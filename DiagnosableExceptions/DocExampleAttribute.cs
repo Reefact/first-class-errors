@@ -5,12 +5,14 @@ public sealed class DocExampleAttribute : Attribute {
 
     #region Constructors declarations
 
-    public DocExampleAttribute(object value) {
-        Value = value;
+    public DocExampleAttribute(params object[] examples) {
+        ArgumentNullException.ThrowIfNull(examples);
+
+        Examples = examples;
     }
 
     #endregion
 
-    public object Value { get; }
+    public object[] Examples { get; }
 
 }

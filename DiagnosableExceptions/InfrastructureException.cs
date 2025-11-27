@@ -13,8 +13,8 @@ public class InfrastructureException : DiagnosableException {
                                       FlowDirection flowDirection,
                                       bool?         isTransient  = null,
                                       string?       remoteSystem = null,
-                                      object?       errorDetails = null)
-        : base(errorCode, message, errorDetails) {
+                                      ErrorContext? contex       = null)
+        : base(errorCode, message, contex) {
         FlowDirection = flowDirection;
         IsTransient   = isTransient;
         RemoteSystem  = remoteSystem;
@@ -26,8 +26,8 @@ public class InfrastructureException : DiagnosableException {
                                       FlowDirection flowDirection,
                                       bool?         isTransient  = null,
                                       string?       remoteSystem = null,
-                                      object?       errorDetails = null)
-        : base(errorCode, message, cause, errorDetails) {
+                                      ErrorContext? context      = null)
+        : base(errorCode, message, cause, context) {
         FlowDirection = flowDirection;
         IsTransient   = isTransient;
         RemoteSystem  = remoteSystem;
@@ -39,8 +39,8 @@ public class InfrastructureException : DiagnosableException {
                                       FlowDirection          flowDirection,
                                       bool?                  isTransient  = null,
                                       string?                remoteSystem = null,
-                                      object?                errorDetails = null)
-        : base(errorCode, message, causes, errorDetails) {
+                                      ErrorContext?          context      = null)
+        : base(errorCode, message, causes, context) {
         FlowDirection = flowDirection;
         IsTransient   = isTransient;
         RemoteSystem  = remoteSystem;

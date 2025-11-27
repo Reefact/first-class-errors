@@ -1,6 +1,6 @@
-﻿namespace Reefact.DiagnosableExceptions;
+﻿namespace Reefact.DiagnosableExceptions.Usage;
 
-public static class ___ValueObjectDiagnostic {
+internal static class ValueObjectDiagnostic {
 
     #region Statics members declarations
 

@@ -1,11 +1,11 @@
 ﻿namespace Reefact.DiagnosableExceptions;
 
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-public sealed class DocErrorCodePrefixAttribute : Attribute {
+public sealed class ErrorCodePrefixAttribute : Attribute {
 
     #region Constructors declarations
 
-    public DocErrorCodePrefixAttribute(string value) {
+    public ErrorCodePrefixAttribute(string value) {
         ArgumentNullException.ThrowIfNull(value);
 
         Value = value;

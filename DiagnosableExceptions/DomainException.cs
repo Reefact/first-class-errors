@@ -11,24 +11,24 @@ public class DomainException : DiagnosableException {
     #region Constructors declarations
 
     /// <inheritdoc />
-    protected DomainException(string           errorCode,
-                              ErrorDescription description,
-                              object?          errorDetails = null)
-        : base(errorCode, description, errorDetails) { }
+    protected DomainException(string        errorCode,
+                              string        description,
+                              ErrorContext? context = null)
+        : base(errorCode, description, context) { }
 
     /// <inheritdoc />
-    protected DomainException(string           errorCode,
-                              ErrorDescription description,
-                              Exception        cause,
-                              object?          errorDetails = null)
-        : base(errorCode, description, cause, errorDetails) { }
+    protected DomainException(string        errorCode,
+                              string        description,
+                              Exception     cause,
+                              ErrorContext? context = null)
+        : base(errorCode, description, cause, context) { }
 
     /// <inheritdoc />
     protected DomainException(string                 errorCode,
-                              ErrorDescription       description,
+                              string                 description,
                               IEnumerable<Exception> causes,
-                              object?                errorDetails = null)
-        : base(errorCode, description, causes, errorDetails) { }
+                              ErrorContext?          context = null)
+        : base(errorCode, description, causes, context) { }
 
     #endregion
 

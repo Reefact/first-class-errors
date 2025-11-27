@@ -15,56 +15,48 @@ public abstract class DiagnosableException : Exception {
 
     #region Constructors declarations
 
-    protected DiagnosableException(string           errorCode,
-                                   ErrorDescription description,
-                                   object?          errorDetails = null)
-        : base(description.Message) {
+    protected DiagnosableException(string        errorCode,
+                                   string        message,
+                                   ErrorContext? context = null)
+        : base(message) {
         ArgumentNullException.ThrowIfNull(errorCode);
-        ArgumentNullException.ThrowIfNull(description);
 
-        InstanceId   = Guid.NewGuid();
-        ErrorCode    = errorCode;
-        ShortMessage = description.ShortMessage;
-        Rule         = description.Rule;
-        ErrorDetails = errorDetails;
-        OccurredAt   = DateTimeOffset.UtcNow;
-        Causes       = new List<Exception>();
+        InstanceId = Guid.NewGuid();
+        ErrorCode  = errorCode;
+        Context    = context;
+        OccurredAt = DateTimeOffset.UtcNow;
+        Causes     = new List<Exception>();
     }
 
-    protected DiagnosableException(string           errorCode,
-                                   ErrorDescription description,
-                                   Exception        cause,
-                                   object?          errorDetails = null)
-        : base(description.Message, cause) {
+    protected DiagnosableException(string        errorCode,
+                                   string        message,
+                                   Exception     cause,
+                                   ErrorContext? context = null)
+        : base(message, cause) {
         ArgumentNullException.ThrowIfNull(errorCode);
-        ArgumentNullException.ThrowIfNull(description);
         ArgumentNullException.ThrowIfNull(cause);
 
-        InstanceId   = Guid.NewGuid();
-        ErrorCode    = errorCode;
-        ShortMessage = description.ShortMessage;
-        Rule         = description.Rule;
-        ErrorDetails = errorDetails;
-        OccurredAt   = DateTimeOffset.UtcNow;
-        Causes       = new List<Exception>([cause]);
+        InstanceId = Guid.NewGuid();
+        ErrorCode  = errorCode;
+        Context    = context;
+        OccurredAt = DateTimeOffset.UtcNow;
+        Causes     = new List<Exception>([cause]);
     }
 
     protected DiagnosableException(string                 errorCode,
-                                   ErrorDescription       description,
+                                   string                 message,
                                    IEnumerable<Exception> causes,
-                                   object?                errorDetails = null)
-        : base(description.Message) {
+                                   ErrorContext?          context = null)
+        : base(message) {
         ArgumentNullException.ThrowIfNull(errorCode);
-        ArgumentNullException.ThrowIfNull(description);
+        ArgumentNullException.ThrowIfNull(message);
         ArgumentNullException.ThrowIfNull(causes);
 
-        InstanceId   = Guid.NewGuid();
-        ErrorCode    = errorCode;
-        ShortMessage = description.ShortMessage;
-        Rule         = description.Rule;
-        ErrorDetails = errorDetails;
-        OccurredAt   = DateTimeOffset.UtcNow;
-        Causes       = new List<Exception>(causes);
+        InstanceId = Guid.NewGuid();
+        ErrorCode  = errorCode;
+        Context    = context;
+        OccurredAt = DateTimeOffset.UtcNow;
+        Causes     = new List<Exception>(causes);
     }
 
     #endregion
@@ -88,24 +80,14 @@ public abstract class DiagnosableException : Exception {
     public DateTimeOffset OccurredAt { get; }
 
     /// <summary>
-    ///     Gets a short message suitable for UI display (e.g., near a field).
-    /// </summary>
-    public string? ShortMessage { get; }
-
-    /// <summary>
-    ///     Gets the business rule associated with this error, if available.
-    /// </summary>
-    public string? Rule { get; }
-
-    /// <summary>
     ///     List of underlying exceptions that contributed to this error.
     /// </summary>
     public IReadOnlyList<Exception> Causes { get; }
 
-    [Obsolete($"Use property {nameof(ErrorDetails)} instead.", true)]
+    [Obsolete($"Use property {nameof(Context)} instead.", true)]
     public new IDictionary Data => base.Data;
 
     // TODO: documenter !
-    public object? ErrorDetails { get; }
+    public ErrorContext? Context { get; }
 
 }

@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\DiagnosableExceptions\Reefact.DiagnosableExceptions.csproj" />
+  </ItemGroup>
+
 </Project>
