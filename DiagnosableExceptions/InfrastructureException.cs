@@ -13,8 +13,8 @@ public class InfrastructureException : DiagnosableException {
                                       FlowDirection flowDirection,
                                       bool?         isTransient  = null,
                                       string?       remoteSystem = null,
-                                      ErrorContext? contex       = null)
-        : base(errorCode, message, contex) {
+                                      ErrorContext? context      = null)
+        : base(errorCode, message, context) {
         FlowDirection = flowDirection;
         IsTransient   = isTransient;
         RemoteSystem  = remoteSystem;
