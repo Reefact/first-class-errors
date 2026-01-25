@@ -6,29 +6,43 @@
 ///     These exceptions are always non-transient and should be interpreted
 ///     strictly in the context of the business model.
 /// </summary>
-public class DomainException : DiagnosableException {
+public abstract class DomainException : DiagnosableException {
 
-    #region Constructors declarations
-
-    /// <inheritdoc />
-    protected DomainException(string        errorCode,
-                              string        description,
-                              ErrorContext? context = null)
-        : base(errorCode, description, context) { }
+    #region Constructors & Destructor
 
     /// <inheritdoc />
-    protected DomainException(string        errorCode,
-                              string        description,
-                              Exception     cause,
-                              ErrorContext? context = null)
-        : base(errorCode, description, cause, context) { }
+    protected DomainException(string errorCode,
+                              string errorMessage)
+        : base(errorCode, errorMessage) { }
+
+    /// <inheritdoc />
+    protected DomainException(string           errorCode,
+                              ErrorDescription errorDescription)
+        : base(errorCode, errorDescription) { }
+
+    /// <inheritdoc />
+    protected DomainException(string    errorCode,
+                              string    errorMessage,
+                              Exception innerException)
+        : base(errorCode, errorMessage, innerException) { }
+
+    /// <inheritdoc />
+    protected DomainException(string           errorCode,
+                              ErrorDescription errorDescription,
+                              Exception        innerException)
+        : base(errorCode, errorDescription, innerException) { }
 
     /// <inheritdoc />
     protected DomainException(string                 errorCode,
-                              string                 description,
-                              IEnumerable<Exception> causes,
-                              ErrorContext?          context = null)
-        : base(errorCode, description, causes, context) { }
+                              string                 errorMessage,
+                              IEnumerable<Exception> innerExceptions)
+        : base(errorCode, errorMessage, innerExceptions) { }
+
+    /// <inheritdoc />
+    protected DomainException(string                 errorCode,
+                              ErrorDescription       errorDescription,
+                              IEnumerable<Exception> innerExceptions)
+        : base(errorCode, errorDescription, innerExceptions) { }
 
     #endregion
 

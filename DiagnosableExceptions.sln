@@ -17,8 +17,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reefact.DiagnosableExceptio
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reefact.DiagnosableExceptions.Cli", "Reefact.DiagnosableExceptions.Cli\Reefact.DiagnosableExceptions.Cli.csproj", "{2106AE5F-8407-465B-AB0C-486127A53742}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reefact.DiagnosableExceptions.Analyzer", "Reefact.DiagnosableExceptions.Analyzer\Reefact.DiagnosableExceptions.Analyzer.csproj", "{C32530C3-FA5B-49C5-86B9-023BA6F5858A}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,10 +43,6 @@ Global
 		{2106AE5F-8407-465B-AB0C-486127A53742}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2106AE5F-8407-465B-AB0C-486127A53742}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2106AE5F-8407-465B-AB0C-486127A53742}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C32530C3-FA5B-49C5-86B9-023BA6F5858A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C32530C3-FA5B-49C5-86B9-023BA6F5858A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C32530C3-FA5B-49C5-86B9-023BA6F5858A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C32530C3-FA5B-49C5-86B9-023BA6F5858A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -59,7 +53,6 @@ Global
 		{204E4D88-48A0-4254-969A-59DB4FA09335} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{F3FE0461-63F5-47A2-A6D4-AFC4D6EA1335} = {B7C3D08D-EFC5-4F5D-8DE4-5B7938354DBB}
 		{2106AE5F-8407-465B-AB0C-486127A53742} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
-		{C32530C3-FA5B-49C5-86B9-023BA6F5858A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4988972E-3E0D-4F48-8656-0E67ECE994BF}

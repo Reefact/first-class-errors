@@ -32,7 +32,7 @@ public sealed class ExceptionFactoryOwnershipAnalyzer : DiagnosticAnalyzer {
         INamedTypeSymbol? exceptionType = method.ContainingType;
         AttributeData? exceptionOfAttr = exceptionType
                                         .GetAttributes()
-                                        .FirstOrDefault(a => a.AttributeClass?.Name == nameof(ExceptionOfAttribute));
+                                        .FirstOrDefault(a => a.AttributeClass?.Name == nameof(ErrorForAttribute));
         if (exceptionOfAttr is null) { return; }
 
         // Extract owner type

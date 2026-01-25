@@ -1,4 +1,8 @@
-﻿namespace Reefact.DiagnosableExceptions;
+﻿#region Usings declarations
+
+#endregion
+
+namespace Reefact.DiagnosableExceptions;
 
 /// <summary>
 ///     An attribute used to document the specific error produced by an exception factory method.

@@ -11,7 +11,7 @@
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 public sealed class ErrorExampleAttribute : Attribute {
 
-    #region Constructors declarations
+    #region Constructors & Destructor
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ErrorExampleAttribute" /> class with the specified example values.
@@ -32,6 +32,13 @@ public sealed class ErrorExampleAttribute : Attribute {
 
     #endregion
 
+    /// <summary>
+    ///     Gets the example values that demonstrate scenarios leading to specific errors.
+    /// </summary>
+    /// <remarks>
+    ///     Each object in the array corresponds to the value (in order) of the arguments in the exception factory method.
+    ///     These values are used for documentation purposes to illustrate potential error scenarios.
+    /// </remarks>
     public object[] Values { get; }
 
 }
