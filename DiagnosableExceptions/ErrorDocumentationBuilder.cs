@@ -36,12 +36,16 @@ internal sealed class ErrorDocumentationBuilder :
     }
 
     public IErrorBusinessRuleStage WithExplanation(string explanation) {
+        if (explanation is null) { throw new ArgumentNullException(nameof(explanation)); }
+
         _doc.Explanation = explanation;
 
         return this;
     }
 
     public IErrorDiagnosticsStage WithBusinessRule(string rule) {
+        if (rule is null) { throw new ArgumentNullException(nameof(rule)); }
+
         _doc.BusinessRule = rule;
 
         return this;
@@ -71,7 +75,10 @@ internal sealed class ErrorDocumentationBuilder :
         _doc.Examples = exampleFactories
                        .Select(factory => {
                             TException? exception = factory();
-                            _doc.Code = exception.ErrorCode; // TODO: Can do better ?
+                            // TODO: revoir les exceptions levées
+                            if (exception == null) { throw new Exception("Factory must not return null."); }
+                            if (_doc.Code != null && _doc.Code != exception.ErrorCode) { throw new Exception("Factories return different error code."); }
+                            _doc.Code = exception.ErrorCode;
 
                             return new ErrorDescription { ShortMessage = exception.ShortMessage, DetailedMessage = exception.Message };
                         })

@@ -161,7 +161,7 @@ public abstract class DiagnosableException : Exception {
         OccurredAt         = DateTimeOffset.UtcNow;
         ShortMessage       = string.Empty;
         InnerExceptions    = [.. innerExceptions];
-        HasInnerExceptions = true;
+        HasInnerExceptions = InnerExceptions.Any();
     }
 
     /// <summary>
@@ -195,7 +195,7 @@ public abstract class DiagnosableException : Exception {
         OccurredAt         = DateTimeOffset.UtcNow;
         ShortMessage       = errorDescription.ShortMessage;
         InnerExceptions    = [..innerExceptions];
-        HasInnerExceptions = true;
+        HasInnerExceptions = InnerExceptions.Any();
     }
 
     #endregion

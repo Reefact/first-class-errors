@@ -10,7 +10,8 @@
 ///     This struct is designed to provide a unified way to handle operations that can either succeed or fail,
 ///     without relying on exceptions for control flow.
 /// </remarks>
-public readonly struct TryOutcome<T> {
+public readonly struct TryOutcome<T>
+    where T : notnull {
 
     /// <summary>
     ///     Creates a successful <see cref="TryOutcome{T}" /> instance with the specified value.
@@ -21,6 +22,8 @@ public readonly struct TryOutcome<T> {
     ///     Use this method to represent a successful operation result within the <see cref="TryOutcome{T}" /> structure.
     /// </remarks>
     public static TryOutcome<T> Success(T value) {
+        if (value is null) { throw new ArgumentNullException(nameof(value)); }
+
         return new TryOutcome<T>(value, null);
     }
 
@@ -51,7 +54,19 @@ public readonly struct TryOutcome<T> {
     ///     This property is <c>true</c> when the <see cref="Exception" /> property is not <c>null</c>, indicating that the
     ///     operation did not succeed.
     /// </remarks>
-    public bool HasError => Exception != null;
+    public bool IsFailure => Exception != null;
+
+    /// <summary>
+    ///     Gets a value indicating whether the operation was successful.
+    /// </summary>
+    /// <value>
+    ///     <c>true</c> if the operation was successful; otherwise, <c>false</c>.
+    /// </value>
+    /// <remarks>
+    ///     This property returns <c>true</c> when the <see cref="TryOutcome{T}" /> instance represents a successful outcome,
+    ///     meaning no exception occurred during the operation.
+    /// </remarks>
+    public bool IsSuccess => Exception == null;
 
     /// <summary>
     ///     Gets the value representing the successful outcome of the operation.
@@ -60,7 +75,7 @@ public readonly struct TryOutcome<T> {
     ///     The value of type <typeparamref name="T" /> if the operation was successful; otherwise, <c>null</c>.
     /// </value>
     /// <remarks>
-    ///     This property should only be accessed when the operation has succeeded. Check the <see cref="HasError" /> property
+    ///     This property should only be accessed when the operation has succeeded. Check the <see cref="IsFailure" /> property
     ///     to determine whether the operation failed.
     /// </remarks>
     public T? Value { get; }
@@ -72,7 +87,7 @@ public readonly struct TryOutcome<T> {
     ///     <c>null</c>.
     /// </value>
     /// <remarks>
-    ///     This property is <c>null</c> when the operation was successful. Use the <see cref="HasError" /> property to
+    ///     This property is <c>null</c> when the operation was successful. Use the <see cref="IsFailure" /> property to
     ///     determine whether an exception is present.
     /// </remarks>
     public Exception? Exception { get; }
