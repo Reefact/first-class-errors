@@ -1,4 +1,4 @@
-﻿namespace Reefact.DiagnosableExceptions;
+﻿namespace DiagnosableExceptions;
 
 /// <summary>
 ///     Specifies the type that an exception class is associated with.

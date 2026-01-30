@@ -1,4 +1,4 @@
-﻿namespace Reefact.DiagnosableExceptions;
+﻿namespace DiagnosableExceptions;
 
 /// <summary>
 ///     Represents an application exception that originates from

@@ -1,10 +1,4 @@
-﻿#region Usings declarations
-
-using System.Collections.Immutable;
-
-#endregion
-
-namespace Reefact.DiagnosableExceptions;
+﻿namespace DiagnosableExceptions;
 
 /// <summary>
 ///     Represents the base type for all application-specific exceptions
@@ -40,7 +34,7 @@ public abstract class DiagnosableException : Exception {
         ErrorCode          = errorCode;
         OccurredAt         = DateTimeOffset.UtcNow;
         ShortMessage       = string.Empty;
-        InnerExceptions    = ImmutableArray<Exception>.Empty;
+        InnerExceptions    = [];
         HasInnerExceptions = false;
     }
 
@@ -67,7 +61,7 @@ public abstract class DiagnosableException : Exception {
         ErrorCode          = errorCode;
         OccurredAt         = DateTimeOffset.UtcNow;
         ShortMessage       = errorDescription.ShortMessage;
-        InnerExceptions    = ImmutableArray<Exception>.Empty;
+        InnerExceptions    = [];
         HasInnerExceptions = false;
     }
 
@@ -244,7 +238,7 @@ public abstract class DiagnosableException : Exception {
     ///     This property provides an immutable array of exceptions that were the cause of the current exception.
     ///     It is useful for diagnosing errors that involve multiple underlying issues.
     /// </remarks>
-    public ImmutableArray<Exception> InnerExceptions { get; }
+    public IReadOnlyList<Exception> InnerExceptions { get; }
 
     /// <summary>
     ///     Gets a value indicating whether this exception contains one or more inner exceptions.

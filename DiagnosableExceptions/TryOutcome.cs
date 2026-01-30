@@ -1,4 +1,4 @@
-﻿namespace Reefact.DiagnosableExceptions;
+﻿namespace DiagnosableExceptions;
 
 /// <summary>
 ///     Represents the outcome of a try operation, encapsulating either a successful result or an exception.

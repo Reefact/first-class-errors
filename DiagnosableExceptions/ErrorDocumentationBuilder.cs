@@ -1,4 +1,4 @@
-﻿namespace Reefact.DiagnosableExceptions;
+﻿namespace DiagnosableExceptions;
 
 internal sealed class ErrorDocumentationBuilder :
     IErrorTitleStage,

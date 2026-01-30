@@ -1,4 +1,4 @@
-﻿namespace Reefact.DiagnosableExceptions;
+﻿namespace DiagnosableExceptions;
 
 /// <summary>
 ///     Represents the stage in the error documentation building process where examples of the error can be specified.

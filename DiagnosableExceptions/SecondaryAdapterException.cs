@@ -1,4 +1,4 @@
-﻿namespace Reefact.DiagnosableExceptions;
+﻿namespace DiagnosableExceptions;
 
 public abstract class SecondaryAdapterException : InfrastructureException {
 

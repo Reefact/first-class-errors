@@ -1,4 +1,10 @@
-﻿namespace Reefact.DiagnosableExceptions;
+﻿#region Usings declarations
+
+using System.Diagnostics;
+
+#endregion
+
+namespace DiagnosableExceptions;
 
 /// <summary>
 ///     Represents detailed documentation for an error.
@@ -7,6 +13,7 @@
 ///     This class is used to encapsulate all relevant information about an error, making it easier to document,
 ///     diagnose, and provide examples for specific error cases.
 /// </remarks>
+[DebuggerDisplay("{ToString()}")]
 public sealed class ErrorDocumentation {
 
     /// <summary>
@@ -69,5 +76,13 @@ public sealed class ErrorDocumentation {
     ///     the nature of the error and its potential occurrences.
     /// </remarks>
     public IReadOnlyList<ErrorDescription> Examples { get; set; } = [];
+    public Type?   Exception         { get;                set; }
+    public Type?   ErrorSource       { get;                set; }
+    public string? FactoryMethodName { get;                set; }
+
+    /// <inheritdoc />
+    public override string ToString() {
+        return Code ?? string.Empty;
+    }
 
 }

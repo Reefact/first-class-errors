@@ -1,4 +1,4 @@
-﻿namespace Reefact.DiagnosableExceptions;
+﻿namespace DiagnosableExceptions;
 
 /// <summary>
 ///     Specifies the type of cause for an error, categorizing it as a bug, data issue, or a combination of both.
