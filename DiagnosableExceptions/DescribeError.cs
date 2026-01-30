@@ -1,12 +1,11 @@
 ﻿namespace Reefact.DiagnosableExceptions;
 
 /// <summary>
-///     Represents the stage in the error documentation building process where the error title can be specified.
+///     Provides a fluent API for defining and documenting errors in a structured and detailed manner.
 /// </summary>
-/// <remarks>
-///     This interface is part of a fluent API for constructing error documentation.
-/// </remarks>
-public interface IErrorTitleStage {
+public static class DescribeError {
+
+    #region Static members
 
     /// <summary>
     ///     Specifies the title of the error being documented.
@@ -16,6 +15,10 @@ public interface IErrorTitleStage {
     /// <exception cref="System.ArgumentException">
     ///     Thrown when <paramref name="title" /> is <c>null</c>, empty, or consists only of whitespace.
     /// </exception>
-    IErrorExplanationStage WithTitle(string title);
+    public static IErrorExplanationStage WithTitle(string title) {
+        return new ErrorDocumentationBuilder().WithTitle(title);
+    }
+
+    #endregion
 
 }

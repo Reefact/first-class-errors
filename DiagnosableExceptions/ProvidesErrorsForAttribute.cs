@@ -8,7 +8,7 @@
 ///     typically to indicate that the exception is related to operations or rules concerning that type.
 /// </remarks>
 /// <example>
-///     The following example demonstrates how to use the <see cref="ErrorForAttribute" />:
+///     The following example demonstrates how to use the <see cref="ProvidesErrorsForAttribute" />:
 ///     <code>
 /// [ExceptionOf(typeof(Temperature))]
 /// public class InvalidTemperatureException : DomainException {
@@ -18,12 +18,12 @@
 ///     In this example, the <c>InvalidTemperatureException</c> is associated with the <c>Temperature</c> type.
 /// </example>
 [AttributeUsage(AttributeTargets.Class)]
-public sealed class ErrorForAttribute : Attribute {
+public sealed class ProvidesErrorsForAttribute : Attribute {
 
     #region Constructors & Destructor
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ErrorForAttribute" /> class with the specified owner type.
+    ///     Initializes a new instance of the <see cref="ProvidesErrorsForAttribute" /> class with the specified owner type.
     /// </summary>
     /// <param name="ownerType">
     ///     The type that the exception class is associated with. This parameter cannot be <c>null</c>.
@@ -35,7 +35,7 @@ public sealed class ErrorForAttribute : Attribute {
     ///     This constructor establishes the relationship between an exception class and a specific type,
     ///     typically to indicate that the exception is related to operations or rules concerning that type.
     /// </remarks>
-    public ErrorForAttribute(Type ownerType) {
+    public ProvidesErrorsForAttribute(Type ownerType) {
         if (ownerType is null) { throw new ArgumentNullException(nameof(ownerType)); }
 
         OwnerType = ownerType;
@@ -48,7 +48,7 @@ public sealed class ErrorForAttribute : Attribute {
     /// </summary>
     /// <value>
     ///     The type that the exception class is related to. This property is set during the initialization
-    ///     of the <see cref="ErrorForAttribute" /> and cannot be <c>null</c>.
+    ///     of the <see cref="ProvidesErrorsForAttribute" /> and cannot be <c>null</c>.
     /// </value>
     /// <remarks>
     ///     This property provides access to the type that is associated with the exception class,

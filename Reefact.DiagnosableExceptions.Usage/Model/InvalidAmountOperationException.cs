@@ -3,7 +3,7 @@
 /// <summary>
 ///     Represents an exception that is thrown when an invalid operation is performed on monetary amounts.
 /// </summary>
-[ErrorFor(typeof(Amount))]
+[ProvidesErrorsFor(typeof(Amount))]
 public sealed class InvalidAmountOperationException : DomainException {
 
     #region Static members
@@ -26,22 +26,20 @@ public sealed class InvalidAmountOperationException : DomainException {
     }
 
     private static ErrorDocumentation CurrencyMismatchDocumentation() {
-        return Describe.Error(nameof(CurrencyMismatch))
-                       .WithCode(Code.CurrencyMismatch)
-                       .WithTitle("Amount currency mismatch")
-                       .WithExplanation("This error occurs when trying to use multiple amounts together in an operation while they are expressed in different currencies.")
-                       .WithBusinessRule("All monetary operations must involve amounts expressed in the same currency.")
-                       .WithDiagnostics(new ErrorDiagnostic {
-                                            Cause = "Amounts were used in a monetary operation without having been converted to the same currency.",
-                                            Type  = ErrorCauseType.System,
-                                            Fix   = "Convert all amounts to a common currency before using them together in a monetary operation."
-                                        },
-                                        new ErrorDiagnostic {
-                                            Cause = "Amounts expected to be expressed in the same currency were provided with different currencies.",
-                                            Type  = ErrorCauseType.SystemOrInput,
-                                            Fix   = "Ensure that all amounts involved in the operation are expressed in the same currency when no conversion is expected."
-                                        })
-                       .WithExamples(() => CurrencyMismatch(new Amount(127.33m, Currency.EUR), new Amount(57689.00m, Currency.USD)));
+        return DescribeError.WithTitle("Amount currency mismatch")
+                            .WithExplanation("This error occurs when trying to use multiple amounts together in an operation while they are expressed in different currencies.")
+                            .WithBusinessRule("All monetary operations must involve amounts expressed in the same currency.")
+                            .WithDiagnostics(new ErrorDiagnostic {
+                                                 Cause = "Amounts were used in a monetary operation without having been converted to the same currency.",
+                                                 Type  = ErrorCauseType.System,
+                                                 Fix   = "Convert all amounts to a common currency before using them together in a monetary operation."
+                                             },
+                                             new ErrorDiagnostic {
+                                                 Cause = "Amounts expected to be expressed in the same currency were provided with different currencies.",
+                                                 Type  = ErrorCauseType.SystemOrInput,
+                                                 Fix   = "Ensure that all amounts involved in the operation are expressed in the same currency when no conversion is expected."
+                                             })
+                            .WithExamples(() => CurrencyMismatch(new Amount(127.33m, Currency.EUR), new Amount(57689.00m, Currency.USD)));
     }
 
     #endregion

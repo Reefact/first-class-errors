@@ -3,7 +3,7 @@
 /// <summary>
 ///     Represents an exception that is thrown when an attempt is made to create a temperature with an invalid value.
 /// </summary>
-[ErrorFor(typeof(Temperature))]
+[ProvidesErrorsFor(typeof(Temperature))]
 public sealed class InvalidTemperatureException : DomainException {
 
     #region Static members
@@ -26,14 +26,13 @@ public sealed class InvalidTemperatureException : DomainException {
     }
 
     private static ErrorDocumentation BelowAbsoluteZeroDocumentation() {
-        return Describe.Error(nameof(BelowAbsoluteZero))
-                       .WithTitle("Temperature below absolute zero")
-                       .WithExplanation("This error occurs when trying to instantiate a temperature with a value that is below absolute zero.")
-                       .WithBusinessRule("Temperature cannot go below absolute zero because absolute zero is the point where particles have minimum possible energy.")
-                       .WithDiagnostics(ValueObjectDiagnostic.Diagnostic)
-                       .WithExamples(
-                            () => BelowAbsoluteZero(-1, TemperatureUnit.Kelvin),
-                            () => BelowAbsoluteZero(-280, TemperatureUnit.Celsius));
+        return DescribeError.WithTitle("Temperature below absolute zero")
+                            .WithExplanation("This error occurs when trying to instantiate a temperature with a value that is below absolute zero.")
+                            .WithBusinessRule("Temperature cannot go below absolute zero because absolute zero is the point where particles have minimum possible energy.")
+                            .WithDiagnostics(ValueObjectDiagnostic.Diagnostic)
+                            .WithExamples(
+                                 () => BelowAbsoluteZero(-1, TemperatureUnit.Kelvin),
+                                 () => BelowAbsoluteZero(-280, TemperatureUnit.Celsius));
     }
 
     #endregion

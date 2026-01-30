@@ -1,7 +1,6 @@
 ﻿namespace Reefact.DiagnosableExceptions;
 
 internal sealed class ErrorDocumentationBuilder :
-    // IErrorCodeStage,
     IErrorTitleStage,
     IErrorExplanationStage,
     IErrorBusinessRuleStage,
@@ -17,18 +16,20 @@ internal sealed class ErrorDocumentationBuilder :
     #region Constructors & Destructor
 
     public ErrorDocumentationBuilder(ErrorDocumentation doc) {
+        if (doc is null) { throw new ArgumentNullException(nameof(doc)); }
+
         _doc = doc;
+    }
+
+    public ErrorDocumentationBuilder() {
+        _doc = new ErrorDocumentation();
     }
 
     #endregion
 
-    //public IErrorTitleStage WithCode(string code) {
-    //    _doc.Code = code;
-
-    //    return this;
-    //}
-
     public IErrorExplanationStage WithTitle(string title) {
+        if (string.IsNullOrWhiteSpace(title)) { throw new ArgumentException("Value cannot be null or whitespace.", nameof(title)); }
+
         _doc.Title = title;
 
         return this;
