@@ -1,0 +1,10 @@
+﻿namespace DiagnosableExceptions.Generation;
+
+public interface IGenerationLogger {
+
+    void Info(string    message);
+    void Warning(string message);
+    void Error(string   message);
+    void Debug(string   message);
+
+}

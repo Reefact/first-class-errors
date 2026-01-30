@@ -6,6 +6,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <GenerateErrorDocumentation>true</GenerateErrorDocumentation>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\DiagnosableExceptions\DiagnosableExceptions.csproj" />
   </ItemGroup>
