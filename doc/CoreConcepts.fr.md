@@ -1,7 +1,6 @@
 # Concepts clés
 
-DiagnosableExceptions n’est pas simplement une bibliothèque utilitaire.  
-Il introduit une autre manière de penser les erreurs applicatives.
+DiagnosableExceptions n’est pas simplement une bibliothèque utilitaire.  Il introduit une autre manière de penser les erreurs applicatives.
 
 Au lieu de considérer les exceptions comme des incidents techniques, elles sont vues comme **une connaissance structurée sur ce qui s’est mal passé**.
 
