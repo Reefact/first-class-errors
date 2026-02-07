@@ -44,7 +44,7 @@ public sealed class InvalidTemperatureException : DomainException {
     #region Constructors declarations
 
     /// <inheritdoc />
-    public InvalidTemperatureException(string errorCode, string errorMessage, string? shortMessage = null) : base(errorCode, errorMessage, shortMessage) { }
+    private InvalidTemperatureException(string errorCode, string errorMessage, string shortMessage) : base(errorCode, errorMessage, shortMessage) { }
 
     #endregion
 
