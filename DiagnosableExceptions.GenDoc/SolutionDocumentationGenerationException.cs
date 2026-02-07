@@ -1,8 +1,8 @@
-﻿namespace DiagnosableExceptions.Generation;
+﻿namespace DiagnosableExceptions.GenDoc;
 
 public sealed class SolutionDocumentationGenerationException : Exception {
 
-    #region Constructors & Destructor
+    #region Constructors declarations
 
     public SolutionDocumentationGenerationException(string message)
         : base(message) { }

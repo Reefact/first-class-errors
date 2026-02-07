@@ -2,7 +2,7 @@
 
 using System.Reflection;
 
-using DiagnosableExceptions.Generation;
+using DiagnosableExceptions.GenDoc;
 using DiagnosableExceptions.Usage.Model;
 
 #endregion
@@ -14,7 +14,7 @@ namespace DiagnosableExceptions.UnitTests {
         [Fact]
         public void Test1() {
             // Setup
-            Assembly assembly = Assembly.GetAssembly(typeof(Temperature))!;
+            var assembly = Assembly.GetAssembly(typeof(Temperature))!;
 
             // Exercise
             IEnumerable<ErrorDocumentation> documentation = AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(assembly);

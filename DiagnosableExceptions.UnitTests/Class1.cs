@@ -1,6 +1,6 @@
 ﻿#region Usings declarations
 
-using DiagnosableExceptions.Generation;
+using DiagnosableExceptions.GenDoc;
 
 using NFluent;
 

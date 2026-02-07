@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiagnosableExceptions", "Di
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiagnosableExceptions.Usage", "DiagnosableExceptions.Usage\DiagnosableExceptions.Usage.csproj", "{EC3C3ADB-6347-4D56-8071-698E3B99FE4C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiagnosableExceptions.Generation", "DiagnosableExceptions.Generation\DiagnosableExceptions.Generation.csproj", "{204E4D88-48A0-4254-969A-59DB4FA09335}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiagnosableExceptions.GenDoc", "DiagnosableExceptions.GenDoc\DiagnosableExceptions.GenDoc.csproj", "{204E4D88-48A0-4254-969A-59DB4FA09335}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
@@ -16,6 +16,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiagnosableExceptions.UnitTests", "DiagnosableExceptions.UnitTests\DiagnosableExceptions.UnitTests.csproj", "{F3FE0461-63F5-47A2-A6D4-AFC4D6EA1335}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiagnosableExceptions.Cli", "DiagnosableExceptions.Cli\DiagnosableExceptions.Cli.csproj", "{2106AE5F-8407-465B-AB0C-486127A53742}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{31891A31-358C-4E35-822F-20D09EB46F5D}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		LICENSE = LICENSE
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,4 +1,4 @@
-﻿namespace DiagnosableExceptions.Generation;
+﻿namespace DiagnosableExceptions.GenDoc;
 
 public sealed class SolutionGenerationOptions {
 

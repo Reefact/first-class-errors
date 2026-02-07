@@ -8,7 +8,7 @@ using Microsoft.Build.Construction;
 
 #endregion
 
-namespace DiagnosableExceptions.Generation;
+namespace DiagnosableExceptions.GenDoc;
 
 /// <summary>
 ///     Generates ErrorDocumentation from a solution by building (optional), collecting target assemblies,
@@ -16,7 +16,7 @@ namespace DiagnosableExceptions.Generation;
 /// </summary>
 public static class SolutionErrorDocumentationGenerator {
 
-    #region Static members
+    #region Statics members declarations
 
     public static IEnumerable<ErrorDocumentation> GetErrorDocumentationFrom(string solutionPath) {
         ArgumentNullException.ThrowIfNull(solutionPath);
@@ -334,7 +334,7 @@ public static class SolutionErrorDocumentationGenerator {
 
     #endregion
 
-    #region Nested types
+    #region Nested types declarations
 
     private sealed record ProjectInfo(string ProjectPath);
 

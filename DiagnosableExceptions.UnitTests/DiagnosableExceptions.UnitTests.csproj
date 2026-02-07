@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DiagnosableExceptions.Generation\DiagnosableExceptions.Generation.csproj" />
+    <ProjectReference Include="..\DiagnosableExceptions.GenDoc\DiagnosableExceptions.GenDoc.csproj" />
     <ProjectReference Include="..\DiagnosableExceptions.Usage\DiagnosableExceptions.Usage.csproj" />
     <ProjectReference Include="..\DiagnosableExceptions\DiagnosableExceptions.csproj" />
   </ItemGroup>
