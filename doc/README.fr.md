@@ -55,7 +55,7 @@ Les erreurs deviennent :
 
 ## 🧱 Ce que fournit la bibliothèque
 
-### 1️⃣ Un modèle d’exception plus riche
+### 1️. Un modèle d’exception plus riche
 
 Les exceptions portent :
 
@@ -71,7 +71,7 @@ Elles sont conçues pour être :
 * comprises par des humains
 * exploitées par des outils
 
-### 2️⃣ Des diagnostics structurés
+### 2️. Des diagnostics structurés
 
 Chaque erreur peut déclarer des **causes possibles** et des **pistes d’analyse** :
 
@@ -81,7 +81,7 @@ Chaque erreur peut déclarer des **causes possibles** et des **pistes d’analys
 
 Les diagnostics orientent l’analyse sans figer les processus opérationnels.
 
-### 3️⃣ Un DSL pour décrire les erreurs
+### 3️. Un DSL pour décrire les erreurs
 
 Les erreurs sont documentées directement dans le code via une API fluide :
 
@@ -97,7 +97,7 @@ return DescribeError.WithTitle("Temperature below absolute zero")
 
 Il ne s’agit pas de simples commentaires — c’est de la **documentation structurée et exécutable**.
 
-### 4️⃣ Extraction de la documentation
+### 4️. Extraction de la documentation
 
 La bibliothèque fournit un mécanisme pour analyser les assemblies et extraire toute la documentation d’erreurs déclarée :
 
@@ -168,6 +168,15 @@ DiagnosableExceptions est particulièrement utile si :
 
 ## 📚 Étapes suivantes
 
-Consultez le projet **DiagnosableExceptions.Usage** dans ce dépôt pour des exemples concrets.
+Consultez la documentation complète :
 
-Des outils plus avancés (génération de documentation, exporters, CLI) peuvent être construits au-dessus du modèle structuré fourni par cette bibliothèque.
+- [Premiers pas](GettingStarted.fr.md)
+- [Principes de conception](DesignPrinciples.fr.md)
+- [Quand ne pas utiliser DiagnosableExceptions](WhenNotToUseDiagnosableExceptions.fr.md)
+- [Concepts fondamentaux](CoreConcepts.fr.md)
+- [Guide d’écriture des erreurs](WritingErrorsGuide.fr.md)
+- [Cas d’usage](UsagePatterns.fr.md)
+- [Bonnes pratiques](BestPractices.fr.md)
+- [Intégration CI/CD et exploitation](OperationalIntegration.fr.md)
+- [Architecture du pipeline de documentation](ArchitectureOfTheDocumentationPipeline.fr.md)
+- [FAQ](FAQ.fr.md)
