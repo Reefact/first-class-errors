@@ -12,7 +12,7 @@ namespace DiagnosableExceptions.Usage.Model;
 [ProvidesErrorsFor(typeof(Temperature))]
 public sealed class InvalidTemperatureException : DomainException {
 
-    #region Static members
+    #region Statics members declarations
 
     /// <summary>
     ///     Creates an <see cref="InvalidTemperatureException" /> indicating that the temperature value is below absolute zero.
@@ -25,16 +25,14 @@ public sealed class InvalidTemperatureException : DomainException {
     internal static InvalidTemperatureException BelowAbsoluteZero(decimal invalidValue, TemperatureUnit invalidValueUnit) {
         return new InvalidTemperatureException(
             "TEMPERATURE_BELOW_ABSOLUTE_ZERO",
-            new ErrorDescription {
-                ShortMessage    = "Temperature below absolute zero.",
-                DetailedMessage = DocumentationFormatter.Format("Failed to instantiate temperature: the value {0}{1} is below absolute zero.", invalidValue, invalidValueUnit)
-            });
+            DocumentationFormatter.Format("Failed to instantiate temperature: the value {0}{1} is below absolute zero.", invalidValue, invalidValueUnit),
+            "Temperature is below absolute zero.");
     }
 
     private static ErrorDocumentation BelowAbsoluteZeroDocumentation() {
         return DescribeError.WithTitle("Temperature below absolute zero")
-                            .WithExplanation("This error occurs when trying to instantiate a temperature with a value that is below absolute zero.")
-                            .WithBusinessRule("Temperature cannot go below absolute zero because absolute zero is the point where particles have minimum possible energy.")
+                            .WithDescription("This error occurs when trying to instantiate a temperature with a value that is below absolute zero.")
+                            .WithRule("Temperature cannot go below absolute zero because absolute zero is the point where particles have minimum possible energy.")
                             .WithDiagnostics(ValueObjectDiagnostic.Diagnostic)
                             .WithExamples(
                                  () => BelowAbsoluteZero(-1, TemperatureUnit.Kelvin),
@@ -43,10 +41,10 @@ public sealed class InvalidTemperatureException : DomainException {
 
     #endregion
 
-    #region Constructors & Destructor
+    #region Constructors declarations
 
     /// <inheritdoc />
-    private InvalidTemperatureException(string errorCode, ErrorDescription errorDescription) : base(errorCode, errorDescription) { }
+    public InvalidTemperatureException(string errorCode, string errorMessage, string? shortMessage = null) : base(errorCode, errorMessage, shortMessage) { }
 
     #endregion
 

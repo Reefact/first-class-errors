@@ -10,96 +10,76 @@ namespace DiagnosableExceptions.Usage.Infrastructure.Adapters;
 [ProvidesErrorsFor(typeof(BankTransactionFileValidator))]
 public sealed class NonCompliantBankTransactionFileException : PrimaryAdapterException {
 
-    #region Static members
+    #region Statics members declarations
 
     [DocumentedBy(nameof(TransactionDateOutOfStatementPeriodDocumentation))]
     internal static NonCompliantBankTransactionFileException DateOutOfStatementPeriod(DateOnly periodStart, DateOnly periodEnd, DateOnly transactionDate) {
         return new NonCompliantBankTransactionFileException(
             Code.DateOutOfStatementPeriod,
-            new ErrorDescription {
-                ShortMessage    = "Transaction date is outside the statement period.",
-                DetailedMessage = DocumentationFormatter.Format("Transaction dated {0} is outside the statement period [{1};{2}].", transactionDate, periodStart, periodEnd)
-            });
+            DocumentationFormatter.Format("Transaction dated {0} is outside the statement period [{1};{2}].", transactionDate, periodStart, periodEnd),
+            "Transaction date is outside the statement period.");
     }
 
     [DocumentedBy(nameof(StatementTotalAmountMismatchDocumentation))]
-    internal static NonCompliantBankTransactionFileException StatementTotalAmountMismatch(Amount declaredTotalAmount,
-                                                                                          Amount computedTotalAmount) {
+    internal static NonCompliantBankTransactionFileException StatementTotalAmountMismatch(Amount declaredTotalAmount, Amount computedTotalAmount) {
         return new NonCompliantBankTransactionFileException(
             Code.StatementTotalAmountMismatch,
-            new ErrorDescription {
-                ShortMessage    = "Statement total amount mismatch.",
-                DetailedMessage = DocumentationFormatter.Format("The declared statement total amount ({0}) does not match the computed total amount from transactions ({1}).", declaredTotalAmount, computedTotalAmount)
-            });
+            DocumentationFormatter.Format("The declared statement total amount ({0}) does not match the computed total amount from transactions ({1}).", declaredTotalAmount, computedTotalAmount),
+            "Statement total amount mismatch.");
     }
 
     private static ErrorDocumentation TransactionDateOutOfStatementPeriodDocumentation() {
         return DescribeError.WithTitle("Transaction date outside statement period")
-                            .WithExplanation("This error occurs when trying to validate a bank statement file that contains one or more transactions dated outside the statement period.")
-                            .WithBusinessRule("All transactions must occur within the statement period.")
-                            .WithDiagnostics(
-                                 new ErrorDiagnostic {
-                                     Cause = "The transaction date provided in the statement file is incorrect or inconsistent with the actual transaction date.",
-                                     Type  = ErrorCauseType.Input,
-                                     Fix   = "Correct the transaction date in the input file so that it falls within the statement period."
-                                 },
-                                 new ErrorDiagnostic {
-                                     Cause = "The statement period defined in the file does not match the actual coverage period of the transactions.",
-                                     Type  = ErrorCauseType.Input,
-                                     Fix   = "Review and correct the statement start and end dates so they accurately reflect the transaction coverage period."
-                                 },
-                                 new ErrorDiagnostic {
-                                     Cause = "The transaction was posted after the statement was generated but was mistakenly included in the file.",
-                                     Type  = ErrorCauseType.SystemOrInput,
-                                     Fix   = "Exclude late-posted transactions from the statement file or regenerate the statement after all transactions are finalized."
-                                 },
-                                 new ErrorDiagnostic {
-                                     Cause = "An internal processing error caused the transaction date to be shifted during data transformation or import.",
-                                     Type  = ErrorCauseType.System,
-                                     Fix   = "Review the data import and transformation logic to ensure transaction dates are preserved correctly."
-                                 })
+                            .WithDescription("This error occurs when trying to validate a bank statement file that contains one or more transactions dated outside the statement period.")
+                            .WithRule("All transactions must occur within the statement period.")
+                            .WithDiagnostic("The transaction date provided in the statement file is incorrect or inconsistent with the actual transaction date.",
+                                            ErrorCauseType.Input,
+                                            "Verify the transaction date present in the input file and confirm its consistency with the actual transaction timeline.")
+                            .AndDiagnostic("The statement period defined in the file does not match the actual coverage period of the transactions.",
+                                           ErrorCauseType.Input,
+                                           "Check whether the statement start and end dates in the file align with the period covered by the transactions.")
+                            .AndDiagnostic("The transaction was posted after the statement was generated but was mistakenly included in the file.",
+                                           ErrorCauseType.SystemOrInput,
+                                           "Determine whether late-posted transactions were included in the statement generation process.")
+                            .AndDiagnostic("An internal processing error caused the transaction date to be shifted during data transformation or import.",
+                                           ErrorCauseType.System,
+                                           "Examine the data import and transformation stages to confirm that transaction dates are preserved without alteration.")
                             .WithExamples(() => DateOutOfStatementPeriod(new DateOnly(2024, 01, 05), new DateOnly(2024, 01, 31), new DateOnly(2024, 02, 02)));
     }
 
     private static ErrorDocumentation StatementTotalAmountMismatchDocumentation() {
         return DescribeError.WithTitle("Statement total amount mismatch")
-                            .WithExplanation("This error occurs when trying to validate a bank statement file whose declared total amount does not match the sum of the individual transaction amounts.")
-                            .WithBusinessRule("The statement total amount must equal the sum of all transaction amounts included in the statement.")
-                            .WithDiagnostics(
-                                 new ErrorDiagnostic {
-                                     Cause = "The total amount declared in the statement file does not match the sum of the individual transaction amounts.",
-                                     Type  = ErrorCauseType.Input,
-                                     Fix   = "Correct the declared total amount in the statement file so that it matches the sum of all transaction amounts."
-                                 },
-                                 new ErrorDiagnostic {
-                                     Cause = "One or more transactions are missing or duplicated in the statement file.",
-                                     Type  = ErrorCauseType.Input,
-                                     Fix   = "Verify that all transactions are present exactly once and that no transaction is missing or duplicated."
-                                 },
-                                 new ErrorDiagnostic {
-                                     Cause = "A rounding or precision error occurred when calculating the statement total amount.",
-                                     Type  = ErrorCauseType.SystemOrInput,
-                                     Fix   = "Ensure that the same rounding and precision rules are applied consistently when computing the statement total."
-                                 },
-                                 new ErrorDiagnostic {
-                                     Cause = "An internal processing error altered transaction amounts during file parsing or transformation.",
-                                     Type  = ErrorCauseType.System,
-                                     Fix   = "Review the file parsing and transformation logic to ensure transaction amounts are preserved accurately."
-                                 }
+                            .WithDescription("This error occurs when trying to validate a bank statement file whose declared total amount does not match the sum of the individual transaction amounts.")
+                            .WithRule("The statement total amount must equal the sum of all transaction amounts included in the statement.")
+                            .WithDiagnostic("The total amount declared in the statement file does not match the sum of the individual transaction amounts.",
+                                            ErrorCauseType.Input,
+                                            "Verify the declared total amount in the file and compare it with the sum of all transaction amounts."
+                             )
+                            .AndDiagnostic("One or more transactions are missing or duplicated in the statement file.",
+                                           ErrorCauseType.Input,
+                                           "Check whether all expected transactions are present exactly once in the statement file."
+                             )
+                            .AndDiagnostic("A rounding or precision error occurred when calculating the statement total amount.",
+                                           ErrorCauseType.SystemOrInput,
+                                           "Examine how rounding and precision rules were applied when computing the statement total."
+                             )
+                            .AndDiagnostic("An internal processing error altered transaction amounts during file parsing or transformation.",
+                                           ErrorCauseType.System,
+                                           "Inspect the file parsing and transformation stages to confirm that transaction amounts remain unchanged."
                              )
                             .WithExamples(() => StatementTotalAmountMismatch(new Amount(1250.00m, Currency.EUR), new Amount(1249.50m, Currency.EUR)));
     }
 
     #endregion
 
-    #region Constructors & Destructor
+    #region Constructors declarations
 
     /// <inheritdoc />
-    private NonCompliantBankTransactionFileException(string errorCode, ErrorDescription errorDescription) : base(errorCode, errorDescription) { }
+    public NonCompliantBankTransactionFileException(string errorCode, string errorMessage, string? shortMessage = null) : base(errorCode, errorMessage, shortMessage) { }
 
     #endregion
 
-    #region Nested types
+    #region Nested types declarations
 
     private static class Code {
 

@@ -1,222 +1,226 @@
 ﻿namespace DiagnosableExceptions;
 
 /// <summary>
-///     Represents the base type for all application-specific exceptions
-///     that are designed to be diagnosable.
+///     Represents the base class for application exceptions that are designed to be diagnosable, identifiable, and
+///     observable beyond their raw message and stack trace.
 /// </summary>
 /// <remarks>
-///     This class provides an immutable structure for identifying, tracing, and documenting errors.
-///     It serves as a foundation for creating exceptions that include additional diagnostic information,
-///     such as error codes, timestamps, and optional contextual details.
+///     <para>
+///         <see cref="DiagnosableException" /> extends the traditional exception model by treating an exception as a
+///         <b>diagnostic event</b>, not only a control-flow mechanism. Each instance captures stable identity, occurrence
+///         metadata, and structured relationships to other exceptions, enabling deeper analysis in logs, monitoring, and
+///         support workflows.
+///     </para>
+///     <para>
+///         This type is intended to serve as the foundation for application-level exceptions whose occurrences must be
+///         traceable, comparable, and understandable across time and system boundaries.
+///     </para>
+///     <para>
+///         <b>Conceptual model:</b>
+///     </para>
+///     <list type="bullet">
+///         <item>
+///             <b>ErrorCode</b> identifies the type of error (stable across occurrences).
+///         </item>
+///         <item>
+///             <b>InstanceId</b> identifies this specific occurrence (unique per throw).
+///         </item>
+///         <item>
+///             <b>OccurredAt</b> captures when the error event happened.
+///         </item>
+///         <item>
+///             <b>InnerExceptions</b> represent underlying contributing failures.
+///         </item>
+///     </list>
+///     <para>
+///         Unlike standard exceptions, this class promotes a view where exceptions are part of the system’s observable
+///         diagnostic surface.
+///     </para>
+///     <para>
+///         <b>Authoring guidance for derived exceptions:</b>
+///     </para>
+///     <list type="bullet">
+///         <item>Use meaningful and stable error codes.</item>
+///         <item>Ensure the message expresses the error clearly and in domain terms.</item>
+///         <item>Prefer immutable state and avoid modifying properties after construction.</item>
+///     </list>
 /// </remarks>
 public abstract class DiagnosableException : Exception {
 
-    #region Constructors & Destructor
+    public const string UnknownErrorCde = "UNKNOWN_ERROR";
+
+    #region Statics members declarations
+
+    private static IReadOnlyList<Exception> CreateInnerExceptionList(Exception? innerException) {
+        if (innerException is null) { return CreateInnerExceptionList(); }
+
+        return Array.AsReadOnly([innerException]);
+    }
+
+    private static IReadOnlyList<Exception> CreateInnerExceptionList() {
+        return Array.AsReadOnly(Array.Empty<Exception>());
+    }
+
+    private static string CreateSafeErrorCode(string? errorCode) {
+        return errorCode ?? UnknownErrorCde;
+    }
+
+    private static IReadOnlyList<Exception> CreateInnerExceptionList(IEnumerable<Exception>? innerExceptions) {
+        if (innerExceptions is null) { return CreateInnerExceptionList(); }
+
+        Exception[] array = innerExceptions as Exception[] ?? innerExceptions.ToArray();
+
+        return Array.AsReadOnly(array);
+    }
+
+    #endregion
+
+    #region Constructors declarations
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="DiagnosableException" /> class.
+    ///     Initializes a new instance of the <see cref="DiagnosableException" /> class with an error code, and a descriptive
+    ///     message.
     /// </summary>
     /// <param name="errorCode">
-    ///     A unique code that identifies the error. This value cannot be <c>null</c>.
+    ///     A stable identifier representing the type of error. This value should remain the same for all occurrences of the
+    ///     same logical error.
     /// </param>
     /// <param name="errorMessage">
-    ///     A detailed message that describes the error. This value cannot be <c>null</c>.
+    ///     A human-readable message describing the error in domain or system terms. This message is intended to explain the
+    ///     failure, not the technical mechanism.
     /// </param>
-    /// <exception cref="ArgumentNullException">
-    ///     Thrown when <paramref name="errorCode" /> is <c>null</c>.
-    /// </exception>
-    protected DiagnosableException(string errorCode,
-                                   string errorMessage)
+    /// <param name="shortMessage">
+    ///     An optional concise version of the error message suitable for user interfaces or compact displays.
+    /// </param>
+    /// <remarks>
+    ///     <para>
+    ///         This constructor captures the essential identity and occurrence metadata of a diagnosable exception. A unique
+    ///         <see cref="InstanceId" /> is generated and the timestamp of occurrence is recorded.
+    ///     </para>
+    ///     <para>
+    ///         Derived exceptions should use this constructor when the error represents a single diagnostic event without
+    ///         additional underlying causes.
+    ///     </para>
+    /// </remarks>
+    protected DiagnosableException(string  errorCode,
+                                   string  errorMessage,
+                                   string? shortMessage = null)
         : base(errorMessage) {
-        if (errorCode is null) { throw new ArgumentNullException(nameof(errorCode)); }
-
-        InstanceId         = Guid.NewGuid();
-        ErrorCode          = errorCode;
-        OccurredAt         = DateTimeOffset.UtcNow;
-        ShortMessage       = string.Empty;
-        InnerExceptions    = [];
-        HasInnerExceptions = false;
+        InstanceId      = Guid.NewGuid();
+        OccurredAt      = DateTimeOffset.UtcNow;
+        ErrorCode       = CreateSafeErrorCode(errorCode);
+        ShortMessage    = shortMessage;
+        InnerExceptions = CreateInnerExceptionList();
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="DiagnosableException" /> class.
+    ///     Initializes a new instance of the <see cref="DiagnosableException" /> class with an error code, a descriptive
+    ///     message, and a single underlying exception.
     /// </summary>
     /// <param name="errorCode">
-    ///     A unique code that identifies the error. This value cannot be <c>null</c>.
-    /// </param>
-    /// <param name="errorDescription">
-    ///     An <see cref="ErrorDescription" /> instance that provides detailed and short messages describing the error. This
-    ///     value cannot be <c>null</c>.
-    /// </param>
-    /// <exception cref="ArgumentNullException">
-    ///     Thrown when <paramref name="errorCode" /> or <paramref name="errorDescription" /> is <c>null</c>.
-    /// </exception>
-    protected DiagnosableException(string           errorCode,
-                                   ErrorDescription errorDescription)
-        : base(errorDescription?.DetailedMessage) {
-        if (errorCode is null) { throw new ArgumentNullException(nameof(errorCode)); }
-        if (errorDescription is null) { throw new ArgumentNullException(nameof(errorDescription)); }
-
-        InstanceId         = Guid.NewGuid();
-        ErrorCode          = errorCode;
-        OccurredAt         = DateTimeOffset.UtcNow;
-        ShortMessage       = errorDescription.ShortMessage;
-        InnerExceptions    = [];
-        HasInnerExceptions = false;
-    }
-
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="DiagnosableException" /> class.
-    /// </summary>
-    /// <param name="errorCode">
-    ///     A unique code that identifies the error. This value cannot be <c>null</c>.
+    ///     A stable identifier representing the type of error. This value should remain the same for all occurrences of the
+    ///     same logical error.
     /// </param>
     /// <param name="errorMessage">
-    ///     A message that describes the error. This value cannot be <c>null</c>.
+    ///     A human-readable message describing the error in domain or system terms. This message is intended to explain the
+    ///     failure, not the technical mechanism.
     /// </param>
     /// <param name="innerException">
-    ///     The exception that is the cause of the current exception. This value cannot be <c>null</c>.
+    ///     The underlying exception that contributed to this error.
     /// </param>
-    /// <exception cref="ArgumentNullException">
-    ///     Thrown when <paramref name="errorCode" /> or <paramref name="innerException" /> is <c>null</c>.
-    /// </exception>
+    /// <param name="shortMessage">
+    ///     An optional concise version of the error message suitable for user interfaces or compact displays.
+    /// </param>
+    /// <remarks>
+    ///     <para>
+    ///         This constructor captures the essential identity and occurrence metadata of a diagnosable exception. A unique
+    ///         <see cref="InstanceId" /> is generated and the timestamp of occurrence is recorded.
+    ///     </para>
+    ///     <para>
+    ///         This constructor should be used when the error results directly from another exception. The inner exception is
+    ///         preserved both in the base <see cref="Exception" /> chain and in the structured <see cref="InnerExceptions" />
+    ///         collection.
+    ///     </para>
+    /// </remarks>
     protected DiagnosableException(string    errorCode,
                                    string    errorMessage,
-                                   Exception innerException)
+                                   Exception innerException,
+                                   string?   shortMessage = null)
         : base(errorMessage, innerException) {
-        if (errorCode is null) { throw new ArgumentNullException(nameof(errorCode)); }
-        if (innerException is null) { throw new ArgumentNullException(nameof(innerException)); }
-
-        InstanceId         = Guid.NewGuid();
-        ErrorCode          = errorCode;
-        OccurredAt         = DateTimeOffset.UtcNow;
-        ShortMessage       = string.Empty;
-        InnerExceptions    = [innerException];
-        HasInnerExceptions = true;
+        InstanceId      = Guid.NewGuid();
+        OccurredAt      = DateTimeOffset.UtcNow;
+        ErrorCode       = CreateSafeErrorCode(errorCode);
+        ShortMessage    = shortMessage;
+        InnerExceptions = CreateInnerExceptionList(innerException);
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="DiagnosableException" /> class.
+    ///     Initializes a new instance of the <see cref="DiagnosableException" /> class with an error code, a descriptive
+    ///     message, and multiple contributing exceptions.
     /// </summary>
     /// <param name="errorCode">
-    ///     A unique code that identifies the error. This value cannot be <c>null</c>.
-    /// </param>
-    /// <param name="errorDescription">
-    ///     An <see cref="ErrorDescription" /> instance containing detailed and short messages describing the error. This value
-    ///     cannot be <c>null</c>.
-    /// </param>
-    /// <param name="innerException">
-    ///     The exception that caused the current exception. This value cannot be <c>null</c>.
-    /// </param>
-    /// <exception cref="ArgumentNullException">
-    ///     Thrown when <paramref name="errorCode" />, <paramref name="errorDescription" />, or
-    ///     <paramref name="innerException" /> is <c>null</c>.
-    /// </exception>
-    protected DiagnosableException(string           errorCode,
-                                   ErrorDescription errorDescription,
-                                   Exception        innerException)
-        : base(errorDescription?.DetailedMessage, innerException) {
-        if (errorCode is null) { throw new ArgumentNullException(nameof(errorCode)); }
-        if (errorDescription is null) { throw new ArgumentNullException(nameof(errorDescription)); }
-        if (innerException is null) { throw new ArgumentNullException(nameof(innerException)); }
-
-        InstanceId         = Guid.NewGuid();
-        ErrorCode          = errorCode;
-        OccurredAt         = DateTimeOffset.UtcNow;
-        ShortMessage       = errorDescription.ShortMessage;
-        InnerExceptions    = [innerException];
-        HasInnerExceptions = true;
-    }
-
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="DiagnosableException" /> class.
-    /// </summary>
-    /// <param name="errorCode">
-    ///     A unique code that identifies the error. This value cannot be <c>null</c>.
+    ///     A stable identifier representing the type of error. This value should remain the same for all occurrences of the
+    ///     same logical error.
     /// </param>
     /// <param name="errorMessage">
-    ///     A message that describes the error. This value cannot be <c>null</c>.
+    ///     A human-readable message describing the error in domain or system terms. This message is intended to explain the
+    ///     failure, not the technical mechanism.
     /// </param>
     /// <param name="innerExceptions">
-    ///     A collection of exceptions that provide additional context for the error. This value cannot be <c>null</c>.
+    ///     A collection of underlying exceptions that contributed to this error.
     /// </param>
-    /// <exception cref="ArgumentNullException">
-    ///     Thrown when <paramref name="errorCode" /> or <paramref name="innerExceptions" /> is <c>null</c>.
-    /// </exception>
+    /// <param name="shortMessage">
+    ///     An optional concise version of the error message suitable for user interfaces or compact displays.
+    /// </param>
+    /// <remarks>
+    ///     <para>
+    ///         This constructor captures the essential identity and occurrence metadata of a diagnosable exception. A unique
+    ///         <see cref="InstanceId" /> is generated and the timestamp of occurrence is recorded.
+    ///     </para>
+    ///     <para>
+    ///         This constructor supports diagnostic scenarios where multiple failures or validation issues contributed to a
+    ///         single error event.
+    ///     </para>
+    /// </remarks>
     protected DiagnosableException(string                 errorCode,
                                    string                 errorMessage,
-                                   IEnumerable<Exception> innerExceptions)
+                                   IEnumerable<Exception> innerExceptions,
+                                   string?                shortMessage = null)
         : base(errorMessage) {
-        if (errorCode is null) { throw new ArgumentNullException(nameof(errorCode)); }
-        if (innerExceptions is null) { throw new ArgumentNullException(nameof(innerExceptions)); }
-
-        InstanceId         = Guid.NewGuid();
-        ErrorCode          = errorCode;
-        OccurredAt         = DateTimeOffset.UtcNow;
-        ShortMessage       = string.Empty;
-        InnerExceptions    = [.. innerExceptions];
-        HasInnerExceptions = InnerExceptions.Any();
-    }
-
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="DiagnosableException" /> class.
-    /// </summary>
-    /// <param name="errorCode">
-    ///     A unique code that identifies the error. This value cannot be <c>null</c>.
-    /// </param>
-    /// <param name="errorDescription">
-    ///     An <see cref="ErrorDescription" /> instance containing detailed and short messages describing the error. This value
-    ///     cannot be <c>null</c>.
-    /// </param>
-    /// <param name="innerExceptions">
-    ///     A collection of exceptions that represent the underlying causes of this exception. This value cannot be <c>null</c>
-    ///     .
-    /// </param>
-    /// <exception cref="ArgumentNullException">
-    ///     Thrown when <paramref name="errorCode" />, <paramref name="errorDescription" />, or
-    ///     <paramref name="innerExceptions" /> is <c>null</c>.
-    /// </exception>
-    protected DiagnosableException(string                 errorCode,
-                                   ErrorDescription       errorDescription,
-                                   IEnumerable<Exception> innerExceptions)
-        : base(errorDescription?.DetailedMessage) {
-        if (errorCode is null) { throw new ArgumentNullException(nameof(errorCode)); }
-        if (errorDescription is null) { throw new ArgumentNullException(nameof(errorDescription)); }
-        if (innerExceptions is null) { throw new ArgumentNullException(nameof(innerExceptions)); }
-
-        InstanceId         = Guid.NewGuid();
-        ErrorCode          = errorCode;
-        OccurredAt         = DateTimeOffset.UtcNow;
-        ShortMessage       = errorDescription.ShortMessage;
-        InnerExceptions    = [..innerExceptions];
-        HasInnerExceptions = InnerExceptions.Any();
+        InstanceId      = Guid.NewGuid();
+        OccurredAt      = DateTimeOffset.UtcNow;
+        ErrorCode       = CreateSafeErrorCode(errorCode);
+        ShortMessage    = shortMessage;
+        InnerExceptions = CreateInnerExceptionList(innerExceptions);
     }
 
     #endregion
 
     /// <summary>
-    ///     Gets a unique identifier for this specific exception instance.
+    ///     Gets the unique identifier for this specific exception occurrence.
     /// </summary>
     /// <remarks>
-    ///     This identifier is automatically generated when the exception is instantiated,
-    ///     ensuring that each occurrence of the exception has a distinct <see cref="Guid" />.
-    ///     It can be used for tracking and correlating exception occurrences in logs or diagnostics.
+    ///     Each thrown instance receives a new <see cref="Guid" /> allowing correlation of logs and diagnostic events related
+    ///     to this particular failure.
     /// </remarks>
     public Guid InstanceId { get; }
 
     /// <summary>
-    ///     Stable code that identifies the type of error. Unlike <see cref="InstanceId" />, this value is the same across all
-    ///     occurrences of the same error type. Examples: <c>PAYMENT.DECLINED</c> or <c>INVENTORY.OUT_OF_STOCK</c>.
+    ///     Gets the stable code identifying the type of error.
     /// </summary>
-
+    /// <remarks>
+    ///     Unlike <see cref="InstanceId" />, this value is shared across all occurrences
+    ///     of the same logical error and is intended for grouping, monitoring, and alerting. Examples: <c>PAYMENT.DECLINED</c>
+    ///     or <c>INVENTORY.OUT_OF_STOCK</c>.
+    /// </remarks>
     public string ErrorCode { get; }
 
     /// <summary>
-    ///     Gets the date and time, in Coordinated Universal Time (UTC), when the exception occurred.
+    ///     Gets the timestamp indicating when the exception instance was created.
     /// </summary>
-    /// <value>
-    ///     A <see cref="DateTimeOffset" /> representing the timestamp of when the exception was instantiated.
-    /// </value>
+    /// <remarks>
+    ///     This value is captured in UTC and represents the moment the diagnostic event occurred.
+    /// </remarks>
     public DateTimeOffset OccurredAt { get; }
 
     /// <summary>
@@ -229,7 +233,7 @@ public abstract class DiagnosableException : Exception {
     ///     This property is intended to provide a simplified error message that can be displayed
     ///     in user interfaces where a full error message might be too verbose.
     /// </remarks>
-    public string ShortMessage { get; }
+    public string? ShortMessage { get; }
 
     /// <summary>
     ///     Gets the collection of inner exceptions that contribute to this exception.
@@ -250,6 +254,8 @@ public abstract class DiagnosableException : Exception {
     ///     This property is useful for determining if additional exceptions are encapsulated within this exception,
     ///     which can provide more context about the error.
     /// </remarks>
-    public bool HasInnerExceptions { get; }
+    public bool HasInnerExceptions() {
+        return InnerExceptions.Any();
+    }
 
 }

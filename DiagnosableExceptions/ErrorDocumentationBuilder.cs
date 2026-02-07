@@ -2,18 +2,20 @@
 
 internal sealed class ErrorDocumentationBuilder :
     IErrorTitleStage,
-    IErrorExplanationStage,
-    IErrorBusinessRuleStage,
+    IErrorDescriptionStage,
+    IErrorRuleStage,
     IErrorDiagnosticsStage,
+    IErrorExamplesOrDiagnosticsStage,
     IErrorExamplesStage {
 
-    #region Fields
+    #region Fields declarations
 
-    private readonly ErrorDocumentation _doc;
+    private readonly ErrorDocumentation    _doc;
+    private readonly List<ErrorDiagnostic> _diagnostics = new();
 
     #endregion
 
-    #region Constructors & Destructor
+    #region Constructors declarations
 
     public ErrorDocumentationBuilder(ErrorDocumentation doc) {
         if (doc is null) { throw new ArgumentNullException(nameof(doc)); }
@@ -27,7 +29,7 @@ internal sealed class ErrorDocumentationBuilder :
 
     #endregion
 
-    public IErrorExplanationStage WithTitle(string title) {
+    public IErrorDescriptionStage WithTitle(string title) {
         if (string.IsNullOrWhiteSpace(title)) { throw new ArgumentException("Value cannot be null or whitespace.", nameof(title)); }
 
         _doc.Title = title;
@@ -35,7 +37,7 @@ internal sealed class ErrorDocumentationBuilder :
         return this;
     }
 
-    public IErrorBusinessRuleStage WithExplanation(string explanation) {
+    public IErrorRuleStage WithDescription(string explanation) {
         if (explanation is null) { throw new ArgumentNullException(nameof(explanation)); }
 
         _doc.Explanation = explanation;
@@ -43,7 +45,7 @@ internal sealed class ErrorDocumentationBuilder :
         return this;
     }
 
-    public IErrorDiagnosticsStage WithBusinessRule(string rule) {
+    public IErrorDiagnosticsStage WithRule(string rule) {
         if (rule is null) { throw new ArgumentNullException(nameof(rule)); }
 
         _doc.BusinessRule = rule;
@@ -51,19 +53,20 @@ internal sealed class ErrorDocumentationBuilder :
         return this;
     }
 
-    public IErrorDiagnosticsStage WithNoBusinessRule() {
+    /// <inheritdoc />
+    public IErrorDiagnosticsStage WithNoRule() {
         return this;
     }
 
-    public IErrorExamplesStage WithDiagnostics(params ErrorDiagnostic[] diagnostics) {
-        if (diagnostics is null) { throw new ArgumentNullException(nameof(diagnostics)); }
-
-        _doc.Diagnostics = diagnostics;
-
-        return this;
-    }
-
+    /// <inheritdoc />
     public IErrorExamplesStage WithNoDiagnostic() {
+        return this;
+    }
+
+    /// <inheritdoc />
+    public IErrorExamplesOrDiagnosticsStage AndDiagnostic(string cause, ErrorCauseType type, string analysisLead) {
+        _diagnostics.Add(new ErrorDiagnostic(cause, type, analysisLead));
+
         return this;
     }
 
@@ -72,6 +75,7 @@ internal sealed class ErrorDocumentationBuilder :
         if (exampleFactories is null) { throw new ArgumentNullException(nameof(exampleFactories)); }
         if (exampleFactories.Length == 0) { throw new ArgumentException("At least one example must be provided."); }
 
+        _doc.Diagnostics = _diagnostics.ToArray();
         _doc.Examples = exampleFactories
                        .Select(factory => {
                             TException? exception = factory();
@@ -80,11 +84,27 @@ internal sealed class ErrorDocumentationBuilder :
                             if (_doc.Code != null && _doc.Code != exception.ErrorCode) { throw new Exception("Factories return different error code."); }
                             _doc.Code = exception.ErrorCode;
 
-                            return new ErrorDescription { ShortMessage = exception.ShortMessage, DetailedMessage = exception.Message };
+                            return new ErrorDescription(exception.Message, exception.ShortMessage);
                         })
                        .ToArray();
 
         return _doc;
+    }
+
+    /// <inheritdoc />
+    public IErrorExamplesStage WithDiagnostics(params ErrorDiagnostic[] diagnostics) {
+        if (diagnostics is null) { throw new ArgumentNullException(nameof(diagnostics)); }
+
+        _doc.Diagnostics = diagnostics;
+
+        return this;
+    }
+
+    /// <inheritdoc />
+    IErrorExamplesOrDiagnosticsStage IErrorDiagnosticsStage.WithDiagnostic(string cause, ErrorCauseType type, string analysisLead) {
+        _diagnostics.Add(new ErrorDiagnostic(cause, type, analysisLead));
+
+        return this;
     }
 
 }

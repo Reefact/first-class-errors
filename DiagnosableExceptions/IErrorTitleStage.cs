@@ -16,6 +16,6 @@ public interface IErrorTitleStage {
     /// <exception cref="System.ArgumentException">
     ///     Thrown when <paramref name="title" /> is <c>null</c>, empty, or consists only of whitespace.
     /// </exception>
-    IErrorExplanationStage WithTitle(string title);
+    IErrorDescriptionStage WithTitle(string title);
 
 }

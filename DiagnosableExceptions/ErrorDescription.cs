@@ -10,6 +10,17 @@
 /// </remarks>
 public sealed class ErrorDescription {
 
+    #region Constructors declarations
+
+    public ErrorDescription(string detailedMessage, string? shortMessage = null) {
+        if (string.IsNullOrWhiteSpace(detailedMessage)) { throw new ArgumentException("Value cannot be null or whitespace.", nameof(detailedMessage)); }
+
+        DetailedMessage = detailedMessage;
+        ShortMessage    = shortMessage;
+    }
+
+    #endregion
+
     /// <summary>
     ///     Gets or sets the detailed message describing the error.
     /// </summary>
@@ -20,7 +31,8 @@ public sealed class ErrorDescription {
     ///     This property provides a more comprehensive description of the error, which can be useful for logging,
     ///     debugging, or displaying detailed error information to users or developers.
     /// </remarks>
-    public string DetailedMessage { get; set; } = string.Empty;
+    public string DetailedMessage { get; }
+
     /// <summary>
     ///     Gets or sets a concise summary of the error.
     /// </summary>
@@ -28,6 +40,6 @@ public sealed class ErrorDescription {
     ///     This property provides a brief description of the error, suitable for display in user interfaces where a short and
     ///     clear message is required.
     /// </remarks>
-    public string ShortMessage { get; set; } = string.Empty;
+    public string? ShortMessage { get; }
 
 }

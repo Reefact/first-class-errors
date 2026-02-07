@@ -10,7 +10,7 @@
 /// </remarks>
 internal static class ValueObjectDiagnostic {
 
-    #region Static members
+    #region Statics members declarations
 
     /// <summary>
     ///     Provides a collection of predefined diagnostics for common value object-related errors.
@@ -20,31 +20,26 @@ internal static class ValueObjectDiagnostic {
     ///     actions.
     /// </remarks>
     public static readonly ErrorDiagnostic[] Diagnostic = [
-        new() {
-            Cause = "The value entered manually by a user is invalid.",
-            Type  = ErrorCauseType.Input,
-            Fix   = "The user must correct the entered value so that it complies with the domain rules."
-        },
-        new() {
-            Cause = "The value received from an external system (API, message, etc.) is invalid.",
-            Type  = ErrorCauseType.Input,
-            Fix   = "Ensure upstream systems validate or normalize their data before sending it."
-        },
-        new() {
-            Cause = "The value was loaded from corrupted or outdated persisted data.",
-            Type  = ErrorCauseType.Input,
-            Fix   = "Correct or migrate persisted data to ensure compliance with current domain rules."
-        },
-        new() {
-            Cause = "The value was computed internally without using domain-safe methods.",
-            Type  = ErrorCauseType.System,
-            Fix   = "Review and fix the computation logic to ensure it preserves domain invariants."
-        },
-        new() {
-            Cause = "The value originates from system configuration or defaults that are incorrect or outdated.",
-            Type  = ErrorCauseType.Input,
-            Fix   = "Review and correct system configuration or default parameters so they comply with domain rules."
-        }
+        new("The value entered manually by a user is invalid.",
+            ErrorCauseType.Input,
+            "Verify the value entered by the user and assess its compliance with domain rules."
+        ),
+        new("The value received from an external system (API, message, etc.) is invalid.",
+            ErrorCauseType.Input,
+            "Check the data provided by the upstream system and evaluate its validity against domain rules."
+        ),
+        new("The value was loaded from corrupted or outdated persisted data.",
+            ErrorCauseType.Input,
+            "Examine the persisted data source to determine whether stored values comply with current domain rules."
+        ),
+        new("The value was computed internally without using domain-safe methods.",
+            ErrorCauseType.System,
+            "Inspect the internal computation logic to confirm that domain invariants are preserved."
+        ),
+        new("The value originates from system configuration or defaults that are incorrect or outdated.",
+            ErrorCauseType.Input,
+            "Review the relevant configuration or default parameters to assess their compliance with domain rules."
+        )
     ];
 
     #endregion

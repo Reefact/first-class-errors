@@ -1,42 +1,59 @@
 ﻿namespace DiagnosableExceptions;
 
+/// <summary>
+///     Represents an infrastructure exception originating from a secondary adapter, that is, a component through which the
+///     system interacts with external dependencies.
+/// </summary>
+/// <remarks>
+///     <para>
+///         A <see cref="SecondaryAdapterException" /> models technical failures occurring at the system boundary where the
+///         application communicates with external systems such as databases, external APIs, file storage, or messaging
+///         platforms.
+///     </para>
+///     <para>
+///         This exception type is used to signal that an outgoing technical interaction failed, independently of domain
+///         logic or business rules.
+///     </para>
+///     <para>
+///         It belongs to the infrastructure layer but specifically reflects failures on the <b>output side</b> of the
+///         system (inside → outside).
+///     </para>
+///     <para>
+///         <b>Typical scenarios include:</b>
+///     </para>
+///     <list type="bullet">
+///         <item>Database connectivity issues</item>
+///         <item>Remote service call failures</item>
+///         <item>File storage or retrieval errors</item>
+///         <item>Message broker communication problems</item>
+///     </list>
+/// </remarks>
 public abstract class SecondaryAdapterException : InfrastructureException {
 
-    #region Constructors & Destructor
+    #region Constructors declarations
 
     /// <inheritdoc />
-    protected SecondaryAdapterException(string errorCode,
-                                        string errorMessage)
-        : base(errorCode, errorMessage) { }
-
-    /// <inheritdoc />
-    protected SecondaryAdapterException(string           errorCode,
-                                        ErrorDescription errorDescription)
-        : base(errorCode, errorDescription) { }
+    protected SecondaryAdapterException(string  errorCode,
+                                        string  errorMessage,
+                                        string? shortMessage = null,
+                                        bool?   isTransient  = null)
+        : base(errorCode, errorMessage, shortMessage, isTransient) { }
 
     /// <inheritdoc />
     protected SecondaryAdapterException(string    errorCode,
                                         string    errorMessage,
-                                        Exception innerException)
-        : base(errorCode, errorMessage, innerException) { }
-
-    /// <inheritdoc />
-    protected SecondaryAdapterException(string           errorCode,
-                                        ErrorDescription errorDescription,
-                                        Exception        innerException)
-        : base(errorCode, errorDescription, innerException) { }
+                                        Exception innerException,
+                                        string?   shortMessage = null,
+                                        bool?     isTransient  = null)
+        : base(errorCode, errorMessage, innerException, shortMessage, isTransient) { }
 
     /// <inheritdoc />
     protected SecondaryAdapterException(string                 errorCode,
                                         string                 errorMessage,
-                                        IEnumerable<Exception> innerExceptions)
-        : base(errorCode, errorMessage, innerExceptions) { }
-
-    /// <inheritdoc />
-    protected SecondaryAdapterException(string                 errorCode,
-                                        ErrorDescription       errorDescription,
-                                        IEnumerable<Exception> innerExceptions)
-        : base(errorCode, errorDescription, innerExceptions) { }
+                                        IEnumerable<Exception> innerExceptions,
+                                        string?                shortMessage = null,
+                                        bool?                  isTransient  = null)
+        : base(errorCode, errorMessage, innerExceptions, shortMessage, isTransient) { }
 
     #endregion
 

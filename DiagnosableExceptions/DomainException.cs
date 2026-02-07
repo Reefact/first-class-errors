@@ -1,48 +1,63 @@
 ﻿namespace DiagnosableExceptions;
 
 /// <summary>
-///     Represents an application exception that originates from
-///     domain rules, business processes, or invariant violations.
-///     These exceptions are always non-transient and should be interpreted
-///     strictly in the context of the business model.
+///     Represents an application exception that originates from domain rules, business logic, or invariant violations
+///     within the core model.
 /// </summary>
+/// <remarks>
+///     <para>
+///         A <see cref="DomainException" /> signals that the system has reached a state that is invalid according to the
+///         business or domain model. These exceptions do not indicate technical failures, infrastructure issues, or
+///         environmental problems — they represent logical inconsistencies or rule violations.
+///     </para>
+///     <para>
+///         Domain exceptions are considered <b>non-transient</b> by nature. Retrying the same operation without changing
+///         input or state will typically lead to the same failure.
+///     </para>
+///     <para>
+///         <b>Typical examples include:</b>
+///     </para>
+///     <list type="bullet">
+///         <item>Violations of business rules or invariants</item>
+///         <item>Invalid state transitions in aggregates</item>
+///         <item>Operations that contradict domain constraints</item>
+///     </list>
+///     <para>
+///         These exceptions are part of the system's semantic layer and should be used to express domain truth, not
+///         technical malfunction.
+///     </para>
+///     <para>
+///         <b>Authoring guidance for derived exceptions:</b>
+///     </para>
+///     <list type="bullet">
+///         <item>The message should describe the violated rule or domain condition.</item>
+///         <item>The error code should identify a stable business error category.</item>
+///         <item>Do not use this type for network, I/O, or dependency failures.</item>
+///     </list>
+/// </remarks>
 public abstract class DomainException : DiagnosableException {
 
-    #region Constructors & Destructor
+    #region Constructors declarations
 
     /// <inheritdoc />
-    protected DomainException(string errorCode,
-                              string errorMessage)
-        : base(errorCode, errorMessage) { }
-
-    /// <inheritdoc />
-    protected DomainException(string           errorCode,
-                              ErrorDescription errorDescription)
-        : base(errorCode, errorDescription) { }
+    protected DomainException(string  errorCode,
+                              string  errorMessage,
+                              string? shortMessage = null)
+        : base(errorCode, errorMessage, shortMessage) { }
 
     /// <inheritdoc />
     protected DomainException(string    errorCode,
                               string    errorMessage,
-                              Exception innerException)
-        : base(errorCode, errorMessage, innerException) { }
-
-    /// <inheritdoc />
-    protected DomainException(string           errorCode,
-                              ErrorDescription errorDescription,
-                              Exception        innerException)
-        : base(errorCode, errorDescription, innerException) { }
+                              Exception innerException,
+                              string?   shortMessage = null)
+        : base(errorCode, errorMessage, innerException, shortMessage) { }
 
     /// <inheritdoc />
     protected DomainException(string                 errorCode,
                               string                 errorMessage,
-                              IEnumerable<Exception> innerExceptions)
-        : base(errorCode, errorMessage, innerExceptions) { }
-
-    /// <inheritdoc />
-    protected DomainException(string                 errorCode,
-                              ErrorDescription       errorDescription,
-                              IEnumerable<Exception> innerExceptions)
-        : base(errorCode, errorDescription, innerExceptions) { }
+                              IEnumerable<Exception> innerExceptions,
+                              string?                shortMessage = null)
+        : base(errorCode, errorMessage, innerExceptions, shortMessage) { }
 
     #endregion
 
