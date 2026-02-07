@@ -18,8 +18,6 @@ It helps you:
 * keep error documentation close to the code
 * generate human-readable error documentation automatically
 
----
-
 ## 🚨 The problem
 
 In most systems, errors are:
@@ -36,8 +34,6 @@ Over time, this leads to:
 * tribal knowledge
 * support teams guessing
 * developers reinventing error explanations
-
----
 
 ## 💡 The idea
 
@@ -57,8 +53,6 @@ Errors become:
 > not just failures,
 > but **documented knowledge units**.
 
----
-
 ## 🧱 What this library provides
 
 ### 1️⃣ A richer exception model
@@ -77,8 +71,6 @@ They are designed to be:
 * understood by humans
 * used by tooling
 
----
-
 ### 2️⃣ Structured diagnostics
 
 Each error can declare **possible causes** and **analysis leads**:
@@ -88,8 +80,6 @@ Each error can declare **possible causes** and **analysis leads**:
 * Where should investigation start?
 
 Diagnostics guide troubleshooting without hardcoding operational processes.
-
----
 
 ### 3️⃣ A DSL to describe errors
 
@@ -107,8 +97,6 @@ return DescribeError.WithTitle("Temperature below absolute zero")
 
 This is not just comments — it is **structured, executable documentation**.
 
----
-
 ### 4️⃣ Documentation extraction
 
 The library includes a mechanism to scan assemblies and extract all declared error documentation:
@@ -124,8 +112,6 @@ This enables:
 * support-oriented documentation
 * living documentation generated from code
 
----
-
 ## 🔁 Exception or not? You choose.
 
 The library supports both:
@@ -139,8 +125,6 @@ This allows you to use exceptions as:
 > or structured error data
 
 depending on the context (domain logic, validation, pipelines, etc.).
-
----
 
 ## 🧩 Example
 
@@ -172,8 +156,6 @@ public sealed class InvalidTemperatureException : DomainException {
 
 Here, the exception, its meaning, its rule, its diagnostics, and example messages are all defined together — in code.
 
----
-
 ## 🎯 Who is this for?
 
 DiagnosableExceptions is especially useful if:
@@ -183,8 +165,6 @@ DiagnosableExceptions is especially useful if:
 * you want consistent error handling
 * you want documentation that doesn’t drift from code
 * you design with domain-driven thinking
-
----
 
 ## 📚 Next steps
 

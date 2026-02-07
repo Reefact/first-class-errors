@@ -18,8 +18,6 @@ Elle vous aide à :
 * garder la documentation des erreurs proche du code
 * générer automatiquement une documentation humaine des erreurs
 
----
-
 ## 🚨 Le problème
 
 Dans la plupart des systèmes, les erreurs sont :
@@ -36,8 +34,6 @@ Avec le temps, cela entraîne :
 * du savoir implicite (“tribal knowledge”)
 * des équipes support qui devinent
 * des développeurs qui réexpliquent sans cesse les mêmes erreurs
-
----
 
 ## 💡 L’idée
 
@@ -57,8 +53,6 @@ Les erreurs deviennent :
 > non seulement des échecs,
 > mais des **unités de connaissance documentées**.
 
----
-
 ## 🧱 Ce que fournit la bibliothèque
 
 ### 1️⃣ Un modèle d’exception plus riche
@@ -77,8 +71,6 @@ Elles sont conçues pour être :
 * comprises par des humains
 * exploitées par des outils
 
----
-
 ### 2️⃣ Des diagnostics structurés
 
 Chaque erreur peut déclarer des **causes possibles** et des **pistes d’analyse** :
@@ -88,8 +80,6 @@ Chaque erreur peut déclarer des **causes possibles** et des **pistes d’analys
 * Par où commencer l’investigation ?
 
 Les diagnostics orientent l’analyse sans figer les processus opérationnels.
-
----
 
 ### 3️⃣ Un DSL pour décrire les erreurs
 
@@ -107,8 +97,6 @@ return DescribeError.WithTitle("Temperature below absolute zero")
 
 Il ne s’agit pas de simples commentaires — c’est de la **documentation structurée et exécutable**.
 
----
-
 ### 4️⃣ Extraction de la documentation
 
 La bibliothèque fournit un mécanisme pour analyser les assemblies et extraire toute la documentation d’erreurs déclarée :
@@ -124,8 +112,6 @@ Cela permet de générer :
 * de la documentation orientée support
 * une documentation vivante générée depuis le code
 
----
-
 ## 🔁 Exception ou pas ? À vous de choisir.
 
 La bibliothèque supporte à la fois :
@@ -139,8 +125,6 @@ Cela vous permet d’utiliser les exceptions :
 > ou comme données d’erreur structurées
 
 selon le contexte (domaine, validation, pipelines, etc.).
-
----
 
 ## 🧩 Exemple
 
@@ -172,8 +156,6 @@ public sealed class InvalidTemperatureException : DomainException {
 
 Ici, l’exception, sa signification, sa règle, ses diagnostics et des exemples de messages sont définis ensemble — dans le code.
 
----
-
 ## 🎯 Pour qui ?
 
 DiagnosableExceptions est particulièrement utile si :
@@ -183,8 +165,6 @@ DiagnosableExceptions est particulièrement utile si :
 * vous voulez une gestion d’erreurs cohérente
 * vous souhaitez une documentation qui ne dérive pas du code
 * vous concevez avec une approche orientée domaine
-
----
 
 ## 📚 Étapes suivantes
 
