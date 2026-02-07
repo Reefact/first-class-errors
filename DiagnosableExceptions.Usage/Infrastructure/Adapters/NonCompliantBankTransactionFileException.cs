@@ -75,7 +75,7 @@ public sealed class NonCompliantBankTransactionFileException : PrimaryAdapterExc
     #region Constructors declarations
 
     /// <inheritdoc />
-    public NonCompliantBankTransactionFileException(string errorCode, string errorMessage, string? shortMessage = null) : base(errorCode, errorMessage, shortMessage) { }
+    private NonCompliantBankTransactionFileException(string errorCode, string errorMessage, string shortMessage) : base(errorCode, errorMessage, shortMessage) { }
 
     #endregion
 

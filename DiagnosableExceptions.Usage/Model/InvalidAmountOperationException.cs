@@ -50,10 +50,7 @@ public sealed class InvalidAmountOperationException : DomainException {
     #region Constructors declarations
 
     /// <inheritdoc />
-    public InvalidAmountOperationException(string errorCode, string errorMessage) : base(errorCode, errorMessage) { }
-
-    /// <inheritdoc />
-    public InvalidAmountOperationException(string errorCode, string errorMessage, string? shortMessage = null) : base(errorCode, errorMessage, shortMessage) { }
+    private InvalidAmountOperationException(string errorCode, string errorMessage, string? shortMessage = null) : base(errorCode, errorMessage, shortMessage) { }
 
     #endregion
 
