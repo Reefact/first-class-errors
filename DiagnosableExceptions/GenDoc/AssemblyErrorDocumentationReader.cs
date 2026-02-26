@@ -11,7 +11,7 @@ namespace DiagnosableExceptions.GenDoc;
 /// </summary>
 public sealed class AssemblyErrorDocumentationReader {
 
-    #region Statics members declarations
+    #region Static members
 
     /// <summary>
     ///     Extracts all documented errors from the provided assembly.
@@ -29,11 +29,11 @@ public sealed class AssemblyErrorDocumentationReader {
     }
 
     private static IEnumerable<ErrorDocumentation> BuildFromExceptionType(Type exceptionType) {
-        var   providesErrorsFor = exceptionType.GetCustomAttribute<ProvidesErrorsForAttribute>();
-        Type? providedType      = providesErrorsFor?.OwnerType;
+        ProvidesErrorsForAttribute? providesErrorsFor = exceptionType.GetCustomAttribute<ProvidesErrorsForAttribute>();
+        Type?                       providedType      = providesErrorsFor?.OwnerType;
 
         foreach (MethodInfo factoryMethod in exceptionType.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)) {
-            var documentedBy = factoryMethod.GetCustomAttribute<DocumentedByAttribute>();
+            DocumentedByAttribute? documentedBy = factoryMethod.GetCustomAttribute<DocumentedByAttribute>();
             if (documentedBy is null) { continue; }
 
             MethodInfo? documentationMethod = exceptionType.GetMethod(documentedBy.MethodName, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);

@@ -47,9 +47,7 @@
 /// </remarks>
 public abstract class DiagnosableException : Exception {
 
-    public const string UnknownErrorCde = "UNKNOWN_ERROR";
-
-    #region Statics members declarations
+    #region Static members
 
     private static IReadOnlyList<Exception> CreateInnerExceptionList(Exception? innerException) {
         if (innerException is null) { return CreateInnerExceptionList(); }
@@ -61,10 +59,6 @@ public abstract class DiagnosableException : Exception {
         return Array.AsReadOnly(Array.Empty<Exception>());
     }
 
-    private static string CreateSafeErrorCode(string? errorCode) {
-        return errorCode ?? UnknownErrorCde;
-    }
-
     private static IReadOnlyList<Exception> CreateInnerExceptionList(IEnumerable<Exception>? innerExceptions) {
         if (innerExceptions is null) { return CreateInnerExceptionList(); }
 
@@ -73,9 +67,18 @@ public abstract class DiagnosableException : Exception {
         return Array.AsReadOnly(array);
     }
 
+    private static ErrorContext BuildContext(Action<ErrorContextBuilder>? configureContext) {
+        if (configureContext is null) { return ErrorContext.Empty; }
+
+        ErrorContextBuilder builder = new();
+        configureContext(builder);
+
+        return builder.Build();
+    }
+
     #endregion
 
-    #region Constructors declarations
+    #region Constructors & Destructor
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="DiagnosableException" /> class with an error code, and a descriptive
@@ -92,6 +95,9 @@ public abstract class DiagnosableException : Exception {
     /// <param name="shortMessage">
     ///     An optional concise version of the error message suitable for user interfaces or compact displays.
     /// </param>
+    /// <param name="configureContext">
+    ///     Optional delegate used to add structured diagnostic context to the exception at construction time.
+    /// </param>
     /// <remarks>
     ///     <para>
     ///         This constructor captures the essential identity and occurrence metadata of a diagnosable exception. A unique
@@ -102,14 +108,16 @@ public abstract class DiagnosableException : Exception {
     ///         additional underlying causes.
     ///     </para>
     /// </remarks>
-    protected DiagnosableException(string  errorCode,
-                                   string  errorMessage,
-                                   string? shortMessage = null)
+    protected DiagnosableException(ErrorCode                    errorCode,
+                                   string                       errorMessage,
+                                   string?                      shortMessage     = null,
+                                   Action<ErrorContextBuilder>? configureContext = null)
         : base(errorMessage) {
         InstanceId      = Guid.NewGuid();
         OccurredAt      = DateTimeOffset.UtcNow;
-        ErrorCode       = CreateSafeErrorCode(errorCode);
+        ErrorCode       = errorCode;
         ShortMessage    = shortMessage;
+        Context         = BuildContext(configureContext);
         InnerExceptions = CreateInnerExceptionList();
     }
 
@@ -131,6 +139,9 @@ public abstract class DiagnosableException : Exception {
     /// <param name="shortMessage">
     ///     An optional concise version of the error message suitable for user interfaces or compact displays.
     /// </param>
+    /// <param name="configureContext">
+    ///     Optional delegate used to add structured diagnostic context to the exception at construction time.
+    /// </param>
     /// <remarks>
     ///     <para>
     ///         This constructor captures the essential identity and occurrence metadata of a diagnosable exception. A unique
@@ -142,15 +153,17 @@ public abstract class DiagnosableException : Exception {
     ///         collection.
     ///     </para>
     /// </remarks>
-    protected DiagnosableException(string    errorCode,
-                                   string    errorMessage,
-                                   Exception innerException,
-                                   string?   shortMessage = null)
+    protected DiagnosableException(ErrorCode                    errorCode,
+                                   string                       errorMessage,
+                                   Exception                    innerException,
+                                   string?                      shortMessage     = null,
+                                   Action<ErrorContextBuilder>? configureContext = null)
         : base(errorMessage, innerException) {
         InstanceId      = Guid.NewGuid();
         OccurredAt      = DateTimeOffset.UtcNow;
-        ErrorCode       = CreateSafeErrorCode(errorCode);
+        ErrorCode       = errorCode;
         ShortMessage    = shortMessage;
+        Context         = BuildContext(configureContext);
         InnerExceptions = CreateInnerExceptionList(innerException);
     }
 
@@ -172,6 +185,9 @@ public abstract class DiagnosableException : Exception {
     /// <param name="shortMessage">
     ///     An optional concise version of the error message suitable for user interfaces or compact displays.
     /// </param>
+    /// <param name="configureContext">
+    ///     Optional delegate used to add structured diagnostic context to the exception at construction time.
+    /// </param>
     /// <remarks>
     ///     <para>
     ///         This constructor captures the essential identity and occurrence metadata of a diagnosable exception. A unique
@@ -182,15 +198,17 @@ public abstract class DiagnosableException : Exception {
     ///         single error event.
     ///     </para>
     /// </remarks>
-    protected DiagnosableException(string                 errorCode,
-                                   string                 errorMessage,
-                                   IEnumerable<Exception> innerExceptions,
-                                   string?                shortMessage = null)
+    protected DiagnosableException(ErrorCode                    errorCode,
+                                   string                       errorMessage,
+                                   IEnumerable<Exception>       innerExceptions,
+                                   string?                      shortMessage     = null,
+                                   Action<ErrorContextBuilder>? configureContext = null)
         : base(errorMessage) {
         InstanceId      = Guid.NewGuid();
         OccurredAt      = DateTimeOffset.UtcNow;
-        ErrorCode       = CreateSafeErrorCode(errorCode);
+        ErrorCode       = errorCode;
         ShortMessage    = shortMessage;
+        Context         = BuildContext(configureContext);
         InnerExceptions = CreateInnerExceptionList(innerExceptions);
     }
 
@@ -213,7 +231,7 @@ public abstract class DiagnosableException : Exception {
     ///     of the same logical error and is intended for grouping, monitoring, and alerting. Examples: <c>PAYMENT.DECLINED</c>
     ///     or <c>INVENTORY.OUT_OF_STOCK</c>.
     /// </remarks>
-    public string ErrorCode { get; }
+    public ErrorCode ErrorCode { get; }
 
     /// <summary>
     ///     Gets the timestamp indicating when the exception instance was created.
@@ -234,6 +252,15 @@ public abstract class DiagnosableException : Exception {
     ///     in user interfaces where a full error message might be too verbose.
     /// </remarks>
     public string? ShortMessage { get; }
+
+    /// <summary>
+    ///     Gets the context that provides additional information about the error.
+    /// </summary>
+    /// <remarks>
+    ///     The <see cref="ErrorContext" /> contains supplementary details that can help diagnose and understand the
+    ///     circumstances of the exception.
+    /// </remarks>
+    public ErrorContext Context { get; }
 
     /// <summary>
     ///     Gets the collection of inner exceptions that contribute to this exception.

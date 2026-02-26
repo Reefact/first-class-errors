@@ -12,7 +12,7 @@ namespace DiagnosableExceptions.Usage.Model;
 [ProvidesErrorsFor(typeof(Temperature))]
 public sealed class InvalidTemperatureException : DomainException {
 
-    #region Statics members declarations
+    #region Static members
 
     /// <summary>
     ///     Creates an <see cref="InvalidTemperatureException" /> indicating that the temperature value is below absolute zero.
@@ -24,7 +24,7 @@ public sealed class InvalidTemperatureException : DomainException {
     [DocumentedBy(nameof(BelowAbsoluteZeroDocumentation))]
     internal static InvalidTemperatureException BelowAbsoluteZero(decimal invalidValue, TemperatureUnit invalidValueUnit) {
         return new InvalidTemperatureException(
-            "TEMPERATURE_BELOW_ABSOLUTE_ZERO",
+            Code.TemperatureBelowAbsoluteZero,
             DocumentationFormatter.Format("Failed to instantiate temperature: the value {0}{1} is below absolute zero.", invalidValue, invalidValueUnit),
             "Temperature is below absolute zero.");
     }
@@ -41,10 +41,24 @@ public sealed class InvalidTemperatureException : DomainException {
 
     #endregion
 
-    #region Constructors declarations
+    #region Constructors & Destructor
 
     /// <inheritdoc />
-    private InvalidTemperatureException(string errorCode, string errorMessage, string shortMessage) : base(errorCode, errorMessage, shortMessage) { }
+    private InvalidTemperatureException(ErrorCode errorCode, string errorMessage, string shortMessage) : base(errorCode, errorMessage, shortMessage) { }
+
+    #endregion
+
+    #region Nested types
+
+    private static class Code {
+
+        #region Static members
+
+        public static readonly ErrorCode TemperatureBelowAbsoluteZero = ErrorCode.Create("TEMPERATURE_BELOW_ABSOLUTE_ZERO");
+
+        #endregion
+
+    }
 
     #endregion
 

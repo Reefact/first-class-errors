@@ -31,10 +31,10 @@ public interface IErrorRuleStage {
     ///     </para>
     ///     <para>
     ///         Prefer <see cref="WithRule(string)" /> whenever you can express a clear rule, constraint, or expectation. Use
-    ///         <see cref="WithNoRule" /> only when the absence of a rule is intentional and communicates something meaningful
+    ///         <see cref="WithoutRule" /> only when the absence of a rule is intentional and communicates something meaningful
     ///         to readers.
     ///     </para>
     /// </remarks>
-    IErrorDiagnosticsStage WithNoRule();
+    IErrorDiagnosticsStage WithoutRule();
 
 }

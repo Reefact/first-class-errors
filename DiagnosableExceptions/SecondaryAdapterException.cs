@@ -30,30 +30,33 @@
 /// </remarks>
 public abstract class SecondaryAdapterException : InfrastructureException {
 
-    #region Constructors declarations
+    #region Constructors & Destructor
 
     /// <inheritdoc />
-    protected SecondaryAdapterException(string  errorCode,
-                                        string  errorMessage,
-                                        string? shortMessage = null,
-                                        bool?   isTransient  = null)
-        : base(errorCode, errorMessage, shortMessage, isTransient) { }
+    protected SecondaryAdapterException(ErrorCode                    errorCode,
+                                        string                       errorMessage,
+                                        string?                      shortMessage     = null,
+                                        bool?                        isTransient      = null,
+                                        Action<ErrorContextBuilder>? configureContext = null)
+        : base(errorCode, errorMessage, shortMessage, isTransient, configureContext) { }
 
     /// <inheritdoc />
-    protected SecondaryAdapterException(string    errorCode,
-                                        string    errorMessage,
-                                        Exception innerException,
-                                        string?   shortMessage = null,
-                                        bool?     isTransient  = null)
-        : base(errorCode, errorMessage, innerException, shortMessage, isTransient) { }
+    protected SecondaryAdapterException(ErrorCode                    errorCode,
+                                        string                       errorMessage,
+                                        Exception                    innerException,
+                                        string?                      shortMessage     = null,
+                                        bool?                        isTransient      = null,
+                                        Action<ErrorContextBuilder>? configureContext = null)
+        : base(errorCode, errorMessage, innerException, shortMessage, isTransient, configureContext) { }
 
     /// <inheritdoc />
-    protected SecondaryAdapterException(string                 errorCode,
-                                        string                 errorMessage,
-                                        IEnumerable<Exception> innerExceptions,
-                                        string?                shortMessage = null,
-                                        bool?                  isTransient  = null)
-        : base(errorCode, errorMessage, innerExceptions, shortMessage, isTransient) { }
+    protected SecondaryAdapterException(ErrorCode                    errorCode,
+                                        string                       errorMessage,
+                                        IEnumerable<Exception>       innerExceptions,
+                                        string?                      shortMessage     = null,
+                                        bool?                        isTransient      = null,
+                                        Action<ErrorContextBuilder>? configureContext = null)
+        : base(errorCode, errorMessage, innerExceptions, shortMessage, isTransient, configureContext) { }
 
     #endregion
 

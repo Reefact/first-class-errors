@@ -12,7 +12,7 @@ namespace DiagnosableExceptions.Usage.Model;
 [ProvidesErrorsFor(typeof(Amount))]
 public sealed class InvalidAmountOperationException : DomainException {
 
-    #region Statics members declarations
+    #region Static members
 
     /// <summary>
     ///     Creates an <see cref="InvalidAmountOperationException" /> to indicate that a monetary operation failed due to a
@@ -47,18 +47,22 @@ public sealed class InvalidAmountOperationException : DomainException {
 
     #endregion
 
-    #region Constructors declarations
+    #region Constructors & Destructor
 
     /// <inheritdoc />
-    private InvalidAmountOperationException(string errorCode, string errorMessage, string? shortMessage = null) : base(errorCode, errorMessage, shortMessage) { }
+    private InvalidAmountOperationException(ErrorCode errorCode, string errorMessage, string? shortMessage = null) : base(errorCode, errorMessage, shortMessage) { }
 
     #endregion
 
-    #region Nested types declarations
+    #region Nested types
 
     private static class Code {
 
-        public const string CurrencyMismatch = "AMOUNT_CURRENCY_MISMATCH";
+        #region Static members
+
+        public static readonly ErrorCode CurrencyMismatch = ErrorCode.Create("AMOUNT_CURRENCY_MISMATCH");
+
+        #endregion
 
     }
 

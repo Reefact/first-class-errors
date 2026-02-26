@@ -10,14 +10,15 @@ namespace DiagnosableExceptions.Usage.Infrastructure.Adapters;
 [ProvidesErrorsFor(typeof(BankTransactionFileValidator))]
 public sealed class NonCompliantBankTransactionFileException : PrimaryAdapterException {
 
-    #region Statics members declarations
+    #region Static members
 
     [DocumentedBy(nameof(TransactionDateOutOfStatementPeriodDocumentation))]
     internal static NonCompliantBankTransactionFileException DateOutOfStatementPeriod(DateOnly periodStart, DateOnly periodEnd, DateOnly transactionDate) {
         return new NonCompliantBankTransactionFileException(
             Code.DateOutOfStatementPeriod,
             DocumentationFormatter.Format("Transaction dated {0} is outside the statement period [{1};{2}].", transactionDate, periodStart, periodEnd),
-            "Transaction date is outside the statement period.");
+            "Transaction date is outside the statement period.",
+            ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate));
     }
 
     [DocumentedBy(nameof(StatementTotalAmountMismatchDocumentation))]
@@ -72,19 +73,23 @@ public sealed class NonCompliantBankTransactionFileException : PrimaryAdapterExc
 
     #endregion
 
-    #region Constructors declarations
+    #region Constructors & Destructor
 
     /// <inheritdoc />
-    private NonCompliantBankTransactionFileException(string errorCode, string errorMessage, string shortMessage) : base(errorCode, errorMessage, shortMessage) { }
+    private NonCompliantBankTransactionFileException(ErrorCode errorCode, string errorMessage, string shortMessage, Action<ErrorContextBuilder>? configureContext = null) : base(errorCode, errorMessage, shortMessage, configureContext: configureContext) { }
 
     #endregion
 
-    #region Nested types declarations
+    #region Nested types
 
     private static class Code {
 
-        public const string DateOutOfStatementPeriod     = "BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD";
-        public const string StatementTotalAmountMismatch = "BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH";
+        #region Static members
+
+        public static readonly ErrorCode DateOutOfStatementPeriod     = ErrorCode.Create("BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD");
+        public static readonly ErrorCode StatementTotalAmountMismatch = ErrorCode.Create("BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH");
+
+        #endregion
 
     }
 

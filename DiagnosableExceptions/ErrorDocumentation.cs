@@ -63,8 +63,8 @@ public sealed class ErrorDocumentation {
     ///     details about a specific cause of the error and its corresponding corrective action.
     /// </value>
     /// <remarks>
-    ///     This property is used to document the potential causes of an error and the recommended
-    ///     solutions, aiding in the diagnosis and resolution of the issue.
+    ///     This property is used to document the potential causes of an error and the recommended solutions, aiding in the
+    ///     diagnosis and resolution of the issue.
     /// </remarks>
     public IReadOnlyList<ErrorDiagnostic> Diagnostics { get; set; } = [];
 
@@ -72,13 +72,48 @@ public sealed class ErrorDocumentation {
     ///     Gets a collection of examples that illustrate specific instances of the error.
     /// </summary>
     /// <remarks>
-    ///     Each example provides a detailed and a short description of an error scenario, helping to clarify
-    ///     the nature of the error and its potential occurrences.
+    ///     Each example provides a detailed and a short description of an error scenario, helping to clarify the nature of the
+    ///     error and its potential occurrences.
     /// </remarks>
     public IReadOnlyList<ErrorDescription> Examples { get; set; } = [];
-    public Type?   Exception         { get;                set; }
-    public Type?   ErrorSource       { get;                set; }
-    public string? FactoryMethodName { get;                set; }
+
+    /// <summary>
+    ///     Gets or sets the collection of context entries that provide additional details about the error.
+    /// </summary>
+    /// <remarks>
+    ///     This collection is used to enhance the understanding and diagnostics of errors by providing structured metadata
+    ///     about the error context.
+    /// </remarks>
+    public IReadOnlyCollection<ErrorContextEntryDocumentation> Context { get; set; } = [];
+    /// <summary>
+    ///     Gets or sets the type of the exception associated with the error documentation.
+    /// </summary>
+    /// <remarks>
+    ///     This property represents the specific exception type that is documented by this instance of
+    ///     <see cref="ErrorDocumentation" />.
+    ///     It is used to link the error documentation to the corresponding exception type, enabling better traceability and
+    ///     diagnostics.
+    /// </remarks>
+    public Type? Exception { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the source type associated with the error.
+    /// </summary>
+    /// <remarks>
+    ///     This property represents the type that is identified as the source of the error. It is typically used to associate
+    ///     the error with a specific domain or context within the application.
+    /// </remarks>
+    public Type? ErrorSource { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the name of the factory method that creates the error instance.
+    /// </summary>
+    /// <remarks>
+    ///     This property is used to associate the error documentation with the specific factory method responsible for
+    ///     creating the error instance. It is particularly useful for tracing the origin of the error and understanding its
+    ///     creation context.
+    /// </remarks>
+    public string? FactoryMethodName { get; set; }
 
     /// <inheritdoc />
     public override string ToString() {

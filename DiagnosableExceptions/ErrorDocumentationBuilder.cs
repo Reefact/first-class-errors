@@ -8,14 +8,45 @@ internal sealed class ErrorDocumentationBuilder :
     IErrorExamplesOrDiagnosticsStage,
     IErrorExamplesStage {
 
-    #region Fields declarations
+    #region Static members
+
+    private static IEnumerable<TException> ComputeExceptions<TException>(Func<TException>[] exampleFactories)
+        where TException : DiagnosableException {
+        return exampleFactories.Select(factory => factory() ?? throw new Exception("Factory must not return null."));
+    }
+
+    private static IEnumerable<ErrorContextEntryDocumentation> BuildContext<TException>(TException[] exceptions)
+        where TException : DiagnosableException {
+        return exceptions
+              .SelectMany(exception =>
+                              exception.Context.Values.Select(kvp => new {
+                                  kvp.Key.Name,
+                                  kvp.Key.ValueType,
+                                  kvp.Key.Description,
+                                  ExampleValue = kvp.Value
+                              }))
+              .GroupBy(x => x.Name)
+              .Select(g => new ErrorContextEntryDocumentation {
+                   Key         = g.Key,
+                   ValueType   = g.First().ValueType,
+                   Description = g.First().Description,
+                   ExampleValues = g.Select(x => x.ExampleValue)
+                                    .Where(v => v != null)
+                                    .Distinct()
+                                    .ToArray()
+               });
+    }
+
+    #endregion
+
+    #region Fields
 
     private readonly ErrorDocumentation    _doc;
     private readonly List<ErrorDiagnostic> _diagnostics = new();
 
     #endregion
 
-    #region Constructors declarations
+    #region Constructors & Destructor
 
     public ErrorDocumentationBuilder(ErrorDocumentation doc) {
         if (doc is null) { throw new ArgumentNullException(nameof(doc)); }
@@ -54,12 +85,12 @@ internal sealed class ErrorDocumentationBuilder :
     }
 
     /// <inheritdoc />
-    public IErrorDiagnosticsStage WithNoRule() {
+    public IErrorDiagnosticsStage WithoutRule() {
         return this;
     }
 
     /// <inheritdoc />
-    public IErrorExamplesStage WithNoDiagnostic() {
+    public IErrorExamplesStage WithoutDiagnostic() {
         return this;
     }
 
@@ -75,18 +106,11 @@ internal sealed class ErrorDocumentationBuilder :
         if (exampleFactories is null) { throw new ArgumentNullException(nameof(exampleFactories)); }
         if (exampleFactories.Length == 0) { throw new ArgumentException("At least one example must be provided."); }
 
-        _doc.Diagnostics = _diagnostics.ToArray();
-        _doc.Examples = exampleFactories
-                       .Select(factory => {
-                            TException? exception = factory();
-                            // TODO: revoir les exceptions levées
-                            if (exception == null) { throw new Exception("Factory must not return null."); }
-                            if (_doc.Code != null && _doc.Code != exception.ErrorCode) { throw new Exception("Factories return different error code."); }
-                            _doc.Code = exception.ErrorCode;
+        TException[] exceptions = ComputeExceptions(exampleFactories).ToArray();
 
-                            return new ErrorDescription(exception.Message, exception.ShortMessage);
-                        })
-                       .ToArray();
+        _doc.Diagnostics = _diagnostics.ToArray();
+        _doc.Examples    = BuildExamples(exceptions).ToArray();
+        _doc.Context     = BuildContext(exceptions).ToArray();
 
         return _doc;
     }
@@ -98,6 +122,18 @@ internal sealed class ErrorDocumentationBuilder :
         _doc.Diagnostics = diagnostics;
 
         return this;
+    }
+
+    private IEnumerable<ErrorDescription> BuildExamples<TException>(TException[] exceptions)
+        where TException : DiagnosableException {
+        return exceptions
+           .Select(exception => {
+                if (_doc.Code != null && _doc.Code != exception.ErrorCode) { throw new Exception("Factories return different error code."); }
+
+                _doc.Code = exception.ErrorCode;
+
+                return new ErrorDescription(exception.Message, exception.ShortMessage);
+            });
     }
 
     /// <inheritdoc />

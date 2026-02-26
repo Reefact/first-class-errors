@@ -36,7 +36,7 @@
 /// </remarks>
 public abstract class InfrastructureException : DiagnosableException {
 
-    #region Constructors declarations
+    #region Constructors & Destructor
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="InfrastructureException" /> class with the specified error code,
@@ -59,6 +59,9 @@ public abstract class InfrastructureException : DiagnosableException {
     ///         <item><c>null</c>: the transient nature is unknown or not specified.</item>
     ///     </list>
     /// </param>
+    /// <param name="configureContext">
+    ///     Optional delegate used to add structured diagnostic context to the exception at construction time.
+    /// </param>
     /// <remarks>
     ///     <para>
     ///         This constructor is used to represent failures originating from technical or environmental concerns outside the
@@ -69,10 +72,12 @@ public abstract class InfrastructureException : DiagnosableException {
     ///         technical dependency, not on business semantics.
     ///     </para>
     /// </remarks>
-    protected InfrastructureException(string  errorCode,
-                                      string  errorMessage,
-                                      string? shortMessage = null,
-                                      bool?   isTransient  = null) : base(errorCode, errorMessage, shortMessage) {
+    protected InfrastructureException(ErrorCode                    errorCode,
+                                      string                       errorMessage,
+                                      string?                      shortMessage     = null,
+                                      bool?                        isTransient      = null,
+                                      Action<ErrorContextBuilder>? configureContext = null)
+        : base(errorCode, errorMessage, shortMessage, configureContext) {
         IsTransient = isTransient;
     }
 
@@ -100,6 +105,9 @@ public abstract class InfrastructureException : DiagnosableException {
     ///         <item><c>null</c>: the transient nature is unknown or not specified.</item>
     ///     </list>
     /// </param>
+    /// <param name="configureContext">
+    ///     Optional delegate used to add structured diagnostic context to the exception at construction time.
+    /// </param>
     /// <remarks>
     ///     <para>
     ///         This constructor is used when a technical failure directly results from another exception. It preserves the
@@ -110,11 +118,13 @@ public abstract class InfrastructureException : DiagnosableException {
     ///         technical dependency (e.g., network, storage, transformation layer), not based on business logic.
     ///     </para>
     /// </remarks>
-    protected InfrastructureException(string    errorCode,
-                                      string    errorMessage,
-                                      Exception innerException,
-                                      string?   shortMessage = null,
-                                      bool?     isTransient  = null) : base(errorCode, errorMessage, innerException, shortMessage) {
+    protected InfrastructureException(ErrorCode                    errorCode,
+                                      string                       errorMessage,
+                                      Exception                    innerException,
+                                      string?                      shortMessage     = null,
+                                      bool?                        isTransient      = null,
+                                      Action<ErrorContextBuilder>? configureContext = null)
+        : base(errorCode, errorMessage, innerException, shortMessage, configureContext) {
         IsTransient = isTransient;
     }
 
@@ -142,6 +152,9 @@ public abstract class InfrastructureException : DiagnosableException {
     ///         <item><c>null</c>: the transient nature is unknown or not specified.</item>
     ///     </list>
     /// </param>
+    /// <param name="configureContext">
+    ///     Optional delegate used to add structured diagnostic context to the exception at construction time.
+    /// </param>
     /// <remarks>
     ///     <para>
     ///         This constructor supports diagnostic scenarios where multiple technical issues contribute to a single
@@ -152,11 +165,13 @@ public abstract class InfrastructureException : DiagnosableException {
     ///         technical dependency, not on business semantics.
     ///     </para>
     /// </remarks>
-    protected InfrastructureException(string                 errorCode,
-                                      string                 errorMessage,
-                                      IEnumerable<Exception> innerExceptions,
-                                      string?                shortMessage = null,
-                                      bool?                  isTransient  = null) : base(errorCode, errorMessage, innerExceptions, shortMessage) {
+    protected InfrastructureException(ErrorCode                    errorCode,
+                                      string                       errorMessage,
+                                      IEnumerable<Exception>       innerExceptions,
+                                      string?                      shortMessage     = null,
+                                      bool?                        isTransient      = null,
+                                      Action<ErrorContextBuilder>? configureContext = null)
+        : base(errorCode, errorMessage, innerExceptions, shortMessage, configureContext) {
         IsTransient = isTransient;
     }
 

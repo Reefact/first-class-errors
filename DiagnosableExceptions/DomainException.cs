@@ -37,27 +37,30 @@
 /// </remarks>
 public abstract class DomainException : DiagnosableException {
 
-    #region Constructors declarations
+    #region Constructors & Destructor
 
     /// <inheritdoc />
-    protected DomainException(string  errorCode,
-                              string  errorMessage,
-                              string? shortMessage = null)
-        : base(errorCode, errorMessage, shortMessage) { }
+    protected DomainException(ErrorCode                    errorCode,
+                              string                       errorMessage,
+                              string?                      shortMessage     = null,
+                              Action<ErrorContextBuilder>? configureContext = null)
+        : base(errorCode, errorMessage, shortMessage, configureContext) { }
 
     /// <inheritdoc />
-    protected DomainException(string    errorCode,
-                              string    errorMessage,
-                              Exception innerException,
-                              string?   shortMessage = null)
-        : base(errorCode, errorMessage, innerException, shortMessage) { }
+    protected DomainException(ErrorCode                    errorCode,
+                              string                       errorMessage,
+                              Exception                    innerException,
+                              string?                      shortMessage     = null,
+                              Action<ErrorContextBuilder>? configureContext = null)
+        : base(errorCode, errorMessage, innerException, shortMessage, configureContext) { }
 
     /// <inheritdoc />
-    protected DomainException(string                 errorCode,
-                              string                 errorMessage,
-                              IEnumerable<Exception> innerExceptions,
-                              string?                shortMessage = null)
-        : base(errorCode, errorMessage, innerExceptions, shortMessage) { }
+    protected DomainException(ErrorCode                    errorCode,
+                              string                       errorMessage,
+                              IEnumerable<Exception>       innerExceptions,
+                              string?                      shortMessage     = null,
+                              Action<ErrorContextBuilder>? configureContext = null)
+        : base(errorCode, errorMessage, innerExceptions, shortMessage, configureContext) { }
 
     #endregion
 

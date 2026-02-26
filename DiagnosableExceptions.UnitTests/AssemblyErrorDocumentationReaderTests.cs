@@ -14,7 +14,7 @@ namespace DiagnosableExceptions.UnitTests {
         [Fact]
         public void Test1() {
             // Setup
-            var assembly = Assembly.GetAssembly(typeof(Temperature))!;
+            Assembly assembly = Assembly.GetAssembly(typeof(Temperature))!;
 
             // Exercise
             IEnumerable<ErrorDocumentation> documentation = AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(assembly);

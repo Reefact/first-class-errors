@@ -56,9 +56,9 @@ public interface IErrorDiagnosticsStage {
     ///     </para>
     ///     <para>
     ///         Prefer <see cref="WithDiagnostics(ErrorDiagnostic[])" /> when you can express plausible causes and analysis
-    ///         directions. Use <see cref="WithNoDiagnostic" /> only when the absence of diagnostics is intentional.
+    ///         directions. Use <see cref="WithoutDiagnostic" /> only when the absence of diagnostics is intentional.
     ///     </para>
     /// </remarks>
-    IErrorExamplesStage WithNoDiagnostic();
+    IErrorExamplesStage WithoutDiagnostic();
 
 }
