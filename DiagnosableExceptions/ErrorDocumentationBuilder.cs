@@ -12,7 +12,23 @@ internal sealed class ErrorDocumentationBuilder :
 
     private static IEnumerable<TException> ComputeExceptions<TException>(Func<TException>[] exampleFactories)
         where TException : DiagnosableException {
-        return exampleFactories.Select(factory => factory() ?? throw new Exception("Factory must not return null."));
+        for (int factoryIndex = 0; factoryIndex < exampleFactories.Length; factoryIndex++) {
+            Func<TException>? factory = exampleFactories[factoryIndex];
+            if (factory is null) { throw ErrorDocumentationException.ExampleFactoryIsNull(factoryIndex); }
+
+            TException? exception;
+            try {
+                exception = factory();
+            } catch (Exception ex) {
+                throw ErrorDocumentationException.ExampleFactoryThrewAnException(factoryIndex, ex);
+            }
+
+            if (exception is null) {
+                throw ErrorDocumentationException.NullExample(factoryIndex);
+            }
+
+            yield return exception;
+        }
     }
 
     private static IEnumerable<ErrorContextEntryDocumentation> BuildContext<TException>(TException[] exceptions)
@@ -104,7 +120,7 @@ internal sealed class ErrorDocumentationBuilder :
     public ErrorDocumentation WithExamples<TException>(params Func<TException>[] exampleFactories)
         where TException : DiagnosableException {
         if (exampleFactories is null) { throw new ArgumentNullException(nameof(exampleFactories)); }
-        if (exampleFactories.Length == 0) { throw new ArgumentException("At least one example must be provided."); }
+        if (exampleFactories.Length == 0) { throw ErrorDocumentationException.AtLeastOneExampleMustBeProvided(); }
 
         TException[] exceptions = ComputeExceptions(exampleFactories).ToArray();
 
@@ -119,21 +135,22 @@ internal sealed class ErrorDocumentationBuilder :
     public IErrorExamplesStage WithDiagnostics(params ErrorDiagnostic[] diagnostics) {
         if (diagnostics is null) { throw new ArgumentNullException(nameof(diagnostics)); }
 
-        _doc.Diagnostics = diagnostics;
+        _diagnostics.AddRange(diagnostics);
 
         return this;
     }
 
     private IEnumerable<ErrorDescription> BuildExamples<TException>(TException[] exceptions)
         where TException : DiagnosableException {
-        return exceptions
-           .Select(exception => {
-                if (_doc.Code != null && _doc.Code != exception.ErrorCode) { throw new Exception("Factories return different error code."); }
+        for (int exampleIndex = 0; exampleIndex < exceptions.Length; exampleIndex++) {
+            TException exception = exceptions[exampleIndex];
 
-                _doc.Code = exception.ErrorCode;
+            if (_doc.Code != null && _doc.Code != exception.ErrorCode) { throw ErrorDocumentationException.InconsistentErrorCode(exampleIndex, _doc.Code, exception.ErrorCode); }
 
-                return new ErrorDescription(exception.Message, exception.ShortMessage);
-            });
+            _doc.Code = exception.ErrorCode;
+
+            yield return new ErrorDescription(exception.Message, exception.ShortMessage);
+        }
     }
 
     /// <inheritdoc />
