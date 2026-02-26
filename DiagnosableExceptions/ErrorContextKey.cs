@@ -39,17 +39,17 @@ public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
 
     #region Static members
 
-    private static readonly Dictionary<string, ErrorContextKey> RegisteredKeys = new(StringComparer.Ordinal);
-    private static readonly object                              Lock           = new();
+    private static readonly Dictionary<string, ErrorContextKey> Registered = new(StringComparer.Ordinal);
+    private static readonly object                              Lock       = new();
 
     public static ErrorContextKey<T> Create<T>(string name, string? description = null) {
         if (string.IsNullOrWhiteSpace(name)) { throw new ArgumentException("Value cannot be null or whitespace.", nameof(name)); }
 
         lock (Lock) {
-            if (RegisteredKeys.ContainsKey(name)) { throw new InvalidOperationException($"An error context key '{name}' has already been registered."); }
+            if (Registered.ContainsKey(name)) { throw new InvalidOperationException($"An error context key '{name}' has already been registered."); }
 
             ErrorContextKey<T> instance = new(name, description);
-            RegisteredKeys.Add(name, instance);
+            Registered.Add(name, instance);
 
             return instance;
         }
@@ -57,7 +57,20 @@ public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
 
     public static IReadOnlyCollection<ErrorContextKey> GetRegisteredKeys() {
         lock (Lock) {
-            return RegisteredKeys.Values.ToArray();
+            return Registered.Values.ToArray();
+        }
+    }
+
+    /// <summary>
+    ///     Resets the internal state of registered <see cref="ErrorContextKey" /> instances.
+    /// </summary>
+    /// <remarks>
+    ///     This method is intended for use in testing scenarios only. It clears all registered keys,
+    ///     allowing a clean slate for subsequent tests that rely on <see cref="ErrorContextKey" /> registration.
+    /// </remarks>
+    internal static void ResetForTests() {
+        lock (Lock) {
+            Registered.Clear();
         }
     }
 

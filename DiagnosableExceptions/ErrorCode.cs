@@ -20,6 +20,19 @@ public sealed class ErrorCode : IEquatable<ErrorCode> {
         return new ErrorCode(code);
     }
 
+    /// <summary>
+    ///     Resets the internal state of registered <see cref="ErrorContextKey" /> instances.
+    /// </summary>
+    /// <remarks>
+    ///     This method is intended for use in testing scenarios only. It clears all registered keys,
+    ///     allowing a clean slate for subsequent tests that rely on <see cref="ErrorContextKey" /> registration.
+    /// </remarks>
+    internal static void ResetForTests() {
+        lock (Lock) {
+            Registered.Clear();
+        }
+    }
+
     #endregion
 
     public static bool operator ==(ErrorCode? left, ErrorCode? right) {
