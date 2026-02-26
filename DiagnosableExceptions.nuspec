@@ -1,0 +1,32 @@
+﻿<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>DiagnosableExceptions</id>
+    <title>Diagnosable Exceptions</title>
+    <version>1.0.0</version>
+    <authors>Sylvain AURAT</authors>
+    <owners>Sylvain AURAT</owners>
+    <license type="expression">Apache-2.0</license>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectUrl>https://github.com/Reefact/diagnosable-exceptions</projectUrl>
+    <repository type="git" url="https://github.com/Reefact/diagnosable-exceptions.git"/>
+    <icon>images\icon.png</icon>
+    <description>DiagnosableExceptions is a lightweight .NET library for creating semantic exceptions that make failures explicit and easier to support in production. It enables error documentation to stay in sync with the code and makes it easy to generate and integrate living documentation into your CI/CD pipeline.</description>
+    <readme>docs\readme.md</readme>
+    <releaseNotes>Initial stable release of DiagnosableExceptions.</releaseNotes>
+    <copyright>© Reefact 2026</copyright>
+    <tags>exceptions error-handling diagnostics observability structured-errors livin-documentation documentation error</tags>
+    <dependencies>
+      <group targetFramework=".NETStandard2.0"></group>
+    </dependencies>
+  </metadata>
+  <files>
+    <!-- Images -->
+    <file src="icon.png" target="images\" />
+    <!-- Documentation -->
+    <file src="README.md" target="docs" />
+    <!-- Library -->
+    <file src="bin\Release\DiagnosableExceptions.dll" target="lib\netstandard2.0" />
+    <file src="bin\Release\DiagnosableExceptions.xml" target="lib\netstandard2.0" />
+  </files>
+</package>
