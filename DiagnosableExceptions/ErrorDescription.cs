@@ -10,13 +10,14 @@
 /// </remarks>
 public sealed class ErrorDescription {
 
-    #region Constructors declarations
+    #region Constructors & Destructor
 
     public ErrorDescription(string detailedMessage, string? shortMessage = null) {
-        if (string.IsNullOrWhiteSpace(detailedMessage)) { throw new ArgumentException("Value cannot be null or whitespace.", nameof(detailedMessage)); }
+        if (detailedMessage is null) { throw new ArgumentNullException(nameof(detailedMessage)); }
+        if (string.IsNullOrWhiteSpace(detailedMessage)) { throw new ArgumentException("Value cannot be empty or whitespace.", nameof(detailedMessage)); }
 
-        DetailedMessage = detailedMessage;
-        ShortMessage    = shortMessage;
+        DetailedMessage = detailedMessage.Trim();
+        ShortMessage    = string.IsNullOrWhiteSpace(shortMessage) ? null : shortMessage?.Trim();
     }
 
     #endregion

@@ -9,7 +9,7 @@ namespace DiagnosableExceptions.GenDoc;
 /// <summary>
 ///     Reads documented errors from an assembly and exposes enriched documentation metadata.
 /// </summary>
-public sealed class AssemblyErrorDocumentationReader {
+public static class AssemblyErrorDocumentationReader {
 
     #region Static members
 

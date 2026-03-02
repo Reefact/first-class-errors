@@ -10,7 +10,7 @@
 /// </remarks>
 internal static class ValueObjectDiagnostic {
 
-    #region Statics members declarations
+    #region Static members
 
     /// <summary>
     ///     Provides a collection of predefined diagnostics for common value object-related errors.

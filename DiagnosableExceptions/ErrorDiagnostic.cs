@@ -33,7 +33,7 @@
 /// </remarks>
 public sealed class ErrorDiagnostic {
 
-    #region Constructors declarations
+    #region Constructors & Destructor
 
     /// <summary>
     ///     Initializes a new fully defined instance of the <see cref="ErrorDiagnostic" /> class.
@@ -86,12 +86,14 @@ public sealed class ErrorDiagnostic {
     ///     </para>
     /// </remarks>
     public ErrorDiagnostic(string cause, ErrorCauseType type, string analysisLead) {
-        if (string.IsNullOrWhiteSpace(cause)) { throw new ArgumentException("Value cannot be null or whitespace.", nameof(cause)); }
-        if (string.IsNullOrWhiteSpace(analysisLead)) { throw new ArgumentException("Value cannot be null or whitespace.", nameof(analysisLead)); }
+        if (cause is null) { throw new ArgumentNullException(nameof(cause)); }
+        if (analysisLead is null) { throw new ArgumentNullException(nameof(analysisLead)); }
+        if (string.IsNullOrWhiteSpace(cause)) { throw new ArgumentException("Value cannot be empty or whitespace.", nameof(cause)); }
+        if (string.IsNullOrWhiteSpace(analysisLead)) { throw new ArgumentException("Value cannot be empty or whitespace.", nameof(analysisLead)); }
 
-        Cause        = cause;
+        Cause        = cause.Trim();
         Type         = type;
-        AnalysisLead = analysisLead;
+        AnalysisLead = analysisLead.Trim();
     }
 
     #endregion

@@ -1,8 +1,4 @@
-﻿#region Usings declarations
-
-using DiagnosableExceptions;
-
-#endregion
+﻿namespace DiagnosableExceptions;
 
 /// <summary>
 ///     Represents a context that provides additional information about an error.

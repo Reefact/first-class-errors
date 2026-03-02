@@ -14,7 +14,7 @@ public sealed class ErrorCode : IEquatable<ErrorCode> {
         if (string.IsNullOrWhiteSpace(code)) { throw new ArgumentException("Error code cannot be null or whitespace.", nameof(code)); }
 
         lock (Lock) {
-            if (!Registered.Add(code)) { throw new InvalidOperationException($"An ErrorCode '{code}' has already been registered."); }
+            if (!Registered.Add(code)) { throw new InvalidOperationException($"Error code '{code}' has already been registered."); }
         }
 
         return new ErrorCode(code);

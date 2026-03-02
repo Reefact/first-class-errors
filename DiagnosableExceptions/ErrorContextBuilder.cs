@@ -1,8 +1,4 @@
-﻿#region Usings declarations
-
-using DiagnosableExceptions;
-
-#endregion
+﻿namespace DiagnosableExceptions;
 
 /// <summary>
 ///     Provides functionality to build an <see cref="ErrorContext" /> by adding key-value pairs.

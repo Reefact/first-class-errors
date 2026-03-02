@@ -57,29 +57,16 @@ internal sealed class ErrorDocumentationBuilder :
 
     #region Fields
 
-    private readonly ErrorDocumentation    _doc;
+    private readonly ErrorDocumentation    _doc         = new();
     private readonly List<ErrorDiagnostic> _diagnostics = new();
 
     #endregion
 
-    #region Constructors & Destructor
-
-    public ErrorDocumentationBuilder(ErrorDocumentation doc) {
-        if (doc is null) { throw new ArgumentNullException(nameof(doc)); }
-
-        _doc = doc;
-    }
-
-    public ErrorDocumentationBuilder() {
-        _doc = new ErrorDocumentation();
-    }
-
-    #endregion
-
     public IErrorDescriptionStage WithTitle(string title) {
-        if (string.IsNullOrWhiteSpace(title)) { throw new ArgumentException("Value cannot be null or whitespace.", nameof(title)); }
+        if (title is null) { throw new ArgumentNullException(nameof(title)); }
+        if (string.IsNullOrWhiteSpace(title)) { throw new ArgumentException("Value cannot be empty or whitespace.", nameof(title)); }
 
-        _doc.Title = title;
+        _doc.Title = title.Trim();
 
         return this;
     }
@@ -87,7 +74,7 @@ internal sealed class ErrorDocumentationBuilder :
     public IErrorRuleStage WithDescription(string explanation) {
         if (explanation is null) { throw new ArgumentNullException(nameof(explanation)); }
 
-        _doc.Explanation = explanation;
+        _doc.Explanation = explanation.Trim();
 
         return this;
     }
@@ -95,7 +82,7 @@ internal sealed class ErrorDocumentationBuilder :
     public IErrorDiagnosticsStage WithRule(string rule) {
         if (rule is null) { throw new ArgumentNullException(nameof(rule)); }
 
-        _doc.BusinessRule = rule;
+        _doc.BusinessRule = rule.Trim();
 
         return this;
     }
