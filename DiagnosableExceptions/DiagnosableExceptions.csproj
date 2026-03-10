@@ -1,16 +1,55 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Build -->
     <TargetFramework>netstandard2.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
+
+    <!-- Version -->
+    <Version>1.0.0</Version>
+
+    <!-- NuGet identity -->
+    <PackageId>DiagnosableExceptions</PackageId>
+    <Authors>Sylvain AURAT</Authors>
+    <Company>Reefact</Company>
+
+    <!-- Description -->
+    <Description>
+      DiagnosableExceptions is a lightweight .NET library for creating semantic exceptions that make failures explicit and easier to support in production. It enables error documentation to stay in sync with the code and makes it easy to generate and integrate living documentation into your CI/CD pipeline.
+    </Description>
+
+    <!-- Metadata -->
+    <PackageTags>exceptions;error-handling;diagnostics;observability;structured-errors;living-documentation;documentation</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+
+    <!-- Links -->
+    <PackageProjectUrl>https://github.com/Reefact/diagnosable-exceptions</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Reefact/diagnosable-exceptions.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <!-- Package assets -->
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>Initial stable release of DiagnosableExceptions.</PackageReleaseNotes>
+
+    <Copyright>© Reefact 2026</Copyright>
+
+    <!-- Generate package -->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>DiagnosableExceptions.UnitTests</_Parameter1>
     </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\icon.png" Pack="true" PackagePath="/" />
+    <None Include="..\README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 
 </Project>
