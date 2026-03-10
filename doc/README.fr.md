@@ -174,6 +174,7 @@ Consultez la documentation complète :
 - [Principes de conception](DesignPrinciples.fr.md)
 - [Quand ne pas utiliser DiagnosableExceptions](WhenNotToUseDiagnosableExceptions.fr.md)
 - [Concepts fondamentaux](CoreConcepts.fr.md)
+- [Guide du contexte d’erreur](ErrorContext.fr.md)
 - [Guide d’écriture des erreurs](WritingErrorsGuide.fr.md)
 - [Cas d’usage](UsagePatterns.fr.md)
 - [Bonnes pratiques](BestPractices.fr.md)

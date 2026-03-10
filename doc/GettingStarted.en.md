@@ -84,7 +84,25 @@ This documentation:
 
 This is structured knowledge, not a comment.
 
-## 3️. Use the exception in domain code
+## 3️. Add structured error context (`ErrorContext`)
+
+When information helps diagnose **a specific occurrence**, attach it as context.
+
+```csharp
+return new NonCompliantBankTransactionFileException(
+    Code.DateOutOfStatementPeriod,
+    $"Transaction dated {transactionDate} is outside statement period [{periodStart};{periodEnd}].",
+    "Transaction date is outside the statement period.",
+    ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate));
+```
+
+Best practices:
+
+* use named, stable keys (`ErrorContextKey<T>`)
+* add context at factory level
+* avoid sensitive or oversized data
+
+## 4️. Use the exception in domain code
 
 ```csharp
 public Amount Add(Amount other) {
@@ -96,7 +114,7 @@ public Amount Add(Amount other) {
 
 Domain logic remains clean and expressive.
 
-## 4️. Or use it without throwing (`TryOutcome<T>`)
+## 5️. Or use it without throwing (`TryOutcome<T>`)
 
 For validation or batch scenarios:
 
@@ -124,7 +142,7 @@ Or escalate:
 var amount = result.GetOrThrow();
 ```
 
-## 5️. Generate documentation
+## 6️. Generate documentation
 
 Because factories are linked to structured documentation:
 

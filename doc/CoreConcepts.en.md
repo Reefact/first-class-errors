@@ -110,6 +110,6 @@ All based on the same source of truth: the code.
 
 ---
 
-Previous section: [When Not to Use DiagnosableExceptions](WhenNotToUseDiagnosableExceptions.en.md) | Next section: [Writing Errors Guide](WritingErrorsGuide.en.md)
+Previous section: [When Not to Use DiagnosableExceptions](WhenNotToUseDiagnosableExceptions.en.md) | Next section: [Error Context Guide](ErrorContext.en.md)
 
 ---

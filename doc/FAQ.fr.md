@@ -77,6 +77,24 @@ Parce que la documentation dans le code :
 
 Cela évite la dérive entre le code et la documentation.
 
+## ❓ Quand dois-je ajouter un `ErrorContext` à une exception ?
+
+Utilisez `ErrorContext` pour des **faits spécifiques à l’occurrence** qui améliorent le diagnostic et l’observabilité.
+
+Bons candidats :
+
+* identifiants métier utiles à l’investigation
+* valeurs ayant violé une règle
+* dates ou bornes pertinentes pour l’échec
+
+Évitez d’y mettre :
+
+* des données sensibles
+* des payloads volumineux
+* des informations déjà présentes dans la documentation stable de l’erreur
+
+Règle simple : si la donnée aide à expliquer cette occurrence dans les logs, et qu’elle est sûre à exposer, ajoutez-la.
+
 ## ❓ Quand dois-je utiliser `TryOutcome<T>` ?
 
 Utilisez-le lorsque l’échec est attendu et fait partie du flux normal :

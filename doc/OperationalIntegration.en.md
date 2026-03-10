@@ -33,11 +33,10 @@ DiagnosableExceptions are designed to integrate naturally with structured loggin
 
 Logs can include:
 
-* `ErrorCode`
-* `ShortMessage`
-* `InstanceId`
-* `OccurredAt`
-* diagnostics context
+* the error code
+* the unique instance ID
+* the occurrence timestamp
+* the error context
 
 This makes logs not only readable but also correlatable across systems.
 

@@ -84,7 +84,25 @@ Cette documentation :
 
 Il s’agit de connaissance structurée, pas d’un commentaire.
 
-## 3. Utiliser l’exception dans le code métier
+## 3. Ajouter un contexte d’erreur structuré (`ErrorContext`)
+
+Quand une information est utile pour diagnostiquer **une occurrence précise**, ajoutez-la dans le contexte.
+
+```csharp
+return new NonCompliantBankTransactionFileException(
+    Code.DateOutOfStatementPeriod,
+    $"Transaction datée du {transactionDate} hors période [{periodStart};{periodEnd}].",
+    "Date de transaction hors période.",
+    ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate));
+```
+
+Bonnes pratiques :
+
+* utilisez des clés nommées et stables (`ErrorContextKey<T>`)
+* ajoutez le contexte au niveau des factories
+* évitez les données sensibles ou trop volumineuses
+
+## 4. Utiliser l’exception dans le code métier
 
 ```csharp
 public Amount Add(Amount other) {
@@ -96,7 +114,7 @@ public Amount Add(Amount other) {
 
 La logique métier reste propre et expressive.
 
-## 4. Ou l’utiliser sans lever d’exception (`TryOutcome<T>`)
+## 5. Ou l’utiliser sans lever d’exception (`TryOutcome<T>`)
 
 Pour les scénarios de validation ou de traitement par lots :
 
@@ -124,7 +142,7 @@ Ou escalader :
 var amount = result.GetOrThrow();
 ```
 
-## 5. Générer la documentation
+## 6. Générer la documentation
 
 Comme les factories sont liées à une documentation structurée :
 

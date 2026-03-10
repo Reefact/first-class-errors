@@ -171,6 +171,6 @@ Des erreurs bien écrites ne sont pas simplement levées. Elles deviennent une p
 
 ---
 
-Section précédente: [Concepts fondamentaux](CoreConcepts.fr.md) | Section suivante: [Cas d’usage](UsagePatterns.fr.md)
+Section précédente: [Guide du contexte d’erreur](ErrorContext.fr.md) | Section suivante: [Cas d’usage](UsagePatterns.fr.md)
 
 ---

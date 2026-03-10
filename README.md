@@ -1,7 +1,7 @@
 # DiagnosableExceptions
 
 🌍 **Languages:**  
-🇬🇧 English (this file) | 🇫🇷 [Français](./docs/README.fr.md)
+🇬🇧 English (this file) | 🇫🇷 [Français](./doc/README.fr.md)
 
 ---
 
@@ -174,6 +174,7 @@ See the full documentation:
 - [Design Principles](doc/DesignPrinciples.en.md)
 - [When Not to Use DiagnosableExceptions](doc/WhenNotToUseDiagnosableExceptions.en.md)
 - [Core Concepts](doc/CoreConcepts.en.md)
+- [Error Context Guide](doc/ErrorContext.en.md)
 - [Writing Errors Guide](doc/WritingErrorsGuide.en.md)
 - [Usage Patterns](doc/UsagePatterns.en.md)
 - [Best Practices](doc/BestPractices.en.md)

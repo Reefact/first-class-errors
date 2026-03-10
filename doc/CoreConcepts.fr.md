@@ -109,6 +109,6 @@ Le tout basé sur une même source de vérité : le code.
 
 ---
 
-Section précédente: [Quand ne pas utiliser DiagnosableExceptions](WhenNotToUseDiagnosableExceptions.fr.md) | Section suivante: [Guide d’écriture des erreurs](WritingErrorsGuide.fr.md)
+Section précédente: [Quand ne pas utiliser DiagnosableExceptions](WhenNotToUseDiagnosableExceptions.fr.md) | Section suivante: [Guide du contexte d’erreur](ErrorContext.fr.md)
 
 ---

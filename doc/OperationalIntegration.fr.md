@@ -33,11 +33,10 @@ DiagnosableExceptions est conçu pour s’intégrer naturellement avec le loggin
 
 Les logs peuvent inclure :
 
-* `ErrorCode`  
-* `ShortMessage`  
-* `InstanceId`  
-* `OccurredAt`  
-* le contexte de diagnostic  
+* le code d'erreur
+* l'identifiant unique de l'erreur
+* l'horodatage de l'occurence
+* le contexte d’erreur
 
 Cela rend les logs non seulement lisibles, mais aussi corrélables entre systèmes.
 

@@ -178,6 +178,6 @@ They become part of the **shared understanding of how the system works — and f
 
 ---
 
-Previous section: [Core Concepts](CoreConcepts.en.md) | Next section: [Usage Patterns](UsagePatterns.en.md)
+Previous section: [Error Context Guide](ErrorContext.en.md) | Next section: [Usage Patterns](UsagePatterns.en.md)
 
 ---
