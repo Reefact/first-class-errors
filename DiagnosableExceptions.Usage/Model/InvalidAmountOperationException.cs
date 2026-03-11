@@ -35,11 +35,11 @@ public sealed class InvalidAmountOperationException : DomainException {
                             .WithDescription("This error occurs when trying to use multiple amounts together in an operation while they are expressed in different currencies.")
                             .WithRule("All monetary operations must involve amounts expressed in the same currency.")
                             .WithDiagnostic("Amounts were used in a monetary operation without having been converted to the same currency.",
-                                            ErrorCauseType.System,
+                                            ErrorOrigin.Internal,
                                             "Verify whether all amounts involved in the operation were converted to a common currency before being used together."
                              )
                             .AndDiagnostic("Amounts expected to be expressed in the same currency were provided with different currencies.",
-                                           ErrorCauseType.SystemOrInput,
+                                           ErrorOrigin.InternalOrExternal,
                                            "Check the currencies associated with each amount and confirm whether a common currency was expected for this operation."
                              )
                             .WithExamples(() => CurrencyMismatch(new Amount(127.33m, Currency.EUR), new Amount(57689.00m, Currency.USD)));
@@ -60,7 +60,9 @@ public sealed class InvalidAmountOperationException : DomainException {
 
         #region Static members
 
+        // ReSharper disable MemberHidesStaticFromOuterClass
         public static readonly ErrorCode CurrencyMismatch = ErrorCode.Create("AMOUNT_CURRENCY_MISMATCH");
+        // ReSharper restore MemberHidesStaticFromOuterClass
 
         #endregion
 

@@ -85,7 +85,7 @@ public sealed class ErrorDiagnostic {
     ///         information.
     ///     </para>
     /// </remarks>
-    public ErrorDiagnostic(string cause, ErrorCauseType type, string analysisLead) {
+    public ErrorDiagnostic(string cause, ErrorOrigin type, string analysisLead) {
         if (cause is null) { throw new ArgumentNullException(nameof(cause)); }
         if (analysisLead is null) { throw new ArgumentNullException(nameof(analysisLead)); }
         if (string.IsNullOrWhiteSpace(cause)) { throw new ArgumentException("Value cannot be empty or whitespace.", nameof(cause)); }
@@ -134,7 +134,7 @@ public sealed class ErrorDiagnostic {
     ///     This helps guide initial investigation by indicating whether the issue is more likely related to external data,
     ///     internal logic, or both.
     /// </remarks>
-    public ErrorCauseType Type { get; }
+    public ErrorOrigin Type { get; }
 
     /// <summary>
     ///     Provides a direction to explore when investigating this cause.

@@ -251,8 +251,8 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         // Setup
         ErrorDocumentationBuilder builder = new();
 
-        ErrorDiagnostic first  = new("cause-1", ErrorCauseType.Input, "lead-1");
-        ErrorDiagnostic second = new("cause-2", ErrorCauseType.System, "lead-2");
+        ErrorDiagnostic first  = new("cause-1", ErrorOrigin.External, "lead-1");
+        ErrorDiagnostic second = new("cause-2", ErrorOrigin.Internal, "lead-2");
 
         ErrorCode                      code    = ErrorCode.Create("ANY_CODE");
         Func<TestDiagnosableException> example = () => new TestDiagnosableException(code, "boom");
@@ -267,11 +267,11 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         Check.That(doc.Diagnostics).CountIs(2);
 
         Check.That(doc.Diagnostics[0].Cause).IsEqualTo("cause-1");
-        Check.That(doc.Diagnostics[0].Type).IsEqualTo(ErrorCauseType.Input);
+        Check.That(doc.Diagnostics[0].Type).IsEqualTo(ErrorOrigin.External);
         Check.That(doc.Diagnostics[0].AnalysisLead).IsEqualTo("lead-1");
 
         Check.That(doc.Diagnostics[1].Cause).IsEqualTo("cause-2");
-        Check.That(doc.Diagnostics[1].Type).IsEqualTo(ErrorCauseType.System);
+        Check.That(doc.Diagnostics[1].Type).IsEqualTo(ErrorOrigin.Internal);
         Check.That(doc.Diagnostics[1].AnalysisLead).IsEqualTo("lead-2");
     }
 
@@ -285,8 +285,8 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
 
         // Exercise
         ErrorDocumentation doc = builder
-                                .AndDiagnostic("cause-1", ErrorCauseType.SystemOrInput, "lead-1")
-                                .AndDiagnostic("cause-2", ErrorCauseType.System, "lead-2")
+                                .AndDiagnostic("cause-1", ErrorOrigin.InternalOrExternal, "lead-1")
+                                .AndDiagnostic("cause-2", ErrorOrigin.Internal, "lead-2")
                                 .WithExamples(example);
 
         // Verify
@@ -384,7 +384,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
 
         // Exercise
         ErrorDocumentation doc = stage
-                                .WithDiagnostic("cause", ErrorCauseType.System, "lead")
+                                .WithDiagnostic("cause", ErrorOrigin.Internal, "lead")
                                 .WithExamples(example);
 
         // Verify

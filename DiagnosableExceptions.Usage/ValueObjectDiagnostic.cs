@@ -21,23 +21,23 @@ internal static class ValueObjectDiagnostic {
     /// </remarks>
     public static readonly ErrorDiagnostic[] Diagnostic = [
         new("The value entered manually by a user is invalid.",
-            ErrorCauseType.Input,
+            ErrorOrigin.External,
             "Verify the value entered by the user and assess its compliance with domain rules."
         ),
         new("The value received from an external system (API, message, etc.) is invalid.",
-            ErrorCauseType.Input,
+            ErrorOrigin.External,
             "Check the data provided by the upstream system and evaluate its validity against domain rules."
         ),
         new("The value was loaded from corrupted or outdated persisted data.",
-            ErrorCauseType.Input,
+            ErrorOrigin.External,
             "Examine the persisted data source to determine whether stored values comply with current domain rules."
         ),
         new("The value was computed internally without using domain-safe methods.",
-            ErrorCauseType.System,
+            ErrorOrigin.Internal,
             "Inspect the internal computation logic to confirm that domain invariants are preserved."
         ),
         new("The value originates from system configuration or defaults that are incorrect or outdated.",
-            ErrorCauseType.Input,
+            ErrorOrigin.External,
             "Review the relevant configuration or default parameters to assess their compliance with domain rules."
         )
     ];

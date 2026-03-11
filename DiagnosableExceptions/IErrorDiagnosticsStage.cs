@@ -44,7 +44,7 @@ public interface IErrorDiagnosticsStage {
     ///         alternative causes.
     ///     </para>
     /// </remarks>
-    IErrorExamplesOrDiagnosticsStage WithDiagnostic(string cause, ErrorCauseType type, string analysisLead);
+    IErrorExamplesOrDiagnosticsStage WithDiagnostic(string cause, ErrorOrigin type, string analysisLead);
 
     /// <summary>
     ///     Explicitly indicates that no diagnostic scenarios are provided for this error.

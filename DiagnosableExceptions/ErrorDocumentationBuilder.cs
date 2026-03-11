@@ -98,7 +98,7 @@ internal sealed class ErrorDocumentationBuilder :
     }
 
     /// <inheritdoc />
-    public IErrorExamplesOrDiagnosticsStage AndDiagnostic(string cause, ErrorCauseType type, string analysisLead) {
+    public IErrorExamplesOrDiagnosticsStage AndDiagnostic(string cause, ErrorOrigin type, string analysisLead) {
         _diagnostics.Add(new ErrorDiagnostic(cause, type, analysisLead));
 
         return this;
@@ -141,7 +141,7 @@ internal sealed class ErrorDocumentationBuilder :
     }
 
     /// <inheritdoc />
-    IErrorExamplesOrDiagnosticsStage IErrorDiagnosticsStage.WithDiagnostic(string cause, ErrorCauseType type, string analysisLead) {
+    IErrorExamplesOrDiagnosticsStage IErrorDiagnosticsStage.WithDiagnostic(string cause, ErrorOrigin type, string analysisLead) {
         _diagnostics.Add(new ErrorDiagnostic(cause, type, analysisLead));
 
         return this;

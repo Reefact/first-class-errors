@@ -35,7 +35,7 @@ public interface IErrorExamplesOrDiagnosticsStage {
     ///         alternative causes.
     ///     </para>
     /// </remarks>
-    IErrorExamplesOrDiagnosticsStage AndDiagnostic(string cause, ErrorCauseType type, string analysisLead);
+    IErrorExamplesOrDiagnosticsStage AndDiagnostic(string cause, ErrorOrigin type, string analysisLead);
 
     /// <summary>
     ///     Adds one or more example exception instances illustrating how this error may appear at runtime.

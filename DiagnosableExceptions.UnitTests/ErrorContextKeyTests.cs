@@ -139,6 +139,7 @@ public class ErrorContextKeyTests : IDisposable {
         ErrorContextKey<string> key = ErrorContextKey.Create<string>("K");
 
         // Exercise
+        // ReSharper disable once SuspiciousTypeConversion.Global
         bool result = key.Equals("K");
 
         // Verify

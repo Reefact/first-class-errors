@@ -171,6 +171,7 @@ public class ErrorCodeTests : IDisposable {
         ErrorCode errorCode = ErrorCode.Create("TEST");
 
         // Exercise
+        // ReSharper disable once SuspiciousTypeConversion.Global
         bool result = errorCode.Equals("TEST");
 
         // Verify
