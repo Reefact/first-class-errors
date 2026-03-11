@@ -22,9 +22,9 @@
 ///         Instead, each diagnostic expresses:
 ///     </para>
 ///     <list type="bullet">
-///         <item>A <see cref="Cause" /> — a plausible state of the world or system that could explain the error</item>
-///         <item>A <see cref="Type" /> — a classification of the origin of the problem</item>
-///         <item>An <see cref="AnalysisLead" /> — a direction to explore during investigation</item>
+///         <item>A <see cref="PossibleCause" /> — a plausible state of the world or system that could explain the error</item>
+///         <item>A <see cref="Origin" /> — a classification of the origin of the problem</item>
+///         <item>An <see cref="AnalysisHint" /> — a direction to explore during investigation</item>
 ///     </list>
 ///     <para>
 ///         This structure ensures that errors remain understandable and actionable
@@ -91,15 +91,15 @@ public sealed class ErrorDiagnostic {
         if (string.IsNullOrWhiteSpace(cause)) { throw new ArgumentException("Value cannot be empty or whitespace.", nameof(cause)); }
         if (string.IsNullOrWhiteSpace(analysisLead)) { throw new ArgumentException("Value cannot be empty or whitespace.", nameof(analysisLead)); }
 
-        Cause        = cause.Trim();
-        Type         = type;
-        AnalysisLead = analysisLead.Trim();
+        PossibleCause = cause.Trim();
+        Origin        = type;
+        AnalysisHint  = analysisLead.Trim();
     }
 
     #endregion
 
     /// <summary>
-    ///     Describes a plausible cause that could have led to the error.
+    ///     Describes a possible cause that could have led to the error.
     /// </summary>
     /// <remarks>
     ///     <para>
@@ -125,7 +125,7 @@ public sealed class ErrorDiagnostic {
     ///         A cause should remain meaningful to someone who does not know the internal codebase.
     ///     </para>
     /// </remarks>
-    public string Cause { get; }
+    public string PossibleCause { get; }
 
     /// <summary>
     ///     Classifies where the problem most likely originates.
@@ -134,7 +134,7 @@ public sealed class ErrorDiagnostic {
     ///     This helps guide initial investigation by indicating whether the issue is more likely related to external data,
     ///     internal logic, or both.
     /// </remarks>
-    public ErrorOrigin Type { get; }
+    public ErrorOrigin Origin { get; }
 
     /// <summary>
     ///     Provides a direction to explore when investigating this cause.
@@ -165,6 +165,6 @@ public sealed class ErrorDiagnostic {
     ///         The analysis lead should remain valid even if organizational processes change.
     ///     </para>
     /// </remarks>
-    public string AnalysisLead { get; }
+    public string AnalysisHint { get; }
 
 }

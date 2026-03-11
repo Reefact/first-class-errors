@@ -266,13 +266,13 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         Check.That(doc.Diagnostics).IsNotNull();
         Check.That(doc.Diagnostics).CountIs(2);
 
-        Check.That(doc.Diagnostics[0].Cause).IsEqualTo("cause-1");
-        Check.That(doc.Diagnostics[0].Type).IsEqualTo(ErrorOrigin.External);
-        Check.That(doc.Diagnostics[0].AnalysisLead).IsEqualTo("lead-1");
+        Check.That(doc.Diagnostics[0].PossibleCause).IsEqualTo("cause-1");
+        Check.That(doc.Diagnostics[0].Origin).IsEqualTo(ErrorOrigin.External);
+        Check.That(doc.Diagnostics[0].AnalysisHint).IsEqualTo("lead-1");
 
-        Check.That(doc.Diagnostics[1].Cause).IsEqualTo("cause-2");
-        Check.That(doc.Diagnostics[1].Type).IsEqualTo(ErrorOrigin.Internal);
-        Check.That(doc.Diagnostics[1].AnalysisLead).IsEqualTo("lead-2");
+        Check.That(doc.Diagnostics[1].PossibleCause).IsEqualTo("cause-2");
+        Check.That(doc.Diagnostics[1].Origin).IsEqualTo(ErrorOrigin.Internal);
+        Check.That(doc.Diagnostics[1].AnalysisHint).IsEqualTo("lead-2");
     }
 
     [Fact(DisplayName = "An error documentation builder includes diagnostics added incrementally.")]
@@ -389,7 +389,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
 
         // Verify
         Check.That(doc.Diagnostics).CountIs(1);
-        Check.That(doc.Diagnostics[0].Cause).IsEqualTo("cause");
+        Check.That(doc.Diagnostics[0].PossibleCause).IsEqualTo("cause");
     }
 
     #region Nested types

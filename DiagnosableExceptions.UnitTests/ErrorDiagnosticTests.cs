@@ -51,7 +51,7 @@ public sealed class ErrorDiagnosticTests {
         ErrorDiagnostic diagnostic = new("  Invalid input.  ", ErrorOrigin.External, StringFactory.AnyAnalysisLead());
 
         // Verify
-        Check.That(diagnostic.Cause).IsEqualTo("Invalid input.");
+        Check.That(diagnostic.PossibleCause).IsEqualTo("Invalid input.");
     }
 
     [Fact(DisplayName = "An error diagnostic normalizes the analysis lead by removing surrounding whitespace.")]
@@ -60,7 +60,7 @@ public sealed class ErrorDiagnosticTests {
         ErrorDiagnostic diagnostic = new(StringFactory.AnyCause(), ErrorOrigin.Internal, "  Inspect payload  ");
 
         // Verify
-        Check.That(diagnostic.AnalysisLead).IsEqualTo("Inspect payload");
+        Check.That(diagnostic.AnalysisHint).IsEqualTo("Inspect payload");
     }
 
     [Fact(DisplayName = "An error diagnostic is defined by a cause, a cause type, and an analysis lead.")]
@@ -69,9 +69,9 @@ public sealed class ErrorDiagnosticTests {
         ErrorDiagnostic diagnostic = new("Invalid input.", ErrorOrigin.External, "Check upstream system");
 
         // Verify
-        Check.That(diagnostic.Cause).IsEqualTo("Invalid input.");
-        Check.That(diagnostic.Type).IsEqualTo(ErrorOrigin.External);
-        Check.That(diagnostic.AnalysisLead).IsEqualTo("Check upstream system");
+        Check.That(diagnostic.PossibleCause).IsEqualTo("Invalid input.");
+        Check.That(diagnostic.Origin).IsEqualTo(ErrorOrigin.External);
+        Check.That(diagnostic.AnalysisHint).IsEqualTo("Check upstream system");
     }
 
     #region Nested types
