@@ -7,8 +7,11 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
 
+    <!-- XML documentation -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
     <!-- Version -->
-    <Version>1.0.0</Version>
+    <Version>0.1.0</Version>
 
     <!-- NuGet identity -->
     <PackageId>DiagnosableExceptions</PackageId>
