@@ -105,16 +105,6 @@ public sealed class ErrorDocumentation {
     /// </remarks>
     public Type? ErrorSource { get; set; }
 
-    /// <summary>
-    ///     Gets or sets the name of the factory method that creates the error instance.
-    /// </summary>
-    /// <remarks>
-    ///     This property is used to associate the error documentation with the specific factory method responsible for
-    ///     creating the error instance. It is particularly useful for tracing the origin of the error and understanding its
-    ///     creation context.
-    /// </remarks>
-    public string? FactoryMethodName { get; set; }
-
     /// <inheritdoc />
     public override string ToString() {
         return Code ?? string.Empty;

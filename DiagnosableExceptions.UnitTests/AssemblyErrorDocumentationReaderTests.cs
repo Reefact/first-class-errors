@@ -42,7 +42,6 @@ namespace DiagnosableExceptions.UnitTests {
 
             Check.That(amountCurrencyMismatch.Exception).IsEqualTo(typeof(InvalidAmountOperationException));
             Check.That(amountCurrencyMismatch.ErrorSource).IsEqualTo(typeof(Amount));
-            Check.That(amountCurrencyMismatch.FactoryMethodName).IsEqualTo("CurrencyMismatch");
 
             Check.That(amountCurrencyMismatch.Diagnostics).CountIs(2);
 
@@ -71,7 +70,6 @@ namespace DiagnosableExceptions.UnitTests {
 
             Check.That(bankTransactionFileDateOutOfStatementPeriod.Exception).IsEqualTo(typeof(NonCompliantBankTransactionFileException));
             Check.That(bankTransactionFileDateOutOfStatementPeriod.ErrorSource).IsEqualTo(typeof(BankTransactionFileValidator));
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.FactoryMethodName).IsEqualTo("DateOutOfStatementPeriod");
 
             Check.That(bankTransactionFileDateOutOfStatementPeriod.Diagnostics).CountIs(4);
 
@@ -106,7 +104,6 @@ namespace DiagnosableExceptions.UnitTests {
 
             Check.That(bankTransactionFileStatementTotalAmountMismatch.Exception).IsEqualTo(typeof(NonCompliantBankTransactionFileException));
             Check.That(bankTransactionFileStatementTotalAmountMismatch.ErrorSource).IsEqualTo(typeof(BankTransactionFileValidator));
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.FactoryMethodName).IsEqualTo("StatementTotalAmountMismatch");
 
             Check.That(bankTransactionFileStatementTotalAmountMismatch.Diagnostics).CountIs(4);
 
@@ -141,7 +138,6 @@ namespace DiagnosableExceptions.UnitTests {
 
             Check.That(temperatureBelowAbsoluteZero.Exception).IsEqualTo(typeof(InvalidTemperatureException));
             Check.That(temperatureBelowAbsoluteZero.ErrorSource).IsEqualTo(typeof(Temperature));
-            Check.That(temperatureBelowAbsoluteZero.FactoryMethodName).IsEqualTo("BelowAbsoluteZero");
 
             // Diagnostics
 

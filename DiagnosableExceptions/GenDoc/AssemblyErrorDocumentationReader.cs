@@ -25,6 +25,8 @@ public static class AssemblyErrorDocumentationReader {
         return assembly.GetTypes()
                        .Where(type => type is { IsClass: true, IsAbstract: false } && typeof(DiagnosableException).IsAssignableFrom(type))
                        .SelectMany(BuildFromExceptionType)
+                       .GroupBy(x => x.Code, StringComparer.OrdinalIgnoreCase)
+                       .Select(g => g.First())
                        .OrderBy(x => x.Code, StringComparer.OrdinalIgnoreCase);
     }
 
@@ -42,9 +44,8 @@ public static class AssemblyErrorDocumentationReader {
             object? documentation = documentationMethod.Invoke(null, []);
             if (documentation is not ErrorDocumentation errorDocumentation) { continue; }
 
-            errorDocumentation.Exception         = exceptionType;
-            errorDocumentation.ErrorSource       = providedType;
-            errorDocumentation.FactoryMethodName = factoryMethod.Name;
+            errorDocumentation.Exception   = exceptionType;
+            errorDocumentation.ErrorSource = providedType;
 
             yield return errorDocumentation;
         }
