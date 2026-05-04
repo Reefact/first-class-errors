@@ -8,52 +8,52 @@ using NFluent;
 
 namespace DiagnosableExceptions.UnitTests;
 
-[TestSubject(typeof(TryOutcome<>))]
+[TestSubject(typeof(Outcome<>))]
 public sealed class TryOutcomeTests {
 
     [Fact(DisplayName = "A successful outcome is marked as success.")]
     public void SuccessfulOutcomeIsMarkedAsSuccess() {
         // Exercise
-        TryOutcome<string> outcome = TryOutcome<string>.Success("ok");
+        Outcome<string> outcome = Outcome<string>.Success("ok");
 
         // Verify
         Check.That(outcome.IsSuccess).IsTrue();
         Check.That(outcome.IsFailure).IsFalse();
-        Check.That(outcome.Exception).IsNull();
+        Check.That(outcome.Error).IsNull();
     }
 
     [Fact(DisplayName = "A successful outcome exposes its value.")]
     public void SuccessfulOutcomeExposesItsValue() {
         // Exercise
-        TryOutcome<string> outcome = TryOutcome<string>.Success("ok");
+        Outcome<string> outcome = Outcome<string>.Success("ok");
 
         // Verify
-        Check.That(outcome.Value).IsEqualTo("ok");
+        Check.That(outcome.GetResultOrThrow()).IsEqualTo("ok");
     }
 
     [Fact(DisplayName = "A successful outcome can be escalated to a value.")]
     public void ASuccessfulOutcomeCanBeEscalatedToAValue() {
         // Exercise
-        TryOutcome<string> outcome = TryOutcome<string>.Success("ok");
+        Outcome<string> outcome = Outcome<string>.Success("ok");
 
         // Verify
-        Check.That(outcome.GetOrThrow()).IsEqualTo("ok");
+        Check.That(outcome.GetResultOrThrow()).IsEqualTo("ok");
     }
 
     [Fact(DisplayName = "A successful outcome cannot be created from a null value.")]
     public void SuccessfulOutcomeCannotBeCreatedFromANullValue() {
         // Exercise & verify
-        Check.ThatCode(() => TryOutcome<string>.Success(null!))
+        Check.ThatCode(() => Outcome<string>.Success(null!))
              .Throws<ArgumentNullException>();
     }
 
     [Fact(DisplayName = "A failed outcome is marked as failure.")]
     public void FailedOutcomeIsMarkedAsFailure() {
         // Setup
-        Exception exception = new InvalidOperationException("boom");
+        DomainError error = new(ErrorCode.Unspecified, "boom");
 
         // Exercise
-        TryOutcome<string> outcome = TryOutcome<string>.Failure(exception);
+        Outcome<string> outcome = Outcome<string>.Failure(error);
 
         // Verify
         Check.That(outcome.IsSuccess).IsFalse();
@@ -63,55 +63,55 @@ public sealed class TryOutcomeTests {
     [Fact(DisplayName = "A failed outcome exposes its exception.")]
     public void AFailedOutcomeExposesItsException() {
         // Setup
-        Exception exception = new InvalidOperationException("boom");
+        DomainError error = new(ErrorCode.Unspecified, "boom");
 
         // Exercise
-        TryOutcome<string> outcome = TryOutcome<string>.Failure(exception);
+        Outcome<string> outcome = Outcome<string>.Failure(error);
 
         // Verify
-        Check.That(outcome.Exception).IsSameReferenceAs(exception);
+        Check.That(outcome.Error).IsSameReferenceAs(error);
     }
 
     [Fact(DisplayName = "A failed outcome cannot be created from a null exception.")]
     public void AFailedOutcomeCannotBeCreatedFromANullException() {
         // Exercise & verify
-        Check.ThatCode(() => TryOutcome<string>.Failure(null!))
+        Check.ThatCode(() => Outcome<string>.Failure(null!))
              .ThrowsAny();
     }
 
     [Fact(DisplayName = "Accessing the value of a failed outcome throws the associated exception.")]
     public void AccessingTheValueOfAFailedOutcomeThrowsTheAssociatedException() {
         // Setup
-        Exception          exception = new InvalidOperationException("boom");
-        TryOutcome<string> outcome   = TryOutcome<string>.Failure(exception);
+        DomainError     error   = new(ErrorCode.Unspecified, "boom");
+        Outcome<string> outcome = Outcome<string>.Failure(error);
 
         // Exercise & verify
-        Check.ThatCode(() => _ = outcome.Value)
-             .Throws<InvalidOperationException>()
+        Check.ThatCode(() => _ = outcome.GetResultOrThrow())
+             .Throws<DomainException>()
              .WithMessage("boom");
     }
 
     [Fact(DisplayName = "Escalating a failed outcome throws the associated exception.")]
     public void EscalatingAFailedOutcomeThrowsTheAssociatedException() {
         // Setup
-        Exception          exception = new InvalidOperationException("boom");
-        TryOutcome<string> outcome   = TryOutcome<string>.Failure(exception);
+        DomainError     error   = new(ErrorCode.Unspecified, "boom");
+        Outcome<string> outcome = Outcome<string>.Failure(error);
 
         // Exercise & verify
-        Check.ThatCode(() => outcome.GetOrThrow())
-             .Throws<InvalidOperationException>()
+        Check.ThatCode(() => outcome.GetResultOrThrow())
+             .Throws<DomainException>()
              .WithMessage("boom");
     }
 
     [Fact(DisplayName = "A failed outcome preserves the original exception instance.")]
     public void FailedOutcomePreservesTheOriginalExceptionInstance() {
         // Setup
-        Exception          exception = new InvalidOperationException("boom");
-        TryOutcome<string> outcome   = TryOutcome<string>.Failure(exception);
+        DomainError     error   = new(ErrorCode.Unspecified, "boom");
+        Outcome<string> outcome = Outcome<string>.Failure(error);
 
         // Exercise & verify
-        Exception thrownException = Check.ThatCode(() => outcome.Value).Throws<Exception>().Value;
-        Check.That(thrownException).IsSameReferenceAs(exception);
+        DomainException thrownException = Check.ThatCode(() => outcome.GetResultOrThrow()).Throws<DomainException>().Value;
+        Check.That(thrownException.Error).IsSameReferenceAs(error);
     }
 
 }

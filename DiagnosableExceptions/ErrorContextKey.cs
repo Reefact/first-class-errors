@@ -37,11 +37,36 @@ namespace DiagnosableExceptions;
 [DebuggerDisplay("{Name}")]
 public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
 
-    #region Static members
+    #region Statics members declarations
 
     private static readonly Dictionary<string, ErrorContextKey> Registered = new(StringComparer.Ordinal);
     private static readonly object                              Lock       = new();
 
+    /// <summary>
+    ///     Represents the key used to attach the exception responsible for the failure to construct the error context
+    ///     to a <see cref="DiagnosableException" />.
+    /// </summary>
+    /// <remarks>
+    ///     This key is used to provide additional diagnostic information when an error occurs during the construction
+    ///     of an error context. The associated value is expected to be of type <see cref="Exception" />.
+    /// </remarks>
+    internal static readonly ErrorContextKey CannotBuildErrorContext = Create<Exception>("#CANNOT_BUILD_ERROR_CONTEXT", "The exception responsible for the failure to construct the error context.");
+
+    /// <summary>
+    ///     Creates a new instance of <see cref="ErrorContextKey{T}" /> with the specified name and optional description.
+    /// </summary>
+    /// <typeparam name="T">The type associated with the error context key.</typeparam>
+    /// <param name="name">The unique name of the error context key. Must not be <c>null</c>, empty, or whitespace.</param>
+    /// <param name="description">An optional description providing additional context for the error context key.</param>
+    /// <returns>A new instance of <see cref="ErrorContextKey{T}" />.</returns>
+    /// <exception cref="ArgumentException">
+    ///     Thrown when <paramref name="name" /> is <c>null</c>, empty, or consists only of
+    ///     whitespace.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when an error context key with the specified
+    ///     <paramref name="name" /> has already been registered.
+    /// </exception>
     public static ErrorContextKey<T> Create<T>(string name, string? description = null) {
         if (string.IsNullOrWhiteSpace(name)) { throw new ArgumentException("Value cannot be null or whitespace.", nameof(name)); }
 
@@ -55,6 +80,15 @@ public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
         }
     }
 
+    /// <summary>
+    ///     Retrieves a collection of all registered <see cref="ErrorContextKey" /> instances.
+    /// </summary>
+    /// <returns>
+    ///     An <see cref="IReadOnlyCollection{T}" /> containing all registered <see cref="ErrorContextKey" /> objects.
+    /// </returns>
+    /// <remarks>
+    ///     This method is thread-safe and ensures that the returned collection reflects the current state of the registry.
+    /// </remarks>
     public static IReadOnlyCollection<ErrorContextKey> GetRegisteredKeys() {
         lock (Lock) {
             return Registered.Values.ToArray();
@@ -76,15 +110,34 @@ public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
 
     #endregion
 
+    /// <summary>
+    ///     Determines whether two <see cref="ErrorContextKey" /> instances are equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="ErrorContextKey" /> to compare.</param>
+    /// <param name="right">The second <see cref="ErrorContextKey" /> to compare.</param>
+    /// <returns>
+    ///     <c>true</c> if the specified <see cref="ErrorContextKey" /> instances are equal; otherwise, <c>false</c>.
+    /// </returns>
     public static bool operator ==(ErrorContextKey? left, ErrorContextKey? right) {
         return Equals(left, right);
     }
 
+    /// <summary>
+    ///     Determines whether two specified <see cref="ErrorContextKey" /> instances are not equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="ErrorContextKey" /> to compare.</param>
+    /// <param name="right">The second <see cref="ErrorContextKey" /> to compare.</param>
+    /// <returns>
+    ///     <c>true</c> if the two <see cref="ErrorContextKey" /> instances are not equal; otherwise, <c>false</c>.
+    /// </returns>
+    /// <remarks>
+    ///     This operator uses the <see cref="object.Equals(object?)" /> method to determine inequality.
+    /// </remarks>
     public static bool operator !=(ErrorContextKey? left, ErrorContextKey? right) {
         return !Equals(left, right);
     }
 
-    #region Constructors & Destructor
+    #region Constructors declarations
 
     private protected ErrorContextKey(string name, string? description, Type valueType) {
         Name        = name;
@@ -137,6 +190,8 @@ public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
     /// </remarks>
     public Type ValueType { get; }
 
+    /// <inheritdoc />
+    /// >
     public bool Equals(ErrorContextKey? other) {
         if (other is null) { return false; }
         if (ReferenceEquals(this, other)) { return true; }
@@ -144,14 +199,20 @@ public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
         return Name == other.Name;
     }
 
+    /// <inheritdoc />
+    /// >
     public override bool Equals(object? obj) {
         return obj is ErrorContextKey other && Equals(other);
     }
 
+    /// <inheritdoc />
+    /// >
     public override int GetHashCode() {
         return StringComparer.Ordinal.GetHashCode(Name);
     }
 
+    /// <inheritdoc />
+    /// >
     public override string ToString() {
         return Name;
     }
@@ -188,7 +249,7 @@ public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
 /// </example>
 public sealed class ErrorContextKey<T> : ErrorContextKey {
 
-    #region Constructors & Destructor
+    #region Constructors declarations
 
     internal ErrorContextKey(string name, string? description) : base(name, description, typeof(T)) { }
 

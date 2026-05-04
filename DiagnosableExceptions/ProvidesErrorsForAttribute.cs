@@ -1,59 +1,42 @@
 ﻿namespace DiagnosableExceptions;
 
 /// <summary>
-///     Specifies the type that an exception class is associated with.
+///     Specifies that the attributed class provides error definitions for a specific source.
 /// </summary>
 /// <remarks>
-///     This attribute is used to establish a relationship between an exception class and a specific type,
-///     typically to indicate that the exception is related to operations or rules concerning that type.
+///     This attribute is used to associate a class with a source, typically representing a domain model or
+///     component, for which the class provides error definitions or factory methods.
 /// </remarks>
-/// <example>
-///     The following example demonstrates how to use the <see cref="ProvidesErrorsForAttribute" />:
-///     <code>
-/// [ExceptionOf(typeof(Temperature))]
-/// public class InvalidTemperatureException : DomainException {
-///     // Exception implementation
-/// }
-/// </code>
-///     In this example, the <c>InvalidTemperatureException</c> is associated with the <c>Temperature</c> type.
-/// </example>
 [AttributeUsage(AttributeTargets.Class)]
 public sealed class ProvidesErrorsForAttribute : Attribute {
 
-    #region Constructors & Destructor
+    #region Constructors declarations
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ProvidesErrorsForAttribute" /> class with the specified owner type.
+    ///     Initializes a new instance of the <see cref="ProvidesErrorsForAttribute" /> class with the specified source.
     /// </summary>
-    /// <param name="ownerType">
-    ///     The type that the exception class is associated with. This parameter cannot be <c>null</c>.
+    /// <param name="source">
+    ///     The name of the source (e.g., a domain model or component) for which the attributed class provides error
+    ///     definitions.
     /// </param>
     /// <exception cref="ArgumentNullException">
-    ///     Thrown when the <paramref name="ownerType" /> is <c>null</c>.
+    ///     Thrown when the <paramref name="source" /> is <c>null</c>.
     /// </exception>
-    /// <remarks>
-    ///     This constructor establishes the relationship between an exception class and a specific type,
-    ///     typically to indicate that the exception is related to operations or rules concerning that type.
-    /// </remarks>
-    public ProvidesErrorsForAttribute(Type ownerType) {
-        if (ownerType is null) { throw new ArgumentNullException(nameof(ownerType)); }
+    public ProvidesErrorsForAttribute(string source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
 
-        OwnerType = ownerType;
+        Source = source;
     }
 
     #endregion
 
     /// <summary>
-    ///     Gets the type that the exception class is associated with.
+    ///     Gets the source associated with the attributed class that provides error definitions.
     /// </summary>
-    /// <value>
-    ///     The type that the exception class is related to. This property is set during the initialization
-    ///     of the <see cref="ProvidesErrorsForAttribute" /> and cannot be <c>null</c>.
-    /// </value>
     /// <remarks>
-    ///     This property provides access to the type that is associated with the exception class,
-    ///     typically used to indicate that the exception is related to operations or rules concerning that type.
+    ///     This property represents the specific source, typically a domain model or component,
+    ///     for which the attributed class defines errors or provides error factory methods.
     /// </remarks>
-    public Type OwnerType { get; }
+    public string Source { get; }
 
 }

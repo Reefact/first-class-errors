@@ -3,7 +3,6 @@
 using System.Reflection;
 
 using DiagnosableExceptions.GenDoc;
-using DiagnosableExceptions.Usage.Infrastructure.Adapters;
 using DiagnosableExceptions.Usage.Model;
 
 using NFluent;
@@ -39,9 +38,7 @@ namespace DiagnosableExceptions.UnitTests {
             Check.That(amountCurrencyMismatch.Title).IsEqualTo("Amount currency mismatch");
             Check.That(amountCurrencyMismatch.Explanation).IsEqualTo("This error occurs when trying to use multiple amounts together in an operation while they are expressed in different currencies.");
             Check.That(amountCurrencyMismatch.BusinessRule).IsEqualTo("All monetary operations must involve amounts expressed in the same currency.");
-
-            Check.That(amountCurrencyMismatch.Exception).IsEqualTo(typeof(InvalidAmountOperationException));
-            Check.That(amountCurrencyMismatch.ErrorSource).IsEqualTo(typeof(Amount));
+            Check.That(amountCurrencyMismatch.Source).IsEqualTo("Amount");
 
             Check.That(amountCurrencyMismatch.Diagnostics).CountIs(2);
 
@@ -67,9 +64,7 @@ namespace DiagnosableExceptions.UnitTests {
             Check.That(bankTransactionFileDateOutOfStatementPeriod.Title).IsEqualTo("Transaction date outside statement period");
             Check.That(bankTransactionFileDateOutOfStatementPeriod.Explanation).IsEqualTo("This error occurs when trying to validate a bank statement file that contains one or more transactions dated outside the statement period.");
             Check.That(bankTransactionFileDateOutOfStatementPeriod.BusinessRule).IsEqualTo("All transactions must occur within the statement period.");
-
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Exception).IsEqualTo(typeof(NonCompliantBankTransactionFileException));
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.ErrorSource).IsEqualTo(typeof(BankTransactionFileValidator));
+            Check.That(bankTransactionFileDateOutOfStatementPeriod.Source).IsEqualTo("BankTransactionFileValidator");
 
             Check.That(bankTransactionFileDateOutOfStatementPeriod.Diagnostics).CountIs(4);
 
@@ -101,9 +96,7 @@ namespace DiagnosableExceptions.UnitTests {
             Check.That(bankTransactionFileStatementTotalAmountMismatch.Title).IsEqualTo("Statement total amount mismatch");
             Check.That(bankTransactionFileStatementTotalAmountMismatch.Explanation).IsEqualTo("This error occurs when trying to validate a bank statement file whose declared total amount does not match the sum of the individual transaction amounts.");
             Check.That(bankTransactionFileStatementTotalAmountMismatch.BusinessRule).IsEqualTo("The statement total amount must equal the sum of all transaction amounts included in the statement.");
-
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Exception).IsEqualTo(typeof(NonCompliantBankTransactionFileException));
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.ErrorSource).IsEqualTo(typeof(BankTransactionFileValidator));
+            Check.That(bankTransactionFileStatementTotalAmountMismatch.Source).IsEqualTo("BankTransactionFileValidator");
 
             Check.That(bankTransactionFileStatementTotalAmountMismatch.Diagnostics).CountIs(4);
 
@@ -135,9 +128,7 @@ namespace DiagnosableExceptions.UnitTests {
             Check.That(temperatureBelowAbsoluteZero.Title).IsEqualTo("Temperature below absolute zero");
             Check.That(temperatureBelowAbsoluteZero.Explanation).IsEqualTo("This error occurs when trying to instantiate a temperature with a value that is below absolute zero.");
             Check.That(temperatureBelowAbsoluteZero.BusinessRule).IsEqualTo("Temperature cannot go below absolute zero because absolute zero is the point where particles have minimum possible energy.");
-
-            Check.That(temperatureBelowAbsoluteZero.Exception).IsEqualTo(typeof(InvalidTemperatureException));
-            Check.That(temperatureBelowAbsoluteZero.ErrorSource).IsEqualTo(typeof(Temperature));
+            Check.That(temperatureBelowAbsoluteZero.Source).IsEqualTo("Temperature");
 
             // Diagnostics
 

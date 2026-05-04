@@ -13,7 +13,7 @@ namespace DiagnosableExceptions.UnitTests;
 [TestSubject(typeof(ErrorDocumentationBuilder))]
 public sealed class ErrorDocumentationBuilderTests : IDisposable {
 
-    #region Constructors & Destructor
+    #region Constructors declarations
 
     public ErrorDocumentationBuilderTests() {
         ErrorContextKey.ResetForTests();
@@ -64,7 +64,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
                                 .WithDescription(StringFactory.AnyDescription())
                                 .WithoutRule()
                                 .WithoutDiagnostic()
-                                .WithExamples(() => new TestDiagnosableException(anyErrorCode, anyErrorLongMessage));
+                                .WithExamples(() => new DomainError(anyErrorCode, anyErrorLongMessage));
 
         // Verify
         Check.That(doc.Title).IsEqualTo("My title");
@@ -94,7 +94,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
                                 .WithDescription("  Explanation  ")
                                 .WithoutRule()
                                 .WithoutDiagnostic()
-                                .WithExamples(() => new TestDiagnosableException(anyErrorCode, anyErrorLongMessage));
+                                .WithExamples(() => new DomainError(anyErrorCode, anyErrorLongMessage));
 
         // Verify
         Check.That(doc.Explanation).IsEqualTo("Explanation");
@@ -125,7 +125,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
                                 .WithDescription(anyExplanation)
                                 .WithRule("  Rule  ")
                                 .WithoutDiagnostic()
-                                .WithExamples(() => new TestDiagnosableException(anyErrorCode, anyErrorLongMessage));
+                                .WithExamples(() => new DomainError(anyErrorCode, anyErrorLongMessage));
 
         // Verify
         Check.That(doc.BusinessRule).IsEqualTo("Rule");
@@ -146,7 +146,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
                                 .WithDescription(anyExplanation)
                                 .WithoutRule()
                                 .WithoutDiagnostic()
-                                .WithExamples(() => new TestDiagnosableException(anyErrorCode, anyErrorLongMessage));
+                                .WithExamples(() => new DomainError(anyErrorCode, anyErrorLongMessage));
 
         // Verify
         Check.That(doc.BusinessRule).IsNull();
@@ -160,7 +160,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         ErrorDocumentationBuilder builder = new();
 
         // Exercise & verify
-        Check.ThatCode(() => builder.WithExamples<TestDiagnosableException>(null!))
+        Check.ThatCode(() => builder.WithExamples<DomainError>(null!))
              .Throws<ArgumentNullException>();
     }
 
@@ -170,7 +170,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         ErrorDocumentationBuilder builder = new();
 
         // Exercise & verify
-        Check.ThatCode(() => builder.WithExamples<TestDiagnosableException>())
+        Check.ThatCode(() => builder.WithExamples<DomainError>())
              .Throws<ErrorDocumentationException>()
              .WithMessage("At least one example factory must be provided to build documentation examples.");
     }
@@ -181,15 +181,15 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         ErrorDocumentationBuilder builder = new();
 
         // Exercise & verify
-        Check.ThatCode(() => builder.WithExamples<TestDiagnosableException>(null!))
+        Check.ThatCode(() => builder.WithExamples<DomainError>(null!))
              .Throws<ArgumentNullException>();
     }
 
     [Fact(DisplayName = "An error documentation builder rejects an example factory that throws.")]
     public void AnErrorDocumentationBuilderRejectsAnExampleFactoryThatThrows() {
         // Setup
-        ErrorDocumentationBuilder      builder = new();
-        Func<TestDiagnosableException> factory = () => throw new InvalidOperationException("boom");
+        ErrorDocumentationBuilder builder = new();
+        Func<DomainError>         factory = () => throw new InvalidOperationException("boom");
 
         // Exercise & verify
         Check.ThatCode(() => builder.WithExamples(factory))
@@ -200,8 +200,8 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
     [Fact(DisplayName = "An error documentation builder rejects a null example.")]
     public void AnErrorDocumentationBuilderRejectsANullExample() {
         // Setup
-        ErrorDocumentationBuilder      builder = new();
-        Func<TestDiagnosableException> factory = () => null!;
+        ErrorDocumentationBuilder builder = new();
+        Func<DomainError>         factory = () => null!;
 
         // Exercise & verify
         Check.ThatCode(() => builder.WithExamples(factory))
@@ -217,8 +217,8 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         ErrorCode codeA = ErrorCode.Create("CODE_A");
         ErrorCode codeB = ErrorCode.Create("CODE_B");
 
-        Func<TestDiagnosableException> first  = () => new TestDiagnosableException(codeA, "m1");
-        Func<TestDiagnosableException> second = () => new TestDiagnosableException(codeB, "m2");
+        Func<DomainError> first  = () => new DomainError(codeA, "m1");
+        Func<DomainError> second = () => new DomainError(codeB, "m2");
 
         // Exercise & verify
         Check.ThatCode(() => builder.WithExamples(first, second))
@@ -232,7 +232,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         ErrorDocumentationBuilder builder = new();
         ErrorCode                 code    = ErrorCode.Create("TEMPERATURE_BELOW_ABSOLUTE_ZERO");
 
-        Func<TestDiagnosableException> example = () => new TestDiagnosableException(code, "boom", "short");
+        Func<DomainError> example = () => new DomainError(code, "boom", "short");
 
         // Exercise
         ErrorDocumentation doc = builder.WithExamples(example);
@@ -254,8 +254,8 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         ErrorDiagnostic first  = new("cause-1", ErrorOrigin.External, "lead-1");
         ErrorDiagnostic second = new("cause-2", ErrorOrigin.Internal, "lead-2");
 
-        ErrorCode                      code    = ErrorCode.Create("ANY_CODE");
-        Func<TestDiagnosableException> example = () => new TestDiagnosableException(code, "boom");
+        ErrorCode         code    = ErrorCode.Create("ANY_CODE");
+        Func<DomainError> example = () => new DomainError(code, "boom");
 
         // Exercise
         ErrorDocumentation doc = builder
@@ -280,8 +280,8 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         // Setup
         ErrorDocumentationBuilder builder = new();
 
-        ErrorCode                      code    = ErrorCode.Create("ANY_CODE");
-        Func<TestDiagnosableException> example = () => new TestDiagnosableException(code, "boom");
+        ErrorCode         code    = ErrorCode.Create("ANY_CODE");
+        Func<DomainError> example = () => new DomainError(code, "boom");
 
         // Exercise
         ErrorDocumentation doc = builder
@@ -302,7 +302,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
 
         ErrorCode code = ErrorCode.Create("ANY_CODE");
 
-        Func<TestDiagnosableException> ex1 = () => new TestDiagnosableException(
+        Func<DomainError> ex1 = () => new DomainError(
             code,
             "m1",
             configureContext: ctx => {
@@ -310,7 +310,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
                 ctx.Add(correlationId, "c-1");
             });
 
-        Func<TestDiagnosableException> ex2 = () => new TestDiagnosableException(
+        Func<DomainError> ex2 = () => new DomainError(
             code,
             "m2",
             configureContext: ctx => {
@@ -343,12 +343,12 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         ErrorContextKey<string> optionalInfo = ErrorContextKey.Create<string>("OptionalInfo", "Optional info.");
         ErrorCode               code         = ErrorCode.Create("ANY_CODE");
 
-        Func<TestDiagnosableException> ex1 = () => new TestDiagnosableException(
+        Func<DomainError> ex1 = () => new DomainError(
             code,
             "m1",
             configureContext: ctx => ctx.Add(optionalInfo, null));
 
-        Func<TestDiagnosableException> ex2 = () => new TestDiagnosableException(
+        Func<DomainError> ex2 = () => new DomainError(
             code,
             "m2",
             configureContext: ctx => ctx.Add(optionalInfo, "x"));
@@ -379,8 +379,8 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         IErrorDiagnosticsStage    stage   = builder;
 
         ErrorCode code = ErrorCode.Create("ANY_CODE");
-        Func<TestDiagnosableException> example =
-            () => new TestDiagnosableException(code, "boom");
+        Func<DomainError> example =
+            () => new DomainError(code, "boom");
 
         // Exercise
         ErrorDocumentation doc = stage
@@ -392,25 +392,11 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         Check.That(doc.Diagnostics[0].PossibleCause).IsEqualTo("cause");
     }
 
-    #region Nested types
-
-    private sealed class TestDiagnosableException : DiagnosableException {
-
-        #region Constructors & Destructor
-
-        public TestDiagnosableException(ErrorCode                    errorCode,
-                                        string                       errorMessage,
-                                        string?                      shortMessage     = null,
-                                        Action<ErrorContextBuilder>? configureContext = null)
-            : base(errorCode, errorMessage, shortMessage, configureContext) { }
-
-        #endregion
-
-    }
+    #region Nested types declarations
 
     private static class StringFactory {
 
-        #region Static members
+        #region Statics members declarations
 
         public static string AnyDescription() {
             return "any description";

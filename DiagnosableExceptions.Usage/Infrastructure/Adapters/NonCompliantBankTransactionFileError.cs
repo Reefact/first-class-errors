@@ -7,25 +7,28 @@ using DiagnosableExceptions.Usage.Utils;
 
 namespace DiagnosableExceptions.Usage.Infrastructure.Adapters;
 
-[ProvidesErrorsFor(typeof(BankTransactionFileValidator))]
-public sealed class NonCompliantBankTransactionFileException : PrimaryAdapterException {
+[ProvidesErrorsFor(nameof(BankTransactionFileValidator))]
+public static class NonCompliantBankTransactionFileError {
 
-    #region Static members
+    #region Statics members declarations
 
     [DocumentedBy(nameof(TransactionDateOutOfStatementPeriodDocumentation))]
-    internal static NonCompliantBankTransactionFileException DateOutOfStatementPeriod(DateOnly periodStart, DateOnly periodEnd, DateOnly transactionDate) {
-        return new NonCompliantBankTransactionFileException(
-            Code.DateOutOfStatementPeriod,
-            DocumentationFormatter.Format("Transaction dated {0} is outside the statement period [{1};{2}].", transactionDate, periodStart, periodEnd),
-            "Transaction date is outside the statement period.",
-            ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate));
+    public static InfrastructureError DateOutOfStatementPeriod(DateOnly periodStart, DateOnly periodEnd, DateOnly transactionDate) {
+        return new InfrastructureError(Code.DateOutOfStatementPeriod,
+                                       DocumentationFormatter.Format("Transaction dated {0} is outside the statement period [{1};{2}].", transactionDate, periodStart, periodEnd),
+                                       InteractionDirection.Incoming,
+                                       Transience.NonTransient,
+                                       "Transaction date is outside the statement period.",
+                                       ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate));
     }
 
     [DocumentedBy(nameof(StatementTotalAmountMismatchDocumentation))]
-    internal static NonCompliantBankTransactionFileException StatementTotalAmountMismatch(Amount declaredTotalAmount, Amount computedTotalAmount) {
-        return new NonCompliantBankTransactionFileException(
+    public static InfrastructureError StatementTotalAmountMismatch(Amount declaredTotalAmount, Amount computedTotalAmount) {
+        return new InfrastructureError(
             Code.StatementTotalAmountMismatch,
             DocumentationFormatter.Format("The declared statement total amount ({0}) does not match the computed total amount from transactions ({1}).", declaredTotalAmount, computedTotalAmount),
+            InteractionDirection.Incoming,
+            Transience.NonTransient,
             "Statement total amount mismatch.");
     }
 
@@ -73,14 +76,7 @@ public sealed class NonCompliantBankTransactionFileException : PrimaryAdapterExc
 
     #endregion
 
-    #region Constructors & Destructor
-
-    /// <inheritdoc />
-    private NonCompliantBankTransactionFileException(ErrorCode errorCode, string errorMessage, string shortMessage, Action<ErrorContextBuilder>? configureContext = null) : base(errorCode, errorMessage, shortMessage, configureContext: configureContext) { }
-
-    #endregion
-
-    #region Nested types
+    #region Nested types declarations
 
     private static class Code {
 

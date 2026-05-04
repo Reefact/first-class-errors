@@ -11,10 +11,10 @@ using NFluent;
 namespace DiagnosableExceptions.UnitTests;
 
 [Collection("SmartEnumSideEffects")]
-[TestSubject(typeof(DiagnosableException))]
+[TestSubject(typeof(Error))]
 public sealed class DiagnosableExceptionTests : IDisposable {
 
-    #region Constructors & Destructor
+    #region Constructors declarations
 
     public DiagnosableExceptionTests() {
         ErrorContextKey.ResetForTests();
@@ -32,30 +32,28 @@ public sealed class DiagnosableExceptionTests : IDisposable {
     [Fact(DisplayName = "A diagnosable exception has a unique instance identifier.")]
     public void ADiagnosableExceptionHasAUniqueInstanceIdentifier() {
         // Setup
-        ErrorCode                anyErrorCode    = ErrorCodeFactory.CreateAny();
-        string                   anyErrorMessage = ExceptionMessageFactory.CreateAnyMessage();
-        TestDiagnosableException first           = new(anyErrorCode, anyErrorMessage);
-        TestDiagnosableException second          = new(anyErrorCode, anyErrorMessage);
+        ErrorCode anyErrorCode    = ErrorCodeFactory.CreateAny();
+        string    anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
 
         // Exercise
-        Guid firstId  = first.InstanceId;
-        Guid secondId = second.InstanceId;
+        DomainError firstError  = new(anyErrorCode, anyErrorMessage);
+        DomainError secondError = new(anyErrorCode, anyErrorMessage);
 
         // Verify
-        Check.That(firstId).IsNotEqualTo(Guid.Empty);
-        Check.That(secondId).IsNotEqualTo(Guid.Empty);
-        Check.That(firstId).IsNotEqualTo(secondId);
+        Check.That(firstError.InstanceId).IsNotEqualTo(Guid.Empty);
+        Check.That(secondError.InstanceId).IsNotEqualTo(Guid.Empty);
+        Check.That(firstError.InstanceId).IsNotEqualTo(secondError.InstanceId);
     }
 
     [Fact(DisplayName = "A diagnosable exception captures its occurrence time in UTC.")]
     public void ADiagnosableExceptionCapturesItsOccurrenceTimeInUtc() {
         // Setup
         ErrorCode      anyErrorCode    = ErrorCodeFactory.CreateAny();
-        string         anyErrorMessage = ExceptionMessageFactory.CreateAnyMessage();
+        string         anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
         DateTimeOffset before          = DateTimeOffset.UtcNow;
 
         // Exercise
-        TestDiagnosableException exception = new(anyErrorCode, anyErrorMessage);
+        DomainError error = new(anyErrorCode, anyErrorMessage);
 
         // Verify
         DateTimeOffset after = DateTimeOffset.UtcNow;
@@ -65,62 +63,62 @@ public sealed class DiagnosableExceptionTests : IDisposable {
         // occurs within the same clock tick as the 'before' or 'after' capture,
         // the values may be equal. The invariant we test is that OccurredAt was
         // captured during construction, not that it is strictly greater.
-        Check.That(exception.OccurredAt >= before).IsTrue();
-        Check.That(exception.OccurredAt <= after).IsTrue();
+        Check.That(error.OccurredAt >= before).IsTrue();
+        Check.That(error.OccurredAt <= after).IsTrue();
     }
 
     [Fact(DisplayName = "A diagnosable exception preserves the provided error code.")]
     public void ADiagnosableExceptionPreservesTheProvidedErrorCode() {
         // Setup
-        string    anyErrorMessage              = ExceptionMessageFactory.CreateAnyMessage();
+        string    anyErrorMessage              = ErrorMessageFactory.CreateAnyMessage();
         ErrorCode temperatureBelowAbsoluteZero = ErrorCode.Create("TEMPERATURE_BELOW_ABSOLUTE_ZERO");
 
         // Exercise
-        TestDiagnosableException exception = new(temperatureBelowAbsoluteZero, anyErrorMessage);
+        DomainError error = new(temperatureBelowAbsoluteZero, anyErrorMessage);
 
         // Verify
-        Check.That(exception.ErrorCode).IsEqualTo(temperatureBelowAbsoluteZero);
+        Check.That(error.Code).IsEqualTo(temperatureBelowAbsoluteZero);
     }
 
     [Fact(DisplayName = "A diagnosable exception preserves the provided short message.")]
     public void ADiagnosableExceptionPreservesTheProvidedShortMessage() {
         // Exercise
-        string                   anyErrorMessage = ExceptionMessageFactory.CreateAnyMessage();
-        ErrorCode                anyErrorCode    = ErrorCodeFactory.CreateAny();
-        TestDiagnosableException exception       = new(anyErrorCode, anyErrorMessage, "short");
+        string              anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
+        ErrorCode           anyErrorCode    = ErrorCodeFactory.CreateAny();
+        InfrastructureError error           = new(anyErrorCode, anyErrorMessage, InteractionDirection.Incoming, Transience.NonTransient, "short");
 
         // Verify
-        Check.That(exception.ShortMessage).IsEqualTo("short");
+        Check.That(error.ShortMessage).IsEqualTo("short");
     }
 
     [Fact(DisplayName = "A diagnosable exception has an empty context when no context is provided.")]
     public void ADiagnosableExceptionHasAnEmptyContextWhenNoContextIsProvided() {
         // Exercise
-        string                   anyErrorMessage = ExceptionMessageFactory.CreateAnyMessage();
-        ErrorCode                anyErrorCode    = ErrorCodeFactory.CreateAny();
-        TestDiagnosableException exception       = new(anyErrorCode, anyErrorMessage);
+        string              anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
+        ErrorCode           anyErrorCode    = ErrorCodeFactory.CreateAny();
+        InfrastructureError error           = new(anyErrorCode, anyErrorMessage, InteractionDirection.Outgoing, Transience.Transient);
 
         // Verify
-        Check.That(exception.Context).IsNotNull();
-        Check.That(exception.Context.IsEmpty).IsTrue();
-        Check.That(exception.Context.Values).CountIs(0);
+        Check.That(error.Context).IsNotNull();
+        Check.That(error.Context.IsEmpty).IsTrue();
+        Check.That(error.Context.Values).CountIs(0);
     }
 
     [Fact(DisplayName = "A diagnosable exception includes the provided context entries.")]
     public void ADiagnosableExceptionIncludesTheProvidedContextEntries() {
         // Setup
-        string                  anyErrorMessage = ExceptionMessageFactory.CreateAnyMessage();
-        ErrorCode               anyErrorCode    = ErrorCodeFactory.CreateAny();
-        ErrorContextKey<string> userIdKey       = ErrorContextKey.Create<string>("UserId");
+        string    anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
+        ErrorCode anyErrorCode    = ErrorCodeFactory.CreateAny();
+        var       userIdKey       = ErrorContextKey.Create<string>("UserId");
 
         // Exercise
-        TestDiagnosableException exception = new(anyErrorCode, anyErrorMessage,
-                                                 configureContext: ctx => ctx.Add(userIdKey, "u-123"));
+        InfrastructureError error = new(anyErrorCode, anyErrorMessage, InteractionDirection.Unknown, Transience.Unknown,
+                                        configureContext: ctx => ctx.Add(userIdKey, "u-123"));
 
         // Verify
-        Check.That(exception.Context.IsEmpty).IsFalse();
+        Check.That(error.Context.IsEmpty).IsFalse();
 
-        bool found = exception.Context.TryGet(userIdKey, out string? value);
+        bool found = error.Context.TryGet(userIdKey, out string? value);
         Check.That(found).IsTrue();
         Check.That(value).IsEqualTo("u-123");
     }
@@ -128,114 +126,105 @@ public sealed class DiagnosableExceptionTests : IDisposable {
     [Fact(DisplayName = "A diagnosable exception has no inner exceptions by default.")]
     public void ADiagnosableExceptionHasNoInnerExceptionsByDefault() {
         // Exercise
-        string                   anyErrorMessage = ExceptionMessageFactory.CreateAnyMessage();
-        ErrorCode                anyErrorCode    = ErrorCodeFactory.CreateAny();
-        TestDiagnosableException exception       = new(anyErrorCode, anyErrorMessage);
+        string              anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
+        ErrorCode           anyErrorCode    = ErrorCodeFactory.CreateAny();
+        InfrastructureError error           = new(anyErrorCode, anyErrorMessage, InteractionDirection.Outgoing, Transience.Unknown);
 
         // Verify
-        Check.That(exception.InnerExceptions).IsNotNull();
-        Check.That(exception.InnerExceptions).CountIs(0);
-        Check.That(exception.HasInnerExceptions()).IsFalse();
-        Check.That(exception.InnerException).IsNull();
+        Check.That(error.InnerErrors).IsNotNull();
+        Check.That(error.InnerErrors).CountIs(0);
     }
 
     [Fact(DisplayName = "A diagnosable exception preserves a single inner exception.")]
     public void ADiagnosableExceptionPreservesASingleInnerException() {
         // Setup
-        string    anyErrorMessage = ExceptionMessageFactory.CreateAnyMessage();
-        ErrorCode anyErrorCode    = ErrorCodeFactory.CreateAny();
-        Exception inner           = new InvalidOperationException("inner");
+        string      anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
+        ErrorCode   anyErrorCode    = ErrorCodeFactory.CreateAny();
+        DomainError innerError      = new(anyErrorCode, "inner");
 
         // Exercise
-        TestDiagnosableException exception = new(anyErrorCode, anyErrorMessage, inner);
+        DomainError rootError = new(anyErrorCode, anyErrorMessage, innerError);
 
         // Verify
-        Check.That(exception.InnerException).IsSameReferenceAs(inner);
-        Check.That(exception.InnerExceptions).CountIs(1);
-        Check.That(exception.InnerExceptions[0]).IsSameReferenceAs(inner);
-        Check.That(exception.HasInnerExceptions()).IsTrue();
+        Check.That(rootError.InnerErrors).CountIs(1);
+        Check.That(rootError.InnerErrors[0]).IsSameReferenceAs(innerError);
     }
 
     [Fact(DisplayName = "A diagnosable exception preserves multiple inner exceptions.")]
     public void ADiagnosableExceptionPreservesMultipleInnerExceptions() {
         // Setup
-        string    anyErrorMessage = ExceptionMessageFactory.CreateAnyMessage();
-        ErrorCode anyErrorCode    = ErrorCodeFactory.CreateAny();
-        Exception first           = new InvalidOperationException("first");
-        Exception second          = new ArgumentException("second");
-
-        IReadOnlyList<Exception> provided = [first, second];
+        string           anyErrorMessage  = ErrorMessageFactory.CreateAnyMessage();
+        ErrorCode        anyErrorCode     = ErrorCodeFactory.CreateAny();
+        DomainError      firstInnerError  = new(ErrorCode.Create("first"), "first");
+        PrimaryPortError secondInnerError = new(ErrorCode.Create("second"), "second", Transience.Unknown);
+        PrimaryPortInnerErrors innerErrors = new PrimaryPortInnerErrors()
+                                            .Add(firstInnerError)
+                                            .Add(secondInnerError);
 
         // Exercise
-        TestDiagnosableException exception = new(anyErrorCode, anyErrorMessage, provided);
+        PrimaryPortError rootError = new(anyErrorCode, anyErrorMessage, innerErrors);
 
         // Verify
-        Check.That(exception.InnerException).IsNull();
-        Check.That(exception.InnerExceptions).CountIs(2);
-        Check.That(exception.InnerExceptions[0]).IsSameReferenceAs(first);
-        Check.That(exception.InnerExceptions[1]).IsSameReferenceAs(second);
-        Check.That(exception.HasInnerExceptions()).IsTrue();
+        Check.That(rootError.InnerErrors).CountIs(2);
+        Check.That(rootError.InnerErrors[0]).IsSameReferenceAs(firstInnerError);
+        Check.That(rootError.InnerErrors[1]).IsSameReferenceAs(secondInnerError);
     }
 
     [Fact(DisplayName = "A diagnosable exception can be created without inner exceptions even when a null collection is provided.")]
     public void ADiagnosableExceptionCanBeCreatedWithoutInnerExceptionsEvenWhenANullCollectionIsProvided() {
         // Exercise
-        ErrorCode                anyErrorCode    = ErrorCodeFactory.CreateAny();
-        string                   anyErrorMessage = ExceptionMessageFactory.CreateAnyMessage();
-        TestDiagnosableException exception       = new(anyErrorCode, anyErrorMessage, innerExceptions: null!);
+        ErrorCode   anyErrorCode    = ErrorCodeFactory.CreateAny();
+        string      anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
+        DomainError error           = new(anyErrorCode, anyErrorMessage, innerErrors: null!);
 
         // Verify
-        Check.That(exception.InnerExceptions).CountIs(0);
-        Check.That(exception.HasInnerExceptions()).IsFalse();
+        Check.That(error.InnerErrors).CountIs(0);
     }
 
     [Fact(DisplayName = "A diagnosable exception created with a null inner exception has no inner exceptions.")]
     public void ADiagnosableExceptionCreatedWithANullInnerExceptionHasNoInnerExceptions() {
         // Exercise
-        ErrorCode                anyErrorCode    = ErrorCodeFactory.CreateAny();
-        string                   anyErrorMessage = ExceptionMessageFactory.CreateAnyMessage();
-        TestDiagnosableException exception       = new(anyErrorCode, anyErrorMessage, innerException: null!);
+        ErrorCode   anyErrorCode    = ErrorCodeFactory.CreateAny();
+        string      anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
+        DomainError exception       = new(anyErrorCode, anyErrorMessage, innerError: null!);
 
         // Verify
-        Check.That(exception.InnerException).IsNull();
-        Check.That(exception.InnerExceptions).IsNotNull();
-        Check.That(exception.InnerExceptions).CountIs(0);
-        Check.That(exception.HasInnerExceptions()).IsFalse();
+        Check.That(exception.InnerErrors).CountIs(0);
     }
 
-    #region Nested types
+    #region Nested types declarations
 
-    private sealed class TestDiagnosableException : DiagnosableException {
+    //private sealed class TestDiagnosableException : DiagnosableException {
 
-        #region Constructors & Destructor
+    //    #region Constructors & Destructor
 
-        public TestDiagnosableException(ErrorCode                    errorCode,
-                                        string                       errorMessage,
-                                        string?                      shortMessage     = null,
-                                        Action<ErrorContextBuilder>? configureContext = null)
-            : base(errorCode, errorMessage, shortMessage, configureContext) { }
+    //    public TestDiagnosableException(ErrorCode                    errorCode,
+    //                                    string                       errorMessage,
+    //                                    string?                      shortMessage     = null,
+    //                                    Action<ErrorContextBuilder>? configureContext = null)
+    //        : base(errorCode, errorMessage, shortMessage, configureContext) { }
 
-        public TestDiagnosableException(ErrorCode                    errorCode,
-                                        string                       errorMessage,
-                                        Exception                    innerException,
-                                        string?                      shortMessage     = null,
-                                        Action<ErrorContextBuilder>? configureContext = null)
-            : base(errorCode, errorMessage, innerException, shortMessage, configureContext) { }
+    //    public TestDiagnosableException(ErrorCode                    errorCode,
+    //                                    string                       errorMessage,
+    //                                    Exception                    innerException,
+    //                                    string?                      shortMessage     = null,
+    //                                    Action<ErrorContextBuilder>? configureContext = null)
+    //        : base(errorCode, errorMessage, innerException, shortMessage, configureContext) { }
 
-        public TestDiagnosableException(ErrorCode                    errorCode,
-                                        string                       errorMessage,
-                                        IEnumerable<Exception>       innerExceptions,
-                                        string?                      shortMessage     = null,
-                                        Action<ErrorContextBuilder>? configureContext = null)
-            : base(errorCode, errorMessage, innerExceptions, shortMessage, configureContext) { }
+    //    public TestDiagnosableException(ErrorCode                    errorCode,
+    //                                    string                       errorMessage,
+    //                                    IEnumerable<Exception>       innerExceptions,
+    //                                    string?                      shortMessage     = null,
+    //                                    Action<ErrorContextBuilder>? configureContext = null)
+    //        : base(errorCode, errorMessage, innerExceptions, shortMessage, configureContext) { }
 
-        #endregion
+    //    #endregion
 
-    }
+    //}
 
-    private static class ExceptionMessageFactory {
+    private static class ErrorMessageFactory {
 
-        #region Static members
+        #region Statics members declarations
 
         public static string CreateAnyMessage() {
             return "boom";

@@ -85,25 +85,14 @@ public sealed class ErrorDocumentation {
     ///     about the error context.
     /// </remarks>
     public IReadOnlyCollection<ErrorContextEntryDocumentation> Context { get; set; } = [];
-    /// <summary>
-    ///     Gets or sets the type of the exception associated with the error documentation.
-    /// </summary>
-    /// <remarks>
-    ///     This property represents the specific exception type that is documented by this instance of
-    ///     <see cref="ErrorDocumentation" />.
-    ///     It is used to link the error documentation to the corresponding exception type, enabling better traceability and
-    ///     diagnostics.
-    /// </remarks>
-    public Type? Exception { get; set; }
 
     /// <summary>
-    ///     Gets or sets the source type associated with the error.
+    ///     Gets or sets the source associated with the error documentation.
     /// </summary>
     /// <remarks>
-    ///     This property represents the type that is identified as the source of the error. It is typically used to associate
-    ///     the error with a specific domain or context within the application.
+    ///     This property typically represents the origin or context of the error (e.g. value object, ...).
     /// </remarks>
-    public Type? ErrorSource { get; set; }
+    public string? Source { get; set; }
 
     /// <inheritdoc />
     public override string ToString() {

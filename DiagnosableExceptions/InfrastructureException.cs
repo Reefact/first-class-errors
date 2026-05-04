@@ -34,169 +34,17 @@
 ///         <item>Use this class to clearly separate technical failures from domain errors.</item>
 ///     </list>
 /// </remarks>
-public abstract class InfrastructureException : DiagnosableException {
+public class InfrastructureException : DiagnosableException {
 
-    #region Constructors & Destructor
-
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="InfrastructureException" /> class with the specified error code,
-    ///     message.
-    /// </summary>
-    /// <param name="errorCode">
-    ///     A stable identifier representing the type of infrastructure error.
-    /// </param>
-    /// <param name="errorMessage">
-    ///     A descriptive message explaining the technical failure that prevented the operation from completing.
-    /// </param>
-    /// <param name="shortMessage">
-    ///     An optional concise message suitable for compact displays or user interfaces.
-    /// </param>
-    /// <param name="isTransient">
-    ///     Indicates whether the failure is considered transient.
-    ///     <list type="bullet">
-    ///         <item><c>true</c>: retrying the same operation may succeed.</item>
-    ///         <item><c>false</c>: retrying will not resolve the issue.</item>
-    ///         <item><c>null</c>: the transient nature is unknown or not specified.</item>
-    ///     </list>
-    /// </param>
-    /// <param name="configureContext">
-    ///     Optional delegate used to add structured diagnostic context to the exception at construction time.
-    /// </param>
-    /// <remarks>
-    ///     <para>
-    ///         This constructor is used to represent failures originating from technical or environmental concerns outside the
-    ///         domain model (e.g., integration, mapping, transport, storage, or configuration).
-    ///     </para>
-    ///     <para>
-    ///         Derived exceptions should set <paramref name="isTransient" /> based on the expected behavior of the failing
-    ///         technical dependency, not on business semantics.
-    ///     </para>
-    /// </remarks>
-    protected InfrastructureException(ErrorCode                    errorCode,
-                                      string                       errorMessage,
-                                      string?                      shortMessage     = null,
-                                      bool?                        isTransient      = null,
-                                      Action<ErrorContextBuilder>? configureContext = null)
-        : base(errorCode, errorMessage, shortMessage, configureContext) {
-        IsTransient = isTransient;
-    }
+    #region Constructors declarations
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="InfrastructureException" /> class with the specified error code,
-    ///     message, and a single underlying exception.
+    ///     Initializes a new instance of the <see cref="InfrastructureException" /> class with the specified
+    ///     <see cref="InfrastructureError" />.
     /// </summary>
-    /// <param name="errorCode">
-    ///     A stable identifier representing the type of infrastructure error.
-    /// </param>
-    /// <param name="errorMessage">
-    ///     A descriptive message explaining the technical failure that prevented the operation from completing.
-    /// </param>
-    /// <param name="innerException">
-    ///     The underlying exception that contributed to this infrastructure failure.
-    /// </param>
-    /// <param name="shortMessage">
-    ///     An optional concise message suitable for compact displays or user interfaces.
-    /// </param>
-    /// <param name="isTransient">
-    ///     Indicates whether the failure is considered transient.
-    ///     <list type="bullet">
-    ///         <item><c>true</c>: retrying the same operation may succeed.</item>
-    ///         <item><c>false</c>: retrying will not resolve the issue.</item>
-    ///         <item><c>null</c>: the transient nature is unknown or not specified.</item>
-    ///     </list>
-    /// </param>
-    /// <param name="configureContext">
-    ///     Optional delegate used to add structured diagnostic context to the exception at construction time.
-    /// </param>
-    /// <remarks>
-    ///     <para>
-    ///         This constructor is used when a technical failure directly results from another exception. It preserves the
-    ///         causal chain while still expressing the nature of the infrastructure problem at this abstraction level.
-    ///     </para>
-    ///     <para>
-    ///         Derived exceptions should set <paramref name="isTransient" /> according to the expected behavior of the failing
-    ///         technical dependency (e.g., network, storage, transformation layer), not based on business logic.
-    ///     </para>
-    /// </remarks>
-    protected InfrastructureException(ErrorCode                    errorCode,
-                                      string                       errorMessage,
-                                      Exception                    innerException,
-                                      string?                      shortMessage     = null,
-                                      bool?                        isTransient      = null,
-                                      Action<ErrorContextBuilder>? configureContext = null)
-        : base(errorCode, errorMessage, innerException, shortMessage, configureContext) {
-        IsTransient = isTransient;
-    }
-
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="InfrastructureException" /> class with the specified error code,
-    ///     message, multiple underlying exceptions, and optional transient classification.
-    /// </summary>
-    /// <param name="errorCode">
-    ///     A stable identifier representing the type of infrastructure error.
-    /// </param>
-    /// <param name="errorMessage">
-    ///     A descriptive message explaining the technical failure that prevented the operation from completing.
-    /// </param>
-    /// <param name="innerExceptions">
-    ///     A collection of underlying exceptions that contributed to this infrastructure failure.
-    /// </param>
-    /// <param name="shortMessage">
-    ///     An optional concise message suitable for compact displays or user interfaces.
-    /// </param>
-    /// <param name="isTransient">
-    ///     Indicates whether the failure is considered transient.
-    ///     <list type="bullet">
-    ///         <item><c>true</c>: retrying the same operation may succeed.</item>
-    ///         <item><c>false</c>: retrying will not resolve the issue.</item>
-    ///         <item><c>null</c>: the transient nature is unknown or not specified.</item>
-    ///     </list>
-    /// </param>
-    /// <param name="configureContext">
-    ///     Optional delegate used to add structured diagnostic context to the exception at construction time.
-    /// </param>
-    /// <remarks>
-    ///     <para>
-    ///         This constructor supports diagnostic scenarios where multiple technical issues contribute to a single
-    ///         infrastructure failure (e.g., parsing errors, transformation problems, or aggregated dependency failures).
-    ///     </para>
-    ///     <para>
-    ///         Derived exceptions should set <paramref name="isTransient" /> based on the expected behavior of the failing
-    ///         technical dependency, not on business semantics.
-    ///     </para>
-    /// </remarks>
-    protected InfrastructureException(ErrorCode                    errorCode,
-                                      string                       errorMessage,
-                                      IEnumerable<Exception>       innerExceptions,
-                                      string?                      shortMessage     = null,
-                                      bool?                        isTransient      = null,
-                                      Action<ErrorContextBuilder>? configureContext = null)
-        : base(errorCode, errorMessage, innerExceptions, shortMessage, configureContext) {
-        IsTransient = isTransient;
-    }
+    /// <param name="error">The <see cref="InfrastructureError" /> that describes the error.</param>
+    public InfrastructureException(InfrastructureError error) : base(error) { }
 
     #endregion
-
-    /// <summary>
-    ///     Indicates whether this infrastructure error is considered transient.
-    /// </summary>
-    /// <remarks>
-    ///     <para>
-    ///         A transient error is one that may succeed if the operation is retried
-    ///         without changing business input, for example due to temporary resource
-    ///         contention or communication issues.
-    ///     </para>
-    ///     <para>
-    ///         <list type="bullet">
-    ///             <item><c>true</c>: retry may succeed without intervention</item>
-    ///             <item><c>false</c>: retry will not help</item>
-    ///         </list>
-    ///     </para>
-    ///     <para>
-    ///         This property is optional and may remain <c>null</c> when the transient
-    ///         nature of the failure is unknown or not specified.
-    ///     </para>
-    /// </remarks>
-    public bool? IsTransient { get; }
 
 }

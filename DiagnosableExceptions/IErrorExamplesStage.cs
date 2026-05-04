@@ -8,7 +8,7 @@ public interface IErrorExamplesStage {
     /// <summary>
     ///     Adds one or more example exception instances illustrating how this error may appear at runtime.
     /// </summary>
-    /// <typeparam name="TException">
+    /// <typeparam name="TError">
     ///     The type of <see cref="DiagnosableException" /> produced by the example factories.
     /// </typeparam>
     /// <param name="exampleFactories">
@@ -37,7 +37,7 @@ public interface IErrorExamplesStage {
     ///         <item>Ensure the example focuses on the rule violation, not on technical side effects.</item>
     ///     </list>
     /// </remarks>
-    ErrorDocumentation WithExamples<TException>(params Func<TException>[] exampleFactories)
-        where TException : DiagnosableException;
+    ErrorDocumentation WithExamples<TError>(params Func<TError>[] exampleFactories)
+        where TError : Error;
 
 }

@@ -9,21 +9,21 @@ namespace DiagnosableExceptions.Usage.Model;
 /// <summary>
 ///     Represents an exception that is thrown when an attempt is made to create a temperature with an invalid value.
 /// </summary>
-[ProvidesErrorsFor(typeof(Temperature))]
-public sealed class InvalidTemperatureException : DomainException {
+[ProvidesErrorsFor(nameof(Temperature))]
+public static class InvalidTemperatureError {
 
-    #region Static members
+    #region Statics members declarations
 
     /// <summary>
-    ///     Creates an <see cref="InvalidTemperatureException" /> indicating that the temperature value is below absolute zero.
+    ///     Creates a <see cref="DomainError" /> indicating that the temperature value is below absolute zero.
     /// </summary>
     /// <param name="invalidValue">The invalid temperature value that caused the exception.</param>
     /// <param name="invalidValueUnit">The unit of the invalid temperature value.</param>
-    /// <returns>An instance of <see cref="InvalidTemperatureException" />.</returns>
+    /// <returns>An instance of <see cref="DomainError" />.</returns>
     /// >
     [DocumentedBy(nameof(BelowAbsoluteZeroDocumentation))]
-    internal static InvalidTemperatureException BelowAbsoluteZero(decimal invalidValue, TemperatureUnit invalidValueUnit) {
-        return new InvalidTemperatureException(
+    internal static DomainError BelowAbsoluteZero(decimal invalidValue, TemperatureUnit invalidValueUnit) {
+        return new DomainError(
             Code.TemperatureBelowAbsoluteZero,
             DocumentationFormatter.Format("Failed to instantiate temperature: the value {0}{1} is below absolute zero.", invalidValue, invalidValueUnit),
             "Temperature is below absolute zero.");
@@ -41,18 +41,11 @@ public sealed class InvalidTemperatureException : DomainException {
 
     #endregion
 
-    #region Constructors & Destructor
-
-    /// <inheritdoc />
-    private InvalidTemperatureException(ErrorCode errorCode, string errorMessage, string shortMessage) : base(errorCode, errorMessage, shortMessage) { }
-
-    #endregion
-
-    #region Nested types
+    #region Nested types declarations
 
     private static class Code {
 
-        #region Static members
+        #region Statics members declarations
 
         public static readonly ErrorCode TemperatureBelowAbsoluteZero = ErrorCode.Create("TEMPERATURE_BELOW_ABSOLUTE_ZERO");
 

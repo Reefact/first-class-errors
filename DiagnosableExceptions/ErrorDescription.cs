@@ -10,8 +10,25 @@
 /// </remarks>
 public sealed class ErrorDescription {
 
-    #region Constructors & Destructor
+    #region Constructors declarations
 
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="ErrorDescription" /> class with a detailed message
+    ///     and an optional short message.
+    /// </summary>
+    /// <param name="detailedMessage">
+    ///     The detailed message describing the error. This parameter cannot be <c>null</c>, empty, or whitespace.
+    /// </param>
+    /// <param name="shortMessage">
+    ///     An optional short message providing a concise summary of the error. If not provided or whitespace, it will be set
+    ///     to <c>null</c>.
+    /// </param>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown when <paramref name="detailedMessage" /> is <c>null</c>.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    ///     Thrown when <paramref name="detailedMessage" /> is empty or consists only of whitespace.
+    /// </exception>
     public ErrorDescription(string detailedMessage, string? shortMessage = null) {
         if (detailedMessage is null) { throw new ArgumentNullException(nameof(detailedMessage)); }
         if (string.IsNullOrWhiteSpace(detailedMessage)) { throw new ArgumentException("Value cannot be empty or whitespace.", nameof(detailedMessage)); }

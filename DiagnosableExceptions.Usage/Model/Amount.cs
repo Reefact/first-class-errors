@@ -16,7 +16,7 @@ namespace DiagnosableExceptions.Usage.Model;
 /// </remarks>
 public sealed class Amount : IEquatable<Amount>, IComparable<Amount> {
 
-    #region Constructors & Destructor
+    #region Constructors declarations
 
     public Amount(decimal value, Currency currency) {
         ArgumentNullException.ThrowIfNull(currency);
@@ -94,7 +94,7 @@ public sealed class Amount : IEquatable<Amount>, IComparable<Amount> {
     }
 
     private void EnsureSameCurrency(Amount other) {
-        if (!Currency.Equals(other.Currency)) { throw InvalidAmountOperationException.CurrencyMismatch(this, other); }
+        if (!Currency.Equals(other.Currency)) { throw InvalidAmountOperationError.CurrencyMismatch(this, other).ToException(); }
     }
 
 }

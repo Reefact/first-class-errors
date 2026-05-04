@@ -11,7 +11,7 @@ namespace DiagnosableExceptions.GenDoc;
 /// </summary>
 public static class AssemblyErrorDocumentationReader {
 
-    #region Static members
+    #region Statics members declarations
 
     /// <summary>
     ///     Extracts all documented errors from the provided assembly.
@@ -23,7 +23,7 @@ public static class AssemblyErrorDocumentationReader {
         if (assembly is null) { throw new ArgumentNullException(nameof(assembly)); }
 
         return assembly.GetTypes()
-                       .Where(type => type is { IsClass: true, IsAbstract: false } && typeof(DiagnosableException).IsAssignableFrom(type))
+                       .Where(type => type is { IsClass: true })
                        .SelectMany(BuildFromExceptionType)
                        .GroupBy(x => x.Code, StringComparer.OrdinalIgnoreCase)
                        .Select(g => g.First())
@@ -32,7 +32,7 @@ public static class AssemblyErrorDocumentationReader {
 
     private static IEnumerable<ErrorDocumentation> BuildFromExceptionType(Type exceptionType) {
         ProvidesErrorsForAttribute? providesErrorsFor = exceptionType.GetCustomAttribute<ProvidesErrorsForAttribute>();
-        Type?                       providedType      = providesErrorsFor?.OwnerType;
+        if (providesErrorsFor == null) { yield break; }
 
         foreach (MethodInfo factoryMethod in exceptionType.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)) {
             DocumentedByAttribute? documentedBy = factoryMethod.GetCustomAttribute<DocumentedByAttribute>();
@@ -44,8 +44,7 @@ public static class AssemblyErrorDocumentationReader {
             object? documentation = documentationMethod.Invoke(null, []);
             if (documentation is not ErrorDocumentation errorDocumentation) { continue; }
 
-            errorDocumentation.Exception   = exceptionType;
-            errorDocumentation.ErrorSource = providedType;
+            errorDocumentation.Source = providesErrorsFor.Source;
 
             yield return errorDocumentation;
         }

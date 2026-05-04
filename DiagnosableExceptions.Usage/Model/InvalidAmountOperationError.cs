@@ -7,23 +7,16 @@ using DiagnosableExceptions.Usage.Utils;
 namespace DiagnosableExceptions.Usage.Model;
 
 /// <summary>
-///     Represents an exception that is thrown when an invalid operation is performed on monetary amounts.
+///     Provides factory methods for creating errors related to invalid operations on monetary amounts.
 /// </summary>
-[ProvidesErrorsFor(typeof(Amount))]
-public sealed class InvalidAmountOperationException : DomainException {
+[ProvidesErrorsFor(nameof(Amount))]
+public static class InvalidAmountOperationError {
 
-    #region Static members
+    #region Statics members declarations
 
-    /// <summary>
-    ///     Creates an <see cref="InvalidAmountOperationException" /> to indicate that a monetary operation failed due to a
-    ///     currency mismatch between the involved amounts.
-    /// </summary>
-    /// <param name="amount1">The first amount involved in the operation.</param>
-    /// <param name="amount2">The second amount involved in the operation.</param>
-    /// <returns>An instance of <see cref="InvalidAmountOperationException" /> describing the currency mismatch error.</returns>
     [DocumentedBy(nameof(CurrencyMismatchDocumentation))]
-    internal static InvalidAmountOperationException CurrencyMismatch(Amount amount1, Amount amount2) {
-        return new InvalidAmountOperationException(
+    public static DomainError CurrencyMismatch(Amount amount1, Amount amount2) {
+        return new DomainError(
             Code.CurrencyMismatch,
             DocumentationFormatter.Format("Failed to perform the monetary operation because the involved amounts are expressed in different currencies: {0} and {1}.", amount1, amount2),
             "Currency mismatch"
@@ -47,18 +40,11 @@ public sealed class InvalidAmountOperationException : DomainException {
 
     #endregion
 
-    #region Constructors & Destructor
-
-    /// <inheritdoc />
-    private InvalidAmountOperationException(ErrorCode errorCode, string errorMessage, string? shortMessage = null) : base(errorCode, errorMessage, shortMessage) { }
-
-    #endregion
-
-    #region Nested types
+    #region Nested types declarations
 
     private static class Code {
 
-        #region Static members
+        #region Statics members declarations
 
         // ReSharper disable MemberHidesStaticFromOuterClass
         public static readonly ErrorCode CurrencyMismatch = ErrorCode.Create("AMOUNT_CURRENCY_MISMATCH");

@@ -8,34 +8,34 @@ internal sealed class ErrorDocumentationBuilder :
     IErrorExamplesOrDiagnosticsStage,
     IErrorExamplesStage {
 
-    #region Static members
+    #region Statics members declarations
 
-    private static IEnumerable<TException> ComputeExceptions<TException>(Func<TException>[] exampleFactories)
-        where TException : DiagnosableException {
+    private static IEnumerable<TError> ComputeErrors<TError>(Func<TError>[] exampleFactories)
+        where TError : Error {
         for (int factoryIndex = 0; factoryIndex < exampleFactories.Length; factoryIndex++) {
-            Func<TException>? factory = exampleFactories[factoryIndex];
+            Func<TError>? factory = exampleFactories[factoryIndex];
             if (factory is null) { throw ErrorDocumentationException.ExampleFactoryIsNull(factoryIndex); }
 
-            TException? exception;
+            TError? error;
             try {
-                exception = factory();
+                error = factory();
             } catch (Exception ex) {
                 throw ErrorDocumentationException.ExampleFactoryThrewAnException(factoryIndex, ex);
             }
 
-            if (exception is null) {
+            if (error is null) {
                 throw ErrorDocumentationException.NullExample(factoryIndex);
             }
 
-            yield return exception;
+            yield return error;
         }
     }
 
-    private static IEnumerable<ErrorContextEntryDocumentation> BuildContext<TException>(TException[] exceptions)
-        where TException : DiagnosableException {
-        return exceptions
-              .SelectMany(exception =>
-                              exception.Context.Values.Select(kvp => new {
+    private static IEnumerable<ErrorContextEntryDocumentation> BuildContext<TError>(TError[] errors)
+        where TError : Error {
+        return errors
+              .SelectMany(error =>
+                              error.Context.Values.Select(kvp => new {
                                   kvp.Key.Name,
                                   kvp.Key.ValueType,
                                   kvp.Key.Description,
@@ -55,7 +55,7 @@ internal sealed class ErrorDocumentationBuilder :
 
     #endregion
 
-    #region Fields
+    #region Fields declarations
 
     private readonly ErrorDocumentation    _doc         = new();
     private readonly List<ErrorDiagnostic> _diagnostics = new();
@@ -104,16 +104,16 @@ internal sealed class ErrorDocumentationBuilder :
         return this;
     }
 
-    public ErrorDocumentation WithExamples<TException>(params Func<TException>[] exampleFactories)
-        where TException : DiagnosableException {
+    public ErrorDocumentation WithExamples<TError>(params Func<TError>[] exampleFactories)
+        where TError : Error {
         if (exampleFactories is null) { throw new ArgumentNullException(nameof(exampleFactories)); }
         if (exampleFactories.Length == 0) { throw ErrorDocumentationException.AtLeastOneExampleMustBeProvided(); }
 
-        TException[] exceptions = ComputeExceptions(exampleFactories).ToArray();
+        TError[] errors = ComputeErrors(exampleFactories).ToArray();
 
         _doc.Diagnostics = _diagnostics.ToArray();
-        _doc.Examples    = BuildExamples(exceptions).ToArray();
-        _doc.Context     = BuildContext(exceptions).ToArray();
+        _doc.Examples    = BuildExamples(errors).ToArray();
+        _doc.Context     = BuildContext(errors).ToArray();
 
         return _doc;
     }
@@ -127,16 +127,16 @@ internal sealed class ErrorDocumentationBuilder :
         return this;
     }
 
-    private IEnumerable<ErrorDescription> BuildExamples<TException>(TException[] exceptions)
-        where TException : DiagnosableException {
-        for (int exampleIndex = 0; exampleIndex < exceptions.Length; exampleIndex++) {
-            TException exception = exceptions[exampleIndex];
+    private IEnumerable<ErrorDescription> BuildExamples<TError>(TError[] errors)
+        where TError : Error {
+        for (int exampleIndex = 0; exampleIndex < errors.Length; exampleIndex++) {
+            TError error = errors[exampleIndex];
 
-            if (_doc.Code != null && _doc.Code != exception.ErrorCode) { throw ErrorDocumentationException.InconsistentErrorCode(exampleIndex, _doc.Code, exception.ErrorCode); }
+            if (_doc.Code != null && _doc.Code != error.Code) { throw ErrorDocumentationException.InconsistentErrorCode(exampleIndex, _doc.Code, error.Code); }
 
-            _doc.Code = exception.ErrorCode;
+            _doc.Code = error.Code;
 
-            yield return new ErrorDescription(exception.Message, exception.ShortMessage);
+            yield return new ErrorDescription(error.DetailedMessage, error.ShortMessage);
         }
     }
 

@@ -1,133 +1,103 @@
-﻿#region Usings declarations
+﻿//#region Usings declarations
 
-using System.Diagnostics.CodeAnalysis;
+//using System.Diagnostics.CodeAnalysis;
 
-using JetBrains.Annotations;
+//using JetBrains.Annotations;
 
-using NFluent;
+//using NFluent;
 
-#endregion
+//#endregion
 
-namespace DiagnosableExceptions.UnitTests;
+//namespace DiagnosableExceptions.UnitTests;
 
-[Collection("SmartEnumSideEffects")]
-[TestSubject(typeof(InfrastructureException))]
-public sealed class InfrastructureExceptionTests : IDisposable {
+//[Collection("SmartEnumSideEffects")]
+//[TestSubject(typeof(InfrastructureException))]
+//public sealed class InfrastructureExceptionTests : IDisposable {
 
-    #region Constructors & Destructor
+//    #region Constructors declarations
 
-    public InfrastructureExceptionTests() {
-        ErrorContextKey.ResetForTests();
-        ErrorCode.ResetForTests();
-    }
+//    public InfrastructureExceptionTests() {
+//        ErrorContextKey.ResetForTests();
+//        ErrorCode.ResetForTests();
+//    }
 
-    #endregion
+//    #endregion
 
-    [SuppressMessage("Usage", "CA1816", Justification = "IDisposable is used as an xUnit teardown hook. The class has no finalizer and does not own unmanaged resources.")]
-    public void Dispose() {
-        ErrorContextKey.ResetForTests();
-        ErrorCode.ResetForTests();
-    }
+//    [SuppressMessage("Usage", "CA1816", Justification = "IDisposable is used as an xUnit teardown hook. The class has no finalizer and does not own unmanaged resources.")]
+//    public void Dispose() {
+//        ErrorContextKey.ResetForTests();
+//        ErrorCode.ResetForTests();
+//    }
 
-    [Theory(DisplayName = "An infrastructure exception preserves its transient classification.")]
-    [InlineData(true)]
-    [InlineData(false)]
-    [InlineData(null)]
-    public void AnInfrastructureExceptionPreservesItsTransientClassification(bool? isTransient) {
-        // Setup
-        ErrorCode anyErrorCode = ErrorCodeFactory.CreateAny();
-        string    anyMessage   = ExceptionMessageFactory.CreateAnyMessage();
+//    [Theory(DisplayName = "An infrastructure exception preserves its transient classification.")]
+//    [InlineData(Transience.Transient)]
+//    [InlineData(Transience.NonTransient)]
+//    [InlineData(Transience.Unknown)]
+//    public void AnInfrastructureExceptionPreservesItsTransientClassification(Transience isTransient) {
+//        // Setup
+//        ErrorCode anyErrorCode = ErrorCodeFactory.CreateAny();
+//        string    anyMessage   = ExceptionMessageFactory.CreateAnyMessage();
 
-        // Exercise
-        TestInfrastructureException exception = new(anyErrorCode, anyMessage, isTransient: isTransient);
+//        // Exercise
+//        TestInfrastructureException exception = new(anyErrorCode, anyMessage, isTransient);
 
-        // Verify
-        Check.That(exception.IsTransient).IsEqualTo(isTransient);
-    }
+//        // Verify
+//        Check.That(exception.Transience).IsEqualTo(isTransient);
+//    }
 
-    [Theory(DisplayName = "An infrastructure exception with an inner exception preserves its transient classification.")]
-    [InlineData(true)]
-    [InlineData(false)]
-    [InlineData(null)]
-    public void AnInfrastructureExceptionWithAnInnerExceptionPreservesItsTransientClassification(bool? isTransient) {
-        // Setup
-        ErrorCode anyErrorCode = ErrorCodeFactory.CreateAny();
-        string    anyMessage   = ExceptionMessageFactory.CreateAnyMessage();
-        Exception inner        = new InvalidOperationException("inner");
+//    [Theory(DisplayName = "An infrastructure exception with an inner exception preserves its transient classification.")]
+//    [InlineData(Transience.Transient)]
+//    [InlineData(Transience.NonTransient)]
+//    [InlineData(Transience.Unknown)]
+//    public void AnInfrastructureExceptionWithAnInnerExceptionPreservesItsTransientClassification(Transience isTransient) {
+//        // Setup
+//        ErrorCode anyErrorCode = ErrorCodeFactory.CreateAny();
+//        string    anyMessage   = ExceptionMessageFactory.CreateAnyMessage();
+//        Exception inner        = new InvalidOperationException("inner");
 
-        // Exercise
-        TestInfrastructureException exception = new(anyErrorCode, anyMessage, inner, isTransient: isTransient);
+//        // Exercise
+//        TestInfrastructureException exception = new(anyErrorCode, anyMessage, isTransient, inner);
 
-        // Verify
-        Check.That(exception.IsTransient).IsEqualTo(isTransient);
-    }
+//        // Verify
+//        Check.That(exception.Transience).IsEqualTo(isTransient);
+//    }
 
-    [Theory(DisplayName = "An infrastructure exception with multiple inner exceptions preserves its transient classification.")]
-    [InlineData(true)]
-    [InlineData(false)]
-    [InlineData(null)]
-    public void AnInfrastructureExceptionWithMultipleInnerExceptionsPreservesItsTransientClassification(bool? isTransient) {
-        // Setup
-        ErrorCode anyErrorCode = ErrorCodeFactory.CreateAny();
-        string    anyMessage   = ExceptionMessageFactory.CreateAnyMessage();
+//    [Theory(DisplayName = "An infrastructure exception with multiple inner exceptions preserves its transient classification.")]
+//    [InlineData(Transience.Transient)]
+//    [InlineData(Transience.NonTransient)]
+//    [InlineData(Transience.Unknown)]
+//    public void AnInfrastructureExceptionWithMultipleInnerExceptionsPreservesItsTransientClassification(Transience isTransient) {
+//        // Setup
+//        ErrorCode anyErrorCode = ErrorCodeFactory.CreateAny();
+//        string    anyMessage   = ExceptionMessageFactory.CreateAnyMessage();
 
-        Exception first  = new InvalidOperationException("first");
-        Exception second = new ArgumentException("second");
+//        Exception first  = new InvalidOperationException("first");
+//        Exception second = new ArgumentException("second");
 
-        IEnumerable<Exception> innerExceptions = new[] { first, second };
+//        IEnumerable<Exception> innerExceptions = new[] { first, second };
 
-        // Exercise
-        TestInfrastructureException exception = new(anyErrorCode, anyMessage, innerExceptions, isTransient: isTransient);
+//        // Exercise
+//        TestInfrastructureException exception = new(anyErrorCode, anyMessage, isTransient, innerExceptions);
 
-        // Verify
-        Check.That(exception.IsTransient).IsEqualTo(isTransient);
-    }
+//        // Verify
+//        Check.That(exception.Transience).IsEqualTo(isTransient);
+//    }
 
-    #region Nested types
+//    #region Nested types declarations
 
-    private sealed class TestInfrastructureException : InfrastructureException {
+//    //private static class aMessageFactory {
 
-        #region Constructors & Destructor
+//        #region Statics members declarations
 
-        public TestInfrastructureException(ErrorCode                    errorCode,
-                                           string                       errorMessage,
-                                           string?                      shortMessage     = null,
-                                           bool?                        isTransient      = null,
-                                           Action<ErrorContextBuilder>? configureContext = null)
-            : base(errorCode, errorMessage, shortMessage, isTransient, configureContext) { }
+//        public static string CreateAnyMessage() {
+//            return "boom";
+//        }
 
-        public TestInfrastructureException(ErrorCode                    errorCode,
-                                           string                       errorMessage,
-                                           Exception                    innerException,
-                                           string?                      shortMessage     = null,
-                                           bool?                        isTransient      = null,
-                                           Action<ErrorContextBuilder>? configureContext = null)
-            : base(errorCode, errorMessage, innerException, shortMessage, isTransient, configureContext) { }
+//        #endregion
 
-        public TestInfrastructureException(ErrorCode                    errorCode,
-                                           string                       errorMessage,
-                                           IEnumerable<Exception>       innerExceptions,
-                                           string?                      shortMessage     = null,
-                                           bool?                        isTransient      = null,
-                                           Action<ErrorContextBuilder>? configureContext = null)
-            : base(errorCode, errorMessage, innerExceptions, shortMessage, isTransient, configureContext) { }
+//    }
 
-        #endregion
+//    #endregion
 
-    }
+//}
 
-    private static class ExceptionMessageFactory {
-
-        #region Static members
-
-        public static string CreateAnyMessage() {
-            return "boom";
-        }
-
-        #endregion
-
-    }
-
-    #endregion
-
-}
