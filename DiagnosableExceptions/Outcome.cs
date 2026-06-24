@@ -172,6 +172,58 @@ public sealed class Outcome {
     }
 
     /// <summary>
+    ///     Attempts to recover from a failure by invoking the specified fallback operation.
+    /// </summary>
+    /// <param name="fallback">
+    ///     A function that receives the current <see cref="Error" /> and returns a new <see cref="Outcome" />,
+    ///     which may itself succeed or fail.
+    /// </param>
+    /// <returns>
+    ///     The current <see cref="Outcome" /> unchanged if the operation was successful; otherwise, the result
+    ///     of invoking <paramref name="fallback" /> with the current error.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if <paramref name="fallback" /> is <c>null</c>.
+    /// </exception>
+    /// <remarks>
+    ///     Use this method to implement compensation logic, alternative strategies, or conditional retries
+    ///     when an operation fails. If the fallback itself fails, the new error replaces the original one.
+    /// </remarks>
+    public Outcome Recover(Func<Error, Outcome> fallback) {
+        if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
+
+        return IsSuccess ? this : fallback(Error);
+    }
+
+    /// <summary>
+    ///     Attempts to recover from a failure by invoking the specified asynchronous fallback operation.
+    /// </summary>
+    /// <param name="fallback">
+    ///     An asynchronous function that receives the current <see cref="Error" /> and returns a
+    ///     <see cref="Task{TResult}" /> of a new <see cref="Outcome" />, which may itself succeed or fail.
+    /// </param>
+    /// <param name="cancellationToken">
+    ///     A token to observe for cancellation requests.
+    /// </param>
+    /// <returns>
+    ///     A <see cref="Task" /> representing the asynchronous operation. Resolves to the current
+    ///     <see cref="Outcome" /> unchanged if successful; otherwise, the result of invoking
+    ///     <paramref name="fallback" />.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if <paramref name="fallback" /> is <c>null</c>.
+    /// </exception>
+    public Task<Outcome> Recover(
+        Func<Error, CancellationToken, Task<Outcome>> fallback,
+        CancellationToken cancellationToken = default) {
+        if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
+
+        return IsSuccess
+            ? Task.FromResult(this)
+            : fallback(Error, cancellationToken);
+    }
+
+    /// <summary>
     ///     Produces a final value by handling both success and failure cases.
     /// </summary>
     /// <typeparam name="TResult">The type of the value returned by the provided functions.</typeparam>
@@ -212,6 +264,61 @@ public sealed class Outcome {
         if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
         if (IsSuccess) { onSuccess(); } else { onFailure(Error); }
+    }
+
+    /// <summary>
+    ///     Asynchronously produces a final value by handling both success and failure cases.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the value returned by the provided functions.</typeparam>
+    /// <param name="onSuccess">
+    ///     An asynchronous function to handle the success case.
+    /// </param>
+    /// <param name="onFailure">
+    ///     An asynchronous function to handle the failure case.
+    /// </param>
+    /// <param name="cancellationToken">
+    ///     A token to observe for cancellation requests.
+    /// </param>
+    /// <returns>
+    ///     A <see cref="Task{TResult}" /> resolving to the result of <paramref name="onSuccess" /> if successful,
+    ///     or the result of <paramref name="onFailure" /> if failed.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if <paramref name="onSuccess" /> or <paramref name="onFailure" /> is <c>null</c>.
+    /// </exception>
+    public Task<TResult> Finally<TResult>(
+        Func<CancellationToken, Task<TResult>> onSuccess,
+        Func<Error, CancellationToken, Task<TResult>> onFailure,
+        CancellationToken cancellationToken = default) {
+        if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
+        if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
+
+        return IsSuccess ? onSuccess(cancellationToken) : onFailure(Error, cancellationToken);
+    }
+
+    /// <summary>
+    ///     Asynchronously executes the specified actions based on whether the outcome is successful or failed.
+    /// </summary>
+    /// <param name="onSuccess">
+    ///     An asynchronous action to execute if the outcome is successful.
+    /// </param>
+    /// <param name="onFailure">
+    ///     An asynchronous action to execute if the outcome is a failure.
+    /// </param>
+    /// <param name="cancellationToken">
+    ///     A token to observe for cancellation requests.
+    /// </param>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if <paramref name="onSuccess" /> or <paramref name="onFailure" /> is <c>null</c>.
+    /// </exception>
+    public Task Finally(
+        Func<CancellationToken, Task> onSuccess,
+        Func<Error, CancellationToken, Task> onFailure,
+        CancellationToken cancellationToken = default) {
+        if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
+        if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
+
+        return IsSuccess ? onSuccess(cancellationToken) : onFailure(Error, cancellationToken);
     }
 }
 
@@ -344,6 +451,20 @@ public sealed class Outcome<T> where T : notnull {
     }
 
     /// <summary>
+    ///     Throws the associated exception if the outcome is a failure; otherwise does nothing.
+    /// </summary>
+    /// <exception cref="Exception">
+    ///     Thrown if the operation failed, using the exception associated with the failure.
+    /// </exception>
+    /// <remarks>
+    ///     Use this method when the operation's value is not needed but failure must still be surfaced,
+    ///     for example when asserting preconditions or verifying a side-effecting step succeeded.
+    /// </remarks>
+    public void ThrowIfFailure() {
+        if (!IsSuccess) { throw Error.ToException(); }
+    }
+
+    /// <summary>
     ///     Continues the process with the next step if the current <see cref="Outcome{T}" /> is successful.
     /// </summary>
     /// <typeparam name="TResult">
@@ -361,11 +482,6 @@ public sealed class Outcome<T> where T : notnull {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="next" /> function is <c>null</c>.
     /// </exception>
-    /// <remarks>
-    ///     This method enables chaining operations that may fail, allowing for a fluent and structured approach to
-    ///     handling success and failure scenarios. If the current outcome is a failure, the error is propagated
-    ///     without modification.
-    /// </remarks>
     public Outcome<TResult> Then<TResult>(Func<T, Outcome<TResult>> next)
         where TResult : notnull {
         if (next is null) { throw new ArgumentNullException(nameof(next)); }
@@ -407,9 +523,7 @@ public sealed class Outcome<T> where T : notnull {
     ///     A token to observe for cancellation requests.
     /// </param>
     /// <returns>
-    ///     A <see cref="Task{TResult}" /> representing the asynchronous operation. If the current outcome is
-    ///     successful, the task resolves to the result of invoking <paramref name="next" />. If the current outcome
-    ///     is a failure, the error is propagated immediately without invoking <paramref name="next" />.
+    ///     A <see cref="Task{TResult}" /> representing the asynchronous operation.
     /// </returns>
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="next" /> function is <c>null</c>.
@@ -494,10 +608,7 @@ public sealed class Outcome<T> where T : notnull {
     ///     A token to observe for cancellation requests.
     /// </param>
     /// <returns>
-    ///     A <see cref="Task{TResult}" /> representing the asynchronous operation. If the current outcome is
-    ///     successful, the task resolves to a new <see cref="Outcome{TResult}" /> containing the converted value.
-    ///     If the current outcome is a failure, the error is propagated immediately without invoking
-    ///     <paramref name="convert" />.
+    ///     A <see cref="Task{TResult}" /> representing the asynchronous operation.
     /// </returns>
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="convert" /> function is <c>null</c>.
@@ -512,6 +623,110 @@ public sealed class Outcome<T> where T : notnull {
 
         var value = await convert(_result, cancellationToken).ConfigureAwait(false);
         return Outcome<TResult>.Success(value);
+    }
+
+    /// <summary>
+    ///     Attempts to recover from a failure by invoking the specified fallback operation.
+    /// </summary>
+    /// <param name="fallback">
+    ///     A function that receives the current <see cref="Error" /> and returns a new <see cref="Outcome{T}" />,
+    ///     which may itself succeed or fail.
+    /// </param>
+    /// <returns>
+    ///     The current <see cref="Outcome{T}" /> unchanged if the operation was successful; otherwise, the result
+    ///     of invoking <paramref name="fallback" /> with the current error.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if <paramref name="fallback" /> is <c>null</c>.
+    /// </exception>
+    /// <remarks>
+    ///     Use this method to implement compensation logic, alternative strategies, or conditional retries.
+    ///     If the fallback itself fails, the new error replaces the original one.
+    /// </remarks>
+    public Outcome<T> Recover(Func<Error, Outcome<T>> fallback) {
+        if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
+
+        return IsSuccess ? this : fallback(Error);
+    }
+
+    /// <summary>
+    ///     Attempts to recover from a failure by providing a guaranteed fallback value.
+    /// </summary>
+    /// <param name="fallback">
+    ///     A function that receives the current <see cref="Error" /> and returns a value of type
+    ///     <typeparamref name="T" />. This function is guaranteed to produce a value — it cannot itself fail.
+    /// </param>
+    /// <returns>
+    ///     The current <see cref="Outcome{T}" /> unchanged if the operation was successful; otherwise, a successful
+    ///     <see cref="Outcome{T}" /> containing the value returned by <paramref name="fallback" />.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if <paramref name="fallback" /> is <c>null</c>.
+    /// </exception>
+    /// <remarks>
+    ///     Unlike <see cref="Recover(Func{Error, Outcome{T}})" />, this overload always produces a success.
+    ///     Use it when a default or cached value can always be substituted for the failed result.
+    /// </remarks>
+    public Outcome<T> Recover(Func<Error, T> fallback) {
+        if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
+
+        return IsSuccess ? this : Outcome<T>.Success(fallback(Error));
+    }
+
+    /// <summary>
+    ///     Attempts to recover from a failure by invoking the specified asynchronous fallback operation.
+    /// </summary>
+    /// <param name="fallback">
+    ///     An asynchronous function that receives the current <see cref="Error" /> and returns a
+    ///     <see cref="Task{TResult}" /> of a new <see cref="Outcome{T}" />, which may itself succeed or fail.
+    /// </param>
+    /// <param name="cancellationToken">
+    ///     A token to observe for cancellation requests.
+    /// </param>
+    /// <returns>
+    ///     A <see cref="Task{TResult}" /> representing the asynchronous operation.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if <paramref name="fallback" /> is <c>null</c>.
+    /// </exception>
+    public Task<Outcome<T>> Recover(
+        Func<Error, CancellationToken, Task<Outcome<T>>> fallback,
+        CancellationToken cancellationToken = default) {
+        if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
+
+        return IsSuccess
+            ? Task.FromResult(this)
+            : fallback(Error, cancellationToken);
+    }
+
+    /// <summary>
+    ///     Attempts to recover from a failure by invoking the specified asynchronous fallback that always produces
+    ///     a value.
+    /// </summary>
+    /// <param name="fallback">
+    ///     An asynchronous function that receives the current <see cref="Error" /> and returns a
+    ///     <see cref="Task{T}" /> containing a guaranteed fallback value.
+    /// </param>
+    /// <param name="cancellationToken">
+    ///     A token to observe for cancellation requests.
+    /// </param>
+    /// <returns>
+    ///     A <see cref="Task{TResult}" /> representing the asynchronous operation. Resolves to the current
+    ///     <see cref="Outcome{T}" /> unchanged if successful; otherwise, a successful <see cref="Outcome{T}" />
+    ///     containing the fallback value.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if <paramref name="fallback" /> is <c>null</c>.
+    /// </exception>
+    public async Task<Outcome<T>> Recover(
+        Func<Error, CancellationToken, Task<T>> fallback,
+        CancellationToken cancellationToken = default) {
+        if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
+
+        if (IsSuccess) { return this; }
+
+        var value = await fallback(Error, cancellationToken).ConfigureAwait(false);
+        return Outcome<T>.Success(value);
     }
 
     /// <summary>
@@ -563,5 +778,60 @@ public sealed class Outcome<T> where T : notnull {
         if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
         if (IsSuccess) { onSuccess(_result); } else { onFailure(Error); }
+    }
+
+    /// <summary>
+    ///     Asynchronously produces a final value by handling both success and failure cases.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the value returned by the provided functions.</typeparam>
+    /// <param name="onSuccess">
+    ///     An asynchronous function to handle the success case.
+    /// </param>
+    /// <param name="onFailure">
+    ///     An asynchronous function to handle the failure case.
+    /// </param>
+    /// <param name="cancellationToken">
+    ///     A token to observe for cancellation requests.
+    /// </param>
+    /// <returns>
+    ///     A <see cref="Task{TResult}" /> resolving to the result of <paramref name="onSuccess" /> if successful,
+    ///     or the result of <paramref name="onFailure" /> if failed.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if <paramref name="onSuccess" /> or <paramref name="onFailure" /> is <c>null</c>.
+    /// </exception>
+    public Task<TResult> Finally<TResult>(
+        Func<T, CancellationToken, Task<TResult>> onSuccess,
+        Func<Error, CancellationToken, Task<TResult>> onFailure,
+        CancellationToken cancellationToken = default) {
+        if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
+        if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
+
+        return IsSuccess ? onSuccess(_result, cancellationToken) : onFailure(Error, cancellationToken);
+    }
+
+    /// <summary>
+    ///     Asynchronously executes the specified actions based on whether the outcome is successful or failed.
+    /// </summary>
+    /// <param name="onSuccess">
+    ///     An asynchronous action to execute if the outcome is successful.
+    /// </param>
+    /// <param name="onFailure">
+    ///     An asynchronous action to execute if the outcome is a failure.
+    /// </param>
+    /// <param name="cancellationToken">
+    ///     A token to observe for cancellation requests.
+    /// </param>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if <paramref name="onSuccess" /> or <paramref name="onFailure" /> is <c>null</c>.
+    /// </exception>
+    public Task Finally(
+        Func<T, CancellationToken, Task> onSuccess,
+        Func<Error, CancellationToken, Task> onFailure,
+        CancellationToken cancellationToken = default) {
+        if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
+        if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
+
+        return IsSuccess ? onSuccess(_result, cancellationToken) : onFailure(Error, cancellationToken);
     }
 }
