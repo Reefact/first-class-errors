@@ -73,13 +73,26 @@ Diagnostics are:
 
 They do not encode operational processes. They provide **direction**, not procedures.
 
+## 🧭 Error taxonomy
+
+Errors are modeled as a hierarchy rooted in the abstract `Error` type:
+
+* **`DomainError`** — a violation of a domain rule (the domain layer).
+* **`InfrastructureError`** — a failure at a technical boundary. It carries a `Transience` (`Unknown` / `NonTransient` / `Transient`) and an `InteractionDirection`.
+  * **`PrimaryPortError`** — incoming boundary (`Direction` fixed to `Incoming`).
+  * **`SecondaryPortError`** — outgoing boundary (`Direction` fixed to `Outgoing`).
+
+The Port errors replace the old Adapter exceptions. When a port failure wraps several causes, `PrimaryPortInnerErrors` / `SecondaryPortInnerErrors` aggregate the inner errors and compute the overall transience.
+
+Each error has a paired exception reached via `error.ToException()`: `DomainException`, `InfrastructureException`, `PrimaryPortException`, `SecondaryPortException`. You never `new` these directly; the exception exposes its `Error` (and through it the context and inner errors).
+
 ## 🔁 Exception or data? Both are supported
 
 Traditionally, exceptions are always thrown.
 DiagnosableExceptions supports two complementary models:
 
 * **Exception as control flow** (classic throw)
-* **Exception as data** (`TryOutcome<T>`)
+* **Exception as data** (`Outcome<T>`, or non-generic `Outcome` when there is no value)
 
 This allows errors to be:
 
@@ -87,7 +100,9 @@ This allows errors to be:
 * transported through validation pipelines
 * escalated later
 
-The same exception type can serve both roles.
+The same error situation can serve both roles.
+
+The non-throwing model is `Outcome` / `Outcome<T>`: the `Error` is carried as data (`IsSuccess` / `IsFailure` / `Error`) and can be converted into an exception on demand via `error.ToException()`.
 
 ## 🎯 From failures to knowledge
 

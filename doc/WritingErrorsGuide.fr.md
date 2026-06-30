@@ -54,7 +54,7 @@ Bon :
 
 À éviter :
 
-* « InvalidAmountOperationException »  
+* « InvalidAmountOperationError »  
 * « L’opération a échoué »  
 
 ## 📝 4. Écrire la **Description**
@@ -63,7 +63,13 @@ La description explique la signification de l’erreur.
 
 Un bon schéma est :
 
+> « Cette erreur survient en essayant de… »
+
+ou
+
 > « Cette erreur survient lorsque… »
+
+Vous pouvez choisir la formulation qui convient le mieux, mais restez cohérent au sein du projet. La cohérence dans la formulation améliore la lisibilité et rend la documentation plus homogène.
 
 La description doit :
 
@@ -71,9 +77,7 @@ La description doit :
 * être compréhensible par quelqu’un qui ne connaît pas le code  
 * expliquer *ce qui s’est passé*, pas *comment le système a réagi*  
 
-La cohérence dans la formulation améliore la lisibilité globale de la documentation.
-
-## 📏 5. Écrire la **régle**
+## 📏 5. Écrire la **règle**
 
 La règle exprime l’invariant ou la contrainte métier.
 

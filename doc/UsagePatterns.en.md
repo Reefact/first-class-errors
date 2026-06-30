@@ -12,7 +12,7 @@ public static Amount From(decimal value, Currency currency)
 {
     if (value < 0)
     {
-        throw InvalidAmountException.NegativeValue(value, currency);
+        throw InvalidAmountOperationError.NegativeAmount(value).ToException();
     }
 
     return new Amount(value, currency);
@@ -32,15 +32,15 @@ This keeps domain code expressive and self-explanatory.
 User or external inputs may be invalid, but not exceptional in the technical sense.
 
 ```csharp
-public TryOutcome<Amount> TryCreateAmount(decimal value, string currencyCode)
+public Outcome<Amount> TryCreateAmount(decimal value, string currencyCode)
 {
     if (!Currency.TryParse(currencyCode, out var currency))
     {
-        return TryOutcome<Amount>.Failure(
-            InvalidAmountException.UnknownCurrency(currencyCode));
+        return Outcome<Amount>.Failure(
+            InvalidAmountOperationError.UnknownCurrency(currencyCode));
     }
 
-    return TryOutcome<Amount>.Success(new Amount(value, currency));
+    return Outcome<Amount>.Success(new Amount(value, currency));
 }
 ```
 
@@ -61,7 +61,7 @@ public Amount Add(Amount other)
 {
     if (Currency != other.Currency)
     {
-        throw InvalidAmountOperationException.CurrencyMismatch(this, other);
+        throw InvalidAmountOperationError.CurrencyMismatch(this, other).ToException();
     }
 
     return new Amount(Value + other.Value, Currency);
@@ -81,7 +81,7 @@ foreach (var line in file)
 
     if (result.IsFailure)
     {
-        Log(result.Exception);
+        Log(result.Error);
         continue;
     }
 
@@ -117,8 +117,8 @@ Complex validations often involve multiple checks.
 
 ```csharp
 var result = ValidateAmount(amount)
-             .Bind(CheckCurrency)
-             .Bind(CheckLimits);
+             .Then(CheckCurrency)
+             .Then(CheckLimits);
 ```
 
 Each failure can carry a diagnosable exception, keeping the model consistent while avoiding uncontrolled throwing.
@@ -132,6 +132,61 @@ Because exceptions carry structured diagnostics, logs become more useful:
 * documented causes
 
 Support teams can relate runtime events to documented error cases.
+
+## 🛠️ 8. Composing with the `Outcome` pipeline
+
+`Outcome` and `Outcome<T>` let you compose success and failure paths without throwing.
+A failure carries an `Error` (never an `Exception`), so the whole chain stays diagnosable.
+
+* **`Then(...)`** — chain the next step only when the previous one succeeded (short-circuits on failure).
+* **`To(...)`** — map the carried value to another value (`Outcome<T>` only), preserving any failure.
+* **`Recover(...)`** — provide a fallback when the chain has failed.
+* **`Finally(...)`** — run terminal handling for both success and failure.
+
+```csharp
+Outcome<Receipt> outcome =
+    TryCreateAmount(value, currencyCode)         // Outcome<Amount>
+        .Then(amount => CheckLimits(amount))     // Outcome<Amount>, runs only on success
+        .To(amount => amount.WithVat())          // map the value, failures pass through
+        .Recover(error => Amount.Zero)           // fallback value if the chain failed
+        .Then(amount => Charge(amount))          // Outcome<Receipt>
+        .Finally(
+            onSuccess: receipt => Log($"Charged {receipt}"),
+            onFailure: error => Log(error));      // error is an Error, fully diagnosable
+```
+
+### Escape hatches
+
+When you need to leave the `Outcome` world (e.g. at an application boundary), two escape hatches turn a failure back into a throw:
+
+* **`ThrowIfFailure()`** — throws the failure's exception (via `error.ToException()`) when the outcome failed; otherwise does nothing.
+* **`GetResultOrThrow()`** — returns the carried value on success, or throws the failure's exception (`Outcome<T>` only).
+
+```csharp
+Outcome<Amount> outcome = TryCreateAmount(value, currencyCode);
+
+outcome.ThrowIfFailure();            // throws error.ToException() on failure
+Amount amount = outcome.GetResultOrThrow(); // value on success, otherwise throws
+```
+
+### Async composition
+
+For asynchronous flows, `OutcomeTaskExtensions` provides `Then` / `To` / `Recover` / `Finally`
+overloads over `Task<Outcome>` and `Task<Outcome<T>>`. Each overload accepts an optional
+`CancellationToken`, so you can await the whole pipeline:
+
+```csharp
+Outcome<Receipt> outcome =
+    await TryLoadAmountAsync(orderId, cancellationToken)   // Task<Outcome<Amount>>
+        .Then(amount => CheckLimitsAsync(amount), cancellationToken)
+        .To(amount => amount.WithVat())
+        .Recover(error => Amount.Zero)
+        .Then(amount => ChargeAsync(amount), cancellationToken)
+        .Finally(
+            onSuccess: receipt => LogAsync(receipt),
+            onFailure: error => LogAsync(error),
+            cancellationToken);
+```
 
 ## 🎯 Summary
 

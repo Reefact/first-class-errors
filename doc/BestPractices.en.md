@@ -32,18 +32,18 @@ Error codes are used in logs, documentation, and support workflows. Stability pr
 
 ## ✂️ 3. Keep the happy path clean
 
-Exception factories should keep error construction out of domain logic.
+Error factories should keep error construction out of domain logic.
 
 Prefer:
 
 ```csharp
-throw InvalidAmountOperationException.CurrencyMismatch(a1, a2);
+throw InvalidAmountOperationError.CurrencyMismatch(a1, a2).ToException();
 ```
 
 Over:
 
 ```csharp
-throw new InvalidAmountOperationException(...);
+throw new DomainException(/* manually assembled Error */);
 ```
 
 **Why:**
@@ -92,14 +92,14 @@ Focus on investigation direction, not workflow.
 **Why:**
 Operational processes depend on organizational context, not on the application itself. Encoding them in error documentation couples your code to external procedures and makes documentation brittle when processes change.
 
-## 🔁 7. Use TryOutcome where failure is expected
+## 🔁 7. Use Outcome where failure is expected
 
 Use exceptions for:
 
 * invariant violations
 * unexpected states
 
-Use `TryOutcome<T>` when:
+Use `Outcome<T>` when:
 
 * validating input
 * processing batches
@@ -135,7 +135,7 @@ Avoid edge cases or pathological data.
 
 ## 🧱 10. Keep documentation close to the factory
 
-Documentation methods should live in the same exception class as the factory.
+Documentation methods should live in the same error factory class as the factory.
 
 This keeps:
 
@@ -148,34 +148,46 @@ in the same conceptual place.
 **Why:**
 Keeping documentation next to the factory ensures it evolves with the code. This prevents drift and preserves the core idea of living documentation: knowledge stays where the behavior is defined.
 
-## 🧩 11. Seal application exception types
+## 🧩 11. Group errors in a dedicated factory class
 
-Application-specific exceptions should be declared as `sealed`.
+Application-specific errors should be grouped in a `static` factory class annotated with `[ProvidesErrorsFor(...)]`, with one `internal static` factory method per error situation.
 
 ```csharp
-public sealed class InvalidAmountOperationException : DomainException
+[ProvidesErrorsFor(nameof(Amount))]
+public static class InvalidAmountOperationError {
+
+    [DocumentedBy(nameof(CurrencyMismatchDocumentation))]
+    internal static DomainError CurrencyMismatch(Amount left, Amount right) {
+        return new DomainError(
+            Code.CurrencyMismatch,
+            $"Cannot operate on amounts with different currencies: {left.Currency} and {right.Currency}.",
+            "Amounts use different currencies.");
+    }
+
+    // ... documentation method and error codes ...
+}
 ```
 
 **Why:**
-Each exception type represents a well-defined error category. Allowing inheritance tends to blur semantics, create unclear hierarchies, and make diagnostics harder to reason about. Sealing the type ensures that the meaning of the exception remains stable and explicit.
+Each factory method represents a well-defined error category. Grouping them in a dedicated class keeps related error situations, their codes, and their documentation in one place. Note that the core types (`DomainError`, `DomainException`, …) are **not** sealed — inheritance is intentionally allowed so you can model your own error hierarchies — but in practice you author error situations through these factory classes rather than by subclassing.
 
-## 🏭 12. Use private constructors and factory methods
+## 🏭 12. Build errors through factories, throw via `ToException()`
 
-Exception constructors should be `private` and only the required ones should be implemented as necessary.
+You never `new` a `DiagnosableException` in user code, and there is no string-pair constructor: an exception's only constructor takes an `Error`. Build the error through a factory method and turn it into an exception with `ToException()`.
 
 ```csharp
-private InvalidAmountOperationException(string errorCode, string errorMessage)
-    : base(errorCode, errorMessage) { }
+// Build an Error through the factory, then throw it as an exception:
+throw InvalidAmountOperationError.CurrencyMismatch(a1, a2).ToException();
 ```
 
-Instances should always be created through factory methods:
+When failure is expected rather than exceptional, return the same factory's `Error` inside an `Outcome<T>`:
 
 ```csharp
-throw InvalidAmountOperationException.CurrencyMismatch(a1, a2);
+return Outcome<Amount>.Failure(InvalidAmountOperationError.NegativeAmount(value));
 ```
 
 **Why:**
-By restricting constructors, you ensure that all exceptions of this type are created in a controlled, documented, and semantically consistent way.
+Routing every error through a factory ensures that all errors of a given category are created in a controlled, documented, and semantically consistent way, whether they are thrown as exceptions or carried as `Outcome` failures.
 
 ## 🎯 Final thought
 

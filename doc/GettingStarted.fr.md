@@ -22,35 +22,37 @@ Ce pattern est essentiel car :
 
 Remarque :
 
-*L’utilisation de méthodes factory pour créer des exceptions est un pattern .NET bien établi pour centraliser et standardiser la création d’exceptions. DiagnosableExceptions s’appuie sur cette idée et fait des factories le point d’ancrage de la documentation d’erreurs structurée et vivante. Au-delà de la documentation, les factories améliorent fortement la lisibilité du code : elles sortent la construction de l’erreur (codes, messages, formatage, formulation) du “happy path”, ce qui permet à la logique métier de rester centrée sur les règles métier plutôt que sur des détails techniques. Un appel comme `throw InvalidAmountOperationException.CurrencyMismatch(a1, a2);` exprime l’intention bien plus clairement qu’une construction d’exception inline. Cette approche s’aligne avec les principes du clean code en séparant les responsabilités, en réduisant la duplication et en donnant à chaque situation d’erreur une représentation explicite et nommée dans le code — tout en fournissant un point unique et cohérent pour attacher diagnostics et documentation.*  
+*L’utilisation de méthodes factory pour créer des exceptions est un pattern .NET bien établi pour centraliser et standardiser la création d’exceptions. DiagnosableExceptions s’appuie sur cette idée et fait des factories le point d’ancrage de la documentation d’erreurs structurée et vivante. Au-delà de la documentation, les factories améliorent fortement la lisibilité du code : elles sortent la construction de l’erreur (codes, messages, formatage, formulation) du “happy path”, ce qui permet à la logique métier de rester centrée sur les règles métier plutôt que sur des détails techniques. Un appel comme `throw InvalidAmountOperationError.CurrencyMismatch(a1, a2).ToException();` exprime l’intention bien plus clairement qu’une construction d’exception inline. Cette approche s’aligne avec les principes du clean code en séparant les responsabilités, en réduisant la duplication et en donnant à chaque situation d’erreur une représentation explicite et nommée dans le code — tout en fournissant un point unique et cohérent pour attacher diagnostics et documentation.*  
 
 Exemple :
 
 ```csharp
-[ProvidesErrorsFor(typeof(Amount))]
-public sealed class InvalidAmountOperationException : DomainException {
+[ProvidesErrorsFor(nameof(Amount))]
+public static class InvalidAmountOperationError {
 
     [DocumentedBy(nameof(CurrencyMismatchDocumentation))]
-    public static InvalidAmountOperationException CurrencyMismatch(Amount amount1, Amount amount2) {
-        return new InvalidAmountOperationException(
-            "AMOUNT_CURRENCY_MISMATCH",
+    internal static DomainError CurrencyMismatch(Amount amount1, Amount amount2) {
+        return new DomainError(
+            Code.CurrencyMismatch,
             $"Impossible d’effectuer l’opération monétaire car les montants impliqués sont exprimés dans des devises différentes : {amount1} et {amount2}.",
-            "Devise différente"
-        );
+            "Devise différente");
     }
 
-    private InvalidAmountOperationException(string errorCode, string errorMessage, string shortMessage)
-        : base(errorCode, errorMessage, shortMessage) { }
+    private static class Code {
+        public static readonly ErrorCode CurrencyMismatch = ErrorCode.Create("AMOUNT_CURRENCY_MISMATCH");
+    }
 
 }
 ````
 
 Ici :
 
-* Le **type d’exception** représente une catégorie d’erreurs métier.
+* Le **type d’erreur** représente une catégorie d’erreurs métier.
 * La **méthode factory** représente un cas d’erreur précis.
 * Le **code d’erreur** est stable et lisible par machine.
 * C’est la méthode factory qui sera documentée.
+
+Vous ne faites jamais `new` sur l’exception vous-même : pour lever, vous appelez `error.ToException()` (voir section 4).
 
 ## 2. Lier la factory à une documentation structurée
 
@@ -63,17 +65,19 @@ private static ErrorDocumentation CurrencyMismatchDocumentation() {
                         .WithRule("Toutes les opérations monétaires doivent impliquer des montants exprimés dans la même devise.")
                         .WithDiagnostic(
                             "Des montants ont été utilisés dans une opération monétaire sans avoir été convertis dans une devise commune.",
-                            ErrorCauseType.System,
+                            ErrorOrigin.Internal,
                             "Vérifiez si tous les montants impliqués ont été convertis dans une devise commune avant d’être utilisés ensemble."
                         )
                         .AndDiagnostic(
                             "Des montants censés être exprimés dans la même devise ont été fournis avec des devises différentes.",
-                            ErrorCauseType.SystemOrInput,
+                            ErrorOrigin.InternalOrExternal,
                             "Vérifiez les devises associées à chaque montant et confirmez si une devise commune était attendue pour cette opération."
                         )
                         .WithExamples(() => CurrencyMismatch(new Amount(127.33m, Currency.EUR), new Amount(57689.00m, Currency.USD)));
 }
 ```
+
+Chaque diagnostic déclare une **origine** via `ErrorOrigin`, dont les valeurs sont `Internal`, `External` et `InternalOrExternal` — indiquant si la cause se situe à l’intérieur du système, à l’extérieur (entrée) ou peut être l’une ou l’autre.
 
 Cette documentation :
 
@@ -89,12 +93,14 @@ Il s’agit de connaissance structurée, pas d’un commentaire.
 Quand une information est utile pour diagnostiquer **une occurrence précise**, ajoutez-la dans le contexte.
 
 ```csharp
-return new NonCompliantBankTransactionFileException(
+return new SecondaryPortError(
     Code.DateOutOfStatementPeriod,
     $"Transaction datée du {transactionDate} hors période [{periodStart};{periodEnd}].",
     "Date de transaction hors période.",
     ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate));
 ```
+
+Le contexte est porté par l’`Error` ; lorsqu’une exception est ensuite produite avec `error.ToException()`, on y accède via `exception.Error.Context`.
 
 Bonnes pratiques :
 
@@ -106,7 +112,7 @@ Bonnes pratiques :
 
 ```csharp
 public Amount Add(Amount other) {
-    if (Currency != other.Currency) { throw InvalidAmountOperationException.CurrencyMismatch(this, other); }
+    if (Currency != other.Currency) { throw InvalidAmountOperationError.CurrencyMismatch(this, other).ToException(); }
 
     return new Amount(Value + other.Value, Currency);
 }
@@ -114,32 +120,34 @@ public Amount Add(Amount other) {
 
 La logique métier reste propre et expressive.
 
-## 5. Ou l’utiliser sans lever d’exception (`TryOutcome<T>`)
+## 5. Ou l’utiliser sans lever d’exception (`Outcome<T>`)
 
 Pour les scénarios de validation ou de traitement par lots :
 
 ```csharp
-public static TryOutcome<Amount> TryAdd(Amount a1, Amount a2) {
+public static Outcome<Amount> TryAdd(Amount a1, Amount a2) {
     if (a1.Currency != a2.Currency) { 
-        return TryOutcome<Amount>.Failure(InvalidAmountOperationException.CurrencyMismatch(a1, a2)); 
+        return Outcome<Amount>.Failure(InvalidAmountOperationError.CurrencyMismatch(a1, a2)); 
     }
 
-    return TryOutcome<Amount>.Success(new Amount(a1.Value + a2.Value, a1.Currency));
+    return Outcome<Amount>.Success(new Amount(a1.Value + a2.Value, a1.Currency));
 }
 ```
+
+Remarque : `Failure(...)` prend une **`Error`** — la factory en renvoie une directement, donc aucune exception n’est impliquée.
 
 Vous pouvez inspecter :
 
 ```csharp
 if (result.IsFailure) {
-    Log(result.Exception);
+    Log(result.Error);
 }
 ```
 
 Ou escalader :
 
 ```csharp
-var amount = result.GetOrThrow();
+var amount = result.GetResultOrThrow();
 ```
 
 ## 6. Générer la documentation

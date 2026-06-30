@@ -24,7 +24,7 @@ DiagnosableExceptions keeps:
 * diagnostics
 * context
 
-while still allowing errors to be transported without throwing via `TryOutcome<T>`.
+while still allowing errors to be transported without throwing via `Outcome<T>`.
 
 You get the advantages of result-based flow without losing the power of exceptions.
 
@@ -95,7 +95,7 @@ Avoid adding:
 
 A good rule: if the data helps explain this occurrence in logs, and is safe to expose, add it.
 
-## ❓ When should I use `TryOutcome<T>`?
+## ❓ When should I use `Outcome<T>`?
 
 Use it when failure is expected and part of normal flow:
 
@@ -108,12 +108,12 @@ Use exceptions directly when:
 * invariants are violated
 * the system cannot proceed
 
-## ❓ Does `TryOutcome<T>` lose the stack trace?
+## ❓ Does `Outcome<T>` lose the stack trace?
 
 Yes — intentionally.
 
-When using `TryOutcome<T>`, the exception is treated as structured error information, not a runtime crash.
-If you later call `GetOrThrow()`, the exception is thrown at that point.
+When using `Outcome<T>`, the exception is treated as structured error information, not a runtime crash.
+If you later call `GetResultOrThrow()`, the exception is thrown at that point.
 
 ## ❓ Can I document every exception?
 

@@ -27,7 +27,7 @@ Errors become **documented knowledge about your system**, not just runtime failu
                             () => BelowAbsoluteZero(-1, TemperatureUnit.Kelvin),
                             () => BelowAbsoluteZero(-280, TemperatureUnit.Celsius));
 
-This produces **structured documentation tied directly to the exception definition**.
+This produces **structured documentation tied directly to the error definition**.
 
 ## When to use DiagnosableExceptions
 

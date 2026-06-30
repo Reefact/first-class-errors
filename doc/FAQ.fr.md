@@ -24,7 +24,7 @@ DiagnosableExceptions conserve :
 * des diagnostics  
 * du contexte  
 
-tout en permettant de transporter les erreurs sans lever d’exception via `TryOutcome<T>`.
+tout en permettant de transporter les erreurs sans lever d’exception via `Outcome<T>`.
 
 Vous obtenez les avantages d’un flux basé sur les résultats sans perdre la puissance des exceptions.
 
@@ -95,7 +95,7 @@ Bons candidats :
 
 Règle simple : si la donnée aide à expliquer cette occurrence dans les logs, et qu’elle est sûre à exposer, ajoutez-la.
 
-## ❓ Quand dois-je utiliser `TryOutcome<T>` ?
+## ❓ Quand dois-je utiliser `Outcome<T>` ?
 
 Utilisez-le lorsque l’échec est attendu et fait partie du flux normal :
 
@@ -108,12 +108,12 @@ Utilisez directement des exceptions lorsque :
 * des invariants sont violés  
 * le système ne peut pas continuer  
 
-## ❓ `TryOutcome<T>` fait-il perdre la stack trace ?
+## ❓ `Outcome<T>` fait-il perdre la stack trace ?
 
 Oui — volontairement.
 
-Avec `TryOutcome<T>`, l’exception est traitée comme une information d’erreur structurée, pas comme un crash runtime.  
-Si vous appelez ensuite `GetOrThrow()`, l’exception est levée à ce moment-là.
+Avec `Outcome<T>`, l’exception est traitée comme une information d’erreur structurée, pas comme un crash runtime.  
+Si vous appelez ensuite `GetResultOrThrow()`, l’exception est levée à ce moment-là.
 
 ## ❓ Puis-je documenter toutes les exceptions ?
 

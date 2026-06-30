@@ -117,7 +117,7 @@ This enables:
 The library supports both:
 
 * **throwing errors** (traditional exception flow)
-* **transporting errors without throwing** via `TryOutcome<T>`
+* **transporting errors without throwing** via `Outcome` and `Outcome<T>`
 
 This allows you to use exceptions as:
 
@@ -131,14 +131,14 @@ depending on the context (domain logic, validation, pipelines, etc.).
 From the `DiagnosableExceptions.Usage` project:
 
 ```csharp
-[ProvidesErrorsFor(typeof(Temperature))]
-public sealed class InvalidTemperatureException : DomainException {
+[ProvidesErrorsFor(nameof(Temperature))]
+public static class InvalidTemperatureError {
 
     [DocumentedBy(nameof(BelowAbsoluteZeroDocumentation))]
-    internal static InvalidTemperatureException BelowAbsoluteZero(decimal invalidValue, TemperatureUnit invalidValueUnit) {
-        return new InvalidTemperatureException(
-            "TEMPERATURE_BELOW_ABSOLUTE_ZERO",
-            $"Failed to instantiate temperature: the value {invalidValue}{invalidValueUnit} is below absolute zero.",
+    internal static DomainError BelowAbsoluteZero(decimal invalidValue, TemperatureUnit invalidValueUnit) {
+        return new DomainError(
+            Code.TemperatureBelowAbsoluteZero,
+            $"Failed to instantiate temperature: the value {invalidValue} {invalidValueUnit} is below absolute zero.",
             "Temperature is below absolute zero.");
     }
 
@@ -151,10 +151,20 @@ public sealed class InvalidTemperatureException : DomainException {
                                 () => BelowAbsoluteZero(-1, TemperatureUnit.Kelvin),
                                 () => BelowAbsoluteZero(-280, TemperatureUnit.Celsius));
     }
+
+    private static class Code {
+        public static readonly ErrorCode TemperatureBelowAbsoluteZero = ErrorCode.Create("TEMPERATURE_BELOW_ABSOLUTE_ZERO");
+    }
 }
 ```
 
-Here, the exception, its meaning, its rule, its diagnostics, and example messages are all defined together — in code.
+The factory returns a structured `Error`. When you need to throw it, you turn it into an exception with `.ToException()`:
+
+```csharp
+throw InvalidTemperatureError.BelowAbsoluteZero(-1, TemperatureUnit.Kelvin).ToException();
+```
+
+Here, the error, its meaning, its rule, its diagnostics, and example messages are all defined together — in code.
 
 ## 🎯 Who is this for?
 

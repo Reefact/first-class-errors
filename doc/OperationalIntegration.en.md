@@ -40,17 +40,17 @@ Logs can include:
 
 This makes logs not only readable but also correlatable across systems.
 
-## 🔍 Logging inner exceptions
+## 🔍 Logging inner errors
 
-By default, most logging setups treat exceptions as flat messages or stack traces. They do not automatically traverse and structure multiple inner exceptions in a meaningful way for analysis.
+By default, most logging setups treat exceptions as flat messages or stack traces. They do not automatically traverse and structure the diagnostic information carried by a `DiagnosableException` in a meaningful way for analysis.
 
-Since `DiagnosableException` can aggregate several inner exceptions, a logging filter or middleware should explicitly extract and log them. Without this step, part of the diagnostic information carried by the model may remain unused in logs.
+A `DiagnosableException` does not set `Exception.InnerException`; instead, the diagnostic chain lives on its `Error`. Through `exception.Error.InnerErrors` (a list of `Error`), a logging filter or middleware should explicitly traverse and log the chain. Without this step, part of the diagnostic information carried by the model may remain unused in logs.
 
 This filter can:
 
 * detect `DiagnosableException`
-* extract its inner exceptions
-* log the full chain in a structured form
+* read its `.Error`
+* traverse `Error.InnerErrors` and log the full chain in a structured form
 
 This preserves diagnostic depth and ensures that the richness of the error model is actually visible in operational logs.
 

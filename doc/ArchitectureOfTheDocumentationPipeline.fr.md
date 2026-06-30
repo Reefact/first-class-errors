@@ -9,18 +9,28 @@ Le pipeline sépare la **définition de la connaissance**, **l’extraction** et
 
 La connaissance liée aux erreurs est écrite à l’endroit où les erreurs sont définies :
 
-* Les types d’exception représentent des catégories d’erreurs  
+* Une classe statique annotée avec `[ProvidesErrorsFor(...)]` regroupe les erreurs liées à un modèle donné  
+* Les sous-types d’`Error` (`DomainError`, `PrimaryPortError`, `SecondaryPortError`, ...) représentent des catégories d’erreurs  
 * Les méthodes factory représentent des situations d’erreur spécifiques  
 * Le DSL `DescribeError` décrit le sens, les règles, les diagnostics et les exemples  
 
 À ce stade, la documentation est une **donnée structurée**, pas des fichiers texte.
 
-## 🔗 2. Les factories sont liées à la documentation
+## 🔗 2. Les erreurs sont ancrées et liées à la documentation
 
-Chaque méthode factory est liée à sa documentation via :
+Une classe statique déclare qu’elle possède les erreurs d’un modèle donné :
 
 ```csharp
-[DocumentedBy(nameof(CurrencyMismatchDocumentation))]
+[ProvidesErrorsFor(nameof(Temperature))]
+public static class InvalidTemperatureError { ... }
+```
+
+Cet attribut est le point d’ancrage principal du modèle de documentation : il marque la classe comme source d’erreurs et fournit `ErrorDocumentation.Source` (le nom du modèle passé via `nameof(...)`).
+
+À l’intérieur de cette classe, chaque méthode factory est liée à sa méthode de documentation via :
+
+```csharp
+[DocumentedBy(nameof(BelowAbsoluteZeroDocumentation))]
 ```
 
 Cela crée une connexion explicite entre :
@@ -28,49 +38,47 @@ Cela crée une connexion explicite entre :
 * la manière dont une erreur est créée
 * la manière dont elle est décrite
 
-Les factories deviennent les points d’ancrage du modèle de documentation.
-
 ## 🔎 3. Analyse des assemblies
 
-`AssemblyErrorDocumentationReader` analyse les assemblies et :
+`AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(assembly)` analyse un assembly et :
 
-* trouve les types d’exception dérivant de `DiagnosableException`
+* trouve toute classe annotée avec `[ProvidesErrorsFor(...)]` (ce sont de simples classes statiques, pas des types d’exception)
 * trouve les méthodes factory marquées avec `[DocumentedBy]`
-* invoque les méthodes de documentation
-* construit une collection d’objets `ErrorDocumentation`
+* invoque les méthodes de documentation liées
+* construit une collection d’objets `ErrorDocumentation` (dédupliquée par `Code`, ordonnée par `Code`)
 
 À ce stade, la documentation devient un modèle structuré en mémoire.
 
 ## 🧩 4. Agrégation au niveau de la solution
 
-Un outil de plus haut niveau peut :
+`SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(solutionPath[, options])` travaille à un niveau plus élevé et :
 
-* compiler une solution
-* charger tous les assemblies
-* agréger tous les `ErrorDocumentation` extraits
+* compile une solution
+* charge tous les assemblies
+* agrège tous les `ErrorDocumentation` extraits (dédupliqués par `Code`, ordonnés par `Code`)
 
 Cela produit un **catalogue global des erreurs** pour l’application ou le système.
 
-## 🖨️ 5. Transformation vers des formats de sortie
+## 🖨️ 5. Transformation vers des formats de sortie (prévu)
 
-Le modèle structuré peut être transformé en :
+La bibliothèque ne fournit que le modèle structuré en mémoire ; **aucun exporteur n’est livré aujourd’hui**. Le modèle étant une simple donnée, un exporteur peut être construit par-dessus cette bibliothèque pour le transformer en :
 
 * Markdown
 * HTML
 * JSON
 * ou tout autre format
 
-La couche de transformation est indépendante du modèle central.
+Une telle couche de transformation serait indépendante du modèle central.
 
-## 🧰 6. Orchestration via CLI
+## 🧰 6. Orchestration via CLI (prévu)
 
-Un outil en ligne de commande peut orchestrer l’ensemble du processus :
+Il n’existe **aucune CLI livrée aujourd’hui** (le projet CLI est actuellement un stub Hello-World). Une CLI pourrait être construite par-dessus cette bibliothèque pour orchestrer l’ensemble du processus, par exemple :
 
 ```bash
 errdocgen --solution ./MyApp.sln --export html
 ```
 
-Il gère :
+Une telle CLI gérerait :
 
 * la compilation de la solution
 * le chargement des assemblies
@@ -82,13 +90,13 @@ Il gère :
 
 Cette séparation garantit :
 
-| Couche   | Responsabilité                       |
-| -------- | ------------------------------------ |
-| Code     | Définir la connaissance des erreurs  |
-| Reader   | Extraire la documentation structurée |
-| Builder  | Agréger à travers les assemblies     |
-| Exporter | Générer la documentation             |
-| CLI      | Orchestrer le processus              |
+| Couche             | Responsabilité                       |
+| ------------------ | ------------------------------------ |
+| Code               | Définir la connaissance des erreurs  |
+| Reader             | Extraire la documentation structurée |
+| Builder            | Agréger à travers les assemblies     |
+| Exporter (prévu)   | Générer la documentation             |
+| CLI (prévu)        | Orchestrer le processus              |
 
 La documentation reste :
 

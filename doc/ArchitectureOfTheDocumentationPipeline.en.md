@@ -9,18 +9,28 @@ The pipeline separates **knowledge definition**, **extraction**, and **rendering
 
 Error knowledge is written where errors are defined:
 
-* Exception types represent categories of errors
+* A static class annotated with `[ProvidesErrorsFor(...)]` groups the errors that belong to a given model
+* `Error` subtypes (`DomainError`, `PrimaryPortError`, `SecondaryPortError`, ...) represent categories of errors
 * Factory methods represent specific error situations
 * The `DescribeError` DSL describes meaning, rules, diagnostics, and examples
 
 At this stage, documentation is **structured data**, not text files.
 
-## 🔗 2️. Factories are linked to documentation
+## 🔗 2️. Errors are anchored and linked to documentation
 
-Each factory method is linked to its documentation using:
+A static class declares that it owns the errors of a given model:
 
 ```csharp
-[DocumentedBy(nameof(CurrencyMismatchDocumentation))]
+[ProvidesErrorsFor(nameof(Temperature))]
+public static class InvalidTemperatureError { ... }
+```
+
+This attribute is the primary anchor of the documentation model: it marks the class as a source of errors and supplies `ErrorDocumentation.Source` (the model name passed via `nameof(...)`).
+
+Inside that class, each factory method is linked to its documentation method using:
+
+```csharp
+[DocumentedBy(nameof(BelowAbsoluteZeroDocumentation))]
 ```
 
 This creates an explicit connection between:
@@ -28,49 +38,47 @@ This creates an explicit connection between:
 * how an error is created
 * how it is described
 
-Factories become the anchor points of the documentation model.
-
 ## 🔎 3. Assembly scanning
 
-The `AssemblyErrorDocumentationReader` scans assemblies and:
+`AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(assembly)` scans an assembly and:
 
-* finds exception types deriving from `DiagnosableException`
+* finds any class annotated with `[ProvidesErrorsFor(...)]` (these are plain static classes, not exception types)
 * finds factory methods marked with `[DocumentedBy]`
-* invokes documentation methods
-* builds a collection of `ErrorDocumentation` objects
+* invokes the linked documentation methods
+* builds a collection of `ErrorDocumentation` objects (deduped by `Code`, ordered by `Code`)
 
 At this stage, documentation becomes a structured in-memory model.
 
 ## 🧩 4️. Aggregation at solution level
 
-A higher-level tool can:
+`SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(solutionPath[, options])` works at a higher level and:
 
-* build a solution
-* load all assemblies
-* aggregate all extracted `ErrorDocumentation`
+* builds a solution
+* loads all assemblies
+* aggregates all extracted `ErrorDocumentation` (deduped by `Code`, ordered by `Code`)
 
 This produces a **global error catalog** for the application or system.
 
-## 🖨️ 5️. Transformation to output formats
+## 🖨️ 5️. Transformation to output formats (planned)
 
-The structured model can be transformed into:
+The library ships the structured in-memory model only; **no exporter is shipped today**. Because the model is plain data, an exporter can be built on top of this library to transform it into:
 
 * Markdown
 * HTML
 * JSON
 * or any other format
 
-The transformation layer is independent of the core model.
+Such a transformation layer would be independent of the core model.
 
-## 🧰 6️. CLI orchestration
+## 🧰 6️. CLI orchestration (planned)
 
-A CLI tool can orchestrate the full process:
+There is **no shipped CLI today** (the CLI project is currently a Hello-World stub). A CLI could be built on top of this library to orchestrate the full process, for example:
 
 ```
 errdocgen --solution ./MyApp.sln --export html
 ```
 
-It handles:
+Such a CLI would handle:
 
 * solution build
 * assembly loading
@@ -82,13 +90,13 @@ It handles:
 
 This separation ensures:
 
-| Layer    | Responsibility                   |
-| -------- | -------------------------------- |
-| Code     | Define error knowledge           |
-| Reader   | Extract structured documentation |
-| Builder  | Aggregate across assemblies      |
-| Exporter | Render documentation             |
-| CLI      | Orchestrate the process          |
+| Layer              | Responsibility                   |
+| ------------------ | -------------------------------- |
+| Code               | Define error knowledge           |
+| Reader             | Extract structured documentation |
+| Builder            | Aggregate across assemblies      |
+| Exporter (planned) | Render documentation             |
+| CLI (planned)      | Orchestrate the process          |
 
 Documentation remains:
 

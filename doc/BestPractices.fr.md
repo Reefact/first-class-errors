@@ -32,18 +32,18 @@ Les codes d’erreur sont utilisés dans les logs, la documentation et les proce
 
 ## ✂️ 3. Garder le happy path propre
 
-Les factories d’exception doivent éviter d’introduire la construction d’erreur directement dans la logique métier.
+Les factories d’erreur doivent éviter d’introduire la construction d’erreur directement dans la logique métier.
 
 Préférez :
 
 ```csharp
-throw InvalidAmountOperationException.CurrencyMismatch(a1, a2);
+throw InvalidAmountOperationError.CurrencyMismatch(a1, a2).ToException();
 ````
 
 Plutôt que :
 
 ```csharp
-throw new InvalidAmountOperationException(...);
+throw new DomainException(/* Error assemblée manuellement */);
 ```
 
 **Pourquoi :**
@@ -92,14 +92,14 @@ Concentrez-vous sur la direction de l’investigation, pas sur le workflow.
 **Pourquoi :**
 Les processus opérationnels dépendent du contexte organisationnel, pas de l’application elle-même. Les encoder dans la documentation des erreurs couple votre code à des procédures externes et rend la documentation fragile lorsque ces processus changent.
 
-## 🔁 7. Utiliser TryOutcome quand l’échec est attendu
+## 🔁 7. Utiliser Outcome quand l’échec est attendu
 
 Utilisez des exceptions pour :
 
 * les violations d’invariants
 * les états inattendus
 
-Utilisez `TryOutcome<T>` lorsque :
+Utilisez `Outcome<T>` lorsque :
 
 * vous validez des entrées
 * vous traitez des lots
@@ -135,7 +135,7 @@ Utilisez des valeurs :
 
 ## 🧱 10. Garder la documentation proche de la factory
 
-Les méthodes de documentation doivent vivre dans la même classe d’exception que la factory.
+Les méthodes de documentation doivent vivre dans la même classe factory d’erreur que la factory.
 
 Cela garde :
 
@@ -148,34 +148,46 @@ au même endroit conceptuel.
 **Pourquoi :**
 Garder la documentation à côté de la factory garantit qu’elle évolue avec le code. Cela évite les dérives et préserve l’idée centrale de documentation vivante : la connaissance reste là où le comportement est défini.
 
-## 🧩 11. Sceller les exceptions applicatives
+## 🧩 11. Regrouper les erreurs dans une classe factory dédiée
 
-Les exceptions spécifiques à l’application devraient être déclarées `sealed`.
+Les erreurs spécifiques à l’application devraient être regroupées dans une classe `static` annotée avec `[ProvidesErrorsFor(...)]`, avec une méthode factory `internal static` par situation d’erreur.
 
 ```csharp
-public sealed class InvalidAmountOperationException : DomainException
+[ProvidesErrorsFor(nameof(Amount))]
+public static class InvalidAmountOperationError {
+
+    [DocumentedBy(nameof(CurrencyMismatchDocumentation))]
+    internal static DomainError CurrencyMismatch(Amount left, Amount right) {
+        return new DomainError(
+            Code.CurrencyMismatch,
+            $"Impossible d’opérer sur des montants de devises différentes : {left.Currency} et {right.Currency}.",
+            "Les montants utilisent des devises différentes.");
+    }
+
+    // ... méthode de documentation et codes d’erreur ...
+}
 ```
 
 **Pourquoi :**
-Chaque type d’exception représente une catégorie d’erreur bien définie. Autoriser l’héritage tend à brouiller la sémantique, créer des hiérarchies floues et rendre les diagnostics plus difficiles à raisonner. Sceller le type garantit que le sens de l’exception reste stable et explicite.
+Chaque méthode factory représente une catégorie d’erreur bien définie. Les regrouper dans une classe dédiée garde au même endroit les situations d’erreur liées, leurs codes et leur documentation. Notez que les types du cœur (`DomainError`, `DomainException`, …) ne sont **pas** `sealed` — l’héritage est intentionnellement autorisé afin de pouvoir modéliser vos propres hiérarchies d’erreur — mais en pratique vous décrivez les situations d’erreur via ces classes factory plutôt qu’en dérivant des sous-classes.
 
-## 🏭 12. Utiliser des constructeurs privés et des méthodes factory
+## 🏭 12. Construire les erreurs via des factories, lever avec `ToException()`
 
-Les constructeurs d’exception devraient être `private` et seuls ceux strictement nécessaires devraient être implémentés.
+Vous ne faites jamais `new` sur une `DiagnosableException` dans votre code, et il n’existe pas de constructeur à deux chaînes : le seul constructeur d’une exception prend une `Error`. Construisez l’erreur via une méthode factory puis transformez-la en exception avec `ToException()`.
 
 ```csharp
-private InvalidAmountOperationException(string errorCode, string errorMessage)
-    : base(errorCode, errorMessage) { }
+// Construit une Error via la factory, puis la lève en tant qu’exception :
+throw InvalidAmountOperationError.CurrencyMismatch(a1, a2).ToException();
 ```
 
-Les instances doivent toujours être créées via des méthodes factory :
+Lorsque l’échec est attendu plutôt qu’exceptionnel, retournez l’`Error` de la même factory dans un `Outcome<T>` :
 
 ```csharp
-throw InvalidAmountOperationException.CurrencyMismatch(a1, a2);
+return Outcome<Amount>.Failure(InvalidAmountOperationError.NegativeAmount(value));
 ```
 
 **Pourquoi :**
-En restreignant les constructeurs, vous vous assurez que toutes les exceptions de ce type sont créées de manière contrôlée, documentée et sémantiquement cohérente.
+Faire passer chaque erreur par une factory garantit que toutes les erreurs d’une catégorie donnée sont créées de manière contrôlée, documentée et sémantiquement cohérente, qu’elles soient levées en tant qu’exceptions ou portées comme échecs d’`Outcome`.
 
 ## 🎯 Pensée finale
 

@@ -10,7 +10,7 @@ Les diagnostics ne sont pas une analyse post-mortem ; ce sont des hypothèses st
 
 La bibliothèque sépare également la sémantique de la mécanique. Lever, intercepter, logger ou transporter des erreurs sont des préoccupations mécaniques. Le sens d’une erreur — quelle règle a été violée, quelle situation s’est produite, ce qui pourrait l’expliquer — appartient au domaine de la connaissance. DiagnosableExceptions se concentre sur la préservation de ce sens, indépendamment de la manière dont l’erreur circule dans le système.
 
-Enfin, la conception reconnaît que tous les échecs ne doivent pas être exceptionnels au sens runtime. Certaines erreurs font partie du flux normal, comme les échecs de validation ou les problèmes de parsing. En permettant d’utiliser les exceptions comme information d’erreur structurée via `TryOutcome<T>`, le modèle supporte à la fois les flux avec et sans levée d’exception, sans perdre la richesse sémantique.
+Enfin, la conception reconnaît que tous les échecs ne doivent pas être exceptionnels au sens runtime. Certaines erreurs font partie du flux normal, comme les échecs de validation ou les problèmes de parsing. En permettant d’utiliser les exceptions comme information d’erreur structurée via `Outcome<T>`, le modèle supporte à la fois les flux avec et sans levée d’exception, sans perdre la richesse sémantique.
 
 En essence, la bibliothèque encourage les équipes à considérer les erreurs comme des artefacts de connaissance de premier plan. Lorsque les erreurs sont explicites, documentées et structurées, elles améliorent la communication entre les développeurs, les équipes de support et le système lui-même.
 

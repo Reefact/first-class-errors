@@ -117,7 +117,7 @@ Cela permet de générer :
 La bibliothèque supporte à la fois :
 
 * **les erreurs levées** (flux classique par exceptions)
-* **les erreurs transportées sans être levées** via `TryOutcome<T>`
+* **les erreurs transportées sans être levées** via `Outcome` et `Outcome<T>`
 
 Cela vous permet d’utiliser les exceptions :
 
@@ -131,14 +131,14 @@ selon le contexte (domaine, validation, pipelines, etc.).
 Extrait du projet `DiagnosableExceptions.Usage` :
 
 ```csharp
-[ProvidesErrorsFor(typeof(Temperature))]
-public sealed class InvalidTemperatureException : DomainException {
+[ProvidesErrorsFor(nameof(Temperature))]
+public static class InvalidTemperatureError {
 
     [DocumentedBy(nameof(BelowAbsoluteZeroDocumentation))]
-    internal static InvalidTemperatureException BelowAbsoluteZero(decimal invalidValue, TemperatureUnit invalidValueUnit) {
-        return new InvalidTemperatureException(
-            "TEMPERATURE_BELOW_ABSOLUTE_ZERO",
-            $"Failed to instantiate temperature: the value {invalidValue}{invalidValueUnit} is below absolute zero.",
+    internal static DomainError BelowAbsoluteZero(decimal invalidValue, TemperatureUnit invalidValueUnit) {
+        return new DomainError(
+            Code.TemperatureBelowAbsoluteZero,
+            $"Failed to instantiate temperature: the value {invalidValue} {invalidValueUnit} is below absolute zero.",
             "Temperature is below absolute zero.");
     }
 
@@ -151,10 +151,20 @@ public sealed class InvalidTemperatureException : DomainException {
                                 () => BelowAbsoluteZero(-1, TemperatureUnit.Kelvin),
                                 () => BelowAbsoluteZero(-280, TemperatureUnit.Celsius));
     }
+
+    private static class Code {
+        public static readonly ErrorCode TemperatureBelowAbsoluteZero = ErrorCode.Create("TEMPERATURE_BELOW_ABSOLUTE_ZERO");
+    }
 }
 ```
 
-Ici, l’exception, sa signification, sa règle, ses diagnostics et des exemples de messages sont définis ensemble — dans le code.
+La factory retourne une `Error` structurée. Lorsque vous devez la lever, vous la transformez en exception avec `.ToException()` :
+
+```csharp
+throw InvalidTemperatureError.BelowAbsoluteZero(-1, TemperatureUnit.Kelvin).ToException();
+```
+
+Ici, l’erreur, sa signification, sa règle, ses diagnostics et des exemples de messages sont définis ensemble — dans le code.
 
 ## 🎯 Pour qui ?
 

@@ -56,7 +56,7 @@ Good:
 
 Avoid:
 
-* “InvalidAmountOperationException”
+* “InvalidAmountOperationError”
 * “Operation failed”
 
 ## 📝 4. Writing the **Description**

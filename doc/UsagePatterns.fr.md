@@ -9,7 +9,7 @@ Lors de la création d’un value object, les états invalides doivent être rej
 
 ```csharp
 public static Amount From(decimal value, Currency currency) {
-    if (value < 0) { throw InvalidAmountException.NegativeValue(value, currency); }
+    if (value < 0) { throw InvalidAmountOperationError.NegativeAmount(value).ToException(); }
 
     return new Amount(value, currency);
 }
@@ -28,11 +28,11 @@ Le code métier reste expressif et auto-explicatif.
 Les entrées utilisateur ou externes peuvent être invalides, sans être exceptionnelles au sens technique.
 
 ```csharp
-public TryOutcome<Amount> TryCreateAmount(decimal value, string currencyCode){
+public Outcome<Amount> TryCreateAmount(decimal value, string currencyCode){
     if (!Currency.TryParse(currencyCode, out var currency))    {
-        return TryOutcome<Amount>.Failure(InvalidAmountException.UnknownCurrency(currencyCode)); }
+        return Outcome<Amount>.Failure(InvalidAmountOperationError.UnknownCurrency(currencyCode)); }
 
-    return TryOutcome<Amount>.Success(new Amount(value, currency));
+    return Outcome<Amount>.Success(new Amount(value, currency));
 }
 ```
 
@@ -50,7 +50,7 @@ Les opérations entre objets métier comportent souvent des contraintes sémanti
 
 ```csharp
 public Amount Add(Amount other) {
-    if (Currency != other.Currency) { throw InvalidAmountOperationException.CurrencyMismatch(this, other); }
+    if (Currency != other.Currency) { throw InvalidAmountOperationError.CurrencyMismatch(this, other).ToException(); }
 
     return new Amount(Value + other.Value, Currency);
 }
@@ -67,7 +67,7 @@ foreach (var line in file) {
     var result = TryParseAmount(line);
 
     if (result.IsFailure) {
-        Log(result.Exception);
+        Log(result.Error);
         
         continue;
     }
@@ -104,8 +104,8 @@ Les validations complexes impliquent souvent plusieurs contrôles.
 
 ```csharp
 var result = ValidateAmount(amount)
-             .Bind(CheckCurrency)
-             .Bind(CheckLimits);
+             .Then(CheckCurrency)
+             .Then(CheckLimits);
 ```
 
 Chaque échec peut porter une exception diagnostiquable, ce qui garde un modèle cohérent tout en évitant des levées d’exception incontrôlées.
@@ -119,6 +119,61 @@ Comme les exceptions portent des diagnostics structurés, les logs deviennent pl
 * causes documentées
 
 Les équipes support peuvent relier les événements runtime à des cas d’erreur documentés.
+
+## 🛠️ 8. Composer avec le pipeline `Outcome`
+
+`Outcome` et `Outcome<T>` permettent de composer les chemins de succès et d’échec sans lever d’exception.
+Un échec porte une `Error` (jamais une `Exception`), si bien que toute la chaîne reste diagnostiquable.
+
+* **`Then(...)`** — enchaîne l’étape suivante uniquement si la précédente a réussi (court-circuite en cas d’échec).
+* **`To(...)`** — transforme la valeur portée en une autre valeur (`Outcome<T>` uniquement), en préservant un éventuel échec.
+* **`Recover(...)`** — fournit une valeur de repli lorsque la chaîne a échoué.
+* **`Finally(...)`** — exécute un traitement terminal pour le succès comme pour l’échec.
+
+```csharp
+Outcome<Receipt> outcome =
+    TryCreateAmount(value, currencyCode)         // Outcome<Amount>
+        .Then(amount => CheckLimits(amount))     // Outcome<Amount>, exécuté seulement en cas de succès
+        .To(amount => amount.WithVat())          // transforme la valeur, les échecs passent au travers
+        .Recover(error => Amount.Zero)           // valeur de repli si la chaîne a échoué
+        .Then(amount => Charge(amount))          // Outcome<Receipt>
+        .Finally(
+            onSuccess: receipt => Log($"Charged {receipt}"),
+            onFailure: error => Log(error));      // error est une Error, pleinement diagnostiquable
+```
+
+### Échappatoires
+
+Lorsqu’il faut sortir du monde `Outcome` (par exemple à une frontière applicative), deux échappatoires retransforment un échec en levée d’exception :
+
+* **`ThrowIfFailure()`** — lève l’exception de l’échec (via `error.ToException()`) lorsque l’outcome a échoué ; sinon ne fait rien.
+* **`GetResultOrThrow()`** — retourne la valeur portée en cas de succès, ou lève l’exception de l’échec (`Outcome<T>` uniquement).
+
+```csharp
+Outcome<Amount> outcome = TryCreateAmount(value, currencyCode);
+
+outcome.ThrowIfFailure();            // lève error.ToException() en cas d’échec
+Amount amount = outcome.GetResultOrThrow(); // valeur en cas de succès, sinon lève
+```
+
+### Composition asynchrone
+
+Pour les flux asynchrones, `OutcomeTaskExtensions` fournit des surcharges `Then` / `To` / `Recover` / `Finally`
+sur `Task<Outcome>` et `Task<Outcome<T>>`. Chaque surcharge accepte un `CancellationToken` optionnel,
+ce qui permet d’attendre l’ensemble du pipeline :
+
+```csharp
+Outcome<Receipt> outcome =
+    await TryLoadAmountAsync(orderId, cancellationToken)   // Task<Outcome<Amount>>
+        .Then(amount => CheckLimitsAsync(amount), cancellationToken)
+        .To(amount => amount.WithVat())
+        .Recover(error => Amount.Zero)
+        .Then(amount => ChargeAsync(amount), cancellationToken)
+        .Finally(
+            onSuccess: receipt => LogAsync(receipt),
+            onFailure: error => LogAsync(error),
+            cancellationToken);
+```
 
 ## 🎯 Résumé
 

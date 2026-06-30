@@ -1,6 +1,6 @@
 # Contexte d’erreur : quand et pourquoi l’utiliser
 
-`ErrorContext` permet d’attacher des métadonnées **structurées, typées et stables** à une instance de `DiagnosableException`.
+`ErrorContext` permet d’attacher des métadonnées **structurées, typées et stables** à une `Error` (via `Error.Context`), accessibles depuis une exception levée via `exception.Error.Context`.
 
 Il complète le code d’erreur et les messages en répondant à :
 
@@ -61,12 +61,13 @@ internal static class ErrCtxKey {
 
 ### 2) Ajouter le contexte au niveau des factories
 
-Attachez le contexte là où l’exception est créée, pour garantir la cohérence de chaque occurrence :
+Attachez le contexte là où l’erreur est créée, pour garantir la cohérence de chaque occurrence :
 
 ```csharp
-return new NonCompliantBankTransactionFileException(
+return new PrimaryPortError(
     Code.DateOutOfStatementPeriod,
-    $"Transaction datée du {transactionDate} hors période [{periodStart};{periodEnd}].",
+    $"Transaction datée du {transactionDate} hors période du relevé.",
+    Transience.NonTransient,
     "La date de transaction est hors période du relevé.",
     ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate));
 ```

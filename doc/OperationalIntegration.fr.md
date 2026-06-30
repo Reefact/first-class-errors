@@ -40,17 +40,17 @@ Les logs peuvent inclure :
 
 Cela rend les logs non seulement lisibles, mais aussi corrélables entre systèmes.
 
-## 🔍 Logging des inner exceptions
+## 🔍 Logging des inner errors
 
-Par défaut, la plupart des configurations de logging traitent les exceptions comme de simples messages ou des stack traces. Elles ne parcourent pas automatiquement plusieurs inner exceptions de manière structurée et exploitable pour l’analyse.
+Par défaut, la plupart des configurations de logging traitent les exceptions comme de simples messages ou des stack traces. Elles ne parcourent pas automatiquement l’information de diagnostic portée par une `DiagnosableException` de manière structurée et exploitable pour l’analyse.
 
-Comme `DiagnosableException` peut agréger plusieurs inner exceptions, un filtre de logging ou un middleware devrait explicitement les extraire et les logger. Sans cela, une partie de l’information de diagnostic portée par le modèle peut rester inutilisée dans les logs.
+Une `DiagnosableException` ne renseigne pas `Exception.InnerException` ; la chaîne de diagnostic vit plutôt sur son `Error`. Via `exception.Error.InnerErrors` (une liste d’`Error`), un filtre de logging ou un middleware devrait explicitement parcourir et logger cette chaîne. Sans cela, une partie de l’information de diagnostic portée par le modèle peut rester inutilisée dans les logs.
 
 Ce filtre peut :
 
 * détecter les `DiagnosableException`  
-* extraire leurs inner exceptions  
-* logger toute la chaîne de manière structurée  
+* lire son `.Error`  
+* parcourir `Error.InnerErrors` et logger toute la chaîne de manière structurée  
 
 Cela préserve la profondeur diagnostique et garantit que la richesse du modèle d’erreur est réellement visible dans les logs opérationnels.
 
@@ -60,8 +60,8 @@ Un pattern puissant consiste à enrichir les exceptions diagnostiquables avec un
 
 Lors de la génération de la documentation, chaque erreur peut être associée à une page ou une ancre. Un filtre de logging peut alors renseigner :
 
-```csharp
-exception.HelpLink = "[https://docs.mycompany/errors/AMOUNT_CURRENCY_MISMATCH](https://docs.mycompany/errors/AMOUNT_CURRENCY_MISMATCH)"
+```
+exception.HelpLink = "https://docs.mycompany/errors/AMOUNT_CURRENCY_MISMATCH"
 ```
 
 Les logs de production deviennent ainsi navigables : le support peut passer directement d’une entrée de log à la documentation correspondante de l’erreur.

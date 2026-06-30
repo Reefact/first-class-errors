@@ -72,13 +72,26 @@ Les diagnostics sont :
 
 Ils n’encodent pas de processus opérationnels. Ils donnent une **direction**, pas des procédures.
 
+## 🧭 Taxonomie des erreurs
+
+Les erreurs sont modélisées sous forme de hiérarchie ayant pour racine le type abstrait `Error` :
+
+* **`DomainError`** — une violation d’une règle métier (la couche domaine).
+* **`InfrastructureError`** — une défaillance à une frontière technique. Elle porte une `Transience` (`Unknown` / `NonTransient` / `Transient`) et une `InteractionDirection`.
+  * **`PrimaryPortError`** — frontière entrante (`Direction` fixée à `Incoming`).
+  * **`SecondaryPortError`** — frontière sortante (`Direction` fixée à `Outgoing`).
+
+Les erreurs de Port remplacent les anciennes exceptions d’Adapter. Lorsqu’une défaillance de port enveloppe plusieurs causes, `PrimaryPortInnerErrors` / `SecondaryPortInnerErrors` agrègent les erreurs internes et calculent la transience globale.
+
+Chaque erreur possède une exception associée, obtenue via `error.ToException()` : `DomainException`, `InfrastructureException`, `PrimaryPortException`, `SecondaryPortException`. On ne les instancie jamais directement avec `new` ; l’exception expose son `Error` (et, à travers lui, le contexte et les erreurs internes).
+
 ## 🔁 Exception ou donnée ? Les deux sont possibles
 
 Traditionnellement, les exceptions sont toujours levées.  
 DiagnosableExceptions supporte deux modèles complémentaires :
 
 * **L’exception comme flux de contrôle** (throw classique)  
-* **L’exception comme donnée** (`TryOutcome<T>`)  
+* **L’exception comme donnée** (`Outcome<T>`, ou `Outcome` non générique lorsqu’il n’y a pas de valeur)  
 
 Cela permet aux erreurs d’être :
 
@@ -86,7 +99,9 @@ Cela permet aux erreurs d’être :
 * transportées dans des pipelines de validation  
 * escaladées plus tard  
 
-Le même type d’exception peut servir ces deux rôles.
+La même situation d’erreur peut servir ces deux rôles.
+
+Le modèle sans levée d’exception est `Outcome` / `Outcome<T>` : l’`Error` est portée comme donnée (`IsSuccess` / `IsFailure` / `Error`) et peut être convertie en exception à la demande via `error.ToException()`.
 
 ## 🎯 De l’échec à la connaissance
 
