@@ -206,7 +206,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         // Exercise & verify
         Check.ThatCode(() => builder.WithExamples(factory))
              .Throws<ErrorDocumentationException>()
-             .WithMessage("Example factory at index 0 returned null. Factories must return a valid exception instance.");
+             .WithMessage("Example factory at index 0 returned null. Factories must return a valid error instance.");
     }
 
     [Fact(DisplayName = "An error documentation builder rejects inconsistent error codes across examples.")]
@@ -223,7 +223,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         // Exercise & verify
         Check.ThatCode(() => builder.WithExamples(first, second))
              .Throws<ErrorDocumentationException>()
-             .WithMessage("All example factories must produce exceptions with the same ErrorCode. Example at index 1 produced a different ErrorCode. Expected 'CODE_A', but received 'CODE_B'.");
+             .WithMessage("All example factories must produce errors with the same ErrorCode. Example at index 1 produced a different ErrorCode. Expected 'CODE_A', but received 'CODE_B'.");
     }
 
     [Fact(DisplayName = "An error documentation builder uses the examples error code as documentation code.")]

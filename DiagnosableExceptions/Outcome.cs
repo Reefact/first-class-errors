@@ -656,19 +656,21 @@ public sealed class Outcome<T>
     ///     Attempts to recover from a failure by providing a guaranteed fallback value.
     /// </summary>
     /// <param name="fallback">
-    ///     A function that receives the current <see cref="Error" /> and returns a value of type
-    ///     <typeparamref name="T" />. This function is guaranteed to produce a value — it cannot itself fail.
+    ///     A function that receives the current <see cref="Error" /> and returns a non-null value of type
+    ///     <typeparamref name="T" /> used to recover from the failure.
     /// </param>
     /// <returns>
     ///     The current <see cref="Outcome{T}" /> unchanged if the operation was successful; otherwise, a successful
     ///     <see cref="Outcome{T}" /> containing the value returned by <paramref name="fallback" />.
     /// </returns>
     /// <exception cref="ArgumentNullException">
-    ///     Thrown if <paramref name="fallback" /> is <c>null</c>.
+    ///     Thrown if <paramref name="fallback" /> is <c>null</c>, or if <paramref name="fallback" /> returns <c>null</c>
+    ///     (the returned value flows through <see cref="Success" />, which rejects <c>null</c>).
     /// </exception>
     /// <remarks>
-    ///     Unlike <see cref="Recover(Func{Error, Outcome{T}})" />, this overload always produces a success.
-    ///     Use it when a default or cached value can always be substituted for the failed result.
+    ///     Unlike <see cref="Recover(Func{Error, Outcome{T}})" />, this overload produces a success whenever the
+    ///     fallback returns a non-null value. Use it when a default or cached value can always be substituted for the
+    ///     failed result.
     /// </remarks>
     public Outcome<T> Recover(Func<Error, T> fallback) {
         if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
@@ -705,7 +707,7 @@ public sealed class Outcome<T>
     /// </summary>
     /// <param name="fallback">
     ///     An asynchronous function that receives the current <see cref="Error" /> and returns a
-    ///     <see cref="Task{T}" /> containing a guaranteed fallback value.
+    ///     <see cref="Task{T}" /> containing a non-null fallback value.
     /// </param>
     /// <param name="cancellationToken">
     ///     A token to observe for cancellation requests.
@@ -716,7 +718,8 @@ public sealed class Outcome<T>
     ///     containing the fallback value.
     /// </returns>
     /// <exception cref="ArgumentNullException">
-    ///     Thrown if <paramref name="fallback" /> is <c>null</c>.
+    ///     Thrown if <paramref name="fallback" /> is <c>null</c>, or if the awaited <paramref name="fallback" /> result
+    ///     is <c>null</c> (it flows through <see cref="Success" />, which rejects <c>null</c>).
     /// </exception>
     public async Task<Outcome<T>> Recover(Func<Error, CancellationToken, Task<T>> fallback,
                                           CancellationToken                       cancellationToken = default) {

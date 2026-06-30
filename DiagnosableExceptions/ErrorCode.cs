@@ -36,11 +36,11 @@ public sealed class ErrorCode : IEquatable<ErrorCode> {
     }
 
     /// <summary>
-    ///     Resets the internal state of registered <see cref="ErrorContextKey" /> instances.
+    ///     Resets the internal state of registered <see cref="ErrorCode" /> values.
     /// </summary>
     /// <remarks>
-    ///     This method is intended for use in testing scenarios only. It clears all registered keys,
-    ///     allowing a clean slate for subsequent tests that rely on <see cref="ErrorContextKey" /> registration.
+    ///     This method is intended for use in testing scenarios only. It clears all registered error codes,
+    ///     allowing a clean slate for subsequent tests that rely on <see cref="ErrorCode" /> registration.
     /// </remarks>
     internal static void ResetForTests() {
         lock (Lock) {
@@ -79,7 +79,10 @@ public sealed class ErrorCode : IEquatable<ErrorCode> {
     /// </summary>
     /// <param name="errorCode">The <see cref="ErrorCode" /> instance to convert.</param>
     /// <returns>The string representation of the specified <see cref="ErrorCode" />.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="errorCode" /> is <c>null</c>.</exception>
     public static implicit operator string(ErrorCode errorCode) {
+        if (errorCode is null) { throw new ArgumentNullException(nameof(errorCode)); }
+
         return errorCode._code;
     }
 

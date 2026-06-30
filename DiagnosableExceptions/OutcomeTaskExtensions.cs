@@ -109,7 +109,7 @@ public static class OutcomeTaskExtensions {
     ///     returned by the <paramref name="next" /> function.
     /// </returns>
     /// <exception cref="ArgumentNullException">
-    ///     Thrown if <paramref name="task" /> or <paramref name="next" /> is <c>null</c>.
+    ///     Thrown if <paramref name="task" /> is <c>null</c>.
     /// </exception>
     public static async Task<Outcome> Then(this Task<Outcome>                     task,
                                            Func<CancellationToken, Task<Outcome>> next,

@@ -69,7 +69,7 @@ public abstract class Error {
     ///     optional short message, and an optional configuration for the error context.
     /// </summary>
     /// <param name="code">
-    ///     The unique code representing the error. This value cannot be null or whitespace.
+    ///     The <see cref="ErrorCode" /> identifying the error. If <c>null</c>, <see cref="ErrorCode.Unspecified" /> is used.
     /// </param>
     /// <param name="detailedMessage">
     ///     A detailed description of the error. This value cannot be null or whitespace.
@@ -101,7 +101,7 @@ public abstract class Error {
     ///     optional short message, and an optional configuration for the error context.
     /// </summary>
     /// <param name="code">
-    ///     The unique code representing the error. This value cannot be null or whitespace.
+    ///     The <see cref="ErrorCode" /> identifying the error. If <c>null</c>, <see cref="ErrorCode.Unspecified" /> is used.
     /// </param>
     /// <param name="detailedMessage">
     ///     A detailed description of the error. This value cannot be null or whitespace.
@@ -110,8 +110,7 @@ public abstract class Error {
     ///     An optional short description of the error. This value can be null.
     /// </param>
     /// <param name="innerError">
-    ///     An inner <see cref="Error" /> instances that provide additional context for the error.
-    ///     If null, an empty collection is used.
+    ///     The inner <see cref="Error" /> that provides additional context for the error.
     /// </param>
     /// <param name="configureContext">
     ///     An optional action to configure the <see cref="ErrorContext" /> using an <see cref="ErrorContextBuilder" />.
@@ -217,7 +216,9 @@ public abstract class Error {
     /// </value>
     /// <remarks>
     ///     This property is intended to provide a simplified error message that can be displayed
-    ///     in user interfaces where a full error message might be too verbose.
+    ///     in user interfaces where a full error message might be too verbose. Unlike
+    ///     <see cref="DetailedMessage" />, the value is stored verbatim: it is neither trimmed nor substituted
+    ///     when <c>null</c> or whitespace.
     /// </remarks>
     public string? ShortMessage { get; }
     /// <summary>

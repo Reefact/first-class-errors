@@ -13,8 +13,8 @@ namespace DiagnosableExceptions.UnitTests {
 
     public class AssemblyErrorDocumentationReaderTests {
 
-        [Fact]
-        public void Test1() {
+        [Fact(DisplayName = "The reader extracts the documented errors of an assembly, keyed by their error code.")]
+        public void TheReaderExtractsTheDocumentedErrorsOfAnAssembly() {
             // Setup
             Assembly assembly = Assembly.GetAssembly(typeof(Temperature))!;
 
@@ -25,10 +25,13 @@ namespace DiagnosableExceptions.UnitTests {
             ErrorDocumentation[] errorDocumentations = documentation.ToArray();
 
             Check.That(errorDocumentations).CountIs(4);
-            ErrorDocumentation amountCurrencyMismatch                          = errorDocumentations[0];
-            ErrorDocumentation bankTransactionFileDateOutOfStatementPeriod     = errorDocumentations[1];
-            ErrorDocumentation bankTransactionFileStatementTotalAmountMismatch = errorDocumentations[2];
-            ErrorDocumentation temperatureBelowAbsoluteZero                    = errorDocumentations[3];
+
+            Dictionary<string, ErrorDocumentation> byCode = errorDocumentations.ToDictionary(doc => doc.Code!, StringComparer.Ordinal);
+
+            ErrorDocumentation amountCurrencyMismatch                          = byCode["AMOUNT_CURRENCY_MISMATCH"];
+            ErrorDocumentation bankTransactionFileDateOutOfStatementPeriod     = byCode["BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD"];
+            ErrorDocumentation bankTransactionFileStatementTotalAmountMismatch = byCode["BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH"];
+            ErrorDocumentation temperatureBelowAbsoluteZero                    = byCode["TEMPERATURE_BELOW_ABSOLUTE_ZERO"];
 
             // ------------------------------------------------------------------
             // AMOUNT_CURRENCY_MISMATCH

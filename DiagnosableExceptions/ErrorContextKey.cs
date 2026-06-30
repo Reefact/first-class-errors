@@ -191,7 +191,6 @@ public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
     public Type ValueType { get; }
 
     /// <inheritdoc />
-    /// >
     public bool Equals(ErrorContextKey? other) {
         if (other is null) { return false; }
         if (ReferenceEquals(this, other)) { return true; }
@@ -200,19 +199,16 @@ public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
     }
 
     /// <inheritdoc />
-    /// >
     public override bool Equals(object? obj) {
         return obj is ErrorContextKey other && Equals(other);
     }
 
     /// <inheritdoc />
-    /// >
     public override int GetHashCode() {
         return StringComparer.Ordinal.GetHashCode(Name);
     }
 
     /// <inheritdoc />
-    /// >
     public override string ToString() {
         return Name;
     }

@@ -19,11 +19,11 @@ public sealed class ProvidesErrorsForAttribute : Attribute {
     ///     The name of the source (e.g., a domain model or component) for which the attributed class provides error
     ///     definitions.
     /// </param>
-    /// <exception cref="ArgumentNullException">
-    ///     Thrown when the <paramref name="source" /> is <c>null</c>.
+    /// <exception cref="ArgumentException">
+    ///     Thrown when <paramref name="source" /> is <c>null</c>, empty, or consists only of white-space characters.
     /// </exception>
     public ProvidesErrorsForAttribute(string source) {
-        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+        if (string.IsNullOrWhiteSpace(source)) { throw new ArgumentException("Value cannot be null or whitespace.", nameof(source)); }
 
         Source = source;
     }

@@ -12,11 +12,11 @@ namespace DiagnosableExceptions.UnitTests;
 
 [Collection("SmartEnumSideEffects")]
 [TestSubject(typeof(Error))]
-public sealed class DiagnosableExceptionTests : IDisposable {
+public sealed class ErrorTests : IDisposable {
 
     #region Constructors declarations
 
-    public DiagnosableExceptionTests() {
+    public ErrorTests() {
         ErrorContextKey.ResetForTests();
         ErrorCode.ResetForTests();
     }
@@ -29,7 +29,7 @@ public sealed class DiagnosableExceptionTests : IDisposable {
         ErrorCode.ResetForTests();
     }
 
-    [Fact(DisplayName = "A diagnosable exception has a unique instance identifier.")]
+    [Fact(DisplayName = "An error has a unique instance identifier.")]
     public void ADiagnosableExceptionHasAUniqueInstanceIdentifier() {
         // Setup
         ErrorCode anyErrorCode    = ErrorCodeFactory.CreateAny();
@@ -45,7 +45,7 @@ public sealed class DiagnosableExceptionTests : IDisposable {
         Check.That(firstError.InstanceId).IsNotEqualTo(secondError.InstanceId);
     }
 
-    [Fact(DisplayName = "A diagnosable exception captures its occurrence time in UTC.")]
+    [Fact(DisplayName = "An error captures its occurrence time in UTC.")]
     public void ADiagnosableExceptionCapturesItsOccurrenceTimeInUtc() {
         // Setup
         ErrorCode      anyErrorCode    = ErrorCodeFactory.CreateAny();
@@ -67,7 +67,7 @@ public sealed class DiagnosableExceptionTests : IDisposable {
         Check.That(error.OccurredAt <= after).IsTrue();
     }
 
-    [Fact(DisplayName = "A diagnosable exception preserves the provided error code.")]
+    [Fact(DisplayName = "An error preserves the provided error code.")]
     public void ADiagnosableExceptionPreservesTheProvidedErrorCode() {
         // Setup
         string    anyErrorMessage              = ErrorMessageFactory.CreateAnyMessage();
@@ -80,7 +80,7 @@ public sealed class DiagnosableExceptionTests : IDisposable {
         Check.That(error.Code).IsEqualTo(temperatureBelowAbsoluteZero);
     }
 
-    [Fact(DisplayName = "A diagnosable exception preserves the provided short message.")]
+    [Fact(DisplayName = "An error preserves the provided short message.")]
     public void ADiagnosableExceptionPreservesTheProvidedShortMessage() {
         // Exercise
         string              anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
@@ -91,7 +91,7 @@ public sealed class DiagnosableExceptionTests : IDisposable {
         Check.That(error.ShortMessage).IsEqualTo("short");
     }
 
-    [Fact(DisplayName = "A diagnosable exception has an empty context when no context is provided.")]
+    [Fact(DisplayName = "An error has an empty context when no context is provided.")]
     public void ADiagnosableExceptionHasAnEmptyContextWhenNoContextIsProvided() {
         // Exercise
         string              anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
@@ -104,7 +104,7 @@ public sealed class DiagnosableExceptionTests : IDisposable {
         Check.That(error.Context.Values).CountIs(0);
     }
 
-    [Fact(DisplayName = "A diagnosable exception includes the provided context entries.")]
+    [Fact(DisplayName = "An error includes the provided context entries.")]
     public void ADiagnosableExceptionIncludesTheProvidedContextEntries() {
         // Setup
         string                  anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
@@ -123,7 +123,7 @@ public sealed class DiagnosableExceptionTests : IDisposable {
         Check.That(value).IsEqualTo("u-123");
     }
 
-    [Fact(DisplayName = "A diagnosable exception has no inner exceptions by default.")]
+    [Fact(DisplayName = "An error has no inner errors by default.")]
     public void ADiagnosableExceptionHasNoInnerExceptionsByDefault() {
         // Exercise
         string              anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
@@ -135,7 +135,7 @@ public sealed class DiagnosableExceptionTests : IDisposable {
         Check.That(error.InnerErrors).CountIs(0);
     }
 
-    [Fact(DisplayName = "A diagnosable exception preserves a single inner exception.")]
+    [Fact(DisplayName = "An error preserves a single inner error.")]
     public void ADiagnosableExceptionPreservesASingleInnerException() {
         // Setup
         string      anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
@@ -150,7 +150,7 @@ public sealed class DiagnosableExceptionTests : IDisposable {
         Check.That(rootError.InnerErrors[0]).IsSameReferenceAs(innerError);
     }
 
-    [Fact(DisplayName = "A diagnosable exception preserves multiple inner exceptions.")]
+    [Fact(DisplayName = "An error preserves multiple inner errors.")]
     public void ADiagnosableExceptionPreservesMultipleInnerExceptions() {
         // Setup
         string           anyErrorMessage  = ErrorMessageFactory.CreateAnyMessage();
@@ -170,7 +170,7 @@ public sealed class DiagnosableExceptionTests : IDisposable {
         Check.That(rootError.InnerErrors[1]).IsSameReferenceAs(secondInnerError);
     }
 
-    [Fact(DisplayName = "A diagnosable exception can be created without inner exceptions even when a null collection is provided.")]
+    [Fact(DisplayName = "An error can be created without inner errors even when a null collection is provided.")]
     public void ADiagnosableExceptionCanBeCreatedWithoutInnerExceptionsEvenWhenANullCollectionIsProvided() {
         // Exercise
         ErrorCode   anyErrorCode    = ErrorCodeFactory.CreateAny();
@@ -181,7 +181,7 @@ public sealed class DiagnosableExceptionTests : IDisposable {
         Check.That(error.InnerErrors).CountIs(0);
     }
 
-    [Fact(DisplayName = "A diagnosable exception created with a null inner exception has no inner exceptions.")]
+    [Fact(DisplayName = "An error created with a null inner error has no inner errors.")]
     public void ADiagnosableExceptionCreatedWithANullInnerExceptionHasNoInnerExceptions() {
         // Exercise
         ErrorCode   anyErrorCode    = ErrorCodeFactory.CreateAny();

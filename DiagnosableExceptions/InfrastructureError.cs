@@ -56,7 +56,9 @@ public class InfrastructureError : Error {
     #endregion
 
     /// <summary>
-    ///     Gets a value indicating whether the error is transient and can potentially be retried.
+    ///     Gets the transience classification of the error: <see cref="DiagnosableExceptions.Transience.Transient" />,
+    ///     <see cref="DiagnosableExceptions.Transience.NonTransient" />, or
+    ///     <see cref="DiagnosableExceptions.Transience.Unknown" /> when it cannot be determined.
     /// </summary>
     /// <remarks>
     ///     A transient error is typically a temporary issue, such as a network glitch or a service unavailability,
