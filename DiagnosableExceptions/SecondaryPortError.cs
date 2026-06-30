@@ -10,7 +10,7 @@
 ///     It enforces that all nested infrastructure errors belong to the same direction (Outgoing),
 ///     while allowing domain errors to be included as part of the diagnostic context.
 /// </remarks>
-public sealed class SecondaryPortError : InfrastructureError {
+public class SecondaryPortError : InfrastructureError {
 
     #region Constructors declarations
 

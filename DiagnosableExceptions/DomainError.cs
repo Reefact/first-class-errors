@@ -8,7 +8,7 @@
 ///     It provides constructors to define the error code, detailed message, optional short message,
 ///     and additional context or inner errors for enhanced diagnostic capabilities.
 /// </remarks>
-public sealed class DomainError : Error {
+public class DomainError : Error {
 
     #region Constructors declarations
 
