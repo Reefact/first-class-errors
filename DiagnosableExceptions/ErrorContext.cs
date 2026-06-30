@@ -1,4 +1,10 @@
-﻿namespace DiagnosableExceptions;
+﻿#region Usings declarations
+
+using System.Collections.ObjectModel;
+
+#endregion
+
+namespace DiagnosableExceptions;
 
 /// <summary>
 ///     Represents a context that provides additional information about an error.
@@ -21,7 +27,8 @@ public sealed class ErrorContext {
 
     #region Fields
 
-    private readonly Dictionary<ErrorContextKey, object?> _values;
+    private readonly Dictionary<ErrorContextKey, object?>           _values;
+    private readonly ReadOnlyDictionary<ErrorContextKey, object?>   _readOnlyValues;
 
     #endregion
 
@@ -30,7 +37,8 @@ public sealed class ErrorContext {
     internal ErrorContext(Dictionary<ErrorContextKey, object?> values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
 
-        _values = new Dictionary<ErrorContextKey, object?>(values);
+        _values         = new Dictionary<ErrorContextKey, object?>(values);
+        _readOnlyValues = new ReadOnlyDictionary<ErrorContextKey, object?>(_values);
     }
 
     #endregion
@@ -46,7 +54,7 @@ public sealed class ErrorContext {
     ///     The <see cref="Values" /> property allows access to the supplementary information stored in the error context. This
     ///     information can be used for diagnostics, logging, or troubleshooting purposes.
     /// </remarks>
-    public IReadOnlyDictionary<ErrorContextKey, object?> Values => _values;
+    public IReadOnlyDictionary<ErrorContextKey, object?> Values => _readOnlyValues;
 
     /// <summary>
     ///     Gets a value indicating whether this context contains no entries.
@@ -71,7 +79,9 @@ public sealed class ErrorContext {
     /// <remarks>
     ///     This method is useful for safely retrieving strongly-typed values from the <see cref="ErrorContext" /> without the
     ///     need for explicit casting. If the key does not exist or the value is not of the expected type, the method returns
-    ///     <c>false</c>, and the <paramref name="value" /> parameter is set to its default value.
+    ///     <c>false</c>, and the <paramref name="value" /> parameter is set to its default value. Note that an entry whose
+    ///     stored value is <c>null</c> is also reported as <c>false</c> (indistinguishable from an absent key), even though it
+    ///     still appears in <see cref="Values" /> and counts toward <see cref="IsEmpty" />.
     /// </remarks>
     public bool TryGet<T>(ErrorContextKey<T> key, out T? value) {
         if (_values.TryGetValue(key, out object? raw) && raw is T typed) {

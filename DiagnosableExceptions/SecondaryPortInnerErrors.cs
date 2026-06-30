@@ -76,7 +76,7 @@ public sealed class SecondaryPortInnerErrors {
     ///     This method provides access to the internal collection of errors in a read-only format,
     ///     ensuring that the original collection remains unmodifiable.
     /// </remarks>
-    public IReadOnlyList<Error> ToList() {
+    internal IReadOnlyList<Error> ToList() {
         return _errors;
     }
 

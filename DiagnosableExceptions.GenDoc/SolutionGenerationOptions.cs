@@ -20,8 +20,8 @@ public sealed class SolutionGenerationOptions {
     public string OptInPropertyName { get; init; } = "GenerateErrorDocumentation";
 
     /// <summary>
-    ///     Additional arguments passed to "dotnet build".
-    ///     Example: "--no-restore"
+    ///     Additional arguments appended verbatim to the "dotnet build" command line (e.g. "--no-restore").
+    ///     Defaults to "--nologo".
     /// </summary>
     public string? DotNetBuildAdditionalArguments { get; init; } = "--nologo";
 

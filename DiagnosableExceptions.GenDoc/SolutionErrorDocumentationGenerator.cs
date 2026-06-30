@@ -99,13 +99,19 @@ public static class SolutionErrorDocumentationGenerator {
         List<ProjectInfo> included = new();
 
         foreach (ProjectInfo project in projects) {
-            bool optedIn = TryReadOptInFromProjectFile(project.ProjectPath, options.OptInPropertyName);
-            if (optedIn) {
+            bool? optedIn = TryReadOptInFromProjectFile(project.ProjectPath, options.OptInPropertyName);
+
+            if (optedIn == true) {
                 included.Add(project);
 
                 continue;
             }
 
+            // An explicit opt-out (property present and set to a falsy value) is always honored, even when
+            // IncludeProjectsWithoutOptIn is true.
+            if (optedIn == false) { continue; }
+
+            // The opt-in property is absent: fall back to the global policy.
             if (options.IncludeProjectsWithoutOptIn) {
                 included.Add(project);
             }
@@ -114,10 +120,10 @@ public static class SolutionErrorDocumentationGenerator {
         return included;
     }
 
-    private static bool TryReadOptInFromProjectFile(string projectPath, string optInPropertyName) {
+    private static bool? TryReadOptInFromProjectFile(string projectPath, string optInPropertyName) {
         try {
             ProjectRootElement? root = ProjectRootElement.Open(projectPath);
-            if (root is null) { return false; }
+            if (root is null) { return null; }
 
             foreach (ProjectPropertyGroupElement group in root.PropertyGroups) {
                 foreach (ProjectPropertyElement prop in group.Properties) {
@@ -127,19 +133,17 @@ public static class SolutionErrorDocumentationGenerator {
                 }
             }
 
-            return false;
+            return null;
         } catch {
-            return false;
+            return null;
         }
     }
 
     private static string? ResolveTargetPath(string projectPath, SolutionGenerationOptions options) {
-        // We purposely avoid MSBuild object model evaluation here to keep dependencies minimal and robust.
-        // We read from the project file:
-        // - TargetFramework or TargetFrameworks
-        // Then compute the expected TargetPath through standard output conventions is risky.
-        // So we rely on MSBuild property "TargetPath" via "dotnet msbuild -getProperty:TargetPath".
-        // This stays SDK-driven and avoids referencing Microsoft.Build assemblies in this lib.
+        // We resolve TargetPath by invoking the SDK ("dotnet msbuild -getProperty:TargetPath") rather than evaluating
+        // the project through the MSBuild object model. Computing the output path ourselves from output conventions
+        // would be fragile, and a full evaluation would require resolving the project's full import graph; delegating
+        // to the installed SDK keeps the result authoritative across project styles.
         string tfm = ResolveTargetFrameworkMoniker(projectPath, options);
 
         return DotNetGetProperty(projectPath, options.Configuration, tfm, "TargetPath", options.Logger);
@@ -329,7 +333,12 @@ public static class SolutionErrorDocumentationGenerator {
             results.AddRange(docs);
         }
 
-        return results.OrderBy(x => x.Code, StringComparer.OrdinalIgnoreCase);
+        // Deduplicate across assemblies as well: the same error Code declared in two assemblies must collapse to a
+        // single catalog entry, mirroring the per-assembly deduplication performed by the reader.
+        return results
+              .GroupBy(x => x.Code, StringComparer.OrdinalIgnoreCase)
+              .Select(g => g.First())
+              .OrderBy(x => x.Code, StringComparer.OrdinalIgnoreCase);
     }
 
     #endregion

@@ -22,12 +22,27 @@ public static class AssemblyErrorDocumentationReader {
     public static IEnumerable<ErrorDocumentation> GetErrorDocumentationFrom(Assembly assembly) {
         if (assembly is null) { throw new ArgumentNullException(nameof(assembly)); }
 
-        return assembly.GetTypes()
-                       .Where(type => type is { IsClass: true })
-                       .SelectMany(BuildFromExceptionType)
-                       .GroupBy(x => x.Code, StringComparer.OrdinalIgnoreCase)
-                       .Select(g => g.First())
-                       .OrderBy(x => x.Code, StringComparer.OrdinalIgnoreCase);
+        return GetLoadableTypes(assembly)
+              .Where(type => type is { IsClass: true })
+              .SelectMany(BuildFromExceptionType)
+               // Order before grouping so that, when several factories share the same Code, the surviving
+               // documentation is chosen deterministically (reflection ordering is not guaranteed).
+              .OrderBy(x => x.Code, StringComparer.OrdinalIgnoreCase)
+              .ThenBy(x => x.Source, StringComparer.Ordinal)
+              .GroupBy(x => x.Code, StringComparer.OrdinalIgnoreCase)
+              .Select(g => g.First())
+              .OrderBy(x => x.Code, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static IEnumerable<Type> GetLoadableTypes(Assembly assembly) {
+        // A documented assembly may reference types that cannot be loaded (e.g. a missing or version-mismatched
+        // dependency). GetTypes() then throws ReflectionTypeLoadException; we still want the loadable, attributed
+        // types rather than aborting extraction for the whole assembly.
+        try {
+            return assembly.GetTypes();
+        } catch (ReflectionTypeLoadException ex) {
+            return ex.Types.Where(type => type is not null).Select(type => type!);
+        }
     }
 
     private static IEnumerable<ErrorDocumentation> BuildFromExceptionType(Type exceptionType) {

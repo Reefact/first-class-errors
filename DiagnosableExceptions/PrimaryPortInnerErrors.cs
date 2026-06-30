@@ -1,4 +1,10 @@
-﻿namespace DiagnosableExceptions;
+﻿#region Usings declarations
+
+using System.Diagnostics;
+
+#endregion
+
+namespace DiagnosableExceptions;
 
 /// <summary>
 ///     Represents a collection of inner errors specific to primary port operations.
@@ -7,6 +13,7 @@
 ///     This class provides methods to add domain-specific and primary port-specific errors to the collection.
 ///     It ensures that the added errors are not null and supports method chaining for convenience.
 /// </remarks>
+[DebuggerDisplay("{ToString()}")]
 public sealed class PrimaryPortInnerErrors {
 
     #region Fields declarations
@@ -100,6 +107,11 @@ public sealed class PrimaryPortInnerErrors {
 
     internal IReadOnlyList<Error> ToList() {
         return _errors;
+    }
+
+    /// <inheritdoc />
+    public override string ToString() {
+        return _errors.Count.ToString();
     }
 
 }

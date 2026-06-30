@@ -44,7 +44,7 @@ public sealed class Temperature : IEquatable<Temperature>, IComparable<Temperatu
     /// </summary>
     /// <param name="kelvin">Temperature in kelvin.</param>
     /// <returns>
-    ///     A <c>TryOutcome&lt;Temperature&gt;</c> that is successful when <paramref name="kelvin" />
+    ///     A <c>Outcome&lt;Temperature&gt;</c> that is successful when <paramref name="kelvin" />
     ///     is not below absolute zero; otherwise a failure containing the corresponding
     ///     <see cref="InvalidTemperatureError" />.
     /// </returns>
@@ -59,7 +59,7 @@ public sealed class Temperature : IEquatable<Temperature>, IComparable<Temperatu
     /// </summary>
     /// <param name="celsius">Temperature in degrees Celsius.</param>
     /// <returns>A new <see cref="Temperature" /> representing the specified Celsius value.</returns>
-    /// <exception cref="InvalidTemperatureError">
+    /// <exception cref="DomainException">
     ///     Thrown when the converted kelvin value is lower than absolute zero.
     /// </exception>
     public static Temperature FromCelsius(decimal celsius) {
@@ -71,7 +71,7 @@ public sealed class Temperature : IEquatable<Temperature>, IComparable<Temperatu
     /// </summary>
     /// <param name="celsius">Temperature in degrees Celsius.</param>
     /// <returns>
-    ///     A <c>TryOutcome&lt;Temperature&gt;</c> that is successful when the Celsius value
+    ///     A <c>Outcome&lt;Temperature&gt;</c> that is successful when the Celsius value
     ///     is not below absolute zero; otherwise a failure containing the corresponding
     ///     <see cref="InvalidTemperatureError" />.
     /// </returns>

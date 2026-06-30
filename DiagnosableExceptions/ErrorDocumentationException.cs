@@ -14,7 +14,7 @@ public sealed class ErrorDocumentationException : InvalidOperationException {
     #region Static members
 
     internal static ErrorDocumentationException InconsistentErrorCode(int exampleIndex, string expectedErrorCode, ErrorCode receivedErrorCode) {
-        return new ErrorDocumentationException($"All example factories must produce exceptions with the same ErrorCode. Example at index {exampleIndex} produced a different ErrorCode. Expected '{expectedErrorCode}', but received '{receivedErrorCode}'.");
+        return new ErrorDocumentationException($"All example factories must produce errors with the same ErrorCode. Example at index {exampleIndex} produced a different ErrorCode. Expected '{expectedErrorCode}', but received '{receivedErrorCode}'.");
     }
 
     internal static ErrorDocumentationException AtLeastOneExampleMustBeProvided() {
@@ -30,7 +30,7 @@ public sealed class ErrorDocumentationException : InvalidOperationException {
     }
 
     internal static ErrorDocumentationException NullExample(int factoryIndex) {
-        return new ErrorDocumentationException($"Example factory at index {factoryIndex} returned null. Factories must return a valid exception instance.");
+        return new ErrorDocumentationException($"Example factory at index {factoryIndex} returned null. Factories must return a valid error instance.");
     }
 
     #endregion

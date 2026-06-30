@@ -1,8 +1,9 @@
 ﻿namespace DiagnosableExceptions;
 
 /// <summary>
-///     Specifies the method that documents the exception produced by the annotated exception factory method.
+///     Specifies the method that documents the error produced by the annotated error factory method.
 /// </summary>
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public sealed class DocumentedByAttribute : Attribute {
 
     #region Constructors & Destructor
