@@ -16,15 +16,15 @@ namespace DiagnosableExceptions;
 /// </remarks>
 public sealed class Outcome {
 
-    private static readonly Outcome _success = new(null);
+    #region Statics members declarations
 
     /// <summary>
-    ///     Creates a successful outcome.
+    ///     Provides a successful outcome.
     /// </summary>
     /// <returns>
     ///     A <see cref="Outcome" /> representing success.
     /// </returns>
-    public static Outcome Success() => _success;
+    public static readonly Outcome Success = new(null);
 
     /// <summary>
     ///     Creates a failed outcome containing the specified error.
@@ -44,6 +44,16 @@ public sealed class Outcome {
         return new Outcome(error);
     }
 
+    #endregion
+
+    #region Constructors declarations
+
+    private Outcome(Error? error) {
+        Error = error;
+    }
+
+    #endregion
+
     /// <summary>
     ///     Gets a value indicating whether the operation failed.
     /// </summary>
@@ -52,17 +62,12 @@ public sealed class Outcome {
     /// <summary>
     ///     Gets a value indicating whether the operation succeeded.
     /// </summary>
-    [MemberNotNullWhen(false, nameof(Error))]
     public bool IsSuccess => Error == null;
 
     /// <summary>
     ///     Gets the error that represents the failure of the operation, if any.
     /// </summary>
     public Error? Error { get; }
-
-    private Outcome(Error? error) {
-        Error = error;
-    }
 
     /// <summary>
     ///     Throws the associated exception if the outcome is a failure; otherwise does nothing.
@@ -71,7 +76,7 @@ public sealed class Outcome {
     ///     Thrown if the operation failed, using the exception associated with the failure.
     /// </exception>
     public void ThrowIfFailure() {
-        if (!IsSuccess) { throw Error.ToException(); }
+        if (IsFailure) { throw Error!.ToException(); }
     }
 
     /// <summary>
@@ -94,7 +99,7 @@ public sealed class Outcome {
         where TResult : notnull {
         if (next is null) { throw new ArgumentNullException(nameof(next)); }
 
-        return IsSuccess ? next() : Outcome<TResult>.Failure(Error);
+        return IsSuccess ? next() : Outcome<TResult>.Failure(Error!);
     }
 
     /// <summary>
@@ -135,15 +140,12 @@ public sealed class Outcome {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="next" /> function is <c>null</c>.
     /// </exception>
-    public Task<Outcome<TResult>> Then<TResult>(
-        Func<CancellationToken, Task<Outcome<TResult>>> next,
-        CancellationToken cancellationToken = default)
+    public Task<Outcome<TResult>> Then<TResult>(Func<CancellationToken, Task<Outcome<TResult>>> next,
+                                                CancellationToken                               cancellationToken = default)
         where TResult : notnull {
         if (next is null) { throw new ArgumentNullException(nameof(next)); }
 
-        return IsSuccess
-            ? next(cancellationToken)
-            : Task.FromResult(Outcome<TResult>.Failure(Error));
+        return IsSuccess ? next(cancellationToken) : Task.FromResult(Outcome<TResult>.Failure(Error!));
     }
 
     /// <summary>
@@ -161,14 +163,13 @@ public sealed class Outcome {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="next" /> function is <c>null</c>.
     /// </exception>
-    public Task<Outcome> Then(
-        Func<CancellationToken, Task<Outcome>> next,
-        CancellationToken cancellationToken = default) {
-        if (next is null) { throw new ArgumentNullException(nameof(next)); }
+    public Task<Outcome> Then(Func<CancellationToken, Task<Outcome>> next,
+                              CancellationToken                      cancellationToken = default) {
+        if (next is null) {
+            throw new ArgumentNullException(nameof(next));
+        }
 
-        return IsSuccess
-            ? next(cancellationToken)
-            : Task.FromResult(this);
+        return IsSuccess ? next(cancellationToken) : Task.FromResult(this);
     }
 
     /// <summary>
@@ -192,7 +193,7 @@ public sealed class Outcome {
     public Outcome Recover(Func<Error, Outcome> fallback) {
         if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
 
-        return IsSuccess ? this : fallback(Error);
+        return IsSuccess ? this : fallback(Error!);
     }
 
     /// <summary>
@@ -213,14 +214,11 @@ public sealed class Outcome {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if <paramref name="fallback" /> is <c>null</c>.
     /// </exception>
-    public Task<Outcome> Recover(
-        Func<Error, CancellationToken, Task<Outcome>> fallback,
-        CancellationToken cancellationToken = default) {
+    public Task<Outcome> Recover(Func<Error, CancellationToken, Task<Outcome>> fallback,
+                                 CancellationToken                             cancellationToken = default) {
         if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
 
-        return IsSuccess
-            ? Task.FromResult(this)
-            : fallback(Error, cancellationToken);
+        return IsSuccess ? Task.FromResult(this) : fallback(Error!, cancellationToken);
     }
 
     /// <summary>
@@ -244,7 +242,7 @@ public sealed class Outcome {
         if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
         if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        return IsSuccess ? onSuccess() : onFailure(Error);
+        return IsSuccess ? onSuccess() : onFailure(Error!);
     }
 
     /// <summary>
@@ -263,7 +261,11 @@ public sealed class Outcome {
         if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
         if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        if (IsSuccess) { onSuccess(); } else { onFailure(Error); }
+        if (IsSuccess) {
+            onSuccess();
+        } else {
+            onFailure(Error!);
+        }
     }
 
     /// <summary>
@@ -286,14 +288,13 @@ public sealed class Outcome {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if <paramref name="onSuccess" /> or <paramref name="onFailure" /> is <c>null</c>.
     /// </exception>
-    public Task<TResult> Finally<TResult>(
-        Func<CancellationToken, Task<TResult>> onSuccess,
-        Func<Error, CancellationToken, Task<TResult>> onFailure,
-        CancellationToken cancellationToken = default) {
+    public Task<TResult> Finally<TResult>(Func<CancellationToken, Task<TResult>>        onSuccess,
+                                          Func<Error, CancellationToken, Task<TResult>> onFailure,
+                                          CancellationToken                             cancellationToken = default) {
         if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
         if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        return IsSuccess ? onSuccess(cancellationToken) : onFailure(Error, cancellationToken);
+        return IsSuccess ? onSuccess(cancellationToken) : onFailure(Error!, cancellationToken);
     }
 
     /// <summary>
@@ -311,15 +312,15 @@ public sealed class Outcome {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if <paramref name="onSuccess" /> or <paramref name="onFailure" /> is <c>null</c>.
     /// </exception>
-    public Task Finally(
-        Func<CancellationToken, Task> onSuccess,
-        Func<Error, CancellationToken, Task> onFailure,
-        CancellationToken cancellationToken = default) {
+    public Task Finally(Func<CancellationToken, Task>        onSuccess,
+                        Func<Error, CancellationToken, Task> onFailure,
+                        CancellationToken                    cancellationToken = default) {
         if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
         if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        return IsSuccess ? onSuccess(cancellationToken) : onFailure(Error, cancellationToken);
+        return IsSuccess ? onSuccess(cancellationToken) : onFailure(Error!, cancellationToken);
     }
+
 }
 
 /// <summary>
@@ -347,9 +348,10 @@ public sealed class Outcome {
 ///         conditions as data, while still leveraging the richness of the error model for diagnostic purposes.
 ///     </para>
 /// </remarks>
-public sealed class Outcome<T> where T : notnull {
+public sealed class Outcome<T>
+    where T : notnull {
 
-    private readonly T? _result;
+    #region Statics members declarations
 
     /// <summary>
     ///     Creates a successful outcome containing the specified value.
@@ -395,6 +397,23 @@ public sealed class Outcome<T> where T : notnull {
         return new Outcome<T>(default, error);
     }
 
+    #endregion
+
+    #region Fields declarations
+
+    private readonly T? _result;
+
+    #endregion
+
+    #region Constructors declarations
+
+    private Outcome(T? result, Error? error) {
+        _result = result;
+        Error   = error;
+    }
+
+    #endregion
+
     /// <summary>
     ///     Gets a value indicating whether the operation failed.
     /// </summary>
@@ -409,8 +428,6 @@ public sealed class Outcome<T> where T : notnull {
     /// <remarks>
     ///     When <c>true</c>, <see cref="GetResultOrThrow" /> is guaranteed to return a valid result and not throw.
     /// </remarks>
-    [MemberNotNullWhen(true,  nameof(_result))]
-    [MemberNotNullWhen(false, nameof(Error))]
     public bool IsSuccess => Error == null;
 
     /// <summary>
@@ -426,11 +443,6 @@ public sealed class Outcome<T> where T : notnull {
     /// </remarks>
     public Error? Error { get; }
 
-    private Outcome(T? result, Error? error) {
-        _result = result;
-        Error   = error;
-    }
-
     /// <summary>
     ///     Retrieves the result of the operation if it succeeded; otherwise, throws the associated exception.
     /// </summary>
@@ -445,9 +457,9 @@ public sealed class Outcome<T> where T : notnull {
     ///     <c>false</c>, the exception associated with the failure will be thrown.
     /// </remarks>
     public T GetResultOrThrow() {
-        if (!IsSuccess) { throw Error.ToException(); }
+        if (IsFailure) { throw Error!.ToException(); }
 
-        return _result;
+        return _result!;
     }
 
     /// <summary>
@@ -461,7 +473,7 @@ public sealed class Outcome<T> where T : notnull {
     ///     for example when asserting preconditions or verifying a side-effecting step succeeded.
     /// </remarks>
     public void ThrowIfFailure() {
-        if (!IsSuccess) { throw Error.ToException(); }
+        if (IsFailure) { throw Error!.ToException(); }
     }
 
     /// <summary>
@@ -486,7 +498,7 @@ public sealed class Outcome<T> where T : notnull {
         where TResult : notnull {
         if (next is null) { throw new ArgumentNullException(nameof(next)); }
 
-        return IsSuccess ? next(_result) : Outcome<TResult>.Failure(Error);
+        return IsSuccess ? next(_result!) : Outcome<TResult>.Failure(Error!);
     }
 
     /// <summary>
@@ -506,7 +518,7 @@ public sealed class Outcome<T> where T : notnull {
     public Outcome Then(Func<T, Outcome> next) {
         if (next is null) { throw new ArgumentNullException(nameof(next)); }
 
-        return IsSuccess ? next(_result) : Outcome.Failure(Error);
+        return IsSuccess ? next(_result!) : Outcome.Failure(Error!);
     }
 
     /// <summary>
@@ -528,15 +540,12 @@ public sealed class Outcome<T> where T : notnull {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="next" /> function is <c>null</c>.
     /// </exception>
-    public Task<Outcome<TResult>> Then<TResult>(
-        Func<T, CancellationToken, Task<Outcome<TResult>>> next,
-        CancellationToken cancellationToken = default)
+    public Task<Outcome<TResult>> Then<TResult>(Func<T, CancellationToken, Task<Outcome<TResult>>> next,
+                                                CancellationToken                                  cancellationToken = default)
         where TResult : notnull {
         if (next is null) { throw new ArgumentNullException(nameof(next)); }
 
-        return IsSuccess
-            ? next(_result, cancellationToken)
-            : Task.FromResult(Outcome<TResult>.Failure(Error));
+        return IsSuccess ? next(_result!, cancellationToken) : Task.FromResult(Outcome<TResult>.Failure(Error!));
     }
 
     /// <summary>
@@ -555,14 +564,11 @@ public sealed class Outcome<T> where T : notnull {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="next" /> function is <c>null</c>.
     /// </exception>
-    public Task<Outcome> Then(
-        Func<T, CancellationToken, Task<Outcome>> next,
-        CancellationToken cancellationToken = default) {
+    public Task<Outcome> Then(Func<T, CancellationToken, Task<Outcome>> next,
+                              CancellationToken                         cancellationToken = default) {
         if (next is null) { throw new ArgumentNullException(nameof(next)); }
 
-        return IsSuccess
-            ? next(_result, cancellationToken)
-            : Task.FromResult(Outcome.Failure(Error));
+        return IsSuccess ? next(_result!, cancellationToken) : Task.FromResult(Outcome.Failure(Error!));
     }
 
     /// <summary>
@@ -588,9 +594,7 @@ public sealed class Outcome<T> where T : notnull {
         where TResult : notnull {
         if (convert is null) { throw new ArgumentNullException(nameof(convert)); }
 
-        return IsSuccess
-            ? Outcome<TResult>.Success(convert(_result))
-            : Outcome<TResult>.Failure(Error);
+        return IsSuccess ? Outcome<TResult>.Success(convert(_result!)) : Outcome<TResult>.Failure(Error!);
     }
 
     /// <summary>
@@ -613,15 +617,14 @@ public sealed class Outcome<T> where T : notnull {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="convert" /> function is <c>null</c>.
     /// </exception>
-    public async Task<Outcome<TResult>> To<TResult>(
-        Func<T, CancellationToken, Task<TResult>> convert,
-        CancellationToken cancellationToken = default)
+    public async Task<Outcome<TResult>> To<TResult>(Func<T, CancellationToken, Task<TResult>> convert, CancellationToken cancellationToken = default)
         where TResult : notnull {
         if (convert is null) { throw new ArgumentNullException(nameof(convert)); }
 
-        if (!IsSuccess) { return Outcome<TResult>.Failure(Error); }
+        if (IsFailure) { return Outcome<TResult>.Failure(Error!); }
 
-        var value = await convert(_result, cancellationToken).ConfigureAwait(false);
+        TResult? value = await convert(_result!, cancellationToken).ConfigureAwait(false);
+
         return Outcome<TResult>.Success(value);
     }
 
@@ -646,7 +649,7 @@ public sealed class Outcome<T> where T : notnull {
     public Outcome<T> Recover(Func<Error, Outcome<T>> fallback) {
         if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
 
-        return IsSuccess ? this : fallback(Error);
+        return IsSuccess ? this : fallback(Error!);
     }
 
     /// <summary>
@@ -670,7 +673,7 @@ public sealed class Outcome<T> where T : notnull {
     public Outcome<T> Recover(Func<Error, T> fallback) {
         if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
 
-        return IsSuccess ? this : Outcome<T>.Success(fallback(Error));
+        return IsSuccess ? this : Success(fallback(Error!));
     }
 
     /// <summary>
@@ -689,14 +692,11 @@ public sealed class Outcome<T> where T : notnull {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if <paramref name="fallback" /> is <c>null</c>.
     /// </exception>
-    public Task<Outcome<T>> Recover(
-        Func<Error, CancellationToken, Task<Outcome<T>>> fallback,
-        CancellationToken cancellationToken = default) {
+    public Task<Outcome<T>> Recover(Func<Error, CancellationToken, Task<Outcome<T>>> fallback,
+                                    CancellationToken                                cancellationToken = default) {
         if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
 
-        return IsSuccess
-            ? Task.FromResult(this)
-            : fallback(Error, cancellationToken);
+        return IsSuccess ? Task.FromResult(this) : fallback(Error!, cancellationToken);
     }
 
     /// <summary>
@@ -718,15 +718,15 @@ public sealed class Outcome<T> where T : notnull {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if <paramref name="fallback" /> is <c>null</c>.
     /// </exception>
-    public async Task<Outcome<T>> Recover(
-        Func<Error, CancellationToken, Task<T>> fallback,
-        CancellationToken cancellationToken = default) {
+    public async Task<Outcome<T>> Recover(Func<Error, CancellationToken, Task<T>> fallback,
+                                          CancellationToken                       cancellationToken = default) {
         if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
 
         if (IsSuccess) { return this; }
 
-        var value = await fallback(Error, cancellationToken).ConfigureAwait(false);
-        return Outcome<T>.Success(value);
+        T? value = await fallback(Error!, cancellationToken).ConfigureAwait(false);
+
+        return Success(value);
     }
 
     /// <summary>
@@ -754,7 +754,7 @@ public sealed class Outcome<T> where T : notnull {
         if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
         if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        return IsSuccess ? onSuccess(_result) : onFailure(Error);
+        return IsSuccess ? onSuccess(_result!) : onFailure(Error!);
     }
 
     /// <summary>
@@ -777,7 +777,11 @@ public sealed class Outcome<T> where T : notnull {
         if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
         if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        if (IsSuccess) { onSuccess(_result); } else { onFailure(Error); }
+        if (IsSuccess) {
+            onSuccess(_result!);
+        } else {
+            onFailure(Error!);
+        }
     }
 
     /// <summary>
@@ -800,14 +804,13 @@ public sealed class Outcome<T> where T : notnull {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if <paramref name="onSuccess" /> or <paramref name="onFailure" /> is <c>null</c>.
     /// </exception>
-    public Task<TResult> Finally<TResult>(
-        Func<T, CancellationToken, Task<TResult>> onSuccess,
-        Func<Error, CancellationToken, Task<TResult>> onFailure,
-        CancellationToken cancellationToken = default) {
+    public Task<TResult> Finally<TResult>(Func<T, CancellationToken, Task<TResult>>     onSuccess,
+                                          Func<Error, CancellationToken, Task<TResult>> onFailure,
+                                          CancellationToken                             cancellationToken = default) {
         if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
         if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        return IsSuccess ? onSuccess(_result, cancellationToken) : onFailure(Error, cancellationToken);
+        return IsSuccess ? onSuccess(_result!, cancellationToken) : onFailure(Error!, cancellationToken);
     }
 
     /// <summary>
@@ -825,13 +828,13 @@ public sealed class Outcome<T> where T : notnull {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if <paramref name="onSuccess" /> or <paramref name="onFailure" /> is <c>null</c>.
     /// </exception>
-    public Task Finally(
-        Func<T, CancellationToken, Task> onSuccess,
-        Func<Error, CancellationToken, Task> onFailure,
-        CancellationToken cancellationToken = default) {
+    public Task Finally(Func<T, CancellationToken, Task>     onSuccess,
+                        Func<Error, CancellationToken, Task> onFailure,
+                        CancellationToken                    cancellationToken = default) {
         if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
         if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        return IsSuccess ? onSuccess(_result, cancellationToken) : onFailure(Error, cancellationToken);
+        return IsSuccess ? onSuccess(_result!, cancellationToken) : onFailure(Error!, cancellationToken);
     }
+
 }
