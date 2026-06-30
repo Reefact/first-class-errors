@@ -13,21 +13,19 @@ public static class NonCompliantBankTransactionFileError {
     #region Statics members declarations
 
     [DocumentedBy(nameof(TransactionDateOutOfStatementPeriodDocumentation))]
-    public static InfrastructureError DateOutOfStatementPeriod(DateOnly periodStart, DateOnly periodEnd, DateOnly transactionDate) {
-        return new InfrastructureError(Code.DateOutOfStatementPeriod,
-                                       DocumentationFormatter.Format("Transaction dated {0} is outside the statement period [{1};{2}].", transactionDate, periodStart, periodEnd),
-                                       InteractionDirection.Incoming,
-                                       Transience.NonTransient,
-                                       "Transaction date is outside the statement period.",
-                                       ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate));
+    internal static PrimaryPortError DateOutOfStatementPeriod(DateOnly periodStart, DateOnly periodEnd, DateOnly transactionDate) {
+        return new PrimaryPortError(Code.DateOutOfStatementPeriod,
+                                    DocumentationFormatter.Format("Transaction dated {0} is outside the statement period [{1};{2}].", transactionDate, periodStart, periodEnd),
+                                    Transience.NonTransient,
+                                    "Transaction date is outside the statement period.",
+                                    ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate));
     }
 
     [DocumentedBy(nameof(StatementTotalAmountMismatchDocumentation))]
-    public static InfrastructureError StatementTotalAmountMismatch(Amount declaredTotalAmount, Amount computedTotalAmount) {
-        return new InfrastructureError(
+    internal static PrimaryPortError StatementTotalAmountMismatch(Amount declaredTotalAmount, Amount computedTotalAmount) {
+        return new PrimaryPortError(
             Code.StatementTotalAmountMismatch,
             DocumentationFormatter.Format("The declared statement total amount ({0}) does not match the computed total amount from transactions ({1}).", declaredTotalAmount, computedTotalAmount),
-            InteractionDirection.Incoming,
             Transience.NonTransient,
             "Statement total amount mismatch.");
     }

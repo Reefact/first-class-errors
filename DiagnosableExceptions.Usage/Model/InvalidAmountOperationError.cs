@@ -15,7 +15,7 @@ public static class InvalidAmountOperationError {
     #region Statics members declarations
 
     [DocumentedBy(nameof(CurrencyMismatchDocumentation))]
-    public static DomainError CurrencyMismatch(Amount amount1, Amount amount2) {
+    internal static DomainError CurrencyMismatch(Amount amount1, Amount amount2) {
         return new DomainError(
             Code.CurrencyMismatch,
             DocumentationFormatter.Format("Failed to perform the monetary operation because the involved amounts are expressed in different currencies: {0} and {1}.", amount1, amount2),

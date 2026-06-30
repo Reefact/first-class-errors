@@ -7,7 +7,7 @@ using DiagnosableExceptions.Usage.Utils;
 namespace DiagnosableExceptions.Usage.Model;
 
 /// <summary>
-///     Represents an exception that is thrown when an attempt is made to create a temperature with an invalid value.
+///     Represents a domain error produced when an attempt is made to create a temperature with an invalid value.
 /// </summary>
 [ProvidesErrorsFor(nameof(Temperature))]
 public static class InvalidTemperatureError {
@@ -15,17 +15,16 @@ public static class InvalidTemperatureError {
     #region Statics members declarations
 
     /// <summary>
-    ///     Creates a <see cref="DomainError" /> indicating that the temperature value is below absolute zero.
+    ///     Creates a <see cref="InvalidTemperatureError" /> indicating that the temperature value is below absolute zero.
     /// </summary>
-    /// <param name="invalidValue">The invalid temperature value that caused the exception.</param>
+    /// <param name="invalidValue">The invalid temperature value that caused the error.</param>
     /// <param name="invalidValueUnit">The unit of the invalid temperature value.</param>
-    /// <returns>An instance of <see cref="DomainError" />.</returns>
-    /// >
+    /// <returns>An instance of <see cref="InvalidTemperatureError" />.</returns>
     [DocumentedBy(nameof(BelowAbsoluteZeroDocumentation))]
     internal static DomainError BelowAbsoluteZero(decimal invalidValue, TemperatureUnit invalidValueUnit) {
         return new DomainError(
             Code.TemperatureBelowAbsoluteZero,
-            DocumentationFormatter.Format("Failed to instantiate temperature: the value {0}{1} is below absolute zero.", invalidValue, invalidValueUnit),
+            DocumentationFormatter.Format("Failed to instantiate temperature: the value {0} {1} is below absolute zero.", invalidValue, invalidValueUnit),
             "Temperature is below absolute zero.");
     }
 
