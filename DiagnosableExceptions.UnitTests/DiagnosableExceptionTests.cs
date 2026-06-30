@@ -107,9 +107,9 @@ public sealed class DiagnosableExceptionTests : IDisposable {
     [Fact(DisplayName = "A diagnosable exception includes the provided context entries.")]
     public void ADiagnosableExceptionIncludesTheProvidedContextEntries() {
         // Setup
-        string    anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
-        ErrorCode anyErrorCode    = ErrorCodeFactory.CreateAny();
-        var       userIdKey       = ErrorContextKey.Create<string>("UserId");
+        string                  anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
+        ErrorCode               anyErrorCode    = ErrorCodeFactory.CreateAny();
+        ErrorContextKey<string> userIdKey       = ErrorContextKey.Create<string>("UserId");
 
         // Exercise
         InfrastructureError error = new(anyErrorCode, anyErrorMessage, InteractionDirection.Unknown, Transience.Unknown,
