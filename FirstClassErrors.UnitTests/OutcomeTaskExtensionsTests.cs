@@ -117,13 +117,12 @@ public sealed class OutcomeTaskExtensionsTests {
              .Throws<ArgumentNullException>();
     }
 
-    [Fact(DisplayName = "The async Then overload threads the supplied cancellation token to the callback.")]
-    public async Task TheAsyncThenOverloadThreadsTheSuppliedCancellationTokenToTheCallback() {
+    [Fact(DisplayName = "The async Then overload threads the ambient cancellation token to the callback.")]
+    public async Task TheAsyncThenOverloadThreadsTheAmbientCancellationTokenToTheCallback() {
         // Setup
-        using CancellationTokenSource         source           = new();
-        CancellationToken                     token            = source.Token;
-        CancellationToken                     received         = default;
-        System.Threading.Tasks.Task<Outcome<int>> task         = System.Threading.Tasks.Task.FromResult(Outcome<int>.Success(4));
+        CancellationToken                         token    = TestContext.Current.CancellationToken;
+        CancellationToken                         received = default;
+        System.Threading.Tasks.Task<Outcome<int>> task     = System.Threading.Tasks.Task.FromResult(Outcome<int>.Success(4));
 
         // Exercise
         Outcome<int> result = await task.Then(async (value, ct) => {
