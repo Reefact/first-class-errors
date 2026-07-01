@@ -4,15 +4,15 @@ FirstClassErrors vous aide à considérer les erreurs comme une **connaissance s
 
 En quelques minutes, vous allez voir comment :
 
-* définir une exception diagnostiquable  
-* utiliser des factories d’exception (indispensables pour la documentation vivante)  
+* définir une erreur (avec une factory)  
+* utiliser des factories d’erreur (indispensables pour la documentation vivante)  
 * documenter l’erreur de manière structurée  
 * attacher des diagnostics  
 * utiliser éventuellement l’erreur sans la lever  
 
-## 1. Définir une exception diagnostiquable (avec une factory)
+## 1️⃣ Définir une erreur (avec une factory)
 
-Pour bénéficier de la **documentation vivante**, les exceptions ne sont pas créées directement avec `new`. Elles sont créées via des **méthodes factory statiques** dans la classe d’exception.
+Pour bénéficier de la **documentation vivante**, les erreurs ne sont pas créées directement avec `new`. Elles sont créées via des **méthodes factory statiques** dans la classe d’erreur.
 
 Ce pattern est essentiel car :
 
@@ -22,7 +22,7 @@ Ce pattern est essentiel car :
 
 Remarque :
 
-*L’utilisation de méthodes factory pour créer des exceptions est un pattern .NET bien établi pour centraliser et standardiser la création d’exceptions. FirstClassErrors s’appuie sur cette idée et fait des factories le point d’ancrage de la documentation d’erreurs structurée et vivante. Au-delà de la documentation, les factories améliorent fortement la lisibilité du code : elles sortent la construction de l’erreur (codes, messages, formatage, formulation) du “happy path”, ce qui permet à la logique métier de rester centrée sur les règles métier plutôt que sur des détails techniques. Un appel comme `throw InvalidAmountOperationError.CurrencyMismatch(a1, a2).ToException();` exprime l’intention bien plus clairement qu’une construction d’exception inline. Cette approche s’aligne avec les principes du clean code en séparant les responsabilités, en réduisant la duplication et en donnant à chaque situation d’erreur une représentation explicite et nommée dans le code — tout en fournissant un point unique et cohérent pour attacher diagnostics et documentation.*  
+*L’utilisation de méthodes factory pour créer des erreurs est un pattern .NET bien établi pour centraliser et standardiser la création d’erreurs. FirstClassErrors s’appuie sur cette idée et fait des factories le point d’ancrage de la documentation d’erreurs structurée et vivante. Au-delà de la documentation, les factories améliorent fortement la lisibilité du code : elles sortent la construction de l’erreur (codes, messages, formatage, formulation) du “happy path”, ce qui permet à la logique métier de rester centrée sur les règles métier plutôt que sur des détails techniques. Un appel comme `throw InvalidAmountOperationError.CurrencyMismatch(a1, a2).ToException();` exprime l’intention bien plus clairement qu’une construction d’erreur inline. Cette approche s’aligne avec les principes du clean code en séparant les responsabilités, en réduisant la duplication et en donnant à chaque situation d’erreur une représentation explicite et nommée dans le code — tout en fournissant un point unique et cohérent pour attacher diagnostics et documentation.*  
 
 Exemple :
 
@@ -54,7 +54,7 @@ Ici :
 
 Vous ne faites jamais `new` sur l’exception vous-même : pour lever, vous appelez `error.ToException()` (voir section 4).
 
-## 2. Lier la factory à une documentation structurée
+## 2️⃣ Lier la factory à une documentation structurée
 
 Chaque méthode factory est liée à sa documentation via `[DocumentedBy]`.
 
@@ -88,14 +88,15 @@ Cette documentation :
 
 Il s’agit de connaissance structurée, pas d’un commentaire.
 
-## 3. Ajouter un contexte d’erreur structuré (`ErrorContext`)
+## 3️⃣ Ajouter un contexte d’erreur structuré (`ErrorContext`)
 
 Quand une information est utile pour diagnostiquer **une occurrence précise**, ajoutez-la dans le contexte.
 
 ```csharp
-return new SecondaryPortError(
+return new PrimaryPortError(
     Code.DateOutOfStatementPeriod,
     $"Transaction datée du {transactionDate} hors période [{periodStart};{periodEnd}].",
+    Transience.NonTransient,
     "Date de transaction hors période.",
     ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate));
 ```
@@ -108,7 +109,7 @@ Bonnes pratiques :
 * ajoutez le contexte au niveau des factories
 * évitez les données sensibles ou trop volumineuses
 
-## 4. Utiliser l’exception dans le code métier
+## 4️⃣ Utiliser l’exception dans le code métier
 
 ```csharp
 public Amount Add(Amount other) {
@@ -120,7 +121,7 @@ public Amount Add(Amount other) {
 
 La logique métier reste propre et expressive.
 
-## 5. Ou l’utiliser sans lever d’exception (`Outcome<T>`)
+## 5️⃣ Ou l’utiliser sans lever d’exception (`Outcome<T>`)
 
 Pour les scénarios de validation ou de traitement par lots :
 
@@ -150,7 +151,7 @@ Ou escalader :
 var amount = result.GetResultOrThrow();
 ```
 
-## 6. Générer la documentation
+## 6️⃣ Générer la documentation
 
 Comme les factories sont liées à une documentation structurée :
 

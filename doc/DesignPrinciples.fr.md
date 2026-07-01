@@ -2,7 +2,7 @@
 
 FirstClassErrors repose sur l’idée que les erreurs ne sont pas des sous-produits accidentels du code, mais des éléments porteurs de sens dans la connaissance du système. Dans de nombreuses applications, les erreurs sont traitées comme du bruit technique — quelque chose à logger, attraper ou masquer. Cette bibliothèque adopte la position inverse : lorsqu’une erreur est exprimée, elle révèle quelque chose sur les règles, les hypothèses et les frontières du système.
 
-Une exception n’est pas simplement un échec d’exécution. Elle représente une situation que le système reconnaît et à laquelle il donne un nom. En transformant les situations d’erreur en concepts explicites — via des méthodes factory, des codes, des diagnostics et de la documentation — le système devient plus lisible, plus explicable et plus facile à maintenir.
+Une **erreur** n’est pas simplement un échec d’exécution. Elle représente une situation que le système reconnaît et à laquelle il donne un nom. En transformant les situations d’erreur en concepts explicites — via des méthodes factory, des codes, des diagnostics et de la documentation — le système devient plus lisible, plus explicable et plus facile à maintenir.
 
 Un autre principe fondamental est que la documentation ne doit pas dériver du comportement. La documentation traditionnelle vit dans des fichiers externes et devient progressivement obsolète. Ici, la documentation est définie à côté du code qui crée l’erreur. Cette proximité garantit que la connaissance évolue avec le système lui-même. Si le comportement change, la documentation change avec lui, car ils partagent la même source.
 
@@ -20,4 +20,4 @@ Section précédente: [Premiers pas](GettingStarted.fr.md) | Section suivante: [
 
 ---
 
-![FirstClassErrors](./images/diagnosable-exceptions-02.png "FirstClassErrors")
+![FirstClassErrors](./images/first-class-errors-02.png "FirstClassErrors")

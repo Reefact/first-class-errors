@@ -56,7 +56,7 @@ This preserves diagnostic depth and ensures that the richness of the error model
 
 ## 🔗 Linking logs to documentation
 
-A powerful pattern is to enrich diagnosable exceptions with a documentation URL.
+A powerful pattern is to enrich the thrown exception (via its `Error`) with a documentation URL.
 
 During the documentation generation step, each error can be associated with a page or anchor. A logging filter can then populate:
 

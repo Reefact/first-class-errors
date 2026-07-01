@@ -4,15 +4,15 @@ FirstClassErrors helps you treat errors as **structured, diagnosable knowledge**
 
 In a few minutes, you will see how to:
 
-* define a diagnosable exception
-* use exception factories (required for living documentation)
+* define an error (with a factory)
+* use error factories (required for living documentation)
 * document the error in a structured way
 * attach diagnostics
 * optionally use the error without throwing
 
-## 1️. Define a diagnosable exception (with a factory)
+## 1️⃣ Define an error (with a factory)
 
-To benefit from **living documentation**, exceptions are not created directly with `new`. Instead, they are created through **static factory methods** inside the exception class.
+To benefit from **living documentation**, errors are not created directly with `new`. Instead, they are created through **static factory methods** inside the error class.
 
 This pattern is essential because:
 
@@ -22,7 +22,7 @@ This pattern is essential because:
 
 Note:
 
-*Using factory methods to create exceptions is a well-established .NET pattern for centralizing and standardizing exception creation. FirstClassErrors builds on this idea and makes exception factories the anchor point for structured, living error documentation. Beyond documentation, factories significantly improve code readability: they keep error construction (error codes, messages, formatting, and wording) out of the “happy path,” allowing domain logic to remain focused on business rules rather than technical details. A call such as `throw InvalidAmountOperationError.CurrencyMismatch(a1, a2).ToException();` expresses intent far more clearly than inlined exception construction. This approach aligns with clean code principles by separating concerns, reducing duplication, and giving each error situation a named, explicit representation in the codebase — while also providing a single, consistent place to attach diagnostics and documentation.*
+*Using factory methods to create errors is a well-established .NET pattern for centralizing and standardizing error creation. FirstClassErrors builds on this idea and makes error factories the anchor point for structured, living error documentation. Beyond documentation, factories significantly improve code readability: they keep error construction (error codes, messages, formatting, and wording) out of the “happy path,” allowing domain logic to remain focused on business rules rather than technical details. A call such as `throw InvalidAmountOperationError.CurrencyMismatch(a1, a2).ToException();` expresses intent far more clearly than inlined error construction. This approach aligns with clean code principles by separating concerns, reducing duplication, and giving each error situation a named, explicit representation in the codebase — while also providing a single, consistent place to attach diagnostics and documentation.*
 
 Example:
 
@@ -54,7 +54,7 @@ Here:
 
 You never `new` the exception yourself: when you need to throw, you call `error.ToException()` (see section 4).
 
-## 2️. Link the factory to structured documentation
+## 2️⃣ Link the factory to structured documentation
 
 Each factory method is linked to documentation using `[DocumentedBy]`.
 
@@ -88,14 +88,15 @@ This documentation:
 
 This is structured knowledge, not a comment.
 
-## 3️. Add structured error context (`ErrorContext`)
+## 3️⃣ Add structured error context (`ErrorContext`)
 
 When information helps diagnose **a specific occurrence**, attach it as context.
 
 ```csharp
-return new SecondaryPortError(
+return new PrimaryPortError(
     Code.DateOutOfStatementPeriod,
-    $"Transaction dated {transactionDate} is outside statement period [{periodStart};{periodEnd}].",
+    $"Transaction dated {transactionDate} is outside the statement period [{periodStart};{periodEnd}].",
+    Transience.NonTransient,
     "Transaction date is outside the statement period.",
     ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate));
 ```
@@ -108,7 +109,7 @@ Best practices:
 * add context at factory level
 * avoid sensitive or oversized data
 
-## 4️. Use the exception in domain code
+## 4️⃣ Use the exception in domain code
 
 ```csharp
 public Amount Add(Amount other) {
@@ -120,7 +121,7 @@ public Amount Add(Amount other) {
 
 Domain logic remains clean and expressive.
 
-## 5️. Or use it without throwing (`Outcome<T>`)
+## 5️⃣ Or use it without throwing (`Outcome<T>`)
 
 For validation or batch scenarios:
 
@@ -150,7 +151,7 @@ Or escalate:
 var amount = result.GetResultOrThrow();
 ```
 
-## 6️. Generate documentation
+## 6️⃣ Generate documentation
 
 Because factories are linked to structured documentation:
 

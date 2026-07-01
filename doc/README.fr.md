@@ -7,7 +7,7 @@
 
 **Transformez vos exceptions en connaissance structurée et vivante sur votre système.**
 
-![FirstClassErrors](./images/diagnosable-exceptions.png "FirstClassErrors")
+![FirstClassErrors](./images/first-class-errors.png "FirstClassErrors")
 
 FirstClassErrors est une bibliothèque .NET qui considère les erreurs comme des concepts de premier ordre, documentés et diagnostiquables — pas seulement comme des chaînes de caractères lancées à l’exécution.
 
@@ -43,7 +43,7 @@ Et si :
 
 FirstClassErrors introduit :
 
-* un **modèle d’exception enrichi**
+* un **modèle d’erreur enrichi**
 * un **système de diagnostics structurés**
 * un **DSL pour documenter les erreurs**
 * un **pipeline d’extraction de documentation**
@@ -55,9 +55,9 @@ Les erreurs deviennent :
 
 ## 🧱 Ce que fournit la bibliothèque
 
-### 1️. Un modèle d’exception plus riche
+### 1️⃣ Un modèle d’erreur plus riche
 
-Les exceptions portent :
+Les erreurs portent :
 
 * un code d’erreur stable
 * un horodatage
@@ -65,13 +65,13 @@ Les exceptions portent :
 * des données de contexte
 * des diagnostics structurés
 
-Elles sont conçues pour être :
+L’exception, elle, n’expose que son `.Error`, et est conçue pour être :
 
 * loguées de manière cohérente
 * comprises par des humains
 * exploitées par des outils
 
-### 2️. Des diagnostics structurés
+### 2️⃣ Des diagnostics structurés
 
 Chaque erreur peut déclarer des **causes possibles** et des **pistes d’analyse** :
 
@@ -81,7 +81,7 @@ Chaque erreur peut déclarer des **causes possibles** et des **pistes d’analys
 
 Les diagnostics orientent l’analyse sans figer les processus opérationnels.
 
-### 3️. Un DSL pour décrire les erreurs
+### 3️⃣ Un DSL pour décrire les erreurs
 
 Les erreurs sont documentées directement dans le code via une API fluide :
 
@@ -97,11 +97,11 @@ return DescribeError.WithTitle("Temperature below absolute zero")
 
 Il ne s’agit pas de simples commentaires — c’est de la **documentation structurée et exécutable**.
 
-### 4️. Extraction de la documentation
+### 4️⃣ Extraction de la documentation
 
 La bibliothèque fournit un mécanisme pour analyser les assemblies et extraire toute la documentation d’erreurs déclarée :
 
-* liée aux types d’exceptions
+* liée aux classes de factories d’erreur
 * liée aux méthodes factory
 * enrichie par des exemples
 * prête à être rendue

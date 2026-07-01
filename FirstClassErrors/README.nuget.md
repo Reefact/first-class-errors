@@ -10,7 +10,7 @@ It is especially useful for systems where **supportability, troubleshooting, and
 
 FirstClassErrors allows you to:
 
-- define **structured exceptions with stable error codes**
+- define **structured errors with stable error codes**
 - attach **diagnostics and investigation leads**
 - keep **error documentation close to the code**
 - generate **human-readable documentation automatically**
