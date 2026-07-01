@@ -117,10 +117,105 @@ public sealed class PortInnerErrorsTests {
         Check.That(root.InnerErrors[1]).IsSameReferenceAs(secondInnerError);
     }
 
+    [Fact(DisplayName = "ToString returns the number of aggregated errors.")]
+    public void ToStringReturnsTheNumberOfAggregatedErrors() {
+        // Setup
+        PrimaryPortInnerErrors innerErrors = new PrimaryPortInnerErrors()
+                                            .Add(new DomainError(ErrorCode.Unspecified, "first"))
+                                            .Add(new PrimaryPortError(ErrorCode.Unspecified, "second", Transience.Transient));
+
+        // Exercise & verify
+        Check.That(innerErrors.ToString()).IsEqualTo("2");
+    }
+
 }
 
 [TestSubject(typeof(SecondaryPortInnerErrors))]
 public sealed class SecondaryPortInnerErrorsTests {
+
+    [Fact(DisplayName = "ComputeTransience is NonTransient when any entry is non-transient, even mixed with a transient one.")]
+    public void ComputeTransienceIsNonTransientWhenAnyEntryIsNonTransient() {
+        // Setup
+        SecondaryPortInnerErrors innerErrors = new SecondaryPortInnerErrors()
+                                              .Add(new SecondaryPortError(ErrorCode.Unspecified, "transient", Transience.Transient))
+                                              .Add(new SecondaryPortError(ErrorCode.Unspecified, "non-transient", Transience.NonTransient));
+
+        // Exercise
+        Transience transience = innerErrors.ComputeTransience();
+
+        // Verify
+        Check.That(transience).IsEqualTo(Transience.NonTransient);
+    }
+
+    [Fact(DisplayName = "ComputeTransience is Transient when at least one entry is transient and none is non-transient.")]
+    public void ComputeTransienceIsTransientWhenAtLeastOneEntryIsTransientAndNoneIsNonTransient() {
+        // Setup
+        SecondaryPortInnerErrors innerErrors = new SecondaryPortInnerErrors()
+                                              .Add(new SecondaryPortError(ErrorCode.Unspecified, "unknown", Transience.Unknown))
+                                              .Add(new SecondaryPortError(ErrorCode.Unspecified, "transient", Transience.Transient));
+
+        // Exercise
+        Transience transience = innerErrors.ComputeTransience();
+
+        // Verify
+        Check.That(transience).IsEqualTo(Transience.Transient);
+    }
+
+    [Fact(DisplayName = "ComputeTransience is Unknown when the collection contains only domain errors.")]
+    public void ComputeTransienceIsUnknownWhenTheCollectionContainsOnlyDomainErrors() {
+        // Setup
+        SecondaryPortInnerErrors innerErrors = new SecondaryPortInnerErrors()
+                                              .Add(new DomainError(ErrorCode.Unspecified, "first"))
+                                              .Add(new DomainError(ErrorCode.Unspecified, "second"));
+
+        // Exercise
+        Transience transience = innerErrors.ComputeTransience();
+
+        // Verify
+        Check.That(transience).IsEqualTo(Transience.Unknown);
+    }
+
+    [Fact(DisplayName = "Add ignores null domain and secondary port errors.")]
+    public void AddIgnoresNullDomainAndSecondaryPortErrors() {
+        // Setup
+        DomainError        domainError        = new(ErrorCode.Unspecified, "domain");
+        SecondaryPortError secondaryPortError = new(ErrorCode.Unspecified, "secondary", Transience.NonTransient);
+
+        SecondaryPortInnerErrors innerErrors = new SecondaryPortInnerErrors()
+                                              .Add((DomainError)null!)
+                                              .Add(domainError)
+                                              .Add((SecondaryPortError)null!)
+                                              .Add(secondaryPortError);
+
+        // Exercise
+        SecondaryPortError root = new(ErrorCode.Unspecified, "root", innerErrors);
+
+        // Verify
+        Check.That(root.InnerErrors).CountIs(2);
+    }
+
+    [Fact(DisplayName = "Add returns the same instance to allow fluent chaining.")]
+    public void AddReturnsTheSameInstanceToAllowFluentChaining() {
+        // Setup
+        SecondaryPortInnerErrors innerErrors = new();
+        DomainError              domainError = new(ErrorCode.Unspecified, "domain");
+        SecondaryPortError       portError   = new(ErrorCode.Unspecified, "secondary", Transience.Transient);
+
+        // Exercise & verify
+        Check.That(innerErrors.Add(domainError)).IsSameReferenceAs(innerErrors);
+        Check.That(innerErrors.Add(portError)).IsSameReferenceAs(innerErrors);
+    }
+
+    [Fact(DisplayName = "ToString returns the number of aggregated errors.")]
+    public void ToStringReturnsTheNumberOfAggregatedErrors() {
+        // Setup
+        SecondaryPortInnerErrors innerErrors = new SecondaryPortInnerErrors()
+                                              .Add(new DomainError(ErrorCode.Unspecified, "first"))
+                                              .Add(new SecondaryPortError(ErrorCode.Unspecified, "second", Transience.Transient));
+
+        // Exercise & verify
+        Check.That(innerErrors.ToString()).IsEqualTo("2");
+    }
 
     [Fact(DisplayName = "ComputeTransience of an empty collection is Unknown.")]
     public void ComputeTransienceOfAnEmptyCollectionIsUnknown() {
