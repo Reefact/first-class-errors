@@ -3,6 +3,8 @@
 🌍 **Languages:**  
 🇬🇧 English (this file) | 🇫🇷 [Français](./doc/README.fr.md)
 
+![.NET Standard 2.0](https://img.shields.io/badge/.NET%20Standard-2.0-512BD4) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
+
 ---
 
 **Turn your exceptions into structured, living knowledge about your system.**
