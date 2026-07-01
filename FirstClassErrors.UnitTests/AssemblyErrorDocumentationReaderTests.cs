@@ -19,10 +19,12 @@ namespace FirstClassErrors.UnitTests {
             Assembly assembly = Assembly.GetAssembly(typeof(Temperature))!;
 
             // Exercise
-            IEnumerable<ErrorDocumentation> documentation = AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(assembly);
+            ErrorDocumentationExtractionResult result = AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(assembly);
 
             // Verify
-            ErrorDocumentation[] errorDocumentations = documentation.ToArray();
+            Check.That(result.Failures).CountIs(0);
+
+            ErrorDocumentation[] errorDocumentations = result.Documentation.ToArray();
 
             Check.That(errorDocumentations).CountIs(4);
 
