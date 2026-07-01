@@ -230,7 +230,7 @@ public sealed class OutcomeNonGenericTests {
         Outcome outcome = Outcome.Success;
 
         // Exercise
-        Outcome result = await outcome.Then((_) => Task.FromResult(Outcome.Success));
+        Outcome result = await outcome.Then((_) => Task.FromResult(Outcome.Success), TestContext.Current.CancellationToken);
 
         // Verify
         Check.That(result.IsSuccess).IsTrue();
@@ -248,7 +248,7 @@ public sealed class OutcomeNonGenericTests {
             called = true;
 
             return Task.FromResult(Outcome.Success);
-        });
+        }, TestContext.Current.CancellationToken);
 
         // Verify
         Check.That(called).IsFalse();

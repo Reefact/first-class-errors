@@ -53,7 +53,7 @@ public sealed class OutcomeGenericAdditionalTests {
             await System.Threading.Tasks.Task.CompletedTask;
 
             return value.ToString();
-        });
+        }, TestContext.Current.CancellationToken);
 
         // Verify
         Check.That(result.GetResultOrThrow()).IsEqualTo("7");
@@ -70,7 +70,7 @@ public sealed class OutcomeGenericAdditionalTests {
             await System.Threading.Tasks.Task.CompletedTask;
 
             return 42;
-        });
+        }, TestContext.Current.CancellationToken);
 
         // Verify
         Check.That(result.IsSuccess).IsTrue();
