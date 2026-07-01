@@ -1,6 +1,6 @@
 # Core Concepts
 
-DiagnosableExceptions is not just a utility library.
+FirstClassErrors is not just a utility library.
 It introduces a different way to think about application errors.
 
 Instead of treating exceptions as technical incidents, it treats them as **structured knowledge about what went wrong**.
@@ -11,7 +11,7 @@ In many systems, exceptions are reduced to:
 
 > a type + a string message
 
-In DiagnosableExceptions, an exception represents:
+In FirstClassErrors, an exception represents:
 
 * a **specific error situation**
 * identified by a **stable error code**
@@ -89,7 +89,7 @@ Each error has a paired exception reached via `error.ToException()`: `DomainExce
 ## 🔁 Exception or data? Both are supported
 
 Traditionally, exceptions are always thrown.
-DiagnosableExceptions supports two complementary models:
+FirstClassErrors supports two complementary models:
 
 * **Exception as control flow** (classic throw)
 * **Exception as data** (`Outcome<T>`, or non-generic `Outcome` when there is no value)
@@ -125,6 +125,6 @@ All based on the same source of truth: the code.
 
 ---
 
-Previous section: [When Not to Use DiagnosableExceptions](WhenNotToUseDiagnosableExceptions.en.md) | Next section: [Error Context Guide](ErrorContext.en.md)
+Previous section: [When Not to Use FirstClassErrors](WhenNotToUseFirstClassErrors.en.md) | Next section: [Error Context Guide](ErrorContext.en.md)
 
 ---

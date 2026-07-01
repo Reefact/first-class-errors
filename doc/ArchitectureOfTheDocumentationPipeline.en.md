@@ -1,6 +1,6 @@
 # Architecture of the Documentation Pipeline
 
-DiagnosableExceptions does not treat documentation as an external artifact.
+FirstClassErrors does not treat documentation as an external artifact.
 Documentation is derived directly from the code and flows through a structured pipeline.
 
 The pipeline separates **knowledge definition**, **extraction**, and **rendering**.

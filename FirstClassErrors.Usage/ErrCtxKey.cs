@@ -1,0 +1,13 @@
+﻿namespace FirstClassErrors.Usage {
+
+    internal static class ErrCtxKey {
+
+        #region Static members
+
+        public static readonly ErrorContextKey<DateOnly> TransactionDate = ErrorContextKey.Create<DateOnly>("TRANSACTION_DATE", "The date of the transaction being processed.");
+
+        #endregion
+
+    }
+
+}

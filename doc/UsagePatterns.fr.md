@@ -1,6 +1,6 @@
 # Patterns d’utilisation
 
-DiagnosableExceptions est particulièrement utile lorsque les erreurs ne sont pas de simples défaillances techniques, mais des **événements porteurs de sens dans la vie du système**.  
+FirstClassErrors est particulièrement utile lorsque les erreurs ne sont pas de simples défaillances techniques, mais des **événements porteurs de sens dans la vie du système**.  
 Voici des patterns courants où la bibliothèque apporte clarté et structure.
 
 ## 🧱 1. Invariants de Value Object
@@ -177,7 +177,7 @@ Outcome<Receipt> outcome =
 
 ## 🎯 Résumé
 
-DiagnosableExceptions brille lorsque :
+FirstClassErrors brille lorsque :
 
 | Situation         | Bénéfice                        |
 | ----------------- | ------------------------------- |

@@ -1,6 +1,6 @@
 # Getting Started
 
-DiagnosableExceptions helps you treat errors as **structured, diagnosable knowledge** instead of simple exception messages.
+FirstClassErrors helps you treat errors as **structured, diagnosable knowledge** instead of simple exception messages.
 
 In a few minutes, you will see how to:
 
@@ -22,7 +22,7 @@ This pattern is essential because:
 
 Note:
 
-*Using factory methods to create exceptions is a well-established .NET pattern for centralizing and standardizing exception creation. DiagnosableExceptions builds on this idea and makes exception factories the anchor point for structured, living error documentation. Beyond documentation, factories significantly improve code readability: they keep error construction (error codes, messages, formatting, and wording) out of the “happy path,” allowing domain logic to remain focused on business rules rather than technical details. A call such as `throw InvalidAmountOperationError.CurrencyMismatch(a1, a2).ToException();` expresses intent far more clearly than inlined exception construction. This approach aligns with clean code principles by separating concerns, reducing duplication, and giving each error situation a named, explicit representation in the codebase — while also providing a single, consistent place to attach diagnostics and documentation.*
+*Using factory methods to create exceptions is a well-established .NET pattern for centralizing and standardizing exception creation. FirstClassErrors builds on this idea and makes exception factories the anchor point for structured, living error documentation. Beyond documentation, factories significantly improve code readability: they keep error construction (error codes, messages, formatting, and wording) out of the “happy path,” allowing domain logic to remain focused on business rules rather than technical details. A call such as `throw InvalidAmountOperationError.CurrencyMismatch(a1, a2).ToException();` expresses intent far more clearly than inlined exception construction. This approach aligns with clean code principles by separating concerns, reducing duplication, and giving each error situation a named, explicit representation in the codebase — while also providing a single, consistent place to attach diagnostics and documentation.*
 
 Example:
 
@@ -160,7 +160,7 @@ Because factories are linked to structured documentation:
 
 ## ✅ What you gain
 
-With DiagnosableExceptions:
+With FirstClassErrors:
 
 * errors are consistent
 * documentation is close to the code

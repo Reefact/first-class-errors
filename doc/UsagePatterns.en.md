@@ -1,6 +1,6 @@
 # Usage Patterns
 
-DiagnosableExceptions is most useful when errors are not just technical failures, but **meaningful events in the life of the system**.
+FirstClassErrors is most useful when errors are not just technical failures, but **meaningful events in the life of the system**.
 Below are common patterns where the library brings clarity and structure.
 
 ## 🧱 1️. Value Object invariants
@@ -190,7 +190,7 @@ Outcome<Receipt> outcome =
 
 ## 🎯 Summary
 
-DiagnosableExceptions shines when:
+FirstClassErrors shines when:
 
 | Situation         | Benefit                     |
 | ----------------- | --------------------------- |

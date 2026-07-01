@@ -1,6 +1,6 @@
 # Bonnes pratiques
 
-DiagnosableExceptions est le plus efficace lorsqu’il est utilisé de manière cohérente et intentionnelle.  
+FirstClassErrors est le plus efficace lorsqu’il est utilisé de manière cohérente et intentionnelle.  
 Ces pratiques aident à garder des erreurs significatives, lisibles et réellement utiles.
 
 ## 🧠 1. Une situation d’erreur par factory
@@ -191,7 +191,7 @@ Faire passer chaque erreur par une factory garantit que toutes les erreurs d’u
 
 ## 🎯 Pensée finale
 
-DiagnosableExceptions vise à **exprimer de la connaissance**, pas seulement à gérer des erreurs.
+FirstClassErrors vise à **exprimer de la connaissance**, pas seulement à gérer des erreurs.
 
 Des erreurs bien écrites améliorent :
 

@@ -2,7 +2,7 @@
 
 ## ❓ Why not just use normal exceptions?
 
-You can — and DiagnosableExceptions still uses standard .NET exceptions.
+You can — and FirstClassErrors still uses standard .NET exceptions.
 
 The difference is that this library adds:
 
@@ -17,7 +17,7 @@ It turns exceptions from *technical signals* into *documented knowledge units*.
 
 A string loses structure.
 
-DiagnosableExceptions keeps:
+FirstClassErrors keeps:
 
 * error codes
 * rich messages

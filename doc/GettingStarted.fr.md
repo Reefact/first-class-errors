@@ -1,6 +1,6 @@
 # Premier pas
 
-DiagnosableExceptions vous aide à considérer les erreurs comme une **connaissance structurée et diagnostiquable**, plutôt que comme de simples messages d’exception.
+FirstClassErrors vous aide à considérer les erreurs comme une **connaissance structurée et diagnostiquable**, plutôt que comme de simples messages d’exception.
 
 En quelques minutes, vous allez voir comment :
 
@@ -22,7 +22,7 @@ Ce pattern est essentiel car :
 
 Remarque :
 
-*L’utilisation de méthodes factory pour créer des exceptions est un pattern .NET bien établi pour centraliser et standardiser la création d’exceptions. DiagnosableExceptions s’appuie sur cette idée et fait des factories le point d’ancrage de la documentation d’erreurs structurée et vivante. Au-delà de la documentation, les factories améliorent fortement la lisibilité du code : elles sortent la construction de l’erreur (codes, messages, formatage, formulation) du “happy path”, ce qui permet à la logique métier de rester centrée sur les règles métier plutôt que sur des détails techniques. Un appel comme `throw InvalidAmountOperationError.CurrencyMismatch(a1, a2).ToException();` exprime l’intention bien plus clairement qu’une construction d’exception inline. Cette approche s’aligne avec les principes du clean code en séparant les responsabilités, en réduisant la duplication et en donnant à chaque situation d’erreur une représentation explicite et nommée dans le code — tout en fournissant un point unique et cohérent pour attacher diagnostics et documentation.*  
+*L’utilisation de méthodes factory pour créer des exceptions est un pattern .NET bien établi pour centraliser et standardiser la création d’exceptions. FirstClassErrors s’appuie sur cette idée et fait des factories le point d’ancrage de la documentation d’erreurs structurée et vivante. Au-delà de la documentation, les factories améliorent fortement la lisibilité du code : elles sortent la construction de l’erreur (codes, messages, formatage, formulation) du “happy path”, ce qui permet à la logique métier de rester centrée sur les règles métier plutôt que sur des détails techniques. Un appel comme `throw InvalidAmountOperationError.CurrencyMismatch(a1, a2).ToException();` exprime l’intention bien plus clairement qu’une construction d’exception inline. Cette approche s’aligne avec les principes du clean code en séparant les responsabilités, en réduisant la duplication et en donnant à chaque situation d’erreur une représentation explicite et nommée dans le code — tout en fournissant un point unique et cohérent pour attacher diagnostics et documentation.*  
 
 Exemple :
 
@@ -160,7 +160,7 @@ Comme les factories sont liées à une documentation structurée :
 
 ## ✅ Ce que vous y gagnez
 
-Avec DiagnosableExceptions :
+Avec FirstClassErrors :
 
 * les erreurs sont cohérentes
 * la documentation est proche du code
