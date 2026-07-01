@@ -651,4 +651,32 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
              .Throws<ArgumentNullException>();
     }
 
+    // -------------------------------------------------------------------------
+    // Remaining null-task guards
+    // -------------------------------------------------------------------------
+
+    [Fact(DisplayName = "Then over a null non-generic Task<Outcome> throws an ArgumentNullException.")]
+    public void ThenOverANullNonGenericTaskOutcomeThrows() {
+        // Exercise & verify
+        Check.ThatCode(() => ((Task<Outcome>)null!).Then(() => Outcome.Success).GetAwaiter().GetResult())
+             .Throws<ArgumentNullException>();
+    }
+
+    [Fact(DisplayName = "The async Then over a null Task<Outcome<T>> to a typed outcome throws an ArgumentNullException.")]
+    public void TheAsyncThenOverANullGenericTaskOutcomeToATypedOutcomeThrows() {
+        // Exercise & verify
+        Check.ThatCode(() => ((Task<Outcome<int>>)null!)
+                             .Then((value, _) => Task.FromResult(Outcome<int>.Success(value + 1)), TestContext.Current.CancellationToken)
+                             .GetAwaiter()
+                             .GetResult())
+             .Throws<ArgumentNullException>();
+    }
+
+    [Fact(DisplayName = "To over a null Task<Outcome<T>> throws an ArgumentNullException.")]
+    public void ToOverANullTaskOutcomeThrows() {
+        // Exercise & verify
+        Check.ThatCode(() => ((Task<Outcome<int>>)null!).To(value => value.ToString()).GetAwaiter().GetResult())
+             .Throws<ArgumentNullException>();
+    }
+
 }

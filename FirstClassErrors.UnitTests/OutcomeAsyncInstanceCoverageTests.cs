@@ -332,6 +332,16 @@ public sealed class OutcomeGenericAsyncInstanceCoverageTests {
         Check.That(recovered.GetResultOrThrow()).IsEqualTo(42);
     }
 
+    [Fact(DisplayName = "Recover with a value fallback guards against a null fallback function.")]
+    public void RecoverWithAValueFallbackGuardsAgainstANullFallbackFunction() {
+        // Setup
+        Outcome<int> outcome = Outcome<int>.Success(1);
+
+        // Exercise & verify
+        Check.ThatCode(() => outcome.Recover((Func<Error, int>)null!))
+             .Throws<ArgumentNullException>();
+    }
+
     [Fact(DisplayName = "The async Recover with an outcome fallback passes a success through and recovers a failure.")]
     public async Task TheAsyncRecoverWithAnOutcomeFallbackPassesASuccessThroughAndRecoversAFailure() {
         // Setup
