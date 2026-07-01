@@ -44,8 +44,8 @@ Cela crée une connexion explicite entre :
 
 * trouve toute classe annotée avec `[ProvidesErrorsFor(...)]` (ce sont de simples classes statiques, pas des types d’exception)
 * trouve les méthodes factory marquées avec `[DocumentedBy]`
-* invoque les méthodes de documentation liées
-* construit une collection d’objets `ErrorDocumentation` (dédupliquée par `Code`, ordonnée par `Code`)
+* invoque les méthodes de documentation liées — une factory qui lève une exception, ou une référence `[DocumentedBy]` non résolvable, est enregistrée comme une *failure* au lieu d’interrompre toute l’analyse
+* renvoie un `ErrorDocumentationExtractionResult` : la collection d’`ErrorDocumentation` (dédupliquée par `Code`, ordonnée par `Code`) avec la liste des *failures* d’extraction
 
 À ce stade, la documentation devient un modèle structuré en mémoire.
 

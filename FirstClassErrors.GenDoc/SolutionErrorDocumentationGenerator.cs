@@ -70,7 +70,7 @@ public static class SolutionErrorDocumentationGenerator {
 
         if (assemblyPaths.Count == 0) { return []; }
 
-        IEnumerable<ErrorDocumentation> errorDocumentation = ExtractFromAssemblies(assemblyPaths);
+        IEnumerable<ErrorDocumentation> errorDocumentation = ExtractFromAssemblies(assemblyPaths, options);
         options.Logger.Info("Documentation generation completed.");
 
         return errorDocumentation;
@@ -324,13 +324,21 @@ public static class SolutionErrorDocumentationGenerator {
             || value.Trim().Equals("y", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static IEnumerable<ErrorDocumentation> ExtractFromAssemblies(IReadOnlyList<string> assemblyPaths) {
+    private static IEnumerable<ErrorDocumentation> ExtractFromAssemblies(IReadOnlyList<string> assemblyPaths, SolutionGenerationOptions options) {
         List<ErrorDocumentation> results = new();
 
         foreach (string assemblyPath in assemblyPaths) {
-            Assembly                        assembly = Assembly.LoadFrom(assemblyPath);
-            IEnumerable<ErrorDocumentation> docs     = AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(assembly);
-            results.AddRange(docs);
+            // NOTE: Assembly.LoadFrom uses the default (non-collectible) load context. Swapping this for an isolated,
+            // unloadable strategy (a collectible AssemblyLoadContext or an out-of-process worker) is tracked as a
+            // separate GenDoc concern; the extraction itself already tolerates per-factory failures.
+            Assembly                           assembly   = Assembly.LoadFrom(assemblyPath);
+            ErrorDocumentationExtractionResult extraction = AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(assembly);
+
+            foreach (ErrorDocumentationExtractionFailure failure in extraction.Failures) {
+                options.Logger.Error($"Documentation extraction issue in '{assemblyPath}': {failure}");
+            }
+
+            results.AddRange(extraction.Documentation);
         }
 
         // Deduplicate across assemblies as well: the same error Code declared in two assemblies must collapse to a
