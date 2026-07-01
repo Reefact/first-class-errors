@@ -43,4 +43,4 @@ This library is particularly useful when:
 
 Full documentation and guides are available on GitHub:
 
-https://github.com/Reefact/diagnosable-exceptions
+https://github.com/Reefact/first-class-errors
