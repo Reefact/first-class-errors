@@ -29,8 +29,8 @@
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 
     <!-- Links -->
-    <PackageProjectUrl>https://github.com/Reefact/diagnosable-exceptions</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/Reefact/diagnosable-exceptions.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/Reefact/first-class-errors</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Reefact/first-class-errors.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
 
     <!-- Package assets -->
