@@ -19,5 +19,3 @@ En essence, la bibliothèque encourage les équipes à considérer les erreurs c
 Section précédente: [Premiers pas](GettingStarted.fr.md) | Section suivante: [Quand ne pas utiliser FirstClassErrors](WhenNotToUseFirstClassErrors.fr.md)
 
 ---
-
-![FirstClassErrors](./images/first-class-errors-02.png "FirstClassErrors")
