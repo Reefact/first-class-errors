@@ -1,0 +1,58 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Build -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+
+    <!-- XML documentation -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- Version -->
+    <Version>0.1.0</Version>
+
+    <!-- NuGet identity -->
+    <PackageId>FirstClassErrors</PackageId>
+    <Authors>Sylvain AURAT</Authors>
+    <Company>Reefact</Company>
+
+    <!-- Description -->
+    <Description>
+      FirstClassErrors is a lightweight .NET library for creating semantic exceptions that make failures explicit and easier to support in production. It enables error documentation to stay in sync with the code and makes it easy to generate and integrate living documentation into your CI/CD pipeline.
+    </Description>
+
+    <!-- Metadata -->
+    <PackageTags>exceptions;error-handling;diagnostics;observability;structured-errors;living-documentation;documentation</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+
+    <!-- Links -->
+    <PackageProjectUrl>https://github.com/Reefact/diagnosable-exceptions</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Reefact/diagnosable-exceptions.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <!-- Package assets -->
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
+    <PackageReleaseNotes>Initial stable release of FirstClassErrors.</PackageReleaseNotes>
+
+    <Copyright>© Reefact 2026</Copyright>
+
+    <!-- Generate package -->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>FirstClassErrors.UnitTests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\icon.png" Pack="true" PackagePath="/" />
+    <None Include="README.nuget.md" Pack="true" PackagePath="readme.md" />
+  </ItemGroup>
+
+</Project>

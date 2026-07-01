@@ -1,4 +1,4 @@
-# DiagnosableExceptions
+# FirstClassErrors
 
 🌍 **Langues:**  
 🇬🇧 [English](../README.md) | 🇫🇷 Français (ce fichier)
@@ -7,9 +7,9 @@
 
 **Transformez vos exceptions en connaissance structurée et vivante sur votre système.**
 
-![Diagnosable Exceptions](./images/diagnosable-exceptions.png "Diagnosable Exceptions")
+![FirstClassErrors](./images/diagnosable-exceptions.png "FirstClassErrors")
 
-DiagnosableExceptions est une bibliothèque .NET qui considère les erreurs comme des concepts de premier ordre, documentés et diagnostiquables — pas seulement comme des chaînes de caractères lancées à l’exécution.
+FirstClassErrors est une bibliothèque .NET qui considère les erreurs comme des concepts de premier ordre, documentés et diagnostiquables — pas seulement comme des chaînes de caractères lancées à l’exécution.
 
 Elle vous aide à :
 
@@ -41,7 +41,7 @@ Et si :
 
 > **Chaque erreur de votre système était explicitement décrite, structurée et documentée — directement dans le code — et que cette documentation pouvait être générée automatiquement ?**
 
-DiagnosableExceptions introduit :
+FirstClassErrors introduit :
 
 * un **modèle d’exception enrichi**
 * un **système de diagnostics structurés**
@@ -128,7 +128,7 @@ selon le contexte (domaine, validation, pipelines, etc.).
 
 ## 🧩 Exemple
 
-Extrait du projet `DiagnosableExceptions.Usage` :
+Extrait du projet `FirstClassErrors.Usage` :
 
 ```csharp
 [ProvidesErrorsFor(nameof(Temperature))]
@@ -168,7 +168,7 @@ Ici, l’erreur, sa signification, sa règle, ses diagnostics et des exemples de
 
 ## 🎯 Pour qui ?
 
-DiagnosableExceptions est particulièrement utile si :
+FirstClassErrors est particulièrement utile si :
 
 * vous développez des systèmes métiers complexes
 * vous vous souciez de la supportabilité
@@ -182,7 +182,7 @@ Consultez la documentation complète :
 
 - [Premiers pas](GettingStarted.fr.md)
 - [Principes de conception](DesignPrinciples.fr.md)
-- [Quand ne pas utiliser DiagnosableExceptions](WhenNotToUseDiagnosableExceptions.fr.md)
+- [Quand ne pas utiliser FirstClassErrors](WhenNotToUseFirstClassErrors.fr.md)
 - [Concepts fondamentaux](CoreConcepts.fr.md)
 - [Guide du contexte d’erreur](ErrorContext.fr.md)
 - [Guide d’écriture des erreurs](WritingErrorsGuide.fr.md)

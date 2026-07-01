@@ -1,4 +1,4 @@
-# DiagnosableExceptions
+# FirstClassErrors
 
 🌍 **Languages:**  
 🇬🇧 English (this file) | 🇫🇷 [Français](./doc/README.fr.md)
@@ -7,9 +7,9 @@
 
 **Turn your exceptions into structured, living knowledge about your system.**
 
-![Diagnosable Exceptions](./doc/images/diagnosable-exceptions.png "Diagnosable Exceptions")
+![FirstClassErrors](./doc/images/diagnosable-exceptions.png "FirstClassErrors")
 
-DiagnosableExceptions is a .NET library that treats errors as first-class, documented, and diagnosable concepts — not just strings thrown at runtime.
+FirstClassErrors is a .NET library that treats errors as first-class, documented, and diagnosable concepts — not just strings thrown at runtime.
 
 It helps you:
 
@@ -41,7 +41,7 @@ What if:
 
 > **Every error in your system was explicitly described, structured, and documented — directly in code — and that documentation could be generated automatically?**
 
-DiagnosableExceptions introduces:
+FirstClassErrors introduces:
 
 * a **rich exception model**
 * a **structured diagnostic system**
@@ -128,7 +128,7 @@ depending on the context (domain logic, validation, pipelines, etc.).
 
 ## 🧩 Example
 
-From the `DiagnosableExceptions.Usage` project:
+From the `FirstClassErrors.Usage` project:
 
 ```csharp
 [ProvidesErrorsFor(nameof(Temperature))]
@@ -168,7 +168,7 @@ Here, the error, its meaning, its rule, its diagnostics, and example messages ar
 
 ## 🎯 Who is this for?
 
-DiagnosableExceptions is especially useful if:
+FirstClassErrors is especially useful if:
 
 * you build complex business systems
 * you care about supportability
@@ -182,7 +182,7 @@ See the full documentation:
 
 - [Getting Started](doc/GettingStarted.en.md)
 - [Design Principles](doc/DesignPrinciples.en.md)
-- [When Not to Use DiagnosableExceptions](doc/WhenNotToUseDiagnosableExceptions.en.md)
+- [When Not to Use FirstClassErrors](doc/WhenNotToUseFirstClassErrors.en.md)
 - [Core Concepts](doc/CoreConcepts.en.md)
 - [Error Context Guide](doc/ErrorContext.en.md)
 - [Writing Errors Guide](doc/WritingErrorsGuide.en.md)

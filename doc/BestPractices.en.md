@@ -1,6 +1,6 @@
 # Best Practices
 
-DiagnosableExceptions is most effective when used consistently and with intention.
+FirstClassErrors is most effective when used consistently and with intention.
 These practices help keep errors meaningful, readable, and useful.
 
 ## 🧠 1. One error situation per factory
@@ -191,7 +191,7 @@ Routing every error through a factory ensures that all errors of a given categor
 
 ## 🎯 Final thought
 
-DiagnosableExceptions is about **expressing knowledge**, not just handling errors.
+FirstClassErrors is about **expressing knowledge**, not just handling errors.
 
 Well-written errors improve:
 

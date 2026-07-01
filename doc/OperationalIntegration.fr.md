@@ -1,6 +1,6 @@
 # CI/CD et intégration opérationnelle
 
-DiagnosableExceptions révèle toute sa valeur lorsqu’il est intégré dans la chaîne de livraison et les outils opérationnels. L’objectif n’est pas seulement de définir la connaissance liée aux erreurs, mais de la rendre automatiquement accessible aux personnes qui en ont besoin : développeurs, équipes de support et opérateurs.
+FirstClassErrors révèle toute sa valeur lorsqu’il est intégré dans la chaîne de livraison et les outils opérationnels. L’objectif n’est pas seulement de définir la connaissance liée aux erreurs, mais de la rendre automatiquement accessible aux personnes qui en ont besoin : développeurs, équipes de support et opérateurs.
 
 ## 📦 La documentation comme artefact de build
 
@@ -29,7 +29,7 @@ Le principe clé est :
 
 ## 📜 Intégration avec les logs
 
-DiagnosableExceptions est conçu pour s’intégrer naturellement avec le logging structuré.
+FirstClassErrors est conçu pour s’intégrer naturellement avec le logging structuré.
 
 Les logs peuvent inclure :
 
@@ -68,13 +68,13 @@ Les logs de production deviennent ainsi navigables : le support peut passer dire
 
 ## 🧩 Complémentaire au logging structuré
 
-DiagnosableExceptions ne remplace ni le logging structuré, ni les scopes, ni les correlation IDs.
+FirstClassErrors ne remplace ni le logging structuré, ni les scopes, ni les correlation IDs.
 
 Il les complète :
 
 * logging structuré → contexte technique  
 * scopes → contexte d’exécution  
-* DiagnosableExceptions → signification sémantique de l’erreur  
+* FirstClassErrors → signification sémantique de l’erreur  
 
 Ensemble, ils donnent une vision complète de ce qui s’est passé.
 

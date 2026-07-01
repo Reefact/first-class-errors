@@ -1,6 +1,6 @@
 # CI/CD and Operational Integration
 
-DiagnosableExceptions reaches its full value when it is integrated into the delivery pipeline and operational tooling. The goal is not only to define error knowledge, but to make it automatically available to the people who need it: developers, support teams, and operators.
+FirstClassErrors reaches its full value when it is integrated into the delivery pipeline and operational tooling. The goal is not only to define error knowledge, but to make it automatically available to the people who need it: developers, support teams, and operators.
 
 ## 📦 Documentation as a build artifact
 
@@ -29,7 +29,7 @@ The important principle is:
 
 ## 📜 Logging integration
 
-DiagnosableExceptions are designed to integrate naturally with structured logging.
+FirstClassErrors are designed to integrate naturally with structured logging.
 
 Logs can include:
 
@@ -68,13 +68,13 @@ This makes production logs navigable: support can move directly from a log entry
 
 ## 🧩 Complementary to structured logging
 
-DiagnosableExceptions do not replace structured logging, scopes, or correlation IDs.
+FirstClassErrors do not replace structured logging, scopes, or correlation IDs.
 
 They complement them:
 
 * structured logging → technical context
 * scopes → execution context
-* DiagnosableExceptions → semantic error meaning
+* FirstClassErrors → semantic error meaning
 
 Together, they provide a complete picture of what happened.
 

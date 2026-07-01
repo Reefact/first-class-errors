@@ -1,6 +1,6 @@
 # Writing Errors Guide
 
-DiagnosableExceptions gives you tools.
+FirstClassErrors gives you tools.
 This guide helps you use them in a consistent and meaningful way.
 
 The goal is not just to throw exceptions, but to **express errors clearly, precisely, and usefully** for humans.

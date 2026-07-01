@@ -2,9 +2,9 @@
 
 [ErrorOr](https://github.com/amantinband/error-or) and [FluentResults](https://github.com/altmann/FluentResults) are excellent, mature libraries. If your goal is a lightweight *Result* type — returning errors as values instead of throwing — they are focused, well-adopted choices for exactly that.
 
-DiagnosableExceptions answers a **different question**. It is not primarily a *Result* library: it is a way to make errors **first-class, documented and diagnosable knowledge** about your system — errors you can *carry* as values **or** *throw* as exceptions, using one and the same model.
+FirstClassErrors answers a **different question**. It is not primarily a *Result* library: it is a way to make errors **first-class, documented and diagnosable knowledge** about your system — errors you can *carry* as values **or** *throw* as exceptions, using one and the same model.
 
-This page highlights what DiagnosableExceptions does differently.
+This page highlights what FirstClassErrors does differently.
 
 ## 🎯 A different centre of gravity
 
@@ -12,9 +12,9 @@ This page highlights what DiagnosableExceptions does differently.
 |---|---|
 | **ErrorOr** | *How do I return one or more errors as a value instead of throwing?* |
 | **FluentResults** | *How do I return a result carrying errors, successes and causal reasons?* |
-| **DiagnosableExceptions** | *How do I turn errors into documented, diagnosable knowledge — and move them through my system however each layer needs?* |
+| **FirstClassErrors** | *How do I turn errors into documented, diagnosable knowledge — and move them through my system however each layer needs?* |
 
-For ErrorOr and FluentResults, the **error is a payload of the result type**. For DiagnosableExceptions, the **error is the model**, and the result type (`Outcome`) is just one of several ways to transport it.
+For ErrorOr and FluentResults, the **error is a payload of the result type**. For FirstClassErrors, the **error is the model**, and the result type (`Outcome`) is just one of several ways to transport it.
 
 ## 🧩 One error model, three transports
 
@@ -26,17 +26,17 @@ The `Error` model is decoupled from the way it travels. The *same* error can be:
 
 Bridges connect all three, so you are never locked into one style. You can *carry* errors inside your domain and *throw* them at a boundary — with **the same error object**, no re-modeling in between.
 
-ErrorOr and FluentResults are, by design, *errors-as-values only*: the error is coupled to the result type and the model deliberately avoids throwing. DiagnosableExceptions treats the exception path as a **first-class citizen** alongside the value path.
+ErrorOr and FluentResults are, by design, *errors-as-values only*: the error is coupled to the result type and the model deliberately avoids throwing. FirstClassErrors treats the exception path as a **first-class citizen** alongside the value path.
 
 ## 📖 Errors that carry meaning, not just an identifier
 
 An ErrorOr `Error` is a code, a description, a `Type` and a metadata bag. A FluentResults error is a message with metadata and nested reasons. That is enough to *handle* an error at runtime.
 
-A DiagnosableExceptions error is described for **humans**: a title, a plain-language explanation, the **business rule** that was violated, and representative examples. The error stops being a technical token and becomes something a developer — or a support engineer — can actually *understand*.
+A FirstClassErrors error is described for **humans**: a title, a plain-language explanation, the **business rule** that was violated, and representative examples. The error stops being a technical token and becomes something a developer — or a support engineer — can actually *understand*.
 
 ## 🔎 Diagnostics built for investigation
 
-Where the others *classify* an error (an `ErrorType` enum, a metadata entry), DiagnosableExceptions lets an error declare **how to investigate it**:
+Where the others *classify* an error (an `ErrorType` enum, a metadata entry), FirstClassErrors lets an error declare **how to investigate it**:
 
 - one or more **possible causes**;
 - the likely **origin** of each one (`Internal`, `External`, `InternalOrExternal`);
@@ -54,7 +54,7 @@ Neither ErrorOr nor FluentResults produces documentation from your error definit
 
 `Outcome` offers a fluent pipeline (`Then`, `To`, `Recover`, `Finally`) to compose steps without throwing — use it when it genuinely makes the flow clearer.
 
-But that pipeline is an **optional transport, not the centre of gravity**. When a plain `if` returning a well-named domain error reads closer to the business, DiagnosableExceptions encourages you to *write that instead*. Your error handling stays at **business altitude**; you are never pushed into long fluent chains just to remain "idiomatic".
+But that pipeline is an **optional transport, not the centre of gravity**. When a plain `if` returning a well-named domain error reads closer to the business, FirstClassErrors encourages you to *write that instead*. Your error handling stays at **business altitude**; you are never pushed into long fluent chains just to remain "idiomatic".
 
 Railway-oriented result libraries tend to make the fluent pipeline the primary idiom. Here, the pipeline serves the error — not the other way around.
 
@@ -70,7 +70,7 @@ ErrorOr and FluentResults are deliberately architecture-agnostic and keep the er
 
 ## 📊 At a glance
 
-| | DiagnosableExceptions | ErrorOr | FluentResults |
+| | FirstClassErrors | ErrorOr | FluentResults |
 |---|:---:|:---:|:---:|
 | Return errors as values (railway style) | ✅ (optional) | ✅ | ✅ |
 | Throw the *same* error as a typed exception | ✅ | ➖ | ➖ |
@@ -87,6 +87,6 @@ ErrorOr and FluentResults are deliberately architecture-agnostic and keep the er
 
 - Reach for **ErrorOr** when you want a tiny, ergonomic result type with clean, HTTP-friendly error categorization.
 - Reach for **FluentResults** when you want a result carrying rich reason chains and metadata.
-- Reach for **DiagnosableExceptions** when you want your errors to be **documented, diagnosable knowledge** — described once in code, carried as values or thrown as exceptions, and turned into a catalog your whole team can rely on.
+- Reach for **FirstClassErrors** when you want your errors to be **documented, diagnosable knowledge** — described once in code, carried as values or thrown as exceptions, and turned into a catalog your whole team can rely on.
 
-They are not really competing for the same job: the first two make errors easy to *return*; DiagnosableExceptions makes them easy to *understand, support and document*.
+They are not really competing for the same job: the first two make errors easy to *return*; FirstClassErrors makes them easy to *understand, support and document*.
