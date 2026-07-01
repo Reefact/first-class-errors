@@ -41,9 +41,9 @@ Cette bibliothèque prend tout son sens dans des systèmes qui sont :
 
 C’est un investissement dans la clarté et la supportabilité.
 
-## ❓ Pourquoi utiliser des factories d’exception plutôt que `new` ?
+## ❓ Pourquoi utiliser des factories d’erreur plutôt que `new` ?
 
-Les factories :
+Les factories d’erreur retournent des objets `Error` (levés via `.ToException()` lorsqu’une exception est nécessaire). Elles :
 
 * rendent explicites les situations d’erreur  
 * gardent la construction en dehors du happy path  
@@ -77,9 +77,9 @@ Parce que la documentation dans le code :
 
 Cela évite la dérive entre le code et la documentation.
 
-## ❓ Quand dois-je ajouter un `ErrorContext` à une exception ?
+## ❓ Quand dois-je ajouter un `ErrorContext` à une erreur ?
 
-Utilisez `ErrorContext` pour des **faits spécifiques à l’occurrence** qui améliorent le diagnostic et l’observabilité.
+Utilisez `ErrorContext` pour des **faits spécifiques à l’occurrence** qui améliorent le diagnostic et l’observabilité. Le contexte vit sur l’`Error`, si bien qu’il voyage avec l’erreur, qu’elle soit transportée via `Outcome<T>` ou levée en exception.
 
 Bons candidats :
 

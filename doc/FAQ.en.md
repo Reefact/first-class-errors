@@ -41,9 +41,9 @@ This library shines in systems that are:
 
 It is an investment in clarity and supportability.
 
-## ❓ Why use exception factories instead of `new`?
+## ❓ Why use error factories instead of `new`?
 
-Factories:
+Error factories return `Error` objects (thrown via `.ToException()` when you need an exception). They:
 
 * make error situations explicit
 * keep construction out of the happy path
@@ -77,9 +77,9 @@ Because documentation in code:
 
 This prevents drift between code and documentation.
 
-## ❓ When should I add `ErrorContext` to an exception?
+## ❓ When should I add `ErrorContext` to an error?
 
-Use `ErrorContext` for **instance-specific facts** that help diagnosis and observability.
+Use `ErrorContext` for **instance-specific facts** that help diagnosis and observability. Context lives on the `Error`, so it travels with the error whether it is transported via `Outcome<T>` or thrown as an exception.
 
 Good candidates:
 

@@ -103,7 +103,7 @@ When interacting with external systems:
 * formats may change
 * assumptions may break
 
-Using diagnosable exceptions helps distinguish:
+Using first-class errors helps distinguish:
 
 * domain issues
 * input issues
@@ -121,11 +121,11 @@ var result = ValidateAmount(amount)
              .Then(CheckLimits);
 ```
 
-Each failure can carry a diagnosable exception, keeping the model consistent while avoiding uncontrolled throwing.
+Each failure carries an `Error`, keeping the model consistent while avoiding uncontrolled throwing.
 
 ## 🧩 7️. Support-oriented logging
 
-Because exceptions carry structured diagnostics, logs become more useful:
+Because errors carry structured diagnostics, logs become more useful:
 
 * stable error codes
 * meaningful short messages

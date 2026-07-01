@@ -20,11 +20,11 @@
 
     <!-- Description -->
     <Description>
-      FirstClassErrors is a lightweight .NET library for creating semantic exceptions that make failures explicit and easier to support in production. It enables error documentation to stay in sync with the code and makes it easy to generate and integrate living documentation into your CI/CD pipeline.
+      FirstClassErrors is a lightweight .NET library that makes errors first-class, documented and diagnosable — carried as values or thrown as exceptions — so failures stay explicit and easy to support in production. Error documentation stays in sync with the code and can be generated and integrated into your CI/CD pipeline as living documentation.
     </Description>
 
     <!-- Metadata -->
-    <PackageTags>exceptions;error-handling;diagnostics;observability;structured-errors;living-documentation;documentation</PackageTags>
+    <PackageTags>error-handling;errors;result;outcome;diagnostics;structured-errors;living-documentation;observability;exceptions</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 

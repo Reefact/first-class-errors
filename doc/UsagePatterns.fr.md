@@ -13,7 +13,7 @@ public static Amount From(decimal value, Currency currency) {
 
     return new Amount(value, currency);
 }
-````
+```
 
 Ici :
 
@@ -90,7 +90,7 @@ Lors d’interactions avec des systèmes externes :
 * les formats peuvent évoluer
 * les hypothèses peuvent être invalides
 
-Les exceptions diagnostiquables aident à distinguer :
+Les erreurs de première classe aident à distinguer :
 
 * les problèmes métier
 * les problèmes d’entrée
@@ -108,11 +108,11 @@ var result = ValidateAmount(amount)
              .Then(CheckLimits);
 ```
 
-Chaque échec peut porter une exception diagnostiquable, ce qui garde un modèle cohérent tout en évitant des levées d’exception incontrôlées.
+Chaque échec porte une `Error`, ce qui garde un modèle cohérent tout en évitant des levées d’exception incontrôlées.
 
 ## 🧩 7. Logging orienté support
 
-Comme les exceptions portent des diagnostics structurés, les logs deviennent plus exploitables :
+Comme les erreurs portent des diagnostics structurés, les logs deviennent plus exploitables :
 
 * codes d’erreur stables
 * messages courts porteurs de sens

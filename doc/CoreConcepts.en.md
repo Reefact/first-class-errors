@@ -5,13 +5,13 @@ It introduces a different way to think about application errors.
 
 Instead of treating exceptions as technical incidents, it treats them as **structured knowledge about what went wrong**.
 
-## 🧠 An exception is not just a message
+## 🧠 An error is not just a message
 
 In many systems, exceptions are reduced to:
 
 > a type + a string message
 
-In FirstClassErrors, an exception represents:
+In FirstClassErrors, an **error** represents:
 
 * a **specific error situation**
 * identified by a **stable error code**
@@ -19,11 +19,11 @@ In FirstClassErrors, an exception represents:
 * optionally enriched with context
 * associated with structured diagnostics
 
-An exception becomes a **semantic object**, not just a runtime signal.
+An **error** becomes a semantic object, not just a runtime signal.
 
 ## 🧩 A factory represents an error situation
 
-Exception factories are central to the model.
+**Error** factories are central to the model.
 
 A factory method:
 
@@ -40,7 +40,7 @@ Factories improve readability and make error situations explicit, while keeping 
 
 ## 📘 Documentation lives with the code
 
-Error documentation is written using the `DescribeError` DSL and linked directly to exception factories.
+Error documentation is written using the `DescribeError` DSL and linked directly to **error** factories.
 
 This creates:
 
@@ -86,13 +86,13 @@ The Port errors replace the old Adapter exceptions. When a port failure wraps se
 
 Each error has a paired exception reached via `error.ToException()`: `DomainException`, `InfrastructureException`, `PrimaryPortException`, `SecondaryPortException`. You never `new` these directly; the exception exposes its `Error` (and through it the context and inner errors).
 
-## 🔁 Exception or data? Both are supported
+## 🔁 Error or data? Both are supported
 
 Traditionally, exceptions are always thrown.
 FirstClassErrors supports two complementary models:
 
 * **Exception as control flow** (classic throw)
-* **Exception as data** (`Outcome<T>`, or non-generic `Outcome` when there is no value)
+* **Error as data** (`Outcome<T>`, or non-generic `Outcome` when there is no value)
 
 This allows errors to be:
 

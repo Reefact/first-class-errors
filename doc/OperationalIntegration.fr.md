@@ -35,7 +35,7 @@ Les logs peuvent inclure :
 
 * le code d'erreur
 * l'identifiant unique de l'erreur
-* l'horodatage de l'occurence
+* l'horodatage de l'occurrence
 * le contexte d’erreur
 
 Cela rend les logs non seulement lisibles, mais aussi corrélables entre systèmes.
@@ -56,7 +56,7 @@ Cela préserve la profondeur diagnostique et garantit que la richesse du modèle
 
 ## 🔗 Lier les logs à la documentation
 
-Un pattern puissant consiste à enrichir les exceptions diagnostiquables avec une URL vers la documentation.
+Un pattern puissant consiste à enrichir l’exception levée (via son `Error`) avec une URL vers la documentation.
 
 Lors de la génération de la documentation, chaque erreur peut être associée à une page ou une ancre. Un filtre de logging peut alors renseigner :
 

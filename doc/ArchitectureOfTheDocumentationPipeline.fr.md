@@ -59,26 +59,26 @@ Cela crée une connexion explicite entre :
 
 Cela produit un **catalogue global des erreurs** pour l’application ou le système.
 
-## 🖨️ 5. Transformation vers des formats de sortie (prévu)
+## 🖨️ 5. Transformation vers des formats de sortie
 
-La bibliothèque ne fournit que le modèle structuré en mémoire ; **aucun exporteur n’est livré aujourd’hui**. Le modèle étant une simple donnée, un exporteur peut être construit par-dessus cette bibliothèque pour le transformer en :
+L’exporteur transforme le modèle structuré en mémoire en documentation publiée. Le modèle étant une simple donnée, l’exporteur le transforme en :
 
 * Markdown
 * HTML
 * JSON
 * ou tout autre format
 
-Une telle couche de transformation serait indépendante du modèle central.
+Cette couche de transformation est indépendante du modèle central.
 
-## 🧰 6. Orchestration via CLI (prévu)
+## 🧰 6. Orchestration via CLI
 
-Il n’existe **aucune CLI livrée aujourd’hui** (le projet CLI est actuellement un stub Hello-World). Une CLI pourrait être construite par-dessus cette bibliothèque pour orchestrer l’ensemble du processus, par exemple :
+La CLI `errdocgen` orchestre l’ensemble du processus, par exemple :
 
 ```bash
 errdocgen --solution ./MyApp.sln --export html
 ```
 
-Une telle CLI gérerait :
+La CLI gère :
 
 * la compilation de la solution
 * le chargement des assemblies
@@ -95,8 +95,8 @@ Cette séparation garantit :
 | Code               | Définir la connaissance des erreurs  |
 | Reader             | Extraire la documentation structurée |
 | Builder            | Agréger à travers les assemblies     |
-| Exporter (prévu)   | Générer la documentation             |
-| CLI (prévu)        | Orchestrer le processus              |
+| Exporter           | Générer la documentation             |
+| CLI                | Orchestrer le processus              |
 
 La documentation reste :
 

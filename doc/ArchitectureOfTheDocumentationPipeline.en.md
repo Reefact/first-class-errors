@@ -59,26 +59,26 @@ At this stage, documentation becomes a structured in-memory model.
 
 This produces a **global error catalog** for the application or system.
 
-## 🖨️ 5️. Transformation to output formats (planned)
+## 🖨️ 5️. Transformation to output formats
 
-The library ships the structured in-memory model only; **no exporter is shipped today**. Because the model is plain data, an exporter can be built on top of this library to transform it into:
+The exporter turns the structured in-memory model into published documentation. Because the model is plain data, the exporter transforms it into:
 
 * Markdown
 * HTML
 * JSON
 * or any other format
 
-Such a transformation layer would be independent of the core model.
+This transformation layer is independent of the core model.
 
-## 🧰 6️. CLI orchestration (planned)
+## 🧰 6️. CLI orchestration
 
-There is **no shipped CLI today** (the CLI project is currently a Hello-World stub). A CLI could be built on top of this library to orchestrate the full process, for example:
+The `errdocgen` CLI orchestrates the full process, for example:
 
 ```
 errdocgen --solution ./MyApp.sln --export html
 ```
 
-Such a CLI would handle:
+The CLI handles:
 
 * solution build
 * assembly loading
@@ -95,8 +95,8 @@ This separation ensures:
 | Code               | Define error knowledge           |
 | Reader             | Extract structured documentation |
 | Builder            | Aggregate across assemblies      |
-| Exporter (planned) | Render documentation             |
-| CLI (planned)      | Orchestrate the process          |
+| Exporter           | Render documentation             |
+| CLI                | Orchestrate the process          |
 
 Documentation remains:
 

@@ -7,7 +7,7 @@
 
 **Turn your exceptions into structured, living knowledge about your system.**
 
-![FirstClassErrors](./doc/images/diagnosable-exceptions.png "FirstClassErrors")
+![FirstClassErrors](./doc/images/first-class-errors.png "FirstClassErrors")
 
 FirstClassErrors is a .NET library that treats errors as first-class, documented, and diagnosable concepts — not just strings thrown at runtime.
 
@@ -43,7 +43,7 @@ What if:
 
 FirstClassErrors introduces:
 
-* a **rich exception model**
+* a **rich error model**
 * a **structured diagnostic system**
 * a **DSL to document errors**
 * a **documentation extraction pipeline**
@@ -55,9 +55,9 @@ Errors become:
 
 ## 🧱 What this library provides
 
-### 1️⃣ A richer exception model
+### 1️⃣ A richer error model
 
-Exceptions carry:
+The `Error` carries:
 
 * a stable error code
 * a timestamp
@@ -65,7 +65,7 @@ Exceptions carry:
 * contextual data
 * structured diagnostics
 
-They are designed to be:
+The exception itself only exposes its `.Error`, and is designed to be:
 
 * logged consistently
 * understood by humans
@@ -101,7 +101,7 @@ This is not just comments — it is **structured, executable documentation**.
 
 The library includes a mechanism to scan assemblies and extract all declared error documentation:
 
-* linked to exception types
+* linked to error factory classes
 * linked to factory methods
 * enriched with examples
 * ready to be rendered
