@@ -185,6 +185,20 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
              .Throws<ArgumentNullException>();
     }
 
+    [Fact(DisplayName = "An error documentation builder rejects a null example factory among the provided factories.")]
+    public void AnErrorDocumentationBuilderRejectsANullExampleFactoryAmongTheProvidedFactories() {
+        // Setup
+        ErrorDocumentationBuilder builder = new();
+
+        ErrorCode         code  = ErrorCode.Create("ANY_CODE");
+        Func<DomainError> valid = () => new DomainError(code, "boom");
+
+        // Exercise & verify
+        Check.ThatCode(() => builder.WithExamples(valid, null!))
+             .Throws<ErrorDocumentationException>()
+             .WithMessage("Example factory at index 1 is null. All factories must be valid delegates.");
+    }
+
     [Fact(DisplayName = "An error documentation builder rejects an example factory that throws.")]
     public void AnErrorDocumentationBuilderRejectsAnExampleFactoryThatThrows() {
         // Setup
