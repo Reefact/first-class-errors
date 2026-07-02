@@ -1,14 +1,12 @@
 #region Usings declarations
 
-using FirstClassErrors.GenDoc.Rendering;
-
 using JetBrains.Annotations;
 
 using NFluent;
 
 #endregion
 
-namespace FirstClassErrors.UnitTests;
+namespace FirstClassErrors.GenDoc.Rendering.UnitTests;
 
 [TestSubject(typeof(MarkdownErrorDocumentationRenderer))]
 public sealed class MarkdownErrorDocumentationRendererTests {
@@ -44,6 +42,12 @@ public sealed class MarkdownErrorDocumentationRendererTests {
     }
 
     #endregion
+
+    [Fact(DisplayName = "The Markdown renderer declares the 'markdown' format.")]
+    public void TheMarkdownRendererDeclaresTheMarkdownFormat() {
+        // Exercise & verify
+        Check.That(new MarkdownErrorDocumentationRenderer().Format).IsEqualTo("markdown");
+    }
 
     [Fact(DisplayName = "The single layout produces one file with a table of contents and every error inlined.")]
     public void TheSingleLayoutProducesOneFileWithATableOfContents() {
@@ -98,6 +102,18 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         Check.That(errorFile.Content).Contains("## Context");
     }
 
+    [Fact(DisplayName = "The split layout on an empty catalog still produces a valid index.")]
+    public void TheSplitLayoutOnAnEmptyCatalogProducesAValidIndex() {
+        // Exercise
+        IReadOnlyList<RenderedDocument> documents =
+            new MarkdownErrorDocumentationRenderer(MarkdownLayout.Split).Render([]);
+
+        // Verify
+        Check.That(documents).HasSize(1);
+        Check.That(documents[0].RelativePath).IsEqualTo("README.md");
+        Check.That(documents[0].Content).Contains("_No documented errors._");
+    }
+
     [Fact(DisplayName = "Errors that slugify to the same name get distinct, disambiguated file names.")]
     public void CollidingSlugsAreDisambiguated() {
         // Setup
@@ -110,6 +126,33 @@ public sealed class MarkdownErrorDocumentationRendererTests {
 
         // Verify
         Check.That(documents.Select(document => document.RelativePath)).Contains("dup.md", "dup-2.md");
+    }
+
+    [Fact(DisplayName = "An error without a code or title falls back to a generated name and slug.")]
+    public void AnErrorWithoutCodeOrTitleFallsBackToAGeneratedName() {
+        // Setup: neither Code nor Title is set.
+        ErrorDocumentation nameless = new();
+
+        // Exercise
+        IReadOnlyList<RenderedDocument> documents =
+            new MarkdownErrorDocumentationRenderer(MarkdownLayout.Split).Render(new[] { nameless });
+
+        // Verify
+        RenderedDocument errorFile = documents.Single(document => document.RelativePath == "error-1.md");
+        Check.That(errorFile.Content).StartsWith("# Error 1");
+    }
+
+    [Fact(DisplayName = "Slugs strip leading, repeated and trailing separators.")]
+    public void SlugsStripLeadingRepeatedAndTrailingSeparators() {
+        // Setup: leading, doubled and trailing non-alphanumeric characters.
+        ErrorDocumentation error = new() { Code = "!!FOO__BAR!!", Title = "Messy" };
+
+        // Exercise
+        IReadOnlyList<RenderedDocument> documents =
+            new MarkdownErrorDocumentationRenderer(MarkdownLayout.Split).Render(new[] { error });
+
+        // Verify
+        Check.That(documents.Select(document => document.RelativePath)).Contains("foo-bar.md");
     }
 
     [Fact(DisplayName = "An empty catalog still produces a valid single document.")]

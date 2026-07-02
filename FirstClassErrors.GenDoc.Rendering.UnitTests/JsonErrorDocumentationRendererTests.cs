@@ -2,18 +2,22 @@
 
 using System.Text.Json;
 
-using FirstClassErrors.GenDoc.Rendering;
-
 using JetBrains.Annotations;
 
 using NFluent;
 
 #endregion
 
-namespace FirstClassErrors.UnitTests;
+namespace FirstClassErrors.GenDoc.Rendering.UnitTests;
 
 [TestSubject(typeof(JsonErrorDocumentationRenderer))]
 public sealed class JsonErrorDocumentationRendererTests {
+
+    [Fact(DisplayName = "The JSON renderer declares the 'json' format.")]
+    public void TheJsonRendererDeclaresTheJsonFormat() {
+        // Exercise & verify
+        Check.That(new JsonErrorDocumentationRenderer().Format).IsEqualTo("json");
+    }
 
     [Fact(DisplayName = "The JSON renderer produces a curated camelCase catalog with enum values as strings.")]
     public void TheJsonRendererProducesACuratedCamelCaseCatalog() {
