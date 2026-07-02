@@ -192,5 +192,6 @@ Consultez la documentation complète :
 - [Bonnes pratiques](BestPractices.fr.md)
 - [Intégration CI/CD et exploitation](OperationalIntegration.fr.md)
 - [Architecture du pipeline de documentation](ArchitectureOfTheDocumentationPipeline.fr.md)
+- [Écrire son propre renderer](WritingACustomRenderer.fr.md)
 - [Comparaison avec les librairies de gestion d’erreurs](ComparisonWithOtherLibraries.fr.md)
 - [FAQ](FAQ.fr.md)

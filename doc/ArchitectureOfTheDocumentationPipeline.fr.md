@@ -3,7 +3,7 @@
 FirstClassErrors ne considère pas la documentation comme un artefact externe.  
 La documentation est dérivée directement du code et circule à travers un pipeline structuré.
 
-Le pipeline sépare la **définition de la connaissance**, **l’extraction** et le **rendu**.
+Le pipeline sépare la **définition de la connaissance**, l’**extraction** et le **rendu**.
 
 ## 🧱 1. La connaissance vit dans le code
 
@@ -38,65 +38,86 @@ Cela crée une connexion explicite entre :
 * la manière dont une erreur est créée
 * la manière dont elle est décrite
 
-## 🔎 3. Analyse des assemblies
+## 🔎 3. Extraction
 
 `AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(assembly)` analyse un assembly et :
 
 * trouve toute classe annotée avec `[ProvidesErrorsFor(...)]` (ce sont de simples classes statiques, pas des types d’exception)
 * trouve les méthodes factory marquées avec `[DocumentedBy]`
-* invoque les méthodes de documentation liées — une factory qui lève une exception, ou une référence `[DocumentedBy]` non résolvable, est enregistrée comme une *failure* au lieu d’interrompre toute l’analyse
+* **invoque** les méthodes de documentation liées — ainsi que les factories d’exemples qu’elles référencent. La documentation est *exécutable* : les exemples reflètent le vrai code, et non une copie qui pourrait dériver. Une factory qui lève une exception, ou une référence `[DocumentedBy]` non résolvable, est enregistrée comme une *failure* au lieu d’interrompre toute l’analyse.
 * renvoie un `ErrorDocumentationExtractionResult` : la collection d’`ErrorDocumentation` (dédupliquée par `Code`, ordonnée par `Code`) avec la liste des *failures* d’extraction
 
 À ce stade, la documentation devient un modèle structuré en mémoire.
 
-## 🧩 4. Agrégation au niveau de la solution
+## 🧪 4. L’extraction s’exécute hors-processus
 
-`SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(solutionPath[, options])` travaille à un niveau plus élevé et :
+Parce que l’extraction **exécute** le code de la cible, chaque assembly est documenté par un **processus worker** éphémère, lancé par le générateur (`dotnet exec`, en s’appuyant sur le fichier de dépendances de la cible). On y gagne :
 
-* compile une solution
-* charge tous les assemblies
+* des **exemples vivants** — les factories d’exemples s’exécutent contre le vrai code, pas une description figée
+* un **registre statique neuf** par assembly — aucun état ne fuit d’un assembly à l’autre
+* l’**isolation des versions** — chaque cible lie sa propre version de FirstClassErrors
+* l’**isolation des pannes** — un assembly qui plante ou se bloque est tué sur *timeout* et enregistré comme une *failure*, sans faire tomber toute la génération
+
+Le worker écrit son `ErrorDocumentationExtractionResult` en JSON ; le générateur le relit et passe à l’assembly suivant.
+
+## 🧩 5. Agrégation au niveau de la solution
+
+`SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(solutionPath[, options])` — ou `GetErrorDocumentationFromAssemblies(paths, options)` pour des binaires déjà compilés — travaille à un niveau plus élevé et :
+
+* découvre les projets (via `dotnet sln list`) et, sauf indication contraire, les compile
+* lance un worker pour chaque assembly de sortie
 * agrège tous les `ErrorDocumentation` extraits (dédupliqués par `Code`, ordonnés par `Code`)
 
 Cela produit un **catalogue global des erreurs** pour l’application ou le système.
 
-## 🖨️ 5. Transformation vers des formats de sortie
+## 🖨️ 6. Rendu vers des formats de sortie
 
-L’exporteur transforme le modèle structuré en mémoire en documentation publiée. Le modèle étant une simple donnée, l’exporteur le transforme en :
+Un *renderer* transforme le catalogue en mémoire en documentation publiée. Le modèle étant une simple donnée, le rendu est découplé derrière un contrat unique :
 
-* Markdown
-* HTML
-* JSON
-* ou tout autre format
-
-Cette couche de transformation est indépendante du modèle central.
-
-## 🧰 6. Orchestration via CLI
-
-La CLI `errdocgen` orchestre l’ensemble du processus, par exemple :
-
-```bash
-errdocgen --solution ./MyApp.sln --export html
+```csharp
+public interface IErrorDocumentationRenderer {
+    string Format { get; }
+    IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog);
+}
 ```
 
-La CLI gère :
+Deux renderers sont fournis d’origine :
 
-* la compilation de la solution
-* le chargement des assemblies
-* l’extraction
-* la transformation
-* l’export
+* **json** — un schéma JSON curé et stable
+* **markdown** — un fichier unique, ou un fichier par erreur plus un index (`--layout single|split`)
+
+Tout autre format (HTML, CSV, un gabarit maison, …) est un **renderer personnalisé** : implémentez l’interface et enregistrez-le. Voir [Écrire son propre renderer](WritingACustomRenderer.fr.md).
+
+## 🧰 7. Orchestration via CLI
+
+La CLI `fce` orchestre l’ensemble du processus :
+
+```bash
+fce generate --solution ./MyApp.sln --format markdown --layout split --output ./docs/errors
+```
+
+Elle gère la compilation de la solution, l’extraction (via les workers), l’agrégation et le rendu. Les options courantes peuvent être stockées dans un fichier de configuration (`fce.json`) pour ne pas les répéter, et les renderers personnalisés y sont aussi référencés :
+
+```bash
+fce config init
+fce config renderer add ./plugins/MyCompany.Renderers.dll
+fce generate            # utilise la solution, le format, l’output, les renderers configurés…
+```
+
+Une valeur passée en ligne de commande écrase la configuration.
 
 ## 🔁 Pourquoi cette architecture est importante
 
 Cette séparation garantit :
 
-| Couche             | Responsabilité                       |
-| ------------------ | ------------------------------------ |
-| Code               | Définir la connaissance des erreurs  |
-| Reader             | Extraire la documentation structurée |
-| Builder            | Agréger à travers les assemblies     |
-| Exporter           | Générer la documentation             |
-| CLI                | Orchestrer le processus              |
+| Couche      | Responsabilité                          |
+| ----------- | --------------------------------------- |
+| Code        | Définir la connaissance des erreurs     |
+| Reader      | Extraire la documentation structurée    |
+| Worker      | Exécuter le code de façon isolée        |
+| Générateur  | Compiler et agréger à travers les assemblies |
+| Renderer    | Transformer le catalogue en un format cible |
+| CLI         | Orchestrer le processus                 |
 
 La documentation reste :
 
@@ -114,6 +135,6 @@ Le code est la source de vérité.
 
 ---
 
-Section précédente: [Intégration CI/CD et exploitation](OperationalIntegration.fr.md) | Section suivante: [FAQ](FAQ.fr.md)
+Section précédente: [Intégration CI/CD et exploitation](OperationalIntegration.fr.md) | Section suivante: [Écrire son propre renderer](WritingACustomRenderer.fr.md)
 
 ---

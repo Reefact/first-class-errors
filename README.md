@@ -192,5 +192,6 @@ See the full documentation:
 - [Best Practices](doc/BestPractices.en.md)
 - [CI/CD and Operational Integration](doc/OperationalIntegration.en.md)
 - [Architecture of the Documentation Pipeline](doc/ArchitectureOfTheDocumentationPipeline.en.md)
+- [Writing a custom renderer](doc/WritingACustomRenderer.en.md)
 - [Comparison with error-handling libraries](doc/ComparisonWithOtherLibraries.en.md)
 - [FAQ](doc/FAQ.en.md)
