@@ -1,5 +1,7 @@
 #region Usings declarations
 
+using System.Globalization;
+
 using JetBrains.Annotations;
 
 using NFluent;
@@ -239,6 +241,30 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         // Exercise & verify
         Check.ThatCode(() => new MarkdownErrorDocumentationRenderer().Render(new[] { TemperatureError() }, new RenderRequest("pdf")))
              .Throws<LayoutNotSupportedException>();
+    }
+
+    [Fact(DisplayName = "The renderer localizes the template boilerplate for the requested culture.")]
+    public void TheRendererLocalizesTheTemplateBoilerplate() {
+        // Exercise: render the same catalog for French.
+        IReadOnlyList<RenderedDocument> documents =
+            new MarkdownErrorDocumentationRenderer().Render(new[] { TemperatureError() },
+                                                           new RenderRequest(RenderLayouts.Single, CultureInfo.GetCultureInfo("fr")));
+        string markdown = documents[0].Content;
+
+        // Verify: headings, labels and table headers come from the French resources.
+        Check.That(markdown).StartsWith("# Catalogue des erreurs");
+        Check.That(markdown).Contains("## Table des matières");
+        Check.That(markdown).Contains("## Erreurs Temperature");
+        Check.That(markdown).Contains("- **Code :**");
+        Check.That(markdown).Contains("#### Diagnostics");
+        Check.That(markdown).Contains("_origine :_ External");
+        Check.That(markdown).Contains("#### Exemples");
+        Check.That(markdown).Contains("#### Contexte");
+        Check.That(markdown).Contains("| Clé | Type | Description | Exemples de valeurs |");
+
+        // The group anchor stays culture-invariant so cross-language links remain stable.
+        Check.That(markdown).Contains("<a id=\"src-temperature\"></a>");
+        Check.That(markdown).Contains("- [Erreurs Temperature](#src-temperature)");
     }
 
 }

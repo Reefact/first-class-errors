@@ -430,6 +430,12 @@ public static class SolutionErrorDocumentationGenerator {
             args.Append('"').Append(targetAssemblyPath).Append("\" ");
             args.Append('"').Append(outputPath).Append('"');
 
+            // Run the extraction under the requested culture so localized documentation resources resolve to that
+            // language. The worker treats it as an option, keeping the two positional paths above intact.
+            if (options.Culture is not null) {
+                args.Append(" --culture \"").Append(options.Culture.Name).Append('"');
+            }
+
             ProcessResult result = RunProcess("dotnet", args.ToString(), workerDirectory, options.Logger, options.WorkerTimeout);
 
             if (result.ExitCode != 0) {

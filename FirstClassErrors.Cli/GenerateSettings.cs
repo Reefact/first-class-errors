@@ -35,6 +35,10 @@ internal sealed class GenerateSettings : ConfigScopedSettings {
     [Description("Markdown layout: single or split. Falls back to the configuration, then single.")]
     public string? Layout { get; set; }
 
+    [CommandOption("-l|--language <LANGUAGE>")]
+    [Description("Language of the generated documentation, e.g. en, fr, es, de, sv. Falls back to the configuration, then en.")]
+    public string? Language { get; set; }
+
     [CommandOption("-c|--configuration <NAME>")]
     [Description("Build configuration used when building a solution. Falls back to the configuration, then Debug.")]
     public string? Configuration { get; set; }

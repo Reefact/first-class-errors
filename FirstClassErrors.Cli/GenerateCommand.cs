@@ -64,6 +64,10 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
             bool    noBuild     = settings.NoBuild || (configuration.NoBuild ?? false);
             bool    strict      = settings.Strict  || (configuration.Strict ?? false);
 
+            // The language drives both the extraction (localized error descriptions) and the rendering (localized
+            // template boilerplate). It defaults to English.
+            CultureInfo culture = ResolveCulture(FirstNonEmpty(settings.Language, configuration.Language) ?? "en");
+
             // Resolve the renderer and validate the requested layout against what it actually supports, before the
             // (expensive) extraction runs — so a bad --format/--layout fails fast. Custom renderers referenced by the
             // configuration are loaded and offered alongside the built-in ones.
@@ -82,6 +86,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
                 TargetFramework    = framework,
                 FailureBehavior    = strict ? FailureBehavior.Stop : FailureBehavior.Continue,
                 WorkerAssemblyPath = worker,
+                Culture            = culture,
                 Logger             = logger
             };
 
@@ -91,7 +96,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
                     : SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies(assemblies, options);
 
             // The catalog is enumerated here (by the renderer), so generation failures surface as a clean error.
-            RenderRequest                   request   = new(layout, CultureInfo.InvariantCulture);
+            RenderRequest                   request   = new(layout, culture);
             IReadOnlyList<RenderedDocument> documents = renderer.Render(catalog, request);
 
             WriteOutput(documents, output, logger);
@@ -118,6 +123,14 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
         string normalized = format.Trim().ToLowerInvariant();
 
         return normalized == "md" ? "markdown" : normalized;
+    }
+
+    private static CultureInfo ResolveCulture(string language) {
+        try {
+            return CultureInfo.GetCultureInfo(language.Trim());
+        } catch (CultureNotFoundException) {
+            throw new InvalidOperationException($"Unknown language '{language}'. Use a culture name such as en, fr, es, de or sv.");
+        }
     }
 
     private static void WriteOutput(IReadOnlyList<RenderedDocument> documents, string? outputPath, ConsoleGenerationLogger logger) {

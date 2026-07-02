@@ -1,4 +1,10 @@
-﻿namespace FirstClassErrors.GenDoc;
+﻿#region Usings declarations
+
+using System.Globalization;
+
+#endregion
+
+namespace FirstClassErrors.GenDoc;
 
 public sealed class SolutionGenerationOptions {
 
@@ -36,6 +42,12 @@ public sealed class SolutionGenerationOptions {
     ///     treated as a failure. Defaults to two minutes.
     /// </summary>
     public TimeSpan WorkerTimeout { get; init; } = TimeSpan.FromMinutes(2);
+
+    /// <summary>
+    ///     The culture the extraction runs under, so documentation factories that read localized resources produce
+    ///     their text in that language. When <c>null</c>, the worker keeps its ambient culture.
+    /// </summary>
+    public CultureInfo? Culture { get; init; }
 
     public IGenerationLogger Logger { get; init; } = new NullGenerationLogger();
 

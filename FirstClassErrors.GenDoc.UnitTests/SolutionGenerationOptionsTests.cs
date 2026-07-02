@@ -26,6 +26,7 @@ public sealed class SolutionGenerationOptionsTests {
         Check.That(options.DotNetBuildAdditionalArguments).IsEqualTo("--nologo");
         Check.That(options.WorkerAssemblyPath).IsNull();
         Check.That(options.WorkerTimeout).IsEqualTo(TimeSpan.FromMinutes(2));
+        Check.That(options.Culture).IsNull();
         Check.That(options.Logger).IsNotNull();
     }
 

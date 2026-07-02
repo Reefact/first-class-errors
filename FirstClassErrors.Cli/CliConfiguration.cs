@@ -23,6 +23,9 @@ internal sealed class CliConfiguration {
     /// <summary>Default Markdown layout (<c>single</c> or <c>split</c>).</summary>
     public string? Layout { get; set; }
 
+    /// <summary>Default language of the generated documentation (e.g. <c>en</c>, <c>fr</c>, <c>es</c>, <c>de</c>, <c>sv</c>).</summary>
+    public string? Language { get; set; }
+
     /// <summary>Default output file or directory.</summary>
     public string? Output { get; set; }
 
