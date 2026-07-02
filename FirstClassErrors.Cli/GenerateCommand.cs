@@ -1,5 +1,7 @@
 #region Usings declarations
 
+using System.Globalization;
+
 using FirstClassErrors;
 using FirstClassErrors.GenDoc;
 using FirstClassErrors.GenDoc.Rendering;
@@ -62,14 +64,14 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
             bool    noBuild     = settings.NoBuild || (configuration.NoBuild ?? false);
             bool    strict      = settings.Strict  || (configuration.Strict ?? false);
 
-            if (layout is not ("single" or "split")) {
-                logger.Error($"Unsupported layout '{layout}'. Supported layouts: single, split.");
+            // Resolve the renderer and validate the requested layout against what it actually supports, before the
+            // (expensive) extraction runs — so a bad --format/--layout fails fast. Custom renderers referenced by the
+            // configuration are loaded and offered alongside the built-in ones.
+            IReadOnlyList<IErrorDocumentationRenderer> customRenderers = RendererLoader.Load(configuration.Renderers, configDir, logger);
+            IErrorDocumentationRenderer                renderer        = RendererCatalog.Create(format, customRenderers);
 
-                return 1;
-            }
-
-            if (layout == "split" && format != "markdown") {
-                logger.Error("The 'split' layout is only supported for the markdown format.");
+            if (renderer.SupportedLayouts.Contains(layout, StringComparer.OrdinalIgnoreCase) is false) {
+                logger.Error($"The '{format}' format does not support the '{layout}' layout. Supported layouts: {string.Join(", ", renderer.SupportedLayouts)}.");
 
                 return 1;
             }
@@ -88,12 +90,9 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
                     ? SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(solution!, options)
                     : SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies(assemblies, options);
 
-            // Custom renderers referenced by the configuration are loaded and offered alongside the built-in ones.
-            IReadOnlyList<IErrorDocumentationRenderer> customRenderers = RendererLoader.Load(configuration.Renderers, configDir, logger);
-            IErrorDocumentationRenderer                renderer        = RendererCatalog.Create(format, layout, customRenderers);
-
             // The catalog is enumerated here (by the renderer), so generation failures surface as a clean error.
-            IReadOnlyList<RenderedDocument> documents = renderer.Render(catalog);
+            RenderRequest                   request   = new(layout, CultureInfo.InvariantCulture);
+            IReadOnlyList<RenderedDocument> documents = renderer.Render(catalog, request);
 
             WriteOutput(documents, output, logger);
 
