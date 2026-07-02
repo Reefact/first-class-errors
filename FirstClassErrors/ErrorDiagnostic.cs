@@ -38,16 +38,16 @@ public sealed class ErrorDiagnostic {
     /// <summary>
     ///     Initializes a new fully defined instance of the <see cref="ErrorDiagnostic" /> class.
     /// </summary>
-    /// <param name="cause">
+    /// <param name="possibleCause">
     ///     Describes a plausible state of the domain or system that could explain the error. This must represent a meaningful
     ///     situation (e.g., invalid input, inconsistent data, unexpected system behavior), not a technical symptom or
     ///     exception detail.
     /// </param>
-    /// <param name="type">
+    /// <param name="origin">
     ///     Classifies where the problem most likely originates (input data, internal system logic, or both). This helps orient
     ///     investigation and should reflect the most probable source, not responsibility or blame.
     /// </param>
-    /// <param name="analysisLead">
+    /// <param name="analysisHint">
     ///     Indicates a direction to explore during investigation. This must guide <b>where to look</b>, not <b>what to fix</b>
     ///     . Use verbs such as "Verify", "Check", "Examine", or "Inspect". Avoid corrective instructions (e.g., "Fix",
     ///     "Correct", "Ensure", "Convert") and avoid references to specific tools or support procedures.
@@ -71,11 +71,11 @@ public sealed class ErrorDiagnostic {
     ///     </para>
     ///     <list type="bullet">
     ///         <item>
-    ///             The <paramref name="cause" /> should describe a plausible situation in the domain or system, not a
+    ///             The <paramref name="possibleCause" /> should describe a plausible situation in the domain or system, not a
     ///             technical symptom.
     ///         </item>
     ///         <item>
-    ///             The <paramref name="analysisLead" /> must indicate a direction of analysis (e.g., "Verify", "Check",
+    ///             The <paramref name="analysisHint" /> must indicate a direction of analysis (e.g., "Verify", "Check",
     ///             "Examine") and must not describe a fix or corrective action.
     ///         </item>
     ///         <item>Text should remain understandable without knowledge of the internal codebase.</item>
@@ -85,15 +85,15 @@ public sealed class ErrorDiagnostic {
     ///         information.
     ///     </para>
     /// </remarks>
-    public ErrorDiagnostic(string cause, ErrorOrigin type, string analysisLead) {
-        if (cause is null) { throw new ArgumentNullException(nameof(cause)); }
-        if (analysisLead is null) { throw new ArgumentNullException(nameof(analysisLead)); }
-        if (string.IsNullOrWhiteSpace(cause)) { throw new ArgumentException("Value cannot be empty or whitespace.", nameof(cause)); }
-        if (string.IsNullOrWhiteSpace(analysisLead)) { throw new ArgumentException("Value cannot be empty or whitespace.", nameof(analysisLead)); }
+    public ErrorDiagnostic(string possibleCause, ErrorOrigin origin, string analysisHint) {
+        if (possibleCause is null) { throw new ArgumentNullException(nameof(possibleCause)); }
+        if (analysisHint is null) { throw new ArgumentNullException(nameof(analysisHint)); }
+        if (string.IsNullOrWhiteSpace(possibleCause)) { throw new ArgumentException("Value cannot be empty or whitespace.", nameof(possibleCause)); }
+        if (string.IsNullOrWhiteSpace(analysisHint)) { throw new ArgumentException("Value cannot be empty or whitespace.", nameof(analysisHint)); }
 
-        PossibleCause = cause.Trim();
-        Origin        = type;
-        AnalysisHint  = analysisLead.Trim();
+        PossibleCause = possibleCause.Trim();
+        Origin        = origin;
+        AnalysisHint  = analysisHint.Trim();
     }
 
     #endregion

@@ -30,13 +30,13 @@ public sealed class ErrorContextEntryDocumentation {
     public string? Description { get; set; }
 
     /// <summary>
-    ///     Gets or sets the type of the value associated with the context entry.
+    ///     Gets or sets the name of the type of the value associated with the context entry.
     /// </summary>
     /// <remarks>
-    ///     This property specifies the <see cref="System.Type" /> of the value that the context entry represents. It helps in
-    ///     understanding the expected data type for the associated context key.
+    ///     This property holds the (fully qualified) name of the value's type, rather than a live <see cref="System.Type" />,
+    ///     so that the documentation model stays serializable and free of any dependency on a runtime load context.
     /// </remarks>
-    public Type? ValueType { get; set; }
+    public string? ValueType { get; set; }
 
     /// <summary>
     ///     Gets or sets a collection of example values associated with the context entry.
@@ -45,6 +45,6 @@ public sealed class ErrorContextEntryDocumentation {
     ///     Example values provide illustrative data that can help understand the typical values associated with this context
     ///     entry. These values are often used for diagnostics or documentation purposes.
     /// </remarks>
-    public IReadOnlyList<object?> ExampleValues { get; set; } = [];
+    public IReadOnlyList<string?> ExampleValues { get; set; } = [];
 
 }
