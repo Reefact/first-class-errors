@@ -37,10 +37,14 @@ public sealed class JsonErrorDocumentationRendererTests {
         };
 
         // Exercise
-        string json = new JsonErrorDocumentationRenderer().Render(new[] { documentation });
+        IReadOnlyList<RenderedDocument> documents = new JsonErrorDocumentationRenderer().Render(new[] { documentation });
 
         // Verify
-        using JsonDocument parsed = JsonDocument.Parse(json);
+        Check.That(documents).HasSize(1);
+        RenderedDocument document = documents[0];
+        Check.That(document.RelativePath).IsEqualTo("errors.json");
+
+        using JsonDocument parsed = JsonDocument.Parse(document.Content);
         JsonElement        root   = parsed.RootElement;
 
         Check.That(root.GetProperty("schemaVersion").GetString()).IsEqualTo("1.0");

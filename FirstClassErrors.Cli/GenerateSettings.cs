@@ -28,9 +28,14 @@ internal sealed class GenerateSettings : CommandSettings {
     public string? OutputPath { get; set; }
 
     [CommandOption("-f|--format <FORMAT>")]
-    [Description("Output format. Supported: json.")]
+    [Description("Output format: json or markdown (alias: md). Default: json.")]
     [DefaultValue("json")]
     public string Format { get; set; } = "json";
+
+    [CommandOption("--layout <LAYOUT>")]
+    [Description("Markdown layout: single (one file) or split (one file per error plus an index). Default: single.")]
+    [DefaultValue("single")]
+    public string Layout { get; set; } = "single";
 
     [CommandOption("-c|--configuration <NAME>")]
     [Description("Build configuration used when building a solution.")]
@@ -57,9 +62,21 @@ internal sealed class GenerateSettings : CommandSettings {
     [Description("Emit diagnostic logging to standard error.")]
     public bool Verbose { get; set; }
 
+    /// <summary>Gets the format normalized to lower case with the <c>md</c> alias expanded to <c>markdown</c>.</summary>
+    public string NormalizedFormat() {
+        string format = Format.Trim().ToLowerInvariant();
+
+        return format == "md" ? "markdown" : format;
+    }
+
+    /// <summary>Gets the layout normalized to lower case.</summary>
+    public string NormalizedLayout() {
+        return Layout.Trim().ToLowerInvariant();
+    }
+
     /// <summary>
     ///     Cross-option rules enforced before the command runs: exactly one source (a solution or one/more
-    ///     assemblies) and a supported output format.
+    ///     assemblies), a supported format, and a layout compatible with that format.
     /// </summary>
     public override ValidationResult Validate() {
         bool hasSolution   = string.IsNullOrWhiteSpace(SolutionPath) is false;
@@ -73,8 +90,18 @@ internal sealed class GenerateSettings : CommandSettings {
             return ValidationResult.Error("A source is required: pass --solution <path> or --assemblies <path> (repeatable).");
         }
 
-        if (string.Equals(Format, "json", StringComparison.OrdinalIgnoreCase) is false) {
-            return ValidationResult.Error($"Unsupported --format '{Format}'. Supported formats: json.");
+        string format = NormalizedFormat();
+        if (format is not ("json" or "markdown")) {
+            return ValidationResult.Error($"Unsupported --format '{Format}'. Supported formats: json, markdown.");
+        }
+
+        string layout = NormalizedLayout();
+        if (layout is not ("single" or "split")) {
+            return ValidationResult.Error($"Unsupported --layout '{Layout}'. Supported layouts: single, split.");
+        }
+
+        if (layout == "split" && format != "markdown") {
+            return ValidationResult.Error("The 'split' layout is only supported for --format markdown.");
         }
 
         return ValidationResult.Success();

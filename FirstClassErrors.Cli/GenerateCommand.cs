@@ -35,26 +35,12 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
                     ? SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(settings.SolutionPath!, options)
                     : SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies(settings.AssemblyPaths, options);
 
-            IErrorDocumentationRenderer renderer = settings.Format.ToLowerInvariant() switch {
-                "json" => new JsonErrorDocumentationRenderer(),
-                _      => throw new InvalidOperationException($"Unsupported format '{settings.Format}'.")
-            };
+            IErrorDocumentationRenderer renderer = CreateRenderer(settings);
 
             // The catalog is enumerated here (by the renderer), so generation failures surface as a clean error.
-            string rendered = renderer.Render(catalog);
+            IReadOnlyList<RenderedDocument> documents = renderer.Render(catalog);
 
-            if (string.IsNullOrWhiteSpace(settings.OutputPath)) {
-                Console.Out.WriteLine(rendered);
-            } else {
-                string  outputPath = Path.GetFullPath(settings.OutputPath!);
-                string? directory  = Path.GetDirectoryName(outputPath);
-                if (string.IsNullOrEmpty(directory) is false) {
-                    Directory.CreateDirectory(directory);
-                }
-
-                File.WriteAllText(outputPath, rendered);
-                logger.Info($"Documentation written to '{outputPath}'.");
-            }
+            WriteOutput(documents, settings.OutputPath, logger);
 
             return 0;
         } catch (Exception exception) {
@@ -64,5 +50,64 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
             return 1;
         }
     }
+
+    #region Helpers
+
+    private static IErrorDocumentationRenderer CreateRenderer(GenerateSettings settings) {
+        return settings.NormalizedFormat() switch {
+            "json"     => new JsonErrorDocumentationRenderer(),
+            "markdown" => new MarkdownErrorDocumentationRenderer(
+                              settings.NormalizedLayout() == "split" ? MarkdownLayout.Split : MarkdownLayout.Single),
+            _ => throw new InvalidOperationException($"Unsupported format '{settings.Format}'.")
+        };
+    }
+
+    private static void WriteOutput(IReadOnlyList<RenderedDocument> documents, string? outputPath, ConsoleGenerationLogger logger) {
+        bool hasOutput = string.IsNullOrWhiteSpace(outputPath) is false;
+
+        // No target: only a single document can go to standard output.
+        if (hasOutput is false) {
+            if (documents.Count > 1) {
+                throw new InvalidOperationException("This layout produces several files; specify an output directory with --output.");
+            }
+
+            Console.Out.WriteLine(documents[0].Content);
+
+            return;
+        }
+
+        string fullOutput = Path.GetFullPath(outputPath!);
+
+        // Treat the target as a directory when there are several files, when it already exists as one, or when the
+        // path ends with a separator. Otherwise a single document is written to the given file path verbatim.
+        bool asDirectory = documents.Count > 1 || Directory.Exists(fullOutput) || EndsWithSeparator(outputPath!);
+        if (asDirectory is false) {
+            WriteFile(fullOutput, documents[0].Content);
+            logger.Info($"Documentation written to '{fullOutput}'.");
+
+            return;
+        }
+
+        foreach (RenderedDocument document in documents) {
+            WriteFile(Path.Combine(fullOutput, document.RelativePath), document.Content);
+        }
+
+        logger.Info($"Documentation written to '{fullOutput}' ({documents.Count} file(s)).");
+    }
+
+    private static void WriteFile(string path, string content) {
+        string? directory = Path.GetDirectoryName(path);
+        if (string.IsNullOrEmpty(directory) is false) {
+            Directory.CreateDirectory(directory);
+        }
+
+        File.WriteAllText(path, content);
+    }
+
+    private static bool EndsWithSeparator(string path) {
+        return path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar);
+    }
+
+    #endregion
 
 }

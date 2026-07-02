@@ -27,7 +27,7 @@ public sealed class JsonErrorDocumentationRenderer : IErrorDocumentationRenderer
     #endregion
 
     /// <inheritdoc />
-    public string Render(IEnumerable<ErrorDocumentation> catalog) {
+    public IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog) {
         if (catalog is null) { throw new ArgumentNullException(nameof(catalog)); }
 
         // A curated projection: the anonymous shape fixes exactly which fields are published, their camelCase names,
@@ -58,7 +58,9 @@ public sealed class JsonErrorDocumentationRenderer : IErrorDocumentationRenderer
             })
         };
 
-        return JsonSerializer.Serialize(document, SerializerOptions);
+        string json = JsonSerializer.Serialize(document, SerializerOptions);
+
+        return [new RenderedDocument("errors.json", json)];
     }
 
 }
