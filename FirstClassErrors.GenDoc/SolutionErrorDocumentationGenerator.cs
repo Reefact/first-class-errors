@@ -1,8 +1,8 @@
 ﻿#region Usings declarations
 
 using System.Diagnostics;
-using System.Reflection;
 using System.Text;
+using System.Text.Json;
 
 using Microsoft.Build.Construction;
 
@@ -266,7 +266,7 @@ public static class SolutionErrorDocumentationGenerator {
         return afterName.Trim();
     }
 
-    private static ProcessResult RunProcess(string fileName, string arguments, string workingDirectory, IGenerationLogger logger) {
+    private static ProcessResult RunProcess(string fileName, string arguments, string workingDirectory, IGenerationLogger logger, TimeSpan? timeout = null) {
         ProcessStartInfo psi = new() {
             FileName               = fileName,
             Arguments              = arguments,
@@ -303,6 +303,22 @@ public static class SolutionErrorDocumentationGenerator {
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
 
+        if (timeout is { } limit) {
+            if (process.WaitForExit((int)limit.TotalMilliseconds) is false) {
+                try {
+                    process.Kill(entireProcessTree: true);
+                } catch {
+                    // The process may already have exited between the timeout and the kill.
+                }
+
+                process.WaitForExit();
+                logger.Error($"Process '{fileName}' timed out after {limit} and was killed.");
+
+                return new ProcessResult(-1, stdout.ToString(), stderr.ToString());
+            }
+        }
+
+        // A final no-argument wait blocks until the async stdout/stderr handlers have flushed.
         process.WaitForExit();
 
         return new ProcessResult(process.ExitCode, stdout.ToString(), stderr.ToString());
@@ -325,14 +341,15 @@ public static class SolutionErrorDocumentationGenerator {
     }
 
     private static IEnumerable<ErrorDocumentation> ExtractFromAssemblies(IReadOnlyList<string> assemblyPaths, SolutionGenerationOptions options) {
+        string workerAssemblyPath = ResolveWorkerAssemblyPath(options);
+
         List<ErrorDocumentation> results = new();
 
         foreach (string assemblyPath in assemblyPaths) {
-            // NOTE: Assembly.LoadFrom uses the default (non-collectible) load context. Swapping this for an isolated,
-            // unloadable strategy (a collectible AssemblyLoadContext or an out-of-process worker) is tracked as a
-            // separate GenDoc concern; the extraction itself already tolerates per-factory failures.
-            Assembly                           assembly   = Assembly.LoadFrom(assemblyPath);
-            ErrorDocumentationExtractionResult extraction = AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(assembly);
+            // Each assembly is documented in a dedicated worker process, launched against that assembly's own
+            // dependency closure (dotnet exec --depsfile ...). This gives a fresh static registry per assembly, binds to
+            // the target's own FirstClassErrors version, and isolates a crashing or hanging factory from the generator.
+            ErrorDocumentationExtractionResult extraction = RunWorker(workerAssemblyPath, assemblyPath, options);
 
             foreach (ErrorDocumentationExtractionFailure failure in extraction.Failures) {
                 options.Logger.Error($"Documentation extraction issue in '{assemblyPath}': {failure}");
@@ -347,6 +364,82 @@ public static class SolutionErrorDocumentationGenerator {
               .GroupBy(x => x.Code, StringComparer.OrdinalIgnoreCase)
               .Select(g => g.First())
               .OrderBy(x => x.Code, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static string ResolveWorkerAssemblyPath(SolutionGenerationOptions options) {
+        if (string.IsNullOrWhiteSpace(options.WorkerAssemblyPath) is false) {
+            if (File.Exists(options.WorkerAssemblyPath) is false) {
+                throw new SolutionDocumentationGenerationException($"The configured documentation worker was not found at '{options.WorkerAssemblyPath}'.");
+            }
+
+            return options.WorkerAssemblyPath!;
+        }
+
+        // Convention: the worker is deployed next to the tool (copied into its output directory).
+        string candidate = Path.Combine(AppContext.BaseDirectory, "FirstClassErrors.GenDoc.Worker.dll");
+        if (File.Exists(candidate)) { return candidate; }
+
+        throw new SolutionDocumentationGenerationException(
+            "The documentation worker 'FirstClassErrors.GenDoc.Worker.dll' could not be located. Set " +
+            $"{nameof(SolutionGenerationOptions)}.{nameof(SolutionGenerationOptions.WorkerAssemblyPath)}, or ensure the worker is deployed next to the tool.");
+    }
+
+    private static ErrorDocumentationExtractionResult RunWorker(string workerAssemblyPath, string targetAssemblyPath, SolutionGenerationOptions options) {
+        string outputPath      = Path.Combine(Path.GetTempPath(), $"first-class-errors-doc-{Guid.NewGuid():N}.json");
+        string workerDirectory = Path.GetDirectoryName(workerAssemblyPath) ?? AppContext.BaseDirectory;
+
+        try {
+            string depsFile = Path.ChangeExtension(targetAssemblyPath, ".deps.json");
+
+            // Run the worker on its own runtimeconfig (RollForward=Major) but against the TARGET's dependency graph, so
+            // the target and its own FirstClassErrors resolve from the target's deps.json. The worker's own directory is
+            // added as a fallback probing path (consulted only for assemblies the target's deps.json does not provide).
+            StringBuilder args = new();
+            args.Append("exec ");
+            if (File.Exists(depsFile)) {
+                args.Append("--depsfile \"").Append(depsFile).Append("\" ");
+            }
+
+            args.Append("--additionalprobingpath \"").Append(workerDirectory).Append("\" ");
+            args.Append('"').Append(workerAssemblyPath).Append("\" ");
+            args.Append('"').Append(targetAssemblyPath).Append("\" ");
+            args.Append('"').Append(outputPath).Append('"');
+
+            ProcessResult result = RunProcess("dotnet", args.ToString(), workerDirectory, options.Logger, options.WorkerTimeout);
+
+            if (result.ExitCode != 0) {
+                HandleFailure(options, $"The documentation worker failed (exit code {result.ExitCode}) for '{targetAssemblyPath}'.\n{result.StandardError}");
+
+                return new ErrorDocumentationExtractionResult([], []);
+            }
+
+            if (File.Exists(outputPath) is false) {
+                HandleFailure(options, $"The documentation worker produced no output for '{targetAssemblyPath}'.");
+
+                return new ErrorDocumentationExtractionResult([], []);
+            }
+
+            string                              json       = File.ReadAllText(outputPath);
+            ErrorDocumentationExtractionResult? extraction = JsonSerializer.Deserialize<ErrorDocumentationExtractionResult>(json);
+
+            if (extraction is null) {
+                HandleFailure(options, $"The documentation worker produced unreadable output for '{targetAssemblyPath}'.");
+
+                return new ErrorDocumentationExtractionResult([], []);
+            }
+
+            return extraction;
+        } catch (Exception ex) when (ex is not SolutionDocumentationGenerationException) {
+            HandleFailure(options, $"Failed to run the documentation worker for '{targetAssemblyPath}'.", ex);
+
+            return new ErrorDocumentationExtractionResult([], []);
+        } finally {
+            try {
+                if (File.Exists(outputPath)) { File.Delete(outputPath); }
+            } catch {
+                // Best-effort cleanup of the temporary catalog file.
+            }
+        }
     }
 
     #endregion
