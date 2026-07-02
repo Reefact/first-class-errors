@@ -23,7 +23,7 @@ internal sealed class RendererRemoveCommand : Command<RendererReferenceSettings>
 
         string                configDir     = Path.GetDirectoryName(path) ?? Directory.GetCurrentDirectory();
         string                target        = RendererLoader.Resolve(settings.LibraryPath, configDir);
-        RendererConfiguration configuration = ConfigurationStore.Load(path);
+        CliConfiguration configuration = ConfigurationStore.Load(path);
 
         int removed = configuration.Renderers.RemoveAll(existing =>
             string.Equals(RendererLoader.Resolve(existing, configDir), target, StringComparison.OrdinalIgnoreCase));

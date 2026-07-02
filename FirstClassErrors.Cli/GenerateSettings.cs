@@ -2,7 +2,6 @@
 
 using System.ComponentModel;
 
-using Spectre.Console;
 using Spectre.Console.Cli;
 
 #endregion
@@ -10,37 +9,35 @@ using Spectre.Console.Cli;
 namespace FirstClassErrors.Cli;
 
 /// <summary>
-///     Options for the documentation generation command. Spectre.Console.Cli binds the command line to these
-///     properties and generates the <c>--help</c> output from the attributes below.
+///     Options for the <c>generate</c> command. Every value is optional here: when omitted, the command falls back
+///     to the configuration file (<c>fce.json</c>) and then to a built-in default. Spectre.Console.Cli binds the
+///     command line to these properties and generates the <c>--help</c> output from the attributes.
 /// </summary>
 internal sealed class GenerateSettings : ConfigScopedSettings {
 
     [CommandOption("-s|--solution <PATH>")]
-    [Description("Path to the .sln file to document.")]
+    [Description("Path to the .sln file to document (overrides 'solution' in the configuration).")]
     public string? SolutionPath { get; set; }
 
     [CommandOption("-a|--assemblies <PATH>")]
-    [Description("A built assembly (.dll) to document. Repeat the option to document several.")]
+    [Description("A built assembly (.dll) to document; repeat to document several (overrides 'assemblies').")]
     public string[] AssemblyPaths { get; set; } = [];
 
     [CommandOption("-o|--output <PATH>")]
-    [Description("Write the rendered document to this file (default: standard output).")]
+    [Description("Write the rendered document to this file or directory (falls back to the configuration, then standard output).")]
     public string? OutputPath { get; set; }
 
     [CommandOption("-f|--format <FORMAT>")]
-    [Description("Output format: json or markdown (alias: md). Default: json.")]
-    [DefaultValue("json")]
-    public string Format { get; set; } = "json";
+    [Description("Output format: json or markdown (alias: md). Falls back to the configuration, then json.")]
+    public string? Format { get; set; }
 
     [CommandOption("--layout <LAYOUT>")]
-    [Description("Markdown layout: single (one file) or split (one file per error plus an index). Default: single.")]
-    [DefaultValue("single")]
-    public string Layout { get; set; } = "single";
+    [Description("Markdown layout: single or split. Falls back to the configuration, then single.")]
+    public string? Layout { get; set; }
 
     [CommandOption("-c|--configuration <NAME>")]
-    [Description("Build configuration used when building a solution.")]
-    [DefaultValue("Debug")]
-    public string Configuration { get; set; } = "Debug";
+    [Description("Build configuration used when building a solution. Falls back to the configuration, then Debug.")]
+    public string? Configuration { get; set; }
 
     [CommandOption("--framework <TFM>")]
     [Description("Restrict a multi-target solution to a single target framework.")]
@@ -61,47 +58,5 @@ internal sealed class GenerateSettings : ConfigScopedSettings {
     [CommandOption("--verbose")] // Long-only to stay clear of Spectre's built-in --version/-h help options.
     [Description("Emit diagnostic logging to standard error.")]
     public bool Verbose { get; set; }
-
-    /// <summary>Gets the format normalized to lower case with the <c>md</c> alias expanded to <c>markdown</c>.</summary>
-    public string NormalizedFormat() {
-        string format = Format.Trim().ToLowerInvariant();
-
-        return format == "md" ? "markdown" : format;
-    }
-
-    /// <summary>Gets the layout normalized to lower case.</summary>
-    public string NormalizedLayout() {
-        return Layout.Trim().ToLowerInvariant();
-    }
-
-    /// <summary>
-    ///     Cross-option rules enforced before the command runs: exactly one source (a solution or one/more
-    ///     assemblies) and a layout compatible with the requested format.
-    /// </summary>
-    public override ValidationResult Validate() {
-        bool hasSolution   = string.IsNullOrWhiteSpace(SolutionPath) is false;
-        bool hasAssemblies = AssemblyPaths.Length > 0;
-
-        if (hasSolution && hasAssemblies) {
-            return ValidationResult.Error("Specify either --solution or --assemblies, not both.");
-        }
-
-        if (hasSolution is false && hasAssemblies is false) {
-            return ValidationResult.Error("A source is required: pass --solution <path> or --assemblies <path> (repeatable).");
-        }
-
-        // The set of valid formats depends on the configured custom renderers, which are resolved at generation
-        // time; an unknown format is reported there. Here we only validate the layout, which is format-agnostic.
-        string layout = NormalizedLayout();
-        if (layout is not ("single" or "split")) {
-            return ValidationResult.Error($"Unsupported --layout '{Layout}'. Supported layouts: single, split.");
-        }
-
-        if (layout == "split" && NormalizedFormat() != "markdown") {
-            return ValidationResult.Error("The 'split' layout is only supported for --format markdown.");
-        }
-
-        return ValidationResult.Success();
-    }
 
 }

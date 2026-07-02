@@ -23,7 +23,7 @@ internal sealed class RendererListCommand : Command<ConfigScopedSettings> {
         }
 
         string                path          = ConfigurationStore.Resolve(settings.ConfigPath);
-        RendererConfiguration configuration = ConfigurationStore.Load(path);
+        CliConfiguration configuration = ConfigurationStore.Load(path);
 
         Console.Out.WriteLine();
         if (configuration.Renderers.Count == 0) {
