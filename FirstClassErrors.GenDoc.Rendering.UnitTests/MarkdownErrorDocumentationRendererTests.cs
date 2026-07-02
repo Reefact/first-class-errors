@@ -37,7 +37,8 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         return new ErrorDocumentation {
             Code        = "INVALID_EMAIL",
             Title       = "Invalid email",
-            Explanation = "The provided email address is not valid."
+            Explanation = "The provided email address is not valid.",
+            Source      = "Email"
         };
     }
 
@@ -49,8 +50,8 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         Check.That(new MarkdownErrorDocumentationRenderer().Format).IsEqualTo("markdown");
     }
 
-    [Fact(DisplayName = "The single layout produces one file with a table of contents and every error inlined.")]
-    public void TheSingleLayoutProducesOneFileWithATableOfContents() {
+    [Fact(DisplayName = "The single layout groups the table of contents by source and inlines every error.")]
+    public void TheSingleLayoutGroupsTheTableOfContentsBySource() {
         // Exercise
         IReadOnlyList<RenderedDocument> documents =
             new MarkdownErrorDocumentationRenderer(MarkdownLayout.Single).Render(new[] { TemperatureError(), EmailError() });
@@ -64,24 +65,47 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         Check.That(markdown).StartsWith("# Error Catalog");
         Check.That(markdown).Contains("## Table of contents");
 
-        // Table of contents links to the deterministic anchors, which are present in the body.
-        Check.That(markdown).Contains("- [Temperature below absolute zero](#err-temperature-below-absolute-zero)");
-        Check.That(markdown).Contains("- [Invalid email](#err-invalid-email)");
+        // The table of contents is two levels: a source group, then the errors nested under it (linked to anchors).
+        Check.That(markdown).Contains("- Temperature errors");
+        Check.That(markdown).Contains("- Email errors");
+        Check.That(markdown).Contains("  - [Temperature below absolute zero](#err-temperature-below-absolute-zero)");
+        Check.That(markdown).Contains("  - [Invalid email](#err-invalid-email)");
         Check.That(markdown).Contains("<a id=\"err-temperature-below-absolute-zero\"></a>");
 
-        // Body of an error: heading, metadata, sections and the context table.
-        Check.That(markdown).Contains("## Temperature below absolute zero");
+        // Body: a source group heading (h2), the error as a sub-heading (h3), then its sections (h4).
+        Check.That(markdown).Contains("## Temperature errors");
+        Check.That(markdown).Contains("### Temperature below absolute zero");
         Check.That(markdown).Contains("- **Code:** `TEMPERATURE_BELOW_ABSOLUTE_ZERO`");
         Check.That(markdown).Contains("- **Source:** `Temperature`");
-        Check.That(markdown).Contains("### Diagnostics");
+        Check.That(markdown).Contains("#### Diagnostics");
         Check.That(markdown).Contains("_origin:_ External");
-        Check.That(markdown).Contains("### Examples");
-        Check.That(markdown).Contains("### Context");
+        Check.That(markdown).Contains("#### Examples");
+        Check.That(markdown).Contains("#### Context");
         Check.That(markdown).Contains("| `AttemptedValue` | `System.Double` | The rejected value. | `-300` |");
     }
 
-    [Fact(DisplayName = "The split layout produces an index plus one file per error.")]
-    public void TheSplitLayoutProducesAnIndexPlusOneFilePerError() {
+    [Fact(DisplayName = "The table of contents groups several errors under one source heading.")]
+    public void TheTableOfContentsGroupsSeveralErrorsUnderOneSourceHeading() {
+        // Setup: two errors share a source, a third has another.
+        ErrorDocumentation tooCold  = new() { Code = "TEMP_LOW", Title = "Too cold", Source = "Temperature" };
+        ErrorDocumentation tooHot   = new() { Code = "TEMP_HIGH", Title = "Too hot", Source = "Temperature" };
+        ErrorDocumentation badEmail = new() { Code = "BAD_EMAIL", Title = "Bad email", Source = "Email" };
+
+        // Exercise
+        IReadOnlyList<RenderedDocument> documents =
+            new MarkdownErrorDocumentationRenderer(MarkdownLayout.Single).Render(new[] { tooCold, tooHot, badEmail });
+
+        // Verify
+        string markdown = documents[0].Content;
+        Check.That(markdown).Contains("- Temperature errors");
+        Check.That(markdown).Contains("  - [Too cold](#err-temp-low)");
+        Check.That(markdown).Contains("  - [Too hot](#err-temp-high)");
+        Check.That(markdown).Contains("- Email errors");
+        Check.That(markdown).Contains("  - [Bad email](#err-bad-email)");
+    }
+
+    [Fact(DisplayName = "The split layout produces an index grouped by source plus one file per error.")]
+    public void TheSplitLayoutProducesAnIndexGroupedBySource() {
         // Exercise
         IReadOnlyList<RenderedDocument> documents =
             new MarkdownErrorDocumentationRenderer(MarkdownLayout.Split).Render(new[] { TemperatureError(), EmailError() });
@@ -93,12 +117,14 @@ public sealed class MarkdownErrorDocumentationRendererTests {
 
         RenderedDocument index = documents.Single(document => document.RelativePath == "README.md");
         Check.That(index.Content).StartsWith("# Error Catalog");
-        Check.That(index.Content).Contains("- [Temperature below absolute zero](./temperature-below-absolute-zero.md)");
-        Check.That(index.Content).Contains("- [Invalid email](./invalid-email.md)");
+        Check.That(index.Content).Contains("- Temperature errors");
+        Check.That(index.Content).Contains("- Email errors");
+        Check.That(index.Content).Contains("  - [Temperature below absolute zero](./temperature-below-absolute-zero.md)");
+        Check.That(index.Content).Contains("  - [Invalid email](./invalid-email.md)");
 
         RenderedDocument errorFile = documents.Single(document => document.RelativePath == "temperature-below-absolute-zero.md");
         Check.That(errorFile.Content).StartsWith("# Temperature below absolute zero");
-        // In the split layout the per-error file title is h1, so its sections are h2 (not h3 as in the single layout).
+        // In the split layout the per-error file title is h1, so its sections are h2.
         Check.That(errorFile.Content).Contains("## Context");
     }
 
