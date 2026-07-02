@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Temperature_Source" xml:space="preserve">
+    <value>Errores generados al construir un valor Temperature a partir de una entrada fuera de rango.</value>
+  </data>
+  <data name="Amount_Source" xml:space="preserve">
+    <value>Errores generados al realizar operaciones que combinan valores monetarios Amount.</value>
+  </data>
+  <data name="Bank_Source" xml:space="preserve">
+    <value>Errores generados al validar un archivo de extracto bancario cargado frente a sus metadatos declarados (período y totales del extracto).</value>
+  </data>
+  <data name="Temperature_BelowAbsoluteZero_Title" xml:space="preserve">
+    <value>Temperatura por debajo del cero absoluto</value>
+  </data>
+  <data name="Temperature_BelowAbsoluteZero_Description" xml:space="preserve">
+    <value>Este error se produce al intentar instanciar una temperatura con un valor inferior al cero absoluto.</value>
+  </data>
+  <data name="Temperature_BelowAbsoluteZero_Rule" xml:space="preserve">
+    <value>La temperatura no puede descender por debajo del cero absoluto, porque el cero absoluto es el punto en el que las partículas tienen la mínima energía posible.</value>
+  </data>
+  <data name="Temperature_BelowAbsoluteZero_Message" xml:space="preserve">
+    <value>No se pudo instanciar la temperatura: el valor {0} {1} está por debajo del cero absoluto.</value>
+  </data>
+  <data name="Temperature_BelowAbsoluteZero_ShortMessage" xml:space="preserve">
+    <value>La temperatura está por debajo del cero absoluto.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Title" xml:space="preserve">
+    <value>Discrepancia de moneda entre importes</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Description" xml:space="preserve">
+    <value>Este error se produce al intentar usar juntos varios importes en una operación cuando están expresados en monedas diferentes.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Rule" xml:space="preserve">
+    <value>Todas las operaciones monetarias deben involucrar importes expresados en la misma moneda.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Message" xml:space="preserve">
+    <value>No se pudo realizar la operación monetaria porque los importes involucrados están expresados en monedas diferentes: {0} y {1}.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_ShortMessage" xml:space="preserve">
+    <value>Discrepancia de moneda</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Cause1" xml:space="preserve">
+    <value>Se usaron importes en una operación monetaria sin haberlos convertido a la misma moneda.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Hint1" xml:space="preserve">
+    <value>Compruebe si todos los importes involucrados en la operación se convirtieron a una moneda común antes de usarlos juntos.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Cause2" xml:space="preserve">
+    <value>Se proporcionaron con monedas diferentes importes que se esperaba estuvieran expresados en la misma moneda.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Hint2" xml:space="preserve">
+    <value>Compruebe las monedas asociadas a cada importe y confirme si se esperaba una moneda común para esta operación.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Title" xml:space="preserve">
+    <value>Fecha de transacción fuera del período del extracto</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Description" xml:space="preserve">
+    <value>Este error se produce al intentar validar un archivo de extracto bancario que contiene una o más transacciones con fecha fuera del período del extracto.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Rule" xml:space="preserve">
+    <value>Todas las transacciones deben producirse dentro del período del extracto.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Message" xml:space="preserve">
+    <value>La transacción con fecha {0} está fuera del período del extracto [{1};{2}].</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_ShortMessage" xml:space="preserve">
+    <value>La fecha de transacción está fuera del período del extracto.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Cause1" xml:space="preserve">
+    <value>La fecha de transacción proporcionada en el archivo del extracto es incorrecta o incoherente con la fecha real de la transacción.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Hint1" xml:space="preserve">
+    <value>Verifique la fecha de transacción presente en el archivo de entrada y confirme su coherencia con la cronología real de la transacción.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Cause2" xml:space="preserve">
+    <value>El período del extracto definido en el archivo no coincide con el período de cobertura real de las transacciones.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Hint2" xml:space="preserve">
+    <value>Compruebe si las fechas de inicio y fin del extracto en el archivo concuerdan con el período cubierto por las transacciones.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Cause3" xml:space="preserve">
+    <value>La transacción se registró después de generar el extracto, pero se incluyó por error en el archivo.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Hint3" xml:space="preserve">
+    <value>Determine si se incluyeron transacciones registradas tardíamente en el proceso de generación del extracto.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Cause4" xml:space="preserve">
+    <value>Un error de procesamiento interno desplazó la fecha de transacción durante la transformación o la importación de datos.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Hint4" xml:space="preserve">
+    <value>Examine las etapas de importación y transformación de datos para confirmar que las fechas de transacción se conservan sin alteración.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Title" xml:space="preserve">
+    <value>Discrepancia del importe total del extracto</value>
+  </data>
+  <data name="Bank_TotalMismatch_Description" xml:space="preserve">
+    <value>Este error se produce al intentar validar un archivo de extracto bancario cuyo importe total declarado no coincide con la suma de los importes de cada transacción.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Rule" xml:space="preserve">
+    <value>El importe total del extracto debe ser igual a la suma de todos los importes de transacción incluidos en el extracto.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Message" xml:space="preserve">
+    <value>El importe total declarado del extracto ({0}) no coincide con el importe total calculado a partir de las transacciones ({1}).</value>
+  </data>
+  <data name="Bank_TotalMismatch_ShortMessage" xml:space="preserve">
+    <value>Discrepancia del importe total del extracto.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Cause1" xml:space="preserve">
+    <value>El importe total declarado en el archivo del extracto no coincide con la suma de los importes de cada transacción.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Hint1" xml:space="preserve">
+    <value>Verifique el importe total declarado en el archivo y compárelo con la suma de todos los importes de transacción.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Cause2" xml:space="preserve">
+    <value>Faltan una o más transacciones, o están duplicadas, en el archivo del extracto.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Hint2" xml:space="preserve">
+    <value>Compruebe si todas las transacciones esperadas están presentes exactamente una vez en el archivo del extracto.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Cause3" xml:space="preserve">
+    <value>Se produjo un error de redondeo o de precisión al calcular el importe total del extracto.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Hint3" xml:space="preserve">
+    <value>Examine cómo se aplicaron las reglas de redondeo y precisión al calcular el total del extracto.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Cause4" xml:space="preserve">
+    <value>Un error de procesamiento interno alteró los importes de transacción durante el análisis o la transformación del archivo.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Hint4" xml:space="preserve">
+    <value>Inspeccione las etapas de análisis y transformación del archivo para confirmar que los importes de transacción permanecen sin cambios.</value>
+  </data>
+  <data name="ValueObject_Cause1" xml:space="preserve">
+    <value>El valor introducido manualmente por un usuario no es válido.</value>
+  </data>
+  <data name="ValueObject_Hint1" xml:space="preserve">
+    <value>Verifique el valor introducido por el usuario y evalúe su conformidad con las reglas del dominio.</value>
+  </data>
+  <data name="ValueObject_Cause2" xml:space="preserve">
+    <value>El valor recibido de un sistema externo (API, mensaje, etc.) no es válido.</value>
+  </data>
+  <data name="ValueObject_Hint2" xml:space="preserve">
+    <value>Compruebe los datos proporcionados por el sistema anterior y evalúe su validez frente a las reglas del dominio.</value>
+  </data>
+  <data name="ValueObject_Cause3" xml:space="preserve">
+    <value>El valor se cargó a partir de datos persistidos corruptos u obsoletos.</value>
+  </data>
+  <data name="ValueObject_Hint3" xml:space="preserve">
+    <value>Examine el origen de datos persistidos para determinar si los valores almacenados cumplen las reglas actuales del dominio.</value>
+  </data>
+  <data name="ValueObject_Cause4" xml:space="preserve">
+    <value>El valor se calculó internamente sin usar métodos seguros para el dominio.</value>
+  </data>
+  <data name="ValueObject_Hint4" xml:space="preserve">
+    <value>Inspeccione la lógica de cálculo interna para confirmar que se preservan los invariantes del dominio.</value>
+  </data>
+  <data name="ValueObject_Cause5" xml:space="preserve">
+    <value>El valor proviene de la configuración del sistema o de valores predeterminados incorrectos u obsoletos.</value>
+  </data>
+  <data name="ValueObject_Hint5" xml:space="preserve">
+    <value>Revise la configuración o los parámetros predeterminados pertinentes para evaluar su conformidad con las reglas del dominio.</value>
+  </data>
+</root>

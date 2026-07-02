@@ -1,7 +1,11 @@
 #region Usings declarations
 
+using System.Globalization;
+
 using FirstClassErrors.GenDoc.Rendering;
 using FirstClassErrors.Usage.Model;
+
+using NFluent;
 
 using VerifyTests;
 using VerifyXunit;
@@ -24,8 +28,20 @@ public sealed class UsageDocumentationSnapshotTests {
 
     #region Statics members declarations
 
+    // The Usage catalog is now localized, so the snapshots pin the invariant (English) culture to stay deterministic
+    // regardless of the machine's culture.
     private static ErrorDocumentationExtractionResult Extract() {
-        return AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(typeof(Temperature).Assembly);
+        return ExtractFor(CultureInfo.InvariantCulture);
+    }
+
+    private static ErrorDocumentationExtractionResult ExtractFor(CultureInfo culture) {
+        CultureInfo previous = CultureInfo.CurrentUICulture;
+        CultureInfo.CurrentUICulture = culture;
+        try {
+            return AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(typeof(Temperature).Assembly);
+        } finally {
+            CultureInfo.CurrentUICulture = previous;
+        }
     }
 
     #endregion
@@ -62,6 +78,22 @@ public sealed class UsageDocumentationSnapshotTests {
                             .ToList();
 
         await Verifier.Verify(files);
+    }
+
+    [Fact(DisplayName = "The Usage catalog is extracted in the requested language (French).")]
+    public void TheUsageCatalogIsExtractedInFrench() {
+        // Exercise: extract the real Usage catalog under the French culture.
+        ErrorDocumentationExtractionResult result = ExtractFor(CultureInfo.GetCultureInfo("fr"));
+
+        // Verify: the authored prose is localized (title/explanation), and the source group's description — provided
+        // as a resource key via [ProvidesErrorsFor(DescriptionResourceType = …)] — is resolved to French too.
+        ErrorDocumentation temperature =
+            result.Documentation.Single(document => document.Code == "TEMPERATURE_BELOW_ABSOLUTE_ZERO");
+
+        Check.That(temperature.Source).IsEqualTo("Temperature");
+        Check.That(temperature.Title).IsEqualTo("Température en dessous du zéro absolu");
+        Check.That(temperature.Explanation).StartsWith("Cette erreur se produit");
+        Check.That(temperature.SourceDescription).StartsWith("Erreurs levées lors de la construction");
     }
 
 }

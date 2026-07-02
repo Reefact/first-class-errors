@@ -1,5 +1,6 @@
 ﻿#region Usings declarations
 
+using FirstClassErrors.Usage.Resources;
 using FirstClassErrors.Usage.Utils;
 
 #endregion
@@ -10,7 +11,8 @@ namespace FirstClassErrors.Usage.Model;
 ///     Provides factory methods for creating errors related to invalid operations on monetary amounts.
 /// </summary>
 [ProvidesErrorsFor(nameof(Amount),
-                   Description = "Errors raised when performing operations that combine monetary Amount values.")]
+                   Description = "Amount_Source",
+                   DescriptionResourceType = typeof(UsageErrorMessages))]
 public static class InvalidAmountOperationError {
 
     #region Statics members declarations
@@ -19,22 +21,22 @@ public static class InvalidAmountOperationError {
     internal static DomainError CurrencyMismatch(Amount amount1, Amount amount2) {
         return new DomainError(
             Code.CurrencyMismatch,
-            DocumentationFormatter.Format("Failed to perform the monetary operation because the involved amounts are expressed in different currencies: {0} and {1}.", amount1, amount2),
-            "Currency mismatch"
+            DocumentationFormatter.Format(UsageErrorMessages.Get("Amount_CurrencyMismatch_Message"), amount1, amount2),
+            UsageErrorMessages.Get("Amount_CurrencyMismatch_ShortMessage")
         );
     }
 
     private static ErrorDocumentation CurrencyMismatchDocumentation() {
-        return DescribeError.WithTitle("Amount currency mismatch")
-                            .WithDescription("This error occurs when trying to use multiple amounts together in an operation while they are expressed in different currencies.")
-                            .WithRule("All monetary operations must involve amounts expressed in the same currency.")
-                            .WithDiagnostic("Amounts were used in a monetary operation without having been converted to the same currency.",
+        return DescribeError.WithTitle(UsageErrorMessages.Get("Amount_CurrencyMismatch_Title"))
+                            .WithDescription(UsageErrorMessages.Get("Amount_CurrencyMismatch_Description"))
+                            .WithRule(UsageErrorMessages.Get("Amount_CurrencyMismatch_Rule"))
+                            .WithDiagnostic(UsageErrorMessages.Get("Amount_CurrencyMismatch_Cause1"),
                                             ErrorOrigin.Internal,
-                                            "Verify whether all amounts involved in the operation were converted to a common currency before being used together."
+                                            UsageErrorMessages.Get("Amount_CurrencyMismatch_Hint1")
                              )
-                            .AndDiagnostic("Amounts expected to be expressed in the same currency were provided with different currencies.",
+                            .AndDiagnostic(UsageErrorMessages.Get("Amount_CurrencyMismatch_Cause2"),
                                            ErrorOrigin.InternalOrExternal,
-                                           "Check the currencies associated with each amount and confirm whether a common currency was expected for this operation."
+                                           UsageErrorMessages.Get("Amount_CurrencyMismatch_Hint2")
                              )
                             .WithExamples(() => CurrencyMismatch(new Amount(127.33m, Currency.EUR), new Amount(57689.00m, Currency.USD)));
     }

@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Temperature_Source" xml:space="preserve">
+    <value>Errors raised when constructing a Temperature value from an out-of-range input.</value>
+  </data>
+  <data name="Amount_Source" xml:space="preserve">
+    <value>Errors raised when performing operations that combine monetary Amount values.</value>
+  </data>
+  <data name="Bank_Source" xml:space="preserve">
+    <value>Errors raised while validating an uploaded bank statement file against its declared metadata (statement period and totals).</value>
+  </data>
+  <data name="Temperature_BelowAbsoluteZero_Title" xml:space="preserve">
+    <value>Temperature below absolute zero</value>
+  </data>
+  <data name="Temperature_BelowAbsoluteZero_Description" xml:space="preserve">
+    <value>This error occurs when trying to instantiate a temperature with a value that is below absolute zero.</value>
+  </data>
+  <data name="Temperature_BelowAbsoluteZero_Rule" xml:space="preserve">
+    <value>Temperature cannot go below absolute zero because absolute zero is the point where particles have minimum possible energy.</value>
+  </data>
+  <data name="Temperature_BelowAbsoluteZero_Message" xml:space="preserve">
+    <value>Failed to instantiate temperature: the value {0} {1} is below absolute zero.</value>
+  </data>
+  <data name="Temperature_BelowAbsoluteZero_ShortMessage" xml:space="preserve">
+    <value>Temperature is below absolute zero.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Title" xml:space="preserve">
+    <value>Amount currency mismatch</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Description" xml:space="preserve">
+    <value>This error occurs when trying to use multiple amounts together in an operation while they are expressed in different currencies.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Rule" xml:space="preserve">
+    <value>All monetary operations must involve amounts expressed in the same currency.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Message" xml:space="preserve">
+    <value>Failed to perform the monetary operation because the involved amounts are expressed in different currencies: {0} and {1}.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_ShortMessage" xml:space="preserve">
+    <value>Currency mismatch</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Cause1" xml:space="preserve">
+    <value>Amounts were used in a monetary operation without having been converted to the same currency.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Hint1" xml:space="preserve">
+    <value>Verify whether all amounts involved in the operation were converted to a common currency before being used together.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Cause2" xml:space="preserve">
+    <value>Amounts expected to be expressed in the same currency were provided with different currencies.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Hint2" xml:space="preserve">
+    <value>Check the currencies associated with each amount and confirm whether a common currency was expected for this operation.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Title" xml:space="preserve">
+    <value>Transaction date outside statement period</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Description" xml:space="preserve">
+    <value>This error occurs when trying to validate a bank statement file that contains one or more transactions dated outside the statement period.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Rule" xml:space="preserve">
+    <value>All transactions must occur within the statement period.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Message" xml:space="preserve">
+    <value>Transaction dated {0} is outside the statement period [{1};{2}].</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_ShortMessage" xml:space="preserve">
+    <value>Transaction date is outside the statement period.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Cause1" xml:space="preserve">
+    <value>The transaction date provided in the statement file is incorrect or inconsistent with the actual transaction date.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Hint1" xml:space="preserve">
+    <value>Verify the transaction date present in the input file and confirm its consistency with the actual transaction timeline.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Cause2" xml:space="preserve">
+    <value>The statement period defined in the file does not match the actual coverage period of the transactions.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Hint2" xml:space="preserve">
+    <value>Check whether the statement start and end dates in the file align with the period covered by the transactions.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Cause3" xml:space="preserve">
+    <value>The transaction was posted after the statement was generated but was mistakenly included in the file.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Hint3" xml:space="preserve">
+    <value>Determine whether late-posted transactions were included in the statement generation process.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Cause4" xml:space="preserve">
+    <value>An internal processing error caused the transaction date to be shifted during data transformation or import.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Hint4" xml:space="preserve">
+    <value>Examine the data import and transformation stages to confirm that transaction dates are preserved without alteration.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Title" xml:space="preserve">
+    <value>Statement total amount mismatch</value>
+  </data>
+  <data name="Bank_TotalMismatch_Description" xml:space="preserve">
+    <value>This error occurs when trying to validate a bank statement file whose declared total amount does not match the sum of the individual transaction amounts.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Rule" xml:space="preserve">
+    <value>The statement total amount must equal the sum of all transaction amounts included in the statement.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Message" xml:space="preserve">
+    <value>The declared statement total amount ({0}) does not match the computed total amount from transactions ({1}).</value>
+  </data>
+  <data name="Bank_TotalMismatch_ShortMessage" xml:space="preserve">
+    <value>Statement total amount mismatch.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Cause1" xml:space="preserve">
+    <value>The total amount declared in the statement file does not match the sum of the individual transaction amounts.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Hint1" xml:space="preserve">
+    <value>Verify the declared total amount in the file and compare it with the sum of all transaction amounts.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Cause2" xml:space="preserve">
+    <value>One or more transactions are missing or duplicated in the statement file.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Hint2" xml:space="preserve">
+    <value>Check whether all expected transactions are present exactly once in the statement file.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Cause3" xml:space="preserve">
+    <value>A rounding or precision error occurred when calculating the statement total amount.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Hint3" xml:space="preserve">
+    <value>Examine how rounding and precision rules were applied when computing the statement total.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Cause4" xml:space="preserve">
+    <value>An internal processing error altered transaction amounts during file parsing or transformation.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Hint4" xml:space="preserve">
+    <value>Inspect the file parsing and transformation stages to confirm that transaction amounts remain unchanged.</value>
+  </data>
+  <data name="ValueObject_Cause1" xml:space="preserve">
+    <value>The value entered manually by a user is invalid.</value>
+  </data>
+  <data name="ValueObject_Hint1" xml:space="preserve">
+    <value>Verify the value entered by the user and assess its compliance with domain rules.</value>
+  </data>
+  <data name="ValueObject_Cause2" xml:space="preserve">
+    <value>The value received from an external system (API, message, etc.) is invalid.</value>
+  </data>
+  <data name="ValueObject_Hint2" xml:space="preserve">
+    <value>Check the data provided by the upstream system and evaluate its validity against domain rules.</value>
+  </data>
+  <data name="ValueObject_Cause3" xml:space="preserve">
+    <value>The value was loaded from corrupted or outdated persisted data.</value>
+  </data>
+  <data name="ValueObject_Hint3" xml:space="preserve">
+    <value>Examine the persisted data source to determine whether stored values comply with current domain rules.</value>
+  </data>
+  <data name="ValueObject_Cause4" xml:space="preserve">
+    <value>The value was computed internally without using domain-safe methods.</value>
+  </data>
+  <data name="ValueObject_Hint4" xml:space="preserve">
+    <value>Inspect the internal computation logic to confirm that domain invariants are preserved.</value>
+  </data>
+  <data name="ValueObject_Cause5" xml:space="preserve">
+    <value>The value originates from system configuration or defaults that are incorrect or outdated.</value>
+  </data>
+  <data name="ValueObject_Hint5" xml:space="preserve">
+    <value>Review the relevant configuration or default parameters to assess their compliance with domain rules.</value>
+  </data>
+</root>

@@ -1,4 +1,10 @@
-﻿namespace FirstClassErrors.Usage;
+﻿#region Usings declarations
+
+using FirstClassErrors.Usage.Resources;
+
+#endregion
+
+namespace FirstClassErrors.Usage;
 
 /// <summary>
 ///     Provides diagnostic information for value object-related errors.
@@ -16,29 +22,29 @@ internal static class ValueObjectDiagnostic {
     ///     Provides a collection of predefined diagnostics for common value object-related errors.
     /// </summary>
     /// <remarks>
-    ///     This field contains diagnostic entries that describe typical causes of errors and their corresponding corrective
-    ///     actions.
+    ///     The diagnostics are rebuilt on each access so their text reflects the current UI culture (localized via the
+    ///     <see cref="UsageErrorMessages" /> resources) rather than being frozen at type initialization.
     /// </remarks>
-    public static readonly ErrorDiagnostic[] Diagnostic = [
-        new("The value entered manually by a user is invalid.",
+    public static ErrorDiagnostic[] Diagnostic => [
+        new(UsageErrorMessages.Get("ValueObject_Cause1"),
             ErrorOrigin.External,
-            "Verify the value entered by the user and assess its compliance with domain rules."
+            UsageErrorMessages.Get("ValueObject_Hint1")
         ),
-        new("The value received from an external system (API, message, etc.) is invalid.",
+        new(UsageErrorMessages.Get("ValueObject_Cause2"),
             ErrorOrigin.External,
-            "Check the data provided by the upstream system and evaluate its validity against domain rules."
+            UsageErrorMessages.Get("ValueObject_Hint2")
         ),
-        new("The value was loaded from corrupted or outdated persisted data.",
+        new(UsageErrorMessages.Get("ValueObject_Cause3"),
             ErrorOrigin.External,
-            "Examine the persisted data source to determine whether stored values comply with current domain rules."
+            UsageErrorMessages.Get("ValueObject_Hint3")
         ),
-        new("The value was computed internally without using domain-safe methods.",
+        new(UsageErrorMessages.Get("ValueObject_Cause4"),
             ErrorOrigin.Internal,
-            "Inspect the internal computation logic to confirm that domain invariants are preserved."
+            UsageErrorMessages.Get("ValueObject_Hint4")
         ),
-        new("The value originates from system configuration or defaults that are incorrect or outdated.",
+        new(UsageErrorMessages.Get("ValueObject_Cause5"),
             ErrorOrigin.External,
-            "Review the relevant configuration or default parameters to assess their compliance with domain rules."
+            UsageErrorMessages.Get("ValueObject_Hint5")
         )
     ];
 
