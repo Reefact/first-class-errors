@@ -74,7 +74,7 @@ public static class AssemblyErrorDocumentationReader {
             foreach (Exception? loaderException in ex.LoaderExceptions ?? []) {
                 if (loaderException is null) { continue; }
 
-                failures.Add(new ErrorDocumentationExtractionFailure(assemblyName, null, "A referenced type could not be loaded.", loaderException));
+                failures.Add(new ErrorDocumentationExtractionFailure(assemblyName, null, "A referenced type could not be loaded.", loaderException.ToString()));
             }
 
             return ex.Types.Where(type => type is not null).Select(type => type!);
@@ -92,7 +92,7 @@ public static class AssemblyErrorDocumentationReader {
         try {
             providesErrorsFor = type.GetCustomAttribute<ProvidesErrorsForAttribute>();
         } catch (Exception ex) {
-            failures.Add(new ErrorDocumentationExtractionFailure(TypeName(type), null, "Failed to read the [ProvidesErrorsFor] attribute.", ex));
+            failures.Add(new ErrorDocumentationExtractionFailure(TypeName(type), null, "Failed to read the [ProvidesErrorsFor] attribute.", ex.ToString()));
 
             return;
         }
@@ -104,7 +104,7 @@ public static class AssemblyErrorDocumentationReader {
             try {
                 documentedBy = factoryMethod.GetCustomAttribute<DocumentedByAttribute>();
             } catch (Exception ex) {
-                failures.Add(new ErrorDocumentationExtractionFailure(TypeName(type), factoryMethod.Name, "Failed to read the [DocumentedBy] attribute.", ex));
+                failures.Add(new ErrorDocumentationExtractionFailure(TypeName(type), factoryMethod.Name, "Failed to read the [DocumentedBy] attribute.", ex.ToString()));
 
                 continue;
             }
@@ -120,7 +120,7 @@ public static class AssemblyErrorDocumentationReader {
             } catch (Exception ex) {
                 // Unwrap the reflection wrapper so the reported failure points at the real cause.
                 Exception cause = (ex as TargetInvocationException)?.InnerException ?? ex;
-                failures.Add(new ErrorDocumentationExtractionFailure(TypeName(type), documentationMethod.Name, "The documentation factory threw while being executed.", cause));
+                failures.Add(new ErrorDocumentationExtractionFailure(TypeName(type), documentationMethod.Name, "The documentation factory threw while being executed.", cause.ToString()));
 
                 continue;
             }
@@ -131,7 +131,8 @@ public static class AssemblyErrorDocumentationReader {
                 continue;
             }
 
-            errorDocumentation.Source = providesErrorsFor.Source;
+            errorDocumentation.Source            = providesErrorsFor.Source;
+            errorDocumentation.SourceDescription = providesErrorsFor.Description;
 
             documentation.Add(errorDocumentation);
         }

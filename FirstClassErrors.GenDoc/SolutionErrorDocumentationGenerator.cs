@@ -1,10 +1,9 @@
 ﻿#region Usings declarations
 
 using System.Diagnostics;
-using System.Reflection;
 using System.Text;
-
-using Microsoft.Build.Construction;
+using System.Text.Json;
+using System.Xml.Linq;
 
 #endregion
 
@@ -38,7 +37,7 @@ public static class SolutionErrorDocumentationGenerator {
             DotNetBuild(fullSolutionPath, options);
         }
 
-        IReadOnlyList<ProjectInfo> projects = ReadSolutionProjects(fullSolutionPath);
+        IReadOnlyList<ProjectInfo> projects = ReadSolutionProjects(fullSolutionPath, options);
         options.Logger.Debug($"Found {projects.Count} MSBuild projects in solution.");
 
         IReadOnlyList<ProjectInfo> includedProjects = FilterProjects(projects, options);
@@ -76,18 +75,55 @@ public static class SolutionErrorDocumentationGenerator {
         return errorDocumentation;
     }
 
-    private static List<ProjectInfo> ReadSolutionProjects(string solutionPath) {
-        SolutionFile sln = SolutionFile.Parse(solutionPath);
+    public static IEnumerable<ErrorDocumentation> GetErrorDocumentationFromAssemblies(IReadOnlyList<string> assemblyPaths, SolutionGenerationOptions options) {
+        ArgumentNullException.ThrowIfNull(assemblyPaths);
+        ArgumentNullException.ThrowIfNull(options);
+
+        options.Logger.Info($"Starting documentation generation from {assemblyPaths.Count} assembly path(s).");
+
+        List<string> resolved = new();
+        foreach (string assemblyPath in assemblyPaths) {
+            string fullPath = Path.GetFullPath(assemblyPath);
+            if (File.Exists(fullPath) is false) {
+                HandleFailure(options, $"Assembly not found: '{fullPath}'.");
+
+                continue;
+            }
+
+            resolved.Add(fullPath);
+        }
+
+        resolved = resolved.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        if (resolved.Count == 0) { return []; }
+
+        IEnumerable<ErrorDocumentation> errorDocumentation = ExtractFromAssemblies(resolved, options);
+        options.Logger.Info("Documentation generation completed.");
+
+        return errorDocumentation;
+    }
+
+    private static List<ProjectInfo> ReadSolutionProjects(string solutionPath, SolutionGenerationOptions options) {
+        // Enumerate projects via the SDK ("dotnet sln list") rather than the in-process MSBuild object model. This keeps
+        // the generator free of the heavy Microsoft.Build dependency and handles both .sln and .slnx uniformly.
+        string solutionDirectory = Path.GetDirectoryName(solutionPath) ?? ".";
+
+        ProcessResult result = RunProcess("dotnet", $"sln \"{solutionPath}\" list", solutionDirectory, options.Logger);
+        if (result.ExitCode != 0) {
+            throw new SolutionDocumentationGenerationException(
+                $"Failed to list the projects of solution '{solutionPath}' (exit code {result.ExitCode}).\n{result.StandardError}");
+        }
 
         List<ProjectInfo> projects = new();
 
-        foreach (ProjectInSolution p in sln.ProjectsInOrder) {
-            if (p.ProjectType != SolutionProjectType.KnownToBeMSBuildFormat) { continue; }
-            if (string.IsNullOrWhiteSpace(p.AbsolutePath)) { continue; }
+        foreach (string rawLine in result.StandardOutput.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)) {
+            string line = rawLine.Trim();
 
-            string projectPath = Path.GetFullPath(p.AbsolutePath);
+            // The command prints a (localized) header followed by the project paths, relative to the solution. Keep
+            // only lines that resolve to an existing project file — this is robust to the header and to localization.
+            if (line.EndsWith("proj", StringComparison.OrdinalIgnoreCase) is false) { continue; }
 
-            if (!File.Exists(projectPath)) { continue; }
+            string projectPath = Path.GetFullPath(Path.Combine(solutionDirectory, line));
+            if (File.Exists(projectPath) is false) { continue; }
 
             projects.Add(new ProjectInfo(projectPath));
         }
@@ -121,22 +157,10 @@ public static class SolutionErrorDocumentationGenerator {
     }
 
     private static bool? TryReadOptInFromProjectFile(string projectPath, string optInPropertyName) {
-        try {
-            ProjectRootElement? root = ProjectRootElement.Open(projectPath);
-            if (root is null) { return null; }
+        string? value = ReadMsBuildProperty(projectPath, optInPropertyName);
 
-            foreach (ProjectPropertyGroupElement group in root.PropertyGroups) {
-                foreach (ProjectPropertyElement prop in group.Properties) {
-                    if (string.Equals(prop.Name, optInPropertyName, StringComparison.OrdinalIgnoreCase)) {
-                        return IsTrue(prop.Value);
-                    }
-                }
-            }
-
-            return null;
-        } catch {
-            return null;
-        }
+        // Absent property -> no opinion (null); present (even empty) -> its truthiness.
+        return value is null ? null : IsTrue(value);
     }
 
     private static string? ResolveTargetPath(string projectPath, SolutionGenerationOptions options) {
@@ -152,38 +176,39 @@ public static class SolutionErrorDocumentationGenerator {
     private static string ResolveTargetFrameworkMoniker(string projectPath, SolutionGenerationOptions options) {
         if (string.IsNullOrWhiteSpace(options.TargetFramework) is false) { return options.TargetFramework!; }
 
-        ProjectRootElement? root = ProjectRootElement.Open(projectPath);
-        if (root is null) { throw new SolutionDocumentationGenerationException($"Unable to open project file '{projectPath}'."); }
-
-        string? single = ReadMsBuildProperty(root, "TargetFramework");
+        string? single = ReadMsBuildProperty(projectPath, "TargetFramework");
         if (string.IsNullOrWhiteSpace(single) is false) { return single; }
 
-        string? multi = ReadMsBuildProperty(root, "TargetFrameworks");
+        string? multi = ReadMsBuildProperty(projectPath, "TargetFrameworks");
         if (string.IsNullOrWhiteSpace(multi)) {
-            // If missing, it's often legacy full framework projects. Let MSBuild decide.
-            // In that case, we pass an empty TFM and let dotnet msbuild resolve it.
+            // Missing on legacy full-framework projects; pass an empty TFM and let "dotnet msbuild" resolve it.
             return string.Empty;
         }
 
-        // Take first framework as default policy for V1.
-        string first = multi
-                      .Split([';'], StringSplitOptions.RemoveEmptyEntries)
-                      .Select(x => x.Trim())
-                      .FirstOrDefault() ?? string.Empty;
-
-        return first;
+        // Take the first framework as the default policy for V1.
+        return multi
+              .Split([';'], StringSplitOptions.RemoveEmptyEntries)
+              .Select(x => x.Trim())
+              .FirstOrDefault() ?? string.Empty;
     }
 
-    private static string? ReadMsBuildProperty(ProjectRootElement root, string propertyName) {
-        foreach (ProjectPropertyGroupElement group in root.PropertyGroups) {
-            foreach (ProjectPropertyElement prop in group.Properties) {
-                if (string.Equals(prop.Name, propertyName, StringComparison.OrdinalIgnoreCase)) {
-                    return prop.Value;
-                }
-            }
-        }
+    private static string? ReadMsBuildProperty(string projectPath, string propertyName) {
+        // Read a raw, unevaluated property from the project XML. This mirrors what the previous MSBuild-object-model
+        // reader saw (ProjectRootElement.Open does not evaluate imports/conditions either), without the dependency.
+        // Matching on the element's local name handles both SDK-style (no namespace) and legacy MSBuild-namespaced files.
+        try {
+            XDocument document = XDocument.Load(projectPath);
 
-        return null;
+            return document
+                  .Descendants()
+                  .Where(element => string.Equals(element.Name.LocalName, "PropertyGroup", StringComparison.OrdinalIgnoreCase))
+                  .SelectMany(propertyGroup => propertyGroup.Elements())
+                  .Where(property => string.Equals(property.Name.LocalName, propertyName, StringComparison.OrdinalIgnoreCase))
+                  .Select(property => property.Value)
+                  .FirstOrDefault();
+        } catch {
+            return null;
+        }
     }
 
     private static void DotNetBuild(string solutionPath, SolutionGenerationOptions options) {
@@ -266,7 +291,7 @@ public static class SolutionErrorDocumentationGenerator {
         return afterName.Trim();
     }
 
-    private static ProcessResult RunProcess(string fileName, string arguments, string workingDirectory, IGenerationLogger logger) {
+    private static ProcessResult RunProcess(string fileName, string arguments, string workingDirectory, IGenerationLogger logger, TimeSpan? timeout = null) {
         ProcessStartInfo psi = new() {
             FileName               = fileName,
             Arguments              = arguments,
@@ -303,6 +328,22 @@ public static class SolutionErrorDocumentationGenerator {
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
 
+        if (timeout is { } limit) {
+            if (process.WaitForExit((int)limit.TotalMilliseconds) is false) {
+                try {
+                    process.Kill(entireProcessTree: true);
+                } catch {
+                    // The process may already have exited between the timeout and the kill.
+                }
+
+                process.WaitForExit();
+                logger.Error($"Process '{fileName}' timed out after {limit} and was killed.");
+
+                return new ProcessResult(-1, stdout.ToString(), stderr.ToString());
+            }
+        }
+
+        // A final no-argument wait blocks until the async stdout/stderr handlers have flushed.
         process.WaitForExit();
 
         return new ProcessResult(process.ExitCode, stdout.ToString(), stderr.ToString());
@@ -325,14 +366,15 @@ public static class SolutionErrorDocumentationGenerator {
     }
 
     private static IEnumerable<ErrorDocumentation> ExtractFromAssemblies(IReadOnlyList<string> assemblyPaths, SolutionGenerationOptions options) {
+        string workerAssemblyPath = ResolveWorkerAssemblyPath(options);
+
         List<ErrorDocumentation> results = new();
 
         foreach (string assemblyPath in assemblyPaths) {
-            // NOTE: Assembly.LoadFrom uses the default (non-collectible) load context. Swapping this for an isolated,
-            // unloadable strategy (a collectible AssemblyLoadContext or an out-of-process worker) is tracked as a
-            // separate GenDoc concern; the extraction itself already tolerates per-factory failures.
-            Assembly                           assembly   = Assembly.LoadFrom(assemblyPath);
-            ErrorDocumentationExtractionResult extraction = AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(assembly);
+            // Each assembly is documented in a dedicated worker process, launched against that assembly's own
+            // dependency closure (dotnet exec --depsfile ...). This gives a fresh static registry per assembly, binds to
+            // the target's own FirstClassErrors version, and isolates a crashing or hanging factory from the generator.
+            ErrorDocumentationExtractionResult extraction = RunWorker(workerAssemblyPath, assemblyPath, options);
 
             foreach (ErrorDocumentationExtractionFailure failure in extraction.Failures) {
                 options.Logger.Error($"Documentation extraction issue in '{assemblyPath}': {failure}");
@@ -347,6 +389,82 @@ public static class SolutionErrorDocumentationGenerator {
               .GroupBy(x => x.Code, StringComparer.OrdinalIgnoreCase)
               .Select(g => g.First())
               .OrderBy(x => x.Code, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static string ResolveWorkerAssemblyPath(SolutionGenerationOptions options) {
+        if (string.IsNullOrWhiteSpace(options.WorkerAssemblyPath) is false) {
+            if (File.Exists(options.WorkerAssemblyPath) is false) {
+                throw new SolutionDocumentationGenerationException($"The configured documentation worker was not found at '{options.WorkerAssemblyPath}'.");
+            }
+
+            return options.WorkerAssemblyPath!;
+        }
+
+        // Convention: the worker is deployed next to the tool (copied into its output directory).
+        string candidate = Path.Combine(AppContext.BaseDirectory, "FirstClassErrors.GenDoc.Worker.dll");
+        if (File.Exists(candidate)) { return candidate; }
+
+        throw new SolutionDocumentationGenerationException(
+            "The documentation worker 'FirstClassErrors.GenDoc.Worker.dll' could not be located. Set " +
+            $"{nameof(SolutionGenerationOptions)}.{nameof(SolutionGenerationOptions.WorkerAssemblyPath)}, or ensure the worker is deployed next to the tool.");
+    }
+
+    private static ErrorDocumentationExtractionResult RunWorker(string workerAssemblyPath, string targetAssemblyPath, SolutionGenerationOptions options) {
+        string outputPath      = Path.Combine(Path.GetTempPath(), $"first-class-errors-doc-{Guid.NewGuid():N}.json");
+        string workerDirectory = Path.GetDirectoryName(workerAssemblyPath) ?? AppContext.BaseDirectory;
+
+        try {
+            string depsFile = Path.ChangeExtension(targetAssemblyPath, ".deps.json");
+
+            // Run the worker on its own runtimeconfig (RollForward=Major) but against the TARGET's dependency graph, so
+            // the target and its own FirstClassErrors resolve from the target's deps.json. The worker's own directory is
+            // added as a fallback probing path (consulted only for assemblies the target's deps.json does not provide).
+            StringBuilder args = new();
+            args.Append("exec ");
+            if (File.Exists(depsFile)) {
+                args.Append("--depsfile \"").Append(depsFile).Append("\" ");
+            }
+
+            args.Append("--additionalprobingpath \"").Append(workerDirectory).Append("\" ");
+            args.Append('"').Append(workerAssemblyPath).Append("\" ");
+            args.Append('"').Append(targetAssemblyPath).Append("\" ");
+            args.Append('"').Append(outputPath).Append('"');
+
+            ProcessResult result = RunProcess("dotnet", args.ToString(), workerDirectory, options.Logger, options.WorkerTimeout);
+
+            if (result.ExitCode != 0) {
+                HandleFailure(options, $"The documentation worker failed (exit code {result.ExitCode}) for '{targetAssemblyPath}'.\n{result.StandardError}");
+
+                return new ErrorDocumentationExtractionResult([], []);
+            }
+
+            if (File.Exists(outputPath) is false) {
+                HandleFailure(options, $"The documentation worker produced no output for '{targetAssemblyPath}'.");
+
+                return new ErrorDocumentationExtractionResult([], []);
+            }
+
+            string                              json       = File.ReadAllText(outputPath);
+            ErrorDocumentationExtractionResult? extraction = JsonSerializer.Deserialize<ErrorDocumentationExtractionResult>(json);
+
+            if (extraction is null) {
+                HandleFailure(options, $"The documentation worker produced unreadable output for '{targetAssemblyPath}'.");
+
+                return new ErrorDocumentationExtractionResult([], []);
+            }
+
+            return extraction;
+        } catch (Exception ex) when (ex is not SolutionDocumentationGenerationException) {
+            HandleFailure(options, $"Failed to run the documentation worker for '{targetAssemblyPath}'.", ex);
+
+            return new ErrorDocumentationExtractionResult([], []);
+        } finally {
+            try {
+                if (File.Exists(outputPath)) { File.Delete(outputPath); }
+            } catch {
+                // Best-effort cleanup of the temporary catalog file.
+            }
+        }
     }
 
     #endregion

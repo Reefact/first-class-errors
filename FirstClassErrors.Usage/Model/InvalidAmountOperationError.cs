@@ -9,7 +9,8 @@ namespace FirstClassErrors.Usage.Model;
 /// <summary>
 ///     Provides factory methods for creating errors related to invalid operations on monetary amounts.
 /// </summary>
-[ProvidesErrorsFor(nameof(Amount))]
+[ProvidesErrorsFor(nameof(Amount),
+                   Description = "Errors raised when performing operations that combine monetary Amount values.")]
 public static class InvalidAmountOperationError {
 
     #region Statics members declarations

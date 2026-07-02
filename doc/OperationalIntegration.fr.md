@@ -9,8 +9,8 @@ La documentation des erreurs doit être générée automatiquement pendant la CI
 Étape typique dans un pipeline :
 
 1. Compiler la solution  
-2. Exécuter l’outil d’extraction de la documentation  
-3. Générer le catalogue d’erreurs (HTML/Markdown)  
+2. Exécuter le générateur de documentation `fce` (`fce generate`)  
+3. Générer le catalogue d’erreurs (Markdown ou JSON)  
 4. Le publier comme artefact du pipeline ou le déployer sur un portail documentaire  
 
 Cela garantit que la documentation correspond toujours à la version du système déployée. Aucune mise à jour manuelle n’est nécessaire et aucune dérive ne peut apparaître.

@@ -7,7 +7,8 @@ using FirstClassErrors.Usage.Utils;
 
 namespace FirstClassErrors.Usage.Infrastructure.Adapters;
 
-[ProvidesErrorsFor(nameof(BankTransactionFileValidator))]
+[ProvidesErrorsFor(nameof(BankTransactionFileValidator),
+                   Description = "Errors raised while validating an uploaded bank statement file against its declared metadata (statement period and totals).")]
 public static class NonCompliantBankTransactionFileError {
 
     #region Statics members declarations

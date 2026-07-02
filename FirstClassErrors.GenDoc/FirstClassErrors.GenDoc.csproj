@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" Version="18.7.1" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
   </ItemGroup>
 

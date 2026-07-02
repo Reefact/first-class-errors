@@ -9,7 +9,8 @@ namespace FirstClassErrors.Usage.Model;
 /// <summary>
 ///     Represents a domain error produced when an attempt is made to create a temperature with an invalid value.
 /// </summary>
-[ProvidesErrorsFor(nameof(Temperature))]
+[ProvidesErrorsFor(nameof(Temperature),
+                   Description = "Errors raised when constructing a Temperature value from an out-of-range input.")]
 public static class InvalidTemperatureError {
 
     #region Statics members declarations

@@ -5,10 +5,47 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- The project keeps its name; only the produced executable is called "fce". -->
+    <AssemblyName>fce</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FirstClassErrors.GenDoc\FirstClassErrors.GenDoc.csproj" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.55.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
+    <ProjectReference Include="..\FirstClassErrors.GenDoc\FirstClassErrors.GenDoc.csproj" />
+
+    <!-- The worker is NOT referenced as an assembly: the tool spawns it as a separate process (it must load target
+         assemblies in their own dependency closure). This reference only forces the worker to be built; the targets
+         below copy its output next to the CLI so the tool works out of the box. -->
+    <ProjectReference Include="..\FirstClassErrors.GenDoc.Worker\FirstClassErrors.GenDoc.Worker.csproj"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <!-- Bundle the documentation worker alongside the CLI. The worker targets the same framework as the CLI, so its
+       build output sits under the sibling bin folder for the current Configuration/TargetFramework. The worker is
+       already built (via the ProjectReference above) by the time these run. Validate locally with `dotnet build`
+       and `dotnet publish`. -->
+  <Target Name="_CopyDocumentationWorker" AfterTargets="Build">
+    <ItemGroup>
+      <_DocumentationWorkerFiles Include="$(MSBuildThisFileDirectory)..\FirstClassErrors.GenDoc.Worker\bin\$(Configuration)\$(TargetFramework)\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_DocumentationWorkerFiles)"
+          DestinationFiles="@(_DocumentationWorkerFiles->'$(OutDir)%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true"
+          OverwriteReadOnlyFiles="true" />
+  </Target>
+
+  <Target Name="_PublishDocumentationWorker" AfterTargets="Publish">
+    <ItemGroup>
+      <_DocumentationWorkerFiles Include="$(MSBuildThisFileDirectory)..\FirstClassErrors.GenDoc.Worker\bin\$(Configuration)\$(TargetFramework)\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_DocumentationWorkerFiles)"
+          DestinationFiles="@(_DocumentationWorkerFiles->'$(PublishDir)%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true"
+          OverwriteReadOnlyFiles="true" />
+  </Target>
 
 </Project>

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -15,6 +15,7 @@
     <PackageReference Include="JetBrains.Annotations" Version="2026.2.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
     <PackageReference Include="NFluent" Version="3.1.0" />
+    <PackageReference Include="Verify.XunitV3" Version="31.20.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -23,7 +24,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
+    <ProjectReference Include="..\FirstClassErrors.GenDoc\FirstClassErrors.GenDoc.csproj" />
+    <ProjectReference Include="..\FirstClassErrors.Usage\FirstClassErrors.Usage.csproj" />
   </ItemGroup>
 
   <ItemGroup>

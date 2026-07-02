@@ -342,12 +342,12 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
 
         ErrorContextEntryDocumentation userIdEntry = doc.Context.Single(x => x.Key == "UserId");
         Check.That(userIdEntry.Description).IsEqualTo("User identifier.");
-        Check.That(userIdEntry.ValueType).IsEqualTo(typeof(string));
+        Check.That(userIdEntry.ValueType).IsEqualTo("System.String");
         Check.That(userIdEntry.ExampleValues.OrderBy(x => x)).ContainsExactly("u-1", "u-2");
 
         ErrorContextEntryDocumentation correlationEntry = doc.Context.Single(x => x.Key == "CorrelationId");
         Check.That(correlationEntry.Description).IsEqualTo("Correlation identifier.");
-        Check.That(correlationEntry.ValueType).IsEqualTo(typeof(string));
+        Check.That(correlationEntry.ValueType).IsEqualTo("System.String");
         Check.That(correlationEntry.ExampleValues).ContainsExactly("c-1");
     }
 

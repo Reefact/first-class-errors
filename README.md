@@ -110,7 +110,7 @@ The library includes a mechanism to scan assemblies and extract all declared err
 
 This enables:
 
-* Markdown or HTML error catalogs
+* Markdown or JSON error catalogs (or any custom format via a renderer)
 * support-oriented documentation
 * living documentation generated from code
 
@@ -192,5 +192,6 @@ See the full documentation:
 - [Best Practices](doc/BestPractices.en.md)
 - [CI/CD and Operational Integration](doc/OperationalIntegration.en.md)
 - [Architecture of the Documentation Pipeline](doc/ArchitectureOfTheDocumentationPipeline.en.md)
+- [Writing a custom renderer](doc/WritingACustomRenderer.en.md)
 - [Comparison with error-handling libraries](doc/ComparisonWithOtherLibraries.en.md)
 - [FAQ](doc/FAQ.en.md)

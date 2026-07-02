@@ -1,179 +1,206 @@
-﻿#region Usings declarations
+#region Usings declarations
 
 using System.Reflection;
 
 using FirstClassErrors.GenDoc;
-using FirstClassErrors.Usage.Model;
+
+using JetBrains.Annotations;
 
 using NFluent;
 
 #endregion
 
-namespace FirstClassErrors.UnitTests {
+namespace FirstClassErrors.UnitTests;
 
-    public class AssemblyErrorDocumentationReaderTests {
+// The reader scans a whole assembly, so the fixtures below (declared at the bottom of this file) act as its input:
+// running it against this test assembly exercises the happy path, the deduplication, and every failure branch in one
+// place. Assertions target the fixtures by their unique source / member names rather than by absolute counts, so they
+// stay stable regardless of the other fixtures present in the assembly.
+[TestSubject(typeof(AssemblyErrorDocumentationReader))]
+public sealed class AssemblyErrorDocumentationReaderTests {
 
-        [Fact(DisplayName = "The reader extracts the documented errors of an assembly, keyed by their error code.")]
-        public void TheReaderExtractsTheDocumentedErrorsOfAnAssembly() {
-            // Setup
-            Assembly assembly = Assembly.GetAssembly(typeof(Temperature))!;
+    #region Statics members declarations
 
-            // Exercise
-            ErrorDocumentationExtractionResult result = AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(assembly);
+    private static ErrorDocumentationExtractionResult Extract() {
+        return AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(Assembly.GetExecutingAssembly());
+    }
 
-            // Verify
-            Check.That(result.Failures).CountIs(0);
+    private static ErrorDocumentation? DocumentationWithCode(ErrorDocumentationExtractionResult result, string code) {
+        return result.Documentation.FirstOrDefault(doc => string.Equals(doc.Code, code, StringComparison.Ordinal));
+    }
 
-            ErrorDocumentation[] errorDocumentations = result.Documentation.ToArray();
+    #endregion
 
-            Check.That(errorDocumentations).CountIs(4);
+    [Fact(DisplayName = "The reader rejects a null assembly.")]
+    public void TheReaderRejectsANullAssembly() {
+        // Exercise & verify
+        Check.ThatCode(() => AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(null!))
+             .Throws<ArgumentNullException>();
+    }
 
-            Dictionary<string, ErrorDocumentation> byCode = errorDocumentations.ToDictionary(doc => doc.Code!, StringComparer.Ordinal);
+    [Fact(DisplayName = "The reader wires the source and its description onto each extracted document.")]
+    public void TheReaderWiresTheSourceAndItsDescriptionOntoEachDocument() {
+        // Exercise
+        ErrorDocumentationExtractionResult result = Extract();
 
-            ErrorDocumentation amountCurrencyMismatch                          = byCode["AMOUNT_CURRENCY_MISMATCH"];
-            ErrorDocumentation bankTransactionFileDateOutOfStatementPeriod     = byCode["BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD"];
-            ErrorDocumentation bankTransactionFileStatementTotalAmountMismatch = byCode["BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH"];
-            ErrorDocumentation temperatureBelowAbsoluteZero                    = byCode["TEMPERATURE_BELOW_ABSOLUTE_ZERO"];
+        // Verify
+        ErrorDocumentation? happy = DocumentationWithCode(result, "READER_HAPPY");
+        Check.That(happy).IsNotNull();
+        Check.That(happy!.Title).IsEqualTo("Happy");
+        Check.That(happy.Source).IsEqualTo("ReaderHappySource");
+        Check.That(happy.SourceDescription).IsEqualTo("Errors from the happy reader fixture.");
+    }
 
-            // ------------------------------------------------------------------
-            // AMOUNT_CURRENCY_MISMATCH
-            // ------------------------------------------------------------------
+    [Fact(DisplayName = "A documentation factory that throws is recorded as a failure instead of aborting the scan.")]
+    public void ADocumentationFactoryThatThrowsIsRecordedAsAFailure() {
+        // Exercise
+        ErrorDocumentationExtractionResult result = Extract();
 
-            Check.That(amountCurrencyMismatch.Code).IsEqualTo("AMOUNT_CURRENCY_MISMATCH");
-            Check.That(amountCurrencyMismatch.Title).IsEqualTo("Amount currency mismatch");
-            Check.That(amountCurrencyMismatch.Explanation).IsEqualTo("This error occurs when trying to use multiple amounts together in an operation while they are expressed in different currencies.");
-            Check.That(amountCurrencyMismatch.BusinessRule).IsEqualTo("All monetary operations must involve amounts expressed in the same currency.");
-            Check.That(amountCurrencyMismatch.Source).IsEqualTo("Amount");
+        // Verify: the throwing fixture is surfaced as a failure...
+        ErrorDocumentationExtractionFailure? failure =
+            result.Failures.FirstOrDefault(f => f.MemberName == "ThrowingDoc");
 
-            Check.That(amountCurrencyMismatch.Diagnostics).CountIs(2);
+        Check.That(failure).IsNotNull();
+        Check.That(failure!.TypeName).Contains("ReaderThrowingFixture");
+        Check.That(failure.Message).Contains("threw");
+        Check.That(failure.ExceptionDetail).Contains("reader-boom");
 
-            Check.That(amountCurrencyMismatch.Diagnostics[0].PossibleCause).IsEqualTo("Amounts were used in a monetary operation without having been converted to the same currency.");
-            Check.That(amountCurrencyMismatch.Diagnostics[0].Origin).IsEqualTo(ErrorOrigin.Internal);
-            Check.That(amountCurrencyMismatch.Diagnostics[0].AnalysisHint).IsEqualTo("Verify whether all amounts involved in the operation were converted to a common currency before being used together.");
+        // ...and the reader still reads the healthy fixtures, i.e. the scan is not aborted.
+        Check.That(result.HasFailures).IsTrue();
+        Check.That(DocumentationWithCode(result, "READER_HAPPY")).IsNotNull();
+    }
 
-            Check.That(amountCurrencyMismatch.Diagnostics[1].PossibleCause).IsEqualTo("Amounts expected to be expressed in the same currency were provided with different currencies.");
-            Check.That(amountCurrencyMismatch.Diagnostics[1].Origin).IsEqualTo(ErrorOrigin.InternalOrExternal);
-            Check.That(amountCurrencyMismatch.Diagnostics[1].AnalysisHint).IsEqualTo("Check the currencies associated with each amount and confirm whether a common currency was expected for this operation.");
+    [Fact(DisplayName = "An unresolvable [DocumentedBy] reference is recorded as a failure.")]
+    public void AnUnresolvableDocumentedByReferenceIsRecordedAsAFailure() {
+        // Exercise
+        ErrorDocumentationExtractionResult result = Extract();
 
-            Check.That(amountCurrencyMismatch.Examples).CountIs(1);
+        // Verify
+        ErrorDocumentationExtractionFailure? failure =
+            result.Failures.FirstOrDefault(f => f.MemberName == "NoSuchReaderMethod");
 
-            Check.That(amountCurrencyMismatch.Examples[0].DetailedMessage).IsNotNull();
-            Check.That(amountCurrencyMismatch.Examples[0].DetailedMessage).IsEqualTo("Failed to perform the monetary operation because the involved amounts are expressed in different currencies: 127.33 EUR and 57689 USD.");
-            Check.That(amountCurrencyMismatch.Examples[0].ShortMessage).IsEqualTo("Currency mismatch");
+        Check.That(failure).IsNotNull();
+        Check.That(failure!.TypeName).Contains("ReaderUnresolvedFixture");
+        Check.That(failure.Message).Contains("No parameterless static method");
+    }
 
-            // ------------------------------------------------------------------
-            // BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD
-            // ------------------------------------------------------------------
+    [Fact(DisplayName = "A documentation factory that returns the wrong type is recorded as a failure.")]
+    public void ADocumentationFactoryReturningTheWrongTypeIsRecordedAsAFailure() {
+        // Exercise
+        ErrorDocumentationExtractionResult result = Extract();
 
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Code).IsEqualTo("BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD");
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Title).IsEqualTo("Transaction date outside statement period");
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Explanation).IsEqualTo("This error occurs when trying to validate a bank statement file that contains one or more transactions dated outside the statement period.");
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.BusinessRule).IsEqualTo("All transactions must occur within the statement period.");
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Source).IsEqualTo("BankTransactionFileValidator");
+        // Verify
+        ErrorDocumentationExtractionFailure? failure =
+            result.Failures.FirstOrDefault(f => f.MemberName == "WrongReturnDoc");
 
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Diagnostics).CountIs(4);
+        Check.That(failure).IsNotNull();
+        Check.That(failure!.TypeName).Contains("ReaderWrongReturnFixture");
+        Check.That(failure.Message).Contains("did not return an ErrorDocumentation");
+    }
 
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Diagnostics[0].PossibleCause).IsEqualTo("The transaction date provided in the statement file is incorrect or inconsistent with the actual transaction date.");
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Diagnostics[0].Origin).IsEqualTo(ErrorOrigin.External);
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Diagnostics[0].AnalysisHint).IsEqualTo("Verify the transaction date present in the input file and confirm its consistency with the actual transaction timeline.");
+    [Fact(DisplayName = "Several factories sharing one error code collapse to a single catalog entry.")]
+    public void SeveralFactoriesSharingOneErrorCodeCollapseToASingleEntry() {
+        // Exercise
+        ErrorDocumentationExtractionResult result = Extract();
 
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Diagnostics[1].PossibleCause).IsEqualTo("The statement period defined in the file does not match the actual coverage period of the transactions.");
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Diagnostics[1].Origin).IsEqualTo(ErrorOrigin.External);
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Diagnostics[1].AnalysisHint).IsEqualTo("Check whether the statement start and end dates in the file align with the period covered by the transactions.");
+        // Verify
+        int count = result.Documentation.Count(doc => string.Equals(doc.Code, "READER_DUP", StringComparison.Ordinal));
+        Check.That(count).IsEqualTo(1);
+    }
 
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Diagnostics[2].PossibleCause).IsEqualTo("The transaction was posted after the statement was generated but was mistakenly included in the file.");
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Diagnostics[2].Origin).IsEqualTo(ErrorOrigin.InternalOrExternal);
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Diagnostics[2].AnalysisHint).IsEqualTo("Determine whether late-posted transactions were included in the statement generation process.");
+    [Fact(DisplayName = "The extracted documentation is ordered by error code, case-insensitively.")]
+    public void TheExtractedDocumentationIsOrderedByErrorCode() {
+        // Exercise
+        ErrorDocumentationExtractionResult result = Extract();
 
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Diagnostics[3].PossibleCause).IsEqualTo("An internal processing error caused the transaction date to be shifted during data transformation or import.");
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Diagnostics[3].Origin).IsEqualTo(ErrorOrigin.Internal);
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Diagnostics[3].AnalysisHint).IsEqualTo("Examine the data import and transformation stages to confirm that transaction dates are preserved without alteration.");
+        // Verify: the surviving documents are sorted by Code (the reader orders the deduplicated catalog).
+        string[] codes = result.Documentation.Select(doc => doc.Code ?? string.Empty).ToArray();
+        string[] sorted = codes.OrderBy(code => code, StringComparer.OrdinalIgnoreCase).ToArray();
+        Check.That(codes).ContainsExactly(sorted);
+    }
 
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Examples).CountIs(1);
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Examples[0].DetailedMessage).Contains("Transaction dated");
-            Check.That(bankTransactionFileDateOutOfStatementPeriod.Examples[0].ShortMessage).IsEqualTo("Transaction date is outside the statement period.");
+}
 
-            // ------------------------------------------------------------------
-            // BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH
-            // ------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Fixtures consumed by the reader (see the note on the test class above).
+// ---------------------------------------------------------------------------
 
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Code).IsEqualTo("BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH");
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Title).IsEqualTo("Statement total amount mismatch");
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Explanation).IsEqualTo("This error occurs when trying to validate a bank statement file whose declared total amount does not match the sum of the individual transaction amounts.");
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.BusinessRule).IsEqualTo("The statement total amount must equal the sum of all transaction amounts included in the statement.");
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Source).IsEqualTo("BankTransactionFileValidator");
+[ProvidesErrorsFor("ReaderHappySource", Description = "Errors from the happy reader fixture.")]
+[UsedImplicitly]
+public static class ReaderHappyFixture {
 
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Diagnostics).CountIs(4);
+    [DocumentedBy(nameof(HappyDoc))]
+    public static object HappyFactory() {
+        return new object();
+    }
 
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Diagnostics[0].PossibleCause).IsEqualTo("The total amount declared in the statement file does not match the sum of the individual transaction amounts.");
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Diagnostics[0].Origin).IsEqualTo(ErrorOrigin.External);
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Diagnostics[0].AnalysisHint).IsEqualTo("Verify the declared total amount in the file and compare it with the sum of all transaction amounts.");
+    public static ErrorDocumentation HappyDoc() {
+        return new ErrorDocumentation { Code = "READER_HAPPY", Title = "Happy" };
+    }
 
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Diagnostics[1].PossibleCause).IsEqualTo("One or more transactions are missing or duplicated in the statement file.");
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Diagnostics[1].Origin).IsEqualTo(ErrorOrigin.External);
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Diagnostics[1].AnalysisHint).IsEqualTo("Check whether all expected transactions are present exactly once in the statement file.");
+}
 
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Diagnostics[2].PossibleCause).IsEqualTo("A rounding or precision error occurred when calculating the statement total amount.");
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Diagnostics[2].Origin).IsEqualTo(ErrorOrigin.InternalOrExternal);
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Diagnostics[2].AnalysisHint).IsEqualTo("Examine how rounding and precision rules were applied when computing the statement total.");
+[ProvidesErrorsFor("ReaderThrowingSource")]
+[UsedImplicitly]
+public static class ReaderThrowingFixture {
 
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Diagnostics[3].PossibleCause).IsEqualTo("An internal processing error altered transaction amounts during file parsing or transformation.");
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Diagnostics[3].Origin).IsEqualTo(ErrorOrigin.Internal);
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Diagnostics[3].AnalysisHint).IsEqualTo("Inspect the file parsing and transformation stages to confirm that transaction amounts remain unchanged.");
+    [DocumentedBy(nameof(ThrowingDoc))]
+    public static object ThrowingFactory() {
+        return new object();
+    }
 
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Examples).CountIs(1);
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Examples[0].DetailedMessage).Contains("declared statement total amount");
-            Check.That(bankTransactionFileStatementTotalAmountMismatch.Examples[0].ShortMessage).IsEqualTo("Statement total amount mismatch.");
+    public static ErrorDocumentation ThrowingDoc() {
+        throw new InvalidOperationException("reader-boom");
+    }
 
-            // ------------------------------------------------------------------
-            // TEMPERATURE_BELOW_ABSOLUTE_ZERO
-            // ------------------------------------------------------------------
+}
 
-            Check.That(temperatureBelowAbsoluteZero.Code).IsEqualTo("TEMPERATURE_BELOW_ABSOLUTE_ZERO");
-            Check.That(temperatureBelowAbsoluteZero.Title).IsEqualTo("Temperature below absolute zero");
-            Check.That(temperatureBelowAbsoluteZero.Explanation).IsEqualTo("This error occurs when trying to instantiate a temperature with a value that is below absolute zero.");
-            Check.That(temperatureBelowAbsoluteZero.BusinessRule).IsEqualTo("Temperature cannot go below absolute zero because absolute zero is the point where particles have minimum possible energy.");
-            Check.That(temperatureBelowAbsoluteZero.Source).IsEqualTo("Temperature");
+[ProvidesErrorsFor("ReaderUnresolvedSource")]
+[UsedImplicitly]
+public static class ReaderUnresolvedFixture {
 
-            // Diagnostics
+    [DocumentedBy("NoSuchReaderMethod")]
+    public static object UnresolvedFactory() {
+        return new object();
+    }
 
-            Check.That(temperatureBelowAbsoluteZero.Diagnostics).CountIs(5);
+}
 
-            // 1
-            Check.That(temperatureBelowAbsoluteZero.Diagnostics[0].PossibleCause).IsEqualTo("The value entered manually by a user is invalid.");
-            Check.That(temperatureBelowAbsoluteZero.Diagnostics[0].Origin).IsEqualTo(ErrorOrigin.External);
-            Check.That(temperatureBelowAbsoluteZero.Diagnostics[0].AnalysisHint).IsEqualTo("Verify the value entered by the user and assess its compliance with domain rules.");
+[ProvidesErrorsFor("ReaderWrongReturnSource")]
+[UsedImplicitly]
+public static class ReaderWrongReturnFixture {
 
-            // 2
-            Check.That(temperatureBelowAbsoluteZero.Diagnostics[1].PossibleCause).IsEqualTo("The value received from an external system (API, message, etc.) is invalid.");
-            Check.That(temperatureBelowAbsoluteZero.Diagnostics[1].Origin).IsEqualTo(ErrorOrigin.External);
-            Check.That(temperatureBelowAbsoluteZero.Diagnostics[1].AnalysisHint).IsEqualTo("Check the data provided by the upstream system and evaluate its validity against domain rules.");
+    [DocumentedBy(nameof(WrongReturnDoc))]
+    public static object WrongReturnFactory() {
+        return new object();
+    }
 
-            // 3
-            Check.That(temperatureBelowAbsoluteZero.Diagnostics[2].PossibleCause).IsEqualTo("The value was loaded from corrupted or outdated persisted data.");
-            Check.That(temperatureBelowAbsoluteZero.Diagnostics[2].Origin).IsEqualTo(ErrorOrigin.External);
-            Check.That(temperatureBelowAbsoluteZero.Diagnostics[2].AnalysisHint).IsEqualTo("Examine the persisted data source to determine whether stored values comply with current domain rules.");
+    public static string WrongReturnDoc() {
+        return "not an ErrorDocumentation";
+    }
 
-            // 4
-            Check.That(temperatureBelowAbsoluteZero.Diagnostics[3].PossibleCause).IsEqualTo("The value was computed internally without using domain-safe methods.");
-            Check.That(temperatureBelowAbsoluteZero.Diagnostics[3].Origin).IsEqualTo(ErrorOrigin.Internal);
-            Check.That(temperatureBelowAbsoluteZero.Diagnostics[3].AnalysisHint).IsEqualTo("Inspect the internal computation logic to confirm that domain invariants are preserved.");
+}
 
-            // 5
-            Check.That(temperatureBelowAbsoluteZero.Diagnostics[4].PossibleCause).IsEqualTo("The value originates from system configuration or defaults that are incorrect or outdated.");
-            Check.That(temperatureBelowAbsoluteZero.Diagnostics[4].Origin).IsEqualTo(ErrorOrigin.External);
-            Check.That(temperatureBelowAbsoluteZero.Diagnostics[4].AnalysisHint).IsEqualTo("Review the relevant configuration or default parameters to assess their compliance with domain rules.");
+[ProvidesErrorsFor("ReaderDupSource")]
+[UsedImplicitly]
+public static class ReaderDuplicateCodeFixture {
 
-            // Examples
+    [DocumentedBy(nameof(DupDocA))]
+    public static object DupFactoryA() {
+        return new object();
+    }
 
-            Check.That(temperatureBelowAbsoluteZero.Examples).CountIs(2);
+    [DocumentedBy(nameof(DupDocB))]
+    public static object DupFactoryB() {
+        return new object();
+    }
 
-            Check.That(temperatureBelowAbsoluteZero.Examples[0].DetailedMessage).Contains("Failed to instantiate temperature");
-            Check.That(temperatureBelowAbsoluteZero.Examples[0].ShortMessage).IsEqualTo("Temperature is below absolute zero.");
-            Check.That(temperatureBelowAbsoluteZero.Examples[1].DetailedMessage).Contains("Failed to instantiate temperature");
-            Check.That(temperatureBelowAbsoluteZero.Examples[1].ShortMessage).IsEqualTo("Temperature is below absolute zero.");
-        }
+    public static ErrorDocumentation DupDocA() {
+        return new ErrorDocumentation { Code = "READER_DUP", Title = "First" };
+    }
 
+    public static ErrorDocumentation DupDocB() {
+        return new ErrorDocumentation { Code = "READER_DUP", Title = "Second" };
     }
 
 }
