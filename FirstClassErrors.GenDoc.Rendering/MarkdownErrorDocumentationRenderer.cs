@@ -32,6 +32,9 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
     #endregion
 
     /// <inheritdoc />
+    public string Format => "markdown";
+
+    /// <inheritdoc />
     public IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog) {
         if (catalog is null) { throw new ArgumentNullException(nameof(catalog)); }
 

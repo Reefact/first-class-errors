@@ -27,6 +27,9 @@ public sealed class JsonErrorDocumentationRenderer : IErrorDocumentationRenderer
     #endregion
 
     /// <inheritdoc />
+    public string Format => "json";
+
+    /// <inheritdoc />
     public IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog) {
         if (catalog is null) { throw new ArgumentNullException(nameof(catalog)); }
 

@@ -91,8 +91,8 @@ internal sealed class GenerateSettings : CommandSettings {
         }
 
         string format = NormalizedFormat();
-        if (format is not ("json" or "markdown")) {
-            return ValidationResult.Error($"Unsupported --format '{Format}'. Supported formats: json, markdown.");
+        if (RendererCatalog.Supports(format) is false) {
+            return ValidationResult.Error($"Unsupported --format '{Format}'. Supported formats: {string.Join(", ", RendererCatalog.Formats)}.");
         }
 
         string layout = NormalizedLayout();

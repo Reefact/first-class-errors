@@ -35,7 +35,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
                     ? SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(settings.SolutionPath!, options)
                     : SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies(settings.AssemblyPaths, options);
 
-            IErrorDocumentationRenderer renderer = CreateRenderer(settings);
+            IErrorDocumentationRenderer renderer = RendererCatalog.Create(settings);
 
             // The catalog is enumerated here (by the renderer), so generation failures surface as a clean error.
             IReadOnlyList<RenderedDocument> documents = renderer.Render(catalog);
@@ -52,15 +52,6 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
     }
 
     #region Helpers
-
-    private static IErrorDocumentationRenderer CreateRenderer(GenerateSettings settings) {
-        return settings.NormalizedFormat() switch {
-            "json"     => new JsonErrorDocumentationRenderer(),
-            "markdown" => new MarkdownErrorDocumentationRenderer(
-                              settings.NormalizedLayout() == "split" ? MarkdownLayout.Split : MarkdownLayout.Single),
-            _ => throw new InvalidOperationException($"Unsupported format '{settings.Format}'.")
-        };
-    }
 
     private static void WriteOutput(IReadOnlyList<RenderedDocument> documents, string? outputPath, ConsoleGenerationLogger logger) {
         bool hasOutput = string.IsNullOrWhiteSpace(outputPath) is false;
