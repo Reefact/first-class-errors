@@ -16,6 +16,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirstClassErrors.UnitTests"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirstClassErrors.Cli", "FirstClassErrors.Cli\FirstClassErrors.Cli.csproj", "{2106AE5F-8407-465B-AB0C-486127A53742}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirstClassErrors.GenDoc.Worker", "FirstClassErrors.GenDoc.Worker\FirstClassErrors.GenDoc.Worker.csproj", "{032D7F17-DBF8-49D6-86A8-E751ADB33D53}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C331E842-DDA5-408B-94CB-D28F1BAFF920}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
@@ -49,6 +51,10 @@ Global
 		{2106AE5F-8407-465B-AB0C-486127A53742}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2106AE5F-8407-465B-AB0C-486127A53742}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2106AE5F-8407-465B-AB0C-486127A53742}.Release|Any CPU.Build.0 = Release|Any CPU
+		{032D7F17-DBF8-49D6-86A8-E751ADB33D53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{032D7F17-DBF8-49D6-86A8-E751ADB33D53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{032D7F17-DBF8-49D6-86A8-E751ADB33D53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{032D7F17-DBF8-49D6-86A8-E751ADB33D53}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -59,6 +65,7 @@ Global
 		{204E4D88-48A0-4254-969A-59DB4FA09335} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{F3FE0461-63F5-47A2-A6D4-AFC4D6EA1335} = {B7C3D08D-EFC5-4F5D-8DE4-5B7938354DBB}
 		{2106AE5F-8407-465B-AB0C-486127A53742} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{032D7F17-DBF8-49D6-86A8-E751ADB33D53} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4988972E-3E0D-4F48-8656-0E67ECE994BF}
