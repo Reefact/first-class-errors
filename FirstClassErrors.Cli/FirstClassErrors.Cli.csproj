@@ -16,7 +16,6 @@
   <ItemGroup>
     <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
     <ProjectReference Include="..\FirstClassErrors.GenDoc\FirstClassErrors.GenDoc.csproj" />
-    <ProjectReference Include="..\FirstClassErrors.GenDoc.Rendering\FirstClassErrors.GenDoc.Rendering.csproj" />
 
     <!-- The worker is NOT referenced as an assembly: the tool spawns it as a separate process (it must load target
          assemblies in their own dependency closure). This reference only forces the worker to be built; the targets
