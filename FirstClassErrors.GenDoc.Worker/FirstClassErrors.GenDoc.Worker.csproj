@@ -6,8 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <!-- The worker is launched against a target's dependency closure (dotnet exec --depsfile ...); allow it to run on
-         a runtime newer than the one it was built for. -->
+    <!-- The worker is launched by the host against a target's own dependency closure; allow it to run on a runtime
+         newer than the one it was built for. -->
     <RollForward>Major</RollForward>
   </PropertyGroup>
 
