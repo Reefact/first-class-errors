@@ -66,13 +66,14 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         Check.That(markdown).Contains("## Table of contents");
 
         // The table of contents is two levels: a source group, then the errors nested under it (linked to anchors).
-        Check.That(markdown).Contains("- Temperature errors");
-        Check.That(markdown).Contains("- Email errors");
+        Check.That(markdown).Contains("- [Temperature errors](#src-temperature)");
+        Check.That(markdown).Contains("- [Email errors](#src-email)");
         Check.That(markdown).Contains("  - [Temperature below absolute zero](#err-temperature-below-absolute-zero)");
         Check.That(markdown).Contains("  - [Invalid email](#err-invalid-email)");
         Check.That(markdown).Contains("<a id=\"err-temperature-below-absolute-zero\"></a>");
 
-        // Body: a source group heading (h2), the error as a sub-heading (h3), then its sections (h4).
+        // Body: a source group heading (h2) preceded by its anchor, the error as a sub-heading (h3), sections (h4).
+        Check.That(markdown).Contains("<a id=\"src-temperature\"></a>");
         Check.That(markdown).Contains("## Temperature errors");
         Check.That(markdown).Contains("### Temperature below absolute zero");
         Check.That(markdown).Contains("- **Code:** `TEMPERATURE_BELOW_ABSOLUTE_ZERO`");
@@ -97,10 +98,10 @@ public sealed class MarkdownErrorDocumentationRendererTests {
 
         // Verify
         string markdown = documents[0].Content;
-        Check.That(markdown).Contains("- Temperature errors");
+        Check.That(markdown).Contains("- [Temperature errors](#src-temperature)");
         Check.That(markdown).Contains("  - [Too cold](#err-temp-low)");
         Check.That(markdown).Contains("  - [Too hot](#err-temp-high)");
-        Check.That(markdown).Contains("- Email errors");
+        Check.That(markdown).Contains("- [Email errors](#src-email)");
         Check.That(markdown).Contains("  - [Bad email](#err-bad-email)");
     }
 
