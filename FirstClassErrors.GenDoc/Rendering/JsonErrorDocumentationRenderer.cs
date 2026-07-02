@@ -36,7 +36,6 @@ public sealed class JsonErrorDocumentationRenderer : IErrorDocumentationRenderer
         // A curated projection: the anonymous shape fixes exactly which fields are published, their camelCase names,
         // and enum-as-string, without exposing the internal model or maintaining parallel DTO types.
         var document = new {
-            schemaVersion = "1.0",
             errors = catalog.Select(error => new {
                 code         = error.Code,
                 title        = error.Title,

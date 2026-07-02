@@ -51,8 +51,6 @@ public sealed class JsonErrorDocumentationRendererTests {
         using JsonDocument parsed = JsonDocument.Parse(document.Content);
         JsonElement        root   = parsed.RootElement;
 
-        Check.That(root.GetProperty("schemaVersion").GetString()).IsEqualTo("1.0");
-
         JsonElement errors = root.GetProperty("errors");
         Check.That(errors.GetArrayLength()).IsEqualTo(1);
 
