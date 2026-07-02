@@ -25,6 +25,18 @@ public sealed class SolutionGenerationOptions {
     /// </summary>
     public string? DotNetBuildAdditionalArguments { get; init; } = "--nologo";
 
+    /// <summary>
+    ///     Absolute path to the documentation worker assembly (<c>FirstClassErrors.GenDoc.Worker.dll</c>). When
+    ///     <c>null</c>, the worker is located next to the running tool (<see cref="AppContext.BaseDirectory" />).
+    /// </summary>
+    public string? WorkerAssemblyPath { get; init; }
+
+    /// <summary>
+    ///     Maximum time to wait for a single worker process (one per documented assembly) before it is killed and
+    ///     treated as a failure. Defaults to two minutes.
+    /// </summary>
+    public TimeSpan WorkerTimeout { get; init; } = TimeSpan.FromMinutes(2);
+
     public IGenerationLogger Logger { get; init; } = new NullGenerationLogger();
 
 }
