@@ -82,14 +82,15 @@ A renderer turns the in-memory catalog into published documentation. Because the
 ```csharp
 public interface IErrorDocumentationRenderer {
     string Format { get; }
-    IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog);
+    IReadOnlyCollection<string> SupportedLayouts { get; }
+    IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog, RenderRequest request);
 }
 ```
 
-Two renderers ship in the box:
+Each renderer declares the layouts it can produce and is asked for one per call through the `RenderRequest` (which also carries the target culture); an unsupported layout is rejected with a `LayoutNotSupportedException`. Two renderers ship in the box:
 
-* **json** — a curated, stable JSON schema
-* **markdown** — a single file, or (with `--layout split`) a README index plus one file per source group and one file per error (`--layout single|split`)
+* **json** — a curated, stable JSON schema (`single` layout only)
+* **markdown** — a single file, or (with `--layout split`) a README index plus one file per source group and one file per error (`single`/`split`)
 
 Any other format (HTML, CSV, a company template, …) is a **custom renderer**: implement the interface and register it. See [Writing a custom renderer](WritingACustomRenderer.en.md).
 
@@ -110,6 +111,15 @@ fce generate            # uses the configured solution, format, output, renderer
 ```
 
 A value passed on the command line overrides the configuration.
+
+## 🌍 8. Internationalization
+
+The generated documentation can be produced in a chosen language with `fce generate --language <en|fr|es|de|sv>` (or a `language` default in `fce.json`, overridden on the command line — like the other options). The language flows through the whole pipeline at two levels:
+
+* **Error descriptions** — the extractor runs each assembly's worker under the requested culture, so documentation factories that read localized resources produce their titles, explanations, rules and diagnostics in that language. A source group's introduction is localized the same way: `[ProvidesErrorsFor]` accepts a `DescriptionResourceType`, and when it is set the extractor treats `Description` as a resource key resolved against that type (the `[Display(ResourceType = …)]` pattern).
+* **Renderer templates** — the culture is passed to the renderer through `RenderRequest.Culture`, so the boilerplate a renderer emits (headings, labels, table headers) is localized. The built-in Markdown renderer reads its template strings from resources; a custom renderer localizes its own template the same way.
+
+Error *content* is localized at extraction; renderer *boilerplate* is localized at rendering. File names and anchors stay culture-invariant, so links remain stable across languages.
 
 ## 🔁 Why this architecture matters
 

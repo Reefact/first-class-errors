@@ -82,14 +82,15 @@ Un *renderer* transforme le catalogue en mémoire en documentation publiée. Le 
 ```csharp
 public interface IErrorDocumentationRenderer {
     string Format { get; }
-    IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog);
+    IReadOnlyCollection<string> SupportedLayouts { get; }
+    IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog, RenderRequest request);
 }
 ```
 
-Deux renderers sont fournis d’origine :
+Chaque renderer déclare les layouts qu’il sait produire et on lui en demande un à chaque appel via le `RenderRequest` (qui porte aussi la culture cible) ; un layout non pris en charge est rejeté par une `LayoutNotSupportedException`. Deux renderers sont fournis d’origine :
 
-* **json** — un schéma JSON curé et stable
-* **markdown** — un fichier unique, ou (avec `--layout split`) un index README plus un fichier par groupe de source et un fichier par erreur (`--layout single|split`)
+* **json** — un schéma JSON curé et stable (layout `single` uniquement)
+* **markdown** — un fichier unique, ou (avec `--layout split`) un index README plus un fichier par groupe de source et un fichier par erreur (`single`/`split`)
 
 Tout autre format (HTML, CSV, un gabarit maison, …) est un **renderer personnalisé** : implémentez l’interface et enregistrez-le. Voir [Écrire son propre renderer](WritingACustomRenderer.fr.md).
 
@@ -110,6 +111,15 @@ fce generate            # utilise la solution, le format, l’output, les render
 ```
 
 Une valeur passée en ligne de commande écrase la configuration.
+
+## 🌍 8. Internationalisation
+
+La documentation générée peut être produite dans une langue choisie avec `fce generate --language <en|fr|es|de|sv>` (ou une valeur `language` par défaut dans `fce.json`, écrasée en ligne de commande — comme les autres options). La langue traverse tout le pipeline à deux niveaux :
+
+* **Descriptions des erreurs** — l’extracteur lance le worker de chaque assembly sous la culture demandée ; les fabriques de documentation qui lisent des ressources localisées produisent donc titres, explications, règles et diagnostics dans cette langue. L’introduction d’un groupe de source est localisée de la même façon : `[ProvidesErrorsFor]` accepte un `DescriptionResourceType`, et lorsqu’il est renseigné l’extracteur traite `Description` comme une clé de ressource résolue via ce type (le patron `[Display(ResourceType = …)]`).
+* **Gabarits des renderers** — la culture est transmise au renderer via `RenderRequest.Culture`, de sorte que le texte fixe qu’il émet (titres, libellés, en-têtes de tableau) est localisé. Le renderer Markdown intégré lit ses chaînes de gabarit depuis des ressources ; un renderer personnalisé localise le sien de la même manière.
+
+Le *contenu* des erreurs est localisé à l’extraction ; le *texte fixe* des renderers l’est au rendu. Les noms de fichiers et les ancres restent indépendants de la culture, pour que les liens restent stables d’une langue à l’autre.
 
 ## 🔁 Pourquoi cette architecture est importante
 
