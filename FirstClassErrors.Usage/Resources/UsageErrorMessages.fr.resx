@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Temperature_Source" xml:space="preserve">
+    <value>Erreurs levées lors de la construction d'une valeur Temperature à partir d'une entrée hors plage.</value>
+  </data>
+  <data name="Amount_Source" xml:space="preserve">
+    <value>Erreurs levées lors d'opérations combinant des valeurs monétaires Amount.</value>
+  </data>
+  <data name="Bank_Source" xml:space="preserve">
+    <value>Erreurs levées lors de la validation d'un relevé bancaire téléversé au regard de ses métadonnées déclarées (période et totaux du relevé).</value>
+  </data>
+  <data name="Temperature_BelowAbsoluteZero_Title" xml:space="preserve">
+    <value>Température en dessous du zéro absolu</value>
+  </data>
+  <data name="Temperature_BelowAbsoluteZero_Description" xml:space="preserve">
+    <value>Cette erreur se produit lorsqu'on tente d'instancier une température avec une valeur inférieure au zéro absolu.</value>
+  </data>
+  <data name="Temperature_BelowAbsoluteZero_Rule" xml:space="preserve">
+    <value>La température ne peut pas descendre en dessous du zéro absolu, car le zéro absolu est le point où les particules ont l'énergie minimale possible.</value>
+  </data>
+  <data name="Temperature_BelowAbsoluteZero_Message" xml:space="preserve">
+    <value>Échec de l'instanciation de la température : la valeur {0} {1} est en dessous du zéro absolu.</value>
+  </data>
+  <data name="Temperature_BelowAbsoluteZero_ShortMessage" xml:space="preserve">
+    <value>La température est en dessous du zéro absolu.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Title" xml:space="preserve">
+    <value>Incohérence de devise entre montants</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Description" xml:space="preserve">
+    <value>Cette erreur se produit lorsqu'on tente d'utiliser ensemble plusieurs montants dans une opération alors qu'ils sont exprimés dans des devises différentes.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Rule" xml:space="preserve">
+    <value>Toutes les opérations monétaires doivent porter sur des montants exprimés dans la même devise.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Message" xml:space="preserve">
+    <value>Échec de l'opération monétaire car les montants concernés sont exprimés dans des devises différentes : {0} et {1}.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_ShortMessage" xml:space="preserve">
+    <value>Incohérence de devise</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Cause1" xml:space="preserve">
+    <value>Des montants ont été utilisés dans une opération monétaire sans avoir été convertis dans la même devise.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Hint1" xml:space="preserve">
+    <value>Vérifiez si tous les montants concernés par l'opération ont été convertis dans une devise commune avant d'être utilisés ensemble.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Cause2" xml:space="preserve">
+    <value>Des montants censés être exprimés dans la même devise ont été fournis avec des devises différentes.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Hint2" xml:space="preserve">
+    <value>Vérifiez les devises associées à chaque montant et confirmez si une devise commune était attendue pour cette opération.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Title" xml:space="preserve">
+    <value>Date de transaction hors de la période du relevé</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Description" xml:space="preserve">
+    <value>Cette erreur se produit lorsqu'on tente de valider un relevé bancaire contenant une ou plusieurs transactions datées en dehors de la période du relevé.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Rule" xml:space="preserve">
+    <value>Toutes les transactions doivent avoir lieu au cours de la période du relevé.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Message" xml:space="preserve">
+    <value>La transaction datée du {0} est en dehors de la période du relevé [{1};{2}].</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_ShortMessage" xml:space="preserve">
+    <value>La date de transaction est en dehors de la période du relevé.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Cause1" xml:space="preserve">
+    <value>La date de transaction fournie dans le fichier du relevé est incorrecte ou incohérente avec la date réelle de la transaction.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Hint1" xml:space="preserve">
+    <value>Vérifiez la date de transaction présente dans le fichier d'entrée et confirmez sa cohérence avec la chronologie réelle de la transaction.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Cause2" xml:space="preserve">
+    <value>La période du relevé définie dans le fichier ne correspond pas à la période réellement couverte par les transactions.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Hint2" xml:space="preserve">
+    <value>Vérifiez si les dates de début et de fin du relevé dans le fichier concordent avec la période couverte par les transactions.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Cause3" xml:space="preserve">
+    <value>La transaction a été enregistrée après la génération du relevé mais a été incluse par erreur dans le fichier.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Hint3" xml:space="preserve">
+    <value>Déterminez si des transactions enregistrées tardivement ont été incluses dans le processus de génération du relevé.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Cause4" xml:space="preserve">
+    <value>Une erreur de traitement interne a décalé la date de transaction lors de la transformation ou de l'import des données.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Hint4" xml:space="preserve">
+    <value>Examinez les étapes d'import et de transformation des données pour confirmer que les dates de transaction sont conservées sans altération.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Title" xml:space="preserve">
+    <value>Incohérence du montant total du relevé</value>
+  </data>
+  <data name="Bank_TotalMismatch_Description" xml:space="preserve">
+    <value>Cette erreur se produit lorsqu'on tente de valider un relevé bancaire dont le montant total déclaré ne correspond pas à la somme des montants de chaque transaction.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Rule" xml:space="preserve">
+    <value>Le montant total du relevé doit être égal à la somme de tous les montants de transaction inclus dans le relevé.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Message" xml:space="preserve">
+    <value>Le montant total déclaré du relevé ({0}) ne correspond pas au montant total calculé à partir des transactions ({1}).</value>
+  </data>
+  <data name="Bank_TotalMismatch_ShortMessage" xml:space="preserve">
+    <value>Incohérence du montant total du relevé.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Cause1" xml:space="preserve">
+    <value>Le montant total déclaré dans le fichier du relevé ne correspond pas à la somme des montants de chaque transaction.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Hint1" xml:space="preserve">
+    <value>Vérifiez le montant total déclaré dans le fichier et comparez-le à la somme de tous les montants de transaction.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Cause2" xml:space="preserve">
+    <value>Une ou plusieurs transactions sont manquantes ou dupliquées dans le fichier du relevé.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Hint2" xml:space="preserve">
+    <value>Vérifiez si toutes les transactions attendues sont présentes exactement une fois dans le fichier du relevé.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Cause3" xml:space="preserve">
+    <value>Une erreur d'arrondi ou de précision s'est produite lors du calcul du montant total du relevé.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Hint3" xml:space="preserve">
+    <value>Examinez la manière dont les règles d'arrondi et de précision ont été appliquées lors du calcul du total du relevé.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Cause4" xml:space="preserve">
+    <value>Une erreur de traitement interne a modifié les montants de transaction lors de l'analyse ou de la transformation du fichier.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Hint4" xml:space="preserve">
+    <value>Inspectez les étapes d'analyse et de transformation du fichier pour confirmer que les montants de transaction restent inchangés.</value>
+  </data>
+  <data name="ValueObject_Cause1" xml:space="preserve">
+    <value>La valeur saisie manuellement par un utilisateur est invalide.</value>
+  </data>
+  <data name="ValueObject_Hint1" xml:space="preserve">
+    <value>Vérifiez la valeur saisie par l'utilisateur et évaluez sa conformité aux règles du domaine.</value>
+  </data>
+  <data name="ValueObject_Cause2" xml:space="preserve">
+    <value>La valeur reçue d'un système externe (API, message, etc.) est invalide.</value>
+  </data>
+  <data name="ValueObject_Hint2" xml:space="preserve">
+    <value>Vérifiez les données fournies par le système en amont et évaluez leur validité au regard des règles du domaine.</value>
+  </data>
+  <data name="ValueObject_Cause3" xml:space="preserve">
+    <value>La valeur a été chargée à partir de données persistées corrompues ou obsolètes.</value>
+  </data>
+  <data name="ValueObject_Hint3" xml:space="preserve">
+    <value>Examinez la source de données persistées pour déterminer si les valeurs stockées respectent les règles actuelles du domaine.</value>
+  </data>
+  <data name="ValueObject_Cause4" xml:space="preserve">
+    <value>La valeur a été calculée en interne sans utiliser de méthodes sûres vis-à-vis du domaine.</value>
+  </data>
+  <data name="ValueObject_Hint4" xml:space="preserve">
+    <value>Inspectez la logique de calcul interne pour confirmer que les invariants du domaine sont préservés.</value>
+  </data>
+  <data name="ValueObject_Cause5" xml:space="preserve">
+    <value>La valeur provient d'une configuration système ou de valeurs par défaut incorrectes ou obsolètes.</value>
+  </data>
+  <data name="ValueObject_Hint5" xml:space="preserve">
+    <value>Passez en revue la configuration ou les paramètres par défaut concernés pour évaluer leur conformité aux règles du domaine.</value>
+  </data>
+</root>

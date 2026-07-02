@@ -1,6 +1,7 @@
 #region Usings declarations
 
 using System.Reflection;
+using System.Resources;
 
 #endregion
 
@@ -132,7 +133,7 @@ public static class AssemblyErrorDocumentationReader {
             }
 
             errorDocumentation.Source            = providesErrorsFor.Source;
-            errorDocumentation.SourceDescription = providesErrorsFor.Description;
+            errorDocumentation.SourceDescription = ResolveSourceDescription(providesErrorsFor);
 
             documentation.Add(errorDocumentation);
         }
@@ -157,6 +158,25 @@ public static class AssemblyErrorDocumentationReader {
         failures.Add(new ErrorDocumentationExtractionFailure(TypeName(type), methodName, reason, null));
 
         return null;
+    }
+
+    private static string? ResolveSourceDescription(ProvidesErrorsForAttribute providesErrorsFor) {
+        string? description = providesErrorsFor.Description;
+
+        // Without a resource type the description is literal text. With one, it is a resource key resolved (under the
+        // current UI culture, which the worker sets per run) against that type's resources — the data-annotations
+        // pattern. A missing resource or an unreadable manager falls back to the key text rather than failing.
+        if (string.IsNullOrEmpty(description) || providesErrorsFor.DescriptionResourceType is null) {
+            return description;
+        }
+
+        try {
+            ResourceManager resources = new(providesErrorsFor.DescriptionResourceType);
+
+            return resources.GetString(description) ?? description;
+        } catch {
+            return description;
+        }
     }
 
     private static string TypeName(Type type) {

@@ -119,6 +119,17 @@ public sealed class AssemblyErrorDocumentationReaderTests {
         Check.That(codes).ContainsExactly(sorted);
     }
 
+    [Fact(DisplayName = "A source description keyed to a resource that cannot be found falls back to the key text.")]
+    public void AResourceKeyedSourceDescriptionFallsBackToTheKeyWhenUnresolved() {
+        // The fixture points DescriptionResourceType at a type with no embedded resources, so the key cannot be
+        // resolved; the reader must fall back to the key text rather than throwing.
+        ErrorDocumentationExtractionResult result = Extract();
+
+        ErrorDocumentation? keyed = DocumentationWithCode(result, "READER_RESKEY");
+        Check.That(keyed).IsNotNull();
+        Check.That(keyed!.SourceDescription).IsEqualTo("reader.missing.key");
+    }
+
 }
 
 // ---------------------------------------------------------------------------
@@ -177,6 +188,23 @@ public static class ReaderWrongReturnFixture {
 
     public static string WrongReturnDoc() {
         return "not an ErrorDocumentation";
+    }
+
+}
+
+[ProvidesErrorsFor("ReaderResourceKeySource",
+                   Description = "reader.missing.key",
+                   DescriptionResourceType = typeof(ReaderResourceKeyFixture))]
+[UsedImplicitly]
+public static class ReaderResourceKeyFixture {
+
+    [DocumentedBy(nameof(ResourceKeyDoc))]
+    public static object ResourceKeyFactory() {
+        return new object();
+    }
+
+    public static ErrorDocumentation ResourceKeyDoc() {
+        return new ErrorDocumentation { Code = "READER_RESKEY", Title = "Resource keyed" };
     }
 
 }
