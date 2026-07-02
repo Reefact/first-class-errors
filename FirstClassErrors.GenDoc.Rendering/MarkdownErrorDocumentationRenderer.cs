@@ -56,18 +56,27 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
             return [new RenderedDocument("errors.md", markdown.ToString())];
         }
 
+        IReadOnlyList<Group> groups = GroupBySource(entries);
+
+        // Table of contents: two levels — each source group, then the errors that belong to it.
         markdown.Append("## Table of contents\n\n");
-        foreach (Entry entry in entries) {
-            markdown.Append($"- [{LinkText(entry.Title)}](#err-{entry.Slug})\n");
+        foreach (Group group in groups) {
+            markdown.Append($"- {Inline(group.Label)}\n");
+            foreach (Entry entry in group.Entries) {
+                markdown.Append($"  - [{LinkText(entry.Title)}](#err-{entry.Slug})\n");
+            }
         }
 
         markdown.Append('\n');
 
-        foreach (Entry entry in entries) {
-            markdown.Append("---\n\n");
-            // An explicit HTML anchor (portable on GitHub) so the table of contents links are deterministic.
-            markdown.Append($"<a id=\"err-{entry.Slug}\"></a>\n\n");
-            AppendErrorBody(markdown, entry, headingLevel: 2);
+        // Body: errors grouped under their source heading.
+        foreach (Group group in groups) {
+            markdown.Append($"## {Inline(group.Label)}\n\n");
+            foreach (Entry entry in group.Entries) {
+                // An explicit HTML anchor (portable on GitHub) so the table of contents links are deterministic.
+                markdown.Append($"<a id=\"err-{entry.Slug}\"></a>\n\n");
+                AppendErrorBody(markdown, entry, headingLevel: 3);
+            }
         }
 
         return [new RenderedDocument("errors.md", markdown.ToString())];
@@ -81,8 +90,12 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         if (entries.Count == 0) {
             index.Append("_No documented errors._\n");
         } else {
-            foreach (Entry entry in entries) {
-                index.Append($"- [{LinkText(entry.Title)}](./{entry.Slug}.md)\n");
+            // The index is the table of contents: two levels — each source group, then its errors.
+            foreach (Group group in GroupBySource(entries)) {
+                index.Append($"- {Inline(group.Label)}\n");
+                foreach (Entry entry in group.Entries) {
+                    index.Append($"  - [{LinkText(entry.Title)}](./{entry.Slug}.md)\n");
+                }
             }
         }
 
@@ -181,6 +194,25 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         return entries;
     }
 
+    private static IReadOnlyList<Group> GroupBySource(IReadOnlyList<Entry> entries) {
+        List<Group>               groups = [];
+        Dictionary<string, Group> byKey  = new(StringComparer.Ordinal);
+
+        // Group by ProvidesErrorsFor (ErrorDocumentation.Source), preserving first-seen order of both groups and errors.
+        foreach (Entry entry in entries) {
+            string source = FirstNonEmpty(entry.Error.Source) ?? "Other";
+            if (byKey.TryGetValue(source, out Group? group) is false) {
+                group = new Group($"{source} errors", []);
+                byKey[source] = group;
+                groups.Add(group);
+            }
+
+            group.Entries.Add(entry);
+        }
+
+        return groups;
+    }
+
     private static string? FirstNonEmpty(params string?[] values) {
         foreach (string? value in values) {
             if (string.IsNullOrWhiteSpace(value) is false) { return value.Trim(); }
@@ -242,6 +274,9 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
 
     /// <summary>An error paired with the display title and unique slug used for its file name and anchor.</summary>
     private sealed record Entry(ErrorDocumentation Error, string Title, string Slug);
+
+    /// <summary>A source group (from <c>[ProvidesErrorsFor]</c>) and the errors that belong to it.</summary>
+    private sealed record Group(string Label, List<Entry> Entries);
 
     #endregion
 
