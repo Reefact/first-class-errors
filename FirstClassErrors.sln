@@ -18,6 +18,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirstClassErrors.Cli", "Fir
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirstClassErrors.GenDoc.Worker", "FirstClassErrors.GenDoc.Worker\FirstClassErrors.GenDoc.Worker.csproj", "{032D7F17-DBF8-49D6-86A8-E751ADB33D53}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirstClassErrors.GenDoc.Rendering", "FirstClassErrors.GenDoc.Rendering\FirstClassErrors.GenDoc.Rendering.csproj", "{A636718F-9FE6-4F58-BAEB-FF5746AE9EE5}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C331E842-DDA5-408B-94CB-D28F1BAFF920}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
@@ -55,6 +57,10 @@ Global
 		{032D7F17-DBF8-49D6-86A8-E751ADB33D53}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{032D7F17-DBF8-49D6-86A8-E751ADB33D53}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{032D7F17-DBF8-49D6-86A8-E751ADB33D53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A636718F-9FE6-4F58-BAEB-FF5746AE9EE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A636718F-9FE6-4F58-BAEB-FF5746AE9EE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A636718F-9FE6-4F58-BAEB-FF5746AE9EE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A636718F-9FE6-4F58-BAEB-FF5746AE9EE5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -66,6 +72,7 @@ Global
 		{F3FE0461-63F5-47A2-A6D4-AFC4D6EA1335} = {B7C3D08D-EFC5-4F5D-8DE4-5B7938354DBB}
 		{2106AE5F-8407-465B-AB0C-486127A53742} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{032D7F17-DBF8-49D6-86A8-E751ADB33D53} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{A636718F-9FE6-4F58-BAEB-FF5746AE9EE5} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4988972E-3E0D-4F48-8656-0E67ECE994BF}

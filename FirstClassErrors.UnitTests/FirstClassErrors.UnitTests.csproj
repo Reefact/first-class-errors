@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FirstClassErrors.GenDoc.Rendering\FirstClassErrors.GenDoc.Rendering.csproj" />
     <ProjectReference Include="..\FirstClassErrors.Usage\FirstClassErrors.Usage.csproj" />
     <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
   </ItemGroup>
