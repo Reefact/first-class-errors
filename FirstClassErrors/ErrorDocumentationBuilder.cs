@@ -44,11 +44,12 @@ internal sealed class ErrorDocumentationBuilder :
               .GroupBy(x => x.Name)
               .Select(g => new ErrorContextEntryDocumentation {
                    Key         = g.Key,
-                   ValueType   = g.First().ValueType,
+                   ValueType   = g.First().ValueType?.FullName ?? g.First().ValueType?.Name,
                    Description = g.First().Description,
                    ExampleValues = g.Select(x => x.ExampleValue)
                                     .Where(v => v != null)
                                     .Distinct()
+                                    .Select(v => v?.ToString())
                                     .ToArray()
                });
     }
