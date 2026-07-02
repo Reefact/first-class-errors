@@ -131,7 +131,8 @@ public static class AssemblyErrorDocumentationReader {
                 continue;
             }
 
-            errorDocumentation.Source = providesErrorsFor.Source;
+            errorDocumentation.Source            = providesErrorsFor.Source;
+            errorDocumentation.SourceDescription = providesErrorsFor.Description;
 
             documentation.Add(errorDocumentation);
         }

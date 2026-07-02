@@ -39,4 +39,10 @@ public sealed class ProvidesErrorsForAttribute : Attribute {
     /// </remarks>
     public string Source { get; }
 
+    /// <summary>
+    ///     Gets or sets an optional human description of this error source. When set, it is rendered as an
+    ///     introduction to the source's group in the generated documentation.
+    /// </summary>
+    public string? Description { get; set; }
+
 }

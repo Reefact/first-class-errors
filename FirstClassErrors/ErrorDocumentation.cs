@@ -94,6 +94,12 @@ public sealed class ErrorDocumentation {
     /// </remarks>
     public string? Source { get; set; }
 
+    /// <summary>
+    ///     Gets or sets the description of the source (from <see cref="ProvidesErrorsForAttribute.Description" />),
+    ///     shared by every error of the same source. Optional.
+    /// </summary>
+    public string? SourceDescription { get; set; }
+
     /// <inheritdoc />
     public override string ToString() {
         return Code ?? string.Empty;
