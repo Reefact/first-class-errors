@@ -1,7 +1,5 @@
 #region Usings declarations
 
-using System.Text;
-
 using FirstClassErrors.GenDoc.Rendering;
 using FirstClassErrors.Usage.Model;
 
@@ -29,20 +27,6 @@ public sealed class UsageDocumentationSnapshotTests {
         return AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(typeof(Temperature).Assembly);
     }
 
-    private static string CombineFiles(IReadOnlyList<RenderedDocument> documents) {
-        // A single Markdown snapshot for the multi-file split output: each file, delimited by an HTML comment that
-        // names it (comments are valid Markdown and render as nothing).
-        StringBuilder builder = new();
-        foreach (RenderedDocument document in documents) {
-            if (builder.Length > 0) { builder.Append('\n'); }
-
-            builder.Append($"<!-- file: {document.RelativePath} -->\n\n");
-            builder.Append(document.Content);
-        }
-
-        return builder.ToString();
-    }
-
     #endregion
 
     [Fact(DisplayName = "The extraction of the Usage catalog matches its snapshot.")]
@@ -64,12 +48,16 @@ public sealed class UsageDocumentationSnapshotTests {
         await Verifier.Verify(markdown, extension: "md");
     }
 
-    [Fact(DisplayName = "The split Markdown rendering of the Usage catalog matches its snapshot.")]
+    [Fact(DisplayName = "Each file of the split Markdown rendering of the Usage catalog matches its snapshot.")]
     public async Task TheSplitMarkdownRenderingOfTheUsageCatalog() {
         IReadOnlyList<RenderedDocument> documents =
             new MarkdownErrorDocumentationRenderer(MarkdownLayout.Split).Render(Extract().Documentation);
 
-        await Verifier.Verify(CombineFiles(documents), extension: "md");
+        // One snapshot per produced file, mirroring exactly what the split layout writes to disk (no wrapper).
+        foreach (RenderedDocument document in documents) {
+            await Verifier.Verify(document.Content, extension: "md")
+                          .UseMethodName($"Split_{Path.GetFileNameWithoutExtension(document.RelativePath)}");
+        }
     }
 
 }
