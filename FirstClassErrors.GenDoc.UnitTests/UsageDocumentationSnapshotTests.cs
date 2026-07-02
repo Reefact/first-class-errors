@@ -37,14 +37,14 @@ public sealed class UsageDocumentationSnapshotTests {
 
     [Fact(DisplayName = "The JSON rendering of the Usage catalog matches its snapshot.")]
     public async Task TheJsonRenderingOfTheUsageCatalog() {
-        string json = new JsonErrorDocumentationRenderer().Render(Extract().Documentation)[0].Content;
+        string json = new JsonErrorDocumentationRenderer().Render(Extract().Documentation, new RenderRequest(RenderLayouts.Single))[0].Content;
 
         await Verifier.Verify(json, extension: "json");
     }
 
     [Fact(DisplayName = "The single-file Markdown rendering of the Usage catalog matches its snapshot.")]
     public async Task TheSingleMarkdownRenderingOfTheUsageCatalog() {
-        string markdown = new MarkdownErrorDocumentationRenderer(MarkdownLayout.Single).Render(Extract().Documentation)[0].Content;
+        string markdown = new MarkdownErrorDocumentationRenderer().Render(Extract().Documentation, new RenderRequest(RenderLayouts.Single))[0].Content;
 
         await Verifier.Verify(markdown, extension: "md");
     }
@@ -52,7 +52,7 @@ public sealed class UsageDocumentationSnapshotTests {
     [Fact(DisplayName = "Each file of the split Markdown rendering of the Usage catalog matches its snapshot.")]
     public async Task TheSplitMarkdownRenderingOfTheUsageCatalog() {
         IReadOnlyList<RenderedDocument> documents =
-            new MarkdownErrorDocumentationRenderer(MarkdownLayout.Split).Render(Extract().Documentation);
+            new MarkdownErrorDocumentationRenderer().Render(Extract().Documentation, new RenderRequest(RenderLayouts.Split));
 
         // A single Verify call that emits one snapshot file per produced document (each file its own pure Markdown,
         // no wrapper). A per-document loop would not work: the first Verify throws on a missing snapshot and aborts

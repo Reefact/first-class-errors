@@ -11,7 +11,8 @@ namespace FirstClassErrors.GenDoc.Rendering;
 ///     </para>
 ///     <para>
 ///         To add a format, implement this interface: declare a unique <see cref="Format" /> (the value selected on
-///         the command line) and return the rendered <see cref="RenderedDocument" />(s). A tool can then discover the
+///         the command line), the <see cref="SupportedLayouts" /> the renderer can produce, and return the rendered
+///         <see cref="RenderedDocument" />(s) for a given <see cref="RenderRequest" />. A tool can then discover the
 ///         renderer by its self-declared format without any hard-coded mapping.
 ///     </para>
 /// </remarks>
@@ -24,11 +25,20 @@ public interface IErrorDocumentationRenderer {
     string Format { get; }
 
     /// <summary>
-    ///     Renders the given catalog and returns the produced document(s).
+    ///     Gets the layouts this renderer can produce (see <see cref="RenderLayouts" />). A renderer must reject, via
+    ///     <see cref="LayoutNotSupportedException" />, any <see cref="RenderRequest.Layout" /> that is not listed here.
+    ///     At least one layout is always declared.
+    /// </summary>
+    IReadOnlyCollection<string> SupportedLayouts { get; }
+
+    /// <summary>
+    ///     Renders the given catalog for the given request and returns the produced document(s).
     /// </summary>
     /// <param name="catalog">The aggregated, deduplicated error documentation to render.</param>
-    /// <returns>The rendered documents. Always at least one; single-file formats return exactly one.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="catalog" /> is <c>null</c>.</exception>
-    IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog);
+    /// <param name="request">The layout and culture to render for.</param>
+    /// <returns>The rendered documents. Always at least one; single-file layouts return exactly one.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="catalog" /> or <paramref name="request" /> is <c>null</c>.</exception>
+    /// <exception cref="LayoutNotSupportedException">Thrown when the requested layout is not one of <see cref="SupportedLayouts" />.</exception>
+    IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog, RenderRequest request);
 
 }

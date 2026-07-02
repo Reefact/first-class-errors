@@ -41,7 +41,7 @@ public sealed class JsonErrorDocumentationRendererTests {
         };
 
         // Exercise
-        IReadOnlyList<RenderedDocument> documents = new JsonErrorDocumentationRenderer().Render(new[] { documentation });
+        IReadOnlyList<RenderedDocument> documents = new JsonErrorDocumentationRenderer().Render(new[] { documentation }, new RenderRequest(RenderLayouts.Single));
 
         // Verify
         Check.That(documents).HasSize(1);
@@ -78,8 +78,24 @@ public sealed class JsonErrorDocumentationRendererTests {
     [Fact(DisplayName = "The JSON renderer guards against a null catalog.")]
     public void TheJsonRendererGuardsAgainstANullCatalog() {
         // Exercise & verify
-        Check.ThatCode(() => new JsonErrorDocumentationRenderer().Render(null!))
+        Check.ThatCode(() => new JsonErrorDocumentationRenderer().Render(null!, new RenderRequest(RenderLayouts.Single)))
              .Throws<ArgumentNullException>();
+    }
+
+    [Fact(DisplayName = "The JSON renderer supports only the single layout.")]
+    public void TheJsonRendererSupportsOnlyTheSingleLayout() {
+        // Exercise & verify
+        Check.That(new JsonErrorDocumentationRenderer().SupportedLayouts).ContainsExactly("single");
+    }
+
+    [Fact(DisplayName = "The JSON renderer rejects the split layout.")]
+    public void TheJsonRendererRejectsTheSplitLayout() {
+        // Setup
+        ErrorDocumentation documentation = new() { Code = "CODE", Title = "Title" };
+
+        // Exercise & verify
+        Check.ThatCode(() => new JsonErrorDocumentationRenderer().Render(new[] { documentation }, new RenderRequest(RenderLayouts.Split)))
+             .Throws<LayoutNotSupportedException>();
     }
 
 }

@@ -14,19 +14,17 @@ internal static class RendererCatalog {
 
     #region Statics members declarations
 
-    // One entry per built-in renderer. Each factory receives the effective layout so a renderer can honour it (only
-    // the Markdown renderer does). Adding a built-in format is a single line here; custom formats are added through
-    // the configuration instead (fce config renderer add).
-    private static readonly IReadOnlyList<Func<string, IErrorDocumentationRenderer>> BuiltInFactories = [
-        _ => new JsonErrorDocumentationRenderer(),
-        layout => new MarkdownErrorDocumentationRenderer(string.Equals(layout, "split", StringComparison.OrdinalIgnoreCase)
-                                                             ? MarkdownLayout.Split
-                                                             : MarkdownLayout.Single)
+    // One entry per built-in renderer. A renderer is layout-agnostic at construction: the layout is chosen per call
+    // through the RenderRequest passed to Render. Adding a built-in format is a single line here; custom formats are
+    // added through the configuration instead (fce config renderer add).
+    private static readonly IReadOnlyList<Func<IErrorDocumentationRenderer>> BuiltInFactories = [
+        () => new JsonErrorDocumentationRenderer(),
+        () => new MarkdownErrorDocumentationRenderer()
     ];
 
     /// <summary>Gets the built-in format identifiers, as declared by the built-in renderers.</summary>
     public static IReadOnlyList<string> BuiltInFormats {
-        get { return BuiltInFactories.Select(factory => factory("single").Format).ToList(); }
+        get { return BuiltInFactories.Select(factory => factory().Format).ToList(); }
     }
 
     /// <summary>
@@ -34,12 +32,11 @@ internal static class RendererCatalog {
     ///     a custom one when both declare the same format.
     /// </summary>
     /// <param name="format">The requested (already normalized) format.</param>
-    /// <param name="layout">The effective Markdown layout, forwarded to renderers that honour it.</param>
     /// <param name="customRenderers">Renderers loaded from the configuration for this run.</param>
     /// <exception cref="InvalidOperationException">Thrown when no renderer declares the requested format.</exception>
-    public static IErrorDocumentationRenderer Create(string format, string layout, IReadOnlyList<IErrorDocumentationRenderer> customRenderers) {
-        foreach (Func<string, IErrorDocumentationRenderer> factory in BuiltInFactories) {
-            IErrorDocumentationRenderer renderer = factory(layout);
+    public static IErrorDocumentationRenderer Create(string format, IReadOnlyList<IErrorDocumentationRenderer> customRenderers) {
+        foreach (Func<IErrorDocumentationRenderer> factory in BuiltInFactories) {
+            IErrorDocumentationRenderer renderer = factory();
             if (string.Equals(renderer.Format, format, StringComparison.OrdinalIgnoreCase)) {
                 return renderer;
             }

@@ -13,35 +13,25 @@ namespace FirstClassErrors.GenDoc.Rendering;
 /// </summary>
 public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRenderer {
 
-    #region Fields declarations
-
-    private readonly MarkdownLayout _layout;
-
-    #endregion
-
-    #region Constructors declarations
-
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="MarkdownErrorDocumentationRenderer" /> class.
-    /// </summary>
-    /// <param name="layout">The on-disk layout to produce. Defaults to <see cref="MarkdownLayout.Single" />.</param>
-    public MarkdownErrorDocumentationRenderer(MarkdownLayout layout = MarkdownLayout.Single) {
-        _layout = layout;
-    }
-
-    #endregion
-
     /// <inheritdoc />
     public string Format => "markdown";
 
     /// <inheritdoc />
-    public IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog) {
+    public IReadOnlyCollection<string> SupportedLayouts { get; } = [RenderLayouts.Single, RenderLayouts.Split];
+
+    /// <inheritdoc />
+    public IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog, RenderRequest request) {
         if (catalog is null) { throw new ArgumentNullException(nameof(catalog)); }
+        if (request is null) { throw new ArgumentNullException(nameof(request)); }
+
+        if (SupportedLayouts.Contains(request.Layout, StringComparer.OrdinalIgnoreCase) is false) {
+            throw new LayoutNotSupportedException(Format, request.Layout, SupportedLayouts);
+        }
 
         // Materialize once, assigning each error a stable title and a unique slug used for file names and anchors.
         IReadOnlyList<Entry> entries = BuildEntries(catalog);
 
-        return _layout == MarkdownLayout.Split
+        return string.Equals(request.Layout, RenderLayouts.Split, StringComparison.OrdinalIgnoreCase)
                    ? RenderSplit(entries)
                    : RenderSingle(entries);
     }
