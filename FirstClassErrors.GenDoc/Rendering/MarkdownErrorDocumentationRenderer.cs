@@ -61,7 +61,7 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         // Table of contents: two levels — each source group, then the errors that belong to it.
         markdown.Append("## Table of contents\n\n");
         foreach (Group group in groups) {
-            markdown.Append($"- {Inline(group.Label)}\n");
+            markdown.Append($"- [{LinkText(group.Label)}](#{group.Anchor})\n");
             foreach (Entry entry in group.Entries) {
                 markdown.Append($"  - [{LinkText(entry.Title)}](#err-{entry.Slug})\n");
             }
@@ -69,11 +69,12 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
 
         markdown.Append('\n');
 
-        // Body: errors grouped under their source heading.
+        // Body: errors grouped under their source heading. Each group and error carries an explicit HTML anchor
+        // (portable on GitHub) so the table-of-contents links are deterministic.
         foreach (Group group in groups) {
+            markdown.Append($"<a id=\"{group.Anchor}\"></a>\n\n");
             markdown.Append($"## {Inline(group.Label)}\n\n");
             foreach (Entry entry in group.Entries) {
-                // An explicit HTML anchor (portable on GitHub) so the table of contents links are deterministic.
                 markdown.Append($"<a id=\"err-{entry.Slug}\"></a>\n\n");
                 AppendErrorBody(markdown, entry, headingLevel: 3);
             }
@@ -202,7 +203,7 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         foreach (Entry entry in entries) {
             string source = FirstNonEmpty(entry.Error.Source) ?? "Other";
             if (byKey.TryGetValue(source, out Group? group) is false) {
-                group = new Group($"{source} errors", []);
+                group = new Group($"{source} errors", $"src-{Slugify(source)}", []);
                 byKey[source] = group;
                 groups.Add(group);
             }
@@ -275,8 +276,8 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
     /// <summary>An error paired with the display title and unique slug used for its file name and anchor.</summary>
     private sealed record Entry(ErrorDocumentation Error, string Title, string Slug);
 
-    /// <summary>A source group (from <c>[ProvidesErrorsFor]</c>) and the errors that belong to it.</summary>
-    private sealed record Group(string Label, List<Entry> Entries);
+    /// <summary>A source group (from <c>[ProvidesErrorsFor]</c>), its heading anchor, and the errors within it.</summary>
+    private sealed record Group(string Label, string Anchor, List<Entry> Entries);
 
     #endregion
 
