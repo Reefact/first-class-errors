@@ -105,28 +105,57 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         Check.That(markdown).Contains("  - [Bad email](#err-bad-email)");
     }
 
-    [Fact(DisplayName = "The split layout produces an index grouped by source plus one file per error.")]
-    public void TheSplitLayoutProducesAnIndexGroupedBySource() {
+    [Fact(DisplayName = "The split layout produces an index, a file per source group, and a file per error.")]
+    public void TheSplitLayoutProducesIndexGroupFilesAndErrorFiles() {
         // Exercise
         IReadOnlyList<RenderedDocument> documents =
             new MarkdownErrorDocumentationRenderer(MarkdownLayout.Split).Render(new[] { TemperatureError(), EmailError() });
 
-        // Verify
-        Check.That(documents).HasSize(3);
+        // Verify: README + one group file per source + one file per error.
+        Check.That(documents).HasSize(5);
         Check.That(documents.Select(document => document.RelativePath))
-             .Contains("README.md", "temperature-below-absolute-zero.md", "invalid-email.md");
+             .Contains("README.md", "temperature-errors.md", "email-errors.md",
+                       "temperature-below-absolute-zero.md", "invalid-email.md");
 
         RenderedDocument index = documents.Single(document => document.RelativePath == "README.md");
         Check.That(index.Content).StartsWith("# Error Catalog");
-        Check.That(index.Content).Contains("- Temperature errors");
-        Check.That(index.Content).Contains("- Email errors");
+        // The index groups link to the new group files; the errors nest under them.
+        Check.That(index.Content).Contains("- [Temperature errors](./temperature-errors.md)");
+        Check.That(index.Content).Contains("- [Email errors](./email-errors.md)");
         Check.That(index.Content).Contains("  - [Temperature below absolute zero](./temperature-below-absolute-zero.md)");
         Check.That(index.Content).Contains("  - [Invalid email](./invalid-email.md)");
+
+        RenderedDocument groupFile = documents.Single(document => document.RelativePath == "temperature-errors.md");
+        Check.That(groupFile.Content).StartsWith("# Temperature errors");
+        Check.That(groupFile.Content).Contains("- [Temperature below absolute zero](./temperature-below-absolute-zero.md)");
 
         RenderedDocument errorFile = documents.Single(document => document.RelativePath == "temperature-below-absolute-zero.md");
         Check.That(errorFile.Content).StartsWith("# Temperature below absolute zero");
         // In the split layout the per-error file title is h1, so its sections are h2.
         Check.That(errorFile.Content).Contains("## Context");
+    }
+
+    [Fact(DisplayName = "A source description is rendered under the group heading (single body and split group file).")]
+    public void ASourceDescriptionIsRenderedUnderTheGroupHeading() {
+        // Setup
+        ErrorDocumentation error = new() {
+            Code              = "TEMP_LOW",
+            Title             = "Too cold",
+            Source            = "Temperature",
+            SourceDescription = "Errors about temperature values."
+        };
+
+        // Single: the description sits under the group heading.
+        string single = new MarkdownErrorDocumentationRenderer(MarkdownLayout.Single).Render(new[] { error })[0].Content;
+        Check.That(single).Contains("## Temperature errors");
+        Check.That(single).Contains("Errors about temperature values.");
+
+        // Split: the description sits in the group file.
+        IReadOnlyList<RenderedDocument> split =
+            new MarkdownErrorDocumentationRenderer(MarkdownLayout.Split).Render(new[] { error });
+        RenderedDocument groupFile = split.Single(document => document.RelativePath == "temperature-errors.md");
+        Check.That(groupFile.Content).StartsWith("# Temperature errors");
+        Check.That(groupFile.Content).Contains("Errors about temperature values.");
     }
 
     [Fact(DisplayName = "The split layout on an empty catalog still produces a valid index.")]

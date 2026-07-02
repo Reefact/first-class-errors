@@ -25,7 +25,12 @@ A static class declares that it owns the errors of a given model:
 public static class InvalidTemperatureError { ... }
 ```
 
-This attribute is the primary anchor of the documentation model: it marks the class as a source of errors and supplies `ErrorDocumentation.Source` (the model name passed via `nameof(...)`).
+This attribute is the primary anchor of the documentation model: it marks the class as a source of errors and supplies `ErrorDocumentation.Source` (the model name passed via `nameof(...)`). It can also carry an optional `Description`, rendered as an introduction to that source's group in the generated documentation:
+
+```csharp
+[ProvidesErrorsFor(nameof(BankTransactionFileValidator),
+                   Description = "Errors raised while validating an uploaded bank statement file against its declared metadata.")]
+```
 
 Inside that class, each factory method is linked to its documentation method using:
 

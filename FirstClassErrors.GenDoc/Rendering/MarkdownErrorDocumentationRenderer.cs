@@ -74,6 +74,10 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         foreach (Group group in groups) {
             markdown.Append($"<a id=\"{group.Anchor}\"></a>\n\n");
             markdown.Append($"## {Inline(group.Label)}\n\n");
+
+            string? description = GroupDescription(group);
+            if (description is not null) { markdown.Append(description).Append("\n\n"); }
+
             foreach (Entry entry in group.Entries) {
                 markdown.Append($"<a id=\"err-{entry.Slug}\"></a>\n\n");
                 AppendErrorBody(markdown, entry, headingLevel: 3);
@@ -84,24 +88,46 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
     }
 
     private static IReadOnlyList<RenderedDocument> RenderSplit(IReadOnlyList<Entry> entries) {
-        List<RenderedDocument> documents = new(entries.Count + 1);
+        List<RenderedDocument> documents = [];
 
         StringBuilder index = new();
         index.Append("# Error Catalog\n\n");
+
         if (entries.Count == 0) {
             index.Append("_No documented errors._\n");
-        } else {
-            // The index is the table of contents: two levels — each source group, then its errors.
-            foreach (Group group in GroupBySource(entries)) {
-                index.Append($"- {Inline(group.Label)}\n");
-                foreach (Entry entry in group.Entries) {
-                    index.Append($"  - [{LinkText(entry.Title)}](./{entry.Slug}.md)\n");
-                }
+            documents.Add(new RenderedDocument("README.md", index.ToString()));
+
+            return documents;
+        }
+
+        IReadOnlyList<Group> groups = GroupBySource(entries);
+
+        // The index (table of contents): each source group linked to its own group file, then its errors.
+        foreach (Group group in groups) {
+            index.Append($"- [{LinkText(group.Label)}](./{group.FileName})\n");
+            foreach (Entry entry in group.Entries) {
+                index.Append($"  - [{LinkText(entry.Title)}](./{entry.Slug}.md)\n");
             }
         }
 
         documents.Add(new RenderedDocument("README.md", index.ToString()));
 
+        // One file per source group: its (optional) description followed by the list of its errors.
+        foreach (Group group in groups) {
+            StringBuilder groupFile = new();
+            groupFile.Append($"# {Inline(group.Label)}\n\n");
+
+            string? description = GroupDescription(group);
+            if (description is not null) { groupFile.Append(description).Append("\n\n"); }
+
+            foreach (Entry entry in group.Entries) {
+                groupFile.Append($"- [{LinkText(entry.Title)}](./{entry.Slug}.md)\n");
+            }
+
+            documents.Add(new RenderedDocument(group.FileName, groupFile.ToString()));
+        }
+
+        // One file per error.
         foreach (Entry entry in entries) {
             StringBuilder markdown = new();
             AppendErrorBody(markdown, entry, headingLevel: 1);
@@ -203,7 +229,8 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         foreach (Entry entry in entries) {
             string source = FirstNonEmpty(entry.Error.Source) ?? "Other";
             if (byKey.TryGetValue(source, out Group? group) is false) {
-                group = new Group($"{source} errors", $"src-{Slugify(source)}", []);
+                string slug = SlugifySource(source);
+                group = new Group($"{source} errors", $"src-{slug}", $"{slug}-errors.md", []);
                 byKey[source] = group;
                 groups.Add(group);
             }
@@ -238,6 +265,35 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         while (builder.Length > 0 && builder[^1] == '-') { builder.Length--; }
 
         return builder.ToString();
+    }
+
+    /// <summary>
+    ///     Slugifies a source name, first splitting PascalCase/camelCase into words so that
+    ///     <c>BankTransactionFileValidator</c> becomes <c>bank-transaction-file-validator</c>.
+    /// </summary>
+    private static string SlugifySource(string source) {
+        StringBuilder spaced = new(source.Length + 8);
+        for (int index = 0; index < source.Length; index++) {
+            char character = source[index];
+            if (index > 0 && char.IsUpper(character) && (char.IsLower(source[index - 1]) || char.IsDigit(source[index - 1]))) {
+                spaced.Append(' ');
+            }
+
+            spaced.Append(character);
+        }
+
+        return Slugify(spaced.ToString());
+    }
+
+    /// <summary>Gets the group's source description (shared by its errors), or <c>null</c> when none is set.</summary>
+    private static string? GroupDescription(Group group) {
+        foreach (Entry entry in group.Entries) {
+            if (string.IsNullOrWhiteSpace(entry.Error.SourceDescription) is false) {
+                return entry.Error.SourceDescription!.Trim();
+            }
+        }
+
+        return null;
     }
 
     /// <summary>Trims a value and folds any line breaks into spaces so it stays on one Markdown line.</summary>
@@ -276,8 +332,8 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
     /// <summary>An error paired with the display title and unique slug used for its file name and anchor.</summary>
     private sealed record Entry(ErrorDocumentation Error, string Title, string Slug);
 
-    /// <summary>A source group (from <c>[ProvidesErrorsFor]</c>), its heading anchor, and the errors within it.</summary>
-    private sealed record Group(string Label, string Anchor, List<Entry> Entries);
+    /// <summary>A source group (from <c>[ProvidesErrorsFor]</c>): its label, heading anchor, split file name, and errors.</summary>
+    private sealed record Group(string Label, string Anchor, string FileName, List<Entry> Entries);
 
     #endregion
 
