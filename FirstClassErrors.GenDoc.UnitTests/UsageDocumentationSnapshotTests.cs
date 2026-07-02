@@ -3,6 +3,7 @@
 using FirstClassErrors.GenDoc.Rendering;
 using FirstClassErrors.Usage.Model;
 
+using VerifyTests;
 using VerifyXunit;
 
 #endregion
@@ -53,11 +54,14 @@ public sealed class UsageDocumentationSnapshotTests {
         IReadOnlyList<RenderedDocument> documents =
             new MarkdownErrorDocumentationRenderer(MarkdownLayout.Split).Render(Extract().Documentation);
 
-        // One snapshot per produced file, mirroring exactly what the split layout writes to disk (no wrapper).
-        foreach (RenderedDocument document in documents) {
-            await Verifier.Verify(document.Content, extension: "md")
-                          .UseMethodName($"Split_{Path.GetFileNameWithoutExtension(document.RelativePath)}");
-        }
+        // A single Verify call that emits one snapshot file per produced document (each file its own pure Markdown,
+        // no wrapper). A per-document loop would not work: the first Verify throws on a missing snapshot and aborts
+        // the test before the next iteration.
+        List<Target> files = documents
+                            .Select(document => new Target("md", document.Content, Path.GetFileNameWithoutExtension(document.RelativePath)))
+                            .ToList();
+
+        await Verifier.Verify(files);
     }
 
 }
