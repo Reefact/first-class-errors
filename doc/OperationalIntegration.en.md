@@ -9,8 +9,8 @@ Error documentation should be generated automatically during CI.
 A typical pipeline step:
 
 1. Build the solution
-2. Run the documentation extraction tool
-3. Generate the error catalog (HTML/Markdown)
+2. Run the `fce` documentation generator (`fce generate`)
+3. Generate the error catalog (Markdown or JSON)
 4. Publish it as a pipeline artifact or deploy it to a documentation portal
 
 This ensures that documentation always matches the version of the system that is deployed. No manual updates are required, and no drift can occur.

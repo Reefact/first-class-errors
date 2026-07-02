@@ -89,7 +89,7 @@ public interface IErrorDocumentationRenderer {
 Deux renderers sont fournis d’origine :
 
 * **json** — un schéma JSON curé et stable
-* **markdown** — un fichier unique, ou un fichier par erreur plus un index (`--layout single|split`)
+* **markdown** — un fichier unique, ou (avec `--layout split`) un index README plus un fichier par groupe de source et un fichier par erreur (`--layout single|split`)
 
 Tout autre format (HTML, CSV, un gabarit maison, …) est un **renderer personnalisé** : implémentez l’interface et enregistrez-le. Voir [Écrire son propre renderer](WritingACustomRenderer.fr.md).
 

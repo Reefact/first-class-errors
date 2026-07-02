@@ -110,7 +110,7 @@ La bibliothèque fournit un mécanisme pour analyser les assemblies et extraire 
 
 Cela permet de générer :
 
-* des catalogues d’erreurs en Markdown ou HTML
+* des catalogues d’erreurs en Markdown ou JSON (ou tout format personnalisé via un renderer)
 * de la documentation orientée support
 * une documentation vivante générée depuis le code
 

@@ -8,7 +8,7 @@ using Spectre.Console.Cli;
 
 namespace FirstClassErrors.Cli;
 
-/// <summary>Settings for <c>fce init</c>.</summary>
+/// <summary>Settings for <c>fce config init</c>.</summary>
 internal sealed class InitSettings : ConfigScopedSettings {
 
     [CommandOption("--force")]

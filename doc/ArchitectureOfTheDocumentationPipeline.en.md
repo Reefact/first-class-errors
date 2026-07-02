@@ -89,7 +89,7 @@ public interface IErrorDocumentationRenderer {
 Two renderers ship in the box:
 
 * **json** — a curated, stable JSON schema
-* **markdown** — a single file, or one file per error plus an index (`--layout single|split`)
+* **markdown** — a single file, or (with `--layout split`) a README index plus one file per source group and one file per error (`--layout single|split`)
 
 Any other format (HTML, CSV, a company template, …) is a **custom renderer**: implement the interface and register it. See [Writing a custom renderer](WritingACustomRenderer.en.md).
 

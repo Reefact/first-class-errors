@@ -110,7 +110,7 @@ The library includes a mechanism to scan assemblies and extract all declared err
 
 This enables:
 
-* Markdown or HTML error catalogs
+* Markdown or JSON error catalogs (or any custom format via a renderer)
 * support-oriented documentation
 * living documentation generated from code
 
