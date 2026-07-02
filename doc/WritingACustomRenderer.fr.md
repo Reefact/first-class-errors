@@ -11,12 +11,20 @@ public interface IErrorDocumentationRenderer {
     // La valeur choisie avec `fce generate --format <…>`.
     string Format { get; }
 
-    // Transforme le catalogue en un ou plusieurs fichiers de sortie.
-    IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog);
+    // Les layouts que ce renderer sait produire, ex. "single", "split" (voir RenderLayouts).
+    IReadOnlyCollection<string> SupportedLayouts { get; }
+
+    // Transforme le catalogue en un ou plusieurs fichiers de sortie pour le layout et la culture demandés.
+    IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog, RenderRequest request);
 }
 ```
 
 `RenderedDocument` est un couple `(RelativePath, Content)`. Renvoyez un seul document pour un format mono-fichier, ou plusieurs (un index plus un fichier par erreur) pour un format multi-fichiers — le `RelativePath` sert de nom de fichier lorsque la sortie est un dossier.
+
+`RenderRequest` porte les deux choix propres à chaque appel :
+
+* **`Layout`** — la valeur de `fce generate --layout <…>`. Déclarez les layouts pris en charge dans `SupportedLayouts` et rejetez tout autre avec `LayoutNotSupportedException` (le renderer intégré `json` ne gère que `single` ; `markdown` gère `single` et `split`). Un layout est une simple chaîne : un renderer peut donc définir les siens.
+* **`Culture`** — la langue cible (`fce generate --language <…>`). Localisez le texte fixe que vous produisez pour `request.Culture` ; le renderer Markdown intégré lit ainsi ses titres et libellés depuis des ressources indexées par cette culture. Le *contenu* des erreurs est déjà localisé en amont par l’extracteur : un renderer ne localise donc que son propre gabarit.
 
 Le contrat et le modèle (`ErrorDocumentation`, `ErrorDiagnostic`, …) sont livrés dans le package `FirstClassErrors`, qui cible **.NET Standard 2.0** — un renderer n’a donc besoin que de cette seule référence, que la plupart des projets possèdent déjà.
 
@@ -32,7 +40,14 @@ public sealed class CsvErrorDocumentationRenderer : IErrorDocumentationRenderer 
 
     public string Format => "csv";
 
-    public IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog) {
+    // Un seul fichier CSV — ce renderer ne gère que le layout « single ».
+    public IReadOnlyCollection<string> SupportedLayouts { get; } = new[] { RenderLayouts.Single };
+
+    public IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog, RenderRequest request) {
+        if (!SupportedLayouts.Contains(request.Layout, StringComparer.OrdinalIgnoreCase)) {
+            throw new LayoutNotSupportedException(Format, request.Layout, SupportedLayouts);
+        }
+
         var rows    = catalog.Select(error => $"{error.Code},{Quote(error.Title)}");
         var content = "code,title\n" + string.Join("\n", rows);
 
@@ -43,7 +58,7 @@ public sealed class CsvErrorDocumentationRenderer : IErrorDocumentationRenderer 
 }
 ```
 
-C’est un renderer complet.
+C’est un renderer complet. (Ce CSV n’a aucun texte fixe à traduire ; un renderer qui émet des titres ou des libellés les lirait depuis des ressources indexées par `request.Culture`.)
 
 ## Le brancher sur la CLI
 
@@ -80,7 +95,8 @@ La CLI est optionnelle — un renderer n’est qu’une classe. Si vous obtenez 
 IEnumerable<ErrorDocumentation> catalog =
     SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom("MyApp.sln", new SolutionGenerationOptions());
 
-foreach (RenderedDocument document in new CsvErrorDocumentationRenderer().Render(catalog)) {
+RenderRequest request = new(RenderLayouts.Single, CultureInfo.GetCultureInfo("fr"));
+foreach (RenderedDocument document in new CsvErrorDocumentationRenderer().Render(catalog, request)) {
     File.WriteAllText(document.RelativePath, document.Content);
 }
 ```
