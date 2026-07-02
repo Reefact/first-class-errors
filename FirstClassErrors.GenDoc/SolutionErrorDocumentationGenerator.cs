@@ -75,6 +75,33 @@ public static class SolutionErrorDocumentationGenerator {
         return errorDocumentation;
     }
 
+    public static IEnumerable<ErrorDocumentation> GetErrorDocumentationFromAssemblies(IReadOnlyList<string> assemblyPaths, SolutionGenerationOptions options) {
+        ArgumentNullException.ThrowIfNull(assemblyPaths);
+        ArgumentNullException.ThrowIfNull(options);
+
+        options.Logger.Info($"Starting documentation generation from {assemblyPaths.Count} assembly path(s).");
+
+        List<string> resolved = new();
+        foreach (string assemblyPath in assemblyPaths) {
+            string fullPath = Path.GetFullPath(assemblyPath);
+            if (File.Exists(fullPath) is false) {
+                HandleFailure(options, $"Assembly not found: '{fullPath}'.");
+
+                continue;
+            }
+
+            resolved.Add(fullPath);
+        }
+
+        resolved = resolved.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        if (resolved.Count == 0) { return []; }
+
+        IEnumerable<ErrorDocumentation> errorDocumentation = ExtractFromAssemblies(resolved, options);
+        options.Logger.Info("Documentation generation completed.");
+
+        return errorDocumentation;
+    }
+
     private static List<ProjectInfo> ReadSolutionProjects(string solutionPath, SolutionGenerationOptions options) {
         // Enumerate projects via the SDK ("dotnet sln list") rather than the in-process MSBuild object model. This keeps
         // the generator free of the heavy Microsoft.Build dependency and handles both .sln and .slnx uniformly.
