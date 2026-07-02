@@ -83,4 +83,32 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
              .Throws<SolutionDocumentationGenerationException>();
     }
 
+    [Fact(DisplayName = "GetErrorDocumentationFromAssemblies returns an empty catalog for an empty path list.")]
+    public void GetErrorDocumentationFromAssembliesReturnsEmptyForAnEmptyList() {
+        // Exercise: no assembly path at all, so no worker is ever launched.
+        IEnumerable<ErrorDocumentation> result =
+            SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies([], new SolutionGenerationOptions());
+
+        // Verify
+        Check.That(result).IsEmpty();
+    }
+
+    [Fact(DisplayName = "Generation fails fast when the configured documentation worker cannot be found.")]
+    public void GenerationFailsWhenTheConfiguredWorkerCannotBeFound() {
+        // Setup: a real (resolvable) assembly path, but a worker path that does not exist. Resolving the worker throws
+        // before any process is launched, so this stays a pure, SDK-free test.
+        string assemblyPath = Path.GetTempFileName();
+        SolutionGenerationOptions options = new() {
+            WorkerAssemblyPath = Path.Combine(Path.GetTempPath(), "this-worker-does-not-exist.dll")
+        };
+
+        try {
+            // Exercise & verify
+            Check.ThatCode(() => SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies(new[] { assemblyPath }, options))
+                 .Throws<SolutionDocumentationGenerationException>();
+        } finally {
+            File.Delete(assemblyPath);
+        }
+    }
+
 }
