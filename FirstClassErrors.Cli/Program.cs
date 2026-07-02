@@ -14,14 +14,17 @@ app.Configure(config => {
     config.AddCommand<GenerateCommand>("generate")
           .WithDescription("Generate error documentation from a solution or from assemblies.");
 
-    config.AddCommand<InitCommand>("init")
-          .WithDescription("Create a configuration file (fce.json) in the current directory.");
+    config.AddBranch<CommandSettings>("config", configuration => {
+        configuration.SetDescription("Manage the configuration file (fce.json).");
+        configuration.AddCommand<InitCommand>("init").WithDescription("Create the configuration file.");
+        configuration.AddCommand<ConfigShowCommand>("show").WithDescription("Print the current configuration.");
 
-    config.AddBranch<CommandSettings>("renderer", renderer => {
-        renderer.SetDescription("Manage the custom renderer libraries referenced by the configuration.");
-        renderer.AddCommand<RendererAddCommand>("add").WithDescription("Register a renderer library.");
-        renderer.AddCommand<RendererRemoveCommand>("remove").WithDescription("Unregister a renderer library.");
-        renderer.AddCommand<RendererListCommand>("list").WithDescription("List available renderers (built-in and configured).");
+        configuration.AddBranch<CommandSettings>("renderer", renderer => {
+            renderer.SetDescription("Manage the custom renderer libraries referenced by the configuration.");
+            renderer.AddCommand<RendererAddCommand>("add").WithDescription("Register a renderer library.");
+            renderer.AddCommand<RendererRemoveCommand>("remove").WithDescription("Unregister a renderer library.");
+            renderer.AddCommand<RendererListCommand>("list").WithDescription("List available renderers (built-in and configured).");
+        });
     });
 });
 

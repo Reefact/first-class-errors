@@ -31,7 +31,7 @@ internal sealed class InitCommand : Command<InitSettings> {
             return 1;
         }
 
-        ConfigurationStore.Save(path, new RendererConfiguration());
+        ConfigurationStore.Save(path, new CliConfiguration());
         Console.Out.WriteLine($"Created configuration at '{path}'.");
 
         return 0;

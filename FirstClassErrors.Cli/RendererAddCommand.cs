@@ -50,7 +50,7 @@ internal sealed class RendererAddCommand : Command<RendererReferenceSettings> {
             return 1;
         }
 
-        RendererConfiguration configuration = ConfigurationStore.Load(path);
+        CliConfiguration configuration = ConfigurationStore.Load(path);
         bool alreadyReferenced = configuration.Renderers.Any(existing =>
             string.Equals(RendererLoader.Resolve(existing, configDir), library, StringComparison.OrdinalIgnoreCase));
 
