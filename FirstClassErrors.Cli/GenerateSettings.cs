@@ -13,7 +13,7 @@ namespace FirstClassErrors.Cli;
 ///     Options for the documentation generation command. Spectre.Console.Cli binds the command line to these
 ///     properties and generates the <c>--help</c> output from the attributes below.
 /// </summary>
-internal sealed class GenerateSettings : CommandSettings {
+internal sealed class GenerateSettings : ConfigScopedSettings {
 
     [CommandOption("-s|--solution <PATH>")]
     [Description("Path to the .sln file to document.")]
@@ -76,7 +76,7 @@ internal sealed class GenerateSettings : CommandSettings {
 
     /// <summary>
     ///     Cross-option rules enforced before the command runs: exactly one source (a solution or one/more
-    ///     assemblies), a supported format, and a layout compatible with that format.
+    ///     assemblies) and a layout compatible with the requested format.
     /// </summary>
     public override ValidationResult Validate() {
         bool hasSolution   = string.IsNullOrWhiteSpace(SolutionPath) is false;
@@ -90,17 +90,14 @@ internal sealed class GenerateSettings : CommandSettings {
             return ValidationResult.Error("A source is required: pass --solution <path> or --assemblies <path> (repeatable).");
         }
 
-        string format = NormalizedFormat();
-        if (RendererCatalog.Supports(format) is false) {
-            return ValidationResult.Error($"Unsupported --format '{Format}'. Supported formats: {string.Join(", ", RendererCatalog.Formats)}.");
-        }
-
+        // The set of valid formats depends on the configured custom renderers, which are resolved at generation
+        // time; an unknown format is reported there. Here we only validate the layout, which is format-agnostic.
         string layout = NormalizedLayout();
         if (layout is not ("single" or "split")) {
             return ValidationResult.Error($"Unsupported --layout '{Layout}'. Supported layouts: single, split.");
         }
 
-        if (layout == "split" && format != "markdown") {
+        if (layout == "split" && NormalizedFormat() != "markdown") {
             return ValidationResult.Error("The 'split' layout is only supported for --format markdown.");
         }
 

@@ -7,47 +7,55 @@ using FirstClassErrors.GenDoc.Rendering;
 namespace FirstClassErrors.Cli;
 
 /// <summary>
-///     The set of renderers the CLI can produce, each selected by the <see cref="IErrorDocumentationRenderer.Format" />
-///     it declares. To expose a new format, add one factory to <see cref="Factories" /> — no other code changes.
+///     Resolves the renderer to use from its declared <see cref="IErrorDocumentationRenderer.Format" />. Built-in
+///     renderers are baked in; custom renderers are supplied per run, loaded from the configuration.
 /// </summary>
 internal static class RendererCatalog {
 
     #region Statics members declarations
 
-    // One entry per renderer. Each factory receives the parsed settings so a renderer can honour its own options
-    // (e.g. the Markdown layout). Adding a format is a single line here.
-    private static readonly IReadOnlyList<Func<GenerateSettings, IErrorDocumentationRenderer>> Factories = [
+    // One entry per built-in renderer. Each factory receives the parsed settings so a renderer can honour its own
+    // options (e.g. the Markdown layout). Adding a built-in format is a single line here; custom formats are added
+    // through the configuration instead (fce renderer add).
+    private static readonly IReadOnlyList<Func<GenerateSettings, IErrorDocumentationRenderer>> BuiltInFactories = [
         _ => new JsonErrorDocumentationRenderer(),
         settings => new MarkdownErrorDocumentationRenderer(settings.NormalizedLayout() == "split"
                                                                ? MarkdownLayout.Split
                                                                : MarkdownLayout.Single)
     ];
 
-    /// <summary>Gets the format identifiers the CLI supports, as declared by the registered renderers.</summary>
-    public static IReadOnlyList<string> Formats {
-        get { return Factories.Select(factory => factory(new GenerateSettings()).Format).ToList(); }
-    }
-
-    /// <summary>Determines whether a renderer is registered for the given (already normalized) format.</summary>
-    public static bool Supports(string format) {
-        return Formats.Any(known => string.Equals(known, format, StringComparison.OrdinalIgnoreCase));
+    /// <summary>Gets the built-in format identifiers, as declared by the built-in renderers.</summary>
+    public static IReadOnlyList<string> BuiltInFormats {
+        get { return BuiltInFactories.Select(factory => factory(new GenerateSettings()).Format).ToList(); }
     }
 
     /// <summary>
-    ///     Creates the renderer whose declared format matches <see cref="GenerateSettings.NormalizedFormat" />.
+    ///     Creates the renderer whose declared format matches <see cref="GenerateSettings.NormalizedFormat" />,
+    ///     preferring a built-in over a custom one when both declare the same format.
     /// </summary>
+    /// <param name="settings">The parsed generation settings (carries the requested format and layout).</param>
+    /// <param name="customRenderers">Renderers loaded from the configuration for this run.</param>
     /// <exception cref="InvalidOperationException">Thrown when no renderer declares the requested format.</exception>
-    public static IErrorDocumentationRenderer Create(GenerateSettings settings) {
+    public static IErrorDocumentationRenderer Create(GenerateSettings settings, IReadOnlyList<IErrorDocumentationRenderer> customRenderers) {
         string requested = settings.NormalizedFormat();
 
-        foreach (Func<GenerateSettings, IErrorDocumentationRenderer> factory in Factories) {
+        foreach (Func<GenerateSettings, IErrorDocumentationRenderer> factory in BuiltInFactories) {
             IErrorDocumentationRenderer renderer = factory(settings);
             if (string.Equals(renderer.Format, requested, StringComparison.OrdinalIgnoreCase)) {
                 return renderer;
             }
         }
 
-        throw new InvalidOperationException($"Unsupported format '{settings.Format}'. Available formats: {string.Join(", ", Formats)}.");
+        foreach (IErrorDocumentationRenderer renderer in customRenderers) {
+            if (string.Equals(renderer.Format, requested, StringComparison.OrdinalIgnoreCase)) {
+                return renderer;
+            }
+        }
+
+        IEnumerable<string> available = BuiltInFormats.Concat(customRenderers.Select(renderer => renderer.Format))
+                                                      .Distinct(StringComparer.OrdinalIgnoreCase);
+
+        throw new InvalidOperationException($"Unsupported format '{settings.Format}'. Available formats: {string.Join(", ", available)}.");
     }
 
     #endregion

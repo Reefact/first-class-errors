@@ -8,7 +8,7 @@ namespace FirstClassErrors.Cli;
 
 /// <summary>
 ///     Writes generation logs to standard error so that standard output carries only the rendered document (which
-///     lets the tool be piped, e.g. <c>fce-gendoc --solution app.sln | jq</c>). Informational and debug lines are
+///     lets the tool be piped, e.g. <c>fce generate --solution app.sln | jq</c>). Informational and debug lines are
 ///     emitted only in verbose mode; warnings and errors are always shown.
 /// </summary>
 internal sealed class ConsoleGenerationLogger : IGenerationLogger {

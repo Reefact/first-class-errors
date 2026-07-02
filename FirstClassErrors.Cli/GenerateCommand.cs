@@ -35,7 +35,13 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
                     ? SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(settings.SolutionPath!, options)
                     : SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies(settings.AssemblyPaths, options);
 
-            IErrorDocumentationRenderer renderer = RendererCatalog.Create(settings);
+            // Custom renderers referenced by the configuration are loaded and offered alongside the built-in ones.
+            string                configPath    = ConfigurationStore.Resolve(settings.ConfigPath);
+            RendererConfiguration configuration = ConfigurationStore.Load(configPath);
+            string                configDir     = Path.GetDirectoryName(configPath) ?? Directory.GetCurrentDirectory();
+            IReadOnlyList<IErrorDocumentationRenderer> customRenderers = RendererLoader.Load(configuration.Renderers, configDir, logger);
+
+            IErrorDocumentationRenderer renderer = RendererCatalog.Create(settings, customRenderers);
 
             // The catalog is enumerated here (by the renderer), so generation failures surface as a clean error.
             IReadOnlyList<RenderedDocument> documents = renderer.Render(catalog);
