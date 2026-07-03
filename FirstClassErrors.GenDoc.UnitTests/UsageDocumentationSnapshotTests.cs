@@ -80,21 +80,27 @@ public sealed class UsageDocumentationSnapshotTests {
         await Verifier.Verify(files);
     }
 
-    [Fact(DisplayName = "The Usage catalog is extracted in the requested language (French).")]
-    public void TheUsageCatalogIsExtractedInFrench() {
-        // Exercise: extract the real Usage catalog under the French culture. Temperature is intentionally the plain,
-        // non-localized example, so this asserts on a source that opts into i18n: Amount.
-        ErrorDocumentationExtractionResult result = ExtractFor(CultureInfo.GetCultureInfo("fr"));
+    // Amount opts into i18n (Temperature is deliberately the plain, non-localized example), so it proves the localized
+    // content is resolved per requested culture: the authored prose (title/explanation) AND the source group's
+    // description — provided as a resource key via [ProvidesErrorsFor(DescriptionResourceType = …)]. A passing case per
+    // language also proves that language's satellite assembly is built and loaded.
+    [Theory(DisplayName = "The Usage catalog is extracted in the requested language.")]
+    [InlineData("fr", "Incohérence de devise entre montants", "Cette erreur se produit", "Erreurs levées lors d'opérations combinant")]
+    [InlineData("es", "Discrepancia de moneda entre importes", "Este error se produce", "Errores generados al realizar operaciones")]
+    [InlineData("de", "Währungskonflikt zwischen Beträgen", "Dieser Fehler tritt auf", "Fehler, die bei Operationen ausgelöst werden")]
+    [InlineData("sv", "Valutakonflikt mellan belopp", "Det här felet uppstår", "Fel som uppstår vid operationer")]
+    public void TheUsageCatalogIsExtractedInTheRequestedLanguage(string culture, string expectedTitle, string explanationPrefix, string sourceDescriptionPrefix) {
+        // Exercise: extract the real Usage catalog under the requested culture.
+        ErrorDocumentationExtractionResult result = ExtractFor(CultureInfo.GetCultureInfo(culture));
 
-        // Verify: the authored prose is localized (title/explanation), and the source group's description — provided
-        // as a resource key via [ProvidesErrorsFor(DescriptionResourceType = …)] — is resolved to French too.
+        // Verify
         ErrorDocumentation amount =
             result.Documentation.Single(document => document.Code == "AMOUNT_CURRENCY_MISMATCH");
 
         Check.That(amount.Source).IsEqualTo("Amount");
-        Check.That(amount.Title).IsEqualTo("Incohérence de devise entre montants");
-        Check.That(amount.Explanation).StartsWith("Cette erreur se produit");
-        Check.That(amount.SourceDescription).StartsWith("Erreurs levées lors d'opérations combinant");
+        Check.That(amount.Title).IsEqualTo(expectedTitle);
+        Check.That(amount.Explanation).StartsWith(explanationPrefix);
+        Check.That(amount.SourceDescription).StartsWith(sourceDescriptionPrefix);
     }
 
 }
