@@ -92,10 +92,14 @@ Paths are absolute or relative to `fce.json`, so a configuration is portable wit
 The CLI is optional — a renderer is just a class. If you obtain a catalog yourself (for instance via `SolutionErrorDocumentationGenerator`, in `FirstClassErrors.GenDoc`), rendering it is:
 
 ```csharp
-IEnumerable<ErrorDocumentation> catalog =
-    SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom("MyApp.sln", new SolutionGenerationOptions());
+// Use one culture for both levels: it localizes the extracted content and the rendered boilerplate.
+CultureInfo culture = CultureInfo.GetCultureInfo("en");
 
-RenderRequest request = new(RenderLayouts.Single, CultureInfo.GetCultureInfo("en"));
+IEnumerable<ErrorDocumentation> catalog =
+    SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(
+        "MyApp.sln", new SolutionGenerationOptions { Culture = culture });
+
+RenderRequest request = new(RenderLayouts.Single, culture);
 foreach (RenderedDocument document in new CsvErrorDocumentationRenderer().Render(catalog, request)) {
     File.WriteAllText(document.RelativePath, document.Content);
 }
