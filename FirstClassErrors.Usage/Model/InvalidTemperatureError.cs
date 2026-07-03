@@ -1,6 +1,5 @@
 ﻿#region Usings declarations
 
-using FirstClassErrors.Usage.Resources;
 using FirstClassErrors.Usage.Utils;
 
 #endregion
@@ -11,8 +10,7 @@ namespace FirstClassErrors.Usage.Model;
 ///     Represents a domain error produced when an attempt is made to create a temperature with an invalid value.
 /// </summary>
 [ProvidesErrorsFor(nameof(Temperature),
-                   Description = "Temperature_Source",
-                   DescriptionResourceType = typeof(UsageErrorMessages))]
+                   Description = "Errors raised when constructing a Temperature value from an out-of-range input.")]
 public static class InvalidTemperatureError {
 
     #region Statics members declarations
@@ -27,14 +25,14 @@ public static class InvalidTemperatureError {
     internal static DomainError BelowAbsoluteZero(decimal invalidValue, TemperatureUnit invalidValueUnit) {
         return new DomainError(
             Code.TemperatureBelowAbsoluteZero,
-            DocumentationFormatter.Format(UsageErrorMessages.Get("Temperature_BelowAbsoluteZero_Message"), invalidValue, invalidValueUnit),
-            UsageErrorMessages.Get("Temperature_BelowAbsoluteZero_ShortMessage"));
+            DocumentationFormatter.Format("Failed to instantiate temperature: the value {0} {1} is below absolute zero.", invalidValue, invalidValueUnit),
+            "Temperature is below absolute zero.");
     }
 
     private static ErrorDocumentation BelowAbsoluteZeroDocumentation() {
-        return DescribeError.WithTitle(UsageErrorMessages.Get("Temperature_BelowAbsoluteZero_Title"))
-                            .WithDescription(UsageErrorMessages.Get("Temperature_BelowAbsoluteZero_Description"))
-                            .WithRule(UsageErrorMessages.Get("Temperature_BelowAbsoluteZero_Rule"))
+        return DescribeError.WithTitle("Temperature below absolute zero")
+                            .WithDescription("This error occurs when trying to instantiate a temperature with a value that is below absolute zero.")
+                            .WithRule("Temperature cannot go below absolute zero because absolute zero is the point where particles have minimum possible energy.")
                             .WithDiagnostics(ValueObjectDiagnostic.Diagnostic)
                             .WithExamples(
                                  () => BelowAbsoluteZero(-1, TemperatureUnit.Kelvin),
