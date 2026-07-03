@@ -1,0 +1,154 @@
+﻿{
+  Documentation: [
+    {
+      Code: AMOUNT_CURRENCY_MISMATCH,
+      Title: Amount currency mismatch,
+      Explanation: This error occurs when trying to use multiple amounts together in an operation while they are expressed in different currencies.,
+      BusinessRule: All monetary operations must involve amounts expressed in the same currency.,
+      Diagnostics: [
+        {
+          PossibleCause: Amounts were used in a monetary operation without having been converted to the same currency.,
+          AnalysisHint: Verify whether all amounts involved in the operation were converted to a common currency before being used together.
+        },
+        {
+          PossibleCause: Amounts expected to be expressed in the same currency were provided with different currencies.,
+          Origin: InternalOrExternal,
+          AnalysisHint: Check the currencies associated with each amount and confirm whether a common currency was expected for this operation.
+        }
+      ],
+      Examples: [
+        {
+          DetailedMessage: Failed to perform the monetary operation because the involved amounts are expressed in different currencies: 127.33 EUR and 57689 USD.,
+          ShortMessage: Currency mismatch
+        }
+      ],
+      Source: Amount,
+      SourceDescription: Errors raised when performing operations that combine monetary Amount values.
+    },
+    {
+      Code: BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD,
+      Title: Transaction date outside statement period,
+      Explanation: This error occurs when trying to validate a bank statement file that contains one or more transactions dated outside the statement period.,
+      BusinessRule: All transactions must occur within the statement period.,
+      Diagnostics: [
+        {
+          PossibleCause: The transaction date provided in the statement file is incorrect or inconsistent with the actual transaction date.,
+          Origin: External,
+          AnalysisHint: Verify the transaction date present in the input file and confirm its consistency with the actual transaction timeline.
+        },
+        {
+          PossibleCause: The statement period defined in the file does not match the actual coverage period of the transactions.,
+          Origin: External,
+          AnalysisHint: Check whether the statement start and end dates in the file align with the period covered by the transactions.
+        },
+        {
+          PossibleCause: The transaction was posted after the statement was generated but was mistakenly included in the file.,
+          Origin: InternalOrExternal,
+          AnalysisHint: Determine whether late-posted transactions were included in the statement generation process.
+        },
+        {
+          PossibleCause: An internal processing error caused the transaction date to be shifted during data transformation or import.,
+          AnalysisHint: Examine the data import and transformation stages to confirm that transaction dates are preserved without alteration.
+        }
+      ],
+      Examples: [
+        {
+          DetailedMessage: Transaction dated 2024-02-02 is outside the statement period [2024-01-05;2024-01-31].,
+          ShortMessage: Transaction date is outside the statement period.
+        }
+      ],
+      Context: [
+        {
+          Key: TRANSACTION_DATE,
+          Description: The date of the transaction being processed.,
+          ValueType: System.DateOnly,
+          ExampleValues: [
+            Date_1
+          ]
+        }
+      ],
+      Source: BankTransactionFileValidator,
+      SourceDescription: Errors raised while validating an uploaded bank statement file against its declared metadata (statement period and totals).
+    },
+    {
+      Code: BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH,
+      Title: Statement total amount mismatch,
+      Explanation: This error occurs when trying to validate a bank statement file whose declared total amount does not match the sum of the individual transaction amounts.,
+      BusinessRule: The statement total amount must equal the sum of all transaction amounts included in the statement.,
+      Diagnostics: [
+        {
+          PossibleCause: The total amount declared in the statement file does not match the sum of the individual transaction amounts.,
+          Origin: External,
+          AnalysisHint: Verify the declared total amount in the file and compare it with the sum of all transaction amounts.
+        },
+        {
+          PossibleCause: One or more transactions are missing or duplicated in the statement file.,
+          Origin: External,
+          AnalysisHint: Check whether all expected transactions are present exactly once in the statement file.
+        },
+        {
+          PossibleCause: A rounding or precision error occurred when calculating the statement total amount.,
+          Origin: InternalOrExternal,
+          AnalysisHint: Examine how rounding and precision rules were applied when computing the statement total.
+        },
+        {
+          PossibleCause: An internal processing error altered transaction amounts during file parsing or transformation.,
+          AnalysisHint: Inspect the file parsing and transformation stages to confirm that transaction amounts remain unchanged.
+        }
+      ],
+      Examples: [
+        {
+          DetailedMessage: The declared statement total amount (1250 EUR) does not match the computed total amount from transactions (1249.5 EUR).,
+          ShortMessage: Statement total amount mismatch.
+        }
+      ],
+      Source: BankTransactionFileValidator,
+      SourceDescription: Errors raised while validating an uploaded bank statement file against its declared metadata (statement period and totals).
+    },
+    {
+      Code: TEMPERATURE_BELOW_ABSOLUTE_ZERO,
+      Title: Temperature below absolute zero,
+      Explanation: This error occurs when trying to instantiate a temperature with a value that is below absolute zero.,
+      BusinessRule: Temperature cannot go below absolute zero because absolute zero is the point where particles have minimum possible energy.,
+      Diagnostics: [
+        {
+          PossibleCause: The value entered manually by a user is invalid.,
+          Origin: External,
+          AnalysisHint: Verify the value entered by the user and assess its compliance with domain rules.
+        },
+        {
+          PossibleCause: The value received from an external system (API, message, etc.) is invalid.,
+          Origin: External,
+          AnalysisHint: Check the data provided by the upstream system and evaluate its validity against domain rules.
+        },
+        {
+          PossibleCause: The value was loaded from corrupted or outdated persisted data.,
+          Origin: External,
+          AnalysisHint: Examine the persisted data source to determine whether stored values comply with current domain rules.
+        },
+        {
+          PossibleCause: The value was computed internally without using domain-safe methods.,
+          AnalysisHint: Inspect the internal computation logic to confirm that domain invariants are preserved.
+        },
+        {
+          PossibleCause: The value originates from system configuration or defaults that are incorrect or outdated.,
+          Origin: External,
+          AnalysisHint: Review the relevant configuration or default parameters to assess their compliance with domain rules.
+        }
+      ],
+      Examples: [
+        {
+          DetailedMessage: Failed to instantiate temperature: the value -1 K is below absolute zero.,
+          ShortMessage: Temperature is below absolute zero.
+        },
+        {
+          DetailedMessage: Failed to instantiate temperature: the value -280 °C is below absolute zero.,
+          ShortMessage: Temperature is below absolute zero.
+        }
+      ],
+      Source: Temperature,
+      SourceDescription: Errors raised when constructing a Temperature value from an out-of-range input.
+    }
+  ],
+  HasFailures: false
+}
