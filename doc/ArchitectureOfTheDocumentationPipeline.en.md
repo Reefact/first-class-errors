@@ -121,6 +121,8 @@ The generated documentation can be produced in a chosen language with `fce gener
 
 Error *content* is localized at extraction; renderer *boilerplate* is localized at rendering. File names and anchors stay culture-invariant, so links remain stable across languages.
 
+**Internationalization is opt-in.** An error whose `[ProvidesErrorsFor]` has no `DescriptionResourceType` keeps its literal `Description` text, and a factory that authors plain strings — rather than reading resources — is simply always in that one language; without `--language` everything renders in English. So a project needs i18n only where it wants it. The `.Usage` sample shows both: `Temperature` is a plain, non-localized example, while `Amount` and `BankTransactionFileValidator` are fully localized across the five languages.
+
 ## 🔁 Why this architecture matters
 
 This separation ensures:

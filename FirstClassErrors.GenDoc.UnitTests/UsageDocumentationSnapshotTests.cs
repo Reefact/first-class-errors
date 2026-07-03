@@ -82,18 +82,19 @@ public sealed class UsageDocumentationSnapshotTests {
 
     [Fact(DisplayName = "The Usage catalog is extracted in the requested language (French).")]
     public void TheUsageCatalogIsExtractedInFrench() {
-        // Exercise: extract the real Usage catalog under the French culture.
+        // Exercise: extract the real Usage catalog under the French culture. Temperature is intentionally the plain,
+        // non-localized example, so this asserts on a source that opts into i18n: Amount.
         ErrorDocumentationExtractionResult result = ExtractFor(CultureInfo.GetCultureInfo("fr"));
 
         // Verify: the authored prose is localized (title/explanation), and the source group's description — provided
         // as a resource key via [ProvidesErrorsFor(DescriptionResourceType = …)] — is resolved to French too.
-        ErrorDocumentation temperature =
-            result.Documentation.Single(document => document.Code == "TEMPERATURE_BELOW_ABSOLUTE_ZERO");
+        ErrorDocumentation amount =
+            result.Documentation.Single(document => document.Code == "AMOUNT_CURRENCY_MISMATCH");
 
-        Check.That(temperature.Source).IsEqualTo("Temperature");
-        Check.That(temperature.Title).IsEqualTo("Température en dessous du zéro absolu");
-        Check.That(temperature.Explanation).StartsWith("Cette erreur se produit");
-        Check.That(temperature.SourceDescription).StartsWith("Erreurs levées lors de la construction");
+        Check.That(amount.Source).IsEqualTo("Amount");
+        Check.That(amount.Title).IsEqualTo("Incohérence de devise entre montants");
+        Check.That(amount.Explanation).StartsWith("Cette erreur se produit");
+        Check.That(amount.SourceDescription).StartsWith("Erreurs levées lors d'opérations combinant");
     }
 
 }

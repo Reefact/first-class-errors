@@ -58,29 +58,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Temperature_Source" xml:space="preserve">
-    <value>Fehler, die beim Erstellen eines Temperature-Werts aus einer Eingabe außerhalb des gültigen Bereichs ausgelöst werden.</value>
-  </data>
   <data name="Amount_Source" xml:space="preserve">
     <value>Fehler, die bei Operationen ausgelöst werden, die monetäre Amount-Werte kombinieren.</value>
   </data>
   <data name="Bank_Source" xml:space="preserve">
     <value>Fehler, die bei der Validierung einer hochgeladenen Kontoauszugsdatei anhand ihrer deklarierten Metadaten (Auszugszeitraum und Summen) ausgelöst werden.</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_Title" xml:space="preserve">
-    <value>Temperatur unter dem absoluten Nullpunkt</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_Description" xml:space="preserve">
-    <value>Dieser Fehler tritt auf, wenn versucht wird, eine Temperatur mit einem Wert unter dem absoluten Nullpunkt zu instanziieren.</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_Rule" xml:space="preserve">
-    <value>Die Temperatur kann nicht unter den absoluten Nullpunkt fallen, da der absolute Nullpunkt der Punkt ist, an dem Teilchen die geringstmögliche Energie besitzen.</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_Message" xml:space="preserve">
-    <value>Temperatur konnte nicht instanziiert werden: der Wert {0} {1} liegt unter dem absoluten Nullpunkt.</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_ShortMessage" xml:space="preserve">
-    <value>Die Temperatur liegt unter dem absoluten Nullpunkt.</value>
   </data>
   <data name="Amount_CurrencyMismatch_Title" xml:space="preserve">
     <value>Währungskonflikt zwischen Beträgen</value>
@@ -186,35 +168,5 @@
   </data>
   <data name="Bank_TotalMismatch_Hint4" xml:space="preserve">
     <value>Prüfen Sie die Phasen des Parsens und der Transformation der Datei, um zu bestätigen, dass die Transaktionsbeträge unverändert bleiben.</value>
-  </data>
-  <data name="ValueObject_Cause1" xml:space="preserve">
-    <value>Der von einem Benutzer manuell eingegebene Wert ist ungültig.</value>
-  </data>
-  <data name="ValueObject_Hint1" xml:space="preserve">
-    <value>Überprüfen Sie den vom Benutzer eingegebenen Wert und beurteilen Sie seine Konformität mit den Domänenregeln.</value>
-  </data>
-  <data name="ValueObject_Cause2" xml:space="preserve">
-    <value>Der von einem externen System (API, Nachricht usw.) empfangene Wert ist ungültig.</value>
-  </data>
-  <data name="ValueObject_Hint2" xml:space="preserve">
-    <value>Überprüfen Sie die vom vorgelagerten System bereitgestellten Daten und bewerten Sie ihre Gültigkeit anhand der Domänenregeln.</value>
-  </data>
-  <data name="ValueObject_Cause3" xml:space="preserve">
-    <value>Der Wert wurde aus beschädigten oder veralteten persistierten Daten geladen.</value>
-  </data>
-  <data name="ValueObject_Hint3" xml:space="preserve">
-    <value>Untersuchen Sie die persistierte Datenquelle, um festzustellen, ob die gespeicherten Werte den aktuellen Domänenregeln entsprechen.</value>
-  </data>
-  <data name="ValueObject_Cause4" xml:space="preserve">
-    <value>Der Wert wurde intern ohne Verwendung domänensicherer Methoden berechnet.</value>
-  </data>
-  <data name="ValueObject_Hint4" xml:space="preserve">
-    <value>Prüfen Sie die interne Berechnungslogik, um zu bestätigen, dass die Domäneninvarianten erhalten bleiben.</value>
-  </data>
-  <data name="ValueObject_Cause5" xml:space="preserve">
-    <value>Der Wert stammt aus einer Systemkonfiguration oder aus Standardwerten, die falsch oder veraltet sind.</value>
-  </data>
-  <data name="ValueObject_Hint5" xml:space="preserve">
-    <value>Überprüfen Sie die relevante Konfiguration oder die Standardparameter, um ihre Konformität mit den Domänenregeln zu bewerten.</value>
   </data>
 </root>

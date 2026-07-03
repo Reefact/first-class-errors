@@ -58,29 +58,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Temperature_Source" xml:space="preserve">
-    <value>Errors raised when constructing a Temperature value from an out-of-range input.</value>
-  </data>
   <data name="Amount_Source" xml:space="preserve">
     <value>Errors raised when performing operations that combine monetary Amount values.</value>
   </data>
   <data name="Bank_Source" xml:space="preserve">
     <value>Errors raised while validating an uploaded bank statement file against its declared metadata (statement period and totals).</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_Title" xml:space="preserve">
-    <value>Temperature below absolute zero</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_Description" xml:space="preserve">
-    <value>This error occurs when trying to instantiate a temperature with a value that is below absolute zero.</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_Rule" xml:space="preserve">
-    <value>Temperature cannot go below absolute zero because absolute zero is the point where particles have minimum possible energy.</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_Message" xml:space="preserve">
-    <value>Failed to instantiate temperature: the value {0} {1} is below absolute zero.</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_ShortMessage" xml:space="preserve">
-    <value>Temperature is below absolute zero.</value>
   </data>
   <data name="Amount_CurrencyMismatch_Title" xml:space="preserve">
     <value>Amount currency mismatch</value>
@@ -186,35 +168,5 @@
   </data>
   <data name="Bank_TotalMismatch_Hint4" xml:space="preserve">
     <value>Inspect the file parsing and transformation stages to confirm that transaction amounts remain unchanged.</value>
-  </data>
-  <data name="ValueObject_Cause1" xml:space="preserve">
-    <value>The value entered manually by a user is invalid.</value>
-  </data>
-  <data name="ValueObject_Hint1" xml:space="preserve">
-    <value>Verify the value entered by the user and assess its compliance with domain rules.</value>
-  </data>
-  <data name="ValueObject_Cause2" xml:space="preserve">
-    <value>The value received from an external system (API, message, etc.) is invalid.</value>
-  </data>
-  <data name="ValueObject_Hint2" xml:space="preserve">
-    <value>Check the data provided by the upstream system and evaluate its validity against domain rules.</value>
-  </data>
-  <data name="ValueObject_Cause3" xml:space="preserve">
-    <value>The value was loaded from corrupted or outdated persisted data.</value>
-  </data>
-  <data name="ValueObject_Hint3" xml:space="preserve">
-    <value>Examine the persisted data source to determine whether stored values comply with current domain rules.</value>
-  </data>
-  <data name="ValueObject_Cause4" xml:space="preserve">
-    <value>The value was computed internally without using domain-safe methods.</value>
-  </data>
-  <data name="ValueObject_Hint4" xml:space="preserve">
-    <value>Inspect the internal computation logic to confirm that domain invariants are preserved.</value>
-  </data>
-  <data name="ValueObject_Cause5" xml:space="preserve">
-    <value>The value originates from system configuration or defaults that are incorrect or outdated.</value>
-  </data>
-  <data name="ValueObject_Hint5" xml:space="preserve">
-    <value>Review the relevant configuration or default parameters to assess their compliance with domain rules.</value>
   </data>
 </root>

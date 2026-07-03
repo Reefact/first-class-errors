@@ -58,29 +58,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Temperature_Source" xml:space="preserve">
-    <value>Erreurs levées lors de la construction d'une valeur Temperature à partir d'une entrée hors plage.</value>
-  </data>
   <data name="Amount_Source" xml:space="preserve">
     <value>Erreurs levées lors d'opérations combinant des valeurs monétaires Amount.</value>
   </data>
   <data name="Bank_Source" xml:space="preserve">
     <value>Erreurs levées lors de la validation d'un relevé bancaire téléversé au regard de ses métadonnées déclarées (période et totaux du relevé).</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_Title" xml:space="preserve">
-    <value>Température en dessous du zéro absolu</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_Description" xml:space="preserve">
-    <value>Cette erreur se produit lorsqu'on tente d'instancier une température avec une valeur inférieure au zéro absolu.</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_Rule" xml:space="preserve">
-    <value>La température ne peut pas descendre en dessous du zéro absolu, car le zéro absolu est le point où les particules ont l'énergie minimale possible.</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_Message" xml:space="preserve">
-    <value>Échec de l'instanciation de la température : la valeur {0} {1} est en dessous du zéro absolu.</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_ShortMessage" xml:space="preserve">
-    <value>La température est en dessous du zéro absolu.</value>
   </data>
   <data name="Amount_CurrencyMismatch_Title" xml:space="preserve">
     <value>Incohérence de devise entre montants</value>
@@ -186,35 +168,5 @@
   </data>
   <data name="Bank_TotalMismatch_Hint4" xml:space="preserve">
     <value>Inspectez les étapes d'analyse et de transformation du fichier pour confirmer que les montants de transaction restent inchangés.</value>
-  </data>
-  <data name="ValueObject_Cause1" xml:space="preserve">
-    <value>La valeur saisie manuellement par un utilisateur est invalide.</value>
-  </data>
-  <data name="ValueObject_Hint1" xml:space="preserve">
-    <value>Vérifiez la valeur saisie par l'utilisateur et évaluez sa conformité aux règles du domaine.</value>
-  </data>
-  <data name="ValueObject_Cause2" xml:space="preserve">
-    <value>La valeur reçue d'un système externe (API, message, etc.) est invalide.</value>
-  </data>
-  <data name="ValueObject_Hint2" xml:space="preserve">
-    <value>Vérifiez les données fournies par le système en amont et évaluez leur validité au regard des règles du domaine.</value>
-  </data>
-  <data name="ValueObject_Cause3" xml:space="preserve">
-    <value>La valeur a été chargée à partir de données persistées corrompues ou obsolètes.</value>
-  </data>
-  <data name="ValueObject_Hint3" xml:space="preserve">
-    <value>Examinez la source de données persistées pour déterminer si les valeurs stockées respectent les règles actuelles du domaine.</value>
-  </data>
-  <data name="ValueObject_Cause4" xml:space="preserve">
-    <value>La valeur a été calculée en interne sans utiliser de méthodes sûres vis-à-vis du domaine.</value>
-  </data>
-  <data name="ValueObject_Hint4" xml:space="preserve">
-    <value>Inspectez la logique de calcul interne pour confirmer que les invariants du domaine sont préservés.</value>
-  </data>
-  <data name="ValueObject_Cause5" xml:space="preserve">
-    <value>La valeur provient d'une configuration système ou de valeurs par défaut incorrectes ou obsolètes.</value>
-  </data>
-  <data name="ValueObject_Hint5" xml:space="preserve">
-    <value>Passez en revue la configuration ou les paramètres par défaut concernés pour évaluer leur conformité aux règles du domaine.</value>
   </data>
 </root>

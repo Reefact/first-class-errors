@@ -58,29 +58,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Temperature_Source" xml:space="preserve">
-    <value>Fel som uppstår när ett Temperature-värde skapas från en indata utanför giltigt intervall.</value>
-  </data>
   <data name="Amount_Source" xml:space="preserve">
     <value>Fel som uppstår vid operationer som kombinerar monetära Amount-värden.</value>
   </data>
   <data name="Bank_Source" xml:space="preserve">
     <value>Fel som uppstår vid validering av en uppladdad kontoutdragsfil mot dess deklarerade metadata (utdragsperiod och summor).</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_Title" xml:space="preserve">
-    <value>Temperatur under absoluta nollpunkten</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_Description" xml:space="preserve">
-    <value>Det här felet uppstår när man försöker skapa en temperatur med ett värde under absoluta nollpunkten.</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_Rule" xml:space="preserve">
-    <value>Temperaturen kan inte gå under absoluta nollpunkten, eftersom absoluta nollpunkten är den punkt där partiklar har lägsta möjliga energi.</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_Message" xml:space="preserve">
-    <value>Det gick inte att skapa temperaturen: värdet {0} {1} är under absoluta nollpunkten.</value>
-  </data>
-  <data name="Temperature_BelowAbsoluteZero_ShortMessage" xml:space="preserve">
-    <value>Temperaturen är under absoluta nollpunkten.</value>
   </data>
   <data name="Amount_CurrencyMismatch_Title" xml:space="preserve">
     <value>Valutakonflikt mellan belopp</value>
@@ -186,35 +168,5 @@
   </data>
   <data name="Bank_TotalMismatch_Hint4" xml:space="preserve">
     <value>Inspektera stegen för tolkning och transformation av filen för att bekräfta att transaktionsbeloppen förblir oförändrade.</value>
-  </data>
-  <data name="ValueObject_Cause1" xml:space="preserve">
-    <value>Värdet som angavs manuellt av en användare är ogiltigt.</value>
-  </data>
-  <data name="ValueObject_Hint1" xml:space="preserve">
-    <value>Kontrollera värdet som användaren angav och bedöm om det uppfyller domänreglerna.</value>
-  </data>
-  <data name="ValueObject_Cause2" xml:space="preserve">
-    <value>Värdet som togs emot från ett externt system (API, meddelande osv.) är ogiltigt.</value>
-  </data>
-  <data name="ValueObject_Hint2" xml:space="preserve">
-    <value>Kontrollera data som tillhandahålls av det uppströms systemet och bedöm dess giltighet mot domänreglerna.</value>
-  </data>
-  <data name="ValueObject_Cause3" xml:space="preserve">
-    <value>Värdet lästes in från skadade eller föråldrade persisterade data.</value>
-  </data>
-  <data name="ValueObject_Hint3" xml:space="preserve">
-    <value>Granska den persisterade datakällan för att avgöra om de lagrade värdena uppfyller de aktuella domänreglerna.</value>
-  </data>
-  <data name="ValueObject_Cause4" xml:space="preserve">
-    <value>Värdet beräknades internt utan att använda domänsäkra metoder.</value>
-  </data>
-  <data name="ValueObject_Hint4" xml:space="preserve">
-    <value>Inspektera den interna beräkningslogiken för att bekräfta att domäninvarianterna bevaras.</value>
-  </data>
-  <data name="ValueObject_Cause5" xml:space="preserve">
-    <value>Värdet kommer från systemkonfiguration eller standardvärden som är felaktiga eller föråldrade.</value>
-  </data>
-  <data name="ValueObject_Hint5" xml:space="preserve">
-    <value>Granska relevant konfiguration eller standardparametrar för att bedöma om de uppfyller domänreglerna.</value>
   </data>
 </root>

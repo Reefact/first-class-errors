@@ -121,6 +121,8 @@ La documentation générée peut être produite dans une langue choisie avec `fc
 
 Le *contenu* des erreurs est localisé à l’extraction ; le *texte fixe* des renderers l’est au rendu. Les noms de fichiers et les ancres restent indépendants de la culture, pour que les liens restent stables d’une langue à l’autre.
 
+**L’internationalisation est optionnelle.** Une erreur dont le `[ProvidesErrorsFor]` n’a pas de `DescriptionResourceType` conserve le texte littéral de `Description`, et une fabrique qui écrit des chaînes en dur — plutôt que de lire des ressources — reste simplement toujours dans cette langue ; sans `--language`, tout est rendu en anglais. Un projet n’a donc besoin d’i18n que là où il le souhaite. L’exemple `.Usage` montre les deux : `Temperature` est un exemple simple, non localisé, tandis qu’`Amount` et `BankTransactionFileValidator` sont entièrement localisés dans les cinq langues.
+
 ## 🔁 Pourquoi cette architecture est importante
 
 Cette séparation garantit :
