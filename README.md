@@ -113,6 +113,7 @@ This enables:
 * Markdown or JSON error catalogs (or any custom format via a renderer)
 * support-oriented documentation
 * living documentation generated from code
+* multi-language catalogs (opt-in: English, French, Spanish, German, Swedish)
 
 ## 🔁 Exception or not? You choose.
 

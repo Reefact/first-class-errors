@@ -92,10 +92,14 @@ Les chemins sont absolus ou relatifs à `fce.json`, de sorte qu’une configurat
 La CLI est optionnelle — un renderer n’est qu’une classe. Si vous obtenez un catalogue vous-même (par exemple via `SolutionErrorDocumentationGenerator`, dans `FirstClassErrors.GenDoc`), le rendre se résume à :
 
 ```csharp
-IEnumerable<ErrorDocumentation> catalog =
-    SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom("MyApp.sln", new SolutionGenerationOptions());
+// Une seule culture pour les deux niveaux : elle localise le contenu extrait et le texte fixe rendu.
+CultureInfo culture = CultureInfo.GetCultureInfo("fr");
 
-RenderRequest request = new(RenderLayouts.Single, CultureInfo.GetCultureInfo("fr"));
+IEnumerable<ErrorDocumentation> catalog =
+    SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(
+        "MyApp.sln", new SolutionGenerationOptions { Culture = culture });
+
+RenderRequest request = new(RenderLayouts.Single, culture);
 foreach (RenderedDocument document in new CsvErrorDocumentationRenderer().Render(catalog, request)) {
     File.WriteAllText(document.RelativePath, document.Content);
 }

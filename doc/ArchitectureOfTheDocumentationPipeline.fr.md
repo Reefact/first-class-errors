@@ -28,9 +28,11 @@ public static class InvalidTemperatureError { ... }
 Cet attribut est le point d’ancrage principal du modèle de documentation : il marque la classe comme source d’erreurs et fournit `ErrorDocumentation.Source` (le nom du modèle passé via `nameof(...)`). Il peut aussi porter une `Description` optionnelle, rendue comme introduction au groupe de cette source dans la documentation générée :
 
 ```csharp
-[ProvidesErrorsFor(nameof(BankTransactionFileValidator),
-                   Description = "Erreurs levées lors de la validation d’un relevé bancaire téléversé au regard de ses métadonnées déclarées.")]
+[ProvidesErrorsFor(nameof(Temperature),
+                   Description = "Errors raised when constructing a Temperature value from an out-of-range input.")]
 ```
+
+La `Description` est un texte littéral par défaut ; renseignez `DescriptionResourceType` pour qu’elle soit résolue comme une clé de ressource à la place, en vue de la localisation (voir la section Internationalisation ci-dessous).
 
 À l’intérieur de cette classe, chaque méthode factory est liée à sa méthode de documentation via :
 
