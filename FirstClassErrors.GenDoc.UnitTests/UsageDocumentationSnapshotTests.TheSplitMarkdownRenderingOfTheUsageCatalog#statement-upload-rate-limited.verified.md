@@ -13,7 +13,21 @@ This error occurs when too many statement uploads arrive in a short window and t
 
 ## Examples
 
-- The statement upload request 11111111-1111-1111-1111-111111111111 was rate-limited; retry after 30 seconds. _(Statement upload rate-limited.)_
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Statement upload rate-limited.",
+  "detail": "Too many statement uploads were sent in a short period; please retry later.",
+  "code": "STATEMENT_UPLOAD_RATE_LIMITED"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [StatementUploadEndpoint] The statement upload request 11111111-1111-1111-1111-111111111111 was rate-limited; retry after 30 seconds. error.code=STATEMENT_UPLOAD_RATE_LIMITED
+```
 
 ## Context
 

@@ -16,7 +16,21 @@ This error occurs when trying to validate a bank statement file that contains on
 
 ## Examples
 
-- Transaction dated 2024-02-02 is outside the statement period [2024-01-05;2024-01-31]. _(Transaction date is outside the statement period.)_
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Transaction date is outside the statement period.",
+  "detail": "A transaction date falls outside the statement period.",
+  "code": "BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [BankTransactionFileValidator] Transaction dated 2024-02-02 is outside the statement period [2024-01-05;2024-01-31]. error.code=BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD
+```
 
 ## Context
 
