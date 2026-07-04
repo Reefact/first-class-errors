@@ -18,6 +18,7 @@ FCE007  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByInvalidS
 <<<<<<< 993934e7f8182457844cd4b01cded521601592e6
 <<<<<<< 76f96d9b547b96b7d8a14048a2f6036c69baf88d
 FCE008  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByWithoutProvidesErrorsForAnalyzer
+<<<<<<< 2cd7e88849d2856333ec71c2146d75e038de3f35
 =======
 >>>>>>> db7c3cb49e9b8480f5aa6d958fabbebeed5d58ac
 =======
@@ -34,3 +35,6 @@ FCE006  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByTargetNo
 =======
 FCE008  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByWithoutProvidesErrorsForAnalyzer
 >>>>>>> 1110bd90366a90aca8cc009aea4091673f8c9dee
+=======
+FCE016  | FirstClassErrors.Usage               | Warning  | UnusedToExceptionResultAnalyzer
+>>>>>>> e82f3b87253ce42f9e0497e6d8a41054cd608b17
