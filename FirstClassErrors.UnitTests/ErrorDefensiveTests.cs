@@ -11,59 +11,102 @@ namespace FirstClassErrors.UnitTests;
 [TestSubject(typeof(Error))]
 public sealed class ErrorDefensiveTests {
 
-    private const string UnknownDetailedMessageFragment = "Exception created without an error message";
-
     [Fact(DisplayName = "A null error code is replaced by the unspecified error code.")]
     public void ANullErrorCodeIsReplacedByTheUnspecifiedErrorCode() {
         // Exercise
-        DomainError error = new(null!, "m");
+        DomainError error = DomainError.Create(null!, "diagnostic").WithPublicMessage("short");
 
         // Verify
         Check.That(error.Code).IsSameReferenceAs(ErrorCode.Unspecified);
     }
 
-    [Fact(DisplayName = "A null detailed message falls back to the default message.")]
-    public void ANullDetailedMessageFallsBackToTheDefaultMessage() {
-        // Exercise
-        DomainError error = new(ErrorCode.Unspecified, null!);
-
-        // Verify
-        Check.That(error.DetailedMessage).IsNotNull();
-        Check.That(error.DetailedMessage).Contains(UnknownDetailedMessageFragment);
+    [Fact(DisplayName = "A null diagnostic message is rejected.")]
+    public void ANullDiagnosticMessageIsRejected() {
+        // Exercise & verify
+        Check.ThatCode(() => DomainError.Create(ErrorCode.Unspecified, null!))
+             .Throws<ArgumentNullException>();
     }
 
-    [Fact(DisplayName = "A whitespace-only detailed message falls back to the default message.")]
-    public void AWhitespaceOnlyDetailedMessageFallsBackToTheDefaultMessage() {
-        // Exercise
-        DomainError error = new(ErrorCode.Unspecified, "   ");
-
-        // Verify
-        Check.That(error.DetailedMessage).IsNotNull();
-        Check.That(error.DetailedMessage).Contains(UnknownDetailedMessageFragment);
+    [Theory(DisplayName = "An empty or whitespace diagnostic message is rejected.")]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("      ")]
+    public void AnEmptyOrWhitespaceDiagnosticMessageIsRejected(string value) {
+        // Exercise & verify
+        Check.ThatCode(() => DomainError.Create(ErrorCode.Unspecified, value))
+             .Throws<ArgumentException>();
     }
 
-    [Fact(DisplayName = "A detailed message is trimmed.")]
-    public void ADetailedMessageIsTrimmed() {
+    [Fact(DisplayName = "The diagnostic message is trimmed.")]
+    public void TheDiagnosticMessageIsTrimmed() {
         // Exercise
-        DomainError error = new(ErrorCode.Unspecified, "  hello  ");
+        DomainError error = DomainError.Create(ErrorCode.Unspecified, "  hello  ").WithPublicMessage("short");
 
         // Verify
-        Check.That(error.DetailedMessage).IsEqualTo("hello");
+        Check.That(error.DiagnosticMessage).IsEqualTo("hello");
     }
 
-    [Fact(DisplayName = "A short message is stored verbatim and is not trimmed.")]
-    public void AShortMessageIsStoredVerbatimAndIsNotTrimmed() {
+    [Fact(DisplayName = "A null short message is rejected.")]
+    public void ANullShortMessageIsRejected() {
+        // Exercise & verify
+        Check.ThatCode(() => DomainError.Create(ErrorCode.Unspecified, "diagnostic").WithPublicMessage(null!))
+             .Throws<ArgumentNullException>();
+    }
+
+    [Theory(DisplayName = "An empty or whitespace short message is rejected.")]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("      ")]
+    public void AnEmptyOrWhitespaceShortMessageIsRejected(string value) {
+        // Exercise & verify
+        Check.ThatCode(() => DomainError.Create(ErrorCode.Unspecified, "diagnostic").WithPublicMessage(value))
+             .Throws<ArgumentException>();
+    }
+
+    [Fact(DisplayName = "The short message is trimmed.")]
+    public void TheShortMessageIsTrimmed() {
         // Exercise
-        DomainError error = new(ErrorCode.Unspecified, "m", "  s  ");
+        DomainError error = DomainError.Create(ErrorCode.Unspecified, "diagnostic").WithPublicMessage("  short  ");
 
         // Verify
-        Check.That(error.ShortMessage).IsEqualTo("  s  ");
+        Check.That(error.ShortMessage).IsEqualTo("short");
+    }
+
+    [Fact(DisplayName = "A null detailed message leaves the detailed message null.")]
+    public void ANullDetailedMessageLeavesTheDetailedMessageNull() {
+        // Exercise
+        DomainError error = DomainError.Create(ErrorCode.Unspecified, "diagnostic").WithPublicMessage("short", null);
+
+        // Verify
+        Check.That(error.DetailedMessage).IsNull();
+    }
+
+    [Theory(DisplayName = "An empty or whitespace detailed message leaves the detailed message null.")]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("      ")]
+    public void AnEmptyOrWhitespaceDetailedMessageLeavesTheDetailedMessageNull(string value) {
+        // Exercise
+        DomainError error = DomainError.Create(ErrorCode.Unspecified, "diagnostic").WithPublicMessage("short", value);
+
+        // Verify
+        Check.That(error.DetailedMessage).IsNull();
+    }
+
+    [Fact(DisplayName = "A detailed message is trimmed when provided.")]
+    public void ADetailedMessageIsTrimmedWhenProvided() {
+        // Exercise
+        DomainError error = DomainError.Create(ErrorCode.Unspecified, "diagnostic").WithPublicMessage("short", "  detailed  ");
+
+        // Verify
+        Check.That(error.DetailedMessage).IsEqualTo("detailed");
     }
 
     [Fact(DisplayName = "A configure-context delegate that throws is captured into the context.")]
     public void AConfigureContextDelegateThatThrowsIsCapturedIntoTheContext() {
         // Exercise
-        DomainError error = new(ErrorCode.Unspecified, "m", configureContext: _ => throw new InvalidOperationException("boom"));
+        DomainError error = DomainError.Create(ErrorCode.Unspecified, "diagnostic", _ => throw new InvalidOperationException("boom"))
+                                       .WithPublicMessage("short");
 
         // Verify
         Check.That(error.Context.IsEmpty).IsFalse();
@@ -78,21 +121,21 @@ public sealed class ErrorDefensiveTests {
     public void InnerErrorsAreStoredAsADefensiveCopyOfTheProvidedCollection() {
         // Setup
         List<DomainError> innerErrors = new() {
-            new DomainError(ErrorCode.Unspecified, "first")
+            ErrorFactory.Domain(ErrorCode.Unspecified, "first")
         };
-        DomainError error = new(ErrorCode.Unspecified, "m", innerErrors);
+        DomainError error = DomainError.Create(ErrorCode.Unspecified, "diagnostic", innerErrors).WithPublicMessage("short");
 
         // Exercise
-        innerErrors.Add(new DomainError(ErrorCode.Unspecified, "second"));
+        innerErrors.Add(ErrorFactory.Domain(ErrorCode.Unspecified, "second"));
 
         // Verify
         Check.That(error.InnerErrors).CountIs(1);
     }
 
-    [Fact(DisplayName = "The string representation combines the detailed message and the code.")]
-    public void TheStringRepresentationCombinesTheDetailedMessageAndTheCode() {
+    [Fact(DisplayName = "The string representation combines the diagnostic message and the code.")]
+    public void TheStringRepresentationCombinesTheDiagnosticMessageAndTheCode() {
         // Exercise
-        DomainError error = new(ErrorCode.Unspecified, "boom");
+        DomainError error = DomainError.Create(ErrorCode.Unspecified, "boom").WithPublicMessage("short");
 
         // Verify
         Check.That(error.ToString()).IsEqualTo("boom (#UNSPECIFIED)");

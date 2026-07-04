@@ -64,7 +64,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
                                 .WithDescription(StringFactory.AnyDescription())
                                 .WithoutRule()
                                 .WithoutDiagnostic()
-                                .WithExamples(() => new DomainError(anyErrorCode, anyErrorLongMessage));
+                                .WithExamples(() => ErrorFactory.Domain(anyErrorCode, anyErrorLongMessage));
 
         // Verify
         Check.That(doc.Title).IsEqualTo("My title");
@@ -94,7 +94,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
                                 .WithDescription("  Explanation  ")
                                 .WithoutRule()
                                 .WithoutDiagnostic()
-                                .WithExamples(() => new DomainError(anyErrorCode, anyErrorLongMessage));
+                                .WithExamples(() => ErrorFactory.Domain(anyErrorCode, anyErrorLongMessage));
 
         // Verify
         Check.That(doc.Explanation).IsEqualTo("Explanation");
@@ -125,7 +125,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
                                 .WithDescription(anyExplanation)
                                 .WithRule("  Rule  ")
                                 .WithoutDiagnostic()
-                                .WithExamples(() => new DomainError(anyErrorCode, anyErrorLongMessage));
+                                .WithExamples(() => ErrorFactory.Domain(anyErrorCode, anyErrorLongMessage));
 
         // Verify
         Check.That(doc.BusinessRule).IsEqualTo("Rule");
@@ -146,7 +146,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
                                 .WithDescription(anyExplanation)
                                 .WithoutRule()
                                 .WithoutDiagnostic()
-                                .WithExamples(() => new DomainError(anyErrorCode, anyErrorLongMessage));
+                                .WithExamples(() => ErrorFactory.Domain(anyErrorCode, anyErrorLongMessage));
 
         // Verify
         Check.That(doc.BusinessRule).IsNull();
@@ -191,7 +191,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         ErrorDocumentationBuilder builder = new();
 
         ErrorCode         code  = ErrorCode.Create("ANY_CODE");
-        Func<DomainError> valid = () => new DomainError(code, "boom");
+        Func<DomainError> valid = () => ErrorFactory.Domain(code, "boom");
 
         // Exercise & verify
         Check.ThatCode(() => builder.WithExamples(valid, null!))
@@ -231,8 +231,8 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         ErrorCode codeA = ErrorCode.Create("CODE_A");
         ErrorCode codeB = ErrorCode.Create("CODE_B");
 
-        Func<DomainError> first  = () => new DomainError(codeA, "m1");
-        Func<DomainError> second = () => new DomainError(codeB, "m2");
+        Func<DomainError> first  = () => ErrorFactory.Domain(codeA, "m1");
+        Func<DomainError> second = () => ErrorFactory.Domain(codeB, "m2");
 
         // Exercise & verify
         Check.ThatCode(() => builder.WithExamples(first, second))
@@ -246,7 +246,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         ErrorDocumentationBuilder builder = new();
         ErrorCode                 code    = ErrorCode.Create("TEMPERATURE_BELOW_ABSOLUTE_ZERO");
 
-        Func<DomainError> example = () => new DomainError(code, "boom", "short");
+        Func<DomainError> example = () => DomainError.Create(code, "diagnostic").WithPublicMessage("short", "detailed");
 
         // Exercise
         ErrorDocumentation doc = builder.WithExamples(example);
@@ -256,8 +256,9 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         Check.That(doc.Examples).IsNotNull();
         Check.That(doc.Examples).CountIs(1);
 
-        Check.That(doc.Examples[0].DetailedMessage).IsEqualTo("boom");
         Check.That(doc.Examples[0].ShortMessage).IsEqualTo("short");
+        Check.That(doc.Examples[0].DiagnosticMessage).IsEqualTo("diagnostic");
+        Check.That(doc.Examples[0].DetailedMessage).IsEqualTo("detailed");
     }
 
     [Fact(DisplayName = "An error documentation builder includes the provided diagnostics.")]
@@ -269,7 +270,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         ErrorDiagnostic second = new("cause-2", ErrorOrigin.Internal, "lead-2");
 
         ErrorCode         code    = ErrorCode.Create("ANY_CODE");
-        Func<DomainError> example = () => new DomainError(code, "boom");
+        Func<DomainError> example = () => ErrorFactory.Domain(code, "boom");
 
         // Exercise
         ErrorDocumentation doc = builder
@@ -295,7 +296,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         ErrorDocumentationBuilder builder = new();
 
         ErrorCode         code    = ErrorCode.Create("ANY_CODE");
-        Func<DomainError> example = () => new DomainError(code, "boom");
+        Func<DomainError> example = () => ErrorFactory.Domain(code, "boom");
 
         // Exercise
         ErrorDocumentation doc = builder
@@ -316,21 +317,21 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
 
         ErrorCode code = ErrorCode.Create("ANY_CODE");
 
-        Func<DomainError> ex1 = () => new DomainError(
+        Func<DomainError> ex1 = () => DomainError.Create(
             code,
             "m1",
-            configureContext: ctx => {
+            ctx => {
                 ctx.Add(userId, "u-1");
                 ctx.Add(correlationId, "c-1");
-            });
+            }).WithPublicMessage("m1");
 
-        Func<DomainError> ex2 = () => new DomainError(
+        Func<DomainError> ex2 = () => DomainError.Create(
             code,
             "m2",
-            configureContext: ctx => {
+            ctx => {
                 ctx.Add(userId, "u-2");
                 ctx.Add(correlationId, "c-1");
-            });
+            }).WithPublicMessage("m2");
 
         // Exercise
         ErrorDocumentation doc = new ErrorDocumentationBuilder()
@@ -357,15 +358,15 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         ErrorContextKey<string> optionalInfo = ErrorContextKey.Create<string>("OptionalInfo", "Optional info.");
         ErrorCode               code         = ErrorCode.Create("ANY_CODE");
 
-        Func<DomainError> ex1 = () => new DomainError(
+        Func<DomainError> ex1 = () => DomainError.Create(
             code,
             "m1",
-            configureContext: ctx => ctx.Add(optionalInfo, null));
+            ctx => ctx.Add(optionalInfo, null)).WithPublicMessage("m1");
 
-        Func<DomainError> ex2 = () => new DomainError(
+        Func<DomainError> ex2 = () => DomainError.Create(
             code,
             "m2",
-            configureContext: ctx => ctx.Add(optionalInfo, "x"));
+            ctx => ctx.Add(optionalInfo, "x")).WithPublicMessage("m2");
 
         // Exercise
         ErrorDocumentation doc = new ErrorDocumentationBuilder()
@@ -394,7 +395,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
 
         ErrorCode code = ErrorCode.Create("ANY_CODE");
         Func<DomainError> example =
-            () => new DomainError(code, "boom");
+            () => ErrorFactory.Domain(code, "boom");
 
         // Exercise
         ErrorDocumentation doc = stage
