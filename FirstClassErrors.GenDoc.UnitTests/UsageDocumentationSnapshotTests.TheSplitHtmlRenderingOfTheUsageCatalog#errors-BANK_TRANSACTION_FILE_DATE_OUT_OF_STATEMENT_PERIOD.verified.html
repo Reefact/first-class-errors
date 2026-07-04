@@ -1,0 +1,183 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD — Error Catalog</title>
+<style>
+:root {
+  --bg: #ffffff; --bg-soft: #f6f8fa; --surface: #ffffff; --text: #1f2328; --text-soft: #59636e;
+  --border: #d1d9e0; --accent: #0969da; --code-bg: #f6f8fa; --code-text: #1f2328;
+  --radius: 8px; --maxw: 1080px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171c; --bg-soft: #1b1f26; --surface: #1b1f26; --text: #e6edf3; --text-soft: #9aa4b2;
+    --border: #2c333d; --accent: #4493f8; --code-bg: #11151b; --code-text: #e6edf3;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #ffffff; --bg-soft: #f6f8fa; --surface: #ffffff; --text: #1f2328; --text-soft: #59636e;
+  --border: #d1d9e0; --accent: #0969da; --code-bg: #f6f8fa; --code-text: #1f2328;
+}
+:root[data-theme="dark"] {
+  --bg: #14171c; --bg-soft: #1b1f26; --surface: #1b1f26; --text: #e6edf3; --text-soft: #9aa4b2;
+  --border: #2c333d; --accent: #4493f8; --code-bg: #11151b; --code-text: #e6edf3;
+}
+* { box-sizing: border-box; }
+html { color-scheme: light dark; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.55; }
+.container { max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, pre { font-family: var(--mono); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.skip-link { position: absolute; left: -999px; top: 0; background: var(--accent); color: #fff; padding: 8px 12px; border-radius: 0 0 var(--radius) 0; z-index: 10; }
+.skip-link:focus { left: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.site-header { border-bottom: 1px solid var(--border); background: var(--bg-soft); position: sticky; top: 0; z-index: 5; }
+.header-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; }
+.site-title { font-size: 1.15rem; margin: 0; }
+.site-title a { color: var(--text); }
+.theme-toggle { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); cursor: pointer; }
+.theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+main { padding: 24px 0 64px; }
+.count { color: var(--text-soft); margin: 0 0 16px; }
+.controls { margin-bottom: 20px; }
+.search { display: block; max-width: 460px; }
+.search input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1rem; }
+.no-results, .empty { color: var(--text-soft); padding: 16px 0; }
+.back { margin: 0 0 16px; }
+.toc { margin: 0 0 8px; }
+.toc ul { list-style: none; margin: 0; padding: 0; }
+.toc > ul > li { margin: 0 0 16px; }
+.toc-source { display: inline-block; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.toc-group > ul { padding-left: 16px; margin-left: 4px; border-left: 2px solid var(--border); }
+.toc-item { margin: 3px 0; }
+.toc-item code { font-size: 0.9rem; }
+.error-group { margin-top: 40px; }
+.group-title { font-size: 1.5rem; margin: 0 0 4px; padding-bottom: 8px; border-bottom: 2px solid var(--border); scroll-margin-top: 72px; }
+.error-detail { border-top: 1px solid var(--border); padding: 24px 0; }
+.error-group .error-detail:first-of-type { border-top: 0; }
+.error-title { font-size: 1.15rem; margin: 0; scroll-margin-top: 72px; }
+.error-title code { background: var(--code-bg); color: var(--code-text); padding: 2px 8px; border-radius: var(--radius); font-size: 0.95rem; }
+.error-subtitle { color: var(--text-soft); margin: 4px 0 12px; }
+.anchor { color: var(--text-soft); text-decoration: none; opacity: 0; padding-left: 4px; }
+.error-title:hover .anchor, .anchor:focus { opacity: 1; }
+section h3, section h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-soft); margin: 20px 0 8px; }
+.rule { margin: 14px 0; padding: 10px 14px; border-left: 3px solid var(--accent); background: var(--bg-soft); border-radius: 0 var(--radius) var(--radius) 0; }
+.table-wrap { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.data-table th, .data-table td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.data-table thead th { color: var(--text-soft); font-weight: 600; border-bottom: 2px solid var(--border); white-space: nowrap; }
+.example { margin: 12px 0; }
+.example-label { font-weight: 600; margin: 12px 0 6px; font-size: 0.9rem; color: var(--text); }
+pre { margin: 0; padding: 12px 14px; background: var(--code-bg); color: var(--code-text); border: 1px solid var(--border); border-radius: var(--radius); overflow-x: auto; }
+pre code { font-size: 0.86rem; white-space: pre; }
+@media (max-width: 640px) {
+  .group-title { font-size: 1.3rem; }
+}
+</style>
+<script>(function(){try{var t=localStorage.getItem('fce-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+<div class="container header-row">
+<h1 class="site-title"><a href="#main">Error Catalog</a></h1>
+<button id="theme-toggle" type="button" class="theme-toggle" aria-label="Toggle light / dark theme" title="Toggle light / dark theme"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></button>
+</div>
+</header>
+<main id="main" class="container">
+<p class="back"><a href="../index.html">&#8592; Back to the catalog</a></p>
+<article class="error-detail" id="err-BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD">
+<h2 class="error-title"><code>BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD</code> <a class="anchor" href="#err-BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD" aria-label="Copy link to this error" data-anchor>#</a></h2>
+<p class="error-subtitle">Transaction date outside statement period</p>
+<section class="doc"><h3>Documentation</h3><p>This error occurs when trying to validate a bank statement file that contains one or more transactions dated outside the statement period.</p></section>
+<blockquote class="rule"><strong>Business rule:</strong> All transactions must occur within the statement period.</blockquote>
+<section class="diagnostics"><h3>Diagnostics</h3>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Possible cause</th><th scope="col">Origin</th><th scope="col">Analysis hint</th></tr>
+</thead>
+<tbody>
+<tr><td>The transaction date provided in the statement file is incorrect or inconsistent with the actual transaction date.</td><td>External</td><td>Verify the transaction date present in the input file and confirm its consistency with the actual transaction timeline.</td></tr>
+<tr><td>The statement period defined in the file does not match the actual coverage period of the transactions.</td><td>External</td><td>Check whether the statement start and end dates in the file align with the period covered by the transactions.</td></tr>
+<tr><td>The transaction was posted after the statement was generated but was mistakenly included in the file.</td><td>InternalOrExternal</td><td>Determine whether late-posted transactions were included in the statement generation process.</td></tr>
+<tr><td>An internal processing error caused the transaction date to be shifted during data transformation or import.</td><td>Internal</td><td>Examine the data import and transformation stages to confirm that transaction dates are preserved without alteration.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h3>Examples</h3>
+<div class="example">
+<p class="example-label">Public response (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;title&quot;: &quot;Transaction date is outside the statement period.&quot;,
+  &quot;detail&quot;: &quot;A transaction date falls outside the statement period.&quot;,
+  &quot;code&quot;: &quot;BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD&quot;
+}</code></pre>
+<p class="example-label">Diagnostic (internal — not for external exposure)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [BankTransactionFileValidator] Transaction dated 2024-02-02 is outside the statement period [2024-01-05;2024-01-31]. error.code=BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD</code></pre>
+</div>
+</section>
+<section class="context"><h3>Context</h3>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Key</th><th scope="col">Type</th><th scope="col">Description</th><th scope="col">Example values</th></tr>
+</thead>
+<tbody>
+<tr><td><code>TRANSACTION_DATE</code></td><td><code>System.DateOnly</code></td><td>The date of the transaction being processed.</td><td><code>02/02/2024</code></td></tr>
+</tbody>
+</table></div>
+</section>
+</article>
+</main>
+<script>
+(function () {
+  var KEY = 'fce-theme';
+  var root = document.documentElement;
+  function apply(t) { if (t === 'light' || t === 'dark') { root.setAttribute('data-theme', t); } else { root.removeAttribute('data-theme'); } }
+  function current() { return root.getAttribute('data-theme') || 'auto'; }
+  var btn = document.getElementById('theme-toggle');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var order = ['auto', 'light', 'dark'];
+      var next = order[(order.indexOf(current()) + 1) % order.length];
+      try { if (next === 'auto') { localStorage.removeItem(KEY); } else { localStorage.setItem(KEY, next); } } catch (e) {}
+      apply(next);
+    });
+  }
+  var search = document.getElementById('search');
+  var toc = document.getElementById('toc');
+  var noResults = document.getElementById('no-results');
+  function filter() {
+    if (!toc) { return; }
+    var q = ((search && search.value) || '').toLowerCase().trim();
+    var items = toc.querySelectorAll('.toc-item');
+    var visible = 0;
+    for (var i = 0; i < items.length; i++) {
+      var ok = !q || (items[i].getAttribute('data-search') || '').indexOf(q) !== -1;
+      items[i].hidden = !ok;
+      if (ok) { visible++; }
+    }
+    var groups = toc.querySelectorAll('.toc-group');
+    for (var g = 0; g < groups.length; g++) {
+      groups[g].hidden = groups[g].querySelectorAll('.toc-item:not([hidden])').length === 0;
+    }
+    if (noResults) { noResults.hidden = visible !== 0; }
+  }
+  if (search) { search.addEventListener('input', filter); }
+  var anchors = document.querySelectorAll('a[data-anchor]');
+  for (var j = 0; j < anchors.length; j++) {
+    anchors[j].addEventListener('click', function () {
+      var href = this.getAttribute('href') || '';
+      var url = location.href.split('#')[0] + href;
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(url).catch(function () {}); }
+    });
+  }
+})();
+</script>
+</body>
+</html>

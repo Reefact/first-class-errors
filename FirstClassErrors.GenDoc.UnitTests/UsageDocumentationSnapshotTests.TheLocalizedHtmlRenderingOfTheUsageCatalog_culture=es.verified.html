@@ -1,0 +1,567 @@
+﻿<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cat&#225;logo de errores</title>
+<style>
+:root {
+  --bg: #ffffff; --bg-soft: #f6f8fa; --surface: #ffffff; --text: #1f2328; --text-soft: #59636e;
+  --border: #d1d9e0; --accent: #0969da; --code-bg: #f6f8fa; --code-text: #1f2328;
+  --radius: 8px; --maxw: 1080px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171c; --bg-soft: #1b1f26; --surface: #1b1f26; --text: #e6edf3; --text-soft: #9aa4b2;
+    --border: #2c333d; --accent: #4493f8; --code-bg: #11151b; --code-text: #e6edf3;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #ffffff; --bg-soft: #f6f8fa; --surface: #ffffff; --text: #1f2328; --text-soft: #59636e;
+  --border: #d1d9e0; --accent: #0969da; --code-bg: #f6f8fa; --code-text: #1f2328;
+}
+:root[data-theme="dark"] {
+  --bg: #14171c; --bg-soft: #1b1f26; --surface: #1b1f26; --text: #e6edf3; --text-soft: #9aa4b2;
+  --border: #2c333d; --accent: #4493f8; --code-bg: #11151b; --code-text: #e6edf3;
+}
+* { box-sizing: border-box; }
+html { color-scheme: light dark; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.55; }
+.container { max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, pre { font-family: var(--mono); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.skip-link { position: absolute; left: -999px; top: 0; background: var(--accent); color: #fff; padding: 8px 12px; border-radius: 0 0 var(--radius) 0; z-index: 10; }
+.skip-link:focus { left: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.site-header { border-bottom: 1px solid var(--border); background: var(--bg-soft); position: sticky; top: 0; z-index: 5; }
+.header-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; }
+.site-title { font-size: 1.15rem; margin: 0; }
+.site-title a { color: var(--text); }
+.theme-toggle { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); cursor: pointer; }
+.theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+main { padding: 24px 0 64px; }
+.count { color: var(--text-soft); margin: 0 0 16px; }
+.controls { margin-bottom: 20px; }
+.search { display: block; max-width: 460px; }
+.search input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1rem; }
+.no-results, .empty { color: var(--text-soft); padding: 16px 0; }
+.back { margin: 0 0 16px; }
+.toc { margin: 0 0 8px; }
+.toc ul { list-style: none; margin: 0; padding: 0; }
+.toc > ul > li { margin: 0 0 16px; }
+.toc-source { display: inline-block; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.toc-group > ul { padding-left: 16px; margin-left: 4px; border-left: 2px solid var(--border); }
+.toc-item { margin: 3px 0; }
+.toc-item code { font-size: 0.9rem; }
+.error-group { margin-top: 40px; }
+.group-title { font-size: 1.5rem; margin: 0 0 4px; padding-bottom: 8px; border-bottom: 2px solid var(--border); scroll-margin-top: 72px; }
+.error-detail { border-top: 1px solid var(--border); padding: 24px 0; }
+.error-group .error-detail:first-of-type { border-top: 0; }
+.error-title { font-size: 1.15rem; margin: 0; scroll-margin-top: 72px; }
+.error-title code { background: var(--code-bg); color: var(--code-text); padding: 2px 8px; border-radius: var(--radius); font-size: 0.95rem; }
+.error-subtitle { color: var(--text-soft); margin: 4px 0 12px; }
+.anchor { color: var(--text-soft); text-decoration: none; opacity: 0; padding-left: 4px; }
+.error-title:hover .anchor, .anchor:focus { opacity: 1; }
+section h3, section h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-soft); margin: 20px 0 8px; }
+.rule { margin: 14px 0; padding: 10px 14px; border-left: 3px solid var(--accent); background: var(--bg-soft); border-radius: 0 var(--radius) var(--radius) 0; }
+.table-wrap { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.data-table th, .data-table td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.data-table thead th { color: var(--text-soft); font-weight: 600; border-bottom: 2px solid var(--border); white-space: nowrap; }
+.example { margin: 12px 0; }
+.example-label { font-weight: 600; margin: 12px 0 6px; font-size: 0.9rem; color: var(--text); }
+pre { margin: 0; padding: 12px 14px; background: var(--code-bg); color: var(--code-text); border: 1px solid var(--border); border-radius: var(--radius); overflow-x: auto; }
+pre code { font-size: 0.86rem; white-space: pre; }
+@media (max-width: 640px) {
+  .group-title { font-size: 1.3rem; }
+}
+</style>
+<script>(function(){try{var t=localStorage.getItem('fce-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Saltar al contenido</a>
+<header class="site-header">
+<div class="container header-row">
+<h1 class="site-title"><a href="#main">Cat&#225;logo de errores</a></h1>
+<button id="theme-toggle" type="button" class="theme-toggle" aria-label="Alternar tema claro / oscuro" title="Alternar tema claro / oscuro"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></button>
+</div>
+</header>
+<main id="main" class="container">
+<p class="count">10 errores documentados</p>
+<div class="controls">
+<label class="search"><span class="visually-hidden">Buscar</span><input id="search" type="search" autocomplete="off" placeholder="Buscar por c&#243;digo, mensaje, documentaci&#243;n…"></label>
+</div>
+<nav class="toc" id="toc" aria-label="Cat&#225;logo de errores">
+<ul>
+<li class="toc-group"><a class="toc-source" href="#src-Amount">Amount</a>
+<ul>
+<li class="toc-item" data-search="amount_currency_mismatch discrepancia de moneda entre importes este error se produce al intentar usar juntos varios importes en una operaci&#243;n cuando est&#225;n expresados en monedas diferentes. todas las operaciones monetarias deben involucrar importes expresados en la misma moneda. amount discrepancia de moneda los dos importes usan monedas diferentes y no pueden combinarse. failed to perform the monetary operation because the involved amounts are expressed in different currencies: 127.33 eur and 57689 usd. se usaron importes en una operaci&#243;n monetaria sin haberlos convertido a la misma moneda. compruebe si todos los importes involucrados en la operaci&#243;n se convirtieron a una moneda com&#250;n antes de usarlos juntos. se proporcionaron con monedas diferentes importes que se esperaba estuvieran expresados en la misma moneda. compruebe las monedas asociadas a cada importe y confirme si se esperaba una moneda com&#250;n para esta operaci&#243;n."><a href="#err-AMOUNT_CURRENCY_MISMATCH"><code>AMOUNT_CURRENCY_MISMATCH</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-BankTransactionFileValidator">BankTransactionFileValidator</a>
+<ul>
+<li class="toc-item" data-search="bank_transaction_file_date_out_of_statement_period fecha de transacci&#243;n fuera del per&#237;odo del extracto este error se produce al intentar validar un archivo de extracto bancario que contiene una o m&#225;s transacciones con fecha fuera del per&#237;odo del extracto. todas las transacciones deben producirse dentro del per&#237;odo del extracto. banktransactionfilevalidator la fecha de transacci&#243;n est&#225; fuera del per&#237;odo del extracto. una fecha de transacci&#243;n queda fuera del per&#237;odo del extracto. transaction dated 2024-02-02 is outside the statement period [2024-01-05;2024-01-31]. la fecha de transacci&#243;n proporcionada en el archivo del extracto es incorrecta o incoherente con la fecha real de la transacci&#243;n. verifique la fecha de transacci&#243;n presente en el archivo de entrada y confirme su coherencia con la cronolog&#237;a real de la transacci&#243;n. el per&#237;odo del extracto definido en el archivo no coincide con el per&#237;odo de cobertura real de las transacciones. compruebe si las fechas de inicio y fin del extracto en el archivo concuerdan con el per&#237;odo cubierto por las transacciones. la transacci&#243;n se registr&#243; despu&#233;s de generar el extracto, pero se incluy&#243; por error en el archivo. determine si se incluyeron transacciones registradas tard&#237;amente en el proceso de generaci&#243;n del extracto. un error de procesamiento interno desplaz&#243; la fecha de transacci&#243;n durante la transformaci&#243;n o la importaci&#243;n de datos. examine las etapas de importaci&#243;n y transformaci&#243;n de datos para confirmar que las fechas de transacci&#243;n se conservan sin alteraci&#243;n. transaction_date la fecha de la transacci&#243;n que se est&#225; procesando."><a href="#err-BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD"><code>BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD</code></a></li>
+<li class="toc-item" data-search="bank_transaction_file_statement_total_amount_mismatch discrepancia del importe total del extracto este error se produce al intentar validar un archivo de extracto bancario cuyo importe total declarado no coincide con la suma de los importes de cada transacci&#243;n. el importe total del extracto debe ser igual a la suma de todos los importes de transacci&#243;n incluidos en el extracto. banktransactionfilevalidator discrepancia del importe total del extracto. el total declarado del extracto no coincide con el total calculado. the declared statement total amount (1250 eur) does not match the computed total amount from transactions (1249.5 eur). el importe total declarado en el archivo del extracto no coincide con la suma de los importes de cada transacci&#243;n. verifique el importe total declarado en el archivo y comp&#225;relo con la suma de todos los importes de transacci&#243;n. faltan una o m&#225;s transacciones, o est&#225;n duplicadas, en el archivo del extracto. compruebe si todas las transacciones esperadas est&#225;n presentes exactamente una vez en el archivo del extracto. se produjo un error de redondeo o de precisi&#243;n al calcular el importe total del extracto. examine c&#243;mo se aplicaron las reglas de redondeo y precisi&#243;n al calcular el total del extracto. un error de procesamiento interno alter&#243; los importes de transacci&#243;n durante el an&#225;lisis o la transformaci&#243;n del archivo. inspeccione las etapas de an&#225;lisis y transformaci&#243;n del archivo para confirmar que los importes de transacci&#243;n permanecen sin cambios."><a href="#err-BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH"><code>BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-ExchangeRateProvider">ExchangeRateProvider</a>
+<ul>
+<li class="toc-item" data-search="exchange_rate_service_unavailable servicio de tipos de cambio no disponible este error se produce cuando no se puede contactar con el proveedor externo de tipos de cambio (un tiempo de espera agotado, un reinicio de conexi&#243;n o una respuesta 5xx). es transitorio: la llamada puede reintentarse. la conversi&#243;n de divisas depende de un proveedor de tipos de cambio accesible. exchangerateprovider servicio de tipos de cambio no disponible. el servicio de tipos de cambio no est&#225; disponible temporalmente; int&#233;ntelo de nuevo m&#225;s tarde. the exchange-rate provider &#39;acme-fx&#39; is unavailable (correlation 22222222-2222-2222-2222-222222222222). el proveedor agot&#243; el tiempo de espera o devolvi&#243; un error de servidor. compruebe el estado del proveedor y reintente la llamada, idealmente con una espera progresiva. la ruta de red saliente hacia el proveedor est&#225; interrumpida. verifique la conectividad saliente y cualquier proxy o cortafuegos entre el servicio y el proveedor. provider el proveedor externo al que se llam&#243;. correlation_id el identificador de correlaci&#243;n de la llamada saliente."><a href="#err-EXCHANGE_RATE_SERVICE_UNAVAILABLE"><code>EXCHANGE_RATE_SERVICE_UNAVAILABLE</code></a></li>
+<li class="toc-item" data-search="unsupported_currency_pair par de divisas no admitido este error se produce cuando el proveedor de tipos de cambio no cotiza un tipo para el par de divisas origen/destino solicitado. una conversi&#243;n de divisas solo puede realizarse para un par que el proveedor cotice. exchangerateprovider par de divisas no admitido. el par de divisas solicitado no es compatible. the exchange-rate provider does not quote the eur to usd currency pair. el par de divisas solicitado no lo ofrece el proveedor. confirme que el proveedor admite tanto la moneda de origen como la de destino antes de solicitar una conversi&#243;n. from_currency la moneda de origen de la conversi&#243;n. to_currency la moneda de destino de la conversi&#243;n."><a href="#err-UNSUPPORTED_CURRENCY_PAIR"><code>UNSUPPORTED_CURRENCY_PAIR</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-StatementUploadEndpoint">StatementUploadEndpoint</a>
+<ul>
+<li class="toc-item" data-search="malformed_statement_payload carga &#250;til de extracto mal formada este error se produce cuando el endpoint de subida de extractos recibe una solicitud cuyo cuerpo omite un campo obligatorio o contiene un valor no v&#225;lido. una solicitud de extracto subida debe incluir todos los campos obligatorios con un valor v&#225;lido. statementuploadendpoint carga &#250;til de extracto mal formada. la solicitud de extracto subida omite un campo obligatorio o contiene un valor no v&#225;lido. the statement upload request 11111111-1111-1111-1111-111111111111 is malformed: the &#39;statementperiod&#39; field is missing or invalid. el cliente envi&#243; un cuerpo de solicitud incompleto o mal formado. examine el campo indicado en el contexto y confirme que el cliente lo env&#237;a con un valor v&#225;lido. request_id el identificador de la solicitud entrante. field el campo de la solicitud que no super&#243; la validaci&#243;n."><a href="#err-MALFORMED_STATEMENT_PAYLOAD"><code>MALFORMED_STATEMENT_PAYLOAD</code></a></li>
+<li class="toc-item" data-search="statement_upload_rate_limited subida de extracto con l&#237;mite de frecuencia este error se produce cuando llegan demasiadas subidas de extractos en un intervalo corto y el endpoint limita la solicitud. es transitorio: la misma solicitud puede reintentarse m&#225;s tarde. los llamadores deben respetar el l&#237;mite de frecuencia de subida del endpoint. statementuploadendpoint subida de extracto con l&#237;mite de frecuencia. se enviaron demasiadas subidas de extractos en poco tiempo; int&#233;ntelo de nuevo m&#225;s tarde. the statement upload request 11111111-1111-1111-1111-111111111111 was rate-limited; retry after 30 seconds. el llamador super&#243; la frecuencia de solicitudes permitida. espere y reintente tras el retardo indicado en el mensaje. request_id el identificador de la solicitud entrante."><a href="#err-STATEMENT_UPLOAD_RATE_LIMITED"><code>STATEMENT_UPLOAD_RATE_LIMITED</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-MoneyTransfer">MoneyTransfer</a>
+<ul>
+<li class="toc-item" data-search="money_transfer_amount_not_positive importe de transferencia no positivo este error se produce cuando se solicita una transferencia con un importe cero o negativo. el importe de una transferencia debe ser estrictamente positivo. moneytransfer el importe de la transferencia debe ser positivo. el importe de la transferencia debe ser mayor que cero. cannot transfer -25 eur: the amount must be strictly positive. el importe se introdujo o se calcul&#243; como cero o un valor negativo. compruebe el importe de transferencia solicitado y confirme que es mayor que cero. transfer_amount el importe monetario de la transferencia intentada."><a href="#err-MONEY_TRANSFER_AMOUNT_NOT_POSITIVE"><code>MONEY_TRANSFER_AMOUNT_NOT_POSITIVE</code></a></li>
+<li class="toc-item" data-search="money_transfer_invalid transferencia de dinero no v&#225;lida este error agrupa todas las reglas de dominio incumplidas al validar una transferencia, de modo que el llamador ve todos los problemas a la vez en lugar de uno por uno. una transferencia debe cumplir todas las reglas de dominio (un importe estrictamente positivo, monedas coincidentes, ...). moneytransfer transferencia no v&#225;lida. la transferencia no cumple todas las reglas requeridas. the money transfer is invalid: it violates one or more domain rules. la transferencia solicitada incumpli&#243; una o varias reglas de dominio. examine los errores internos agregados para ver cada infracci&#243;n de regla individual."><a href="#err-MONEY_TRANSFER_INVALID"><code>MONEY_TRANSFER_INVALID</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-Temperature">Temperature</a>
+<ul>
+<li class="toc-item" data-search="temperature_below_absolute_zero temperature below absolute zero this error occurs when trying to instantiate a temperature with a value that is below absolute zero. temperature cannot go below absolute zero because absolute zero is the point where particles have minimum possible energy. temperature temperature is invalid. the temperature -1 k is below absolute zero. failed to instantiate temperature: the value -1 k is below absolute zero. temperature is invalid. the temperature -280 &#176;c is below absolute zero. failed to instantiate temperature: the value -280 &#176;c is below absolute zero. the value entered manually by a user is invalid. verify the value entered by the user and assess its compliance with domain rules. the value received from an external system (api, message, etc.) is invalid. check the data provided by the upstream system and evaluate its validity against domain rules. the value was loaded from corrupted or outdated persisted data. examine the persisted data source to determine whether stored values comply with current domain rules. the value was computed internally without using domain-safe methods. inspect the internal computation logic to confirm that domain invariants are preserved. the value originates from system configuration or defaults that are incorrect or outdated. review the relevant configuration or default parameters to assess their compliance with domain rules."><a href="#err-TEMPERATURE_BELOW_ABSOLUTE_ZERO"><code>TEMPERATURE_BELOW_ABSOLUTE_ZERO</code></a></li>
+</ul>
+</li>
+</ul>
+</nav>
+<p id="no-results" class="no-results" hidden>No hay errores coincidentes.</p>
+<section class="error-group" id="src-Amount">
+<h2 class="group-title">Amount</h2>
+<article class="error-detail" id="err-AMOUNT_CURRENCY_MISMATCH">
+<h3 class="error-title"><code>AMOUNT_CURRENCY_MISMATCH</code> <a class="anchor" href="#err-AMOUNT_CURRENCY_MISMATCH" aria-label="Copiar enlace a este error" data-anchor>#</a></h3>
+<p class="error-subtitle">Discrepancia de moneda entre importes</p>
+<section class="doc"><h4>Documentaci&#243;n</h4><p>Este error se produce al intentar usar juntos varios importes en una operaci&#243;n cuando est&#225;n expresados en monedas diferentes.</p></section>
+<blockquote class="rule"><strong>Regla de negocio:</strong> Todas las operaciones monetarias deben involucrar importes expresados en la misma moneda.</blockquote>
+<section class="diagnostics"><h4>Diagn&#243;sticos</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Causa posible</th><th scope="col">Origen</th><th scope="col">Pista de an&#225;lisis</th></tr>
+</thead>
+<tbody>
+<tr><td>Se usaron importes en una operaci&#243;n monetaria sin haberlos convertido a la misma moneda.</td><td>Internal</td><td>Compruebe si todos los importes involucrados en la operaci&#243;n se convirtieron a una moneda com&#250;n antes de usarlos juntos.</td></tr>
+<tr><td>Se proporcionaron con monedas diferentes importes que se esperaba estuvieran expresados en la misma moneda.</td><td>InternalOrExternal</td><td>Compruebe las monedas asociadas a cada importe y confirme si se esperaba una moneda com&#250;n para esta operaci&#243;n.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Ejemplos</h4>
+<div class="example">
+<p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;title&quot;: &quot;Discrepancia de moneda&quot;,
+  &quot;detail&quot;: &quot;Los dos importes usan monedas diferentes y no pueden combinarse.&quot;,
+  &quot;code&quot;: &quot;AMOUNT_CURRENCY_MISMATCH&quot;
+}</code></pre>
+<p class="example-label">Diagn&#243;stico (interno — no destinado a exposici&#243;n externa)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [Amount] Failed to perform the monetary operation because the involved amounts are expressed in different currencies: 127.33 EUR and 57689 USD. error.code=AMOUNT_CURRENCY_MISMATCH</code></pre>
+</div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-BankTransactionFileValidator">
+<h2 class="group-title">BankTransactionFileValidator</h2>
+<article class="error-detail" id="err-BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD">
+<h3 class="error-title"><code>BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD</code> <a class="anchor" href="#err-BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD" aria-label="Copiar enlace a este error" data-anchor>#</a></h3>
+<p class="error-subtitle">Fecha de transacci&#243;n fuera del per&#237;odo del extracto</p>
+<section class="doc"><h4>Documentaci&#243;n</h4><p>Este error se produce al intentar validar un archivo de extracto bancario que contiene una o m&#225;s transacciones con fecha fuera del per&#237;odo del extracto.</p></section>
+<blockquote class="rule"><strong>Regla de negocio:</strong> Todas las transacciones deben producirse dentro del per&#237;odo del extracto.</blockquote>
+<section class="diagnostics"><h4>Diagn&#243;sticos</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Causa posible</th><th scope="col">Origen</th><th scope="col">Pista de an&#225;lisis</th></tr>
+</thead>
+<tbody>
+<tr><td>La fecha de transacci&#243;n proporcionada en el archivo del extracto es incorrecta o incoherente con la fecha real de la transacci&#243;n.</td><td>External</td><td>Verifique la fecha de transacci&#243;n presente en el archivo de entrada y confirme su coherencia con la cronolog&#237;a real de la transacci&#243;n.</td></tr>
+<tr><td>El per&#237;odo del extracto definido en el archivo no coincide con el per&#237;odo de cobertura real de las transacciones.</td><td>External</td><td>Compruebe si las fechas de inicio y fin del extracto en el archivo concuerdan con el per&#237;odo cubierto por las transacciones.</td></tr>
+<tr><td>La transacci&#243;n se registr&#243; despu&#233;s de generar el extracto, pero se incluy&#243; por error en el archivo.</td><td>InternalOrExternal</td><td>Determine si se incluyeron transacciones registradas tard&#237;amente en el proceso de generaci&#243;n del extracto.</td></tr>
+<tr><td>Un error de procesamiento interno desplaz&#243; la fecha de transacci&#243;n durante la transformaci&#243;n o la importaci&#243;n de datos.</td><td>Internal</td><td>Examine las etapas de importaci&#243;n y transformaci&#243;n de datos para confirmar que las fechas de transacci&#243;n se conservan sin alteraci&#243;n.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Ejemplos</h4>
+<div class="example">
+<p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;title&quot;: &quot;La fecha de transacci&#243;n est&#225; fuera del per&#237;odo del extracto.&quot;,
+  &quot;detail&quot;: &quot;Una fecha de transacci&#243;n queda fuera del per&#237;odo del extracto.&quot;,
+  &quot;code&quot;: &quot;BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD&quot;
+}</code></pre>
+<p class="example-label">Diagn&#243;stico (interno — no destinado a exposici&#243;n externa)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [BankTransactionFileValidator] Transaction dated 2024-02-02 is outside the statement period [2024-01-05;2024-01-31]. error.code=BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD</code></pre>
+</div>
+</section>
+<section class="context"><h4>Contexto</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Clave</th><th scope="col">Tipo</th><th scope="col">Descripci&#243;n</th><th scope="col">Valores de ejemplo</th></tr>
+</thead>
+<tbody>
+<tr><td><code>TRANSACTION_DATE</code></td><td><code>System.DateOnly</code></td><td>La fecha de la transacci&#243;n que se est&#225; procesando.</td><td><code>02/02/2024</code></td></tr>
+</tbody>
+</table></div>
+</section>
+</article>
+<article class="error-detail" id="err-BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH">
+<h3 class="error-title"><code>BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH</code> <a class="anchor" href="#err-BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH" aria-label="Copiar enlace a este error" data-anchor>#</a></h3>
+<p class="error-subtitle">Discrepancia del importe total del extracto</p>
+<section class="doc"><h4>Documentaci&#243;n</h4><p>Este error se produce al intentar validar un archivo de extracto bancario cuyo importe total declarado no coincide con la suma de los importes de cada transacci&#243;n.</p></section>
+<blockquote class="rule"><strong>Regla de negocio:</strong> El importe total del extracto debe ser igual a la suma de todos los importes de transacci&#243;n incluidos en el extracto.</blockquote>
+<section class="diagnostics"><h4>Diagn&#243;sticos</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Causa posible</th><th scope="col">Origen</th><th scope="col">Pista de an&#225;lisis</th></tr>
+</thead>
+<tbody>
+<tr><td>El importe total declarado en el archivo del extracto no coincide con la suma de los importes de cada transacci&#243;n.</td><td>External</td><td>Verifique el importe total declarado en el archivo y comp&#225;relo con la suma de todos los importes de transacci&#243;n.</td></tr>
+<tr><td>Faltan una o m&#225;s transacciones, o est&#225;n duplicadas, en el archivo del extracto.</td><td>External</td><td>Compruebe si todas las transacciones esperadas est&#225;n presentes exactamente una vez en el archivo del extracto.</td></tr>
+<tr><td>Se produjo un error de redondeo o de precisi&#243;n al calcular el importe total del extracto.</td><td>InternalOrExternal</td><td>Examine c&#243;mo se aplicaron las reglas de redondeo y precisi&#243;n al calcular el total del extracto.</td></tr>
+<tr><td>Un error de procesamiento interno alter&#243; los importes de transacci&#243;n durante el an&#225;lisis o la transformaci&#243;n del archivo.</td><td>Internal</td><td>Inspeccione las etapas de an&#225;lisis y transformaci&#243;n del archivo para confirmar que los importes de transacci&#243;n permanecen sin cambios.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Ejemplos</h4>
+<div class="example">
+<p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;title&quot;: &quot;Discrepancia del importe total del extracto.&quot;,
+  &quot;detail&quot;: &quot;El total declarado del extracto no coincide con el total calculado.&quot;,
+  &quot;code&quot;: &quot;BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH&quot;
+}</code></pre>
+<p class="example-label">Diagn&#243;stico (interno — no destinado a exposici&#243;n externa)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [BankTransactionFileValidator] The declared statement total amount (1250 EUR) does not match the computed total amount from transactions (1249.5 EUR). error.code=BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH</code></pre>
+</div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-ExchangeRateProvider">
+<h2 class="group-title">ExchangeRateProvider</h2>
+<article class="error-detail" id="err-EXCHANGE_RATE_SERVICE_UNAVAILABLE">
+<h3 class="error-title"><code>EXCHANGE_RATE_SERVICE_UNAVAILABLE</code> <a class="anchor" href="#err-EXCHANGE_RATE_SERVICE_UNAVAILABLE" aria-label="Copiar enlace a este error" data-anchor>#</a></h3>
+<p class="error-subtitle">Servicio de tipos de cambio no disponible</p>
+<section class="doc"><h4>Documentaci&#243;n</h4><p>Este error se produce cuando no se puede contactar con el proveedor externo de tipos de cambio (un tiempo de espera agotado, un reinicio de conexi&#243;n o una respuesta 5xx). Es transitorio: la llamada puede reintentarse.</p></section>
+<blockquote class="rule"><strong>Regla de negocio:</strong> La conversi&#243;n de divisas depende de un proveedor de tipos de cambio accesible.</blockquote>
+<section class="diagnostics"><h4>Diagn&#243;sticos</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Causa posible</th><th scope="col">Origen</th><th scope="col">Pista de an&#225;lisis</th></tr>
+</thead>
+<tbody>
+<tr><td>El proveedor agot&#243; el tiempo de espera o devolvi&#243; un error de servidor.</td><td>External</td><td>Compruebe el estado del proveedor y reintente la llamada, idealmente con una espera progresiva.</td></tr>
+<tr><td>La ruta de red saliente hacia el proveedor est&#225; interrumpida.</td><td>InternalOrExternal</td><td>Verifique la conectividad saliente y cualquier proxy o cortafuegos entre el servicio y el proveedor.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Ejemplos</h4>
+<div class="example">
+<p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;title&quot;: &quot;Servicio de tipos de cambio no disponible.&quot;,
+  &quot;detail&quot;: &quot;El servicio de tipos de cambio no est&#225; disponible temporalmente; int&#233;ntelo de nuevo m&#225;s tarde.&quot;,
+  &quot;code&quot;: &quot;EXCHANGE_RATE_SERVICE_UNAVAILABLE&quot;
+}</code></pre>
+<p class="example-label">Diagn&#243;stico (interno — no destinado a exposici&#243;n externa)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [ExchangeRateProvider] The exchange-rate provider &#39;acme-fx&#39; is unavailable (correlation 22222222-2222-2222-2222-222222222222). error.code=EXCHANGE_RATE_SERVICE_UNAVAILABLE</code></pre>
+</div>
+</section>
+<section class="context"><h4>Contexto</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Clave</th><th scope="col">Tipo</th><th scope="col">Descripci&#243;n</th><th scope="col">Valores de ejemplo</th></tr>
+</thead>
+<tbody>
+<tr><td><code>PROVIDER</code></td><td><code>System.String</code></td><td>El proveedor externo al que se llam&#243;.</td><td><code>acme-fx</code></td></tr>
+<tr><td><code>CORRELATION_ID</code></td><td><code>System.Guid</code></td><td>El identificador de correlaci&#243;n de la llamada saliente.</td><td><code>22222222-2222-2222-2222-222222222222</code></td></tr>
+</tbody>
+</table></div>
+</section>
+</article>
+<article class="error-detail" id="err-UNSUPPORTED_CURRENCY_PAIR">
+<h3 class="error-title"><code>UNSUPPORTED_CURRENCY_PAIR</code> <a class="anchor" href="#err-UNSUPPORTED_CURRENCY_PAIR" aria-label="Copiar enlace a este error" data-anchor>#</a></h3>
+<p class="error-subtitle">Par de divisas no admitido</p>
+<section class="doc"><h4>Documentaci&#243;n</h4><p>Este error se produce cuando el proveedor de tipos de cambio no cotiza un tipo para el par de divisas origen/destino solicitado.</p></section>
+<blockquote class="rule"><strong>Regla de negocio:</strong> Una conversi&#243;n de divisas solo puede realizarse para un par que el proveedor cotice.</blockquote>
+<section class="diagnostics"><h4>Diagn&#243;sticos</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Causa posible</th><th scope="col">Origen</th><th scope="col">Pista de an&#225;lisis</th></tr>
+</thead>
+<tbody>
+<tr><td>El par de divisas solicitado no lo ofrece el proveedor.</td><td>External</td><td>Confirme que el proveedor admite tanto la moneda de origen como la de destino antes de solicitar una conversi&#243;n.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Ejemplos</h4>
+<div class="example">
+<p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;title&quot;: &quot;Par de divisas no admitido.&quot;,
+  &quot;detail&quot;: &quot;El par de divisas solicitado no es compatible.&quot;,
+  &quot;code&quot;: &quot;UNSUPPORTED_CURRENCY_PAIR&quot;
+}</code></pre>
+<p class="example-label">Diagn&#243;stico (interno — no destinado a exposici&#243;n externa)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [ExchangeRateProvider] The exchange-rate provider does not quote the EUR to USD currency pair. error.code=UNSUPPORTED_CURRENCY_PAIR</code></pre>
+</div>
+</section>
+<section class="context"><h4>Contexto</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Clave</th><th scope="col">Tipo</th><th scope="col">Descripci&#243;n</th><th scope="col">Valores de ejemplo</th></tr>
+</thead>
+<tbody>
+<tr><td><code>FROM_CURRENCY</code></td><td><code>FirstClassErrors.Usage.Model.Currency</code></td><td>La moneda de origen de la conversi&#243;n.</td><td><code>EUR</code></td></tr>
+<tr><td><code>TO_CURRENCY</code></td><td><code>FirstClassErrors.Usage.Model.Currency</code></td><td>La moneda de destino de la conversi&#243;n.</td><td><code>USD</code></td></tr>
+</tbody>
+</table></div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-StatementUploadEndpoint">
+<h2 class="group-title">StatementUploadEndpoint</h2>
+<article class="error-detail" id="err-MALFORMED_STATEMENT_PAYLOAD">
+<h3 class="error-title"><code>MALFORMED_STATEMENT_PAYLOAD</code> <a class="anchor" href="#err-MALFORMED_STATEMENT_PAYLOAD" aria-label="Copiar enlace a este error" data-anchor>#</a></h3>
+<p class="error-subtitle">Carga &#250;til de extracto mal formada</p>
+<section class="doc"><h4>Documentaci&#243;n</h4><p>Este error se produce cuando el endpoint de subida de extractos recibe una solicitud cuyo cuerpo omite un campo obligatorio o contiene un valor no v&#225;lido.</p></section>
+<blockquote class="rule"><strong>Regla de negocio:</strong> Una solicitud de extracto subida debe incluir todos los campos obligatorios con un valor v&#225;lido.</blockquote>
+<section class="diagnostics"><h4>Diagn&#243;sticos</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Causa posible</th><th scope="col">Origen</th><th scope="col">Pista de an&#225;lisis</th></tr>
+</thead>
+<tbody>
+<tr><td>El cliente envi&#243; un cuerpo de solicitud incompleto o mal formado.</td><td>External</td><td>Examine el campo indicado en el contexto y confirme que el cliente lo env&#237;a con un valor v&#225;lido.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Ejemplos</h4>
+<div class="example">
+<p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;title&quot;: &quot;Carga &#250;til de extracto mal formada.&quot;,
+  &quot;detail&quot;: &quot;La solicitud de extracto subida omite un campo obligatorio o contiene un valor no v&#225;lido.&quot;,
+  &quot;code&quot;: &quot;MALFORMED_STATEMENT_PAYLOAD&quot;
+}</code></pre>
+<p class="example-label">Diagn&#243;stico (interno — no destinado a exposici&#243;n externa)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [StatementUploadEndpoint] The statement upload request 11111111-1111-1111-1111-111111111111 is malformed: the &#39;statementPeriod&#39; field is missing or invalid. error.code=MALFORMED_STATEMENT_PAYLOAD</code></pre>
+</div>
+</section>
+<section class="context"><h4>Contexto</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Clave</th><th scope="col">Tipo</th><th scope="col">Descripci&#243;n</th><th scope="col">Valores de ejemplo</th></tr>
+</thead>
+<tbody>
+<tr><td><code>REQUEST_ID</code></td><td><code>System.Guid</code></td><td>El identificador de la solicitud entrante.</td><td><code>11111111-1111-1111-1111-111111111111</code></td></tr>
+<tr><td><code>FIELD</code></td><td><code>System.String</code></td><td>El campo de la solicitud que no super&#243; la validaci&#243;n.</td><td><code>statementPeriod</code></td></tr>
+</tbody>
+</table></div>
+</section>
+</article>
+<article class="error-detail" id="err-STATEMENT_UPLOAD_RATE_LIMITED">
+<h3 class="error-title"><code>STATEMENT_UPLOAD_RATE_LIMITED</code> <a class="anchor" href="#err-STATEMENT_UPLOAD_RATE_LIMITED" aria-label="Copiar enlace a este error" data-anchor>#</a></h3>
+<p class="error-subtitle">Subida de extracto con l&#237;mite de frecuencia</p>
+<section class="doc"><h4>Documentaci&#243;n</h4><p>Este error se produce cuando llegan demasiadas subidas de extractos en un intervalo corto y el endpoint limita la solicitud. Es transitorio: la misma solicitud puede reintentarse m&#225;s tarde.</p></section>
+<blockquote class="rule"><strong>Regla de negocio:</strong> Los llamadores deben respetar el l&#237;mite de frecuencia de subida del endpoint.</blockquote>
+<section class="diagnostics"><h4>Diagn&#243;sticos</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Causa posible</th><th scope="col">Origen</th><th scope="col">Pista de an&#225;lisis</th></tr>
+</thead>
+<tbody>
+<tr><td>El llamador super&#243; la frecuencia de solicitudes permitida.</td><td>External</td><td>Espere y reintente tras el retardo indicado en el mensaje.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Ejemplos</h4>
+<div class="example">
+<p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;title&quot;: &quot;Subida de extracto con l&#237;mite de frecuencia.&quot;,
+  &quot;detail&quot;: &quot;Se enviaron demasiadas subidas de extractos en poco tiempo; int&#233;ntelo de nuevo m&#225;s tarde.&quot;,
+  &quot;code&quot;: &quot;STATEMENT_UPLOAD_RATE_LIMITED&quot;
+}</code></pre>
+<p class="example-label">Diagn&#243;stico (interno — no destinado a exposici&#243;n externa)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [StatementUploadEndpoint] The statement upload request 11111111-1111-1111-1111-111111111111 was rate-limited; retry after 30 seconds. error.code=STATEMENT_UPLOAD_RATE_LIMITED</code></pre>
+</div>
+</section>
+<section class="context"><h4>Contexto</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Clave</th><th scope="col">Tipo</th><th scope="col">Descripci&#243;n</th><th scope="col">Valores de ejemplo</th></tr>
+</thead>
+<tbody>
+<tr><td><code>REQUEST_ID</code></td><td><code>System.Guid</code></td><td>El identificador de la solicitud entrante.</td><td><code>11111111-1111-1111-1111-111111111111</code></td></tr>
+</tbody>
+</table></div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-MoneyTransfer">
+<h2 class="group-title">MoneyTransfer</h2>
+<article class="error-detail" id="err-MONEY_TRANSFER_AMOUNT_NOT_POSITIVE">
+<h3 class="error-title"><code>MONEY_TRANSFER_AMOUNT_NOT_POSITIVE</code> <a class="anchor" href="#err-MONEY_TRANSFER_AMOUNT_NOT_POSITIVE" aria-label="Copiar enlace a este error" data-anchor>#</a></h3>
+<p class="error-subtitle">Importe de transferencia no positivo</p>
+<section class="doc"><h4>Documentaci&#243;n</h4><p>Este error se produce cuando se solicita una transferencia con un importe cero o negativo.</p></section>
+<blockquote class="rule"><strong>Regla de negocio:</strong> El importe de una transferencia debe ser estrictamente positivo.</blockquote>
+<section class="diagnostics"><h4>Diagn&#243;sticos</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Causa posible</th><th scope="col">Origen</th><th scope="col">Pista de an&#225;lisis</th></tr>
+</thead>
+<tbody>
+<tr><td>El importe se introdujo o se calcul&#243; como cero o un valor negativo.</td><td>External</td><td>Compruebe el importe de transferencia solicitado y confirme que es mayor que cero.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Ejemplos</h4>
+<div class="example">
+<p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;title&quot;: &quot;El importe de la transferencia debe ser positivo.&quot;,
+  &quot;detail&quot;: &quot;El importe de la transferencia debe ser mayor que cero.&quot;,
+  &quot;code&quot;: &quot;MONEY_TRANSFER_AMOUNT_NOT_POSITIVE&quot;
+}</code></pre>
+<p class="example-label">Diagn&#243;stico (interno — no destinado a exposici&#243;n externa)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [MoneyTransfer] Cannot transfer -25 EUR: the amount must be strictly positive. error.code=MONEY_TRANSFER_AMOUNT_NOT_POSITIVE</code></pre>
+</div>
+</section>
+<section class="context"><h4>Contexto</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Clave</th><th scope="col">Tipo</th><th scope="col">Descripci&#243;n</th><th scope="col">Valores de ejemplo</th></tr>
+</thead>
+<tbody>
+<tr><td><code>TRANSFER_AMOUNT</code></td><td><code>FirstClassErrors.Usage.Model.Amount</code></td><td>El importe monetario de la transferencia intentada.</td><td><code>-25 EUR</code></td></tr>
+</tbody>
+</table></div>
+</section>
+</article>
+<article class="error-detail" id="err-MONEY_TRANSFER_INVALID">
+<h3 class="error-title"><code>MONEY_TRANSFER_INVALID</code> <a class="anchor" href="#err-MONEY_TRANSFER_INVALID" aria-label="Copiar enlace a este error" data-anchor>#</a></h3>
+<p class="error-subtitle">Transferencia de dinero no v&#225;lida</p>
+<section class="doc"><h4>Documentaci&#243;n</h4><p>Este error agrupa todas las reglas de dominio incumplidas al validar una transferencia, de modo que el llamador ve todos los problemas a la vez en lugar de uno por uno.</p></section>
+<blockquote class="rule"><strong>Regla de negocio:</strong> Una transferencia debe cumplir todas las reglas de dominio (un importe estrictamente positivo, monedas coincidentes, ...).</blockquote>
+<section class="diagnostics"><h4>Diagn&#243;sticos</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Causa posible</th><th scope="col">Origen</th><th scope="col">Pista de an&#225;lisis</th></tr>
+</thead>
+<tbody>
+<tr><td>La transferencia solicitada incumpli&#243; una o varias reglas de dominio.</td><td>External</td><td>Examine los errores internos agregados para ver cada infracci&#243;n de regla individual.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Ejemplos</h4>
+<div class="example">
+<p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;title&quot;: &quot;Transferencia no v&#225;lida.&quot;,
+  &quot;detail&quot;: &quot;La transferencia no cumple todas las reglas requeridas.&quot;,
+  &quot;code&quot;: &quot;MONEY_TRANSFER_INVALID&quot;
+}</code></pre>
+<p class="example-label">Diagn&#243;stico (interno — no destinado a exposici&#243;n externa)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [MoneyTransfer] The money transfer is invalid: it violates one or more domain rules. error.code=MONEY_TRANSFER_INVALID</code></pre>
+</div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-Temperature">
+<h2 class="group-title">Temperature</h2>
+<article class="error-detail" id="err-TEMPERATURE_BELOW_ABSOLUTE_ZERO">
+<h3 class="error-title"><code>TEMPERATURE_BELOW_ABSOLUTE_ZERO</code> <a class="anchor" href="#err-TEMPERATURE_BELOW_ABSOLUTE_ZERO" aria-label="Copiar enlace a este error" data-anchor>#</a></h3>
+<p class="error-subtitle">Temperature below absolute zero</p>
+<section class="doc"><h4>Documentaci&#243;n</h4><p>This error occurs when trying to instantiate a temperature with a value that is below absolute zero.</p></section>
+<blockquote class="rule"><strong>Regla de negocio:</strong> Temperature cannot go below absolute zero because absolute zero is the point where particles have minimum possible energy.</blockquote>
+<section class="diagnostics"><h4>Diagn&#243;sticos</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Causa posible</th><th scope="col">Origen</th><th scope="col">Pista de an&#225;lisis</th></tr>
+</thead>
+<tbody>
+<tr><td>The value entered manually by a user is invalid.</td><td>External</td><td>Verify the value entered by the user and assess its compliance with domain rules.</td></tr>
+<tr><td>The value received from an external system (API, message, etc.) is invalid.</td><td>External</td><td>Check the data provided by the upstream system and evaluate its validity against domain rules.</td></tr>
+<tr><td>The value was loaded from corrupted or outdated persisted data.</td><td>External</td><td>Examine the persisted data source to determine whether stored values comply with current domain rules.</td></tr>
+<tr><td>The value was computed internally without using domain-safe methods.</td><td>Internal</td><td>Inspect the internal computation logic to confirm that domain invariants are preserved.</td></tr>
+<tr><td>The value originates from system configuration or defaults that are incorrect or outdated.</td><td>External</td><td>Review the relevant configuration or default parameters to assess their compliance with domain rules.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Ejemplos</h4>
+<div class="example">
+<p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;title&quot;: &quot;Temperature is invalid.&quot;,
+  &quot;detail&quot;: &quot;The temperature -1 K is below absolute zero.&quot;,
+  &quot;code&quot;: &quot;TEMPERATURE_BELOW_ABSOLUTE_ZERO&quot;
+}</code></pre>
+<p class="example-label">Diagn&#243;stico (interno — no destinado a exposici&#243;n externa)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [Temperature] Failed to instantiate temperature: the value -1 K is below absolute zero. error.code=TEMPERATURE_BELOW_ABSOLUTE_ZERO</code></pre>
+</div>
+<div class="example">
+<p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;title&quot;: &quot;Temperature is invalid.&quot;,
+  &quot;detail&quot;: &quot;The temperature -280 &#176;C is below absolute zero.&quot;,
+  &quot;code&quot;: &quot;TEMPERATURE_BELOW_ABSOLUTE_ZERO&quot;
+}</code></pre>
+<p class="example-label">Diagn&#243;stico (interno — no destinado a exposici&#243;n externa)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [Temperature] Failed to instantiate temperature: the value -280 &#176;C is below absolute zero. error.code=TEMPERATURE_BELOW_ABSOLUTE_ZERO</code></pre>
+</div>
+</section>
+</article>
+</section>
+</main>
+<script>
+(function () {
+  var KEY = 'fce-theme';
+  var root = document.documentElement;
+  function apply(t) { if (t === 'light' || t === 'dark') { root.setAttribute('data-theme', t); } else { root.removeAttribute('data-theme'); } }
+  function current() { return root.getAttribute('data-theme') || 'auto'; }
+  var btn = document.getElementById('theme-toggle');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var order = ['auto', 'light', 'dark'];
+      var next = order[(order.indexOf(current()) + 1) % order.length];
+      try { if (next === 'auto') { localStorage.removeItem(KEY); } else { localStorage.setItem(KEY, next); } } catch (e) {}
+      apply(next);
+    });
+  }
+  var search = document.getElementById('search');
+  var toc = document.getElementById('toc');
+  var noResults = document.getElementById('no-results');
+  function filter() {
+    if (!toc) { return; }
+    var q = ((search && search.value) || '').toLowerCase().trim();
+    var items = toc.querySelectorAll('.toc-item');
+    var visible = 0;
+    for (var i = 0; i < items.length; i++) {
+      var ok = !q || (items[i].getAttribute('data-search') || '').indexOf(q) !== -1;
+      items[i].hidden = !ok;
+      if (ok) { visible++; }
+    }
+    var groups = toc.querySelectorAll('.toc-group');
+    for (var g = 0; g < groups.length; g++) {
+      groups[g].hidden = groups[g].querySelectorAll('.toc-item:not([hidden])').length === 0;
+    }
+    if (noResults) { noResults.hidden = visible !== 0; }
+  }
+  if (search) { search.addEventListener('input', filter); }
+  var anchors = document.querySelectorAll('a[data-anchor]');
+  for (var j = 0; j < anchors.length; j++) {
+    anchors[j].addEventListener('click', function () {
+      var href = this.getAttribute('href') || '';
+      var url = location.href.split('#')[0] + href;
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(url).catch(function () {}); }
+    });
+  }
+})();
+</script>
+</body>
+</html>

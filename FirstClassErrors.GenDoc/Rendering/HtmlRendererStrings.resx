@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ErrorCatalog" xml:space="preserve">
+    <value>Error Catalog</value>
+  </data>
+  <data name="ErrorsCountFormat" xml:space="preserve">
+    <value>{0} documented errors</value>
+  </data>
+  <data name="NoDocumentedErrors" xml:space="preserve">
+    <value>No documented errors.</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="SearchPlaceholder" xml:space="preserve">
+    <value>Search by code, message, documentation…</value>
+  </data>
+  <data name="NoResults" xml:space="preserve">
+    <value>No matching errors.</value>
+  </data>
+  <data name="DocumentationHeading" xml:space="preserve">
+    <value>Documentation</value>
+  </data>
+  <data name="BusinessRuleLabel" xml:space="preserve">
+    <value>Business rule:</value>
+  </data>
+  <data name="DiagnosticsHeading" xml:space="preserve">
+    <value>Diagnostics</value>
+  </data>
+  <data name="DiagnosticCauseHeader" xml:space="preserve">
+    <value>Possible cause</value>
+  </data>
+  <data name="DiagnosticOriginHeader" xml:space="preserve">
+    <value>Origin</value>
+  </data>
+  <data name="DiagnosticHintHeader" xml:space="preserve">
+    <value>Analysis hint</value>
+  </data>
+  <data name="ExamplesHeading" xml:space="preserve">
+    <value>Examples</value>
+  </data>
+  <data name="PublicResponseLabel" xml:space="preserve">
+    <value>Public response (RFC 9457)</value>
+  </data>
+  <data name="DiagnosticExampleLabel" xml:space="preserve">
+    <value>Diagnostic (internal — not for external exposure)</value>
+  </data>
+  <data name="ContextHeading" xml:space="preserve">
+    <value>Context</value>
+  </data>
+  <data name="ContextKeyHeader" xml:space="preserve">
+    <value>Key</value>
+  </data>
+  <data name="ContextTypeHeader" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="ContextDescriptionHeader" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="ContextExampleValuesHeader" xml:space="preserve">
+    <value>Example values</value>
+  </data>
+  <data name="BackToCatalog" xml:space="preserve">
+    <value>Back to the catalog</value>
+  </data>
+  <data name="CopyLinkLabel" xml:space="preserve">
+    <value>Copy link to this error</value>
+  </data>
+  <data name="ThemeToggleLabel" xml:space="preserve">
+    <value>Toggle light / dark theme</value>
+  </data>
+  <data name="SkipToContent" xml:space="preserve">
+    <value>Skip to content</value>
+  </data>
+</root>
