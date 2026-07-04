@@ -193,6 +193,12 @@ FirstClassErrors is especially useful if:
 * you want documentation that doesn’t drift from code
 * you design with domain-driven thinking
 
+## 🔍 Analyzers
+
+FirstClassErrors ships with a set of Roslyn analyzers (rule ids `FCExxx`) **bundled in the NuGet package** — reference the package and they run at build time, no extra install. They catch, before you run anything, the mistakes the runtime or the documentation pipeline would otherwise surface late or silently: duplicate error codes, `[DocumentedBy]` references that don't resolve, documented errors that never reach the catalog, and more.
+
+See the [analyzer rules reference](doc/analyzers/README.md).
+
 ## 📚 Next steps
 
 See the full documentation:
@@ -210,4 +216,5 @@ See the full documentation:
 - [Writing a custom renderer](doc/WritingACustomRenderer.en.md)
 - [Internationalization](doc/Internationalization.en.md)
 - [Comparison with error-handling libraries](doc/ComparisonWithOtherLibraries.en.md)
+- [Analyzer rules (FCExxx)](doc/analyzers/README.md)
 - [FAQ](doc/FAQ.en.md)
