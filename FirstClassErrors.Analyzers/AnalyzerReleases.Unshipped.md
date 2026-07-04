@@ -18,4 +18,5 @@ FCE010  | FirstClassErrors.DocumentationWiring | Warning  | MultipleFactoriesSha
 FCE011  | FirstClassErrors.DocumentationContent| Error    | DuplicateDocumentedCodeAnalyzer
 FCE012  | FirstClassErrors.DocumentationContent| Warning  | EmptyExamplesAnalyzer
 FCE013  | FirstClassErrors.DocumentationContent| Warning  | ExampleDoesNotCallDocumentedFactoryAnalyzer
+FCE014  | FirstClassErrors.DocumentationContent| Info     | ShortMessageSameAsDetailedMessageAnalyzer
 FCE016  | FirstClassErrors.Usage               | Warning  | UnusedToExceptionResultAnalyzer
