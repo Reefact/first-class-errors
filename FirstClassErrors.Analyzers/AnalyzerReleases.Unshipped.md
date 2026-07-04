@@ -11,6 +11,7 @@ Rule ID | Category | Severity | Notes
 <<<<<<< b99d792aab6c528239b0e92feef667084d9dea0a
 <<<<<<< b57606bb883403c1b1a6d14247e5e03a167aa892
 --------|--------------------------------------|----------|-------------------------------------
+FCE001  | FirstClassErrors.ErrorCodes          | Error    | DuplicateErrorCodeAnalyzer
 FCE002  | FirstClassErrors.ErrorCodes          | Error    | EmptyErrorCodeAnalyzer
 FCE006  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByTargetNotFoundAnalyzer
 FCE007  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByInvalidSignatureAnalyzer

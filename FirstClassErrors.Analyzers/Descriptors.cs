@@ -8,6 +8,16 @@ namespace FirstClassErrors.Analyzers;
 /// </summary>
 internal static class Descriptors {
 
+    public static readonly DiagnosticDescriptor DuplicateErrorCode = new(
+        id: DiagnosticIds.DuplicateErrorCode,
+        title: "Duplicate error code",
+        messageFormat: "Error code '{0}' is created more than once; each ErrorCode must be unique",
+        category: DiagnosticCategories.ErrorCodes,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "ErrorCode.Create registers each code in a process-wide set and throws when the same code is created twice. Detection is per-compilation and limited to literal codes.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.DuplicateErrorCode));
+
     public static readonly DiagnosticDescriptor EmptyErrorCode = new(
         id: DiagnosticIds.EmptyErrorCode,
         title: "Error code must not be empty",
