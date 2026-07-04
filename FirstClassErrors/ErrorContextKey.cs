@@ -68,12 +68,42 @@ public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
     ///     <paramref name="name" /> has already been registered.
     /// </exception>
     public static ErrorContextKey<T> Create<T>(string name, string? description = null) {
+        Func<string?>? descriptionProvider = null;
+        if (description is not null) { descriptionProvider = () => description; }
+
+        return Register<T>(name, descriptionProvider);
+    }
+
+    /// <summary>
+    ///     Creates a new <see cref="ErrorContextKey{T}" /> whose description is resolved lazily, on each read of
+    ///     <see cref="Description" />.
+    /// </summary>
+    /// <remarks>
+    ///     Use this to supply a <b>localized</b> description — for example one read from a
+    ///     <see cref="System.Resources.ResourceManager" /> under the current UI culture — so the same registered key
+    ///     documents itself in whatever language is in effect when the documentation is extracted. A key is still
+    ///     registered once by its <paramref name="name" />; only the description text is deferred.
+    /// </remarks>
+    /// <typeparam name="T">The type associated with the error context key.</typeparam>
+    /// <param name="name">The unique name of the error context key. Must not be <c>null</c>, empty, or whitespace.</param>
+    /// <param name="descriptionProvider">A function returning the description; invoked each time <see cref="Description" /> is read.</param>
+    /// <returns>A new instance of <see cref="ErrorContextKey{T}" />.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="name" /> is <c>null</c>, empty, or whitespace.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="descriptionProvider" /> is <c>null</c>.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when a key with the specified <paramref name="name" /> is already registered.</exception>
+    public static ErrorContextKey<T> Create<T>(string name, Func<string?> descriptionProvider) {
+        if (descriptionProvider is null) { throw new ArgumentNullException(nameof(descriptionProvider)); }
+
+        return Register<T>(name, descriptionProvider);
+    }
+
+    private static ErrorContextKey<T> Register<T>(string name, Func<string?>? descriptionProvider) {
         if (string.IsNullOrWhiteSpace(name)) { throw new ArgumentException("Value cannot be null or whitespace.", nameof(name)); }
 
         lock (Lock) {
             if (Registered.ContainsKey(name)) { throw new InvalidOperationException($"An error context key '{name}' has already been registered."); }
 
-            ErrorContextKey<T> instance = new(name, description);
+            ErrorContextKey<T> instance = new(name, descriptionProvider);
             Registered.Add(name, instance);
 
             return instance;
@@ -137,12 +167,18 @@ public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
         return !Equals(left, right);
     }
 
+    #region Fields declarations
+
+    private readonly Func<string?>? _descriptionProvider;
+
+    #endregion
+
     #region Constructors declarations
 
-    private protected ErrorContextKey(string name, string? description, Type valueType) {
-        Name        = name;
-        Description = description;
-        ValueType   = valueType;
+    private protected ErrorContextKey(string name, Func<string?>? descriptionProvider, Type valueType) {
+        Name                 = name;
+        _descriptionProvider = descriptionProvider;
+        ValueType            = valueType;
     }
 
     #endregion
@@ -171,10 +207,12 @@ public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
     ///     </para>
     ///     <para>
     ///         This value does not affect the identity or behavior of the key and may be null if the name is considered
-    ///         self-explanatory.
+    ///         self-explanatory. When the key is created with a description provider (see
+    ///         <see cref="Create{T}(string, Func{string})" />), it is resolved on each read, so a localized description
+    ///         follows the current UI culture.
     ///     </para>
     /// </remarks>
-    public string? Description { get; }
+    public string? Description => _descriptionProvider?.Invoke();
     /// <summary>
     ///     Gets the type of value that is expected to be associated with this context key.
     /// </summary>
@@ -247,7 +285,7 @@ public sealed class ErrorContextKey<T> : ErrorContextKey {
 
     #region Constructors declarations
 
-    internal ErrorContextKey(string name, string? description) : base(name, description, typeof(T)) { }
+    internal ErrorContextKey(string name, Func<string?>? descriptionProvider) : base(name, descriptionProvider, typeof(T)) { }
 
     #endregion
 

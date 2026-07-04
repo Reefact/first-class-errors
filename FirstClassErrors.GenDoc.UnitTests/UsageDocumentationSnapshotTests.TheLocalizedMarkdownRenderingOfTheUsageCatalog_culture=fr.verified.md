@@ -68,7 +68,7 @@ Cette erreur se produit lorsqu'on tente de valider un relevé bancaire contenant
 
 | Clé | Type | Description | Exemples de valeurs |
 | --- | --- | --- | --- |
-| `TRANSACTION_DATE` | `System.DateOnly` | The date of the transaction being processed. | `02/02/2024` |
+| `TRANSACTION_DATE` | `System.DateOnly` | La date de la transaction en cours de traitement. | `02/02/2024` |
 
 <a id="err-bank-transaction-file-statement-total-amount-mismatch"></a>
 

@@ -68,7 +68,7 @@ Det här felet uppstår när man försöker validera en kontoutdragsfil som inne
 
 | Nyckel | Typ | Beskrivning | Exempelvärden |
 | --- | --- | --- | --- |
-| `TRANSACTION_DATE` | `System.DateOnly` | The date of the transaction being processed. | `02/02/2024` |
+| `TRANSACTION_DATE` | `System.DateOnly` | Datumet för transaktionen som behandlas. | `02/02/2024` |
 
 <a id="err-bank-transaction-file-statement-total-amount-mismatch"></a>
 

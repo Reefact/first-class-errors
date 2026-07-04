@@ -169,4 +169,7 @@
   <data name="Bank_TotalMismatch_Hint4" xml:space="preserve">
     <value>Inspektera stegen för tolkning och transformation av filen för att bekräfta att transaktionsbeloppen förblir oförändrade.</value>
   </data>
+  <data name="Bank_TransactionDate_Context" xml:space="preserve">
+    <value>Datumet för transaktionen som behandlas.</value>
+  </data>
 </root>

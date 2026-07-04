@@ -68,7 +68,7 @@ Dieser Fehler tritt auf, wenn versucht wird, eine Kontoauszugsdatei zu validiere
 
 | Schlüssel | Typ | Beschreibung | Beispielwerte |
 | --- | --- | --- | --- |
-| `TRANSACTION_DATE` | `System.DateOnly` | The date of the transaction being processed. | `02/02/2024` |
+| `TRANSACTION_DATE` | `System.DateOnly` | Das Datum der gerade verarbeiteten Transaktion. | `02/02/2024` |
 
 <a id="err-bank-transaction-file-statement-total-amount-mismatch"></a>
 
