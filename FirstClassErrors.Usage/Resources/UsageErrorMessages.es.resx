@@ -169,4 +169,7 @@
   <data name="Bank_TotalMismatch_Hint4" xml:space="preserve">
     <value>Inspeccione las etapas de análisis y transformación del archivo para confirmar que los importes de transacción permanecen sin cambios.</value>
   </data>
+  <data name="Bank_TransactionDate_Context" xml:space="preserve">
+    <value>La fecha de la transacción que se está procesando.</value>
+  </data>
 </root>
