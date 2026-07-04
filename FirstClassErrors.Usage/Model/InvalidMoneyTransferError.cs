@@ -20,11 +20,13 @@ public static class InvalidMoneyTransferError {
 
     [DocumentedBy(nameof(AmountNotPositiveDocumentation))]
     internal static DomainError AmountNotPositive(Amount amount) {
-        return new DomainError(
-            Code.AmountNotPositive,
-            DocumentationFormatter.Format(UsageErrorMessages.Get("MoneyTransfer_AmountNotPositive_Message"), amount),
-            UsageErrorMessages.Get("MoneyTransfer_AmountNotPositive_ShortMessage"),
-            ctx => ctx.Add(ErrCtxKey.TransferAmount, amount));
+        return DomainError.Create(
+                              Code.AmountNotPositive,
+                              DocumentationFormatter.Format("Cannot transfer {0}: the amount must be strictly positive.", amount),
+                              ctx => ctx.Add(ErrCtxKey.TransferAmount, amount))
+                          .WithPublicMessage(
+                              UsageErrorMessages.Get("MoneyTransfer_AmountNotPositive_ShortMessage"),
+                              UsageErrorMessages.Get("MoneyTransfer_AmountNotPositive_DetailedMessage"));
     }
 
     [DocumentedBy(nameof(InvalidDocumentation))]
@@ -35,11 +37,13 @@ public static class InvalidMoneyTransferError {
             InvalidAmountOperationError.CurrencyMismatch(amount, other)
         };
 
-        return new DomainError(
-            Code.Invalid,
-            UsageErrorMessages.Get("MoneyTransfer_Invalid_Message"),
-            violations,
-            UsageErrorMessages.Get("MoneyTransfer_Invalid_ShortMessage"));
+        return DomainError.Create(
+                              Code.Invalid,
+                              "The money transfer is invalid: it violates one or more domain rules.",
+                              violations)
+                          .WithPublicMessage(
+                              UsageErrorMessages.Get("MoneyTransfer_Invalid_ShortMessage"),
+                              UsageErrorMessages.Get("MoneyTransfer_Invalid_DetailedMessage"));
     }
 
     private static ErrorDocumentation AmountNotPositiveDocumentation() {
