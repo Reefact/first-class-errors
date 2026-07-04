@@ -24,7 +24,7 @@ public interface IErrorDocumentationRenderer {
 `RenderRequest` porte les deux choix propres à chaque appel :
 
 * **`Layout`** — la valeur de `fce generate --layout <…>`. Déclarez les layouts pris en charge dans `SupportedLayouts` et rejetez tout autre avec `LayoutNotSupportedException` (le renderer intégré `json` ne gère que `single` ; `markdown` gère `single` et `split`). Un layout est une simple chaîne : un renderer peut donc définir les siens.
-* **`Culture`** — la langue cible (`fce generate --language <…>`). Localisez le texte fixe que vous produisez pour `request.Culture` ; le renderer Markdown intégré lit ainsi ses titres et libellés depuis des ressources indexées par cette culture. Le *contenu* des erreurs est déjà localisé en amont par l’extracteur : un renderer ne localise donc que son propre gabarit.
+* **`Culture`** — la langue cible. Localisez le texte fixe que vous produisez pour `request.Culture` (le *contenu* des erreurs est déjà localisé en amont par l’extracteur : un renderer ne localise donc que son propre gabarit). Voir [Internationalisation](Internationalisation.fr.md).
 
 Le contrat et le modèle (`ErrorDocumentation`, `ErrorDiagnostic`, …) sont livrés dans le package `FirstClassErrors`, qui cible **.NET Standard 2.0** — un renderer n’a donc besoin que de cette seule référence, que la plupart des projets possèdent déjà.
 
@@ -107,6 +107,6 @@ foreach (RenderedDocument document in new CsvErrorDocumentationRenderer().Render
 
 ---
 
-Section précédente: [Architecture du pipeline de documentation](ArchitectureOfTheDocumentationPipeline.fr.md) | Section suivante: [FAQ](FAQ.fr.md)
+Section précédente: [Architecture du pipeline de documentation](ArchitectureOfTheDocumentationPipeline.fr.md) | Section suivante: [Internationalisation](Internationalisation.fr.md)
 
 ---

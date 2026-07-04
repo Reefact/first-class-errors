@@ -113,7 +113,7 @@ This enables:
 * Markdown or JSON error catalogs (or any custom format via a renderer)
 * support-oriented documentation
 * living documentation generated from code
-* multi-language catalogs (opt-in: English, French, Spanish, German, Swedish)
+* multi-language catalogs (opt-in) — see [Internationalization](doc/Internationalization.en.md)
 
 ## 🔁 Exception or not? You choose.
 
@@ -194,5 +194,6 @@ See the full documentation:
 - [CI/CD and Operational Integration](doc/OperationalIntegration.en.md)
 - [Architecture of the Documentation Pipeline](doc/ArchitectureOfTheDocumentationPipeline.en.md)
 - [Writing a custom renderer](doc/WritingACustomRenderer.en.md)
+- [Internationalization](doc/Internationalization.en.md)
 - [Comparison with error-handling libraries](doc/ComparisonWithOtherLibraries.en.md)
 - [FAQ](doc/FAQ.en.md)

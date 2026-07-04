@@ -32,7 +32,7 @@ Cet attribut est le point d’ancrage principal du modèle de documentation : il
                    Description = "Errors raised when constructing a Temperature value from an out-of-range input.")]
 ```
 
-La `Description` est un texte littéral par défaut ; renseignez `DescriptionResourceType` pour qu’elle soit résolue comme une clé de ressource à la place, en vue de la localisation (voir la section Internationalisation ci-dessous).
+La `Description` est un texte littéral par défaut ; renseignez `DescriptionResourceType` pour qu’elle soit résolue comme une clé de ressource à la place, en vue de la localisation (voir [Internationalisation](Internationalisation.fr.md)).
 
 À l’intérieur de cette classe, chaque méthode factory est liée à sa méthode de documentation via :
 
@@ -116,14 +116,9 @@ Une valeur passée en ligne de commande écrase la configuration.
 
 ## 🌍 8. Internationalisation
 
-La documentation générée peut être produite dans une langue choisie avec `fce generate --language <en|fr|es|de|sv>` (ou une valeur `language` par défaut dans `fce.json`, écrasée en ligne de commande — comme les autres options). La langue traverse tout le pipeline à deux niveaux :
+Le pipeline est sensible à la culture à deux niveaux : l’extracteur localise le *contenu* des erreurs (sous la culture UI demandée) et chaque renderer localise ses propres *gabarits* (depuis `RenderRequest.Culture`), tandis que les noms de fichiers et les ancres restent indépendants de la culture, pour que les liens ne cassent jamais. C’est optionnel et piloté par `fce generate --language`.
 
-* **Descriptions des erreurs** — l’extracteur lance le worker de chaque assembly sous la culture demandée ; les fabriques de documentation qui lisent des ressources localisées produisent donc titres, explications, règles et diagnostics dans cette langue. L’introduction d’un groupe de source est localisée de la même façon : `[ProvidesErrorsFor]` accepte un `DescriptionResourceType`, et lorsqu’il est renseigné l’extracteur traite `Description` comme une clé de ressource résolue via ce type (le patron `[Display(ResourceType = …)]`).
-* **Gabarits des renderers** — la culture est transmise au renderer via `RenderRequest.Culture`, de sorte que le texte fixe qu’il émet (titres, libellés, en-têtes de tableau) est localisé. Le renderer Markdown intégré lit ses chaînes de gabarit depuis des ressources ; un renderer personnalisé localise le sien de la même manière.
-
-Le *contenu* des erreurs est localisé à l’extraction ; le *texte fixe* des renderers l’est au rendu. Les noms de fichiers et les ancres restent indépendants de la culture, pour que les liens restent stables d’une langue à l’autre.
-
-**L’internationalisation est optionnelle.** Une erreur dont le `[ProvidesErrorsFor]` n’a pas de `DescriptionResourceType` conserve le texte littéral de `Description`, et une fabrique qui écrit des chaînes en dur — plutôt que de lire des ressources — reste simplement toujours dans cette langue ; sans `--language`, tout est rendu en anglais. Un projet n’a donc besoin d’i18n que là où il le souhaite. L’exemple `.Usage` montre les deux : `Temperature` est un exemple simple, non localisé, tandis qu’`Amount` et `BankTransactionFileValidator` sont entièrement localisés dans les cinq langues.
+Voir **[Internationalisation](Internationalisation.fr.md)** pour le détail — choisir la langue, le hook `DescriptionResourceType`, la localisation des gabarits de renderer, et le pilotage sans la CLI.
 
 ## 🔁 Pourquoi cette architecture est importante
 

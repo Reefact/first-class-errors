@@ -15,6 +15,8 @@ A typical pipeline step:
 
 This ensures that documentation always matches the version of the system that is deployed. No manual updates are required, and no drift can occur.
 
+You can emit the catalog per locale by adding `--language <…>` (e.g. a CI matrix over `en`, `fr`, `sv`); file names and anchors stay stable across languages. See [Internationalization](Internationalization.en.md).
+
 ## 🌍 Publishing documentation
 
 The generated documentation can be:

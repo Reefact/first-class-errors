@@ -32,7 +32,7 @@ This attribute is the primary anchor of the documentation model: it marks the cl
                    Description = "Errors raised when constructing a Temperature value from an out-of-range input.")]
 ```
 
-The `Description` is literal text by default; set `DescriptionResourceType` to have it resolved as a resource key instead, for localization (see the Internationalization section below).
+The `Description` is literal text by default; set `DescriptionResourceType` to have it resolved as a resource key instead, for localization (see [Internationalization](Internationalization.en.md)).
 
 Inside that class, each factory method is linked to its documentation method using:
 
@@ -116,14 +116,9 @@ A value passed on the command line overrides the configuration.
 
 ## 🌍 8. Internationalization
 
-The generated documentation can be produced in a chosen language with `fce generate --language <en|fr|es|de|sv>` (or a `language` default in `fce.json`, overridden on the command line — like the other options). The language flows through the whole pipeline at two levels:
+The pipeline is culture-aware at two levels: the extractor localizes error *content* (under the requested UI culture) and each renderer localizes its own *templates* (from `RenderRequest.Culture`), while file names and anchors stay culture-invariant so links never break. It is opt-in and driven by `fce generate --language`.
 
-* **Error descriptions** — the extractor runs each assembly's worker under the requested culture, so documentation factories that read localized resources produce their titles, explanations, rules and diagnostics in that language. A source group's introduction is localized the same way: `[ProvidesErrorsFor]` accepts a `DescriptionResourceType`, and when it is set the extractor treats `Description` as a resource key resolved against that type (the `[Display(ResourceType = …)]` pattern).
-* **Renderer templates** — the culture is passed to the renderer through `RenderRequest.Culture`, so the boilerplate a renderer emits (headings, labels, table headers) is localized. The built-in Markdown renderer reads its template strings from resources; a custom renderer localizes its own template the same way.
-
-Error *content* is localized at extraction; renderer *boilerplate* is localized at rendering. File names and anchors stay culture-invariant, so links remain stable across languages.
-
-**Internationalization is opt-in.** An error whose `[ProvidesErrorsFor]` has no `DescriptionResourceType` keeps its literal `Description` text, and a factory that authors plain strings — rather than reading resources — is simply always in that one language; without `--language` everything renders in English. So a project needs i18n only where it wants it. The `.Usage` sample shows both: `Temperature` is a plain, non-localized example, while `Amount` and `BankTransactionFileValidator` are fully localized across the five languages.
+See **[Internationalization](Internationalization.en.md)** for the full story — choosing the language, the `DescriptionResourceType` hook, localizing renderer templates, and driving it without the CLI.
 
 ## 🔁 Why this architecture matters
 
