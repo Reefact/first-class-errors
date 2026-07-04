@@ -9,16 +9,19 @@ namespace FirstClassErrors.Analyzers;
 /// </summary>
 internal sealed class KnownSymbols {
 
+    public const string ErrorMetadataName                      = "FirstClassErrors.Error";
     public const string DocumentedByAttributeMetadataName      = "FirstClassErrors.DocumentedByAttribute";
     public const string ProvidesErrorsForAttributeMetadataName = "FirstClassErrors.ProvidesErrorsForAttribute";
     public const string ErrorDocumentationMetadataName         = "FirstClassErrors.ErrorDocumentation";
 
     private KnownSymbols(Compilation compilation) {
+        Error                      = compilation.GetTypeByMetadataName(ErrorMetadataName);
         DocumentedByAttribute      = compilation.GetTypeByMetadataName(DocumentedByAttributeMetadataName);
         ProvidesErrorsForAttribute = compilation.GetTypeByMetadataName(ProvidesErrorsForAttributeMetadataName);
         ErrorDocumentation         = compilation.GetTypeByMetadataName(ErrorDocumentationMetadataName);
     }
 
+    public INamedTypeSymbol? Error                      { get; }
     public INamedTypeSymbol? DocumentedByAttribute      { get; }
     public INamedTypeSymbol? ProvidesErrorsForAttribute { get; }
     public INamedTypeSymbol? ErrorDocumentation         { get; }

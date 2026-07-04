@@ -68,4 +68,14 @@ internal static class Descriptors {
         description: "ToException() only builds an exception; discarding it as a standalone statement means nothing is thrown and the error is lost.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.UnusedToExceptionResult));
 
+    public static readonly DiagnosticDescriptor ErrorFactoryNotDocumented = new(
+        id: DiagnosticIds.ErrorFactoryNotDocumented,
+        title: "Error factory is not documented",
+        messageFormat: "Factory '{0}' returns an error but has no [DocumentedBy]; it will not appear in the generated documentation",
+        category: DiagnosticCategories.DocumentationWiring,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "A non-private static factory in a [ProvidesErrorsFor] type that returns an Error is expected to carry [DocumentedBy]; without it the error is left out of the generated catalog.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.ErrorFactoryNotDocumented));
+
 }
