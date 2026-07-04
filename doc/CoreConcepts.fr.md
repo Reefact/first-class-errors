@@ -14,11 +14,21 @@ Avec FirstClassErrors, une **erreur** représente :
 
 * une **situation d’erreur spécifique**  
 * identifiée par un **code d’erreur stable**  
-* décrite avec des messages porteurs de sens  
+* décrite avec trois messages dédiés (un résumé public, un détail public optionnel et un message de diagnostic interne)  
 * éventuellement enrichie de contexte  
 * associée à des diagnostics structurés  
 
 Une **erreur** devient un objet sémantique, pas seulement un signal d’exécution.
+
+### Trois messages, trois publics
+
+Une erreur sépare délibérément ce qui peut atteindre un appelant de ce qui est destiné aux développeurs et au support :
+
+* **`ShortMessage`** (obligatoire) — un résumé public court, exposable sans risque à un utilisateur final ou à un client d’API (par ex. le `title` d’un problem detail RFC 9457).
+* **`DetailedMessage`** (optionnel) — un détail public maîtrisé, exposable **uniquement** si l’application le décide explicitement (par ex. le `detail` d’un problem detail RFC 9457). Il ne doit jamais contenir d’information sensible ou interne.
+* **`DiagnosticMessage`** (obligatoire) — le message de diagnostic interne destiné aux logs, au support et aux développeurs. Il peut contenir des détails techniques/opérationnels (identifiants, valeurs fautives, état interne) et n’est **jamais** exposé aux clients externes par défaut. `error.ToException()` l’utilise comme `Message` de l’exception.
+
+Le cœur du modèle reste agnostique vis-à-vis d’HTTP : le message de diagnostic n’est jamais un corps de réponse HTTP par défaut.
 
 ## 🧩 Une factory représente une situation d’erreur
 

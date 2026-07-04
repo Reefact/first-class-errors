@@ -64,12 +64,14 @@ internal static class ErrCtxKey {
 Attach context where the error is created, so every occurrence is consistent:
 
 ```csharp
-return new PrimaryPortError(
-    Code.DateOutOfStatementPeriod,
-    $"Transaction dated {transactionDate} is outside the statement period.",
-    Transience.NonTransient,
-    "Transaction date is outside the statement period.",
-    ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate));
+return PrimaryPortError.Create(
+        Code.DateOutOfStatementPeriod,
+        diagnosticMessage: $"Transaction dated {transactionDate} is outside the statement period.",
+        transience: Transience.NonTransient,
+        configureContext: ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate))
+    .WithPublicMessage(
+        shortMessage: "Transaction date is outside the statement period.",
+        detailedMessage: "The transaction date falls outside the allowed statement period.");
 ```
 
 ### 3) Keep values simple and serializable

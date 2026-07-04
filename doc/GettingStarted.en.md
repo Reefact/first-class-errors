@@ -32,10 +32,12 @@ public static class InvalidAmountOperationError {
 
     [DocumentedBy(nameof(CurrencyMismatchDocumentation))]
     internal static DomainError CurrencyMismatch(Amount amount1, Amount amount2) {
-        return new DomainError(
-            Code.CurrencyMismatch,
-            $"Failed to perform the monetary operation because the involved amounts are expressed in different currencies: {amount1} and {amount2}.",
-            "Currency mismatch");
+        return DomainError.Create(
+                Code.CurrencyMismatch,
+                diagnosticMessage: $"Failed to perform the monetary operation because the involved amounts are expressed in different currencies: {amount1} and {amount2}.")
+            .WithPublicMessage(
+                shortMessage: "Currency mismatch",
+                detailedMessage: "The amounts involved in the operation are expressed in different currencies.");
     }
 
     private static class Code {
@@ -52,7 +54,9 @@ Here:
 * The **error code** is stable and machine-readable.
 * The factory method is what will be documented.
 
-You never `new` the exception yourself: when you need to throw, you call `error.ToException()` (see section 4).
+The error is built in two stages: `DomainError.Create(...)` captures the mandatory internal information (the error `code` and the internal `diagnosticMessage`), and `.WithPublicMessage(shortMessage, detailedMessage)` supplies the public-facing messages and produces the final error. The mandatory `shortMessage` is a safe public summary, the optional `detailedMessage` is a controlled public detail, and the `diagnosticMessage` is for logs, support and developers — never exposed to clients by default. There is no `.Build()`, and the public constructors are internal, so an error can never be left without its public message.
+
+You never `new` the error or the exception yourself: the error is created through the staged builder inside the factory, and when you need to throw, you call `error.ToException()` (see section 4).
 
 ## 2️⃣ Link the factory to structured documentation
 
@@ -93,12 +97,14 @@ This is structured knowledge, not a comment.
 When information helps diagnose **a specific occurrence**, attach it as context.
 
 ```csharp
-return new PrimaryPortError(
-    Code.DateOutOfStatementPeriod,
-    $"Transaction dated {transactionDate} is outside the statement period [{periodStart};{periodEnd}].",
-    Transience.NonTransient,
-    "Transaction date is outside the statement period.",
-    ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate));
+return PrimaryPortError.Create(
+        Code.DateOutOfStatementPeriod,
+        diagnosticMessage: $"Transaction dated {transactionDate} is outside the statement period [{periodStart};{periodEnd}].",
+        transience: Transience.NonTransient,
+        configureContext: ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate))
+    .WithPublicMessage(
+        shortMessage: "Transaction date is outside the statement period.",
+        detailedMessage: "The transaction date falls outside the allowed statement period.");
 ```
 
 The context lives on the `Error`; when an exception is later produced with `error.ToException()`, it is reached through `exception.Error.Context`.
