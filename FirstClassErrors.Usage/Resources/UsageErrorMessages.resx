@@ -172,4 +172,166 @@
   <data name="Bank_TransactionDate_Context" xml:space="preserve">
     <value>The date of the transaction being processed.</value>
   </data>
+  <data name="MoneyTransfer_Source" xml:space="preserve">
+    <value>Errors raised while validating a money transfer between accounts.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Title" xml:space="preserve">
+    <value>Non-positive transfer amount</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Description" xml:space="preserve">
+    <value>This error occurs when a money transfer is requested with an amount that is zero or negative.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Rule" xml:space="preserve">
+    <value>A money transfer amount must be strictly positive.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Cause1" xml:space="preserve">
+    <value>The amount was entered or computed as zero or a negative value.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Hint1" xml:space="preserve">
+    <value>Check the requested transfer amount and confirm it is greater than zero.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_ShortMessage" xml:space="preserve">
+    <value>Transfer amount must be positive.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Message" xml:space="preserve">
+    <value>Cannot transfer {0}: the amount must be strictly positive.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Title" xml:space="preserve">
+    <value>Invalid money transfer</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Description" xml:space="preserve">
+    <value>This error aggregates every domain rule violated while validating a money transfer, so the caller sees all the problems at once rather than one at a time.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Rule" xml:space="preserve">
+    <value>A money transfer must satisfy every domain rule (a strictly positive amount, matching currencies, ...).</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Cause1" xml:space="preserve">
+    <value>One or more domain rules were violated by the requested transfer.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Hint1" xml:space="preserve">
+    <value>Inspect the aggregated inner errors to see each individual rule violation.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_ShortMessage" xml:space="preserve">
+    <value>Invalid money transfer.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Message" xml:space="preserve">
+    <value>The money transfer is invalid: it violates one or more domain rules.</value>
+  </data>
+  <data name="MoneyTransfer_TransferAmount_Context" xml:space="preserve">
+    <value>The monetary amount of the attempted transfer.</value>
+  </data>
+  <data name="StatementUpload_Source" xml:space="preserve">
+    <value>Errors raised by the HTTP endpoint that ingests uploaded bank statements (an incoming, primary-port adapter).</value>
+  </data>
+  <data name="StatementUpload_Malformed_Title" xml:space="preserve">
+    <value>Malformed statement payload</value>
+  </data>
+  <data name="StatementUpload_Malformed_Description" xml:space="preserve">
+    <value>This error occurs when the statement upload endpoint receives a request whose body is missing a required field or carries an invalid value.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Rule" xml:space="preserve">
+    <value>An uploaded statement request must carry every required field with a valid value.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Cause1" xml:space="preserve">
+    <value>The client sent an incomplete or malformed request body.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Hint1" xml:space="preserve">
+    <value>Inspect the field named in the context and confirm the client sends it with a valid value.</value>
+  </data>
+  <data name="StatementUpload_Malformed_ShortMessage" xml:space="preserve">
+    <value>Malformed statement payload.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Message" xml:space="preserve">
+    <value>The statement upload request {0} is malformed: the '{1}' field is missing or invalid.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Title" xml:space="preserve">
+    <value>Statement upload rate-limited</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Description" xml:space="preserve">
+    <value>This error occurs when too many statement uploads arrive in a short window and the endpoint throttles the request. It is transient: the same request can be retried later.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Rule" xml:space="preserve">
+    <value>Callers must stay within the endpoint's upload rate limit.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Cause1" xml:space="preserve">
+    <value>The caller exceeded the allowed request rate.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Hint1" xml:space="preserve">
+    <value>Back off and retry after the delay indicated in the message.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_ShortMessage" xml:space="preserve">
+    <value>Statement upload rate-limited.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Message" xml:space="preserve">
+    <value>The statement upload request {0} was rate-limited; retry after {1} seconds.</value>
+  </data>
+  <data name="StatementUpload_RequestId_Context" xml:space="preserve">
+    <value>The identifier of the incoming request.</value>
+  </data>
+  <data name="StatementUpload_Field_Context" xml:space="preserve">
+    <value>The request field that failed validation.</value>
+  </data>
+  <data name="ExchangeRate_Source" xml:space="preserve">
+    <value>Errors raised while calling the external exchange-rate provider (an outgoing, secondary-port adapter).</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Title" xml:space="preserve">
+    <value>Exchange-rate service unavailable</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Description" xml:space="preserve">
+    <value>This error occurs when the external exchange-rate provider cannot be reached (a timeout, a connection reset, or a 5xx response). It is transient: the call can be retried.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Rule" xml:space="preserve">
+    <value>Currency conversion depends on a reachable exchange-rate provider.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Cause1" xml:space="preserve">
+    <value>The provider timed out or returned a server error.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Hint1" xml:space="preserve">
+    <value>Check the provider's health and retry the call, ideally with a backoff.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Cause2" xml:space="preserve">
+    <value>The outgoing network path to the provider is disrupted.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Hint2" xml:space="preserve">
+    <value>Verify outbound connectivity and any proxy or firewall between the service and the provider.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_ShortMessage" xml:space="preserve">
+    <value>Exchange-rate service unavailable.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Message" xml:space="preserve">
+    <value>The exchange-rate provider '{0}' is unavailable (correlation {1}).</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Title" xml:space="preserve">
+    <value>Unsupported currency pair</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Description" xml:space="preserve">
+    <value>This error occurs when the exchange-rate provider does not quote a rate for the requested source/target currency pair.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Rule" xml:space="preserve">
+    <value>A currency conversion can only be performed for a pair the provider quotes.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Cause1" xml:space="preserve">
+    <value>The requested currency pair is not offered by the provider.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Hint1" xml:space="preserve">
+    <value>Confirm the provider supports both the source and target currencies before requesting a conversion.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_ShortMessage" xml:space="preserve">
+    <value>Unsupported currency pair.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Message" xml:space="preserve">
+    <value>The exchange-rate provider does not quote the {0} to {1} currency pair.</value>
+  </data>
+  <data name="ExchangeRate_Provider_Context" xml:space="preserve">
+    <value>The external provider that was called.</value>
+  </data>
+  <data name="ExchangeRate_CorrelationId_Context" xml:space="preserve">
+    <value>The correlation identifier of the outgoing call.</value>
+  </data>
+  <data name="ExchangeRate_FromCurrency_Context" xml:space="preserve">
+    <value>The source currency of the conversion.</value>
+  </data>
+  <data name="ExchangeRate_ToCurrency_Context" xml:space="preserve">
+    <value>The target currency of the conversion.</value>
+  </data>
 </root>

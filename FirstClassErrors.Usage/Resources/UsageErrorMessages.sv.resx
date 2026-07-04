@@ -172,4 +172,166 @@
   <data name="Bank_TransactionDate_Context" xml:space="preserve">
     <value>Datumet för transaktionen som behandlas.</value>
   </data>
+  <data name="MoneyTransfer_Source" xml:space="preserve">
+    <value>Fel som uppstår vid validering av en penningöverföring mellan konton.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Title" xml:space="preserve">
+    <value>Icke-positivt överföringsbelopp</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Description" xml:space="preserve">
+    <value>Det här felet uppstår när en överföring begärs med ett belopp som är noll eller negativt.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Rule" xml:space="preserve">
+    <value>Beloppet för en överföring måste vara strikt positivt.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Cause1" xml:space="preserve">
+    <value>Beloppet angavs eller beräknades som noll eller ett negativt värde.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Hint1" xml:space="preserve">
+    <value>Kontrollera det begärda överföringsbeloppet och bekräfta att det är större än noll.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_ShortMessage" xml:space="preserve">
+    <value>Överföringsbeloppet måste vara positivt.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Message" xml:space="preserve">
+    <value>Kan inte överföra {0}: beloppet måste vara strikt positivt.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Title" xml:space="preserve">
+    <value>Ogiltig penningöverföring</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Description" xml:space="preserve">
+    <value>Det här felet samlar alla domänregler som bröts vid valideringen av en överföring, så att anroparen ser alla problem på en gång i stället för ett i taget.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Rule" xml:space="preserve">
+    <value>En överföring måste uppfylla alla domänregler (ett strikt positivt belopp, matchande valutor, ...).</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Cause1" xml:space="preserve">
+    <value>Den begärda överföringen bröt mot en eller flera domänregler.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Hint1" xml:space="preserve">
+    <value>Granska de sammanslagna inre felen för att se varje enskild regelöverträdelse.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_ShortMessage" xml:space="preserve">
+    <value>Ogiltig överföring.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Message" xml:space="preserve">
+    <value>Överföringen är ogiltig: den bryter mot en eller flera domänregler.</value>
+  </data>
+  <data name="MoneyTransfer_TransferAmount_Context" xml:space="preserve">
+    <value>Det monetära beloppet för den försökta överföringen.</value>
+  </data>
+  <data name="StatementUpload_Source" xml:space="preserve">
+    <value>Fel som utlöses av HTTP-slutpunkten som tar emot uppladdade kontoutdrag (en inkommande primary-port-adapter).</value>
+  </data>
+  <data name="StatementUpload_Malformed_Title" xml:space="preserve">
+    <value>Felaktig utdragspayload</value>
+  </data>
+  <data name="StatementUpload_Malformed_Description" xml:space="preserve">
+    <value>Det här felet uppstår när slutpunkten för uppladdning av utdrag tar emot en begäran vars body saknar ett obligatoriskt fält eller innehåller ett ogiltigt värde.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Rule" xml:space="preserve">
+    <value>En uppladdad utdragsbegäran måste innehålla alla obligatoriska fält med ett giltigt värde.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Cause1" xml:space="preserve">
+    <value>Klienten skickade en ofullständig eller felaktig begärans-body.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Hint1" xml:space="preserve">
+    <value>Granska fältet som anges i kontexten och bekräfta att klienten skickar det med ett giltigt värde.</value>
+  </data>
+  <data name="StatementUpload_Malformed_ShortMessage" xml:space="preserve">
+    <value>Felaktig utdragspayload.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Message" xml:space="preserve">
+    <value>Utdragsuppladdningsbegäran {0} är felaktig: fältet ”{1}” saknas eller är ogiltigt.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Title" xml:space="preserve">
+    <value>Utdragsuppladdning hastighetsbegränsad</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Description" xml:space="preserve">
+    <value>Det här felet uppstår när för många utdragsuppladdningar anländer under ett kort intervall och slutpunkten stryper begäran. Det är övergående: samma begäran kan försökas igen senare.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Rule" xml:space="preserve">
+    <value>Anropare måste hålla sig inom slutpunktens hastighetsgräns för uppladdning.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Cause1" xml:space="preserve">
+    <value>Anroparen överskred den tillåtna begärandefrekvensen.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Hint1" xml:space="preserve">
+    <value>Vänta och försök igen efter fördröjningen som anges i meddelandet.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_ShortMessage" xml:space="preserve">
+    <value>Utdragsuppladdning hastighetsbegränsad.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Message" xml:space="preserve">
+    <value>Utdragsuppladdningsbegäran {0} hastighetsbegränsades; försök igen efter {1} sekunder.</value>
+  </data>
+  <data name="StatementUpload_RequestId_Context" xml:space="preserve">
+    <value>Identifieraren för den inkommande begäran.</value>
+  </data>
+  <data name="StatementUpload_Field_Context" xml:space="preserve">
+    <value>Begäransfältet som inte klarade valideringen.</value>
+  </data>
+  <data name="ExchangeRate_Source" xml:space="preserve">
+    <value>Fel som uppstår vid anrop till den externa växelkursleverantören (en utgående secondary-port-adapter).</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Title" xml:space="preserve">
+    <value>Växelkurstjänsten är otillgänglig</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Description" xml:space="preserve">
+    <value>Det här felet uppstår när den externa växelkursleverantören inte kan nås (en timeout, en återställd anslutning eller ett 5xx-svar). Det är övergående: anropet kan försökas igen.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Rule" xml:space="preserve">
+    <value>Valutakonvertering är beroende av en nåbar växelkursleverantör.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Cause1" xml:space="preserve">
+    <value>Leverantören nådde en timeout eller returnerade ett serverfel.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Hint1" xml:space="preserve">
+    <value>Kontrollera leverantörens hälsa och försök anropet igen, helst med en backoff.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Cause2" xml:space="preserve">
+    <value>Den utgående nätverksvägen till leverantören är störd.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Hint2" xml:space="preserve">
+    <value>Verifiera utgående anslutning och eventuell proxy eller brandvägg mellan tjänsten och leverantören.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_ShortMessage" xml:space="preserve">
+    <value>Växelkurstjänsten är otillgänglig.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Message" xml:space="preserve">
+    <value>Växelkursleverantören ”{0}” är otillgänglig (korrelation {1}).</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Title" xml:space="preserve">
+    <value>Valutapar som inte stöds</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Description" xml:space="preserve">
+    <value>Det här felet uppstår när växelkursleverantören inte noterar någon kurs för det begärda käll-/målvalutaparet.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Rule" xml:space="preserve">
+    <value>En valutakonvertering kan endast utföras för ett par som leverantören noterar.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Cause1" xml:space="preserve">
+    <value>Det begärda valutaparet erbjuds inte av leverantören.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Hint1" xml:space="preserve">
+    <value>Bekräfta att leverantören stöder både käll- och målvalutan innan du begär en konvertering.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_ShortMessage" xml:space="preserve">
+    <value>Valutapar som inte stöds.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Message" xml:space="preserve">
+    <value>Växelkursleverantören noterar inte valutaparet {0} till {1}.</value>
+  </data>
+  <data name="ExchangeRate_Provider_Context" xml:space="preserve">
+    <value>Den externa leverantören som anropades.</value>
+  </data>
+  <data name="ExchangeRate_CorrelationId_Context" xml:space="preserve">
+    <value>Korrelationsidentifieraren för det utgående anropet.</value>
+  </data>
+  <data name="ExchangeRate_FromCurrency_Context" xml:space="preserve">
+    <value>Källvalutan för konverteringen.</value>
+  </data>
+  <data name="ExchangeRate_ToCurrency_Context" xml:space="preserve">
+    <value>Målvalutan för konverteringen.</value>
+  </data>
 </root>

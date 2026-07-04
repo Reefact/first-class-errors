@@ -11,33 +11,32 @@ namespace FirstClassErrors.Usage {
 
         #region Static members
 
-        // The description is provided lazily so it follows the current UI culture (localized via UsageErrorMessages),
-        // exactly like the errors' own prose — the key is still registered once by its name.
+        // Descriptions are provided lazily so they follow the current UI culture (localized via UsageErrorMessages),
+        // exactly like the errors' own prose — each key is still registered once by its name. The value types below all
+        // stringify culture-invariantly (Guid, string, Currency, Amount), so the rendered context stays deterministic.
         public static readonly ErrorContextKey<DateOnly> TransactionDate =
             ErrorContextKey.Create<DateOnly>("TRANSACTION_DATE", () => UsageErrorMessages.Get("Bank_TransactionDate_Context"));
 
-        // The keys below carry a plain (non-localized) description. Their example values all stringify culture-invariantly
-        // (Guid, string, Currency, Amount), so the rendered context stays deterministic across languages.
         public static readonly ErrorContextKey<Amount> TransferAmount =
-            ErrorContextKey.Create<Amount>("TRANSFER_AMOUNT", "The monetary amount of the attempted transfer.");
+            ErrorContextKey.Create<Amount>("TRANSFER_AMOUNT", () => UsageErrorMessages.Get("MoneyTransfer_TransferAmount_Context"));
 
         public static readonly ErrorContextKey<Guid> RequestId =
-            ErrorContextKey.Create<Guid>("REQUEST_ID", "The identifier of the incoming request.");
+            ErrorContextKey.Create<Guid>("REQUEST_ID", () => UsageErrorMessages.Get("StatementUpload_RequestId_Context"));
 
         public static readonly ErrorContextKey<string> Field =
-            ErrorContextKey.Create<string>("FIELD", "The request field that failed validation.");
+            ErrorContextKey.Create<string>("FIELD", () => UsageErrorMessages.Get("StatementUpload_Field_Context"));
 
         public static readonly ErrorContextKey<string> Provider =
-            ErrorContextKey.Create<string>("PROVIDER", "The external provider that was called.");
+            ErrorContextKey.Create<string>("PROVIDER", () => UsageErrorMessages.Get("ExchangeRate_Provider_Context"));
 
         public static readonly ErrorContextKey<Guid> CorrelationId =
-            ErrorContextKey.Create<Guid>("CORRELATION_ID", "The correlation identifier of the outgoing call.");
+            ErrorContextKey.Create<Guid>("CORRELATION_ID", () => UsageErrorMessages.Get("ExchangeRate_CorrelationId_Context"));
 
         public static readonly ErrorContextKey<Currency> FromCurrency =
-            ErrorContextKey.Create<Currency>("FROM_CURRENCY", "The source currency of the conversion.");
+            ErrorContextKey.Create<Currency>("FROM_CURRENCY", () => UsageErrorMessages.Get("ExchangeRate_FromCurrency_Context"));
 
         public static readonly ErrorContextKey<Currency> ToCurrency =
-            ErrorContextKey.Create<Currency>("TO_CURRENCY", "The target currency of the conversion.");
+            ErrorContextKey.Create<Currency>("TO_CURRENCY", () => UsageErrorMessages.Get("ExchangeRate_ToCurrency_Context"));
 
         #endregion
 
