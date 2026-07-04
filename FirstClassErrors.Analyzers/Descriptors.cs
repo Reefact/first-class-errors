@@ -58,4 +58,14 @@ internal static class Descriptors {
         description: "Documentation extraction only scans types annotated with [ProvidesErrorsFor]; [DocumentedBy] methods on an unannotated type are never extracted.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.DocumentedByWithoutProvidesErrorsFor));
 
+    public static readonly DiagnosticDescriptor UnusedToExceptionResult = new(
+        id: DiagnosticIds.UnusedToExceptionResult,
+        title: "The result of ToException() is not used",
+        messageFormat: "The result of ToException() is discarded; did you mean to throw it?",
+        category: DiagnosticCategories.Usage,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "ToException() only builds an exception; discarding it as a standalone statement means nothing is thrown and the error is lost.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.UnusedToExceptionResult));
+
 }

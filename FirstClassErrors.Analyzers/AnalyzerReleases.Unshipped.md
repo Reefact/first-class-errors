@@ -10,3 +10,4 @@ FCE002  | FirstClassErrors.ErrorCodes          | Error    | EmptyErrorCodeAnalyz
 FCE006  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByTargetNotFoundAnalyzer
 FCE007  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByInvalidSignatureAnalyzer
 FCE008  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByWithoutProvidesErrorsForAnalyzer
+FCE016  | FirstClassErrors.Usage               | Warning  | UnusedToExceptionResultAnalyzer
