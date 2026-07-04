@@ -1,0 +1,209 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Malformed statement payload — Error Catalog</title>
+<style>
+:root {
+  --bg: #ffffff; --bg-soft: #f6f8fa; --surface: #ffffff; --text: #1f2328; --text-soft: #59636e;
+  --border: #d1d9e0; --accent: #0969da; --code-bg: #f6f8fa; --code-text: #1f2328;
+  --internal-bg: #fff8f0; --internal-border: #e0a96d; --internal-text: #7a4a10;
+  --radius: 8px; --maxw: 1080px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171c; --bg-soft: #1b1f26; --surface: #1b1f26; --text: #e6edf3; --text-soft: #9aa4b2;
+    --border: #2c333d; --accent: #4493f8; --code-bg: #11151b; --code-text: #e6edf3;
+    --internal-bg: #241a10; --internal-border: #7a5a2e; --internal-text: #e6c58a;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #ffffff; --bg-soft: #f6f8fa; --surface: #ffffff; --text: #1f2328; --text-soft: #59636e;
+  --border: #d1d9e0; --accent: #0969da; --code-bg: #f6f8fa; --code-text: #1f2328;
+  --internal-bg: #fff8f0; --internal-border: #e0a96d; --internal-text: #7a4a10;
+}
+:root[data-theme="dark"] {
+  --bg: #14171c; --bg-soft: #1b1f26; --surface: #1b1f26; --text: #e6edf3; --text-soft: #9aa4b2;
+  --border: #2c333d; --accent: #4493f8; --code-bg: #11151b; --code-text: #e6edf3;
+  --internal-bg: #241a10; --internal-border: #7a5a2e; --internal-text: #e6c58a;
+}
+* { box-sizing: border-box; }
+html { color-scheme: light dark; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.55; }
+.container { max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, pre { font-family: var(--mono); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.skip-link { position: absolute; left: -999px; top: 0; background: var(--accent); color: #fff; padding: 8px 12px; border-radius: 0 0 var(--radius) 0; z-index: 10; }
+.skip-link:focus { left: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.site-header { border-bottom: 1px solid var(--border); background: var(--bg-soft); position: sticky; top: 0; z-index: 5; }
+.header-row { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; padding-bottom: 14px; }
+.site-title { font-size: 1.15rem; margin: 0; }
+.site-title a { color: var(--text); }
+.theme-toggle { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); cursor: pointer; }
+.theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+main { padding: 24px 0 64px; }
+.count { color: var(--text-soft); margin: 0 0 16px; }
+.controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 20px; }
+.search { flex: 1 1 280px; }
+.search input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1rem; }
+.filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.filter { display: inline-flex; align-items: center; gap: 6px; color: var(--text-soft); font-size: 0.92rem; }
+.filter select { padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+.catalog { font-size: 0.95rem; }
+.catalog th, .catalog td, .context-table th, .context-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+thead th { color: var(--text-soft); font-weight: 600; border-bottom: 2px solid var(--border); white-space: nowrap; }
+.num { text-align: right; }
+.catalog td.code a { font-weight: 600; }
+.present { color: #1a7f37; font-weight: 700; }
+:root[data-theme="dark"] .present { color: #3fb950; }
+@media (prefers-color-scheme: dark) { .present { color: #3fb950; } }
+.absent { color: var(--text-soft); }
+.no-results, .empty { color: var(--text-soft); padding: 24px 0; }
+.back { margin: 0 0 16px; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.82rem; font-family: var(--mono); border: 1px solid var(--border); }
+.badge-code { background: var(--code-bg); color: var(--code-text); font-weight: 600; }
+.badge-source { background: transparent; color: var(--text-soft); }
+.error-detail { border-top: 1px solid var(--border); padding: 28px 0; }
+.error-detail:first-of-type { border-top: 0; }
+.error-title { font-size: 1.4rem; margin: 0 0 10px; scroll-margin-top: 80px; }
+.anchor { color: var(--text-soft); text-decoration: none; opacity: 0; padding-left: 6px; }
+.error-title:hover .anchor, .anchor:focus { opacity: 1; }
+.badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.doc h3, .messages h3, .diagnostics h3, .examples h3, .context h3, section h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-soft); margin: 22px 0 8px; }
+.rule { margin: 16px 0; padding: 10px 14px; border-left: 3px solid var(--accent); background: var(--bg-soft); border-radius: 0 var(--radius) var(--radius) 0; }
+.messages { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.msg-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; background: var(--surface); }
+.msg-card h3 { margin-top: 0; }
+.msg-card p { margin: 0; }
+.msg-card.internal { background: var(--internal-bg); border-color: var(--internal-border); }
+.msg-card.internal h3, .example-label.internal { color: var(--internal-text); }
+.note { font-size: 0.85rem; color: var(--internal-text); margin: 0 0 8px; }
+.diagnostics ul { margin: 0; padding-left: 20px; }
+.diagnostics li { margin: 6px 0; }
+.example { margin: 14px 0; }
+.example-label { font-weight: 600; margin: 12px 0 6px; font-size: 0.9rem; }
+pre { margin: 0; padding: 12px 14px; background: var(--code-bg); color: var(--code-text); border: 1px solid var(--border); border-radius: var(--radius); overflow-x: auto; }
+pre code { font-size: 0.86rem; white-space: pre; }
+pre.log { border-left: 3px solid var(--internal-border); }
+.context-table { font-size: 0.92rem; }
+@media (max-width: 640px) {
+  .header-row { padding-top: 10px; padding-bottom: 10px; }
+  .catalog th:nth-child(3), .catalog td:nth-child(3) { display: none; }
+  .error-title { font-size: 1.2rem; }
+}
+</style>
+<script>(function(){try{var t=localStorage.getItem('fce-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+<div class="container header-row">
+<h1 class="site-title"><a href="#main">Error Catalog</a></h1>
+<button id="theme-toggle" type="button" class="theme-toggle" aria-label="Toggle light / dark theme" title="Toggle light / dark theme"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></button>
+</div>
+</header>
+<main id="main" class="container">
+<p class="back"><a href="../index.html">&#8592; Back to the catalog</a></p>
+<article class="error-detail" id="err-MALFORMED_STATEMENT_PAYLOAD">
+<div class="error-head">
+<h2 class="error-title">Malformed statement payload <a class="anchor" href="#err-MALFORMED_STATEMENT_PAYLOAD" aria-label="Copy link to this error" data-anchor>#</a></h2>
+<div class="badges"><span class="badge badge-code">MALFORMED_STATEMENT_PAYLOAD</span><span class="badge badge-source">StatementUploadEndpoint</span></div>
+</div>
+<section class="doc"><h3>Documentation</h3><p>This error occurs when the statement upload endpoint receives a request whose body is missing a required field or carries an invalid value.</p></section>
+<blockquote class="rule"><strong>Business rule:</strong> An uploaded statement request must carry every required field with a valid value.</blockquote>
+<section class="messages">
+<div class="msg-card public"><h3>Public summary</h3><p>Malformed statement payload.</p></div>
+<div class="msg-card public"><h3>Public detail</h3><p>The uploaded statement request is missing a required field or contains an invalid value.</p></div>
+<div class="msg-card internal"><h3>Internal diagnostic message</h3><p class="note">Internal — not intended for external clients or HTTP responses.</p><pre class="log"><code>The statement upload request 11111111-1111-1111-1111-111111111111 is malformed: the &#39;statementPeriod&#39; field is missing or invalid.</code></pre></div>
+</section>
+<section class="diagnostics"><h3>Diagnostics</h3>
+<ul>
+<li><strong>The client sent an incomplete or malformed request body.</strong> &#8212; <em>origin:</em> External &#8212; Inspect the field named in the context and confirm the client sends it with a valid value.</li>
+</ul>
+</section>
+<section class="examples"><h3>Examples</h3>
+<div class="example">
+<p class="example-label">Public response (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;title&quot;: &quot;Malformed statement payload.&quot;,
+  &quot;detail&quot;: &quot;The uploaded statement request is missing a required field or contains an invalid value.&quot;,
+  &quot;code&quot;: &quot;MALFORMED_STATEMENT_PAYLOAD&quot;
+}</code></pre>
+<p class="example-label internal">Diagnostic (internal — not for external exposure)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [StatementUploadEndpoint] The statement upload request 11111111-1111-1111-1111-111111111111 is malformed: the &#39;statementPeriod&#39; field is missing or invalid. error.code=MALFORMED_STATEMENT_PAYLOAD</code></pre>
+</div>
+</section>
+<section class="context"><h3>Context</h3>
+<div class="table-wrap"><table class="context-table">
+<thead>
+<tr><th scope="col">Key</th><th scope="col">Type</th><th scope="col">Description</th><th scope="col">Example values</th></tr>
+</thead>
+<tbody>
+<tr><td><code>REQUEST_ID</code></td><td><code>System.Guid</code></td><td>The identifier of the incoming request.</td><td><code>11111111-1111-1111-1111-111111111111</code></td></tr>
+<tr><td><code>FIELD</code></td><td><code>System.String</code></td><td>The request field that failed validation.</td><td><code>statementPeriod</code></td></tr>
+</tbody>
+</table></div>
+</section>
+</article>
+</main>
+<script>
+(function () {
+  var KEY = 'fce-theme';
+  var root = document.documentElement;
+  function apply(t) { if (t === 'light' || t === 'dark') { root.setAttribute('data-theme', t); } else { root.removeAttribute('data-theme'); } }
+  function current() { return root.getAttribute('data-theme') || 'auto'; }
+  var btn = document.getElementById('theme-toggle');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var order = ['auto', 'light', 'dark'];
+      var next = order[(order.indexOf(current()) + 1) % order.length];
+      try { if (next === 'auto') { localStorage.removeItem(KEY); } else { localStorage.setItem(KEY, next); } } catch (e) {}
+      apply(next);
+    });
+  }
+  var search = document.getElementById('search');
+  var srcFilter = document.getElementById('filter-source');
+  var detailFilter = document.getElementById('filter-detail');
+  var table = document.getElementById('catalog');
+  var noResults = document.getElementById('no-results');
+  function filter() {
+    if (!table || !table.tBodies[0]) { return; }
+    var q = ((search && search.value) || '').toLowerCase().trim();
+    var src = srcFilter ? srcFilter.value : '';
+    var onlyDetail = detailFilter ? detailFilter.checked : false;
+    var rows = table.tBodies[0].rows;
+    var visible = 0;
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var text = r.getAttribute('data-search') || '';
+      var ok = (!q || text.indexOf(q) !== -1)
+            && (!src || r.getAttribute('data-source') === src)
+            && (!onlyDetail || r.getAttribute('data-detail') === 'true');
+      r.hidden = !ok;
+      if (ok) { visible++; }
+    }
+    if (noResults) { noResults.hidden = visible !== 0; }
+  }
+  if (search) { search.addEventListener('input', filter); }
+  if (srcFilter) { srcFilter.addEventListener('change', filter); }
+  if (detailFilter) { detailFilter.addEventListener('change', filter); }
+  var anchors = document.querySelectorAll('a[data-anchor]');
+  for (var j = 0; j < anchors.length; j++) {
+    anchors[j].addEventListener('click', function () {
+      var href = this.getAttribute('href') || '';
+      var url = location.href.split('#')[0] + href;
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(url).catch(function () {}); }
+    });
+  }
+})();
+</script>
+</body>
+</html>
