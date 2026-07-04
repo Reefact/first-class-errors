@@ -55,4 +55,25 @@
     <None Include="README.nuget.md" Pack="true" PackagePath="readme.md" />
   </ItemGroup>
 
+  <!-- Ship the analyzers inside this package (analyzers/dotnet/cs) so package consumers get them automatically.
+       ReferenceOutputAssembly=false + PrivateAssets=all keeps the analyzer off the runtime/dependency graph; the
+       ProjectReference only guarantees the analyzer is built before this project is packed. -->
+  <ItemGroup>
+    <ProjectReference Include="..\FirstClassErrors.Analyzers\FirstClassErrors.Analyzers.csproj"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzerToPackage</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <Target Name="_AddAnalyzerToPackage">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(MSBuildThisFileDirectory)..\FirstClassErrors.Analyzers\bin\$(Configuration)\netstandard2.0\FirstClassErrors.Analyzers.dll">
+        <PackagePath>analyzers/dotnet/cs</PackagePath>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+  </Target>
+
 </Project>
