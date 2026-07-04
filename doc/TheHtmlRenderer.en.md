@@ -1,6 +1,6 @@
 # The HTML renderer
 
-The **html** renderer turns the error catalog into a **self-contained static website**: a searchable, filterable home page and — in the multi-page layout — one page per error. It is a final, human-facing output, not a pivot format.
+The **html** renderer turns the error catalog into a **self-contained static website**: a searchable home page with a two-level table of contents (grouped by source, then by error code) and — in the multi-page layout — one page per error. It is a final, human-facing output, not a pivot format.
 
 ## When to use HTML vs Markdown vs JSON
 
@@ -40,7 +40,7 @@ Each error has a stable URL derived from its **code** (`errors/ORDER_ALREADY_SHI
 
 - **No external dependency.** The CSS and JS are inlined into every page, icons are inline SVG, the font stack is the system default — each page is self-contained and works offline from a local folder (or on its own), with no CDN.
 - **Light / dark theme.** Follows the system preference (`prefers-color-scheme`) by default, with a manual toggle that is remembered in `localStorage`.
-- **Search & filters.** A client-side search over every error (code, messages, documentation, context) and filters by source and by presence of a public detail. Search works offline (it reads data embedded in the page, so it does not depend on a network fetch).
+- **Grouped table of contents & search.** The home page lists every error under its source (two levels: source → error code). A client-side search over every error (code, messages, documentation, context) filters the table of contents; it works offline (it reads data embedded in the page, so it does not depend on a network fetch).
 - **Localization.** Labels are localized for `--language` (e.g. `--language fr`), like the Markdown renderer. Public messages follow the culture; the internal diagnostic message stays in the author language.
 - **Deterministic.** Errors are ordered by code and no timestamp is emitted, so the generated site diffs cleanly and can be compared across builds.
 

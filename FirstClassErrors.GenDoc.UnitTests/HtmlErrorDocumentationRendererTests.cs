@@ -103,25 +103,33 @@ public sealed class HtmlErrorDocumentationRendererTests {
         Check.That(html).Not.Contains("https://");
     }
 
-    [Fact(DisplayName = "The single layout inlines every error and its three messages under a code anchor.")]
-    public void TheSingleLayoutInlinesEveryError() {
+    [Fact(DisplayName = "The single layout groups a two-level table of contents by source and inlines every error.")]
+    public void TheSingleLayoutGroupsAndInlinesEveryError() {
         // Exercise
         string html = ContentOf(RenderSingle(TemperatureError(), EmailError()), "index.html");
 
         // Verify
         Check.That(html).StartsWith("<!doctype html>");
-        Check.That(html).Contains("<table id=\"catalog\"");
-        Check.That(html).Contains("<a href=\"#err-TEMPERATURE_BELOW_ABSOLUTE_ZERO\"");
-        Check.That(html).Contains("id=\"err-TEMPERATURE_BELOW_ABSOLUTE_ZERO\"");
+
+        // Two-level table of contents: a source group, then the error codes under it (linked to in-page anchors).
+        Check.That(html).Contains("<nav class=\"toc\"");
+        Check.That(html).Contains("<a class=\"toc-source\" href=\"#src-Temperature\">Temperature</a>");
+        Check.That(html).Contains("<li class=\"toc-item\"");
+        Check.That(html).Contains("<a href=\"#err-TEMPERATURE_BELOW_ABSOLUTE_ZERO\"><code>TEMPERATURE_BELOW_ABSOLUTE_ZERO</code></a>");
+
+        // Body grouped by source (h2), each error keyed by its code (h3).
+        Check.That(html).Contains("<h2 class=\"group-title\">Temperature</h2>");
+        Check.That(html).Contains("<h3 class=\"error-title\"><code>TEMPERATURE_BELOW_ABSOLUTE_ZERO</code>");
         Check.That(html).Contains("id=\"err-INVALID_EMAIL\"");
 
-        // The public messages, and the diagnostic clearly flagged as internal.
-        Check.That(html).Contains("Temperature is invalid.");
-        Check.That(html).Contains("Internal diagnostic message");
-        Check.That(html).Contains("not intended for external clients");
+        // Diagnostics render as a table.
+        Check.That(html).Contains("<table class=\"data-table\"");
+        Check.That(html).Contains("A value entered by a user is invalid.");
 
-        // The dual example rendering: an RFC 9457 problem detail and an internal diagnostic log line.
+        // The dual example rendering (RFC 9457 + internal diagnostic log). The redundant top messages panel is gone.
         Check.That(html).Contains("Public response (RFC 9457)");
+        Check.That(html).Contains("Diagnostic (internal");
+        Check.That(html).Not.Contains("Internal diagnostic message");
         Check.That(html).Contains("&quot;title&quot;: &quot;Temperature is invalid.&quot;");
         Check.That(html).Contains("2026-07-04T13:42:18.734Z ERROR [Temperature] Failed to instantiate temperature: -300 is below absolute zero. error.code=TEMPERATURE_BELOW_ABSOLUTE_ZERO");
     }

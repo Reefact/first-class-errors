@@ -1,6 +1,6 @@
 # Le renderer HTML
 
-Le renderer **html** transforme le catalogue d’erreurs en un **site statique autonome** : une page d’accueil consultable et filtrable et — en mode multi-pages — une page par erreur. C’est une sortie finale destinée à la lecture humaine, pas un format pivot.
+Le renderer **html** transforme le catalogue d’erreurs en un **site statique autonome** : une page d’accueil consultable avec une table des matières à deux niveaux (groupée par source, puis par code d’erreur) et — en mode multi-pages — une page par erreur. C’est une sortie finale destinée à la lecture humaine, pas un format pivot.
 
 ## Quand utiliser HTML plutôt que Markdown ou JSON
 
@@ -40,7 +40,7 @@ Chaque erreur a une URL stable dérivée de son **code** (`errors/ORDER_ALREADY_
 
 - **Aucune dépendance externe.** Le CSS et le JS sont intégrés dans chaque page, les icônes sont du SVG inline, la police est celle du système — chaque page est autonome et fonctionne hors-ligne depuis un simple dossier (ou seule), sans CDN.
 - **Thème clair / sombre.** Suit la préférence système (`prefers-color-scheme`) par défaut, avec une bascule manuelle mémorisée dans `localStorage`.
-- **Recherche et filtres.** Une recherche côté client sur toutes les erreurs (code, messages, documentation, contexte) et des filtres par source et par présence d’un détail public. La recherche fonctionne hors-ligne (elle lit des données intégrées à la page, sans requête réseau).
+- **Table des matières groupée et recherche.** La page d’accueil liste chaque erreur sous sa source (deux niveaux : source → code d’erreur). Une recherche côté client sur toutes les erreurs (code, messages, documentation, contexte) filtre la table des matières ; elle fonctionne hors-ligne (elle lit des données intégrées à la page, sans requête réseau).
 - **Localisation.** Les libellés sont localisés selon `--language` (par ex. `--language fr`), comme le renderer Markdown. Les messages publics suivent la culture ; le message de diagnostic interne reste dans la langue auteur.
 - **Déterministe.** Les erreurs sont triées par code et aucun horodatage n’est émis, donc le site généré se compare proprement d’une version à l’autre.
 

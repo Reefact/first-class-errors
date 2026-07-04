@@ -163,4 +163,13 @@
   <data name="SkipToContent" xml:space="preserve">
     <value>Aller au contenu</value>
   </data>
+  <data name="DiagnosticCauseHeader" xml:space="preserve">
+    <value>Cause possible</value>
+  </data>
+  <data name="DiagnosticOriginHeader" xml:space="preserve">
+    <value>Origine</value>
+  </data>
+  <data name="DiagnosticHintHeader" xml:space="preserve">
+    <value>Piste d'analyse</value>
+  </data>
 </root>

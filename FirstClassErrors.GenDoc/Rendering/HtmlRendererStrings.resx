@@ -124,6 +124,15 @@
   <data name="DiagnosticsHeading" xml:space="preserve">
     <value>Diagnostics</value>
   </data>
+  <data name="DiagnosticCauseHeader" xml:space="preserve">
+    <value>Possible cause</value>
+  </data>
+  <data name="DiagnosticOriginHeader" xml:space="preserve">
+    <value>Origin</value>
+  </data>
+  <data name="DiagnosticHintHeader" xml:space="preserve">
+    <value>Analysis hint</value>
+  </data>
   <data name="OriginLabel" xml:space="preserve">
     <value>origin:</value>
   </data>
