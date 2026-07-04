@@ -48,47 +48,8 @@ internal sealed class HtmlRendererStrings {
     /// <summary>The search field placeholder.</summary>
     public string SearchPlaceholder => Get(nameof(SearchPlaceholder));
 
-    /// <summary>The message shown when a search/filter yields no error.</summary>
+    /// <summary>The message shown when a search yields no error.</summary>
     public string NoResults => Get(nameof(NoResults));
-
-    /// <summary>The filters section label.</summary>
-    public string FiltersLabel => Get(nameof(FiltersLabel));
-
-    /// <summary>The "all sources" option of the source filter.</summary>
-    public string AllSources => Get(nameof(AllSources));
-
-    /// <summary>The "with public detail" filter label.</summary>
-    public string WithDetailFilter => Get(nameof(WithDetailFilter));
-
-    /// <summary>The catalog table's "Code" column header.</summary>
-    public string CodeColumn => Get(nameof(CodeColumn));
-
-    /// <summary>The catalog table's public-summary column header.</summary>
-    public string SummaryColumn => Get(nameof(SummaryColumn));
-
-    /// <summary>The catalog table's "Source" column header.</summary>
-    public string SourceColumn => Get(nameof(SourceColumn));
-
-    /// <summary>The catalog table's "Detail" (has public detail) column header.</summary>
-    public string DetailColumn => Get(nameof(DetailColumn));
-
-    /// <summary>The catalog table's "Examples" (count) column header.</summary>
-    public string ExamplesColumn => Get(nameof(ExamplesColumn));
-
-    /// <summary>The affirmative label used as the accessible text of a "present" marker.</summary>
-    public string YesLabel => Get(nameof(YesLabel));
-
-    /// <summary>The public-summary heading on the detail view.</summary>
-    public string PublicSummaryHeading => Get(nameof(PublicSummaryHeading));
-
-    /// <summary>The public-detail heading on the detail view.</summary>
-    public string PublicDetailHeading => Get(nameof(PublicDetailHeading));
-
-    /// <summary>The internal-diagnostic-message heading on the detail view.</summary>
-    public string DiagnosticHeading => Get(nameof(DiagnosticHeading));
-
-    /// <summary>The note clarifying that the diagnostic message is internal.</summary>
-    public string DiagnosticNote => Get(nameof(DiagnosticNote));
 
     /// <summary>The documentation (explanation) section heading.</summary>
     public string DocumentationHeading => Get(nameof(DocumentationHeading));
@@ -107,9 +68,6 @@ internal sealed class HtmlRendererStrings {
 
     /// <summary>The diagnostics table's "analysis hint" column header.</summary>
     public string DiagnosticHintHeader => Get(nameof(DiagnosticHintHeader));
-
-    /// <summary>The inline label preceding a diagnostic's origin.</summary>
-    public string OriginLabel => Get(nameof(OriginLabel));
 
     /// <summary>The examples section heading.</summary>
     public string ExamplesHeading => Get(nameof(ExamplesHeading));

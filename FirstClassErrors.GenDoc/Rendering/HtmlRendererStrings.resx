@@ -76,45 +76,6 @@
   <data name="NoResults" xml:space="preserve">
     <value>No matching errors.</value>
   </data>
-  <data name="FiltersLabel" xml:space="preserve">
-    <value>Filters</value>
-  </data>
-  <data name="AllSources" xml:space="preserve">
-    <value>All sources</value>
-  </data>
-  <data name="WithDetailFilter" xml:space="preserve">
-    <value>With public detail</value>
-  </data>
-  <data name="CodeColumn" xml:space="preserve">
-    <value>Code</value>
-  </data>
-  <data name="SummaryColumn" xml:space="preserve">
-    <value>Public summary</value>
-  </data>
-  <data name="SourceColumn" xml:space="preserve">
-    <value>Source</value>
-  </data>
-  <data name="DetailColumn" xml:space="preserve">
-    <value>Detail</value>
-  </data>
-  <data name="ExamplesColumn" xml:space="preserve">
-    <value>Examples</value>
-  </data>
-  <data name="YesLabel" xml:space="preserve">
-    <value>Yes</value>
-  </data>
-  <data name="PublicSummaryHeading" xml:space="preserve">
-    <value>Public summary</value>
-  </data>
-  <data name="PublicDetailHeading" xml:space="preserve">
-    <value>Public detail</value>
-  </data>
-  <data name="DiagnosticHeading" xml:space="preserve">
-    <value>Internal diagnostic message</value>
-  </data>
-  <data name="DiagnosticNote" xml:space="preserve">
-    <value>Internal — not intended for external clients or HTTP responses.</value>
-  </data>
   <data name="DocumentationHeading" xml:space="preserve">
     <value>Documentation</value>
   </data>
@@ -132,9 +93,6 @@
   </data>
   <data name="DiagnosticHintHeader" xml:space="preserve">
     <value>Analysis hint</value>
-  </data>
-  <data name="OriginLabel" xml:space="preserve">
-    <value>origin:</value>
   </data>
   <data name="ExamplesHeading" xml:space="preserve">
     <value>Examples</value>
