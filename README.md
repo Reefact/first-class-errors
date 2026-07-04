@@ -73,9 +73,9 @@ The exception itself only exposes its `.Error`, and is designed to be:
 * understood by humans
 * used by tooling
 
-#### Three messages, three audiences
+#### Three messages, two audiences
 
-An `Error` deliberately separates what may be shown to a caller from what is meant for developers and support:
+An `Error` carries three messages but deliberately splits them across just **two audiences** — a public one (end users / API clients) and an internal one (logs, support, developers). The separation is enforced by construction, so what reaches a caller can never leak what is meant for developers and support:
 
 | Message | Mandatory | Audience | Exposure |
 | --- | --- | --- | --- |
