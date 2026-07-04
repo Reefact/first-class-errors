@@ -169,3 +169,5 @@ internal static class Descriptors {
         isEnabledByDefault: false,
         description: "A title such as \"Error\" or \"Invalid value\" tells the reader nothing. A good title names the condition (e.g. \"Temperature below absolute zero\"). Opt-in.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.DocumentationTitleTooGeneric));
+
+}
