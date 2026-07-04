@@ -39,6 +39,16 @@ internal static class Descriptors {
         description: "Only literal error codes can be checked statically. A code built at runtime is a blind spot for duplicate detection; this rule is opt-in for teams that want codes to stay literal.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.NonLiteralErrorCode));
 
+    public static readonly DiagnosticDescriptor InvalidErrorCodeFormat = new(
+        id: DiagnosticIds.InvalidErrorCodeFormat,
+        title: "Error code does not follow the UPPER_SNAKE_CASE convention",
+        messageFormat: "Error code '{0}' does not match the expected UPPER_SNAKE_CASE format",
+        category: DiagnosticCategories.ErrorCodes,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: false,
+        description: "A consistent code format keeps catalogs and logs scannable. This convention check is opt-in.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.InvalidErrorCodeFormat));
+
     public static readonly DiagnosticDescriptor DocumentedByTargetNotFound = new(
         id: DiagnosticIds.DocumentedByTargetNotFound,
         title: "Documentation method referenced by [DocumentedBy] was not found",
