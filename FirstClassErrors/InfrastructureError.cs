@@ -1,56 +1,65 @@
-﻿namespace FirstClassErrors;
+namespace FirstClassErrors;
 
 /// <summary>
 ///     Represents an error that occurs within the infrastructure layer of the application.
 /// </summary>
 /// <remarks>
 ///     This class is a specialized type of <see cref="Error" /> that includes additional information
-///     about whether the error is transient, allowing for more granular handling of infrastructure-related issues.
+///     about the interaction direction and whether the error is transient, allowing for more granular handling of
+///     infrastructure-related issues. Instances are created through the staged builder
+///     (<see cref="Create(ErrorCode, string, InteractionDirection, Transience, Action{ErrorContextBuilder})" />).
 /// </remarks>
 public class InfrastructureError : Error {
 
     #region Constructors declarations
 
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="InfrastructureError" /> class.
-    /// </summary>
-    /// <param name="code">The error code representing the type of the error.</param>
-    /// <param name="detailedMessage">A detailed message describing the error.</param>
-    /// <param name="direction">The direction of the interaction associated with the error.</param>
-    /// <param name="transience">The transience level of the error, indicating whether it is transient or non-transient.</param>
-    /// <param name="shortMessage">An optional short message providing a concise description of the error.</param>
-    /// <param name="configureContext">
-    ///     An optional action to configure the error context using an <see cref="ErrorContextBuilder" />.
-    /// </param>
-    public InfrastructureError(ErrorCode code, string detailedMessage, InteractionDirection direction, Transience transience, string? shortMessage = null, Action<ErrorContextBuilder>? configureContext = null) : base(code, detailedMessage, shortMessage, configureContext) {
+    internal InfrastructureError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, InteractionDirection direction, Transience transience, Action<ErrorContextBuilder>? configureContext = null)
+        : base(code, diagnosticMessage, shortMessage, detailedMessage, configureContext) {
         Direction  = direction;
         Transience = transience;
     }
 
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="InfrastructureError" /> class with the specified error code, detailed
-    ///     message,
-    ///     interaction direction, transience, a collection of inner errors, an optional short message, and an optional context
-    ///     configuration.
-    /// </summary>
-    /// <param name="code">The <see cref="ErrorCode" /> representing the specific error.</param>
-    /// <param name="detailedMessage">A detailed message describing the error.</param>
-    /// <param name="direction">
-    ///     The <see cref="InteractionDirection" /> indicating the direction of the interaction associated
-    ///     with the error.
-    /// </param>
-    /// <param name="transience">The <see cref="Transience" /> indicating whether the error is transient or non-transient.</param>
-    /// <param name="innerErrors">
-    ///     A collection of <see cref="Error" /> instances representing the inner errors associated with
-    ///     this error.
-    /// </param>
-    /// <param name="shortMessage">An optional short message providing a concise description of the error.</param>
-    /// <param name="configureContext">
-    ///     An optional action to configure the <see cref="ErrorContextBuilder" /> for additional error context.
-    /// </param>
-    public InfrastructureError(ErrorCode code, string detailedMessage, InteractionDirection direction, Transience transience, IEnumerable<Error> innerErrors, string? shortMessage = null, Action<ErrorContextBuilder>? configureContext = null) : base(code, detailedMessage, shortMessage, innerErrors, configureContext) {
+    internal InfrastructureError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, InteractionDirection direction, Transience transience, IEnumerable<Error> innerErrors, Action<ErrorContextBuilder>? configureContext = null)
+        : base(code, diagnosticMessage, shortMessage, detailedMessage, innerErrors, configureContext) {
         Direction  = direction;
         Transience = transience;
+    }
+
+    #endregion
+
+    #region Statics members declarations
+
+    /// <summary>
+    ///     Begins the creation of an <see cref="InfrastructureError" /> with its mandatory internal information.
+    /// </summary>
+    /// <param name="code">The error code representing the type of the error.</param>
+    /// <param name="diagnosticMessage">The mandatory internal diagnostic message (for logs, support and developers).</param>
+    /// <param name="direction">The direction of the interaction associated with the error.</param>
+    /// <param name="transience">The transience level of the error.</param>
+    /// <param name="configureContext">An optional action to configure additional error context.</param>
+    /// <returns>A <see cref="PublicMessageStage{TError}" /> to supply the public messages and finalize the error.</returns>
+    public static PublicMessageStage<InfrastructureError> Create(ErrorCode code, string diagnosticMessage, InteractionDirection direction, Transience transience, Action<ErrorContextBuilder>? configureContext = null) {
+        string safeDiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
+
+        return new PublicMessageStage<InfrastructureError>((shortMessage, detailedMessage) =>
+                                                               new InfrastructureError(code, safeDiagnosticMessage, shortMessage, detailedMessage, direction, transience, configureContext));
+    }
+
+    /// <summary>
+    ///     Begins the creation of an <see cref="InfrastructureError" /> that collects a set of inner errors.
+    /// </summary>
+    /// <param name="code">The error code representing the type of the error.</param>
+    /// <param name="diagnosticMessage">The mandatory internal diagnostic message (for logs, support and developers).</param>
+    /// <param name="direction">The direction of the interaction associated with the error.</param>
+    /// <param name="transience">The transience level of the error.</param>
+    /// <param name="innerErrors">A collection of inner <see cref="Error" /> instances associated with this error.</param>
+    /// <param name="configureContext">An optional action to configure additional error context.</param>
+    /// <returns>A <see cref="PublicMessageStage{TError}" /> to supply the public messages and finalize the error.</returns>
+    public static PublicMessageStage<InfrastructureError> Create(ErrorCode code, string diagnosticMessage, InteractionDirection direction, Transience transience, IEnumerable<Error> innerErrors, Action<ErrorContextBuilder>? configureContext = null) {
+        string safeDiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
+
+        return new PublicMessageStage<InfrastructureError>((shortMessage, detailedMessage) =>
+                                                               new InfrastructureError(code, safeDiagnosticMessage, shortMessage, detailedMessage, direction, transience, innerErrors, configureContext));
     }
 
     #endregion

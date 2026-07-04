@@ -17,6 +17,35 @@ This error occurs when trying to instantiate a temperature with a value that is 
 
 ## Examples
 
-- Failed to instantiate temperature: the value -1 K is below absolute zero. _(Temperature is below absolute zero.)_
-- Failed to instantiate temperature: the value -280 °C is below absolute zero. _(Temperature is below absolute zero.)_
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Temperature is invalid.",
+  "detail": "The temperature -1 K is below absolute zero.",
+  "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [Temperature] Failed to instantiate temperature: the value -1 K is below absolute zero. error.code=TEMPERATURE_BELOW_ABSOLUTE_ZERO
+```
+
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Temperature is invalid.",
+  "detail": "The temperature -280 °C is below absolute zero.",
+  "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [Temperature] Failed to instantiate temperature: the value -280 °C is below absolute zero. error.code=TEMPERATURE_BELOW_ABSOLUTE_ZERO
+```
 

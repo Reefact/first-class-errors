@@ -158,10 +158,12 @@ public static class InvalidAmountOperationError {
 
     [DocumentedBy(nameof(CurrencyMismatchDocumentation))]
     internal static DomainError CurrencyMismatch(Amount left, Amount right) {
-        return new DomainError(
-            Code.CurrencyMismatch,
-            $"Impossible d’opérer sur des montants de devises différentes : {left.Currency} et {right.Currency}.",
-            "Les montants utilisent des devises différentes.");
+        return DomainError.Create(
+                Code.CurrencyMismatch,
+                diagnosticMessage: $"Impossible d’opérer sur des montants de devises différentes : {left.Currency} et {right.Currency}.")
+            .WithPublicMessage(
+                shortMessage: "Les montants utilisent des devises différentes.",
+                detailedMessage: "Les montants impliqués utilisent des devises différentes.");
     }
 
     // ... méthode de documentation et codes d’erreur ...
@@ -173,7 +175,7 @@ Chaque méthode factory représente une catégorie d’erreur bien définie. Les
 
 ## 🏭 12. Construire les erreurs via des factories, lever avec `ToException()`
 
-Vous ne faites jamais `new` sur une `DiagnosableException` dans votre code, et il n’existe pas de constructeur à deux chaînes : le seul constructeur d’une exception prend une `Error`. Construisez l’erreur via une méthode factory puis transformez-la en exception avec `ToException()`.
+Vous ne faites jamais `new` sur une `DiagnosableException` dans votre code : le seul constructeur d’une exception prend une `Error`. Les erreurs elles-mêmes ne se construisent plus non plus via des constructeurs publics — ceux-ci sont désormais internes. Une erreur s’assemble via le builder étagé — `Type.Create(code, diagnosticMessage, …)` capture l’information interne obligatoire et retourne une étape intermédiaire, et `.WithPublicMessage(shortMessage, detailedMessage)` finalise l’erreur réelle (il n’y a pas de `.Build()`). Les méthodes factory encapsulent cet appel : vous invoquez simplement la factory et transformez son résultat en exception avec `ToException()`.
 
 ```csharp
 // Construit une Error via la factory, puis la lève en tant qu’exception :

@@ -6,10 +6,19 @@ Deux choses peuvent être localisées, à deux étapes différentes du pipeline 
 
 | Quoi | Localisé quand | Comment |
 | --- | --- | --- |
-| **Contenu des erreurs** — titres, explications, règles, diagnostics, messages, descriptions de source et de contexte | à l’**extraction** | vos fabriques lisent des ressources localisées sous la culture UI courante |
+| **Contenu des erreurs** — titres, explications, règles, diagnostics, les messages publics (court et détaillé), descriptions de source et de contexte | à l’**extraction** | vos fabriques lisent des ressources localisées sous la culture UI courante |
 | **Gabarits des renderers** — titres, libellés, en-têtes de tableau | au **rendu** | le renderer lit son propre texte fixe pour `RenderRequest.Culture` |
 
-Tout le reste demeure **indépendant de la culture**, pour que les liens ne cassent jamais d’une langue à l’autre : codes d’erreur, noms de source (`nameof(...)`), valeurs d’`ErrorOrigin`, ainsi que les noms de fichiers et les ancres générés.
+Tout le reste demeure **indépendant de la culture**, pour que les liens ne cassent jamais d’une langue à l’autre — et pour que les diagnostics restent dans une langue unique et cohérente pour les logs et le support : codes d’erreur, noms de source (`nameof(...)`), valeurs d’`ErrorOrigin`, le **message de diagnostic interne** de chaque erreur, ainsi que les noms de fichiers et les ancres générés.
+
+### Les messages publics sont localisés, le message de diagnostic ne l’est pas
+
+Une erreur porte trois messages, qui se localisent différemment :
+
+* **`ShortMessage`** et **`DetailedMessage`** sont du contenu public : ils sont localisés à l’extraction comme n’importe quelle autre prose — lisez-les depuis des ressources sous la culture UI courante.
+* **`DiagnosticMessage`** est délibérément **conservé dans la langue de l’auteur (indépendant de la culture)**. Il est destiné aux logs, au support et aux développeurs, et un texte de diagnostic est le plus utile lorsqu’il se lit toujours dans une langue unique et cohérente, quelle que soit la locale de l’appelant — c’est une bonne pratique assumée.
+
+Ainsi, dans la documentation générée, les messages publics sont rendus localisés tandis que le message de diagnostic est rendu dans la langue invariante (celle de l’auteur).
 
 L’exemple `.Usage` fournit cinq langues — anglais, français, espagnol, allemand et suédois (`en`, `fr`, `es`, `de`, `sv`).
 
@@ -99,10 +108,10 @@ IReadOnlyList<RenderedDocument> documents = new MarkdownErrorDocumentationRender
 
 | Étape | Source de la culture | Ce qu’elle localise |
 | --- | --- | --- |
-| Worker / extraction | `CultureInfo.CurrentUICulture` (réglée depuis `--language`) | le contenu des erreurs (titres, explications, règles, diagnostics, messages, descriptions de source et de contexte) |
+| Worker / extraction | `CultureInfo.CurrentUICulture` (réglée depuis `--language`) | le contenu des erreurs (titres, explications, règles, diagnostics, les messages publics court et détaillé, descriptions de source et de contexte) |
 | Renderer | `RenderRequest.Culture` | le texte fixe propre au renderer (titres, libellés, en-têtes de tableau) |
 
-Le contenu est localisé à l’extraction ; le texte fixe au rendu. Les noms de fichiers et les ancres restent indépendants de la culture.
+Le contenu est localisé à l’extraction ; le texte fixe au rendu. Les noms de fichiers, les ancres et le message de diagnostic interne de chaque erreur restent indépendants de la culture.
 
 ---
 

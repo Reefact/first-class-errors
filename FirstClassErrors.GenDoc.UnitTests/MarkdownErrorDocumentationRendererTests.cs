@@ -31,7 +31,7 @@ public sealed class MarkdownErrorDocumentationRendererTests {
             BusinessRule = "Temperature cannot go below absolute zero.",
             Source       = "Temperature",
             Diagnostics  = new[] { new ErrorDiagnostic("A value entered by a user is invalid.", ErrorOrigin.External, "Verify the user input.") },
-            Examples     = new[] { new ErrorDescription("Failed to instantiate temperature: -300 is below absolute zero.", "Below absolute zero.") },
+            Examples     = new[] { new ErrorDescription("Below absolute zero.", "Failed to instantiate temperature: -300 is below absolute zero.", "The temperature is invalid.") },
             Context = new[] {
                 new ErrorContextEntryDocumentation {
                     Key           = "AttemptedValue",
@@ -96,6 +96,17 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         Check.That(markdown).Contains("#### Diagnostics");
         Check.That(markdown).Contains("_origin:_ External");
         Check.That(markdown).Contains("#### Examples");
+
+        // Each example is shown two ways: a public RFC 9457 problem detail (short message as title, detailed as detail,
+        // code as an extension), and the internal diagnostic rendered as a log line (invariant, flagged internal).
+        Check.That(markdown).Contains("**Public response (RFC 9457)**");
+        Check.That(markdown).Contains("```json");
+        Check.That(markdown).Contains("\"title\": \"Below absolute zero.\"");
+        Check.That(markdown).Contains("\"detail\": \"The temperature is invalid.\"");
+        Check.That(markdown).Contains("\"code\": \"TEMPERATURE_BELOW_ABSOLUTE_ZERO\"");
+        Check.That(markdown).Contains("**Diagnostic (internal — not for external exposure)**");
+        Check.That(markdown).Contains("2026-07-04T13:42:18.734Z ERROR [Temperature] Failed to instantiate temperature: -300 is below absolute zero. error.code=TEMPERATURE_BELOW_ABSOLUTE_ZERO");
+
         Check.That(markdown).Contains("#### Context");
         Check.That(markdown).Contains("| `AttemptedValue` | `System.Double` | The rejected value. | `-300` |");
     }
@@ -259,6 +270,12 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         Check.That(markdown).Contains("#### Diagnostics");
         Check.That(markdown).Contains("_origine :_ External");
         Check.That(markdown).Contains("#### Exemples");
+
+        // The example block labels are localized, but the diagnostic log line stays in the invariant author language.
+        Check.That(markdown).Contains("**Réponse publique (RFC 9457)**");
+        Check.That(markdown).Contains("**Diagnostic (interne — non destiné à l'exposition externe)**");
+        Check.That(markdown).Contains("2026-07-04T13:42:18.734Z ERROR [Temperature] Failed to instantiate temperature: -300 is below absolute zero. error.code=TEMPERATURE_BELOW_ABSOLUTE_ZERO");
+
         Check.That(markdown).Contains("#### Contexte");
         Check.That(markdown).Contains("| Clé | Type | Description | Exemples de valeurs |");
 

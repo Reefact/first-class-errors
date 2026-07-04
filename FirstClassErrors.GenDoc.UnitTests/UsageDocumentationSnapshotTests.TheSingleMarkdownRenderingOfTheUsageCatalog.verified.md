@@ -43,7 +43,21 @@ This error occurs when trying to use multiple amounts together in an operation w
 
 #### Examples
 
-- Failed to perform the monetary operation because the involved amounts are expressed in different currencies: 127.33 EUR and 57689 USD. _(Currency mismatch)_
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Currency mismatch",
+  "detail": "The two amounts use different currencies and cannot be combined.",
+  "code": "AMOUNT_CURRENCY_MISMATCH"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [Amount] Failed to perform the monetary operation because the involved amounts are expressed in different currencies: 127.33 EUR and 57689 USD. error.code=AMOUNT_CURRENCY_MISMATCH
+```
 
 <a id="src-bank-transaction-file-validator"></a>
 
@@ -71,7 +85,21 @@ This error occurs when trying to validate a bank statement file that contains on
 
 #### Examples
 
-- Transaction dated 2024-02-02 is outside the statement period [2024-01-05;2024-01-31]. _(Transaction date is outside the statement period.)_
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Transaction date is outside the statement period.",
+  "detail": "A transaction date falls outside the statement period.",
+  "code": "BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [BankTransactionFileValidator] Transaction dated 2024-02-02 is outside the statement period [2024-01-05;2024-01-31]. error.code=BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD
+```
 
 #### Context
 
@@ -99,7 +127,21 @@ This error occurs when trying to validate a bank statement file whose declared t
 
 #### Examples
 
-- The declared statement total amount (1250 EUR) does not match the computed total amount from transactions (1249.5 EUR). _(Statement total amount mismatch.)_
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Statement total amount mismatch.",
+  "detail": "The declared statement total does not match the computed total.",
+  "code": "BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [BankTransactionFileValidator] The declared statement total amount (1250 EUR) does not match the computed total amount from transactions (1249.5 EUR). error.code=BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH
+```
 
 <a id="src-exchange-rate-provider"></a>
 
@@ -125,7 +167,21 @@ This error occurs when the external exchange-rate provider cannot be reached (a 
 
 #### Examples
 
-- The exchange-rate provider 'acme-fx' is unavailable (correlation 22222222-2222-2222-2222-222222222222). _(Exchange-rate service unavailable.)_
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Exchange-rate service unavailable.",
+  "detail": "The exchange-rate service is temporarily unavailable; please retry later.",
+  "code": "EXCHANGE_RATE_SERVICE_UNAVAILABLE"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [ExchangeRateProvider] The exchange-rate provider 'acme-fx' is unavailable (correlation 22222222-2222-2222-2222-222222222222). error.code=EXCHANGE_RATE_SERVICE_UNAVAILABLE
+```
 
 #### Context
 
@@ -151,7 +207,21 @@ This error occurs when the exchange-rate provider does not quote a rate for the 
 
 #### Examples
 
-- The exchange-rate provider does not quote the EUR to USD currency pair. _(Unsupported currency pair.)_
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Unsupported currency pair.",
+  "detail": "The requested currency pair is not supported.",
+  "code": "UNSUPPORTED_CURRENCY_PAIR"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [ExchangeRateProvider] The exchange-rate provider does not quote the EUR to USD currency pair. error.code=UNSUPPORTED_CURRENCY_PAIR
+```
 
 #### Context
 
@@ -183,7 +253,21 @@ This error occurs when the statement upload endpoint receives a request whose bo
 
 #### Examples
 
-- The statement upload request 11111111-1111-1111-1111-111111111111 is malformed: the 'statementPeriod' field is missing or invalid. _(Malformed statement payload.)_
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Malformed statement payload.",
+  "detail": "The uploaded statement request is missing a required field or contains an invalid value.",
+  "code": "MALFORMED_STATEMENT_PAYLOAD"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [StatementUploadEndpoint] The statement upload request 11111111-1111-1111-1111-111111111111 is malformed: the 'statementPeriod' field is missing or invalid. error.code=MALFORMED_STATEMENT_PAYLOAD
+```
 
 #### Context
 
@@ -209,7 +293,21 @@ This error occurs when too many statement uploads arrive in a short window and t
 
 #### Examples
 
-- The statement upload request 11111111-1111-1111-1111-111111111111 was rate-limited; retry after 30 seconds. _(Statement upload rate-limited.)_
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Statement upload rate-limited.",
+  "detail": "Too many statement uploads were sent in a short period; please retry later.",
+  "code": "STATEMENT_UPLOAD_RATE_LIMITED"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [StatementUploadEndpoint] The statement upload request 11111111-1111-1111-1111-111111111111 was rate-limited; retry after 30 seconds. error.code=STATEMENT_UPLOAD_RATE_LIMITED
+```
 
 #### Context
 
@@ -240,7 +338,21 @@ This error occurs when a money transfer is requested with an amount that is zero
 
 #### Examples
 
-- Cannot transfer -25 EUR: the amount must be strictly positive. _(Transfer amount must be positive.)_
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Transfer amount must be positive.",
+  "detail": "The transfer amount must be greater than zero.",
+  "code": "MONEY_TRANSFER_AMOUNT_NOT_POSITIVE"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [MoneyTransfer] Cannot transfer -25 EUR: the amount must be strictly positive. error.code=MONEY_TRANSFER_AMOUNT_NOT_POSITIVE
+```
 
 #### Context
 
@@ -265,7 +377,21 @@ This error aggregates every domain rule violated while validating a money transf
 
 #### Examples
 
-- The money transfer is invalid: it violates one or more domain rules. _(Invalid money transfer.)_
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Invalid money transfer.",
+  "detail": "The money transfer does not satisfy all the required rules.",
+  "code": "MONEY_TRANSFER_INVALID"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [MoneyTransfer] The money transfer is invalid: it violates one or more domain rules. error.code=MONEY_TRANSFER_INVALID
+```
 
 <a id="src-temperature"></a>
 
@@ -294,6 +420,35 @@ This error occurs when trying to instantiate a temperature with a value that is 
 
 #### Examples
 
-- Failed to instantiate temperature: the value -1 K is below absolute zero. _(Temperature is below absolute zero.)_
-- Failed to instantiate temperature: the value -280 °C is below absolute zero. _(Temperature is below absolute zero.)_
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Temperature is invalid.",
+  "detail": "The temperature -1 K is below absolute zero.",
+  "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [Temperature] Failed to instantiate temperature: the value -1 K is below absolute zero. error.code=TEMPERATURE_BELOW_ABSOLUTE_ZERO
+```
+
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Temperature is invalid.",
+  "detail": "The temperature -280 °C is below absolute zero.",
+  "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [Temperature] Failed to instantiate temperature: the value -280 °C is below absolute zero. error.code=TEMPERATURE_BELOW_ABSOLUTE_ZERO
+```
 

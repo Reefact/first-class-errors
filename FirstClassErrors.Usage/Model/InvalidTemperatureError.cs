@@ -23,10 +23,12 @@ public static class InvalidTemperatureError {
     /// <returns>An instance of <see cref="InvalidTemperatureError" />.</returns>
     [DocumentedBy(nameof(BelowAbsoluteZeroDocumentation))]
     internal static DomainError BelowAbsoluteZero(decimal invalidValue, TemperatureUnit invalidValueUnit) {
-        return new DomainError(
-            Code.TemperatureBelowAbsoluteZero,
-            DocumentationFormatter.Format("Failed to instantiate temperature: the value {0} {1} is below absolute zero.", invalidValue, invalidValueUnit),
-            "Temperature is below absolute zero.");
+        return DomainError.Create(
+                               Code.TemperatureBelowAbsoluteZero,
+                               DocumentationFormatter.Format("Failed to instantiate temperature: the value {0} {1} is below absolute zero.", invalidValue, invalidValueUnit))
+                          .WithPublicMessage(
+                               "Temperature is invalid.",
+                               DocumentationFormatter.Format("The temperature {0} {1} is below absolute zero.", invalidValue, invalidValueUnit));
     }
 
     private static ErrorDocumentation BelowAbsoluteZeroDocumentation() {

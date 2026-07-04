@@ -29,7 +29,7 @@ public sealed class JsonErrorDocumentationRendererTests {
             BusinessRule = "Temperature cannot go below absolute zero.",
             Source       = "Temperature",
             Diagnostics  = new[] { new ErrorDiagnostic("A value entered by a user is invalid.", ErrorOrigin.External, "Verify the user input.") },
-            Examples     = new[] { new ErrorDescription("Failed to instantiate temperature: -300 is below absolute zero.", "Below absolute zero.") },
+            Examples     = new[] { new ErrorDescription("Below absolute zero.", "Failed to instantiate temperature: -300 is below absolute zero.", "The temperature is invalid.") },
             Context = new[] {
                 new ErrorContextEntryDocumentation {
                     Key           = "AttemptedValue",
@@ -62,7 +62,10 @@ public sealed class JsonErrorDocumentationRendererTests {
         Check.That(error.GetProperty("diagnostics")[0].GetProperty("possibleCause").GetString()).IsEqualTo("A value entered by a user is invalid.");
         Check.That(error.GetProperty("diagnostics")[0].GetProperty("origin").GetString()).IsEqualTo("External");
 
+        // The JSON catalog emits the three raw message fields (the public short and detailed, plus the internal diagnostic).
         Check.That(error.GetProperty("examples")[0].GetProperty("shortMessage").GetString()).IsEqualTo("Below absolute zero.");
+        Check.That(error.GetProperty("examples")[0].GetProperty("diagnosticMessage").GetString()).IsEqualTo("Failed to instantiate temperature: -300 is below absolute zero.");
+        Check.That(error.GetProperty("examples")[0].GetProperty("detailedMessage").GetString()).IsEqualTo("The temperature is invalid.");
 
         JsonElement contextEntry = error.GetProperty("context")[0];
         Check.That(contextEntry.GetProperty("key").GetString()).IsEqualTo("AttemptedValue");

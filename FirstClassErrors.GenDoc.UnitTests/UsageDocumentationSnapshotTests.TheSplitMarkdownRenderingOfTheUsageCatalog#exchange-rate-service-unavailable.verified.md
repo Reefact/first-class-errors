@@ -14,7 +14,21 @@ This error occurs when the external exchange-rate provider cannot be reached (a 
 
 ## Examples
 
-- The exchange-rate provider 'acme-fx' is unavailable (correlation 22222222-2222-2222-2222-222222222222). _(Exchange-rate service unavailable.)_
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Exchange-rate service unavailable.",
+  "detail": "The exchange-rate service is temporarily unavailable; please retry later.",
+  "code": "EXCHANGE_RATE_SERVICE_UNAVAILABLE"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [ExchangeRateProvider] The exchange-rate provider 'acme-fx' is unavailable (correlation 22222222-2222-2222-2222-222222222222). error.code=EXCHANGE_RATE_SERVICE_UNAVAILABLE
+```
 
 ## Context
 

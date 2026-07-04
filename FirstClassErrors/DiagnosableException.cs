@@ -15,8 +15,13 @@ public abstract class DiagnosableException : Exception {
     /// <param name="error">
     ///     An instance of the <see cref="Error" /> class that provides detailed information about the exception.
     /// </param>
+    /// <remarks>
+    ///     The exception's <see cref="Exception.Message" /> is set from the error's
+    ///     <see cref="FirstClassErrors.Error.DiagnosticMessage" />: exceptions surface in logs and stack traces, which are
+    ///     developer- and support-facing, so the internal diagnostic message — not a public message — is the right payload.
+    /// </remarks>
     protected DiagnosableException(Error error)
-        : base(error.DetailedMessage) {
+        : base(error.DiagnosticMessage) {
         Error = error;
     }
 

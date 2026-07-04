@@ -17,20 +17,25 @@ public static class NonCompliantBankTransactionFileError {
 
     [DocumentedBy(nameof(TransactionDateOutOfStatementPeriodDocumentation))]
     internal static PrimaryPortError DateOutOfStatementPeriod(DateOnly periodStart, DateOnly periodEnd, DateOnly transactionDate) {
-        return new PrimaryPortError(Code.DateOutOfStatementPeriod,
-                                    DocumentationFormatter.Format(UsageErrorMessages.Get("Bank_DateOutOfPeriod_Message"), transactionDate, periodStart, periodEnd),
-                                    Transience.NonTransient,
-                                    UsageErrorMessages.Get("Bank_DateOutOfPeriod_ShortMessage"),
-                                    ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate));
+        return PrimaryPortError.Create(
+                                   Code.DateOutOfStatementPeriod,
+                                   DocumentationFormatter.Format("Transaction dated {0} is outside the statement period [{1};{2}].", transactionDate, periodStart, periodEnd),
+                                   Transience.NonTransient,
+                                   ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate))
+                               .WithPublicMessage(
+                                   UsageErrorMessages.Get("Bank_DateOutOfPeriod_ShortMessage"),
+                                   UsageErrorMessages.Get("Bank_DateOutOfPeriod_DetailedMessage"));
     }
 
     [DocumentedBy(nameof(StatementTotalAmountMismatchDocumentation))]
     internal static PrimaryPortError StatementTotalAmountMismatch(Amount declaredTotalAmount, Amount computedTotalAmount) {
-        return new PrimaryPortError(
-            Code.StatementTotalAmountMismatch,
-            DocumentationFormatter.Format(UsageErrorMessages.Get("Bank_TotalMismatch_Message"), declaredTotalAmount, computedTotalAmount),
-            Transience.NonTransient,
-            UsageErrorMessages.Get("Bank_TotalMismatch_ShortMessage"));
+        return PrimaryPortError.Create(
+                                   Code.StatementTotalAmountMismatch,
+                                   DocumentationFormatter.Format("The declared statement total amount ({0}) does not match the computed total amount from transactions ({1}).", declaredTotalAmount, computedTotalAmount),
+                                   Transience.NonTransient)
+                               .WithPublicMessage(
+                                   UsageErrorMessages.Get("Bank_TotalMismatch_ShortMessage"),
+                                   UsageErrorMessages.Get("Bank_TotalMismatch_DetailedMessage"));
     }
 
     private static ErrorDocumentation TransactionDateOutOfStatementPeriodDocumentation() {

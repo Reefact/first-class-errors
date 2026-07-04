@@ -19,25 +19,29 @@ public static class StatementUploadEndpointError {
 
     [DocumentedBy(nameof(MalformedPayloadDocumentation))]
     internal static PrimaryPortError MalformedPayload(Guid requestId, string field) {
-        return new PrimaryPortError(
-            Code.MalformedPayload,
-            DocumentationFormatter.Format(UsageErrorMessages.Get("StatementUpload_Malformed_Message"), requestId, field),
-            Transience.NonTransient,
-            UsageErrorMessages.Get("StatementUpload_Malformed_ShortMessage"),
-            ctx => {
-                ctx.Add(ErrCtxKey.RequestId, requestId);
-                ctx.Add(ErrCtxKey.Field, field);
-            });
+        return PrimaryPortError.Create(
+                                   Code.MalformedPayload,
+                                   DocumentationFormatter.Format("The statement upload request {0} is malformed: the '{1}' field is missing or invalid.", requestId, field),
+                                   Transience.NonTransient,
+                                   ctx => {
+                                       ctx.Add(ErrCtxKey.RequestId, requestId);
+                                       ctx.Add(ErrCtxKey.Field, field);
+                                   })
+                               .WithPublicMessage(
+                                   UsageErrorMessages.Get("StatementUpload_Malformed_ShortMessage"),
+                                   UsageErrorMessages.Get("StatementUpload_Malformed_DetailedMessage"));
     }
 
     [DocumentedBy(nameof(RateLimitedDocumentation))]
     internal static PrimaryPortError RateLimited(Guid requestId, int retryAfterSeconds) {
-        return new PrimaryPortError(
-            Code.RateLimited,
-            DocumentationFormatter.Format(UsageErrorMessages.Get("StatementUpload_RateLimited_Message"), requestId, retryAfterSeconds),
-            Transience.Transient,
-            UsageErrorMessages.Get("StatementUpload_RateLimited_ShortMessage"),
-            ctx => ctx.Add(ErrCtxKey.RequestId, requestId));
+        return PrimaryPortError.Create(
+                                   Code.RateLimited,
+                                   DocumentationFormatter.Format("The statement upload request {0} was rate-limited; retry after {1} seconds.", requestId, retryAfterSeconds),
+                                   Transience.Transient,
+                                   ctx => ctx.Add(ErrCtxKey.RequestId, requestId))
+                               .WithPublicMessage(
+                                   UsageErrorMessages.Get("StatementUpload_RateLimited_ShortMessage"),
+                                   UsageErrorMessages.Get("StatementUpload_RateLimited_DetailedMessage"));
     }
 
     private static ErrorDocumentation MalformedPayloadDocumentation() {

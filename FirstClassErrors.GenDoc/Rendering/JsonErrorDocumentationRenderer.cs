@@ -57,8 +57,9 @@ public sealed class JsonErrorDocumentationRenderer : IErrorDocumentationRenderer
                     analysisHint  = diagnostic.AnalysisHint
                 }),
                 examples = error.Examples.Select(example => new {
-                    detailedMessage = example.DetailedMessage,
-                    shortMessage    = example.ShortMessage
+                    shortMessage      = example.ShortMessage,
+                    detailedMessage   = example.DetailedMessage,
+                    diagnosticMessage = example.DiagnosticMessage
                 }),
                 context = error.Context.Select(entry => new {
                     key           = entry.Key,

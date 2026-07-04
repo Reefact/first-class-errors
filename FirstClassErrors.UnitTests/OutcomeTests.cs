@@ -50,7 +50,7 @@ public sealed class OutcomeTests {
     [Fact(DisplayName = "A failed outcome is marked as failure.")]
     public void FailedOutcomeIsMarkedAsFailure() {
         // Setup
-        DomainError error = new(ErrorCode.Unspecified, "boom");
+        DomainError error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
 
         // Exercise
         Outcome<string> outcome = Outcome<string>.Failure(error);
@@ -63,7 +63,7 @@ public sealed class OutcomeTests {
     [Fact(DisplayName = "A failed outcome exposes its error.")]
     public void AFailedOutcomeExposesItsError() {
         // Setup
-        DomainError error = new(ErrorCode.Unspecified, "boom");
+        DomainError error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
 
         // Exercise
         Outcome<string> outcome = Outcome<string>.Failure(error);
@@ -82,7 +82,7 @@ public sealed class OutcomeTests {
     [Fact(DisplayName = "Accessing the value of a failed outcome throws the associated exception.")]
     public void AccessingTheValueOfAFailedOutcomeThrowsTheAssociatedException() {
         // Setup
-        DomainError     error   = new(ErrorCode.Unspecified, "boom");
+        DomainError     error   = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
         Outcome<string> outcome = Outcome<string>.Failure(error);
 
         // Exercise & verify
@@ -94,7 +94,7 @@ public sealed class OutcomeTests {
     [Fact(DisplayName = "Escalating a failed outcome throws the associated exception.")]
     public void EscalatingAFailedOutcomeThrowsTheAssociatedException() {
         // Setup
-        DomainError     error   = new(ErrorCode.Unspecified, "boom");
+        DomainError     error   = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
         Outcome<string> outcome = Outcome<string>.Failure(error);
 
         // Exercise & verify
@@ -106,7 +106,7 @@ public sealed class OutcomeTests {
     [Fact(DisplayName = "A failed outcome preserves the original error instance.")]
     public void FailedOutcomePreservesTheOriginalErrorInstance() {
         // Setup
-        DomainError     error   = new(ErrorCode.Unspecified, "boom");
+        DomainError     error   = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
         Outcome<string> outcome = Outcome<string>.Failure(error);
 
         // Exercise & verify
@@ -117,7 +117,7 @@ public sealed class OutcomeTests {
     [Fact(DisplayName = "ThrowIfFailure throws the associated exception when the outcome is a failure.")]
     public void ThrowIfFailureThrowsTheAssociatedExceptionWhenTheOutcomeIsAFailure() {
         // Setup
-        DomainError     error   = new(ErrorCode.Unspecified, "boom");
+        DomainError     error   = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
         Outcome<string> outcome = Outcome<string>.Failure(error);
 
         // Exercise & verify
@@ -151,7 +151,7 @@ public sealed class OutcomeTests {
     [Fact(DisplayName = "Then short-circuits and propagates the error when the outcome is a failure.")]
     public void ThenShortCircuitsAndPropagatesTheErrorWhenTheOutcomeIsAFailure() {
         // Setup
-        DomainError  error   = new(ErrorCode.Unspecified, "boom");
+        DomainError  error   = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
         Outcome<int> outcome = Outcome<int>.Failure(error);
         bool         called  = false;
 
@@ -183,7 +183,7 @@ public sealed class OutcomeTests {
     [Fact(DisplayName = "To propagates the error without invoking the converter on a failure.")]
     public void ToPropagatesTheErrorWithoutInvokingTheConverterOnAFailure() {
         // Setup
-        DomainError  error   = new(ErrorCode.Unspecified, "boom");
+        DomainError  error   = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
         Outcome<int> outcome = Outcome<int>.Failure(error);
 
         // Exercise
@@ -197,7 +197,7 @@ public sealed class OutcomeTests {
     [Fact(DisplayName = "Recover replaces a failure with a guaranteed fallback value.")]
     public void RecoverReplacesAFailureWithAGuaranteedFallbackValue() {
         // Setup
-        DomainError  error   = new(ErrorCode.Unspecified, "boom");
+        DomainError  error   = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
         Outcome<int> outcome = Outcome<int>.Failure(error);
 
         // Exercise
@@ -235,11 +235,11 @@ public sealed class OutcomeTests {
     [Fact(DisplayName = "Finally resolves the failure branch when the outcome is a failure.")]
     public void FinallyResolvesTheFailureBranchWhenTheOutcomeIsAFailure() {
         // Setup
-        DomainError  error   = new(ErrorCode.Unspecified, "boom");
+        DomainError  error   = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
         Outcome<int> outcome = Outcome<int>.Failure(error);
 
         // Exercise
-        string result = outcome.Finally(value => $"ok:{value}", failure => $"ko:{failure.DetailedMessage}");
+        string result = outcome.Finally(value => $"ok:{value}", failure => $"ko:{failure.DiagnosticMessage}");
 
         // Verify
         Check.That(result).IsEqualTo("ko:boom");
@@ -248,7 +248,7 @@ public sealed class OutcomeTests {
     [Fact(DisplayName = "The non-generic Outcome.Then chains when successful and propagates on failure.")]
     public void NonGenericOutcomeThenChainsWhenSuccessfulAndPropagatesOnFailure() {
         // Setup
-        DomainError error = new(ErrorCode.Unspecified, "boom");
+        DomainError error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
 
         // Exercise
         Outcome chainedFromSuccess = Outcome.Success.Then(() => Outcome.Success);

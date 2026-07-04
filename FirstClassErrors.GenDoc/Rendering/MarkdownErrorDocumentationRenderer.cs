@@ -162,15 +162,18 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         if (error.Examples.Count > 0) {
             markdown.Append($"{subHeading} {strings.ExamplesHeading}\n\n");
             foreach (ErrorDescription example in error.Examples) {
-                markdown.Append($"- {Inline(example.DetailedMessage)}");
-                if (string.IsNullOrWhiteSpace(example.ShortMessage) is false) {
-                    markdown.Append($" _({Inline(example.ShortMessage)})_");
-                }
+                // Public, exposable form: an RFC 9457 problem detail built only from the controlled public messages.
+                markdown.Append($"**{Inline(strings.ExamplePublicResponseLabel)}**\n\n");
+                markdown.Append("```json\n");
+                markdown.Append(ProblemDetailsJson(example, error.Code));
+                markdown.Append("\n```\n\n");
 
-                markdown.Append('\n');
+                // Internal form: how the same failure reads in the logs. Never exposed to external clients.
+                markdown.Append($"**{Inline(strings.ExampleDiagnosticLabel)}**\n\n");
+                markdown.Append("```text\n");
+                markdown.Append(DiagnosticLogLine(example, error.Code, error.Source));
+                markdown.Append("\n```\n\n");
             }
-
-            markdown.Append('\n');
         }
 
         if (error.Context.Count > 0) {
@@ -186,6 +189,60 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
     }
 
     #region Helpers
+
+    /// <summary>
+    ///     Builds the public, exposable RFC 9457 (<c>problem+json</c>) representation of an example, using only the
+    ///     controlled public messages — never the diagnostic message. <c>detail</c> is omitted when there is no public
+    ///     detail. Neither <c>type</c> nor <c>status</c> is emitted: both are the application's concern (an absent
+    ///     <c>type</c> defaults to <c>about:blank</c> per RFC 9457 §4.1, and the core model is HTTP-agnostic).
+    /// </summary>
+    private static string ProblemDetailsJson(ErrorDescription example, string? code) {
+        StringBuilder json = new();
+        json.Append("{\n");
+        json.Append($"  \"title\": \"{JsonString(example.ShortMessage)}\"");
+        if (string.IsNullOrWhiteSpace(example.DetailedMessage) is false) {
+            json.Append($",\n  \"detail\": \"{JsonString(example.DetailedMessage!)}\"");
+        }
+
+        if (string.IsNullOrWhiteSpace(code) is false) {
+            json.Append($",\n  \"code\": \"{JsonString(code!.Trim())}\"");
+        }
+
+        json.Append("\n}");
+
+        return json.ToString();
+    }
+
+    /// <summary>
+    ///     A fixed, illustrative timestamp used by the diagnostic log-line examples. A real logger injects the actual
+    ///     time at runtime; this constant keeps the rendered documentation deterministic.
+    /// </summary>
+    private const string SampleLogTimestamp = "2026-07-04T13:42:18.734Z";
+
+    /// <summary>
+    ///     Builds a structured log-line rendering of an example's internal diagnostic message: a fixed illustrative
+    ///     timestamp, the level, the source used as the logger category, the diagnostic message, and the error code as a
+    ///     structured field. It is illustrative, stays in the author (invariant) language, and is never a public message.
+    /// </summary>
+    private static string DiagnosticLogLine(ErrorDescription example, string? code, string? source) {
+        StringBuilder line = new();
+        line.Append($"{SampleLogTimestamp} ERROR");
+        if (string.IsNullOrWhiteSpace(source) is false) {
+            line.Append($" [{source!.Trim()}]");
+        }
+
+        line.Append($" {Inline(example.DiagnosticMessage)}");
+        if (string.IsNullOrWhiteSpace(code) is false) {
+            line.Append($" error.code={code!.Trim()}");
+        }
+
+        return line.ToString();
+    }
+
+    /// <summary>Escapes a value for inclusion inside a JSON string literal (folding line breaks to spaces first).</summary>
+    private static string JsonString(string value) {
+        return Inline(value).Replace("\\", "\\\\").Replace("\"", "\\\"");
+    }
 
     private static IReadOnlyList<Entry> BuildEntries(IEnumerable<ErrorDocumentation> catalog) {
         List<Entry>     entries   = [];

@@ -1,4 +1,4 @@
-﻿#region Usings declarations
+#region Usings declarations
 
 using System.Diagnostics.CodeAnalysis;
 
@@ -36,8 +36,8 @@ public sealed class ErrorTests : IDisposable {
         string    anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
 
         // Exercise
-        DomainError firstError  = new(anyErrorCode, anyErrorMessage);
-        DomainError secondError = new(anyErrorCode, anyErrorMessage);
+        DomainError firstError  = DomainError.Create(anyErrorCode, anyErrorMessage).WithPublicMessage(anyErrorMessage);
+        DomainError secondError = DomainError.Create(anyErrorCode, anyErrorMessage).WithPublicMessage(anyErrorMessage);
 
         // Verify
         Check.That(firstError.InstanceId).IsNotEqualTo(Guid.Empty);
@@ -53,7 +53,7 @@ public sealed class ErrorTests : IDisposable {
         DateTimeOffset before          = DateTimeOffset.UtcNow;
 
         // Exercise
-        DomainError error = new(anyErrorCode, anyErrorMessage);
+        DomainError error = DomainError.Create(anyErrorCode, anyErrorMessage).WithPublicMessage(anyErrorMessage);
 
         // Verify
         DateTimeOffset after = DateTimeOffset.UtcNow;
@@ -74,7 +74,7 @@ public sealed class ErrorTests : IDisposable {
         ErrorCode temperatureBelowAbsoluteZero = ErrorCode.Create("TEMPERATURE_BELOW_ABSOLUTE_ZERO");
 
         // Exercise
-        DomainError error = new(temperatureBelowAbsoluteZero, anyErrorMessage);
+        DomainError error = DomainError.Create(temperatureBelowAbsoluteZero, anyErrorMessage).WithPublicMessage(anyErrorMessage);
 
         // Verify
         Check.That(error.Code).IsEqualTo(temperatureBelowAbsoluteZero);
@@ -85,10 +85,23 @@ public sealed class ErrorTests : IDisposable {
         // Exercise
         string              anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
         ErrorCode           anyErrorCode    = ErrorCodeFactory.CreateAny();
-        InfrastructureError error           = new(anyErrorCode, anyErrorMessage, InteractionDirection.Incoming, Transience.NonTransient, "short");
+        InfrastructureError error           = InfrastructureError.Create(anyErrorCode, anyErrorMessage, InteractionDirection.Incoming, Transience.NonTransient)
+                                                                  .WithPublicMessage("short");
 
         // Verify
         Check.That(error.ShortMessage).IsEqualTo("short");
+    }
+
+    [Fact(DisplayName = "An error preserves the provided diagnostic message.")]
+    public void ADiagnosableExceptionPreservesTheProvidedDiagnosticMessage() {
+        // Exercise
+        ErrorCode   anyErrorCode = ErrorCodeFactory.CreateAny();
+        DomainError error        = DomainError.Create(anyErrorCode, "diagnostic").WithPublicMessage("short", "detailed");
+
+        // Verify
+        Check.That(error.DiagnosticMessage).IsEqualTo("diagnostic");
+        Check.That(error.ShortMessage).IsEqualTo("short");
+        Check.That(error.DetailedMessage).IsEqualTo("detailed");
     }
 
     [Fact(DisplayName = "An error has an empty context when no context is provided.")]
@@ -96,7 +109,8 @@ public sealed class ErrorTests : IDisposable {
         // Exercise
         string              anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
         ErrorCode           anyErrorCode    = ErrorCodeFactory.CreateAny();
-        InfrastructureError error           = new(anyErrorCode, anyErrorMessage, InteractionDirection.Outgoing, Transience.Transient);
+        InfrastructureError error           = InfrastructureError.Create(anyErrorCode, anyErrorMessage, InteractionDirection.Outgoing, Transience.Transient)
+                                                                  .WithPublicMessage(anyErrorMessage);
 
         // Verify
         Check.That(error.Context).IsNotNull();
@@ -112,8 +126,9 @@ public sealed class ErrorTests : IDisposable {
         ErrorContextKey<string> userIdKey       = ErrorContextKey.Create<string>("UserId");
 
         // Exercise
-        InfrastructureError error = new(anyErrorCode, anyErrorMessage, InteractionDirection.Unknown, Transience.Unknown,
-                                        configureContext: ctx => ctx.Add(userIdKey, "u-123"));
+        InfrastructureError error = InfrastructureError.Create(anyErrorCode, anyErrorMessage, InteractionDirection.Unknown, Transience.Unknown,
+                                                               ctx => ctx.Add(userIdKey, "u-123"))
+                                                       .WithPublicMessage(anyErrorMessage);
 
         // Verify
         Check.That(error.Context.IsEmpty).IsFalse();
@@ -128,7 +143,8 @@ public sealed class ErrorTests : IDisposable {
         // Exercise
         string              anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
         ErrorCode           anyErrorCode    = ErrorCodeFactory.CreateAny();
-        InfrastructureError error           = new(anyErrorCode, anyErrorMessage, InteractionDirection.Outgoing, Transience.Unknown);
+        InfrastructureError error           = InfrastructureError.Create(anyErrorCode, anyErrorMessage, InteractionDirection.Outgoing, Transience.Unknown)
+                                                                  .WithPublicMessage(anyErrorMessage);
 
         // Verify
         Check.That(error.InnerErrors).IsNotNull();
@@ -140,10 +156,10 @@ public sealed class ErrorTests : IDisposable {
         // Setup
         string      anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
         ErrorCode   anyErrorCode    = ErrorCodeFactory.CreateAny();
-        DomainError innerError      = new(anyErrorCode, "inner");
+        DomainError innerError      = DomainError.Create(anyErrorCode, "inner").WithPublicMessage("inner");
 
         // Exercise
-        DomainError rootError = new(anyErrorCode, anyErrorMessage, innerError);
+        DomainError rootError = DomainError.Create(anyErrorCode, anyErrorMessage, innerError).WithPublicMessage(anyErrorMessage);
 
         // Verify
         Check.That(rootError.InnerErrors).CountIs(1);
@@ -155,14 +171,14 @@ public sealed class ErrorTests : IDisposable {
         // Setup
         string           anyErrorMessage  = ErrorMessageFactory.CreateAnyMessage();
         ErrorCode        anyErrorCode     = ErrorCodeFactory.CreateAny();
-        DomainError      firstInnerError  = new(ErrorCode.Create("first"), "first");
-        PrimaryPortError secondInnerError = new(ErrorCode.Create("second"), "second", Transience.Unknown);
+        DomainError      firstInnerError  = DomainError.Create(ErrorCode.Create("first"), "first").WithPublicMessage("first");
+        PrimaryPortError secondInnerError = PrimaryPortError.Create(ErrorCode.Create("second"), "second", Transience.Unknown).WithPublicMessage("second");
         PrimaryPortInnerErrors innerErrors = new PrimaryPortInnerErrors()
                                             .Add(firstInnerError)
                                             .Add(secondInnerError);
 
         // Exercise
-        PrimaryPortError rootError = new(anyErrorCode, anyErrorMessage, innerErrors);
+        PrimaryPortError rootError = PrimaryPortError.Create(anyErrorCode, anyErrorMessage, innerErrors).WithPublicMessage(anyErrorMessage);
 
         // Verify
         Check.That(rootError.InnerErrors).CountIs(2);
@@ -175,7 +191,7 @@ public sealed class ErrorTests : IDisposable {
         // Exercise
         ErrorCode   anyErrorCode    = ErrorCodeFactory.CreateAny();
         string      anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
-        DomainError error           = new(anyErrorCode, anyErrorMessage, innerErrors: null!);
+        DomainError error           = DomainError.Create(anyErrorCode, anyErrorMessage, innerErrors: null!).WithPublicMessage(anyErrorMessage);
 
         // Verify
         Check.That(error.InnerErrors).CountIs(0);
@@ -186,41 +202,13 @@ public sealed class ErrorTests : IDisposable {
         // Exercise
         ErrorCode   anyErrorCode    = ErrorCodeFactory.CreateAny();
         string      anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
-        DomainError exception       = new(anyErrorCode, anyErrorMessage, innerError: null!);
+        DomainError exception       = DomainError.Create(anyErrorCode, anyErrorMessage, innerError: null!).WithPublicMessage(anyErrorMessage);
 
         // Verify
         Check.That(exception.InnerErrors).CountIs(0);
     }
 
     #region Nested types declarations
-
-    //private sealed class TestDiagnosableException : DiagnosableException {
-
-    //    #region Constructors & Destructor
-
-    //    public TestDiagnosableException(ErrorCode                    errorCode,
-    //                                    string                       errorMessage,
-    //                                    string?                      shortMessage     = null,
-    //                                    Action<ErrorContextBuilder>? configureContext = null)
-    //        : base(errorCode, errorMessage, shortMessage, configureContext) { }
-
-    //    public TestDiagnosableException(ErrorCode                    errorCode,
-    //                                    string                       errorMessage,
-    //                                    Exception                    innerException,
-    //                                    string?                      shortMessage     = null,
-    //                                    Action<ErrorContextBuilder>? configureContext = null)
-    //        : base(errorCode, errorMessage, innerException, shortMessage, configureContext) { }
-
-    //    public TestDiagnosableException(ErrorCode                    errorCode,
-    //                                    string                       errorMessage,
-    //                                    IEnumerable<Exception>       innerExceptions,
-    //                                    string?                      shortMessage     = null,
-    //                                    Action<ErrorContextBuilder>? configureContext = null)
-    //        : base(errorCode, errorMessage, innerExceptions, shortMessage, configureContext) { }
-
-    //    #endregion
-
-    //}
 
     private static class ErrorMessageFactory {
 

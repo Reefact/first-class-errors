@@ -43,7 +43,21 @@ Este error se produce al intentar usar juntos varios importes en una operación 
 
 #### Ejemplos
 
-- No se pudo realizar la operación monetaria porque los importes involucrados están expresados en monedas diferentes: 127.33 EUR y 57689 USD. _(Discrepancia de moneda)_
+**Respuesta pública (RFC 9457)**
+
+```json
+{
+  "title": "Discrepancia de moneda",
+  "detail": "Los dos importes usan monedas diferentes y no pueden combinarse.",
+  "code": "AMOUNT_CURRENCY_MISMATCH"
+}
+```
+
+**Diagnóstico (interno — no destinado a exposición externa)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [Amount] Failed to perform the monetary operation because the involved amounts are expressed in different currencies: 127.33 EUR and 57689 USD. error.code=AMOUNT_CURRENCY_MISMATCH
+```
 
 <a id="src-bank-transaction-file-validator"></a>
 
@@ -71,7 +85,21 @@ Este error se produce al intentar validar un archivo de extracto bancario que co
 
 #### Ejemplos
 
-- La transacción con fecha 2024-02-02 está fuera del período del extracto [2024-01-05;2024-01-31]. _(La fecha de transacción está fuera del período del extracto.)_
+**Respuesta pública (RFC 9457)**
+
+```json
+{
+  "title": "La fecha de transacción está fuera del período del extracto.",
+  "detail": "Una fecha de transacción queda fuera del período del extracto.",
+  "code": "BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD"
+}
+```
+
+**Diagnóstico (interno — no destinado a exposición externa)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [BankTransactionFileValidator] Transaction dated 2024-02-02 is outside the statement period [2024-01-05;2024-01-31]. error.code=BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD
+```
 
 #### Contexto
 
@@ -99,7 +127,21 @@ Este error se produce al intentar validar un archivo de extracto bancario cuyo i
 
 #### Ejemplos
 
-- El importe total declarado del extracto (1250 EUR) no coincide con el importe total calculado a partir de las transacciones (1249.5 EUR). _(Discrepancia del importe total del extracto.)_
+**Respuesta pública (RFC 9457)**
+
+```json
+{
+  "title": "Discrepancia del importe total del extracto.",
+  "detail": "El total declarado del extracto no coincide con el total calculado.",
+  "code": "BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH"
+}
+```
+
+**Diagnóstico (interno — no destinado a exposición externa)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [BankTransactionFileValidator] The declared statement total amount (1250 EUR) does not match the computed total amount from transactions (1249.5 EUR). error.code=BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH
+```
 
 <a id="src-exchange-rate-provider"></a>
 
@@ -125,7 +167,21 @@ Este error se produce cuando no se puede contactar con el proveedor externo de t
 
 #### Ejemplos
 
-- El proveedor de tipos de cambio «acme-fx» no está disponible (correlación 22222222-2222-2222-2222-222222222222). _(Servicio de tipos de cambio no disponible.)_
+**Respuesta pública (RFC 9457)**
+
+```json
+{
+  "title": "Servicio de tipos de cambio no disponible.",
+  "detail": "El servicio de tipos de cambio no está disponible temporalmente; inténtelo de nuevo más tarde.",
+  "code": "EXCHANGE_RATE_SERVICE_UNAVAILABLE"
+}
+```
+
+**Diagnóstico (interno — no destinado a exposición externa)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [ExchangeRateProvider] The exchange-rate provider 'acme-fx' is unavailable (correlation 22222222-2222-2222-2222-222222222222). error.code=EXCHANGE_RATE_SERVICE_UNAVAILABLE
+```
 
 #### Contexto
 
@@ -151,7 +207,21 @@ Este error se produce cuando el proveedor de tipos de cambio no cotiza un tipo p
 
 #### Ejemplos
 
-- El proveedor de tipos de cambio no cotiza el par de divisas EUR a USD. _(Par de divisas no admitido.)_
+**Respuesta pública (RFC 9457)**
+
+```json
+{
+  "title": "Par de divisas no admitido.",
+  "detail": "El par de divisas solicitado no es compatible.",
+  "code": "UNSUPPORTED_CURRENCY_PAIR"
+}
+```
+
+**Diagnóstico (interno — no destinado a exposición externa)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [ExchangeRateProvider] The exchange-rate provider does not quote the EUR to USD currency pair. error.code=UNSUPPORTED_CURRENCY_PAIR
+```
 
 #### Contexto
 
@@ -183,7 +253,21 @@ Este error se produce cuando el endpoint de subida de extractos recibe una solic
 
 #### Ejemplos
 
-- La solicitud de subida de extracto 11111111-1111-1111-1111-111111111111 está mal formada: falta el campo «statementPeriod» o no es válido. _(Carga útil de extracto mal formada.)_
+**Respuesta pública (RFC 9457)**
+
+```json
+{
+  "title": "Carga útil de extracto mal formada.",
+  "detail": "La solicitud de extracto subida omite un campo obligatorio o contiene un valor no válido.",
+  "code": "MALFORMED_STATEMENT_PAYLOAD"
+}
+```
+
+**Diagnóstico (interno — no destinado a exposición externa)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [StatementUploadEndpoint] The statement upload request 11111111-1111-1111-1111-111111111111 is malformed: the 'statementPeriod' field is missing or invalid. error.code=MALFORMED_STATEMENT_PAYLOAD
+```
 
 #### Contexto
 
@@ -209,7 +293,21 @@ Este error se produce cuando llegan demasiadas subidas de extractos en un interv
 
 #### Ejemplos
 
-- La solicitud de subida de extracto 11111111-1111-1111-1111-111111111111 se limitó por frecuencia; reintente tras 30 segundos. _(Subida de extracto con límite de frecuencia.)_
+**Respuesta pública (RFC 9457)**
+
+```json
+{
+  "title": "Subida de extracto con límite de frecuencia.",
+  "detail": "Se enviaron demasiadas subidas de extractos en poco tiempo; inténtelo de nuevo más tarde.",
+  "code": "STATEMENT_UPLOAD_RATE_LIMITED"
+}
+```
+
+**Diagnóstico (interno — no destinado a exposición externa)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [StatementUploadEndpoint] The statement upload request 11111111-1111-1111-1111-111111111111 was rate-limited; retry after 30 seconds. error.code=STATEMENT_UPLOAD_RATE_LIMITED
+```
 
 #### Contexto
 
@@ -240,7 +338,21 @@ Este error se produce cuando se solicita una transferencia con un importe cero o
 
 #### Ejemplos
 
-- No se puede transferir -25 EUR: el importe debe ser estrictamente positivo. _(El importe de la transferencia debe ser positivo.)_
+**Respuesta pública (RFC 9457)**
+
+```json
+{
+  "title": "El importe de la transferencia debe ser positivo.",
+  "detail": "El importe de la transferencia debe ser mayor que cero.",
+  "code": "MONEY_TRANSFER_AMOUNT_NOT_POSITIVE"
+}
+```
+
+**Diagnóstico (interno — no destinado a exposición externa)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [MoneyTransfer] Cannot transfer -25 EUR: the amount must be strictly positive. error.code=MONEY_TRANSFER_AMOUNT_NOT_POSITIVE
+```
 
 #### Contexto
 
@@ -265,7 +377,21 @@ Este error agrupa todas las reglas de dominio incumplidas al validar una transfe
 
 #### Ejemplos
 
-- La transferencia no es válida: incumple una o varias reglas de dominio. _(Transferencia no válida.)_
+**Respuesta pública (RFC 9457)**
+
+```json
+{
+  "title": "Transferencia no válida.",
+  "detail": "La transferencia no cumple todas las reglas requeridas.",
+  "code": "MONEY_TRANSFER_INVALID"
+}
+```
+
+**Diagnóstico (interno — no destinado a exposición externa)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [MoneyTransfer] The money transfer is invalid: it violates one or more domain rules. error.code=MONEY_TRANSFER_INVALID
+```
 
 <a id="src-temperature"></a>
 
@@ -294,6 +420,35 @@ This error occurs when trying to instantiate a temperature with a value that is 
 
 #### Ejemplos
 
-- Failed to instantiate temperature: the value -1 K is below absolute zero. _(Temperature is below absolute zero.)_
-- Failed to instantiate temperature: the value -280 °C is below absolute zero. _(Temperature is below absolute zero.)_
+**Respuesta pública (RFC 9457)**
+
+```json
+{
+  "title": "Temperature is invalid.",
+  "detail": "The temperature -1 K is below absolute zero.",
+  "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"
+}
+```
+
+**Diagnóstico (interno — no destinado a exposición externa)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [Temperature] Failed to instantiate temperature: the value -1 K is below absolute zero. error.code=TEMPERATURE_BELOW_ABSOLUTE_ZERO
+```
+
+**Respuesta pública (RFC 9457)**
+
+```json
+{
+  "title": "Temperature is invalid.",
+  "detail": "The temperature -280 °C is below absolute zero.",
+  "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"
+}
+```
+
+**Diagnóstico (interno — no destinado a exposición externa)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [Temperature] Failed to instantiate temperature: the value -280 °C is below absolute zero. error.code=TEMPERATURE_BELOW_ABSOLUTE_ZERO
+```
 

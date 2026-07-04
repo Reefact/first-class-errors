@@ -19,11 +19,12 @@ public static class InvalidAmountOperationError {
 
     [DocumentedBy(nameof(CurrencyMismatchDocumentation))]
     internal static DomainError CurrencyMismatch(Amount amount1, Amount amount2) {
-        return new DomainError(
-            Code.CurrencyMismatch,
-            DocumentationFormatter.Format(UsageErrorMessages.Get("Amount_CurrencyMismatch_Message"), amount1, amount2),
-            UsageErrorMessages.Get("Amount_CurrencyMismatch_ShortMessage")
-        );
+        return DomainError.Create(
+                              Code.CurrencyMismatch,
+                              DocumentationFormatter.Format("Failed to perform the monetary operation because the involved amounts are expressed in different currencies: {0} and {1}.", amount1, amount2))
+                          .WithPublicMessage(
+                              UsageErrorMessages.Get("Amount_CurrencyMismatch_ShortMessage"),
+                              UsageErrorMessages.Get("Amount_CurrencyMismatch_DetailedMessage"));
     }
 
     private static ErrorDocumentation CurrencyMismatchDocumentation() {

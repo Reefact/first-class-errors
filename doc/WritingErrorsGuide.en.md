@@ -161,6 +161,18 @@ Avoid leaking:
 * framework details
 * internal class names
 
+## 🗂️ 10. The three messages an error carries
+
+The elements above describe the **documentation** of an error. In addition, each factory sets the three messages the error carries at runtime, through the staged builder `Type.Create(code, diagnosticMessage, …).WithPublicMessage(shortMessage, detailedMessage)`:
+
+| Message             | Mandatory | Audience                | Exposure                                                                                             |
+| ------------------- | --------- | ----------------------- | ---------------------------------------------------------------------------------------------------- |
+| `ShortMessage`      | Yes       | End users / API clients | Safe public summary (e.g. an RFC 9457 `title`).                                                       |
+| `DetailedMessage`   | No        | End users / API clients | Controlled public detail, exposed only when the application chooses to (e.g. an RFC 9457 `detail`); never sensitive or internal. |
+| `DiagnosticMessage` | Yes       | Logs, support, devs     | Internal diagnostic detail (identifiers, offending values, internal state); never exposed to external clients by default. |
+
+Keep the diagnostic message rich and technical; keep the public messages safe and free of internal detail. `error.ToException()` uses the diagnostic message as the exception's `Message`.
+
 ## 🏁 Summary
 
 When writing errors:
@@ -168,6 +180,9 @@ When writing errors:
 | Element       | Purpose                  |
 | ------------- | ------------------------ |
 | Error code    | Stable identifier        |
+| Short message | Safe public summary      |
+| Detailed message | Controlled public detail (optional) |
+| Diagnostic message | Internal, for logs and support |
 | Title         | Short human summary      |
 | Description   | What the error means     |
 | Rule          | The violated invariant   |

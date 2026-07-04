@@ -73,9 +73,6 @@
   <data name="Amount_CurrencyMismatch_Rule" xml:space="preserve">
     <value>Alle monetären Operationen müssen Beträge in derselben Währung betreffen.</value>
   </data>
-  <data name="Amount_CurrencyMismatch_Message" xml:space="preserve">
-    <value>Die monetäre Operation ist fehlgeschlagen, da die beteiligten Beträge in unterschiedlichen Währungen ausgedrückt sind: {0} und {1}.</value>
-  </data>
   <data name="Amount_CurrencyMismatch_ShortMessage" xml:space="preserve">
     <value>Währungskonflikt</value>
   </data>
@@ -99,9 +96,6 @@
   </data>
   <data name="Bank_DateOutOfPeriod_Rule" xml:space="preserve">
     <value>Alle Transaktionen müssen innerhalb des Auszugszeitraums stattfinden.</value>
-  </data>
-  <data name="Bank_DateOutOfPeriod_Message" xml:space="preserve">
-    <value>Die auf {0} datierte Transaktion liegt außerhalb des Auszugszeitraums [{1};{2}].</value>
   </data>
   <data name="Bank_DateOutOfPeriod_ShortMessage" xml:space="preserve">
     <value>Das Transaktionsdatum liegt außerhalb des Auszugszeitraums.</value>
@@ -138,9 +132,6 @@
   </data>
   <data name="Bank_TotalMismatch_Rule" xml:space="preserve">
     <value>Der Gesamtbetrag des Auszugs muss der Summe aller im Auszug enthaltenen Transaktionsbeträge entsprechen.</value>
-  </data>
-  <data name="Bank_TotalMismatch_Message" xml:space="preserve">
-    <value>Der deklarierte Gesamtbetrag des Auszugs ({0}) stimmt nicht mit dem aus den Transaktionen berechneten Gesamtbetrag ({1}) überein.</value>
   </data>
   <data name="Bank_TotalMismatch_ShortMessage" xml:space="preserve">
     <value>Abweichung des Gesamtbetrags des Auszugs.</value>
@@ -193,9 +184,6 @@
   <data name="MoneyTransfer_AmountNotPositive_ShortMessage" xml:space="preserve">
     <value>Der Überweisungsbetrag muss positiv sein.</value>
   </data>
-  <data name="MoneyTransfer_AmountNotPositive_Message" xml:space="preserve">
-    <value>{0} kann nicht überwiesen werden: Der Betrag muss strikt positiv sein.</value>
-  </data>
   <data name="MoneyTransfer_Invalid_Title" xml:space="preserve">
     <value>Ungültige Geldüberweisung</value>
   </data>
@@ -213,9 +201,6 @@
   </data>
   <data name="MoneyTransfer_Invalid_ShortMessage" xml:space="preserve">
     <value>Ungültige Überweisung.</value>
-  </data>
-  <data name="MoneyTransfer_Invalid_Message" xml:space="preserve">
-    <value>Die Überweisung ist ungültig: Sie verletzt eine oder mehrere Domänenregeln.</value>
   </data>
   <data name="MoneyTransfer_TransferAmount_Context" xml:space="preserve">
     <value>Der Geldbetrag der versuchten Überweisung.</value>
@@ -241,9 +226,6 @@
   <data name="StatementUpload_Malformed_ShortMessage" xml:space="preserve">
     <value>Fehlerhafte Auszugsnutzlast.</value>
   </data>
-  <data name="StatementUpload_Malformed_Message" xml:space="preserve">
-    <value>Die Auszugs-Upload-Anfrage {0} ist fehlerhaft: Das Feld „{1}“ fehlt oder ist ungültig.</value>
-  </data>
   <data name="StatementUpload_RateLimited_Title" xml:space="preserve">
     <value>Auszug-Upload gedrosselt</value>
   </data>
@@ -261,9 +243,6 @@
   </data>
   <data name="StatementUpload_RateLimited_ShortMessage" xml:space="preserve">
     <value>Auszug-Upload gedrosselt.</value>
-  </data>
-  <data name="StatementUpload_RateLimited_Message" xml:space="preserve">
-    <value>Die Auszug-Upload-Anfrage {0} wurde gedrosselt; versuchen Sie es nach {1} Sekunden erneut.</value>
   </data>
   <data name="StatementUpload_RequestId_Context" xml:space="preserve">
     <value>Die Kennung der eingehenden Anfrage.</value>
@@ -298,9 +277,6 @@
   <data name="ExchangeRate_ServiceUnavailable_ShortMessage" xml:space="preserve">
     <value>Wechselkursdienst nicht verfügbar.</value>
   </data>
-  <data name="ExchangeRate_ServiceUnavailable_Message" xml:space="preserve">
-    <value>Der Wechselkursanbieter „{0}“ ist nicht verfügbar (Korrelation {1}).</value>
-  </data>
   <data name="ExchangeRate_UnsupportedPair_Title" xml:space="preserve">
     <value>Nicht unterstütztes Währungspaar</value>
   </data>
@@ -319,9 +295,6 @@
   <data name="ExchangeRate_UnsupportedPair_ShortMessage" xml:space="preserve">
     <value>Nicht unterstütztes Währungspaar.</value>
   </data>
-  <data name="ExchangeRate_UnsupportedPair_Message" xml:space="preserve">
-    <value>Der Wechselkursanbieter notiert das Währungspaar {0} zu {1} nicht.</value>
-  </data>
   <data name="ExchangeRate_Provider_Context" xml:space="preserve">
     <value>Der externe Anbieter, der aufgerufen wurde.</value>
   </data>
@@ -333,5 +306,32 @@
   </data>
   <data name="ExchangeRate_ToCurrency_Context" xml:space="preserve">
     <value>Die Zielwährung der Umrechnung.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_DetailedMessage" xml:space="preserve">
+    <value>Die beiden Beträge verwenden unterschiedliche Währungen und können nicht kombiniert werden.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_DetailedMessage" xml:space="preserve">
+    <value>Ein Transaktionsdatum liegt außerhalb des Auszugszeitraums.</value>
+  </data>
+  <data name="Bank_TotalMismatch_DetailedMessage" xml:space="preserve">
+    <value>Der angegebene Auszugsgesamtbetrag stimmt nicht mit dem berechneten Gesamtbetrag überein.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_DetailedMessage" xml:space="preserve">
+    <value>Der Überweisungsbetrag muss größer als null sein.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_DetailedMessage" xml:space="preserve">
+    <value>Die Überweisung erfüllt nicht alle erforderlichen Regeln.</value>
+  </data>
+  <data name="StatementUpload_Malformed_DetailedMessage" xml:space="preserve">
+    <value>Der hochgeladenen Auszugsanfrage fehlt ein Pflichtfeld oder sie enthält einen ungültigen Wert.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_DetailedMessage" xml:space="preserve">
+    <value>Es wurden zu viele Auszug-Uploads in kurzer Zeit gesendet; bitte versuchen Sie es später erneut.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_DetailedMessage" xml:space="preserve">
+    <value>Der Wechselkursdienst ist vorübergehend nicht verfügbar; bitte versuchen Sie es später erneut.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_DetailedMessage" xml:space="preserve">
+    <value>Das angeforderte Währungspaar wird nicht unterstützt.</value>
   </data>
 </root>

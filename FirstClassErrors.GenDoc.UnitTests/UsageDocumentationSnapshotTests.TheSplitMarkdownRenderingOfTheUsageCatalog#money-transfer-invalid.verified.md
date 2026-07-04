@@ -13,5 +13,19 @@ This error aggregates every domain rule violated while validating a money transf
 
 ## Examples
 
-- The money transfer is invalid: it violates one or more domain rules. _(Invalid money transfer.)_
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Invalid money transfer.",
+  "detail": "The money transfer does not satisfy all the required rules.",
+  "code": "MONEY_TRANSFER_INVALID"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [MoneyTransfer] The money transfer is invalid: it violates one or more domain rules. error.code=MONEY_TRANSFER_INVALID
+```
 

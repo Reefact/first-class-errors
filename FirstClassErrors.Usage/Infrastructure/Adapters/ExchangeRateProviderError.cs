@@ -21,28 +21,32 @@ public static class ExchangeRateProviderError {
 
     [DocumentedBy(nameof(ServiceUnavailableDocumentation))]
     internal static SecondaryPortError ServiceUnavailable(string provider, Guid correlationId) {
-        return new SecondaryPortError(
-            Code.ServiceUnavailable,
-            DocumentationFormatter.Format(UsageErrorMessages.Get("ExchangeRate_ServiceUnavailable_Message"), provider, correlationId),
-            Transience.Transient,
-            UsageErrorMessages.Get("ExchangeRate_ServiceUnavailable_ShortMessage"),
-            ctx => {
-                ctx.Add(ErrCtxKey.Provider, provider);
-                ctx.Add(ErrCtxKey.CorrelationId, correlationId);
-            });
+        return SecondaryPortError.Create(
+                                     Code.ServiceUnavailable,
+                                     DocumentationFormatter.Format("The exchange-rate provider '{0}' is unavailable (correlation {1}).", provider, correlationId),
+                                     Transience.Transient,
+                                     ctx => {
+                                         ctx.Add(ErrCtxKey.Provider, provider);
+                                         ctx.Add(ErrCtxKey.CorrelationId, correlationId);
+                                     })
+                                 .WithPublicMessage(
+                                     UsageErrorMessages.Get("ExchangeRate_ServiceUnavailable_ShortMessage"),
+                                     UsageErrorMessages.Get("ExchangeRate_ServiceUnavailable_DetailedMessage"));
     }
 
     [DocumentedBy(nameof(UnsupportedCurrencyPairDocumentation))]
     internal static SecondaryPortError UnsupportedCurrencyPair(Currency from, Currency to) {
-        return new SecondaryPortError(
-            Code.UnsupportedCurrencyPair,
-            DocumentationFormatter.Format(UsageErrorMessages.Get("ExchangeRate_UnsupportedPair_Message"), from, to),
-            Transience.NonTransient,
-            UsageErrorMessages.Get("ExchangeRate_UnsupportedPair_ShortMessage"),
-            ctx => {
-                ctx.Add(ErrCtxKey.FromCurrency, from);
-                ctx.Add(ErrCtxKey.ToCurrency, to);
-            });
+        return SecondaryPortError.Create(
+                                     Code.UnsupportedCurrencyPair,
+                                     DocumentationFormatter.Format("The exchange-rate provider does not quote the {0} to {1} currency pair.", from, to),
+                                     Transience.NonTransient,
+                                     ctx => {
+                                         ctx.Add(ErrCtxKey.FromCurrency, from);
+                                         ctx.Add(ErrCtxKey.ToCurrency, to);
+                                     })
+                                 .WithPublicMessage(
+                                     UsageErrorMessages.Get("ExchangeRate_UnsupportedPair_ShortMessage"),
+                                     UsageErrorMessages.Get("ExchangeRate_UnsupportedPair_DetailedMessage"));
     }
 
     private static ErrorDocumentation ServiceUnavailableDocumentation() {
