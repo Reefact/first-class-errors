@@ -62,6 +62,10 @@ FCE013  | FirstClassErrors.DocumentationContent| Warning  | ExampleDoesNotCallDo
 >>>>>>> 6b9bac398957700cc935135cb9decc007d4cdf60
 =======
 FCE014  | FirstClassErrors.DocumentationContent| Info     | ShortMessageSameAsDetailedMessageAnalyzer
+<<<<<<< 257dc34cc90bcf323082afeceee0af40210cc29a
 >>>>>>> 33f2b6c0380c98d5a9cc87d3fa834786017363cf
+=======
+FCE015  | FirstClassErrors.DocumentationContent| Info     | DocumentationTitleTooGenericAnalyzer (disabled by default)
+>>>>>>> 60c027495ed52dfaf11feee3b82122d063fe82b8
 FCE016  | FirstClassErrors.Usage               | Warning  | UnusedToExceptionResultAnalyzer
 >>>>>>> e82f3b87253ce42f9e0497e6d8a41054cd608b17
