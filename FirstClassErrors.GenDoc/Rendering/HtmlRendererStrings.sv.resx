@@ -76,45 +76,6 @@
   <data name="NoResults" xml:space="preserve">
     <value>Inga matchande fel.</value>
   </data>
-  <data name="FiltersLabel" xml:space="preserve">
-    <value>Filter</value>
-  </data>
-  <data name="AllSources" xml:space="preserve">
-    <value>Alla källor</value>
-  </data>
-  <data name="WithDetailFilter" xml:space="preserve">
-    <value>Med publik detalj</value>
-  </data>
-  <data name="CodeColumn" xml:space="preserve">
-    <value>Kod</value>
-  </data>
-  <data name="SummaryColumn" xml:space="preserve">
-    <value>Publik sammanfattning</value>
-  </data>
-  <data name="SourceColumn" xml:space="preserve">
-    <value>Källa</value>
-  </data>
-  <data name="DetailColumn" xml:space="preserve">
-    <value>Detalj</value>
-  </data>
-  <data name="ExamplesColumn" xml:space="preserve">
-    <value>Exempel</value>
-  </data>
-  <data name="YesLabel" xml:space="preserve">
-    <value>Ja</value>
-  </data>
-  <data name="PublicSummaryHeading" xml:space="preserve">
-    <value>Publik sammanfattning</value>
-  </data>
-  <data name="PublicDetailHeading" xml:space="preserve">
-    <value>Publik detalj</value>
-  </data>
-  <data name="DiagnosticHeading" xml:space="preserve">
-    <value>Internt diagnostikmeddelande</value>
-  </data>
-  <data name="DiagnosticNote" xml:space="preserve">
-    <value>Internt — inte avsett för externa klienter eller HTTP-svar.</value>
-  </data>
   <data name="DocumentationHeading" xml:space="preserve">
     <value>Dokumentation</value>
   </data>
@@ -123,9 +84,6 @@
   </data>
   <data name="DiagnosticsHeading" xml:space="preserve">
     <value>Diagnostik</value>
-  </data>
-  <data name="OriginLabel" xml:space="preserve">
-    <value>ursprung:</value>
   </data>
   <data name="ExamplesHeading" xml:space="preserve">
     <value>Exempel</value>

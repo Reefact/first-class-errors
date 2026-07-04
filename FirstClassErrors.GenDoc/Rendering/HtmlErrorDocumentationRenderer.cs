@@ -347,14 +347,15 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
     }
 
     private static IReadOnlyList<Group> GroupBySource(IReadOnlyList<Entry> entries) {
-        List<Group>               groups = [];
-        Dictionary<string, Group> byKey  = new(StringComparer.Ordinal);
+        List<Group>               groups      = [];
+        Dictionary<string, Group> byKey       = new(StringComparer.Ordinal);
+        HashSet<string>           usedAnchors = new(StringComparer.OrdinalIgnoreCase);
 
         // Group by source (ProvidesErrorsFor target), preserving first-seen order of both groups and errors.
         foreach (Entry entry in entries) {
             string source = entry.Source ?? "Other";
             if (byKey.TryGetValue(source, out Group? group) is false) {
-                group = new Group(source, "src-" + SafeStem(source), []);
+                group = new Group(source, UniqueAnchor(source, usedAnchors), []);
                 byKey[source] = group;
                 groups.Add(group);
             }
@@ -363,6 +364,21 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         }
 
         return groups;
+    }
+
+    /// <summary>Builds a unique <c>src-…</c> anchor for a source name (distinct names that share a stem stay distinct).</summary>
+    private static string UniqueAnchor(string source, HashSet<string> used) {
+        string stem = SafeStem(source);
+        if (stem.Length == 0) { stem = "group"; }
+
+        string anchor = "src-" + stem;
+        int    suffix = 2;
+        while (used.Add(anchor) is false) {
+            anchor = $"src-{stem}-{suffix}";
+            suffix++;
+        }
+
+        return anchor;
     }
 
     private static string BuildSearchIndex(IReadOnlyList<Entry> entries) {
