@@ -14,4 +14,5 @@ FCE009  | FirstClassErrors.DocumentationWiring | Warning  | ErrorFactoryNotDocum
 FCE010  | FirstClassErrors.DocumentationWiring | Warning  | MultipleFactoriesShareDocumentationAnalyzer
 FCE011  | FirstClassErrors.DocumentationContent| Error    | DuplicateDocumentedCodeAnalyzer
 FCE012  | FirstClassErrors.DocumentationContent| Warning  | EmptyExamplesAnalyzer
+FCE013  | FirstClassErrors.DocumentationContent| Warning  | ExampleDoesNotCallDocumentedFactoryAnalyzer
 FCE016  | FirstClassErrors.Usage               | Warning  | UnusedToExceptionResultAnalyzer

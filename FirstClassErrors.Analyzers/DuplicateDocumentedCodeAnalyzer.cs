@@ -48,7 +48,7 @@ public sealed class DuplicateDocumentedCodeAnalyzer : DiagnosticAnalyzer {
         if (!SymbolFacts.HasAttribute(method, symbols.DocumentedByAttribute!)) { return; }
 
         foreach (IOperation block in context.OperationBlocks) {
-            foreach (IOperation operation in EnumerateOperations(block)) {
+            foreach (IOperation operation in OperationFacts.EnumerateOperations(block)) {
                 if (operation is not IInvocationOperation invocation) { continue; }
                 if (invocation.TargetMethod.Name != CreateMethodName) { continue; }
                 if (!SymbolFacts.IsOrInheritsFrom(invocation.TargetMethod.ContainingType, symbols.Error!)) { continue; }
@@ -60,22 +60,6 @@ public sealed class DuplicateDocumentedCodeAnalyzer : DiagnosticAnalyzer {
                 }
 
                 return; // the outermost error-factory Create identifies the produced code
-            }
-        }
-    }
-
-    // Pre-order (ancestor-before-descendant) walk over the operation tree; the outermost Error.Create is reached
-    // before any inner-error Create it may wrap.
-    private static IEnumerable<IOperation> EnumerateOperations(IOperation root) {
-        Stack<IOperation> pending = new();
-        pending.Push(root);
-
-        while (pending.Count > 0) {
-            IOperation current = pending.Pop();
-            yield return current;
-
-            foreach (IOperation child in current.ChildOperations) {
-                pending.Push(child);
             }
         }
     }
