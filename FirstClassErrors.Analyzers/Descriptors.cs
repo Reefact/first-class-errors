@@ -99,4 +99,25 @@ internal static class Descriptors {
         description: "Examples expose the real messages an error produces; calling WithExamples with no factory yields documentation that shows none.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.EmptyExamples));
 
+    public static readonly DiagnosticDescriptor DuplicateDocumentedCode = new(
+        id: DiagnosticIds.DuplicateDocumentedCode,
+        title: "Duplicate documented error code",
+        messageFormat: "Error code '{0}' is produced by more than one documented factory; documentation extraction keeps only one of them",
+        category: DiagnosticCategories.DocumentationContent,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "Documentation extraction groups by error code and keeps a single entry per code. Two documented factories that share the same code field silently collapse to one in the catalog.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.DuplicateDocumentedCode),
+        customTags: new[] { WellKnownDiagnosticTags.CompilationEnd });
+
+    public static readonly DiagnosticDescriptor ExampleDoesNotCallDocumentedFactory = new(
+        id: DiagnosticIds.ExampleDoesNotCallDocumentedFactory,
+        title: "Documentation example does not construct the documented error",
+        messageFormat: "This example does not call any factory of '{0}'; an example should build the error it documents",
+        category: DiagnosticCategories.DocumentationContent,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Examples are meant to expose the real messages of the documented error, so each should invoke a factory of the type that declares the documentation.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.ExampleDoesNotCallDocumentedFactory));
+
 }
