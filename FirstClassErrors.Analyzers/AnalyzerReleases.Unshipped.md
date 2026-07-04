@@ -4,5 +4,6 @@
 ### New Rules
 
 Rule ID | Category | Severity | Notes
---------|-----------------------------|----------|-------------------------
-FCE002  | FirstClassErrors.ErrorCodes | Error    | EmptyErrorCodeAnalyzer
+--------|--------------------------------------|----------|-------------------------------------
+FCE002  | FirstClassErrors.ErrorCodes          | Error    | EmptyErrorCodeAnalyzer
+FCE006  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByTargetNotFoundAnalyzer
