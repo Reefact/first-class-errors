@@ -193,12 +193,12 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
     /// <summary>
     ///     Builds the public, exposable RFC 9457 (<c>problem+json</c>) representation of an example, using only the
     ///     controlled public messages — never the diagnostic message. <c>detail</c> is omitted when there is no public
-    ///     detail. No HTTP <c>status</c> is emitted: the core model is HTTP-agnostic and the application maps it.
+    ///     detail. Neither <c>type</c> nor <c>status</c> is emitted: both are the application's concern (an absent
+    ///     <c>type</c> defaults to <c>about:blank</c> per RFC 9457 §4.1, and the core model is HTTP-agnostic).
     /// </summary>
     private static string ProblemDetailsJson(ErrorDescription example, string? code) {
         StringBuilder json = new();
         json.Append("{\n");
-        json.Append("  \"type\": \"about:blank\",\n");
         json.Append($"  \"title\": \"{JsonString(example.ShortMessage)}\"");
         if (string.IsNullOrWhiteSpace(example.DetailedMessage) is false) {
             json.Append($",\n  \"detail\": \"{JsonString(example.DetailedMessage!)}\"");
