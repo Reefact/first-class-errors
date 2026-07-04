@@ -19,4 +19,5 @@ FCE011  | FirstClassErrors.DocumentationContent| Error    | DuplicateDocumentedC
 FCE012  | FirstClassErrors.DocumentationContent| Warning  | EmptyExamplesAnalyzer
 FCE013  | FirstClassErrors.DocumentationContent| Warning  | ExampleDoesNotCallDocumentedFactoryAnalyzer
 FCE014  | FirstClassErrors.DocumentationContent| Info     | ShortMessageSameAsDetailedMessageAnalyzer
+FCE015  | FirstClassErrors.DocumentationContent| Info     | DocumentationTitleTooGenericAnalyzer (disabled by default)
 FCE016  | FirstClassErrors.Usage               | Warning  | UnusedToExceptionResultAnalyzer

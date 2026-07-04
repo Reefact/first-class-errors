@@ -160,4 +160,12 @@ internal static class Descriptors {
         description: "The short message is a public summary and the detailed message an optional public detail; making them identical usually signals a copy-paste.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.ShortMessageSameAsDetailedMessage));
 
-}
+    public static readonly DiagnosticDescriptor DocumentationTitleTooGeneric = new(
+        id: DiagnosticIds.DocumentationTitleTooGeneric,
+        title: "Documentation title is too generic",
+        messageFormat: "Documentation title '{0}' is too generic; state what the error is",
+        category: DiagnosticCategories.DocumentationContent,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: false,
+        description: "A title such as \"Error\" or \"Invalid value\" tells the reader nothing. A good title names the condition (e.g. \"Temperature below absolute zero\"). Opt-in.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.DocumentationTitleTooGeneric));
