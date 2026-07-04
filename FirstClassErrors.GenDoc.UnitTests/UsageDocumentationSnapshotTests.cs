@@ -1,5 +1,7 @@
 #region Usings declarations
 
+using System.Globalization;
+
 using FirstClassErrors.GenDoc.Rendering;
 using FirstClassErrors.Usage.Model;
 
@@ -24,8 +26,20 @@ public sealed class UsageDocumentationSnapshotTests {
 
     #region Statics members declarations
 
+    // The Usage catalog is now localized, so the snapshots pin the invariant (English) culture to stay deterministic
+    // regardless of the machine's culture.
     private static ErrorDocumentationExtractionResult Extract() {
-        return AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(typeof(Temperature).Assembly);
+        return ExtractFor(CultureInfo.InvariantCulture);
+    }
+
+    private static ErrorDocumentationExtractionResult ExtractFor(CultureInfo culture) {
+        CultureInfo previous = CultureInfo.CurrentUICulture;
+        CultureInfo.CurrentUICulture = culture;
+        try {
+            return AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(typeof(Temperature).Assembly);
+        } finally {
+            CultureInfo.CurrentUICulture = previous;
+        }
     }
 
     #endregion
@@ -37,14 +51,14 @@ public sealed class UsageDocumentationSnapshotTests {
 
     [Fact(DisplayName = "The JSON rendering of the Usage catalog matches its snapshot.")]
     public async Task TheJsonRenderingOfTheUsageCatalog() {
-        string json = new JsonErrorDocumentationRenderer().Render(Extract().Documentation)[0].Content;
+        string json = new JsonErrorDocumentationRenderer().Render(Extract().Documentation, new RenderRequest(RenderLayouts.Single))[0].Content;
 
         await Verifier.Verify(json, extension: "json");
     }
 
     [Fact(DisplayName = "The single-file Markdown rendering of the Usage catalog matches its snapshot.")]
     public async Task TheSingleMarkdownRenderingOfTheUsageCatalog() {
-        string markdown = new MarkdownErrorDocumentationRenderer(MarkdownLayout.Single).Render(Extract().Documentation)[0].Content;
+        string markdown = new MarkdownErrorDocumentationRenderer().Render(Extract().Documentation, new RenderRequest(RenderLayouts.Single))[0].Content;
 
         await Verifier.Verify(markdown, extension: "md");
     }
@@ -52,7 +66,7 @@ public sealed class UsageDocumentationSnapshotTests {
     [Fact(DisplayName = "Each file of the split Markdown rendering of the Usage catalog matches its snapshot.")]
     public async Task TheSplitMarkdownRenderingOfTheUsageCatalog() {
         IReadOnlyList<RenderedDocument> documents =
-            new MarkdownErrorDocumentationRenderer(MarkdownLayout.Split).Render(Extract().Documentation);
+            new MarkdownErrorDocumentationRenderer().Render(Extract().Documentation, new RenderRequest(RenderLayouts.Split));
 
         // A single Verify call that emits one snapshot file per produced document (each file its own pure Markdown,
         // no wrapper). A per-document loop would not work: the first Verify throws on a missing snapshot and aborts
@@ -62,6 +76,26 @@ public sealed class UsageDocumentationSnapshotTests {
                             .ToList();
 
         await Verifier.Verify(files);
+    }
+
+    // A true end-to-end check of the translations: the catalog is extracted AND rendered under each culture, so one
+    // snapshot per language captures both the localized templates (headings and labels, from MarkdownRendererStrings)
+    // and the localized error content (descriptions, from the .Usage resources). A passing case also proves that
+    // language's satellite assemblies are built and loaded. Temperature stays plain (English) in every language, since
+    // it opts out of i18n; Amount and BankTransactionFileValidator are translated.
+    [Theory(DisplayName = "The Markdown rendering of the Usage catalog is localized per language.")]
+    [InlineData("fr")]
+    [InlineData("es")]
+    [InlineData("de")]
+    [InlineData("sv")]
+    public async Task TheLocalizedMarkdownRenderingOfTheUsageCatalog(string culture) {
+        CultureInfo cultureInfo = CultureInfo.GetCultureInfo(culture);
+
+        string markdown = new MarkdownErrorDocumentationRenderer()
+                         .Render(ExtractFor(cultureInfo).Documentation, new RenderRequest(RenderLayouts.Single, cultureInfo))[0]
+                         .Content;
+
+        await Verifier.Verify(markdown, extension: "md").UseParameters(culture);
     }
 
 }

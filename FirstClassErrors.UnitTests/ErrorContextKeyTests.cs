@@ -49,6 +49,27 @@ public class ErrorContextKeyTests : IDisposable {
         Check.That(key.Description).IsEqualTo(description);
     }
 
+    [Fact(DisplayName = "A key's description provider is resolved on each read (not cached).")]
+    public void AKeyDescriptionProviderIsResolvedOnEachRead() {
+        // Setup: a provider whose result changes, proving the description follows the current state (e.g. the current
+        // UI culture) rather than being frozen at creation.
+        string                  current = "first";
+        ErrorContextKey<string> key     = ErrorContextKey.Create<string>("LazyDesc", () => current);
+
+        // Verify
+        Check.That(key.Description).IsEqualTo("first");
+
+        current = "second";
+        Check.That(key.Description).IsEqualTo("second");
+    }
+
+    [Fact(DisplayName = "A key cannot be created with a null description provider.")]
+    public void AKeyCannotBeCreatedWithANullDescriptionProvider() {
+        // Exercise & verify
+        Check.ThatCode(() => ErrorContextKey.Create<string>("K", (Func<string?>)null!))
+             .Throws<ArgumentNullException>();
+    }
+
     [Theory(DisplayName = "Registering a key with a null or blank name is rejected.")]
     [InlineData(null)]
     [InlineData("")]

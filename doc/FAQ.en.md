@@ -142,6 +142,6 @@ can use this library.
 
 ---
 
-Previous section: [Architecture of the Documentation Pipeline](ArchitectureOfTheDocumentationPipeline.en.md)
+Previous section: [Internationalization](Internationalization.en.md)
 
 ---

@@ -20,6 +20,19 @@ public sealed class ProvidesErrorsForAttributeTests {
         Check.That(attribute.Source).IsEqualTo("Model");
     }
 
+    [Fact(DisplayName = "A provides-errors-for attribute preserves its description and resource type.")]
+    public void AProvidesErrorsForAttributePreservesItsDescriptionAndResourceType() {
+        // Exercise
+        ProvidesErrorsForAttribute attribute = new("Model") {
+            Description             = "Model_Source",
+            DescriptionResourceType = typeof(ProvidesErrorsForAttributeTests)
+        };
+
+        // Verify
+        Check.That(attribute.Description).IsEqualTo("Model_Source");
+        Check.That(attribute.DescriptionResourceType).IsEqualTo(typeof(ProvidesErrorsForAttributeTests));
+    }
+
     [Fact(DisplayName = "A provides-errors-for attribute cannot be created from a null source.")]
     public void AProvidesErrorsForAttributeCannotBeCreatedFromANullSource() {
         // Exercise & verify

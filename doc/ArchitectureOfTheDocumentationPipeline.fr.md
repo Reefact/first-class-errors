@@ -28,9 +28,11 @@ public static class InvalidTemperatureError { ... }
 Cet attribut est le point d’ancrage principal du modèle de documentation : il marque la classe comme source d’erreurs et fournit `ErrorDocumentation.Source` (le nom du modèle passé via `nameof(...)`). Il peut aussi porter une `Description` optionnelle, rendue comme introduction au groupe de cette source dans la documentation générée :
 
 ```csharp
-[ProvidesErrorsFor(nameof(BankTransactionFileValidator),
-                   Description = "Erreurs levées lors de la validation d’un relevé bancaire téléversé au regard de ses métadonnées déclarées.")]
+[ProvidesErrorsFor(nameof(Temperature),
+                   Description = "Errors raised when constructing a Temperature value from an out-of-range input.")]
 ```
+
+La `Description` est un texte littéral par défaut ; renseignez `DescriptionResourceType` pour qu’elle soit résolue comme une clé de ressource à la place, en vue de la localisation (voir [Internationalisation](Internationalisation.fr.md)).
 
 À l’intérieur de cette classe, chaque méthode factory est liée à sa méthode de documentation via :
 
@@ -82,14 +84,15 @@ Un *renderer* transforme le catalogue en mémoire en documentation publiée. Le 
 ```csharp
 public interface IErrorDocumentationRenderer {
     string Format { get; }
-    IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog);
+    IReadOnlyCollection<string> SupportedLayouts { get; }
+    IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog, RenderRequest request);
 }
 ```
 
-Deux renderers sont fournis d’origine :
+Chaque renderer déclare les layouts qu’il sait produire et on lui en demande un à chaque appel via le `RenderRequest` (qui porte aussi la culture cible) ; un layout non pris en charge est rejeté par une `LayoutNotSupportedException`. Deux renderers sont fournis d’origine :
 
-* **json** — un schéma JSON curé et stable
-* **markdown** — un fichier unique, ou (avec `--layout split`) un index README plus un fichier par groupe de source et un fichier par erreur (`--layout single|split`)
+* **json** — un schéma JSON curé et stable (layout `single` uniquement)
+* **markdown** — un fichier unique, ou (avec `--layout split`) un index README plus un fichier par groupe de source et un fichier par erreur (`single`/`split`)
 
 Tout autre format (HTML, CSV, un gabarit maison, …) est un **renderer personnalisé** : implémentez l’interface et enregistrez-le. Voir [Écrire son propre renderer](WritingACustomRenderer.fr.md).
 
@@ -110,6 +113,12 @@ fce generate            # utilise la solution, le format, l’output, les render
 ```
 
 Une valeur passée en ligne de commande écrase la configuration.
+
+## 🌍 8. Internationalisation
+
+Le pipeline est sensible à la culture à deux niveaux : l’extracteur localise le *contenu* des erreurs (sous la culture UI demandée) et chaque renderer localise ses propres *gabarits* (depuis `RenderRequest.Culture`), tandis que les noms de fichiers et les ancres restent indépendants de la culture, pour que les liens ne cassent jamais. C’est optionnel et piloté par `fce generate --language`.
+
+Voir **[Internationalisation](Internationalisation.fr.md)** pour le détail — choisir la langue, le hook `DescriptionResourceType`, la localisation des gabarits de renderer, et le pilotage sans la CLI.
 
 ## 🔁 Pourquoi cette architecture est importante
 

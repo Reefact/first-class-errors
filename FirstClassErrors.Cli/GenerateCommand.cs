@@ -1,5 +1,7 @@
 #region Usings declarations
 
+using System.Globalization;
+
 using FirstClassErrors;
 using FirstClassErrors.GenDoc;
 using FirstClassErrors.GenDoc.Rendering;
@@ -62,14 +64,18 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
             bool    noBuild     = settings.NoBuild || (configuration.NoBuild ?? false);
             bool    strict      = settings.Strict  || (configuration.Strict ?? false);
 
-            if (layout is not ("single" or "split")) {
-                logger.Error($"Unsupported layout '{layout}'. Supported layouts: single, split.");
+            // The language drives both the extraction (localized error descriptions) and the rendering (localized
+            // template boilerplate). It defaults to English.
+            CultureInfo culture = ResolveCulture(FirstNonEmpty(settings.Language, configuration.Language) ?? "en");
 
-                return 1;
-            }
+            // Resolve the renderer and validate the requested layout against what it actually supports, before the
+            // (expensive) extraction runs — so a bad --format/--layout fails fast. Custom renderers referenced by the
+            // configuration are loaded and offered alongside the built-in ones.
+            IReadOnlyList<IErrorDocumentationRenderer> customRenderers = RendererLoader.Load(configuration.Renderers, configDir, logger);
+            IErrorDocumentationRenderer                renderer        = RendererCatalog.Create(format, customRenderers);
 
-            if (layout == "split" && format != "markdown") {
-                logger.Error("The 'split' layout is only supported for the markdown format.");
+            if (renderer.SupportedLayouts.Contains(layout, StringComparer.OrdinalIgnoreCase) is false) {
+                logger.Error($"The '{format}' format does not support the '{layout}' layout. Supported layouts: {string.Join(", ", renderer.SupportedLayouts)}.");
 
                 return 1;
             }
@@ -80,6 +86,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
                 TargetFramework    = framework,
                 FailureBehavior    = strict ? FailureBehavior.Stop : FailureBehavior.Continue,
                 WorkerAssemblyPath = worker,
+                Culture            = culture,
                 Logger             = logger
             };
 
@@ -88,12 +95,9 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
                     ? SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(solution!, options)
                     : SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies(assemblies, options);
 
-            // Custom renderers referenced by the configuration are loaded and offered alongside the built-in ones.
-            IReadOnlyList<IErrorDocumentationRenderer> customRenderers = RendererLoader.Load(configuration.Renderers, configDir, logger);
-            IErrorDocumentationRenderer                renderer        = RendererCatalog.Create(format, layout, customRenderers);
-
             // The catalog is enumerated here (by the renderer), so generation failures surface as a clean error.
-            IReadOnlyList<RenderedDocument> documents = renderer.Render(catalog);
+            RenderRequest                   request   = new(layout, culture);
+            IReadOnlyList<RenderedDocument> documents = renderer.Render(catalog, request);
 
             WriteOutput(documents, output, logger);
 
@@ -119,6 +123,14 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
         string normalized = format.Trim().ToLowerInvariant();
 
         return normalized == "md" ? "markdown" : normalized;
+    }
+
+    private static CultureInfo ResolveCulture(string language) {
+        try {
+            return CultureInfo.GetCultureInfo(language.Trim());
+        } catch (CultureNotFoundException) {
+            throw new InvalidOperationException($"Unknown language '{language}'. Use a culture name such as en, fr, es, de or sv.");
+        }
     }
 
     private static void WriteOutput(IReadOnlyList<RenderedDocument> documents, string? outputPath, ConsoleGenerationLogger logger) {

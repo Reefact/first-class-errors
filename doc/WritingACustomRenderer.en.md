@@ -11,12 +11,20 @@ public interface IErrorDocumentationRenderer {
     // The value selected with `fce generate --format <…>`.
     string Format { get; }
 
-    // Turn the catalog into one or more output files.
-    IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog);
+    // The layouts this renderer can produce, e.g. "single", "split" (see RenderLayouts).
+    IReadOnlyCollection<string> SupportedLayouts { get; }
+
+    // Turn the catalog into one or more output files for the requested layout and culture.
+    IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog, RenderRequest request);
 }
 ```
 
 `RenderedDocument` is a `(RelativePath, Content)` pair. Return a single document for a one-file format, or several (an index plus one file per error) for a multi-file one — the `RelativePath` is used as the file name when the output target is a directory.
+
+`RenderRequest` carries the two per-call choices:
+
+* **`Layout`** — the value of `fce generate --layout <…>`. Declare the layouts you support in `SupportedLayouts` and reject any other with `LayoutNotSupportedException` (the built-in `json` renderer supports only `single`; `markdown` supports `single` and `split`). A layout is a free-form string, so a renderer may define its own.
+* **`Culture`** — the target language. Localize any boilerplate you emit for `request.Culture` (the error *content* is already localized upstream by the extractor, so a renderer only localizes its own template text). See [Internationalization](Internationalization.en.md).
 
 The contract and the model (`ErrorDocumentation`, `ErrorDiagnostic`, …) ship in the `FirstClassErrors` package, which targets **.NET Standard 2.0** — so a renderer needs only that one reference, which most projects already have.
 
@@ -32,7 +40,14 @@ public sealed class CsvErrorDocumentationRenderer : IErrorDocumentationRenderer 
 
     public string Format => "csv";
 
-    public IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog) {
+    // A single CSV file — this renderer supports only the "single" layout.
+    public IReadOnlyCollection<string> SupportedLayouts { get; } = new[] { RenderLayouts.Single };
+
+    public IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog, RenderRequest request) {
+        if (!SupportedLayouts.Contains(request.Layout, StringComparer.OrdinalIgnoreCase)) {
+            throw new LayoutNotSupportedException(Format, request.Layout, SupportedLayouts);
+        }
+
         var rows    = catalog.Select(error => $"{error.Code},{Quote(error.Title)}");
         var content = "code,title\n" + string.Join("\n", rows);
 
@@ -43,7 +58,7 @@ public sealed class CsvErrorDocumentationRenderer : IErrorDocumentationRenderer 
 }
 ```
 
-That is a complete renderer.
+That is a complete renderer. (This CSV has no boilerplate to translate; a renderer that emits headings or labels would read them from resources keyed by `request.Culture`.)
 
 ## Plugging it into the CLI
 
@@ -77,16 +92,21 @@ Paths are absolute or relative to `fce.json`, so a configuration is portable wit
 The CLI is optional — a renderer is just a class. If you obtain a catalog yourself (for instance via `SolutionErrorDocumentationGenerator`, in `FirstClassErrors.GenDoc`), rendering it is:
 
 ```csharp
-IEnumerable<ErrorDocumentation> catalog =
-    SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom("MyApp.sln", new SolutionGenerationOptions());
+// Use one culture for both levels: it localizes the extracted content and the rendered boilerplate.
+CultureInfo culture = CultureInfo.GetCultureInfo("en");
 
-foreach (RenderedDocument document in new CsvErrorDocumentationRenderer().Render(catalog)) {
+IEnumerable<ErrorDocumentation> catalog =
+    SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(
+        "MyApp.sln", new SolutionGenerationOptions { Culture = culture });
+
+RenderRequest request = new(RenderLayouts.Single, culture);
+foreach (RenderedDocument document in new CsvErrorDocumentationRenderer().Render(catalog, request)) {
     File.WriteAllText(document.RelativePath, document.Content);
 }
 ```
 
 ---
 
-Previous section: [Architecture of the Documentation Pipeline](ArchitectureOfTheDocumentationPipeline.en.md) | Next section: [FAQ](FAQ.en.md)
+Previous section: [Architecture of the Documentation Pipeline](ArchitectureOfTheDocumentationPipeline.en.md) | Next section: [Internationalization](Internationalization.en.md)
 
 ---

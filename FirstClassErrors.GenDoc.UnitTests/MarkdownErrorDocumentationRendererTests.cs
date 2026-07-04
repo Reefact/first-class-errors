@@ -1,5 +1,7 @@
 #region Usings declarations
 
+using System.Globalization;
+
 using JetBrains.Annotations;
 
 using NFluent;
@@ -12,6 +14,14 @@ namespace FirstClassErrors.GenDoc.Rendering.UnitTests;
 public sealed class MarkdownErrorDocumentationRendererTests {
 
     #region Statics members declarations
+
+    private static IReadOnlyList<RenderedDocument> RenderSingle(params ErrorDocumentation[] catalog) {
+        return new MarkdownErrorDocumentationRenderer().Render(catalog, new RenderRequest(RenderLayouts.Single));
+    }
+
+    private static IReadOnlyList<RenderedDocument> RenderSplit(params ErrorDocumentation[] catalog) {
+        return new MarkdownErrorDocumentationRenderer().Render(catalog, new RenderRequest(RenderLayouts.Split));
+    }
 
     private static ErrorDocumentation TemperatureError() {
         return new ErrorDocumentation {
@@ -50,11 +60,16 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         Check.That(new MarkdownErrorDocumentationRenderer().Format).IsEqualTo("markdown");
     }
 
+    [Fact(DisplayName = "The Markdown renderer declares the single and split layouts.")]
+    public void TheMarkdownRendererDeclaresTheSingleAndSplitLayouts() {
+        // Exercise & verify
+        Check.That(new MarkdownErrorDocumentationRenderer().SupportedLayouts).Contains("single", "split");
+    }
+
     [Fact(DisplayName = "The single layout groups the table of contents by source and inlines every error.")]
     public void TheSingleLayoutGroupsTheTableOfContentsBySource() {
         // Exercise
-        IReadOnlyList<RenderedDocument> documents =
-            new MarkdownErrorDocumentationRenderer(MarkdownLayout.Single).Render(new[] { TemperatureError(), EmailError() });
+        IReadOnlyList<RenderedDocument> documents = RenderSingle(TemperatureError(), EmailError());
 
         // Verify
         Check.That(documents).HasSize(1);
@@ -93,8 +108,7 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         ErrorDocumentation badEmail = new() { Code = "BAD_EMAIL", Title = "Bad email", Source = "Email" };
 
         // Exercise
-        IReadOnlyList<RenderedDocument> documents =
-            new MarkdownErrorDocumentationRenderer(MarkdownLayout.Single).Render(new[] { tooCold, tooHot, badEmail });
+        IReadOnlyList<RenderedDocument> documents = RenderSingle(tooCold, tooHot, badEmail);
 
         // Verify
         string markdown = documents[0].Content;
@@ -108,8 +122,7 @@ public sealed class MarkdownErrorDocumentationRendererTests {
     [Fact(DisplayName = "The split layout produces an index, a file per source group, and a file per error.")]
     public void TheSplitLayoutProducesIndexGroupFilesAndErrorFiles() {
         // Exercise
-        IReadOnlyList<RenderedDocument> documents =
-            new MarkdownErrorDocumentationRenderer(MarkdownLayout.Split).Render(new[] { TemperatureError(), EmailError() });
+        IReadOnlyList<RenderedDocument> documents = RenderSplit(TemperatureError(), EmailError());
 
         // Verify: README + one group file per source + one file per error.
         Check.That(documents).HasSize(5);
@@ -146,14 +159,13 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         };
 
         // Single: the description sits under the group heading.
-        string single = new MarkdownErrorDocumentationRenderer(MarkdownLayout.Single).Render(new[] { error })[0].Content;
+        string single = RenderSingle(error)[0].Content;
         Check.That(single).Contains("## Temperature errors");
         Check.That(single).Contains("Errors about temperature values.");
 
         // Split: the description sits in the group file.
-        IReadOnlyList<RenderedDocument> split =
-            new MarkdownErrorDocumentationRenderer(MarkdownLayout.Split).Render(new[] { error });
-        RenderedDocument groupFile = split.Single(document => document.RelativePath == "temperature-errors.md");
+        IReadOnlyList<RenderedDocument> split     = RenderSplit(error);
+        RenderedDocument                groupFile = split.Single(document => document.RelativePath == "temperature-errors.md");
         Check.That(groupFile.Content).StartsWith("# Temperature errors");
         Check.That(groupFile.Content).Contains("Errors about temperature values.");
     }
@@ -161,8 +173,7 @@ public sealed class MarkdownErrorDocumentationRendererTests {
     [Fact(DisplayName = "The split layout on an empty catalog still produces a valid index.")]
     public void TheSplitLayoutOnAnEmptyCatalogProducesAValidIndex() {
         // Exercise
-        IReadOnlyList<RenderedDocument> documents =
-            new MarkdownErrorDocumentationRenderer(MarkdownLayout.Split).Render([]);
+        IReadOnlyList<RenderedDocument> documents = RenderSplit();
 
         // Verify
         Check.That(documents).HasSize(1);
@@ -177,8 +188,7 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         ErrorDocumentation second = new() { Code = "DUP", Title = "Second" };
 
         // Exercise
-        IReadOnlyList<RenderedDocument> documents =
-            new MarkdownErrorDocumentationRenderer(MarkdownLayout.Split).Render(new[] { first, second });
+        IReadOnlyList<RenderedDocument> documents = RenderSplit(first, second);
 
         // Verify
         Check.That(documents.Select(document => document.RelativePath)).Contains("dup.md", "dup-2.md");
@@ -190,8 +200,7 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         ErrorDocumentation nameless = new();
 
         // Exercise
-        IReadOnlyList<RenderedDocument> documents =
-            new MarkdownErrorDocumentationRenderer(MarkdownLayout.Split).Render(new[] { nameless });
+        IReadOnlyList<RenderedDocument> documents = RenderSplit(nameless);
 
         // Verify
         RenderedDocument errorFile = documents.Single(document => document.RelativePath == "error-1.md");
@@ -204,8 +213,7 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         ErrorDocumentation error = new() { Code = "!!FOO__BAR!!", Title = "Messy" };
 
         // Exercise
-        IReadOnlyList<RenderedDocument> documents =
-            new MarkdownErrorDocumentationRenderer(MarkdownLayout.Split).Render(new[] { error });
+        IReadOnlyList<RenderedDocument> documents = RenderSplit(error);
 
         // Verify
         Check.That(documents.Select(document => document.RelativePath)).Contains("foo-bar.md");
@@ -214,8 +222,7 @@ public sealed class MarkdownErrorDocumentationRendererTests {
     [Fact(DisplayName = "An empty catalog still produces a valid single document.")]
     public void AnEmptyCatalogProducesAValidSingleDocument() {
         // Exercise
-        IReadOnlyList<RenderedDocument> documents =
-            new MarkdownErrorDocumentationRenderer(MarkdownLayout.Single).Render([]);
+        IReadOnlyList<RenderedDocument> documents = RenderSingle();
 
         // Verify
         Check.That(documents).HasSize(1);
@@ -225,8 +232,39 @@ public sealed class MarkdownErrorDocumentationRendererTests {
     [Fact(DisplayName = "The Markdown renderer guards against a null catalog.")]
     public void TheMarkdownRendererGuardsAgainstANullCatalog() {
         // Exercise & verify
-        Check.ThatCode(() => new MarkdownErrorDocumentationRenderer().Render(null!))
+        Check.ThatCode(() => new MarkdownErrorDocumentationRenderer().Render(null!, new RenderRequest(RenderLayouts.Single)))
              .Throws<ArgumentNullException>();
+    }
+
+    [Fact(DisplayName = "The Markdown renderer rejects a layout it does not support.")]
+    public void TheMarkdownRendererRejectsAnUnsupportedLayout() {
+        // Exercise & verify
+        Check.ThatCode(() => new MarkdownErrorDocumentationRenderer().Render(new[] { TemperatureError() }, new RenderRequest("pdf")))
+             .Throws<LayoutNotSupportedException>();
+    }
+
+    [Fact(DisplayName = "The renderer localizes the template boilerplate for the requested culture.")]
+    public void TheRendererLocalizesTheTemplateBoilerplate() {
+        // Exercise: render the same catalog for French.
+        IReadOnlyList<RenderedDocument> documents =
+            new MarkdownErrorDocumentationRenderer().Render(new[] { TemperatureError() },
+                                                           new RenderRequest(RenderLayouts.Single, CultureInfo.GetCultureInfo("fr")));
+        string markdown = documents[0].Content;
+
+        // Verify: headings, labels and table headers come from the French resources.
+        Check.That(markdown).StartsWith("# Catalogue des erreurs");
+        Check.That(markdown).Contains("## Table des matières");
+        Check.That(markdown).Contains("## Erreurs Temperature");
+        Check.That(markdown).Contains("- **Code :**");
+        Check.That(markdown).Contains("#### Diagnostics");
+        Check.That(markdown).Contains("_origine :_ External");
+        Check.That(markdown).Contains("#### Exemples");
+        Check.That(markdown).Contains("#### Contexte");
+        Check.That(markdown).Contains("| Clé | Type | Description | Exemples de valeurs |");
+
+        // The group anchor stays culture-invariant so cross-language links remain stable.
+        Check.That(markdown).Contains("<a id=\"src-temperature\"></a>");
+        Check.That(markdown).Contains("- [Erreurs Temperature](#src-temperature)");
     }
 
 }

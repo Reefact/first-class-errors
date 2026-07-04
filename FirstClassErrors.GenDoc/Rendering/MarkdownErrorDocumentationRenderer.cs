@@ -13,53 +13,44 @@ namespace FirstClassErrors.GenDoc.Rendering;
 /// </summary>
 public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRenderer {
 
-    #region Fields declarations
-
-    private readonly MarkdownLayout _layout;
-
-    #endregion
-
-    #region Constructors declarations
-
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="MarkdownErrorDocumentationRenderer" /> class.
-    /// </summary>
-    /// <param name="layout">The on-disk layout to produce. Defaults to <see cref="MarkdownLayout.Single" />.</param>
-    public MarkdownErrorDocumentationRenderer(MarkdownLayout layout = MarkdownLayout.Single) {
-        _layout = layout;
-    }
-
-    #endregion
-
     /// <inheritdoc />
     public string Format => "markdown";
 
     /// <inheritdoc />
-    public IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog) {
+    public IReadOnlyCollection<string> SupportedLayouts { get; } = [RenderLayouts.Single, RenderLayouts.Split];
+
+    /// <inheritdoc />
+    public IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog, RenderRequest request) {
         if (catalog is null) { throw new ArgumentNullException(nameof(catalog)); }
+        if (request is null) { throw new ArgumentNullException(nameof(request)); }
+
+        if (SupportedLayouts.Contains(request.Layout, StringComparer.OrdinalIgnoreCase) is false) {
+            throw new LayoutNotSupportedException(Format, request.Layout, SupportedLayouts);
+        }
 
         // Materialize once, assigning each error a stable title and a unique slug used for file names and anchors.
-        IReadOnlyList<Entry> entries = BuildEntries(catalog);
+        IReadOnlyList<Entry>    entries = BuildEntries(catalog);
+        MarkdownRendererStrings strings = new(request.Culture);
 
-        return _layout == MarkdownLayout.Split
-                   ? RenderSplit(entries)
-                   : RenderSingle(entries);
+        return string.Equals(request.Layout, RenderLayouts.Split, StringComparison.OrdinalIgnoreCase)
+                   ? RenderSplit(entries, strings)
+                   : RenderSingle(entries, strings);
     }
 
-    private static IReadOnlyList<RenderedDocument> RenderSingle(IReadOnlyList<Entry> entries) {
+    private static IReadOnlyList<RenderedDocument> RenderSingle(IReadOnlyList<Entry> entries, MarkdownRendererStrings strings) {
         StringBuilder markdown = new();
-        markdown.Append("# Error Catalog\n\n");
+        markdown.Append($"# {strings.ErrorCatalog}\n\n");
 
         if (entries.Count == 0) {
-            markdown.Append("_No documented errors._\n");
+            markdown.Append($"_{strings.NoDocumentedErrors}_\n");
 
             return [new RenderedDocument("errors.md", markdown.ToString())];
         }
 
-        IReadOnlyList<Group> groups = GroupBySource(entries);
+        IReadOnlyList<Group> groups = GroupBySource(entries, strings);
 
         // Table of contents: two levels — each source group, then the errors that belong to it.
-        markdown.Append("## Table of contents\n\n");
+        markdown.Append($"## {strings.TableOfContents}\n\n");
         foreach (Group group in groups) {
             markdown.Append($"- [{LinkText(group.Label)}](#{group.Anchor})\n");
             foreach (Entry entry in group.Entries) {
@@ -80,27 +71,27 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
 
             foreach (Entry entry in group.Entries) {
                 markdown.Append($"<a id=\"err-{entry.Slug}\"></a>\n\n");
-                AppendErrorBody(markdown, entry, headingLevel: 3);
+                AppendErrorBody(markdown, entry, headingLevel: 3, strings);
             }
         }
 
         return [new RenderedDocument("errors.md", markdown.ToString())];
     }
 
-    private static IReadOnlyList<RenderedDocument> RenderSplit(IReadOnlyList<Entry> entries) {
+    private static IReadOnlyList<RenderedDocument> RenderSplit(IReadOnlyList<Entry> entries, MarkdownRendererStrings strings) {
         List<RenderedDocument> documents = [];
 
         StringBuilder index = new();
-        index.Append("# Error Catalog\n\n");
+        index.Append($"# {strings.ErrorCatalog}\n\n");
 
         if (entries.Count == 0) {
-            index.Append("_No documented errors._\n");
+            index.Append($"_{strings.NoDocumentedErrors}_\n");
             documents.Add(new RenderedDocument("README.md", index.ToString()));
 
             return documents;
         }
 
-        IReadOnlyList<Group> groups = GroupBySource(entries);
+        IReadOnlyList<Group> groups = GroupBySource(entries, strings);
 
         // The index (table of contents): each source group linked to its own group file, then its errors.
         foreach (Group group in groups) {
@@ -130,14 +121,14 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         // One file per error.
         foreach (Entry entry in entries) {
             StringBuilder markdown = new();
-            AppendErrorBody(markdown, entry, headingLevel: 1);
+            AppendErrorBody(markdown, entry, headingLevel: 1, strings);
             documents.Add(new RenderedDocument($"{entry.Slug}.md", markdown.ToString()));
         }
 
         return documents;
     }
 
-    private static void AppendErrorBody(StringBuilder markdown, Entry entry, int headingLevel) {
+    private static void AppendErrorBody(StringBuilder markdown, Entry entry, int headingLevel, MarkdownRendererStrings strings) {
         ErrorDocumentation error       = entry.Error;
         string             heading     = new('#', headingLevel);
         string             subHeading  = new('#', headingLevel + 1);
@@ -146,8 +137,8 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
 
         bool hasCode   = string.IsNullOrWhiteSpace(error.Code) is false;
         bool hasSource = string.IsNullOrWhiteSpace(error.Source) is false;
-        if (hasCode) { markdown.Append($"- **Code:** `{error.Code!.Trim()}`\n"); }
-        if (hasSource) { markdown.Append($"- **Source:** `{error.Source!.Trim()}`\n"); }
+        if (hasCode) { markdown.Append($"- **{strings.CodeLabel}** `{error.Code!.Trim()}`\n"); }
+        if (hasSource) { markdown.Append($"- **{strings.SourceLabel}** `{error.Source!.Trim()}`\n"); }
         if (hasCode || hasSource) { markdown.Append('\n'); }
 
         if (string.IsNullOrWhiteSpace(error.Explanation) is false) {
@@ -156,20 +147,20 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         }
 
         if (string.IsNullOrWhiteSpace(error.BusinessRule) is false) {
-            markdown.Append($"> **Business rule:** {Inline(error.BusinessRule)}\n\n");
+            markdown.Append($"> **{strings.BusinessRuleLabel}** {Inline(error.BusinessRule)}\n\n");
         }
 
         if (error.Diagnostics.Count > 0) {
-            markdown.Append($"{subHeading} Diagnostics\n\n");
+            markdown.Append($"{subHeading} {strings.DiagnosticsHeading}\n\n");
             foreach (ErrorDiagnostic diagnostic in error.Diagnostics) {
-                markdown.Append($"- **{Inline(diagnostic.PossibleCause)}** — _origin:_ {diagnostic.Origin} — {Inline(diagnostic.AnalysisHint)}\n");
+                markdown.Append($"- **{Inline(diagnostic.PossibleCause)}** — _{strings.OriginLabel}_ {diagnostic.Origin} — {Inline(diagnostic.AnalysisHint)}\n");
             }
 
             markdown.Append('\n');
         }
 
         if (error.Examples.Count > 0) {
-            markdown.Append($"{subHeading} Examples\n\n");
+            markdown.Append($"{subHeading} {strings.ExamplesHeading}\n\n");
             foreach (ErrorDescription example in error.Examples) {
                 markdown.Append($"- {Inline(example.DetailedMessage)}");
                 if (string.IsNullOrWhiteSpace(example.ShortMessage) is false) {
@@ -183,8 +174,8 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         }
 
         if (error.Context.Count > 0) {
-            markdown.Append($"{subHeading} Context\n\n");
-            markdown.Append("| Key | Type | Description | Example values |\n");
+            markdown.Append($"{subHeading} {strings.ContextHeading}\n\n");
+            markdown.Append($"| {strings.ContextKeyHeader} | {strings.ContextTypeHeader} | {strings.ContextDescriptionHeader} | {strings.ContextExampleValuesHeader} |\n");
             markdown.Append("| --- | --- | --- | --- |\n");
             foreach (ErrorContextEntryDocumentation contextEntry in error.Context) {
                 markdown.Append($"| {CodeCell(contextEntry.Key)} | {CodeCell(contextEntry.ValueType)} | {Cell(contextEntry.Description)} | {ExampleValuesCell(contextEntry.ExampleValues)} |\n");
@@ -221,16 +212,17 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         return entries;
     }
 
-    private static IReadOnlyList<Group> GroupBySource(IReadOnlyList<Entry> entries) {
+    private static IReadOnlyList<Group> GroupBySource(IReadOnlyList<Entry> entries, MarkdownRendererStrings strings) {
         List<Group>               groups = [];
         Dictionary<string, Group> byKey  = new(StringComparer.Ordinal);
 
         // Group by ProvidesErrorsFor (ErrorDocumentation.Source), preserving first-seen order of both groups and errors.
+        // The label is localized, but the anchor and file name stay culture-invariant so links are stable across languages.
         foreach (Entry entry in entries) {
             string source = FirstNonEmpty(entry.Error.Source) ?? "Other";
             if (byKey.TryGetValue(source, out Group? group) is false) {
                 string slug = SlugifySource(source);
-                group = new Group($"{source} errors", $"src-{slug}", $"{slug}-errors.md", []);
+                group = new Group(strings.GroupLabel(source), $"src-{slug}", $"{slug}-errors.md", []);
                 byKey[source] = group;
                 groups.Add(group);
             }

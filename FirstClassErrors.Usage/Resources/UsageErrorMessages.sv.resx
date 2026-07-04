@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Amount_Source" xml:space="preserve">
+    <value>Fel som uppstår vid operationer som kombinerar monetära Amount-värden.</value>
+  </data>
+  <data name="Bank_Source" xml:space="preserve">
+    <value>Fel som uppstår vid validering av en uppladdad kontoutdragsfil mot dess deklarerade metadata (utdragsperiod och summor).</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Title" xml:space="preserve">
+    <value>Valutakonflikt mellan belopp</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Description" xml:space="preserve">
+    <value>Det här felet uppstår när flera belopp används tillsammans i en operation trots att de uttrycks i olika valutor.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Rule" xml:space="preserve">
+    <value>Alla monetära operationer måste avse belopp uttryckta i samma valuta.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Message" xml:space="preserve">
+    <value>Den monetära operationen misslyckades eftersom de berörda beloppen uttrycks i olika valutor: {0} och {1}.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_ShortMessage" xml:space="preserve">
+    <value>Valutakonflikt</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Cause1" xml:space="preserve">
+    <value>Belopp användes i en monetär operation utan att ha konverterats till samma valuta.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Hint1" xml:space="preserve">
+    <value>Kontrollera om alla belopp som ingår i operationen konverterades till en gemensam valuta innan de användes tillsammans.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Cause2" xml:space="preserve">
+    <value>Belopp som förväntades vara uttryckta i samma valuta angavs med olika valutor.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_Hint2" xml:space="preserve">
+    <value>Kontrollera valutorna som är kopplade till varje belopp och bekräfta om en gemensam valuta förväntades för den här operationen.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Title" xml:space="preserve">
+    <value>Transaktionsdatum utanför utdragsperioden</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Description" xml:space="preserve">
+    <value>Det här felet uppstår när man försöker validera en kontoutdragsfil som innehåller en eller flera transaktioner daterade utanför utdragsperioden.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Rule" xml:space="preserve">
+    <value>Alla transaktioner måste ske inom utdragsperioden.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Message" xml:space="preserve">
+    <value>Transaktionen daterad {0} ligger utanför utdragsperioden [{1};{2}].</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_ShortMessage" xml:space="preserve">
+    <value>Transaktionsdatumet ligger utanför utdragsperioden.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Cause1" xml:space="preserve">
+    <value>Transaktionsdatumet som anges i utdragsfilen är felaktigt eller stämmer inte med det faktiska transaktionsdatumet.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Hint1" xml:space="preserve">
+    <value>Kontrollera transaktionsdatumet i indatafilen och bekräfta att det stämmer med den faktiska transaktionstidslinjen.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Cause2" xml:space="preserve">
+    <value>Utdragsperioden som definieras i filen matchar inte den faktiska period som transaktionerna täcker.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Hint2" xml:space="preserve">
+    <value>Kontrollera om start- och slutdatumen för utdraget i filen stämmer med den period som transaktionerna täcker.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Cause3" xml:space="preserve">
+    <value>Transaktionen bokfördes efter att utdraget genererades men inkluderades av misstag i filen.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Hint3" xml:space="preserve">
+    <value>Fastställ om sent bokförda transaktioner inkluderades i processen för att generera utdraget.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Cause4" xml:space="preserve">
+    <value>Ett internt bearbetningsfel försköt transaktionsdatumet under datatransformationen eller importen.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_Hint4" xml:space="preserve">
+    <value>Granska stegen för dataimport och transformation för att bekräfta att transaktionsdatumen bevaras utan ändring.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Title" xml:space="preserve">
+    <value>Avvikelse i utdragets totalbelopp</value>
+  </data>
+  <data name="Bank_TotalMismatch_Description" xml:space="preserve">
+    <value>Det här felet uppstår när man försöker validera en kontoutdragsfil vars deklarerade totalbelopp inte stämmer med summan av de enskilda transaktionsbeloppen.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Rule" xml:space="preserve">
+    <value>Utdragets totalbelopp måste vara lika med summan av alla transaktionsbelopp som ingår i utdraget.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Message" xml:space="preserve">
+    <value>Utdragets deklarerade totalbelopp ({0}) stämmer inte med det totalbelopp som beräknats från transaktionerna ({1}).</value>
+  </data>
+  <data name="Bank_TotalMismatch_ShortMessage" xml:space="preserve">
+    <value>Avvikelse i utdragets totalbelopp.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Cause1" xml:space="preserve">
+    <value>Det totalbelopp som deklareras i utdragsfilen stämmer inte med summan av de enskilda transaktionsbeloppen.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Hint1" xml:space="preserve">
+    <value>Kontrollera det deklarerade totalbeloppet i filen och jämför det med summan av alla transaktionsbelopp.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Cause2" xml:space="preserve">
+    <value>En eller flera transaktioner saknas eller är duplicerade i utdragsfilen.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Hint2" xml:space="preserve">
+    <value>Kontrollera om alla förväntade transaktioner förekommer exakt en gång i utdragsfilen.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Cause3" xml:space="preserve">
+    <value>Ett avrundnings- eller precisionsfel uppstod vid beräkningen av utdragets totalbelopp.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Hint3" xml:space="preserve">
+    <value>Granska hur avrundnings- och precisionsregler tillämpades vid beräkningen av utdragets summa.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Cause4" xml:space="preserve">
+    <value>Ett internt bearbetningsfel ändrade transaktionsbelopp under tolkning eller transformation av filen.</value>
+  </data>
+  <data name="Bank_TotalMismatch_Hint4" xml:space="preserve">
+    <value>Inspektera stegen för tolkning och transformation av filen för att bekräfta att transaktionsbeloppen förblir oförändrade.</value>
+  </data>
+  <data name="Bank_TransactionDate_Context" xml:space="preserve">
+    <value>Datumet för transaktionen som behandlas.</value>
+  </data>
+</root>

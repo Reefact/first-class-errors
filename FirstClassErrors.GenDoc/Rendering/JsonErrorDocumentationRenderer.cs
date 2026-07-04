@@ -30,8 +30,17 @@ public sealed class JsonErrorDocumentationRenderer : IErrorDocumentationRenderer
     public string Format => "json";
 
     /// <inheritdoc />
-    public IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog) {
+    public IReadOnlyCollection<string> SupportedLayouts { get; } = [RenderLayouts.Single];
+
+    /// <inheritdoc />
+    public IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog, RenderRequest request) {
         if (catalog is null) { throw new ArgumentNullException(nameof(catalog)); }
+        if (request is null) { throw new ArgumentNullException(nameof(request)); }
+
+        // A single JSON catalog has no notion of a split layout; reject anything but the layouts we advertise.
+        if (SupportedLayouts.Contains(request.Layout, StringComparer.OrdinalIgnoreCase) is false) {
+            throw new LayoutNotSupportedException(Format, request.Layout, SupportedLayouts);
+        }
 
         // A curated projection: the anonymous shape fixes exactly which fields are published, their camelCase names,
         // and enum-as-string, without exposing the internal model or maintaining parallel DTO types.
