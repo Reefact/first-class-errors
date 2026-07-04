@@ -7,9 +7,9 @@ Rule ID | Category | Severity | Notes
 --------|--------------------------------------|----------|-------------------------------------
 FCE001  | FirstClassErrors.ErrorCodes          | Error    | DuplicateErrorCodeAnalyzer
 FCE002  | FirstClassErrors.ErrorCodes          | Error    | EmptyErrorCodeAnalyzer
-FCE003  | FirstClassErrors.ErrorCodes          | Info     | NonLiteralErrorCodeAnalyzer (disabled by default)
-FCE004  | FirstClassErrors.ErrorCodes          | Info     | InvalidErrorCodeFormatAnalyzer (disabled by default)
-FCE005  | FirstClassErrors.ErrorCodes          | Info     | TooGenericErrorCodeAnalyzer (disabled by default)
+FCE003  | FirstClassErrors.ErrorCodes          | Disabled | NonLiteralErrorCodeAnalyzer
+FCE004  | FirstClassErrors.ErrorCodes          | Disabled | InvalidErrorCodeFormatAnalyzer
+FCE005  | FirstClassErrors.ErrorCodes          | Disabled | TooGenericErrorCodeAnalyzer
 FCE006  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByTargetNotFoundAnalyzer
 FCE007  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByInvalidSignatureAnalyzer
 FCE008  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByWithoutProvidesErrorsForAnalyzer
@@ -19,5 +19,5 @@ FCE011  | FirstClassErrors.DocumentationContent| Error    | DuplicateDocumentedC
 FCE012  | FirstClassErrors.DocumentationContent| Warning  | EmptyExamplesAnalyzer
 FCE013  | FirstClassErrors.DocumentationContent| Warning  | ExampleDoesNotCallDocumentedFactoryAnalyzer
 FCE014  | FirstClassErrors.DocumentationContent| Info     | ShortMessageSameAsDetailedMessageAnalyzer
-FCE015  | FirstClassErrors.DocumentationContent| Info     | DocumentationTitleTooGenericAnalyzer (disabled by default)
+FCE015  | FirstClassErrors.DocumentationContent| Disabled | DocumentationTitleTooGenericAnalyzer
 FCE016  | FirstClassErrors.Usage               | Warning  | UnusedToExceptionResultAnalyzer
