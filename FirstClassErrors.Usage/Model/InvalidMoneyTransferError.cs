@@ -1,5 +1,6 @@
 #region Usings declarations
 
+using FirstClassErrors.Usage.Resources;
 using FirstClassErrors.Usage.Utils;
 
 #endregion
@@ -11,7 +12,8 @@ namespace FirstClassErrors.Usage.Model;
 ///     error that collects several rule violations at once.
 /// </summary>
 [ProvidesErrorsFor(nameof(MoneyTransfer),
-                   Description = "Errors raised while validating a money transfer between accounts.")]
+                   Description = "MoneyTransfer_Source",
+                   DescriptionResourceType = typeof(UsageErrorMessages))]
 public static class InvalidMoneyTransferError {
 
     #region Statics members declarations
@@ -20,8 +22,8 @@ public static class InvalidMoneyTransferError {
     internal static DomainError AmountNotPositive(Amount amount) {
         return new DomainError(
             Code.AmountNotPositive,
-            DocumentationFormatter.Format("Cannot transfer {0}: the amount must be strictly positive.", amount),
-            "Transfer amount must be positive.",
+            DocumentationFormatter.Format(UsageErrorMessages.Get("MoneyTransfer_AmountNotPositive_Message"), amount),
+            UsageErrorMessages.Get("MoneyTransfer_AmountNotPositive_ShortMessage"),
             ctx => ctx.Add(ErrCtxKey.TransferAmount, amount));
     }
 
@@ -35,28 +37,28 @@ public static class InvalidMoneyTransferError {
 
         return new DomainError(
             Code.Invalid,
-            "The money transfer is invalid: it violates one or more domain rules.",
+            UsageErrorMessages.Get("MoneyTransfer_Invalid_Message"),
             violations,
-            "Invalid money transfer.");
+            UsageErrorMessages.Get("MoneyTransfer_Invalid_ShortMessage"));
     }
 
     private static ErrorDocumentation AmountNotPositiveDocumentation() {
-        return DescribeError.WithTitle("Non-positive transfer amount")
-                            .WithDescription("This error occurs when a money transfer is requested with an amount that is zero or negative.")
-                            .WithRule("A money transfer amount must be strictly positive.")
-                            .WithDiagnostic("The amount was entered or computed as zero or a negative value.",
+        return DescribeError.WithTitle(UsageErrorMessages.Get("MoneyTransfer_AmountNotPositive_Title"))
+                            .WithDescription(UsageErrorMessages.Get("MoneyTransfer_AmountNotPositive_Description"))
+                            .WithRule(UsageErrorMessages.Get("MoneyTransfer_AmountNotPositive_Rule"))
+                            .WithDiagnostic(UsageErrorMessages.Get("MoneyTransfer_AmountNotPositive_Cause1"),
                                             ErrorOrigin.External,
-                                            "Check the requested transfer amount and confirm it is greater than zero.")
+                                            UsageErrorMessages.Get("MoneyTransfer_AmountNotPositive_Hint1"))
                             .WithExamples(() => AmountNotPositive(new Amount(-25.00m, Currency.EUR)));
     }
 
     private static ErrorDocumentation InvalidDocumentation() {
-        return DescribeError.WithTitle("Invalid money transfer")
-                            .WithDescription("This error aggregates every domain rule violated while validating a money transfer, so the caller sees all the problems at once rather than one at a time.")
-                            .WithRule("A money transfer must satisfy every domain rule (a strictly positive amount, matching currencies, ...).")
-                            .WithDiagnostic("One or more domain rules were violated by the requested transfer.",
+        return DescribeError.WithTitle(UsageErrorMessages.Get("MoneyTransfer_Invalid_Title"))
+                            .WithDescription(UsageErrorMessages.Get("MoneyTransfer_Invalid_Description"))
+                            .WithRule(UsageErrorMessages.Get("MoneyTransfer_Invalid_Rule"))
+                            .WithDiagnostic(UsageErrorMessages.Get("MoneyTransfer_Invalid_Cause1"),
                                             ErrorOrigin.External,
-                                            "Inspect the aggregated inner errors to see each individual rule violation.")
+                                            UsageErrorMessages.Get("MoneyTransfer_Invalid_Hint1"))
                             .WithExamples(() => Invalid(new Amount(-10.00m, Currency.EUR), new Amount(5.00m, Currency.USD)));
     }
 

@@ -172,4 +172,166 @@
   <data name="Bank_TransactionDate_Context" xml:space="preserve">
     <value>La date de la transaction en cours de traitement.</value>
   </data>
+  <data name="MoneyTransfer_Source" xml:space="preserve">
+    <value>Erreurs levées lors de la validation d'un virement entre comptes.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Title" xml:space="preserve">
+    <value>Montant de virement non positif</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Description" xml:space="preserve">
+    <value>Cette erreur se produit lorsqu'un virement est demandé avec un montant nul ou négatif.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Rule" xml:space="preserve">
+    <value>Le montant d'un virement doit être strictement positif.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Cause1" xml:space="preserve">
+    <value>Le montant a été saisi ou calculé comme nul ou négatif.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Hint1" xml:space="preserve">
+    <value>Vérifiez le montant de virement demandé et confirmez qu'il est supérieur à zéro.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_ShortMessage" xml:space="preserve">
+    <value>Le montant du virement doit être positif.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Message" xml:space="preserve">
+    <value>Impossible de virer {0} : le montant doit être strictement positif.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Title" xml:space="preserve">
+    <value>Virement invalide</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Description" xml:space="preserve">
+    <value>Cette erreur regroupe toutes les règles métier violées lors de la validation d'un virement, afin que l'appelant voie tous les problèmes d'un coup plutôt qu'un par un.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Rule" xml:space="preserve">
+    <value>Un virement doit satisfaire toutes les règles métier (un montant strictement positif, des devises identiques, ...).</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Cause1" xml:space="preserve">
+    <value>Une ou plusieurs règles métier ont été violées par le virement demandé.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Hint1" xml:space="preserve">
+    <value>Examinez les erreurs internes agrégées pour voir chaque violation de règle individuelle.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_ShortMessage" xml:space="preserve">
+    <value>Virement invalide.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Message" xml:space="preserve">
+    <value>Le virement est invalide : il viole une ou plusieurs règles métier.</value>
+  </data>
+  <data name="MoneyTransfer_TransferAmount_Context" xml:space="preserve">
+    <value>Le montant monétaire du virement tenté.</value>
+  </data>
+  <data name="StatementUpload_Source" xml:space="preserve">
+    <value>Erreurs levées par le point d'entrée HTTP qui ingère les relevés bancaires téléversés (un adaptateur entrant, primary port).</value>
+  </data>
+  <data name="StatementUpload_Malformed_Title" xml:space="preserve">
+    <value>Charge utile de relevé mal formée</value>
+  </data>
+  <data name="StatementUpload_Malformed_Description" xml:space="preserve">
+    <value>Cette erreur se produit lorsque le point d'entrée de téléversement de relevé reçoit une requête dont le corps omet un champ obligatoire ou contient une valeur invalide.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Rule" xml:space="preserve">
+    <value>Une requête de relevé téléversée doit porter tous les champs obligatoires avec une valeur valide.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Cause1" xml:space="preserve">
+    <value>Le client a envoyé un corps de requête incomplet ou mal formé.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Hint1" xml:space="preserve">
+    <value>Examinez le champ nommé dans le contexte et confirmez que le client l'envoie avec une valeur valide.</value>
+  </data>
+  <data name="StatementUpload_Malformed_ShortMessage" xml:space="preserve">
+    <value>Charge utile de relevé mal formée.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Message" xml:space="preserve">
+    <value>La requête de téléversement de relevé {0} est mal formée : le champ « {1} » est manquant ou invalide.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Title" xml:space="preserve">
+    <value>Téléversement de relevé limité en débit</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Description" xml:space="preserve">
+    <value>Cette erreur se produit lorsque trop de téléversements de relevés arrivent dans un court laps de temps et que le point d'entrée limite la requête. Elle est transitoire : la même requête peut être réessayée plus tard.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Rule" xml:space="preserve">
+    <value>Les appelants doivent rester dans la limite de débit de téléversement du point d'entrée.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Cause1" xml:space="preserve">
+    <value>L'appelant a dépassé le débit de requêtes autorisé.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Hint1" xml:space="preserve">
+    <value>Temporisez et réessayez après le délai indiqué dans le message.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_ShortMessage" xml:space="preserve">
+    <value>Téléversement de relevé limité en débit.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Message" xml:space="preserve">
+    <value>La requête de téléversement de relevé {0} a été limitée en débit ; réessayez après {1} secondes.</value>
+  </data>
+  <data name="StatementUpload_RequestId_Context" xml:space="preserve">
+    <value>L'identifiant de la requête entrante.</value>
+  </data>
+  <data name="StatementUpload_Field_Context" xml:space="preserve">
+    <value>Le champ de la requête qui a échoué à la validation.</value>
+  </data>
+  <data name="ExchangeRate_Source" xml:space="preserve">
+    <value>Erreurs levées lors de l'appel au fournisseur de taux de change externe (un adaptateur sortant, secondary port).</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Title" xml:space="preserve">
+    <value>Service de taux de change indisponible</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Description" xml:space="preserve">
+    <value>Cette erreur se produit lorsque le fournisseur de taux de change externe est injoignable (un dépassement de délai, une réinitialisation de connexion ou une réponse 5xx). Elle est transitoire : l'appel peut être réessayé.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Rule" xml:space="preserve">
+    <value>La conversion de devises dépend d'un fournisseur de taux de change joignable.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Cause1" xml:space="preserve">
+    <value>Le fournisseur a dépassé le délai ou a renvoyé une erreur serveur.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Hint1" xml:space="preserve">
+    <value>Vérifiez l'état de santé du fournisseur et réessayez l'appel, idéalement avec une temporisation.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Cause2" xml:space="preserve">
+    <value>Le chemin réseau sortant vers le fournisseur est perturbé.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Hint2" xml:space="preserve">
+    <value>Vérifiez la connectivité sortante ainsi que tout proxy ou pare-feu entre le service et le fournisseur.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_ShortMessage" xml:space="preserve">
+    <value>Service de taux de change indisponible.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Message" xml:space="preserve">
+    <value>Le fournisseur de taux de change « {0} » est indisponible (corrélation {1}).</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Title" xml:space="preserve">
+    <value>Paire de devises non prise en charge</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Description" xml:space="preserve">
+    <value>Cette erreur se produit lorsque le fournisseur de taux de change ne cote pas de taux pour la paire de devises source/cible demandée.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Rule" xml:space="preserve">
+    <value>Une conversion de devises ne peut être effectuée que pour une paire cotée par le fournisseur.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Cause1" xml:space="preserve">
+    <value>La paire de devises demandée n'est pas proposée par le fournisseur.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Hint1" xml:space="preserve">
+    <value>Confirmez que le fournisseur prend en charge les devises source et cible avant de demander une conversion.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_ShortMessage" xml:space="preserve">
+    <value>Paire de devises non prise en charge.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Message" xml:space="preserve">
+    <value>Le fournisseur de taux de change ne cote pas la paire de devises {0} vers {1}.</value>
+  </data>
+  <data name="ExchangeRate_Provider_Context" xml:space="preserve">
+    <value>Le fournisseur externe qui a été appelé.</value>
+  </data>
+  <data name="ExchangeRate_CorrelationId_Context" xml:space="preserve">
+    <value>L'identifiant de corrélation de l'appel sortant.</value>
+  </data>
+  <data name="ExchangeRate_FromCurrency_Context" xml:space="preserve">
+    <value>La devise source de la conversion.</value>
+  </data>
+  <data name="ExchangeRate_ToCurrency_Context" xml:space="preserve">
+    <value>La devise cible de la conversion.</value>
+  </data>
 </root>
