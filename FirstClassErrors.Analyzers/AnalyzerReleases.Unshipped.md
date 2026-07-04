@@ -58,6 +58,10 @@ FCE012  | FirstClassErrors.DocumentationContent| Warning  | EmptyExamplesAnalyze
 >>>>>>> fa43e3873d390a51a58a51b6e9e5119f10aae02a
 =======
 FCE013  | FirstClassErrors.DocumentationContent| Warning  | ExampleDoesNotCallDocumentedFactoryAnalyzer
+<<<<<<< 3aa23bfd9141054bc31a506ad36d40b8bcbc2701
 >>>>>>> 6b9bac398957700cc935135cb9decc007d4cdf60
+=======
+FCE014  | FirstClassErrors.DocumentationContent| Info     | ShortMessageSameAsDetailedMessageAnalyzer
+>>>>>>> 33f2b6c0380c98d5a9cc87d3fa834786017363cf
 FCE016  | FirstClassErrors.Usage               | Warning  | UnusedToExceptionResultAnalyzer
 >>>>>>> e82f3b87253ce42f9e0497e6d8a41054cd608b17

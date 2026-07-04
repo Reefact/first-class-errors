@@ -197,5 +197,18 @@ internal static class Descriptors {
         description: "Examples are meant to expose the real messages of the documented error, so each should invoke a factory of the type that declares the documentation.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.ExampleDoesNotCallDocumentedFactory));
 
+<<<<<<< 3aa23bfd9141054bc31a506ad36d40b8bcbc2701
 >>>>>>> 6b9bac398957700cc935135cb9decc007d4cdf60
+=======
+    public static readonly DiagnosticDescriptor ShortMessageSameAsDetailedMessage = new(
+        id: DiagnosticIds.ShortMessageSameAsDetailedMessage,
+        title: "Short message duplicates the detailed message",
+        messageFormat: "The short public message is identical to the detailed message; give the caller a shorter summary",
+        category: DiagnosticCategories.DocumentationContent,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        description: "The short message is a public summary and the detailed message an optional public detail; making them identical usually signals a copy-paste.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.ShortMessageSameAsDetailedMessage));
+
+>>>>>>> 33f2b6c0380c98d5a9cc87d3fa834786017363cf
 }
