@@ -171,7 +171,7 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
                 // Internal form: how the same failure reads in the logs. Never exposed to external clients.
                 markdown.Append($"**{Inline(strings.ExampleDiagnosticLabel)}**\n\n");
                 markdown.Append("```text\n");
-                markdown.Append(DiagnosticLogLine(example, error.Code));
+                markdown.Append(DiagnosticLogLine(example, error.Code, error.Source));
                 markdown.Append("\n```\n\n");
             }
         }
@@ -214,15 +214,25 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
     }
 
     /// <summary>
-    ///     Builds a log-style rendering of an example's internal diagnostic message. It is illustrative and stays in the
-    ///     author (invariant) language; it is never a public message.
+    ///     Builds a structured log-line rendering of an example's internal diagnostic message: a placeholder timestamp,
+    ///     the level, the source used as the logger category, the diagnostic message, and the error code as a structured
+    ///     field. The timestamp (and the error's instance id) are injected by the logging pipeline at runtime, so a
+    ///     <c>&lt;timestamp&gt;</c> placeholder is emitted to keep the output deterministic. It is illustrative, stays in
+    ///     the author (invariant) language, and is never a public message.
     /// </summary>
-    private static string DiagnosticLogLine(ErrorDescription example, string? code) {
-        string message = Inline(example.DiagnosticMessage);
+    private static string DiagnosticLogLine(ErrorDescription example, string? code, string? source) {
+        StringBuilder line = new();
+        line.Append("<timestamp> ERROR");
+        if (string.IsNullOrWhiteSpace(source) is false) {
+            line.Append($" [{source!.Trim()}]");
+        }
 
-        return string.IsNullOrWhiteSpace(code)
-                   ? $"error: {message}"
-                   : $"error: [{code!.Trim()}] {message}";
+        line.Append($" {Inline(example.DiagnosticMessage)}");
+        if (string.IsNullOrWhiteSpace(code) is false) {
+            line.Append($" error.code={code!.Trim()}");
+        }
+
+        return line.ToString();
     }
 
     /// <summary>Escapes a value for inclusion inside a JSON string literal (folding line breaks to spaces first).</summary>
