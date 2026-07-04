@@ -46,7 +46,10 @@ internal static class Descriptors {
         description: "The documentation factory referenced by [DocumentedBy] is invoked as a static parameterless method returning ErrorDocumentation; any other shape is skipped at extraction time.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.DocumentedByInvalidSignature));
 
+<<<<<<< 993934e7f8182457844cd4b01cded521601592e6
 <<<<<<< 76f96d9b547b96b7d8a14048a2f6036c69baf88d
+=======
+>>>>>>> 1110bd90366a90aca8cc009aea4091673f8c9dee
     public static readonly DiagnosticDescriptor DocumentedByWithoutProvidesErrorsFor = new(
         id: DiagnosticIds.DocumentedByWithoutProvidesErrorsFor,
         title: "[DocumentedBy] used in a type without [ProvidesErrorsFor]",
@@ -57,10 +60,13 @@ internal static class Descriptors {
         description: "Documentation extraction only scans types annotated with [ProvidesErrorsFor]; [DocumentedBy] methods on an unannotated type are never extracted.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.DocumentedByWithoutProvidesErrorsFor));
 
+<<<<<<< 993934e7f8182457844cd4b01cded521601592e6
 =======
 >>>>>>> 8229f61d518a97b78334466dffa438b4a7426c3d
 =======
 >>>>>>> 25f33ab91f85a53fce3220cf3b67a341780288de
 =======
 >>>>>>> 42551f455f05a68042840626428e601821a47626
+=======
+>>>>>>> 1110bd90366a90aca8cc009aea4091673f8c9dee
 }
