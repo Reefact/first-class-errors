@@ -38,4 +38,14 @@ internal static class Descriptors {
         description: "The documentation factory referenced by [DocumentedBy] is invoked as a static parameterless method returning ErrorDocumentation; any other shape is skipped at extraction time.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.DocumentedByInvalidSignature));
 
+    public static readonly DiagnosticDescriptor DocumentedByWithoutProvidesErrorsFor = new(
+        id: DiagnosticIds.DocumentedByWithoutProvidesErrorsFor,
+        title: "[DocumentedBy] used in a type without [ProvidesErrorsFor]",
+        messageFormat: "Type '{0}' declares [DocumentedBy] factories but is missing [ProvidesErrorsFor]; its error documentation will be silently ignored",
+        category: DiagnosticCategories.DocumentationWiring,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "Documentation extraction only scans types annotated with [ProvidesErrorsFor]; [DocumentedBy] methods on an unannotated type are never extracted.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.DocumentedByWithoutProvidesErrorsFor));
+
 }
