@@ -98,4 +98,46 @@ public sealed class UsageDocumentationSnapshotTests {
         await Verifier.Verify(markdown, extension: "md").UseParameters(culture);
     }
 
+    [Fact(DisplayName = "The single-page HTML rendering of the Usage catalog matches its snapshot.")]
+    public async Task TheSingleHtmlRenderingOfTheUsageCatalog() {
+        string html = new HtmlErrorDocumentationRenderer().Render(Extract().Documentation, new RenderRequest(RenderLayouts.Single))[0].Content;
+
+        await Verifier.Verify(html, extension: "html");
+    }
+
+    [Fact(DisplayName = "Each file of the split HTML rendering of the Usage catalog matches its snapshot.")]
+    public async Task TheSplitHtmlRenderingOfTheUsageCatalog() {
+        IReadOnlyList<RenderedDocument> documents =
+            new HtmlErrorDocumentationRenderer().Render(Extract().Documentation, new RenderRequest(RenderLayouts.Split));
+
+        // One snapshot file per produced document (pages and assets). The target name is the relative path with its
+        // separators flattened so a sub-folder never collides (e.g. assets/app.css and assets/app.js stay distinct).
+        List<Target> files = documents
+                            .Select(document => new Target(
+                                        Path.GetExtension(document.RelativePath).TrimStart('.'),
+                                        document.Content,
+                                        Path.ChangeExtension(document.RelativePath, null).Replace('/', '-').Replace('\\', '-')))
+                            .ToList();
+
+        await Verifier.Verify(files);
+    }
+
+    // The end-to-end i18n check for HTML: extracted AND rendered under each culture, so one snapshot per language
+    // captures both the localized labels (from HtmlRendererStrings) and the localized error content. The diagnostic
+    // log lines stay in the invariant (author) language in every snapshot.
+    [Theory(DisplayName = "The HTML rendering of the Usage catalog is localized per language.")]
+    [InlineData("fr")]
+    [InlineData("es")]
+    [InlineData("de")]
+    [InlineData("sv")]
+    public async Task TheLocalizedHtmlRenderingOfTheUsageCatalog(string culture) {
+        CultureInfo cultureInfo = CultureInfo.GetCultureInfo(culture);
+
+        string html = new HtmlErrorDocumentationRenderer()
+                     .Render(ExtractFor(cultureInfo).Documentation, new RenderRequest(RenderLayouts.Single, cultureInfo))[0]
+                     .Content;
+
+        await Verifier.Verify(html, extension: "html").UseParameters(culture);
+    }
+
 }
