@@ -93,7 +93,7 @@ Each renderer declares the layouts it can produce and is asked for one per call 
 
 * **json** — a curated, stable JSON schema (`single` layout only)
 * **markdown** — a single file, or (with `--layout split`) a README index plus one file per source group and one file per error (`single`/`split`)
-* **html** — a self-contained static site: a searchable, filterable catalog and, in `split`, one page per error (`single`/`split`). See [The HTML renderer](TheHtmlRenderer.en.md).
+* **html** — a self-contained static site: a searchable table of contents grouped by source and, in `split`, one page per error (`single`/`split`). See [The HTML renderer](TheHtmlRenderer.en.md).
 
 Any other format (CSV, a company template, …) is a **custom renderer**: implement the interface and register it. See [Writing a custom renderer](WritingACustomRenderer.en.md).
 

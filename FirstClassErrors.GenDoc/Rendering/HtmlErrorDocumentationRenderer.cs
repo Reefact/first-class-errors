@@ -9,12 +9,12 @@ using System.Text;
 namespace FirstClassErrors.GenDoc.Rendering;
 
 /// <summary>
-///     Renders the catalog as a self-contained static HTML site: a home page (searchable, filterable catalog table)
-///     plus, in the split layout, one page per error. Everything is emitted as UTF-8 text with no external dependency
-///     (no CDN, no binary asset): the CSS and JS are inlined into every page (so each file is self-contained and stays
-///     styled even opened on its own), icons are inline SVG, and the font stack is the system default. The only external
-///     file is <c>assets/search-index.json</c>, for external tooling. The output is deterministic (no timestamps, errors
-///     ordered by code) so it diffs cleanly in source control.
+///     Renders the catalog as a self-contained static HTML site: a home page with a two-level table of contents
+///     (grouped by source, then by error code) plus, in the split layout, one page per error. Everything is emitted as
+///     UTF-8 text with no external dependency (no CDN, no binary asset): the CSS and JS are inlined into every page (so
+///     each file is self-contained and stays styled even opened on its own), icons are inline SVG, and the font stack is
+///     the system default. The only external file is <c>assets/search-index.json</c>, for external tooling. The output
+///     is deterministic (no timestamps, errors ordered by code) so it diffs cleanly in source control.
 /// </summary>
 /// <remarks>
 ///     The renderer is a pure projection of the existing <see cref="ErrorDocumentation" /> catalog: it adds no
@@ -39,8 +39,8 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
             throw new LayoutNotSupportedException(Format, request.Layout, SupportedLayouts);
         }
 
-        IReadOnlyList<Entry> entries = BuildEntries(catalog);
-        HtmlRendererStrings  strings = new(request.Culture);
+        IReadOnlyList<Entry> entries  = BuildEntries(catalog);
+        HtmlRendererStrings  strings  = new(request.Culture);
         string               htmlLang = HtmlLang(request.Culture);
 
         bool split = string.Equals(request.Layout, RenderLayouts.Split, StringComparison.OrdinalIgnoreCase);
@@ -66,27 +66,33 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         if (entries.Count == 0) {
             body.Append($"<p class=\"empty\">{Text(strings.NoDocumentedErrors)}</p>\n");
         } else {
-            AppendControls(body, entries, strings);
-            AppendCatalogTable(body, entries, strings, entry => $"#err-{Attr(entry.Anchor)}");
+            IReadOnlyList<Group> groups = GroupBySource(entries);
+
+            AppendSearch(body, entries, strings);
+            AppendToc(body, groups, strings, entry => $"#err-{Attr(entry.Anchor)}", group => $"#{Attr(group.Anchor)}");
             body.Append($"<p id=\"no-results\" class=\"no-results\" hidden>{Text(strings.NoResults)}</p>\n");
 
-            // The detail of every error, inline, each addressable by its #err-<code> anchor.
-            foreach (Entry entry in entries) {
-                AppendErrorDetail(body, entry, strings, headingLevel: 2);
+            // Body grouped by source: a section per source (its errors inlined below).
+            foreach (Group group in groups) {
+                body.Append($"<section class=\"error-group\" id=\"{Attr(group.Anchor)}\">\n");
+                body.Append($"<h2 class=\"group-title\">{Text(group.Label)}</h2>\n");
+                foreach (Entry entry in group.Entries) {
+                    AppendErrorDetail(body, entry, strings, headingLevel: 3);
+                }
+
+                body.Append("</section>\n");
             }
         }
 
         body.Append("</main>\n");
 
-        string page = BuildPage(strings.ErrorCatalog, body.ToString(), strings, htmlLang);
-
-        return [new RenderedDocument("index.html", page)];
+        return [new RenderedDocument("index.html", BuildPage(strings.ErrorCatalog, body.ToString(), strings, htmlLang))];
     }
 
     private static List<RenderedDocument> RenderSplit(IReadOnlyList<Entry> entries, HtmlRendererStrings strings, string htmlLang) {
         List<RenderedDocument> documents = [];
 
-        // Home page: the searchable, filterable catalog table linking to one page per error.
+        // Home page: the two-level table of contents (source, then error code) linking to one page per error.
         StringBuilder home = new();
         AppendHeader(home, strings);
         home.Append("<main id=\"main\" class=\"container\">\n");
@@ -94,8 +100,10 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         if (entries.Count == 0) {
             home.Append($"<p class=\"empty\">{Text(strings.NoDocumentedErrors)}</p>\n");
         } else {
-            AppendControls(home, entries, strings);
-            AppendCatalogTable(home, entries, strings, entry => $"errors/{Attr(entry.FileName)}");
+            IReadOnlyList<Group> groups = GroupBySource(entries);
+
+            AppendSearch(home, entries, strings);
+            AppendToc(home, groups, strings, entry => $"errors/{Attr(entry.FileName)}", _ => null);
             home.Append($"<p id=\"no-results\" class=\"no-results\" hidden>{Text(strings.NoResults)}</p>\n");
         }
 
@@ -104,15 +112,15 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
 
         // One page per error.
         foreach (Entry entry in entries) {
-            StringBuilder body = new();
-            AppendHeader(body, strings);
-            body.Append("<main id=\"main\" class=\"container\">\n");
-            body.Append($"<p class=\"back\"><a href=\"../index.html\">&#8592; {Text(strings.BackToCatalog)}</a></p>\n");
-            AppendErrorDetail(body, entry, strings, headingLevel: 2);
-            body.Append("</main>\n");
+            StringBuilder page = new();
+            AppendHeader(page, strings);
+            page.Append("<main id=\"main\" class=\"container\">\n");
+            page.Append($"<p class=\"back\"><a href=\"../index.html\">&#8592; {Text(strings.BackToCatalog)}</a></p>\n");
+            AppendErrorDetail(page, entry, strings, headingLevel: 2);
+            page.Append("</main>\n");
 
-            string title = $"{entry.Title} — {strings.ErrorCatalog}";
-            documents.Add(new RenderedDocument($"errors/{entry.FileName}", BuildPage(title, body.ToString(), strings, htmlLang)));
+            string title = $"{entry.Code} — {strings.ErrorCatalog}";
+            documents.Add(new RenderedDocument($"errors/{entry.FileName}", BuildPage(title, page.ToString(), strings, htmlLang)));
         }
 
         return documents;
@@ -153,57 +161,31 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         html.Append("</header>\n");
     }
 
-    private static void AppendControls(StringBuilder html, IReadOnlyList<Entry> entries, HtmlRendererStrings strings) {
+    private static void AppendSearch(StringBuilder html, IReadOnlyList<Entry> entries, HtmlRendererStrings strings) {
         html.Append($"<p class=\"count\">{Text(strings.ErrorsCount(entries.Count))}</p>\n");
         html.Append("<div class=\"controls\">\n");
         html.Append($"<label class=\"search\"><span class=\"visually-hidden\">{Text(strings.Search)}</span>");
         html.Append($"<input id=\"search\" type=\"search\" autocomplete=\"off\" placeholder=\"{Attr(strings.SearchPlaceholder)}\"></label>\n");
-
-        html.Append($"<div class=\"filters\" role=\"group\" aria-label=\"{Attr(strings.FiltersLabel)}\">\n");
-
-        // Source filter (the documented target of each error).
-        IReadOnlyList<string> sources = entries.Select(e => e.Source)
-                                               .Where(s => string.IsNullOrWhiteSpace(s) is false)
-                                               .Select(s => s!.Trim())
-                                               .Distinct(StringComparer.Ordinal)
-                                               .OrderBy(s => s, StringComparer.Ordinal)
-                                               .ToArray();
-        if (sources.Count > 0) {
-            html.Append($"<label class=\"filter\"><span>{Text(strings.SourceColumn)}</span> <select id=\"filter-source\">");
-            html.Append($"<option value=\"\">{Text(strings.AllSources)}</option>");
-            foreach (string source in sources) {
-                html.Append($"<option value=\"{Attr(source)}\">{Text(source)}</option>");
-            }
-
-            html.Append("</select></label>\n");
-        }
-
-        html.Append($"<label class=\"filter checkbox\"><input id=\"filter-detail\" type=\"checkbox\"> <span>{Text(strings.WithDetailFilter)}</span></label>\n");
-        html.Append("</div>\n</div>\n");
+        html.Append("</div>\n");
     }
 
-    private static void AppendCatalogTable(StringBuilder html, IReadOnlyList<Entry> entries, HtmlRendererStrings strings, Func<Entry, string> hrefOf) {
-        html.Append("<table id=\"catalog\" class=\"catalog\">\n<thead>\n<tr>");
-        html.Append($"<th scope=\"col\">{Text(strings.CodeColumn)}</th>");
-        html.Append($"<th scope=\"col\">{Text(strings.SummaryColumn)}</th>");
-        html.Append($"<th scope=\"col\">{Text(strings.SourceColumn)}</th>");
-        html.Append($"<th scope=\"col\" class=\"num\">{Text(strings.DetailColumn)}</th>");
-        html.Append($"<th scope=\"col\" class=\"num\">{Text(strings.ExamplesColumn)}</th>");
-        html.Append("</tr>\n</thead>\n<tbody>\n");
+    private static void AppendToc(StringBuilder html, IReadOnlyList<Group> groups, HtmlRendererStrings strings, Func<Entry, string> errorHref, Func<Group, string?> groupHref) {
+        html.Append($"<nav class=\"toc\" id=\"toc\" aria-label=\"{Attr(strings.ErrorCatalog)}\">\n<ul>\n");
+        foreach (Group group in groups) {
+            html.Append("<li class=\"toc-group\">");
+            string? href = groupHref(group);
+            html.Append(href is null
+                            ? $"<span class=\"toc-source\">{Text(group.Label)}</span>"
+                            : $"<a class=\"toc-source\" href=\"{Attr(href)}\">{Text(group.Label)}</a>");
+            html.Append("\n<ul>\n");
+            foreach (Entry entry in group.Entries) {
+                html.Append($"<li class=\"toc-item\" data-search=\"{Attr(entry.SearchText)}\"><a href=\"{Attr(errorHref(entry))}\"><code>{Text(entry.Code)}</code></a></li>\n");
+            }
 
-        foreach (Entry entry in entries) {
-            string searchText = Attr(entry.SearchText);
-            string hasDetail  = entry.HasDetail ? "true" : "false";
-            html.Append($"<tr data-search=\"{searchText}\" data-source=\"{Attr(entry.Source ?? string.Empty)}\" data-detail=\"{hasDetail}\">");
-            html.Append($"<td class=\"code\"><a href=\"{Attr(hrefOf(entry))}\"><code>{Text(entry.Code)}</code></a></td>");
-            html.Append($"<td>{Text(entry.Summary)}</td>");
-            html.Append($"<td>{(string.IsNullOrWhiteSpace(entry.Source) ? string.Empty : $"<span class=\"badge badge-source\">{Text(entry.Source!)}</span>")}</td>");
-            html.Append($"<td class=\"num\">{PresenceMark(entry.HasDetail, strings)}</td>");
-            html.Append($"<td class=\"num\">{entry.ExampleCount.ToString(CultureInfo.InvariantCulture)}</td>");
-            html.Append("</tr>\n");
+            html.Append("</ul>\n</li>\n");
         }
 
-        html.Append("</tbody>\n</table>\n");
+        html.Append("</ul>\n</nav>\n");
     }
 
     private static void AppendErrorDetail(StringBuilder html, Entry entry, HtmlRendererStrings strings, int headingLevel) {
@@ -213,14 +195,9 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
 
         html.Append($"<article class=\"error-detail\" id=\"err-{Attr(entry.Anchor)}\">\n");
 
-        // Head: title with a copyable anchor, then the code and source badges.
-        html.Append("<div class=\"error-head\">\n");
-        html.Append($"<{h} class=\"error-title\">{Text(entry.Title)} <a class=\"anchor\" href=\"#err-{Attr(entry.Anchor)}\" aria-label=\"{Attr(strings.CopyLinkLabel)}\" data-anchor>#</a></{h}>\n");
-        html.Append("<div class=\"badges\">");
-        html.Append($"<span class=\"badge badge-code\">{Text(entry.Code)}</span>");
-        if (string.IsNullOrWhiteSpace(error.Source) is false) { html.Append($"<span class=\"badge badge-source\">{Text(error.Source!.Trim())}</span>"); }
-
-        html.Append("</div>\n</div>\n");
+        // Head: the error code as the heading (with a copyable anchor), then the human title as a subtitle.
+        html.Append($"<{h} class=\"error-title\"><code>{Text(entry.Code)}</code> <a class=\"anchor\" href=\"#err-{Attr(entry.Anchor)}\" aria-label=\"{Attr(strings.CopyLinkLabel)}\" data-anchor>#</a></{h}>\n");
+        html.Append($"<p class=\"error-subtitle\">{Text(entry.Title)}</p>\n");
 
         if (string.IsNullOrWhiteSpace(error.Explanation) is false) {
             html.Append($"<section class=\"doc\"><{hSub}>{Text(strings.DocumentationHeading)}</{hSub}><p>{Text(error.Explanation!.Trim())}</p></section>\n");
@@ -230,28 +207,22 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
             html.Append($"<blockquote class=\"rule\"><strong>{Text(strings.BusinessRuleLabel)}</strong> {Text(error.BusinessRule!.Trim())}</blockquote>\n");
         }
 
-        // Canonical three messages (from the first example), each explicitly labelled — public vs internal.
-        ErrorDescription? headline = error.Examples.Count > 0 ? error.Examples[0] : null;
-        if (headline is not null) {
-            html.Append("<section class=\"messages\">\n");
-            html.Append($"<div class=\"msg-card public\"><{hSub}>{Text(strings.PublicSummaryHeading)}</{hSub}><p>{Text(headline.ShortMessage)}</p></div>\n");
-            if (string.IsNullOrWhiteSpace(headline.DetailedMessage) is false) {
-                html.Append($"<div class=\"msg-card public\"><{hSub}>{Text(strings.PublicDetailHeading)}</{hSub}><p>{Text(headline.DetailedMessage!)}</p></div>\n");
-            }
-
-            html.Append($"<div class=\"msg-card internal\"><{hSub}>{Text(strings.DiagnosticHeading)}</{hSub}>");
-            html.Append($"<p class=\"note\">{Text(strings.DiagnosticNote)}</p>");
-            html.Append($"<pre class=\"log\"><code>{Text(headline.DiagnosticMessage)}</code></pre></div>\n");
-            html.Append("</section>\n");
-        }
-
         if (error.Diagnostics.Count > 0) {
-            html.Append($"<section class=\"diagnostics\"><{hSub}>{Text(strings.DiagnosticsHeading)}</{hSub}>\n<ul>\n");
+            html.Append($"<section class=\"diagnostics\"><{hSub}>{Text(strings.DiagnosticsHeading)}</{hSub}>\n");
+            html.Append("<div class=\"table-wrap\"><table class=\"data-table\">\n<thead>\n<tr>");
+            html.Append($"<th scope=\"col\">{Text(strings.DiagnosticCauseHeader)}</th>");
+            html.Append($"<th scope=\"col\">{Text(strings.DiagnosticOriginHeader)}</th>");
+            html.Append($"<th scope=\"col\">{Text(strings.DiagnosticHintHeader)}</th>");
+            html.Append("</tr>\n</thead>\n<tbody>\n");
             foreach (ErrorDiagnostic diagnostic in error.Diagnostics) {
-                html.Append($"<li><strong>{Text(diagnostic.PossibleCause)}</strong> &#8212; <em>{Text(strings.OriginLabel)}</em> {Text(diagnostic.Origin.ToString())} &#8212; {Text(diagnostic.AnalysisHint)}</li>\n");
+                html.Append("<tr>");
+                html.Append($"<td>{Text(diagnostic.PossibleCause)}</td>");
+                html.Append($"<td>{Text(diagnostic.Origin.ToString())}</td>");
+                html.Append($"<td>{Text(diagnostic.AnalysisHint)}</td>");
+                html.Append("</tr>\n");
             }
 
-            html.Append("</ul>\n</section>\n");
+            html.Append("</tbody>\n</table></div>\n</section>\n");
         }
 
         if (error.Examples.Count > 0) {
@@ -260,7 +231,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
                 html.Append("<div class=\"example\">\n");
                 html.Append($"<p class=\"example-label\">{Text(strings.PublicResponseLabel)}</p>\n");
                 html.Append($"<pre class=\"json\"><code>{Text(ProblemDetailsJson(example, error.Code))}</code></pre>\n");
-                html.Append($"<p class=\"example-label internal\">{Text(strings.DiagnosticExampleLabel)}</p>\n");
+                html.Append($"<p class=\"example-label\">{Text(strings.DiagnosticExampleLabel)}</p>\n");
                 html.Append($"<pre class=\"log\"><code>{Text(DiagnosticLogLine(example, error.Code, error.Source))}</code></pre>\n");
                 html.Append("</div>\n");
             }
@@ -270,7 +241,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
 
         if (error.Context.Count > 0) {
             html.Append($"<section class=\"context\"><{hSub}>{Text(strings.ContextHeading)}</{hSub}>\n");
-            html.Append("<div class=\"table-wrap\"><table class=\"context-table\">\n<thead>\n<tr>");
+            html.Append("<div class=\"table-wrap\"><table class=\"data-table\">\n<thead>\n<tr>");
             html.Append($"<th scope=\"col\">{Text(strings.ContextKeyHeader)}</th>");
             html.Append($"<th scope=\"col\">{Text(strings.ContextTypeHeader)}</th>");
             html.Append($"<th scope=\"col\">{Text(strings.ContextDescriptionHeader)}</th>");
@@ -289,12 +260,6 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         }
 
         html.Append("</article>\n");
-    }
-
-    private static string PresenceMark(bool present, HtmlRendererStrings strings) {
-        return present
-                   ? $"<span class=\"present\" aria-label=\"{Attr(strings.YesLabel)}\" title=\"{Attr(strings.YesLabel)}\">&#10003;</span>"
-                   : "<span class=\"absent\" aria-hidden=\"true\">&#8212;</span>";
     }
 
     #endregion
@@ -365,7 +330,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
             string code  = FirstNonEmpty(error.Code) ?? $"ERROR_{position}";
             string title = FirstNonEmpty(error.Title, error.Code) ?? $"Error {position}";
 
-            string baseName = SafeFileStem(code);
+            string baseName = SafeStem(code);
             if (baseName.Length == 0) { baseName = $"error-{position}"; }
 
             string name   = baseName;
@@ -379,6 +344,25 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         }
 
         return entries;
+    }
+
+    private static IReadOnlyList<Group> GroupBySource(IReadOnlyList<Entry> entries) {
+        List<Group>               groups = [];
+        Dictionary<string, Group> byKey  = new(StringComparer.Ordinal);
+
+        // Group by source (ProvidesErrorsFor target), preserving first-seen order of both groups and errors.
+        foreach (Entry entry in entries) {
+            string source = entry.Source ?? "Other";
+            if (byKey.TryGetValue(source, out Group? group) is false) {
+                group = new Group(source, "src-" + SafeStem(source), []);
+                byKey[source] = group;
+                groups.Add(group);
+            }
+
+            group.Entries.Add(entry);
+        }
+
+        return groups;
     }
 
     private static string BuildSearchIndex(IReadOnlyList<Entry> entries) {
@@ -415,11 +399,11 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         return null;
     }
 
-    /// <summary>Turns an error code into a safe file-name stem, keeping it recognizable (letters, digits, <c>._-</c>).</summary>
-    private static string SafeFileStem(string code) {
-        StringBuilder builder  = new(code.Length);
+    /// <summary>Turns a code or source name into a safe file-name / anchor stem (letters, digits, <c>._-</c>).</summary>
+    private static string SafeStem(string value) {
+        StringBuilder builder  = new(value.Length);
         bool          lastDash = false;
-        foreach (char character in code.Trim()) {
+        foreach (char character in value.Trim()) {
             if (char.IsAsciiLetterOrDigit(character) || character is '_' or '-' or '.') {
                 builder.Append(character);
                 lastDash = false;
@@ -463,7 +447,10 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
 
     #endregion
 
-    #region Nested type: Entry
+    #region Nested types
+
+    /// <summary>A source group (from <c>[ProvidesErrorsFor]</c>): its label, anchor id, and the errors under it.</summary>
+    private sealed record Group(string Label, string Anchor, List<Entry> Entries);
 
     /// <summary>An error paired with its stable code, display title, and file-name stem, plus derived catalog data.</summary>
     private sealed class Entry {
@@ -476,11 +463,9 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
             FileName = fileStem + ".html";
 
             ErrorDescription? first = error.Examples.Count > 0 ? error.Examples[0] : null;
-            Summary      = first?.ShortMessage ?? title;
-            HasDetail    = error.Examples.Any(example => string.IsNullOrWhiteSpace(example.DetailedMessage) is false);
-            ExampleCount = error.Examples.Count;
-            Source       = string.IsNullOrWhiteSpace(error.Source) ? null : error.Source!.Trim();
-            SearchText   = BuildSearchText(error, code, title);
+            Summary    = first?.ShortMessage ?? title;
+            Source     = string.IsNullOrWhiteSpace(error.Source) ? null : error.Source!.Trim();
+            SearchText = BuildSearchText(error, code, title);
         }
 
         public ErrorDocumentation Error { get; }
@@ -492,8 +477,6 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
 
         public string FileName { get; }
         public string Summary { get; }
-        public bool HasDetail { get; }
-        public int ExampleCount { get; }
         public string? Source { get; }
 
         /// <summary>Lower-cased, space-joined searchable text (code, title, messages, documentation, context).</summary>

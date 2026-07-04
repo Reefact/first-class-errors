@@ -99,6 +99,15 @@ internal sealed class HtmlRendererStrings {
     /// <summary>The diagnostics section heading.</summary>
     public string DiagnosticsHeading => Get(nameof(DiagnosticsHeading));
 
+    /// <summary>The diagnostics table's "possible cause" column header.</summary>
+    public string DiagnosticCauseHeader => Get(nameof(DiagnosticCauseHeader));
+
+    /// <summary>The diagnostics table's "origin" column header.</summary>
+    public string DiagnosticOriginHeader => Get(nameof(DiagnosticOriginHeader));
+
+    /// <summary>The diagnostics table's "analysis hint" column header.</summary>
+    public string DiagnosticHintHeader => Get(nameof(DiagnosticHintHeader));
+
     /// <summary>The inline label preceding a diagnostic's origin.</summary>
     public string OriginLabel => Get(nameof(OriginLabel));
 
