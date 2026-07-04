@@ -11,8 +11,9 @@ namespace FirstClassErrors.GenDoc.Rendering;
 /// <summary>
 ///     Renders the catalog as a self-contained static HTML site: a home page (searchable, filterable catalog table)
 ///     plus, in the split layout, one page per error. Everything is emitted as UTF-8 text with no external dependency
-///     (no CDN, no binary asset): the CSS and JS are inlined into <c>assets/app.css</c> / <c>assets/app.js</c>, icons
-///     are inline SVG, and the font stack is the system default. The output is deterministic (no timestamps, errors
+///     (no CDN, no binary asset): the CSS and JS are inlined into every page (so each file is self-contained and stays
+///     styled even opened on its own), icons are inline SVG, and the font stack is the system default. The only external
+///     file is <c>assets/search-index.json</c>, for external tooling. The output is deterministic (no timestamps, errors
 ///     ordered by code) so it diffs cleanly in source control.
 /// </summary>
 /// <remarks>
@@ -48,9 +49,8 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
                                                ? RenderSplit(entries, strings, htmlLang)
                                                : RenderSingle(entries, strings, htmlLang);
 
-        // Assets are identical in both layouts; app.css/app.js are static, the search index is derived from the catalog.
-        documents.Add(new RenderedDocument("assets/app.css", HtmlRendererAssets.Css));
-        documents.Add(new RenderedDocument("assets/app.js", HtmlRendererAssets.Js));
+        // The CSS and JS are inlined into every page (see BuildPage) so each file is self-contained and stays styled
+        // even when opened on its own. Only the search index remains an external asset, for external tooling.
         documents.Add(new RenderedDocument("assets/search-index.json", BuildSearchIndex(entries)));
 
         return documents;
@@ -78,7 +78,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
 
         body.Append("</main>\n");
 
-        string page = BuildPage(strings.ErrorCatalog, body.ToString(), strings, htmlLang, assetsPrefix: "assets/");
+        string page = BuildPage(strings.ErrorCatalog, body.ToString(), strings, htmlLang);
 
         return [new RenderedDocument("index.html", page)];
     }
@@ -100,7 +100,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         }
 
         home.Append("</main>\n");
-        documents.Add(new RenderedDocument("index.html", BuildPage(strings.ErrorCatalog, home.ToString(), strings, htmlLang, assetsPrefix: "assets/")));
+        documents.Add(new RenderedDocument("index.html", BuildPage(strings.ErrorCatalog, home.ToString(), strings, htmlLang)));
 
         // One page per error.
         foreach (Entry entry in entries) {
@@ -112,7 +112,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
             body.Append("</main>\n");
 
             string title = $"{entry.Title} — {strings.ErrorCatalog}";
-            documents.Add(new RenderedDocument($"errors/{entry.FileName}", BuildPage(title, body.ToString(), strings, htmlLang, assetsPrefix: "../assets/")));
+            documents.Add(new RenderedDocument($"errors/{entry.FileName}", BuildPage(title, body.ToString(), strings, htmlLang)));
         }
 
         return documents;
@@ -122,7 +122,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
 
     #region Building blocks
 
-    private static string BuildPage(string title, string body, HtmlRendererStrings strings, string htmlLang, string assetsPrefix) {
+    private static string BuildPage(string title, string body, HtmlRendererStrings strings, string htmlLang) {
         StringBuilder page = new();
         page.Append("<!doctype html>\n");
         page.Append($"<html lang=\"{Attr(htmlLang)}\">\n");
@@ -130,14 +130,15 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         page.Append("<meta charset=\"utf-8\">\n");
         page.Append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n");
         page.Append($"<title>{Text(title)}</title>\n");
-        page.Append($"<link rel=\"stylesheet\" href=\"{Attr(assetsPrefix)}app.css\">\n");
+        // Inlined so each page is self-contained (styled and interactive) no matter how it is opened — no external file.
+        page.Append($"<style>\n{HtmlRendererAssets.Css}\n</style>\n");
         // Apply the stored theme before first paint to avoid a flash of the wrong theme.
         page.Append($"<script>{HtmlRendererAssets.ThemeInit}</script>\n");
         page.Append("</head>\n");
         page.Append("<body>\n");
         page.Append($"<a class=\"skip-link\" href=\"#main\">{Text(strings.SkipToContent)}</a>\n");
         page.Append(body);
-        page.Append($"<script src=\"{Attr(assetsPrefix)}app.js\"></script>\n");
+        page.Append($"<script>\n{HtmlRendererAssets.Js}\n</script>\n");
         page.Append("</body>\n</html>\n");
 
         return page.ToString();

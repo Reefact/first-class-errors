@@ -26,21 +26,19 @@ The output is a complete folder, ready to open locally or publish to any static 
 
 ```text
 error-catalog/
-  index.html
+  index.html                   (CSS and JS inlined — self-contained)
   errors/                      (split layout only)
     ORDER_ALREADY_SHIPPED.html
     TEMPERATURE_BELOW_ABSOLUTE_ZERO.html
   assets/
-    app.css
-    app.js
-    search-index.json
+    search-index.json          (for external tooling; in-page search is self-contained)
 ```
 
 Each error has a stable URL derived from its **code** (`errors/ORDER_ALREADY_SHIPPED.html`, or `#err-ORDER_ALREADY_SHIPPED` in single-page) — never from its message, title, or generation order.
 
 ## Features
 
-- **No external dependency.** The CSS and JS are inlined into `assets/`, icons are inline SVG, the font stack is the system default — the site works offline from a local folder, with no CDN.
+- **No external dependency.** The CSS and JS are inlined into every page, icons are inline SVG, the font stack is the system default — each page is self-contained and works offline from a local folder (or on its own), with no CDN.
 - **Light / dark theme.** Follows the system preference (`prefers-color-scheme`) by default, with a manual toggle that is remembered in `localStorage`.
 - **Search & filters.** A client-side search over every error (code, messages, documentation, context) and filters by source and by presence of a public detail. Search works offline (it reads data embedded in the page, so it does not depend on a network fetch).
 - **Localization.** Labels are localized for `--language` (e.g. `--language fr`), like the Markdown renderer. Public messages follow the culture; the internal diagnostic message stays in the author language.
