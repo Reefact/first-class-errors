@@ -13,6 +13,7 @@ Rule ID | Category | Severity | Notes
 --------|--------------------------------------|----------|-------------------------------------
 FCE001  | FirstClassErrors.ErrorCodes          | Error    | DuplicateErrorCodeAnalyzer
 FCE002  | FirstClassErrors.ErrorCodes          | Error    | EmptyErrorCodeAnalyzer
+FCE003  | FirstClassErrors.ErrorCodes          | Info     | NonLiteralErrorCodeAnalyzer (disabled by default)
 FCE006  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByTargetNotFoundAnalyzer
 FCE007  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByInvalidSignatureAnalyzer
 <<<<<<< 993934e7f8182457844cd4b01cded521601592e6

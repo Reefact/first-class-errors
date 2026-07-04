@@ -29,10 +29,23 @@ internal static class Descriptors {
         description: "ErrorCode.Create requires a non-empty code; an empty or whitespace literal throws an ArgumentException at runtime.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.EmptyErrorCode));
 
+<<<<<<< 1af5e392cae2440e9940e433595f2ca8292bd0fc
 <<<<<<< b99d792aab6c528239b0e92feef667084d9dea0a
 <<<<<<< b57606bb883403c1b1a6d14247e5e03a167aa892
 =======
 >>>>>>> 25f33ab91f85a53fce3220cf3b67a341780288de
+=======
+    public static readonly DiagnosticDescriptor NonLiteralErrorCode = new(
+        id: DiagnosticIds.NonLiteralErrorCode,
+        title: "Error code is not a compile-time literal",
+        messageFormat: "Error code is computed at runtime; duplicate-code analysis (FCE001) cannot verify it",
+        category: DiagnosticCategories.ErrorCodes,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: false,
+        description: "Only literal error codes can be checked statically. A code built at runtime is a blind spot for duplicate detection; this rule is opt-in for teams that want codes to stay literal.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.NonLiteralErrorCode));
+
+>>>>>>> ef8557a936a90c63d0fd16092e81044e7e626d7d
     public static readonly DiagnosticDescriptor DocumentedByTargetNotFound = new(
         id: DiagnosticIds.DocumentedByTargetNotFound,
         title: "Documentation method referenced by [DocumentedBy] was not found",
