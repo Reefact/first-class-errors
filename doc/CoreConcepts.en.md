@@ -21,9 +21,9 @@ In FirstClassErrors, an **error** represents:
 
 An **error** becomes a semantic object, not just a runtime signal.
 
-### Three messages, three audiences
+### Three messages, two audiences
 
-An error deliberately separates what may reach a caller from what is meant for developers and support:
+An error carries three messages but deliberately splits them across just **two audiences** — a public one (end users / API clients) and an internal one (logs, support, developers). The separation is guaranteed by construction, so what reaches a caller can never leak what is meant for developers and support:
 
 * **`ShortMessage`** (mandatory) — a short public summary, safe to expose to an end user or an API client (e.g. the `title` of an RFC 9457 problem detail).
 * **`DetailedMessage`** (optional) — a controlled public detail, exposable **only** when the application explicitly chooses to (e.g. the `detail` of an RFC 9457 problem detail). It must never carry sensitive or internal information.

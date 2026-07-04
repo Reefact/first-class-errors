@@ -20,9 +20,9 @@ Avec FirstClassErrors, une **erreur** représente :
 
 Une **erreur** devient un objet sémantique, pas seulement un signal d’exécution.
 
-### Trois messages, trois publics
+### Trois messages, deux publics
 
-Une erreur sépare délibérément ce qui peut atteindre un appelant de ce qui est destiné aux développeurs et au support :
+Une erreur porte trois messages mais les répartit délibérément entre seulement **deux publics** — un public externe (utilisateurs finaux / clients d’API) et un public interne (logs, support, développeurs). La séparation est garantie par construction : ce qui atteint un appelant ne peut jamais laisser fuiter ce qui est destiné aux développeurs et au support :
 
 * **`ShortMessage`** (obligatoire) — un résumé public court, exposable sans risque à un utilisateur final ou à un client d’API (par ex. le `title` d’un problem detail RFC 9457).
 * **`DetailedMessage`** (optionnel) — un détail public maîtrisé, exposable **uniquement** si l’application le décide explicitement (par ex. le `detail` d’un problem detail RFC 9457). Il ne doit jamais contenir d’information sensible ou interne.
