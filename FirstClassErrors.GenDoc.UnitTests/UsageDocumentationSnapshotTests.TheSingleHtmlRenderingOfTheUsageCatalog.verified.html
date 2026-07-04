@@ -8,7 +8,6 @@
 :root {
   --bg: #ffffff; --bg-soft: #f6f8fa; --surface: #ffffff; --text: #1f2328; --text-soft: #59636e;
   --border: #d1d9e0; --accent: #0969da; --code-bg: #f6f8fa; --code-text: #1f2328;
-  --internal-bg: #fff8f0; --internal-border: #e0a96d; --internal-text: #7a4a10;
   --radius: 8px; --maxw: 1080px;
   --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
@@ -17,18 +16,15 @@
   :root {
     --bg: #14171c; --bg-soft: #1b1f26; --surface: #1b1f26; --text: #e6edf3; --text-soft: #9aa4b2;
     --border: #2c333d; --accent: #4493f8; --code-bg: #11151b; --code-text: #e6edf3;
-    --internal-bg: #241a10; --internal-border: #7a5a2e; --internal-text: #e6c58a;
   }
 }
 :root[data-theme="light"] {
   --bg: #ffffff; --bg-soft: #f6f8fa; --surface: #ffffff; --text: #1f2328; --text-soft: #59636e;
   --border: #d1d9e0; --accent: #0969da; --code-bg: #f6f8fa; --code-text: #1f2328;
-  --internal-bg: #fff8f0; --internal-border: #e0a96d; --internal-text: #7a4a10;
 }
 :root[data-theme="dark"] {
   --bg: #14171c; --bg-soft: #1b1f26; --surface: #1b1f26; --text: #e6edf3; --text-soft: #9aa4b2;
   --border: #2c333d; --accent: #4493f8; --code-bg: #11151b; --code-text: #e6edf3;
-  --internal-bg: #241a10; --internal-border: #7a5a2e; --internal-text: #e6c58a;
 }
 * { box-sizing: border-box; }
 html { color-scheme: light dark; }
@@ -42,62 +38,46 @@ code, pre { font-family: var(--mono); }
 .skip-link:focus { left: 0; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 .site-header { border-bottom: 1px solid var(--border); background: var(--bg-soft); position: sticky; top: 0; z-index: 5; }
-.header-row { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; padding-bottom: 14px; }
+.header-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; }
 .site-title { font-size: 1.15rem; margin: 0; }
 .site-title a { color: var(--text); }
 .theme-toggle { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); cursor: pointer; }
 .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
 main { padding: 24px 0 64px; }
 .count { color: var(--text-soft); margin: 0 0 16px; }
-.controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 20px; }
-.search { flex: 1 1 280px; }
+.controls { margin-bottom: 20px; }
+.search { display: block; max-width: 460px; }
 .search input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1rem; }
-.filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-.filter { display: inline-flex; align-items: center; gap: 6px; color: var(--text-soft); font-size: 0.92rem; }
-.filter select { padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); }
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; }
-.catalog { font-size: 0.95rem; }
-.catalog th, .catalog td, .context-table th, .context-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
-thead th { color: var(--text-soft); font-weight: 600; border-bottom: 2px solid var(--border); white-space: nowrap; }
-.num { text-align: right; }
-.catalog td.code a { font-weight: 600; }
-.present { color: #1a7f37; font-weight: 700; }
-:root[data-theme="dark"] .present { color: #3fb950; }
-@media (prefers-color-scheme: dark) { .present { color: #3fb950; } }
-.absent { color: var(--text-soft); }
-.no-results, .empty { color: var(--text-soft); padding: 24px 0; }
+.no-results, .empty { color: var(--text-soft); padding: 16px 0; }
 .back { margin: 0 0 16px; }
-.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.82rem; font-family: var(--mono); border: 1px solid var(--border); }
-.badge-code { background: var(--code-bg); color: var(--code-text); font-weight: 600; }
-.badge-source { background: transparent; color: var(--text-soft); }
-.error-detail { border-top: 1px solid var(--border); padding: 28px 0; }
-.error-detail:first-of-type { border-top: 0; }
-.error-title { font-size: 1.4rem; margin: 0 0 10px; scroll-margin-top: 80px; }
-.anchor { color: var(--text-soft); text-decoration: none; opacity: 0; padding-left: 6px; }
+.toc { margin: 0 0 8px; }
+.toc ul { list-style: none; margin: 0; padding: 0; }
+.toc > ul > li { margin: 0 0 16px; }
+.toc-source { display: inline-block; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.toc-group > ul { padding-left: 16px; margin-left: 4px; border-left: 2px solid var(--border); }
+.toc-item { margin: 3px 0; }
+.toc-item code { font-size: 0.9rem; }
+.error-group { margin-top: 40px; }
+.group-title { font-size: 1.5rem; margin: 0 0 4px; padding-bottom: 8px; border-bottom: 2px solid var(--border); scroll-margin-top: 72px; }
+.error-detail { border-top: 1px solid var(--border); padding: 24px 0; }
+.error-group .error-detail:first-of-type { border-top: 0; }
+.error-title { font-size: 1.15rem; margin: 0; scroll-margin-top: 72px; }
+.error-title code { background: var(--code-bg); color: var(--code-text); padding: 2px 8px; border-radius: var(--radius); font-size: 0.95rem; }
+.error-subtitle { color: var(--text-soft); margin: 4px 0 12px; }
+.anchor { color: var(--text-soft); text-decoration: none; opacity: 0; padding-left: 4px; }
 .error-title:hover .anchor, .anchor:focus { opacity: 1; }
-.badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-.doc h3, .messages h3, .diagnostics h3, .examples h3, .context h3, section h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-soft); margin: 22px 0 8px; }
-.rule { margin: 16px 0; padding: 10px 14px; border-left: 3px solid var(--accent); background: var(--bg-soft); border-radius: 0 var(--radius) var(--radius) 0; }
-.messages { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-.msg-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; background: var(--surface); }
-.msg-card h3 { margin-top: 0; }
-.msg-card p { margin: 0; }
-.msg-card.internal { background: var(--internal-bg); border-color: var(--internal-border); }
-.msg-card.internal h3, .example-label.internal { color: var(--internal-text); }
-.note { font-size: 0.85rem; color: var(--internal-text); margin: 0 0 8px; }
-.diagnostics ul { margin: 0; padding-left: 20px; }
-.diagnostics li { margin: 6px 0; }
-.example { margin: 14px 0; }
-.example-label { font-weight: 600; margin: 12px 0 6px; font-size: 0.9rem; }
+section h3, section h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-soft); margin: 20px 0 8px; }
+.rule { margin: 14px 0; padding: 10px 14px; border-left: 3px solid var(--accent); background: var(--bg-soft); border-radius: 0 var(--radius) var(--radius) 0; }
+.table-wrap { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.data-table th, .data-table td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.data-table thead th { color: var(--text-soft); font-weight: 600; border-bottom: 2px solid var(--border); white-space: nowrap; }
+.example { margin: 12px 0; }
+.example-label { font-weight: 600; margin: 12px 0 6px; font-size: 0.9rem; color: var(--text); }
 pre { margin: 0; padding: 12px 14px; background: var(--code-bg); color: var(--code-text); border: 1px solid var(--border); border-radius: var(--radius); overflow-x: auto; }
 pre code { font-size: 0.86rem; white-space: pre; }
-pre.log { border-left: 3px solid var(--internal-border); }
-.context-table { font-size: 0.92rem; }
 @media (max-width: 640px) {
-  .header-row { padding-top: 10px; padding-bottom: 10px; }
-  .catalog th:nth-child(3), .catalog td:nth-child(3) { display: none; }
-  .error-title { font-size: 1.2rem; }
+  .group-title { font-size: 1.3rem; }
 }
 </style>
 <script>(function(){try{var t=localStorage.getItem('fce-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
@@ -114,48 +94,65 @@ pre.log { border-left: 3px solid var(--internal-border); }
 <p class="count">10 documented errors</p>
 <div class="controls">
 <label class="search"><span class="visually-hidden">Search</span><input id="search" type="search" autocomplete="off" placeholder="Search by code, message, documentation…"></label>
-<div class="filters" role="group" aria-label="Filters">
-<label class="filter"><span>Source</span> <select id="filter-source"><option value="">All sources</option><option value="Amount">Amount</option><option value="BankTransactionFileValidator">BankTransactionFileValidator</option><option value="ExchangeRateProvider">ExchangeRateProvider</option><option value="MoneyTransfer">MoneyTransfer</option><option value="StatementUploadEndpoint">StatementUploadEndpoint</option><option value="Temperature">Temperature</option></select></label>
-<label class="filter checkbox"><input id="filter-detail" type="checkbox"> <span>With public detail</span></label>
 </div>
-</div>
-<table id="catalog" class="catalog">
+<nav class="toc" id="toc" aria-label="Error Catalog">
+<ul>
+<li class="toc-group"><a class="toc-source" href="#src-Amount">Amount</a>
+<ul>
+<li class="toc-item" data-search="amount_currency_mismatch amount currency mismatch this error occurs when trying to use multiple amounts together in an operation while they are expressed in different currencies. all monetary operations must involve amounts expressed in the same currency. amount currency mismatch the two amounts use different currencies and cannot be combined. failed to perform the monetary operation because the involved amounts are expressed in different currencies: 127.33 eur and 57689 usd. amounts were used in a monetary operation without having been converted to the same currency. verify whether all amounts involved in the operation were converted to a common currency before being used together. amounts expected to be expressed in the same currency were provided with different currencies. check the currencies associated with each amount and confirm whether a common currency was expected for this operation."><a href="#err-AMOUNT_CURRENCY_MISMATCH"><code>AMOUNT_CURRENCY_MISMATCH</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-BankTransactionFileValidator">BankTransactionFileValidator</a>
+<ul>
+<li class="toc-item" data-search="bank_transaction_file_date_out_of_statement_period transaction date outside statement period this error occurs when trying to validate a bank statement file that contains one or more transactions dated outside the statement period. all transactions must occur within the statement period. banktransactionfilevalidator transaction date is outside the statement period. a transaction date falls outside the statement period. transaction dated 2024-02-02 is outside the statement period [2024-01-05;2024-01-31]. the transaction date provided in the statement file is incorrect or inconsistent with the actual transaction date. verify the transaction date present in the input file and confirm its consistency with the actual transaction timeline. the statement period defined in the file does not match the actual coverage period of the transactions. check whether the statement start and end dates in the file align with the period covered by the transactions. the transaction was posted after the statement was generated but was mistakenly included in the file. determine whether late-posted transactions were included in the statement generation process. an internal processing error caused the transaction date to be shifted during data transformation or import. examine the data import and transformation stages to confirm that transaction dates are preserved without alteration. transaction_date the date of the transaction being processed."><a href="#err-BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD"><code>BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD</code></a></li>
+<li class="toc-item" data-search="bank_transaction_file_statement_total_amount_mismatch statement total amount mismatch this error occurs when trying to validate a bank statement file whose declared total amount does not match the sum of the individual transaction amounts. the statement total amount must equal the sum of all transaction amounts included in the statement. banktransactionfilevalidator statement total amount mismatch. the declared statement total does not match the computed total. the declared statement total amount (1250 eur) does not match the computed total amount from transactions (1249.5 eur). the total amount declared in the statement file does not match the sum of the individual transaction amounts. verify the declared total amount in the file and compare it with the sum of all transaction amounts. one or more transactions are missing or duplicated in the statement file. check whether all expected transactions are present exactly once in the statement file. a rounding or precision error occurred when calculating the statement total amount. examine how rounding and precision rules were applied when computing the statement total. an internal processing error altered transaction amounts during file parsing or transformation. inspect the file parsing and transformation stages to confirm that transaction amounts remain unchanged."><a href="#err-BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH"><code>BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-ExchangeRateProvider">ExchangeRateProvider</a>
+<ul>
+<li class="toc-item" data-search="exchange_rate_service_unavailable exchange-rate service unavailable this error occurs when the external exchange-rate provider cannot be reached (a timeout, a connection reset, or a 5xx response). it is transient: the call can be retried. currency conversion depends on a reachable exchange-rate provider. exchangerateprovider exchange-rate service unavailable. the exchange-rate service is temporarily unavailable; please retry later. the exchange-rate provider &#39;acme-fx&#39; is unavailable (correlation 22222222-2222-2222-2222-222222222222). the provider timed out or returned a server error. check the provider&#39;s health and retry the call, ideally with a backoff. the outgoing network path to the provider is disrupted. verify outbound connectivity and any proxy or firewall between the service and the provider. provider the external provider that was called. correlation_id the correlation identifier of the outgoing call."><a href="#err-EXCHANGE_RATE_SERVICE_UNAVAILABLE"><code>EXCHANGE_RATE_SERVICE_UNAVAILABLE</code></a></li>
+<li class="toc-item" data-search="unsupported_currency_pair unsupported currency pair this error occurs when the exchange-rate provider does not quote a rate for the requested source/target currency pair. a currency conversion can only be performed for a pair the provider quotes. exchangerateprovider unsupported currency pair. the requested currency pair is not supported. the exchange-rate provider does not quote the eur to usd currency pair. the requested currency pair is not offered by the provider. confirm the provider supports both the source and target currencies before requesting a conversion. from_currency the source currency of the conversion. to_currency the target currency of the conversion."><a href="#err-UNSUPPORTED_CURRENCY_PAIR"><code>UNSUPPORTED_CURRENCY_PAIR</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-StatementUploadEndpoint">StatementUploadEndpoint</a>
+<ul>
+<li class="toc-item" data-search="malformed_statement_payload malformed statement payload this error occurs when the statement upload endpoint receives a request whose body is missing a required field or carries an invalid value. an uploaded statement request must carry every required field with a valid value. statementuploadendpoint malformed statement payload. the uploaded statement request is missing a required field or contains an invalid value. the statement upload request 11111111-1111-1111-1111-111111111111 is malformed: the &#39;statementperiod&#39; field is missing or invalid. the client sent an incomplete or malformed request body. inspect the field named in the context and confirm the client sends it with a valid value. request_id the identifier of the incoming request. field the request field that failed validation."><a href="#err-MALFORMED_STATEMENT_PAYLOAD"><code>MALFORMED_STATEMENT_PAYLOAD</code></a></li>
+<li class="toc-item" data-search="statement_upload_rate_limited statement upload rate-limited this error occurs when too many statement uploads arrive in a short window and the endpoint throttles the request. it is transient: the same request can be retried later. callers must stay within the endpoint&#39;s upload rate limit. statementuploadendpoint statement upload rate-limited. too many statement uploads were sent in a short period; please retry later. the statement upload request 11111111-1111-1111-1111-111111111111 was rate-limited; retry after 30 seconds. the caller exceeded the allowed request rate. back off and retry after the delay indicated in the message. request_id the identifier of the incoming request."><a href="#err-STATEMENT_UPLOAD_RATE_LIMITED"><code>STATEMENT_UPLOAD_RATE_LIMITED</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-MoneyTransfer">MoneyTransfer</a>
+<ul>
+<li class="toc-item" data-search="money_transfer_amount_not_positive non-positive transfer amount this error occurs when a money transfer is requested with an amount that is zero or negative. a money transfer amount must be strictly positive. moneytransfer transfer amount must be positive. the transfer amount must be greater than zero. cannot transfer -25 eur: the amount must be strictly positive. the amount was entered or computed as zero or a negative value. check the requested transfer amount and confirm it is greater than zero. transfer_amount the monetary amount of the attempted transfer."><a href="#err-MONEY_TRANSFER_AMOUNT_NOT_POSITIVE"><code>MONEY_TRANSFER_AMOUNT_NOT_POSITIVE</code></a></li>
+<li class="toc-item" data-search="money_transfer_invalid invalid money transfer this error aggregates every domain rule violated while validating a money transfer, so the caller sees all the problems at once rather than one at a time. a money transfer must satisfy every domain rule (a strictly positive amount, matching currencies, ...). moneytransfer invalid money transfer. the money transfer does not satisfy all the required rules. the money transfer is invalid: it violates one or more domain rules. one or more domain rules were violated by the requested transfer. inspect the aggregated inner errors to see each individual rule violation."><a href="#err-MONEY_TRANSFER_INVALID"><code>MONEY_TRANSFER_INVALID</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-Temperature">Temperature</a>
+<ul>
+<li class="toc-item" data-search="temperature_below_absolute_zero temperature below absolute zero this error occurs when trying to instantiate a temperature with a value that is below absolute zero. temperature cannot go below absolute zero because absolute zero is the point where particles have minimum possible energy. temperature temperature is invalid. the temperature -1 k is below absolute zero. failed to instantiate temperature: the value -1 k is below absolute zero. temperature is invalid. the temperature -280 &#176;c is below absolute zero. failed to instantiate temperature: the value -280 &#176;c is below absolute zero. the value entered manually by a user is invalid. verify the value entered by the user and assess its compliance with domain rules. the value received from an external system (api, message, etc.) is invalid. check the data provided by the upstream system and evaluate its validity against domain rules. the value was loaded from corrupted or outdated persisted data. examine the persisted data source to determine whether stored values comply with current domain rules. the value was computed internally without using domain-safe methods. inspect the internal computation logic to confirm that domain invariants are preserved. the value originates from system configuration or defaults that are incorrect or outdated. review the relevant configuration or default parameters to assess their compliance with domain rules."><a href="#err-TEMPERATURE_BELOW_ABSOLUTE_ZERO"><code>TEMPERATURE_BELOW_ABSOLUTE_ZERO</code></a></li>
+</ul>
+</li>
+</ul>
+</nav>
+<p id="no-results" class="no-results" hidden>No matching errors.</p>
+<section class="error-group" id="src-Amount">
+<h2 class="group-title">Amount</h2>
+<article class="error-detail" id="err-AMOUNT_CURRENCY_MISMATCH">
+<h3 class="error-title"><code>AMOUNT_CURRENCY_MISMATCH</code> <a class="anchor" href="#err-AMOUNT_CURRENCY_MISMATCH" aria-label="Copy link to this error" data-anchor>#</a></h3>
+<p class="error-subtitle">Amount currency mismatch</p>
+<section class="doc"><h4>Documentation</h4><p>This error occurs when trying to use multiple amounts together in an operation while they are expressed in different currencies.</p></section>
+<blockquote class="rule"><strong>Business rule:</strong> All monetary operations must involve amounts expressed in the same currency.</blockquote>
+<section class="diagnostics"><h4>Diagnostics</h4>
+<div class="table-wrap"><table class="data-table">
 <thead>
-<tr><th scope="col">Code</th><th scope="col">Public summary</th><th scope="col">Source</th><th scope="col" class="num">Detail</th><th scope="col" class="num">Examples</th></tr>
+<tr><th scope="col">Possible cause</th><th scope="col">Origin</th><th scope="col">Analysis hint</th></tr>
 </thead>
 <tbody>
-<tr data-search="amount_currency_mismatch amount currency mismatch this error occurs when trying to use multiple amounts together in an operation while they are expressed in different currencies. all monetary operations must involve amounts expressed in the same currency. amount currency mismatch the two amounts use different currencies and cannot be combined. failed to perform the monetary operation because the involved amounts are expressed in different currencies: 127.33 eur and 57689 usd. amounts were used in a monetary operation without having been converted to the same currency. verify whether all amounts involved in the operation were converted to a common currency before being used together. amounts expected to be expressed in the same currency were provided with different currencies. check the currencies associated with each amount and confirm whether a common currency was expected for this operation." data-source="Amount" data-detail="true"><td class="code"><a href="#err-AMOUNT_CURRENCY_MISMATCH"><code>AMOUNT_CURRENCY_MISMATCH</code></a></td><td>Currency mismatch</td><td><span class="badge badge-source">Amount</span></td><td class="num"><span class="present" aria-label="Yes" title="Yes">&#10003;</span></td><td class="num">1</td></tr>
-<tr data-search="bank_transaction_file_date_out_of_statement_period transaction date outside statement period this error occurs when trying to validate a bank statement file that contains one or more transactions dated outside the statement period. all transactions must occur within the statement period. banktransactionfilevalidator transaction date is outside the statement period. a transaction date falls outside the statement period. transaction dated 2024-02-02 is outside the statement period [2024-01-05;2024-01-31]. the transaction date provided in the statement file is incorrect or inconsistent with the actual transaction date. verify the transaction date present in the input file and confirm its consistency with the actual transaction timeline. the statement period defined in the file does not match the actual coverage period of the transactions. check whether the statement start and end dates in the file align with the period covered by the transactions. the transaction was posted after the statement was generated but was mistakenly included in the file. determine whether late-posted transactions were included in the statement generation process. an internal processing error caused the transaction date to be shifted during data transformation or import. examine the data import and transformation stages to confirm that transaction dates are preserved without alteration. transaction_date the date of the transaction being processed." data-source="BankTransactionFileValidator" data-detail="true"><td class="code"><a href="#err-BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD"><code>BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD</code></a></td><td>Transaction date is outside the statement period.</td><td><span class="badge badge-source">BankTransactionFileValidator</span></td><td class="num"><span class="present" aria-label="Yes" title="Yes">&#10003;</span></td><td class="num">1</td></tr>
-<tr data-search="bank_transaction_file_statement_total_amount_mismatch statement total amount mismatch this error occurs when trying to validate a bank statement file whose declared total amount does not match the sum of the individual transaction amounts. the statement total amount must equal the sum of all transaction amounts included in the statement. banktransactionfilevalidator statement total amount mismatch. the declared statement total does not match the computed total. the declared statement total amount (1250 eur) does not match the computed total amount from transactions (1249.5 eur). the total amount declared in the statement file does not match the sum of the individual transaction amounts. verify the declared total amount in the file and compare it with the sum of all transaction amounts. one or more transactions are missing or duplicated in the statement file. check whether all expected transactions are present exactly once in the statement file. a rounding or precision error occurred when calculating the statement total amount. examine how rounding and precision rules were applied when computing the statement total. an internal processing error altered transaction amounts during file parsing or transformation. inspect the file parsing and transformation stages to confirm that transaction amounts remain unchanged." data-source="BankTransactionFileValidator" data-detail="true"><td class="code"><a href="#err-BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH"><code>BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH</code></a></td><td>Statement total amount mismatch.</td><td><span class="badge badge-source">BankTransactionFileValidator</span></td><td class="num"><span class="present" aria-label="Yes" title="Yes">&#10003;</span></td><td class="num">1</td></tr>
-<tr data-search="exchange_rate_service_unavailable exchange-rate service unavailable this error occurs when the external exchange-rate provider cannot be reached (a timeout, a connection reset, or a 5xx response). it is transient: the call can be retried. currency conversion depends on a reachable exchange-rate provider. exchangerateprovider exchange-rate service unavailable. the exchange-rate service is temporarily unavailable; please retry later. the exchange-rate provider &#39;acme-fx&#39; is unavailable (correlation 22222222-2222-2222-2222-222222222222). the provider timed out or returned a server error. check the provider&#39;s health and retry the call, ideally with a backoff. the outgoing network path to the provider is disrupted. verify outbound connectivity and any proxy or firewall between the service and the provider. provider the external provider that was called. correlation_id the correlation identifier of the outgoing call." data-source="ExchangeRateProvider" data-detail="true"><td class="code"><a href="#err-EXCHANGE_RATE_SERVICE_UNAVAILABLE"><code>EXCHANGE_RATE_SERVICE_UNAVAILABLE</code></a></td><td>Exchange-rate service unavailable.</td><td><span class="badge badge-source">ExchangeRateProvider</span></td><td class="num"><span class="present" aria-label="Yes" title="Yes">&#10003;</span></td><td class="num">1</td></tr>
-<tr data-search="malformed_statement_payload malformed statement payload this error occurs when the statement upload endpoint receives a request whose body is missing a required field or carries an invalid value. an uploaded statement request must carry every required field with a valid value. statementuploadendpoint malformed statement payload. the uploaded statement request is missing a required field or contains an invalid value. the statement upload request 11111111-1111-1111-1111-111111111111 is malformed: the &#39;statementperiod&#39; field is missing or invalid. the client sent an incomplete or malformed request body. inspect the field named in the context and confirm the client sends it with a valid value. request_id the identifier of the incoming request. field the request field that failed validation." data-source="StatementUploadEndpoint" data-detail="true"><td class="code"><a href="#err-MALFORMED_STATEMENT_PAYLOAD"><code>MALFORMED_STATEMENT_PAYLOAD</code></a></td><td>Malformed statement payload.</td><td><span class="badge badge-source">StatementUploadEndpoint</span></td><td class="num"><span class="present" aria-label="Yes" title="Yes">&#10003;</span></td><td class="num">1</td></tr>
-<tr data-search="money_transfer_amount_not_positive non-positive transfer amount this error occurs when a money transfer is requested with an amount that is zero or negative. a money transfer amount must be strictly positive. moneytransfer transfer amount must be positive. the transfer amount must be greater than zero. cannot transfer -25 eur: the amount must be strictly positive. the amount was entered or computed as zero or a negative value. check the requested transfer amount and confirm it is greater than zero. transfer_amount the monetary amount of the attempted transfer." data-source="MoneyTransfer" data-detail="true"><td class="code"><a href="#err-MONEY_TRANSFER_AMOUNT_NOT_POSITIVE"><code>MONEY_TRANSFER_AMOUNT_NOT_POSITIVE</code></a></td><td>Transfer amount must be positive.</td><td><span class="badge badge-source">MoneyTransfer</span></td><td class="num"><span class="present" aria-label="Yes" title="Yes">&#10003;</span></td><td class="num">1</td></tr>
-<tr data-search="money_transfer_invalid invalid money transfer this error aggregates every domain rule violated while validating a money transfer, so the caller sees all the problems at once rather than one at a time. a money transfer must satisfy every domain rule (a strictly positive amount, matching currencies, ...). moneytransfer invalid money transfer. the money transfer does not satisfy all the required rules. the money transfer is invalid: it violates one or more domain rules. one or more domain rules were violated by the requested transfer. inspect the aggregated inner errors to see each individual rule violation." data-source="MoneyTransfer" data-detail="true"><td class="code"><a href="#err-MONEY_TRANSFER_INVALID"><code>MONEY_TRANSFER_INVALID</code></a></td><td>Invalid money transfer.</td><td><span class="badge badge-source">MoneyTransfer</span></td><td class="num"><span class="present" aria-label="Yes" title="Yes">&#10003;</span></td><td class="num">1</td></tr>
-<tr data-search="statement_upload_rate_limited statement upload rate-limited this error occurs when too many statement uploads arrive in a short window and the endpoint throttles the request. it is transient: the same request can be retried later. callers must stay within the endpoint&#39;s upload rate limit. statementuploadendpoint statement upload rate-limited. too many statement uploads were sent in a short period; please retry later. the statement upload request 11111111-1111-1111-1111-111111111111 was rate-limited; retry after 30 seconds. the caller exceeded the allowed request rate. back off and retry after the delay indicated in the message. request_id the identifier of the incoming request." data-source="StatementUploadEndpoint" data-detail="true"><td class="code"><a href="#err-STATEMENT_UPLOAD_RATE_LIMITED"><code>STATEMENT_UPLOAD_RATE_LIMITED</code></a></td><td>Statement upload rate-limited.</td><td><span class="badge badge-source">StatementUploadEndpoint</span></td><td class="num"><span class="present" aria-label="Yes" title="Yes">&#10003;</span></td><td class="num">1</td></tr>
-<tr data-search="temperature_below_absolute_zero temperature below absolute zero this error occurs when trying to instantiate a temperature with a value that is below absolute zero. temperature cannot go below absolute zero because absolute zero is the point where particles have minimum possible energy. temperature temperature is invalid. the temperature -1 k is below absolute zero. failed to instantiate temperature: the value -1 k is below absolute zero. temperature is invalid. the temperature -280 &#176;c is below absolute zero. failed to instantiate temperature: the value -280 &#176;c is below absolute zero. the value entered manually by a user is invalid. verify the value entered by the user and assess its compliance with domain rules. the value received from an external system (api, message, etc.) is invalid. check the data provided by the upstream system and evaluate its validity against domain rules. the value was loaded from corrupted or outdated persisted data. examine the persisted data source to determine whether stored values comply with current domain rules. the value was computed internally without using domain-safe methods. inspect the internal computation logic to confirm that domain invariants are preserved. the value originates from system configuration or defaults that are incorrect or outdated. review the relevant configuration or default parameters to assess their compliance with domain rules." data-source="Temperature" data-detail="true"><td class="code"><a href="#err-TEMPERATURE_BELOW_ABSOLUTE_ZERO"><code>TEMPERATURE_BELOW_ABSOLUTE_ZERO</code></a></td><td>Temperature is invalid.</td><td><span class="badge badge-source">Temperature</span></td><td class="num"><span class="present" aria-label="Yes" title="Yes">&#10003;</span></td><td class="num">2</td></tr>
-<tr data-search="unsupported_currency_pair unsupported currency pair this error occurs when the exchange-rate provider does not quote a rate for the requested source/target currency pair. a currency conversion can only be performed for a pair the provider quotes. exchangerateprovider unsupported currency pair. the requested currency pair is not supported. the exchange-rate provider does not quote the eur to usd currency pair. the requested currency pair is not offered by the provider. confirm the provider supports both the source and target currencies before requesting a conversion. from_currency the source currency of the conversion. to_currency the target currency of the conversion." data-source="ExchangeRateProvider" data-detail="true"><td class="code"><a href="#err-UNSUPPORTED_CURRENCY_PAIR"><code>UNSUPPORTED_CURRENCY_PAIR</code></a></td><td>Unsupported currency pair.</td><td><span class="badge badge-source">ExchangeRateProvider</span></td><td class="num"><span class="present" aria-label="Yes" title="Yes">&#10003;</span></td><td class="num">1</td></tr>
+<tr><td>Amounts were used in a monetary operation without having been converted to the same currency.</td><td>Internal</td><td>Verify whether all amounts involved in the operation were converted to a common currency before being used together.</td></tr>
+<tr><td>Amounts expected to be expressed in the same currency were provided with different currencies.</td><td>InternalOrExternal</td><td>Check the currencies associated with each amount and confirm whether a common currency was expected for this operation.</td></tr>
 </tbody>
-</table>
-<p id="no-results" class="no-results" hidden>No matching errors.</p>
-<article class="error-detail" id="err-AMOUNT_CURRENCY_MISMATCH">
-<div class="error-head">
-<h2 class="error-title">Amount currency mismatch <a class="anchor" href="#err-AMOUNT_CURRENCY_MISMATCH" aria-label="Copy link to this error" data-anchor>#</a></h2>
-<div class="badges"><span class="badge badge-code">AMOUNT_CURRENCY_MISMATCH</span><span class="badge badge-source">Amount</span></div>
-</div>
-<section class="doc"><h3>Documentation</h3><p>This error occurs when trying to use multiple amounts together in an operation while they are expressed in different currencies.</p></section>
-<blockquote class="rule"><strong>Business rule:</strong> All monetary operations must involve amounts expressed in the same currency.</blockquote>
-<section class="messages">
-<div class="msg-card public"><h3>Public summary</h3><p>Currency mismatch</p></div>
-<div class="msg-card public"><h3>Public detail</h3><p>The two amounts use different currencies and cannot be combined.</p></div>
-<div class="msg-card internal"><h3>Internal diagnostic message</h3><p class="note">Internal — not intended for external clients or HTTP responses.</p><pre class="log"><code>Failed to perform the monetary operation because the involved amounts are expressed in different currencies: 127.33 EUR and 57689 USD.</code></pre></div>
+</table></div>
 </section>
-<section class="diagnostics"><h3>Diagnostics</h3>
-<ul>
-<li><strong>Amounts were used in a monetary operation without having been converted to the same currency.</strong> &#8212; <em>origin:</em> Internal &#8212; Verify whether all amounts involved in the operation were converted to a common currency before being used together.</li>
-<li><strong>Amounts expected to be expressed in the same currency were provided with different currencies.</strong> &#8212; <em>origin:</em> InternalOrExternal &#8212; Check the currencies associated with each amount and confirm whether a common currency was expected for this operation.</li>
-</ul>
-</section>
-<section class="examples"><h3>Examples</h3>
+<section class="examples"><h4>Examples</h4>
 <div class="example">
 <p class="example-label">Public response (RFC 9457)</p>
 <pre class="json"><code>{
@@ -163,32 +160,33 @@ pre.log { border-left: 3px solid var(--internal-border); }
   &quot;detail&quot;: &quot;The two amounts use different currencies and cannot be combined.&quot;,
   &quot;code&quot;: &quot;AMOUNT_CURRENCY_MISMATCH&quot;
 }</code></pre>
-<p class="example-label internal">Diagnostic (internal — not for external exposure)</p>
+<p class="example-label">Diagnostic (internal — not for external exposure)</p>
 <pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [Amount] Failed to perform the monetary operation because the involved amounts are expressed in different currencies: 127.33 EUR and 57689 USD. error.code=AMOUNT_CURRENCY_MISMATCH</code></pre>
 </div>
 </section>
 </article>
+</section>
+<section class="error-group" id="src-BankTransactionFileValidator">
+<h2 class="group-title">BankTransactionFileValidator</h2>
 <article class="error-detail" id="err-BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD">
-<div class="error-head">
-<h2 class="error-title">Transaction date outside statement period <a class="anchor" href="#err-BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD" aria-label="Copy link to this error" data-anchor>#</a></h2>
-<div class="badges"><span class="badge badge-code">BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD</span><span class="badge badge-source">BankTransactionFileValidator</span></div>
-</div>
-<section class="doc"><h3>Documentation</h3><p>This error occurs when trying to validate a bank statement file that contains one or more transactions dated outside the statement period.</p></section>
+<h3 class="error-title"><code>BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD</code> <a class="anchor" href="#err-BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD" aria-label="Copy link to this error" data-anchor>#</a></h3>
+<p class="error-subtitle">Transaction date outside statement period</p>
+<section class="doc"><h4>Documentation</h4><p>This error occurs when trying to validate a bank statement file that contains one or more transactions dated outside the statement period.</p></section>
 <blockquote class="rule"><strong>Business rule:</strong> All transactions must occur within the statement period.</blockquote>
-<section class="messages">
-<div class="msg-card public"><h3>Public summary</h3><p>Transaction date is outside the statement period.</p></div>
-<div class="msg-card public"><h3>Public detail</h3><p>A transaction date falls outside the statement period.</p></div>
-<div class="msg-card internal"><h3>Internal diagnostic message</h3><p class="note">Internal — not intended for external clients or HTTP responses.</p><pre class="log"><code>Transaction dated 2024-02-02 is outside the statement period [2024-01-05;2024-01-31].</code></pre></div>
+<section class="diagnostics"><h4>Diagnostics</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Possible cause</th><th scope="col">Origin</th><th scope="col">Analysis hint</th></tr>
+</thead>
+<tbody>
+<tr><td>The transaction date provided in the statement file is incorrect or inconsistent with the actual transaction date.</td><td>External</td><td>Verify the transaction date present in the input file and confirm its consistency with the actual transaction timeline.</td></tr>
+<tr><td>The statement period defined in the file does not match the actual coverage period of the transactions.</td><td>External</td><td>Check whether the statement start and end dates in the file align with the period covered by the transactions.</td></tr>
+<tr><td>The transaction was posted after the statement was generated but was mistakenly included in the file.</td><td>InternalOrExternal</td><td>Determine whether late-posted transactions were included in the statement generation process.</td></tr>
+<tr><td>An internal processing error caused the transaction date to be shifted during data transformation or import.</td><td>Internal</td><td>Examine the data import and transformation stages to confirm that transaction dates are preserved without alteration.</td></tr>
+</tbody>
+</table></div>
 </section>
-<section class="diagnostics"><h3>Diagnostics</h3>
-<ul>
-<li><strong>The transaction date provided in the statement file is incorrect or inconsistent with the actual transaction date.</strong> &#8212; <em>origin:</em> External &#8212; Verify the transaction date present in the input file and confirm its consistency with the actual transaction timeline.</li>
-<li><strong>The statement period defined in the file does not match the actual coverage period of the transactions.</strong> &#8212; <em>origin:</em> External &#8212; Check whether the statement start and end dates in the file align with the period covered by the transactions.</li>
-<li><strong>The transaction was posted after the statement was generated but was mistakenly included in the file.</strong> &#8212; <em>origin:</em> InternalOrExternal &#8212; Determine whether late-posted transactions were included in the statement generation process.</li>
-<li><strong>An internal processing error caused the transaction date to be shifted during data transformation or import.</strong> &#8212; <em>origin:</em> Internal &#8212; Examine the data import and transformation stages to confirm that transaction dates are preserved without alteration.</li>
-</ul>
-</section>
-<section class="examples"><h3>Examples</h3>
+<section class="examples"><h4>Examples</h4>
 <div class="example">
 <p class="example-label">Public response (RFC 9457)</p>
 <pre class="json"><code>{
@@ -196,12 +194,12 @@ pre.log { border-left: 3px solid var(--internal-border); }
   &quot;detail&quot;: &quot;A transaction date falls outside the statement period.&quot;,
   &quot;code&quot;: &quot;BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD&quot;
 }</code></pre>
-<p class="example-label internal">Diagnostic (internal — not for external exposure)</p>
+<p class="example-label">Diagnostic (internal — not for external exposure)</p>
 <pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [BankTransactionFileValidator] Transaction dated 2024-02-02 is outside the statement period [2024-01-05;2024-01-31]. error.code=BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD</code></pre>
 </div>
 </section>
-<section class="context"><h3>Context</h3>
-<div class="table-wrap"><table class="context-table">
+<section class="context"><h4>Context</h4>
+<div class="table-wrap"><table class="data-table">
 <thead>
 <tr><th scope="col">Key</th><th scope="col">Type</th><th scope="col">Description</th><th scope="col">Example values</th></tr>
 </thead>
@@ -212,26 +210,24 @@ pre.log { border-left: 3px solid var(--internal-border); }
 </section>
 </article>
 <article class="error-detail" id="err-BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH">
-<div class="error-head">
-<h2 class="error-title">Statement total amount mismatch <a class="anchor" href="#err-BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH" aria-label="Copy link to this error" data-anchor>#</a></h2>
-<div class="badges"><span class="badge badge-code">BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH</span><span class="badge badge-source">BankTransactionFileValidator</span></div>
-</div>
-<section class="doc"><h3>Documentation</h3><p>This error occurs when trying to validate a bank statement file whose declared total amount does not match the sum of the individual transaction amounts.</p></section>
+<h3 class="error-title"><code>BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH</code> <a class="anchor" href="#err-BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH" aria-label="Copy link to this error" data-anchor>#</a></h3>
+<p class="error-subtitle">Statement total amount mismatch</p>
+<section class="doc"><h4>Documentation</h4><p>This error occurs when trying to validate a bank statement file whose declared total amount does not match the sum of the individual transaction amounts.</p></section>
 <blockquote class="rule"><strong>Business rule:</strong> The statement total amount must equal the sum of all transaction amounts included in the statement.</blockquote>
-<section class="messages">
-<div class="msg-card public"><h3>Public summary</h3><p>Statement total amount mismatch.</p></div>
-<div class="msg-card public"><h3>Public detail</h3><p>The declared statement total does not match the computed total.</p></div>
-<div class="msg-card internal"><h3>Internal diagnostic message</h3><p class="note">Internal — not intended for external clients or HTTP responses.</p><pre class="log"><code>The declared statement total amount (1250 EUR) does not match the computed total amount from transactions (1249.5 EUR).</code></pre></div>
+<section class="diagnostics"><h4>Diagnostics</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Possible cause</th><th scope="col">Origin</th><th scope="col">Analysis hint</th></tr>
+</thead>
+<tbody>
+<tr><td>The total amount declared in the statement file does not match the sum of the individual transaction amounts.</td><td>External</td><td>Verify the declared total amount in the file and compare it with the sum of all transaction amounts.</td></tr>
+<tr><td>One or more transactions are missing or duplicated in the statement file.</td><td>External</td><td>Check whether all expected transactions are present exactly once in the statement file.</td></tr>
+<tr><td>A rounding or precision error occurred when calculating the statement total amount.</td><td>InternalOrExternal</td><td>Examine how rounding and precision rules were applied when computing the statement total.</td></tr>
+<tr><td>An internal processing error altered transaction amounts during file parsing or transformation.</td><td>Internal</td><td>Inspect the file parsing and transformation stages to confirm that transaction amounts remain unchanged.</td></tr>
+</tbody>
+</table></div>
 </section>
-<section class="diagnostics"><h3>Diagnostics</h3>
-<ul>
-<li><strong>The total amount declared in the statement file does not match the sum of the individual transaction amounts.</strong> &#8212; <em>origin:</em> External &#8212; Verify the declared total amount in the file and compare it with the sum of all transaction amounts.</li>
-<li><strong>One or more transactions are missing or duplicated in the statement file.</strong> &#8212; <em>origin:</em> External &#8212; Check whether all expected transactions are present exactly once in the statement file.</li>
-<li><strong>A rounding or precision error occurred when calculating the statement total amount.</strong> &#8212; <em>origin:</em> InternalOrExternal &#8212; Examine how rounding and precision rules were applied when computing the statement total.</li>
-<li><strong>An internal processing error altered transaction amounts during file parsing or transformation.</strong> &#8212; <em>origin:</em> Internal &#8212; Inspect the file parsing and transformation stages to confirm that transaction amounts remain unchanged.</li>
-</ul>
-</section>
-<section class="examples"><h3>Examples</h3>
+<section class="examples"><h4>Examples</h4>
 <div class="example">
 <p class="example-label">Public response (RFC 9457)</p>
 <pre class="json"><code>{
@@ -239,30 +235,31 @@ pre.log { border-left: 3px solid var(--internal-border); }
   &quot;detail&quot;: &quot;The declared statement total does not match the computed total.&quot;,
   &quot;code&quot;: &quot;BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH&quot;
 }</code></pre>
-<p class="example-label internal">Diagnostic (internal — not for external exposure)</p>
+<p class="example-label">Diagnostic (internal — not for external exposure)</p>
 <pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [BankTransactionFileValidator] The declared statement total amount (1250 EUR) does not match the computed total amount from transactions (1249.5 EUR). error.code=BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH</code></pre>
 </div>
 </section>
 </article>
+</section>
+<section class="error-group" id="src-ExchangeRateProvider">
+<h2 class="group-title">ExchangeRateProvider</h2>
 <article class="error-detail" id="err-EXCHANGE_RATE_SERVICE_UNAVAILABLE">
-<div class="error-head">
-<h2 class="error-title">Exchange-rate service unavailable <a class="anchor" href="#err-EXCHANGE_RATE_SERVICE_UNAVAILABLE" aria-label="Copy link to this error" data-anchor>#</a></h2>
-<div class="badges"><span class="badge badge-code">EXCHANGE_RATE_SERVICE_UNAVAILABLE</span><span class="badge badge-source">ExchangeRateProvider</span></div>
-</div>
-<section class="doc"><h3>Documentation</h3><p>This error occurs when the external exchange-rate provider cannot be reached (a timeout, a connection reset, or a 5xx response). It is transient: the call can be retried.</p></section>
+<h3 class="error-title"><code>EXCHANGE_RATE_SERVICE_UNAVAILABLE</code> <a class="anchor" href="#err-EXCHANGE_RATE_SERVICE_UNAVAILABLE" aria-label="Copy link to this error" data-anchor>#</a></h3>
+<p class="error-subtitle">Exchange-rate service unavailable</p>
+<section class="doc"><h4>Documentation</h4><p>This error occurs when the external exchange-rate provider cannot be reached (a timeout, a connection reset, or a 5xx response). It is transient: the call can be retried.</p></section>
 <blockquote class="rule"><strong>Business rule:</strong> Currency conversion depends on a reachable exchange-rate provider.</blockquote>
-<section class="messages">
-<div class="msg-card public"><h3>Public summary</h3><p>Exchange-rate service unavailable.</p></div>
-<div class="msg-card public"><h3>Public detail</h3><p>The exchange-rate service is temporarily unavailable; please retry later.</p></div>
-<div class="msg-card internal"><h3>Internal diagnostic message</h3><p class="note">Internal — not intended for external clients or HTTP responses.</p><pre class="log"><code>The exchange-rate provider &#39;acme-fx&#39; is unavailable (correlation 22222222-2222-2222-2222-222222222222).</code></pre></div>
+<section class="diagnostics"><h4>Diagnostics</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Possible cause</th><th scope="col">Origin</th><th scope="col">Analysis hint</th></tr>
+</thead>
+<tbody>
+<tr><td>The provider timed out or returned a server error.</td><td>External</td><td>Check the provider&#39;s health and retry the call, ideally with a backoff.</td></tr>
+<tr><td>The outgoing network path to the provider is disrupted.</td><td>InternalOrExternal</td><td>Verify outbound connectivity and any proxy or firewall between the service and the provider.</td></tr>
+</tbody>
+</table></div>
 </section>
-<section class="diagnostics"><h3>Diagnostics</h3>
-<ul>
-<li><strong>The provider timed out or returned a server error.</strong> &#8212; <em>origin:</em> External &#8212; Check the provider&#39;s health and retry the call, ideally with a backoff.</li>
-<li><strong>The outgoing network path to the provider is disrupted.</strong> &#8212; <em>origin:</em> InternalOrExternal &#8212; Verify outbound connectivity and any proxy or firewall between the service and the provider.</li>
-</ul>
-</section>
-<section class="examples"><h3>Examples</h3>
+<section class="examples"><h4>Examples</h4>
 <div class="example">
 <p class="example-label">Public response (RFC 9457)</p>
 <pre class="json"><code>{
@@ -270,12 +267,12 @@ pre.log { border-left: 3px solid var(--internal-border); }
   &quot;detail&quot;: &quot;The exchange-rate service is temporarily unavailable; please retry later.&quot;,
   &quot;code&quot;: &quot;EXCHANGE_RATE_SERVICE_UNAVAILABLE&quot;
 }</code></pre>
-<p class="example-label internal">Diagnostic (internal — not for external exposure)</p>
+<p class="example-label">Diagnostic (internal — not for external exposure)</p>
 <pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [ExchangeRateProvider] The exchange-rate provider &#39;acme-fx&#39; is unavailable (correlation 22222222-2222-2222-2222-222222222222). error.code=EXCHANGE_RATE_SERVICE_UNAVAILABLE</code></pre>
 </div>
 </section>
-<section class="context"><h3>Context</h3>
-<div class="table-wrap"><table class="context-table">
+<section class="context"><h4>Context</h4>
+<div class="table-wrap"><table class="data-table">
 <thead>
 <tr><th scope="col">Key</th><th scope="col">Type</th><th scope="col">Description</th><th scope="col">Example values</th></tr>
 </thead>
@@ -286,219 +283,22 @@ pre.log { border-left: 3px solid var(--internal-border); }
 </table></div>
 </section>
 </article>
-<article class="error-detail" id="err-MALFORMED_STATEMENT_PAYLOAD">
-<div class="error-head">
-<h2 class="error-title">Malformed statement payload <a class="anchor" href="#err-MALFORMED_STATEMENT_PAYLOAD" aria-label="Copy link to this error" data-anchor>#</a></h2>
-<div class="badges"><span class="badge badge-code">MALFORMED_STATEMENT_PAYLOAD</span><span class="badge badge-source">StatementUploadEndpoint</span></div>
-</div>
-<section class="doc"><h3>Documentation</h3><p>This error occurs when the statement upload endpoint receives a request whose body is missing a required field or carries an invalid value.</p></section>
-<blockquote class="rule"><strong>Business rule:</strong> An uploaded statement request must carry every required field with a valid value.</blockquote>
-<section class="messages">
-<div class="msg-card public"><h3>Public summary</h3><p>Malformed statement payload.</p></div>
-<div class="msg-card public"><h3>Public detail</h3><p>The uploaded statement request is missing a required field or contains an invalid value.</p></div>
-<div class="msg-card internal"><h3>Internal diagnostic message</h3><p class="note">Internal — not intended for external clients or HTTP responses.</p><pre class="log"><code>The statement upload request 11111111-1111-1111-1111-111111111111 is malformed: the &#39;statementPeriod&#39; field is missing or invalid.</code></pre></div>
-</section>
-<section class="diagnostics"><h3>Diagnostics</h3>
-<ul>
-<li><strong>The client sent an incomplete or malformed request body.</strong> &#8212; <em>origin:</em> External &#8212; Inspect the field named in the context and confirm the client sends it with a valid value.</li>
-</ul>
-</section>
-<section class="examples"><h3>Examples</h3>
-<div class="example">
-<p class="example-label">Public response (RFC 9457)</p>
-<pre class="json"><code>{
-  &quot;title&quot;: &quot;Malformed statement payload.&quot;,
-  &quot;detail&quot;: &quot;The uploaded statement request is missing a required field or contains an invalid value.&quot;,
-  &quot;code&quot;: &quot;MALFORMED_STATEMENT_PAYLOAD&quot;
-}</code></pre>
-<p class="example-label internal">Diagnostic (internal — not for external exposure)</p>
-<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [StatementUploadEndpoint] The statement upload request 11111111-1111-1111-1111-111111111111 is malformed: the &#39;statementPeriod&#39; field is missing or invalid. error.code=MALFORMED_STATEMENT_PAYLOAD</code></pre>
-</div>
-</section>
-<section class="context"><h3>Context</h3>
-<div class="table-wrap"><table class="context-table">
-<thead>
-<tr><th scope="col">Key</th><th scope="col">Type</th><th scope="col">Description</th><th scope="col">Example values</th></tr>
-</thead>
-<tbody>
-<tr><td><code>REQUEST_ID</code></td><td><code>System.Guid</code></td><td>The identifier of the incoming request.</td><td><code>11111111-1111-1111-1111-111111111111</code></td></tr>
-<tr><td><code>FIELD</code></td><td><code>System.String</code></td><td>The request field that failed validation.</td><td><code>statementPeriod</code></td></tr>
-</tbody>
-</table></div>
-</section>
-</article>
-<article class="error-detail" id="err-MONEY_TRANSFER_AMOUNT_NOT_POSITIVE">
-<div class="error-head">
-<h2 class="error-title">Non-positive transfer amount <a class="anchor" href="#err-MONEY_TRANSFER_AMOUNT_NOT_POSITIVE" aria-label="Copy link to this error" data-anchor>#</a></h2>
-<div class="badges"><span class="badge badge-code">MONEY_TRANSFER_AMOUNT_NOT_POSITIVE</span><span class="badge badge-source">MoneyTransfer</span></div>
-</div>
-<section class="doc"><h3>Documentation</h3><p>This error occurs when a money transfer is requested with an amount that is zero or negative.</p></section>
-<blockquote class="rule"><strong>Business rule:</strong> A money transfer amount must be strictly positive.</blockquote>
-<section class="messages">
-<div class="msg-card public"><h3>Public summary</h3><p>Transfer amount must be positive.</p></div>
-<div class="msg-card public"><h3>Public detail</h3><p>The transfer amount must be greater than zero.</p></div>
-<div class="msg-card internal"><h3>Internal diagnostic message</h3><p class="note">Internal — not intended for external clients or HTTP responses.</p><pre class="log"><code>Cannot transfer -25 EUR: the amount must be strictly positive.</code></pre></div>
-</section>
-<section class="diagnostics"><h3>Diagnostics</h3>
-<ul>
-<li><strong>The amount was entered or computed as zero or a negative value.</strong> &#8212; <em>origin:</em> External &#8212; Check the requested transfer amount and confirm it is greater than zero.</li>
-</ul>
-</section>
-<section class="examples"><h3>Examples</h3>
-<div class="example">
-<p class="example-label">Public response (RFC 9457)</p>
-<pre class="json"><code>{
-  &quot;title&quot;: &quot;Transfer amount must be positive.&quot;,
-  &quot;detail&quot;: &quot;The transfer amount must be greater than zero.&quot;,
-  &quot;code&quot;: &quot;MONEY_TRANSFER_AMOUNT_NOT_POSITIVE&quot;
-}</code></pre>
-<p class="example-label internal">Diagnostic (internal — not for external exposure)</p>
-<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [MoneyTransfer] Cannot transfer -25 EUR: the amount must be strictly positive. error.code=MONEY_TRANSFER_AMOUNT_NOT_POSITIVE</code></pre>
-</div>
-</section>
-<section class="context"><h3>Context</h3>
-<div class="table-wrap"><table class="context-table">
-<thead>
-<tr><th scope="col">Key</th><th scope="col">Type</th><th scope="col">Description</th><th scope="col">Example values</th></tr>
-</thead>
-<tbody>
-<tr><td><code>TRANSFER_AMOUNT</code></td><td><code>FirstClassErrors.Usage.Model.Amount</code></td><td>The monetary amount of the attempted transfer.</td><td><code>-25 EUR</code></td></tr>
-</tbody>
-</table></div>
-</section>
-</article>
-<article class="error-detail" id="err-MONEY_TRANSFER_INVALID">
-<div class="error-head">
-<h2 class="error-title">Invalid money transfer <a class="anchor" href="#err-MONEY_TRANSFER_INVALID" aria-label="Copy link to this error" data-anchor>#</a></h2>
-<div class="badges"><span class="badge badge-code">MONEY_TRANSFER_INVALID</span><span class="badge badge-source">MoneyTransfer</span></div>
-</div>
-<section class="doc"><h3>Documentation</h3><p>This error aggregates every domain rule violated while validating a money transfer, so the caller sees all the problems at once rather than one at a time.</p></section>
-<blockquote class="rule"><strong>Business rule:</strong> A money transfer must satisfy every domain rule (a strictly positive amount, matching currencies, ...).</blockquote>
-<section class="messages">
-<div class="msg-card public"><h3>Public summary</h3><p>Invalid money transfer.</p></div>
-<div class="msg-card public"><h3>Public detail</h3><p>The money transfer does not satisfy all the required rules.</p></div>
-<div class="msg-card internal"><h3>Internal diagnostic message</h3><p class="note">Internal — not intended for external clients or HTTP responses.</p><pre class="log"><code>The money transfer is invalid: it violates one or more domain rules.</code></pre></div>
-</section>
-<section class="diagnostics"><h3>Diagnostics</h3>
-<ul>
-<li><strong>One or more domain rules were violated by the requested transfer.</strong> &#8212; <em>origin:</em> External &#8212; Inspect the aggregated inner errors to see each individual rule violation.</li>
-</ul>
-</section>
-<section class="examples"><h3>Examples</h3>
-<div class="example">
-<p class="example-label">Public response (RFC 9457)</p>
-<pre class="json"><code>{
-  &quot;title&quot;: &quot;Invalid money transfer.&quot;,
-  &quot;detail&quot;: &quot;The money transfer does not satisfy all the required rules.&quot;,
-  &quot;code&quot;: &quot;MONEY_TRANSFER_INVALID&quot;
-}</code></pre>
-<p class="example-label internal">Diagnostic (internal — not for external exposure)</p>
-<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [MoneyTransfer] The money transfer is invalid: it violates one or more domain rules. error.code=MONEY_TRANSFER_INVALID</code></pre>
-</div>
-</section>
-</article>
-<article class="error-detail" id="err-STATEMENT_UPLOAD_RATE_LIMITED">
-<div class="error-head">
-<h2 class="error-title">Statement upload rate-limited <a class="anchor" href="#err-STATEMENT_UPLOAD_RATE_LIMITED" aria-label="Copy link to this error" data-anchor>#</a></h2>
-<div class="badges"><span class="badge badge-code">STATEMENT_UPLOAD_RATE_LIMITED</span><span class="badge badge-source">StatementUploadEndpoint</span></div>
-</div>
-<section class="doc"><h3>Documentation</h3><p>This error occurs when too many statement uploads arrive in a short window and the endpoint throttles the request. It is transient: the same request can be retried later.</p></section>
-<blockquote class="rule"><strong>Business rule:</strong> Callers must stay within the endpoint&#39;s upload rate limit.</blockquote>
-<section class="messages">
-<div class="msg-card public"><h3>Public summary</h3><p>Statement upload rate-limited.</p></div>
-<div class="msg-card public"><h3>Public detail</h3><p>Too many statement uploads were sent in a short period; please retry later.</p></div>
-<div class="msg-card internal"><h3>Internal diagnostic message</h3><p class="note">Internal — not intended for external clients or HTTP responses.</p><pre class="log"><code>The statement upload request 11111111-1111-1111-1111-111111111111 was rate-limited; retry after 30 seconds.</code></pre></div>
-</section>
-<section class="diagnostics"><h3>Diagnostics</h3>
-<ul>
-<li><strong>The caller exceeded the allowed request rate.</strong> &#8212; <em>origin:</em> External &#8212; Back off and retry after the delay indicated in the message.</li>
-</ul>
-</section>
-<section class="examples"><h3>Examples</h3>
-<div class="example">
-<p class="example-label">Public response (RFC 9457)</p>
-<pre class="json"><code>{
-  &quot;title&quot;: &quot;Statement upload rate-limited.&quot;,
-  &quot;detail&quot;: &quot;Too many statement uploads were sent in a short period; please retry later.&quot;,
-  &quot;code&quot;: &quot;STATEMENT_UPLOAD_RATE_LIMITED&quot;
-}</code></pre>
-<p class="example-label internal">Diagnostic (internal — not for external exposure)</p>
-<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [StatementUploadEndpoint] The statement upload request 11111111-1111-1111-1111-111111111111 was rate-limited; retry after 30 seconds. error.code=STATEMENT_UPLOAD_RATE_LIMITED</code></pre>
-</div>
-</section>
-<section class="context"><h3>Context</h3>
-<div class="table-wrap"><table class="context-table">
-<thead>
-<tr><th scope="col">Key</th><th scope="col">Type</th><th scope="col">Description</th><th scope="col">Example values</th></tr>
-</thead>
-<tbody>
-<tr><td><code>REQUEST_ID</code></td><td><code>System.Guid</code></td><td>The identifier of the incoming request.</td><td><code>11111111-1111-1111-1111-111111111111</code></td></tr>
-</tbody>
-</table></div>
-</section>
-</article>
-<article class="error-detail" id="err-TEMPERATURE_BELOW_ABSOLUTE_ZERO">
-<div class="error-head">
-<h2 class="error-title">Temperature below absolute zero <a class="anchor" href="#err-TEMPERATURE_BELOW_ABSOLUTE_ZERO" aria-label="Copy link to this error" data-anchor>#</a></h2>
-<div class="badges"><span class="badge badge-code">TEMPERATURE_BELOW_ABSOLUTE_ZERO</span><span class="badge badge-source">Temperature</span></div>
-</div>
-<section class="doc"><h3>Documentation</h3><p>This error occurs when trying to instantiate a temperature with a value that is below absolute zero.</p></section>
-<blockquote class="rule"><strong>Business rule:</strong> Temperature cannot go below absolute zero because absolute zero is the point where particles have minimum possible energy.</blockquote>
-<section class="messages">
-<div class="msg-card public"><h3>Public summary</h3><p>Temperature is invalid.</p></div>
-<div class="msg-card public"><h3>Public detail</h3><p>The temperature -1 K is below absolute zero.</p></div>
-<div class="msg-card internal"><h3>Internal diagnostic message</h3><p class="note">Internal — not intended for external clients or HTTP responses.</p><pre class="log"><code>Failed to instantiate temperature: the value -1 K is below absolute zero.</code></pre></div>
-</section>
-<section class="diagnostics"><h3>Diagnostics</h3>
-<ul>
-<li><strong>The value entered manually by a user is invalid.</strong> &#8212; <em>origin:</em> External &#8212; Verify the value entered by the user and assess its compliance with domain rules.</li>
-<li><strong>The value received from an external system (API, message, etc.) is invalid.</strong> &#8212; <em>origin:</em> External &#8212; Check the data provided by the upstream system and evaluate its validity against domain rules.</li>
-<li><strong>The value was loaded from corrupted or outdated persisted data.</strong> &#8212; <em>origin:</em> External &#8212; Examine the persisted data source to determine whether stored values comply with current domain rules.</li>
-<li><strong>The value was computed internally without using domain-safe methods.</strong> &#8212; <em>origin:</em> Internal &#8212; Inspect the internal computation logic to confirm that domain invariants are preserved.</li>
-<li><strong>The value originates from system configuration or defaults that are incorrect or outdated.</strong> &#8212; <em>origin:</em> External &#8212; Review the relevant configuration or default parameters to assess their compliance with domain rules.</li>
-</ul>
-</section>
-<section class="examples"><h3>Examples</h3>
-<div class="example">
-<p class="example-label">Public response (RFC 9457)</p>
-<pre class="json"><code>{
-  &quot;title&quot;: &quot;Temperature is invalid.&quot;,
-  &quot;detail&quot;: &quot;The temperature -1 K is below absolute zero.&quot;,
-  &quot;code&quot;: &quot;TEMPERATURE_BELOW_ABSOLUTE_ZERO&quot;
-}</code></pre>
-<p class="example-label internal">Diagnostic (internal — not for external exposure)</p>
-<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [Temperature] Failed to instantiate temperature: the value -1 K is below absolute zero. error.code=TEMPERATURE_BELOW_ABSOLUTE_ZERO</code></pre>
-</div>
-<div class="example">
-<p class="example-label">Public response (RFC 9457)</p>
-<pre class="json"><code>{
-  &quot;title&quot;: &quot;Temperature is invalid.&quot;,
-  &quot;detail&quot;: &quot;The temperature -280 &#176;C is below absolute zero.&quot;,
-  &quot;code&quot;: &quot;TEMPERATURE_BELOW_ABSOLUTE_ZERO&quot;
-}</code></pre>
-<p class="example-label internal">Diagnostic (internal — not for external exposure)</p>
-<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [Temperature] Failed to instantiate temperature: the value -280 &#176;C is below absolute zero. error.code=TEMPERATURE_BELOW_ABSOLUTE_ZERO</code></pre>
-</div>
-</section>
-</article>
 <article class="error-detail" id="err-UNSUPPORTED_CURRENCY_PAIR">
-<div class="error-head">
-<h2 class="error-title">Unsupported currency pair <a class="anchor" href="#err-UNSUPPORTED_CURRENCY_PAIR" aria-label="Copy link to this error" data-anchor>#</a></h2>
-<div class="badges"><span class="badge badge-code">UNSUPPORTED_CURRENCY_PAIR</span><span class="badge badge-source">ExchangeRateProvider</span></div>
-</div>
-<section class="doc"><h3>Documentation</h3><p>This error occurs when the exchange-rate provider does not quote a rate for the requested source/target currency pair.</p></section>
+<h3 class="error-title"><code>UNSUPPORTED_CURRENCY_PAIR</code> <a class="anchor" href="#err-UNSUPPORTED_CURRENCY_PAIR" aria-label="Copy link to this error" data-anchor>#</a></h3>
+<p class="error-subtitle">Unsupported currency pair</p>
+<section class="doc"><h4>Documentation</h4><p>This error occurs when the exchange-rate provider does not quote a rate for the requested source/target currency pair.</p></section>
 <blockquote class="rule"><strong>Business rule:</strong> A currency conversion can only be performed for a pair the provider quotes.</blockquote>
-<section class="messages">
-<div class="msg-card public"><h3>Public summary</h3><p>Unsupported currency pair.</p></div>
-<div class="msg-card public"><h3>Public detail</h3><p>The requested currency pair is not supported.</p></div>
-<div class="msg-card internal"><h3>Internal diagnostic message</h3><p class="note">Internal — not intended for external clients or HTTP responses.</p><pre class="log"><code>The exchange-rate provider does not quote the EUR to USD currency pair.</code></pre></div>
+<section class="diagnostics"><h4>Diagnostics</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Possible cause</th><th scope="col">Origin</th><th scope="col">Analysis hint</th></tr>
+</thead>
+<tbody>
+<tr><td>The requested currency pair is not offered by the provider.</td><td>External</td><td>Confirm the provider supports both the source and target currencies before requesting a conversion.</td></tr>
+</tbody>
+</table></div>
 </section>
-<section class="diagnostics"><h3>Diagnostics</h3>
-<ul>
-<li><strong>The requested currency pair is not offered by the provider.</strong> &#8212; <em>origin:</em> External &#8212; Confirm the provider supports both the source and target currencies before requesting a conversion.</li>
-</ul>
-</section>
-<section class="examples"><h3>Examples</h3>
+<section class="examples"><h4>Examples</h4>
 <div class="example">
 <p class="example-label">Public response (RFC 9457)</p>
 <pre class="json"><code>{
@@ -506,12 +306,12 @@ pre.log { border-left: 3px solid var(--internal-border); }
   &quot;detail&quot;: &quot;The requested currency pair is not supported.&quot;,
   &quot;code&quot;: &quot;UNSUPPORTED_CURRENCY_PAIR&quot;
 }</code></pre>
-<p class="example-label internal">Diagnostic (internal — not for external exposure)</p>
+<p class="example-label">Diagnostic (internal — not for external exposure)</p>
 <pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [ExchangeRateProvider] The exchange-rate provider does not quote the EUR to USD currency pair. error.code=UNSUPPORTED_CURRENCY_PAIR</code></pre>
 </div>
 </section>
-<section class="context"><h3>Context</h3>
-<div class="table-wrap"><table class="context-table">
+<section class="context"><h4>Context</h4>
+<div class="table-wrap"><table class="data-table">
 <thead>
 <tr><th scope="col">Key</th><th scope="col">Type</th><th scope="col">Description</th><th scope="col">Example values</th></tr>
 </thead>
@@ -522,6 +322,201 @@ pre.log { border-left: 3px solid var(--internal-border); }
 </table></div>
 </section>
 </article>
+</section>
+<section class="error-group" id="src-StatementUploadEndpoint">
+<h2 class="group-title">StatementUploadEndpoint</h2>
+<article class="error-detail" id="err-MALFORMED_STATEMENT_PAYLOAD">
+<h3 class="error-title"><code>MALFORMED_STATEMENT_PAYLOAD</code> <a class="anchor" href="#err-MALFORMED_STATEMENT_PAYLOAD" aria-label="Copy link to this error" data-anchor>#</a></h3>
+<p class="error-subtitle">Malformed statement payload</p>
+<section class="doc"><h4>Documentation</h4><p>This error occurs when the statement upload endpoint receives a request whose body is missing a required field or carries an invalid value.</p></section>
+<blockquote class="rule"><strong>Business rule:</strong> An uploaded statement request must carry every required field with a valid value.</blockquote>
+<section class="diagnostics"><h4>Diagnostics</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Possible cause</th><th scope="col">Origin</th><th scope="col">Analysis hint</th></tr>
+</thead>
+<tbody>
+<tr><td>The client sent an incomplete or malformed request body.</td><td>External</td><td>Inspect the field named in the context and confirm the client sends it with a valid value.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Examples</h4>
+<div class="example">
+<p class="example-label">Public response (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;title&quot;: &quot;Malformed statement payload.&quot;,
+  &quot;detail&quot;: &quot;The uploaded statement request is missing a required field or contains an invalid value.&quot;,
+  &quot;code&quot;: &quot;MALFORMED_STATEMENT_PAYLOAD&quot;
+}</code></pre>
+<p class="example-label">Diagnostic (internal — not for external exposure)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [StatementUploadEndpoint] The statement upload request 11111111-1111-1111-1111-111111111111 is malformed: the &#39;statementPeriod&#39; field is missing or invalid. error.code=MALFORMED_STATEMENT_PAYLOAD</code></pre>
+</div>
+</section>
+<section class="context"><h4>Context</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Key</th><th scope="col">Type</th><th scope="col">Description</th><th scope="col">Example values</th></tr>
+</thead>
+<tbody>
+<tr><td><code>REQUEST_ID</code></td><td><code>System.Guid</code></td><td>The identifier of the incoming request.</td><td><code>11111111-1111-1111-1111-111111111111</code></td></tr>
+<tr><td><code>FIELD</code></td><td><code>System.String</code></td><td>The request field that failed validation.</td><td><code>statementPeriod</code></td></tr>
+</tbody>
+</table></div>
+</section>
+</article>
+<article class="error-detail" id="err-STATEMENT_UPLOAD_RATE_LIMITED">
+<h3 class="error-title"><code>STATEMENT_UPLOAD_RATE_LIMITED</code> <a class="anchor" href="#err-STATEMENT_UPLOAD_RATE_LIMITED" aria-label="Copy link to this error" data-anchor>#</a></h3>
+<p class="error-subtitle">Statement upload rate-limited</p>
+<section class="doc"><h4>Documentation</h4><p>This error occurs when too many statement uploads arrive in a short window and the endpoint throttles the request. It is transient: the same request can be retried later.</p></section>
+<blockquote class="rule"><strong>Business rule:</strong> Callers must stay within the endpoint&#39;s upload rate limit.</blockquote>
+<section class="diagnostics"><h4>Diagnostics</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Possible cause</th><th scope="col">Origin</th><th scope="col">Analysis hint</th></tr>
+</thead>
+<tbody>
+<tr><td>The caller exceeded the allowed request rate.</td><td>External</td><td>Back off and retry after the delay indicated in the message.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Examples</h4>
+<div class="example">
+<p class="example-label">Public response (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;title&quot;: &quot;Statement upload rate-limited.&quot;,
+  &quot;detail&quot;: &quot;Too many statement uploads were sent in a short period; please retry later.&quot;,
+  &quot;code&quot;: &quot;STATEMENT_UPLOAD_RATE_LIMITED&quot;
+}</code></pre>
+<p class="example-label">Diagnostic (internal — not for external exposure)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [StatementUploadEndpoint] The statement upload request 11111111-1111-1111-1111-111111111111 was rate-limited; retry after 30 seconds. error.code=STATEMENT_UPLOAD_RATE_LIMITED</code></pre>
+</div>
+</section>
+<section class="context"><h4>Context</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Key</th><th scope="col">Type</th><th scope="col">Description</th><th scope="col">Example values</th></tr>
+</thead>
+<tbody>
+<tr><td><code>REQUEST_ID</code></td><td><code>System.Guid</code></td><td>The identifier of the incoming request.</td><td><code>11111111-1111-1111-1111-111111111111</code></td></tr>
+</tbody>
+</table></div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-MoneyTransfer">
+<h2 class="group-title">MoneyTransfer</h2>
+<article class="error-detail" id="err-MONEY_TRANSFER_AMOUNT_NOT_POSITIVE">
+<h3 class="error-title"><code>MONEY_TRANSFER_AMOUNT_NOT_POSITIVE</code> <a class="anchor" href="#err-MONEY_TRANSFER_AMOUNT_NOT_POSITIVE" aria-label="Copy link to this error" data-anchor>#</a></h3>
+<p class="error-subtitle">Non-positive transfer amount</p>
+<section class="doc"><h4>Documentation</h4><p>This error occurs when a money transfer is requested with an amount that is zero or negative.</p></section>
+<blockquote class="rule"><strong>Business rule:</strong> A money transfer amount must be strictly positive.</blockquote>
+<section class="diagnostics"><h4>Diagnostics</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Possible cause</th><th scope="col">Origin</th><th scope="col">Analysis hint</th></tr>
+</thead>
+<tbody>
+<tr><td>The amount was entered or computed as zero or a negative value.</td><td>External</td><td>Check the requested transfer amount and confirm it is greater than zero.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Examples</h4>
+<div class="example">
+<p class="example-label">Public response (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;title&quot;: &quot;Transfer amount must be positive.&quot;,
+  &quot;detail&quot;: &quot;The transfer amount must be greater than zero.&quot;,
+  &quot;code&quot;: &quot;MONEY_TRANSFER_AMOUNT_NOT_POSITIVE&quot;
+}</code></pre>
+<p class="example-label">Diagnostic (internal — not for external exposure)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [MoneyTransfer] Cannot transfer -25 EUR: the amount must be strictly positive. error.code=MONEY_TRANSFER_AMOUNT_NOT_POSITIVE</code></pre>
+</div>
+</section>
+<section class="context"><h4>Context</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Key</th><th scope="col">Type</th><th scope="col">Description</th><th scope="col">Example values</th></tr>
+</thead>
+<tbody>
+<tr><td><code>TRANSFER_AMOUNT</code></td><td><code>FirstClassErrors.Usage.Model.Amount</code></td><td>The monetary amount of the attempted transfer.</td><td><code>-25 EUR</code></td></tr>
+</tbody>
+</table></div>
+</section>
+</article>
+<article class="error-detail" id="err-MONEY_TRANSFER_INVALID">
+<h3 class="error-title"><code>MONEY_TRANSFER_INVALID</code> <a class="anchor" href="#err-MONEY_TRANSFER_INVALID" aria-label="Copy link to this error" data-anchor>#</a></h3>
+<p class="error-subtitle">Invalid money transfer</p>
+<section class="doc"><h4>Documentation</h4><p>This error aggregates every domain rule violated while validating a money transfer, so the caller sees all the problems at once rather than one at a time.</p></section>
+<blockquote class="rule"><strong>Business rule:</strong> A money transfer must satisfy every domain rule (a strictly positive amount, matching currencies, ...).</blockquote>
+<section class="diagnostics"><h4>Diagnostics</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Possible cause</th><th scope="col">Origin</th><th scope="col">Analysis hint</th></tr>
+</thead>
+<tbody>
+<tr><td>One or more domain rules were violated by the requested transfer.</td><td>External</td><td>Inspect the aggregated inner errors to see each individual rule violation.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Examples</h4>
+<div class="example">
+<p class="example-label">Public response (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;title&quot;: &quot;Invalid money transfer.&quot;,
+  &quot;detail&quot;: &quot;The money transfer does not satisfy all the required rules.&quot;,
+  &quot;code&quot;: &quot;MONEY_TRANSFER_INVALID&quot;
+}</code></pre>
+<p class="example-label">Diagnostic (internal — not for external exposure)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [MoneyTransfer] The money transfer is invalid: it violates one or more domain rules. error.code=MONEY_TRANSFER_INVALID</code></pre>
+</div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-Temperature">
+<h2 class="group-title">Temperature</h2>
+<article class="error-detail" id="err-TEMPERATURE_BELOW_ABSOLUTE_ZERO">
+<h3 class="error-title"><code>TEMPERATURE_BELOW_ABSOLUTE_ZERO</code> <a class="anchor" href="#err-TEMPERATURE_BELOW_ABSOLUTE_ZERO" aria-label="Copy link to this error" data-anchor>#</a></h3>
+<p class="error-subtitle">Temperature below absolute zero</p>
+<section class="doc"><h4>Documentation</h4><p>This error occurs when trying to instantiate a temperature with a value that is below absolute zero.</p></section>
+<blockquote class="rule"><strong>Business rule:</strong> Temperature cannot go below absolute zero because absolute zero is the point where particles have minimum possible energy.</blockquote>
+<section class="diagnostics"><h4>Diagnostics</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">Possible cause</th><th scope="col">Origin</th><th scope="col">Analysis hint</th></tr>
+</thead>
+<tbody>
+<tr><td>The value entered manually by a user is invalid.</td><td>External</td><td>Verify the value entered by the user and assess its compliance with domain rules.</td></tr>
+<tr><td>The value received from an external system (API, message, etc.) is invalid.</td><td>External</td><td>Check the data provided by the upstream system and evaluate its validity against domain rules.</td></tr>
+<tr><td>The value was loaded from corrupted or outdated persisted data.</td><td>External</td><td>Examine the persisted data source to determine whether stored values comply with current domain rules.</td></tr>
+<tr><td>The value was computed internally without using domain-safe methods.</td><td>Internal</td><td>Inspect the internal computation logic to confirm that domain invariants are preserved.</td></tr>
+<tr><td>The value originates from system configuration or defaults that are incorrect or outdated.</td><td>External</td><td>Review the relevant configuration or default parameters to assess their compliance with domain rules.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Examples</h4>
+<div class="example">
+<p class="example-label">Public response (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;title&quot;: &quot;Temperature is invalid.&quot;,
+  &quot;detail&quot;: &quot;The temperature -1 K is below absolute zero.&quot;,
+  &quot;code&quot;: &quot;TEMPERATURE_BELOW_ABSOLUTE_ZERO&quot;
+}</code></pre>
+<p class="example-label">Diagnostic (internal — not for external exposure)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [Temperature] Failed to instantiate temperature: the value -1 K is below absolute zero. error.code=TEMPERATURE_BELOW_ABSOLUTE_ZERO</code></pre>
+</div>
+<div class="example">
+<p class="example-label">Public response (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;title&quot;: &quot;Temperature is invalid.&quot;,
+  &quot;detail&quot;: &quot;The temperature -280 &#176;C is below absolute zero.&quot;,
+  &quot;code&quot;: &quot;TEMPERATURE_BELOW_ABSOLUTE_ZERO&quot;
+}</code></pre>
+<p class="example-label">Diagnostic (internal — not for external exposure)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [Temperature] Failed to instantiate temperature: the value -280 &#176;C is below absolute zero. error.code=TEMPERATURE_BELOW_ABSOLUTE_ZERO</code></pre>
+</div>
+</section>
+</article>
+</section>
 </main>
 <script>
 (function () {
@@ -539,31 +534,25 @@ pre.log { border-left: 3px solid var(--internal-border); }
     });
   }
   var search = document.getElementById('search');
-  var srcFilter = document.getElementById('filter-source');
-  var detailFilter = document.getElementById('filter-detail');
-  var table = document.getElementById('catalog');
+  var toc = document.getElementById('toc');
   var noResults = document.getElementById('no-results');
   function filter() {
-    if (!table || !table.tBodies[0]) { return; }
+    if (!toc) { return; }
     var q = ((search && search.value) || '').toLowerCase().trim();
-    var src = srcFilter ? srcFilter.value : '';
-    var onlyDetail = detailFilter ? detailFilter.checked : false;
-    var rows = table.tBodies[0].rows;
+    var items = toc.querySelectorAll('.toc-item');
     var visible = 0;
-    for (var i = 0; i < rows.length; i++) {
-      var r = rows[i];
-      var text = r.getAttribute('data-search') || '';
-      var ok = (!q || text.indexOf(q) !== -1)
-            && (!src || r.getAttribute('data-source') === src)
-            && (!onlyDetail || r.getAttribute('data-detail') === 'true');
-      r.hidden = !ok;
+    for (var i = 0; i < items.length; i++) {
+      var ok = !q || (items[i].getAttribute('data-search') || '').indexOf(q) !== -1;
+      items[i].hidden = !ok;
       if (ok) { visible++; }
+    }
+    var groups = toc.querySelectorAll('.toc-group');
+    for (var g = 0; g < groups.length; g++) {
+      groups[g].hidden = groups[g].querySelectorAll('.toc-item:not([hidden])').length === 0;
     }
     if (noResults) { noResults.hidden = visible !== 0; }
   }
   if (search) { search.addEventListener('input', filter); }
-  if (srcFilter) { srcFilter.addEventListener('change', filter); }
-  if (detailFilter) { detailFilter.addEventListener('change', filter); }
   var anchors = document.querySelectorAll('a[data-anchor]');
   for (var j = 0; j < anchors.length; j++) {
     anchors[j].addEventListener('click', function () {
