@@ -89,12 +89,13 @@ public interface IErrorDocumentationRenderer {
 }
 ```
 
-Chaque renderer déclare les layouts qu’il sait produire et on lui en demande un à chaque appel via le `RenderRequest` (qui porte aussi la culture cible) ; un layout non pris en charge est rejeté par une `LayoutNotSupportedException`. Deux renderers sont fournis d’origine :
+Chaque renderer déclare les layouts qu’il sait produire et on lui en demande un à chaque appel via le `RenderRequest` (qui porte aussi la culture cible) ; un layout non pris en charge est rejeté par une `LayoutNotSupportedException`. Trois renderers sont fournis d’origine :
 
 * **json** — un schéma JSON curé et stable (layout `single` uniquement)
 * **markdown** — un fichier unique, ou (avec `--layout split`) un index README plus un fichier par groupe de source et un fichier par erreur (`single`/`split`)
+* **html** — un site statique autonome : un catalogue consultable et filtrable et, en `split`, une page par erreur (`single`/`split`). Voir [Le renderer HTML](TheHtmlRenderer.fr.md).
 
-Tout autre format (HTML, CSV, un gabarit maison, …) est un **renderer personnalisé** : implémentez l’interface et enregistrez-le. Voir [Écrire son propre renderer](WritingACustomRenderer.fr.md).
+Tout autre format (CSV, un gabarit maison, …) est un **renderer personnalisé** : implémentez l’interface et enregistrez-le. Voir [Écrire son propre renderer](WritingACustomRenderer.fr.md).
 
 ## 🧰 7. Orchestration via CLI
 
