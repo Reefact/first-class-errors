@@ -73,9 +73,6 @@
   <data name="Amount_CurrencyMismatch_Rule" xml:space="preserve">
     <value>Toutes les opérations monétaires doivent porter sur des montants exprimés dans la même devise.</value>
   </data>
-  <data name="Amount_CurrencyMismatch_Message" xml:space="preserve">
-    <value>Échec de l'opération monétaire car les montants concernés sont exprimés dans des devises différentes : {0} et {1}.</value>
-  </data>
   <data name="Amount_CurrencyMismatch_ShortMessage" xml:space="preserve">
     <value>Incohérence de devise</value>
   </data>
@@ -99,9 +96,6 @@
   </data>
   <data name="Bank_DateOutOfPeriod_Rule" xml:space="preserve">
     <value>Toutes les transactions doivent avoir lieu au cours de la période du relevé.</value>
-  </data>
-  <data name="Bank_DateOutOfPeriod_Message" xml:space="preserve">
-    <value>La transaction datée du {0} est en dehors de la période du relevé [{1};{2}].</value>
   </data>
   <data name="Bank_DateOutOfPeriod_ShortMessage" xml:space="preserve">
     <value>La date de transaction est en dehors de la période du relevé.</value>
@@ -138,9 +132,6 @@
   </data>
   <data name="Bank_TotalMismatch_Rule" xml:space="preserve">
     <value>Le montant total du relevé doit être égal à la somme de tous les montants de transaction inclus dans le relevé.</value>
-  </data>
-  <data name="Bank_TotalMismatch_Message" xml:space="preserve">
-    <value>Le montant total déclaré du relevé ({0}) ne correspond pas au montant total calculé à partir des transactions ({1}).</value>
   </data>
   <data name="Bank_TotalMismatch_ShortMessage" xml:space="preserve">
     <value>Incohérence du montant total du relevé.</value>
@@ -193,9 +184,6 @@
   <data name="MoneyTransfer_AmountNotPositive_ShortMessage" xml:space="preserve">
     <value>Le montant du virement doit être positif.</value>
   </data>
-  <data name="MoneyTransfer_AmountNotPositive_Message" xml:space="preserve">
-    <value>Impossible de virer {0} : le montant doit être strictement positif.</value>
-  </data>
   <data name="MoneyTransfer_Invalid_Title" xml:space="preserve">
     <value>Virement invalide</value>
   </data>
@@ -213,9 +201,6 @@
   </data>
   <data name="MoneyTransfer_Invalid_ShortMessage" xml:space="preserve">
     <value>Virement invalide.</value>
-  </data>
-  <data name="MoneyTransfer_Invalid_Message" xml:space="preserve">
-    <value>Le virement est invalide : il viole une ou plusieurs règles métier.</value>
   </data>
   <data name="MoneyTransfer_TransferAmount_Context" xml:space="preserve">
     <value>Le montant monétaire du virement tenté.</value>
@@ -241,9 +226,6 @@
   <data name="StatementUpload_Malformed_ShortMessage" xml:space="preserve">
     <value>Charge utile de relevé mal formée.</value>
   </data>
-  <data name="StatementUpload_Malformed_Message" xml:space="preserve">
-    <value>La requête de téléversement de relevé {0} est mal formée : le champ « {1} » est manquant ou invalide.</value>
-  </data>
   <data name="StatementUpload_RateLimited_Title" xml:space="preserve">
     <value>Téléversement de relevé limité en débit</value>
   </data>
@@ -261,9 +243,6 @@
   </data>
   <data name="StatementUpload_RateLimited_ShortMessage" xml:space="preserve">
     <value>Téléversement de relevé limité en débit.</value>
-  </data>
-  <data name="StatementUpload_RateLimited_Message" xml:space="preserve">
-    <value>La requête de téléversement de relevé {0} a été limitée en débit ; réessayez après {1} secondes.</value>
   </data>
   <data name="StatementUpload_RequestId_Context" xml:space="preserve">
     <value>L'identifiant de la requête entrante.</value>
@@ -298,9 +277,6 @@
   <data name="ExchangeRate_ServiceUnavailable_ShortMessage" xml:space="preserve">
     <value>Service de taux de change indisponible.</value>
   </data>
-  <data name="ExchangeRate_ServiceUnavailable_Message" xml:space="preserve">
-    <value>Le fournisseur de taux de change « {0} » est indisponible (corrélation {1}).</value>
-  </data>
   <data name="ExchangeRate_UnsupportedPair_Title" xml:space="preserve">
     <value>Paire de devises non prise en charge</value>
   </data>
@@ -319,9 +295,6 @@
   <data name="ExchangeRate_UnsupportedPair_ShortMessage" xml:space="preserve">
     <value>Paire de devises non prise en charge.</value>
   </data>
-  <data name="ExchangeRate_UnsupportedPair_Message" xml:space="preserve">
-    <value>Le fournisseur de taux de change ne cote pas la paire de devises {0} vers {1}.</value>
-  </data>
   <data name="ExchangeRate_Provider_Context" xml:space="preserve">
     <value>Le fournisseur externe qui a été appelé.</value>
   </data>
@@ -333,5 +306,32 @@
   </data>
   <data name="ExchangeRate_ToCurrency_Context" xml:space="preserve">
     <value>La devise cible de la conversion.</value>
+  </data>
+  <data name="Amount_CurrencyMismatch_DetailedMessage" xml:space="preserve">
+    <value>Les deux montants utilisent des devises différentes et ne peuvent pas être combinés.</value>
+  </data>
+  <data name="Bank_DateOutOfPeriod_DetailedMessage" xml:space="preserve">
+    <value>Une date de transaction se situe en dehors de la période du relevé.</value>
+  </data>
+  <data name="Bank_TotalMismatch_DetailedMessage" xml:space="preserve">
+    <value>Le total déclaré du relevé ne correspond pas au total calculé.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_DetailedMessage" xml:space="preserve">
+    <value>Le montant du virement doit être supérieur à zéro.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_DetailedMessage" xml:space="preserve">
+    <value>Le virement ne respecte pas toutes les règles requises.</value>
+  </data>
+  <data name="StatementUpload_Malformed_DetailedMessage" xml:space="preserve">
+    <value>La requête de relevé téléversée omet un champ obligatoire ou contient une valeur invalide.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_DetailedMessage" xml:space="preserve">
+    <value>Trop de téléversements de relevés ont été envoyés en peu de temps ; veuillez réessayer plus tard.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_DetailedMessage" xml:space="preserve">
+    <value>Le service de taux de change est temporairement indisponible ; veuillez réessayer plus tard.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_DetailedMessage" xml:space="preserve">
+    <value>La paire de devises demandée n'est pas prise en charge.</value>
   </data>
 </root>
