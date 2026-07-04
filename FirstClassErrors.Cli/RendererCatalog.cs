@@ -19,7 +19,8 @@ internal static class RendererCatalog {
     // added through the configuration instead (fce config renderer add).
     private static readonly IReadOnlyList<Func<IErrorDocumentationRenderer>> BuiltInFactories = [
         () => new JsonErrorDocumentationRenderer(),
-        () => new MarkdownErrorDocumentationRenderer()
+        () => new MarkdownErrorDocumentationRenderer(),
+        () => new HtmlErrorDocumentationRenderer()
     ];
 
     /// <summary>Gets the built-in format identifiers, as declared by the built-in renderers.</summary>
