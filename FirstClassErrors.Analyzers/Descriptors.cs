@@ -32,7 +32,10 @@ internal static class Descriptors {
         description: "[DocumentedBy] references its documentation method by name; a name that resolves to nothing is silently skipped when documentation is extracted.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.DocumentedByTargetNotFound));
 
+<<<<<<< 76f96d9b547b96b7d8a14048a2f6036c69baf88d
 <<<<<<< b99d792aab6c528239b0e92feef667084d9dea0a
+=======
+>>>>>>> 42551f455f05a68042840626428e601821a47626
     public static readonly DiagnosticDescriptor DocumentedByInvalidSignature = new(
         id: DiagnosticIds.DocumentedByInvalidSignature,
         title: "[DocumentedBy] target has an invalid signature",
@@ -43,6 +46,7 @@ internal static class Descriptors {
         description: "The documentation factory referenced by [DocumentedBy] is invoked as a static parameterless method returning ErrorDocumentation; any other shape is skipped at extraction time.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.DocumentedByInvalidSignature));
 
+<<<<<<< 76f96d9b547b96b7d8a14048a2f6036c69baf88d
     public static readonly DiagnosticDescriptor DocumentedByWithoutProvidesErrorsFor = new(
         id: DiagnosticIds.DocumentedByWithoutProvidesErrorsFor,
         title: "[DocumentedBy] used in a type without [ProvidesErrorsFor]",
@@ -57,4 +61,6 @@ internal static class Descriptors {
 >>>>>>> 8229f61d518a97b78334466dffa438b4a7426c3d
 =======
 >>>>>>> 25f33ab91f85a53fce3220cf3b67a341780288de
+=======
+>>>>>>> 42551f455f05a68042840626428e601821a47626
 }

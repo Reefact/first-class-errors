@@ -14,6 +14,7 @@ Rule ID | Category | Severity | Notes
 FCE002  | FirstClassErrors.ErrorCodes          | Error    | EmptyErrorCodeAnalyzer
 FCE006  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByTargetNotFoundAnalyzer
 FCE007  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByInvalidSignatureAnalyzer
+<<<<<<< 76f96d9b547b96b7d8a14048a2f6036c69baf88d
 FCE008  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByWithoutProvidesErrorsForAnalyzer
 =======
 >>>>>>> db7c3cb49e9b8480f5aa6d958fabbebeed5d58ac
@@ -26,3 +27,5 @@ FCE002  | FirstClassErrors.ErrorCodes | Error    | EmptyErrorCodeAnalyzer
 FCE002  | FirstClassErrors.ErrorCodes          | Error    | EmptyErrorCodeAnalyzer
 FCE006  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByTargetNotFoundAnalyzer
 >>>>>>> 25f33ab91f85a53fce3220cf3b67a341780288de
+=======
+>>>>>>> 42551f455f05a68042840626428e601821a47626
