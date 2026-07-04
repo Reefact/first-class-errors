@@ -34,7 +34,7 @@ public sealed class DocumentationModelSerializationTests {
                 new ErrorDiagnostic("A value computed internally is invalid.", ErrorOrigin.Internal, "Inspect the computation.")
             },
             Examples = new[] {
-                new ErrorDescription("Failed to instantiate temperature: -300 is below absolute zero.", "Temperature is below absolute zero.")
+                new ErrorDescription("Temperature is below absolute zero.", "Failed to instantiate temperature: -300 is below absolute zero.", "The provided temperature is below the minimum allowed value.")
             },
             Context = new[] {
                 new ErrorContextEntryDocumentation {
@@ -78,8 +78,9 @@ public sealed class DocumentationModelSerializationTests {
         Check.That(restored.Diagnostics[1].Origin).IsEqualTo(ErrorOrigin.Internal);
 
         Check.That(restored.Examples).CountIs(1);
-        Check.That(restored.Examples[0].DetailedMessage).IsEqualTo("Failed to instantiate temperature: -300 is below absolute zero.");
         Check.That(restored.Examples[0].ShortMessage).IsEqualTo("Temperature is below absolute zero.");
+        Check.That(restored.Examples[0].DiagnosticMessage).IsEqualTo("Failed to instantiate temperature: -300 is below absolute zero.");
+        Check.That(restored.Examples[0].DetailedMessage).IsEqualTo("The provided temperature is below the minimum allowed value.");
 
         ErrorContextEntryDocumentation contextEntry = restored.Context.Single();
         Check.That(contextEntry.Key).IsEqualTo("AttemptedValue");

@@ -14,7 +14,7 @@ public sealed class ToExceptionTests {
     [Fact(DisplayName = "Converting a domain error produces a domain exception.")]
     public void ConvertingADomainErrorProducesADomainException() {
         // Setup
-        DomainError error = new(ErrorCode.Unspecified, "boom");
+        DomainError error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
 
         // Exercise
         DiagnosableException exception = error.ToException();
@@ -26,7 +26,7 @@ public sealed class ToExceptionTests {
     [Fact(DisplayName = "Converting an infrastructure error produces an infrastructure exception.")]
     public void ConvertingAnInfrastructureErrorProducesAnInfrastructureException() {
         // Setup
-        InfrastructureError error = new(ErrorCode.Unspecified, "boom", InteractionDirection.Incoming, Transience.NonTransient);
+        InfrastructureError error = ErrorFactory.Infrastructure(ErrorCode.Unspecified, "boom", InteractionDirection.Incoming, Transience.NonTransient);
 
         // Exercise
         DiagnosableException exception = error.ToException();
@@ -38,7 +38,7 @@ public sealed class ToExceptionTests {
     [Fact(DisplayName = "Converting a primary port error produces a primary port exception.")]
     public void ConvertingAPrimaryPortErrorProducesAPrimaryPortException() {
         // Setup
-        PrimaryPortError error = new(ErrorCode.Unspecified, "boom", Transience.NonTransient);
+        PrimaryPortError error = ErrorFactory.Primary(ErrorCode.Unspecified, "boom", Transience.NonTransient);
 
         // Exercise
         DiagnosableException exception = error.ToException();
@@ -50,7 +50,7 @@ public sealed class ToExceptionTests {
     [Fact(DisplayName = "Converting a secondary port error produces a secondary port exception.")]
     public void ConvertingASecondaryPortErrorProducesASecondaryPortException() {
         // Setup
-        SecondaryPortError error = new(ErrorCode.Unspecified, "boom", Transience.NonTransient);
+        SecondaryPortError error = ErrorFactory.Secondary(ErrorCode.Unspecified, "boom", Transience.NonTransient);
 
         // Exercise
         DiagnosableException exception = error.ToException();
@@ -62,7 +62,7 @@ public sealed class ToExceptionTests {
     [Fact(DisplayName = "The converted exception carries the same error reference.")]
     public void TheConvertedExceptionCarriesTheSameErrorReference() {
         // Setup
-        DomainError error = new(ErrorCode.Unspecified, "boom");
+        DomainError error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
 
         // Exercise
         DiagnosableException exception = error.ToException();
@@ -71,22 +71,22 @@ public sealed class ToExceptionTests {
         Check.That(exception.Error).IsSameReferenceAs(error);
     }
 
-    [Fact(DisplayName = "The converted exception message equals the error detailed message.")]
-    public void TheConvertedExceptionMessageEqualsTheErrorDetailedMessage() {
+    [Fact(DisplayName = "The converted exception message equals the error diagnostic message.")]
+    public void TheConvertedExceptionMessageEqualsTheErrorDiagnosticMessage() {
         // Setup
-        DomainError error = new(ErrorCode.Unspecified, "boom");
+        DomainError error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
 
         // Exercise
         DiagnosableException exception = error.ToException();
 
         // Verify
-        Check.That(exception.Message).IsEqualTo(error.DetailedMessage);
+        Check.That(exception.Message).IsEqualTo(error.DiagnosticMessage);
     }
 
     [Fact(DisplayName = "The converted exception has no inner exception even when the error has inner errors.")]
     public void TheConvertedExceptionHasNoInnerExceptionEvenWhenTheErrorHasInnerErrors() {
         // Setup
-        DomainError error = new(ErrorCode.Unspecified, "root", new DomainError(ErrorCode.Unspecified, "inner"));
+        DomainError error = ErrorFactory.Domain(ErrorCode.Unspecified, "root", ErrorFactory.Domain(ErrorCode.Unspecified, "inner"));
 
         // Exercise
         DiagnosableException exception = error.ToException();
@@ -99,7 +99,7 @@ public sealed class ToExceptionTests {
     [Fact(DisplayName = "Throwing and catching a converted error preserves the error reference.")]
     public void ThrowingAndCatchingAConvertedErrorPreservesTheErrorReference() {
         // Setup
-        DomainError error = new(ErrorCode.Unspecified, "boom");
+        DomainError error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
 
         // Exercise
         Error? caughtError = null;

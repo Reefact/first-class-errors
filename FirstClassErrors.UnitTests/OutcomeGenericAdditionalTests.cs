@@ -26,7 +26,7 @@ public sealed class OutcomeGenericAdditionalTests {
     [Fact(DisplayName = "Then discarding the value propagates the error on failure.")]
     public void ThenDiscardingTheValuePropagatesTheErrorOnFailure() {
         // Setup
-        DomainError  error   = new(ErrorCode.Unspecified, "boom");
+        DomainError  error   = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
         Outcome<int> outcome = Outcome<int>.Failure(error);
         bool         called  = false;
 
@@ -62,7 +62,7 @@ public sealed class OutcomeGenericAdditionalTests {
     [Fact(DisplayName = "Awaiting the async instance Recover value overload recovers a failure.")]
     public async Task AwaitingTheAsyncInstanceRecoverValueOverloadRecoversAFailure() {
         // Setup
-        DomainError  error   = new(ErrorCode.Unspecified, "boom");
+        DomainError  error   = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
         Outcome<int> outcome = Outcome<int>.Failure(error);
 
         // Exercise
@@ -120,7 +120,7 @@ public sealed class OutcomeGenericAdditionalTests {
     [Fact(DisplayName = "Recover with a value-returning fallback that returns null throws an ArgumentNullException.")]
     public void RecoverWithAValueReturningFallbackThatReturnsNullThrowsAnArgumentNullException() {
         // Setup
-        DomainError     error   = new(ErrorCode.Unspecified, "boom");
+        DomainError     error   = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
         Outcome<string> outcome = Outcome<string>.Failure(error);
 
         // Exercise & verify
