@@ -4,6 +4,8 @@ FirstClassErrors vous fournit des outils. Ce guide vous aide à les utiliser de 
 
 L’objectif n’est pas seulement de lever des exceptions, mais d’**exprimer les erreurs de façon claire, précise et utile** pour des humains.
 
+> La prose que vous rédigez ci-dessous (titre, description, règle, causes, …) peut être écrite en dur ou lue depuis des ressources localisées, afin de générer le catalogue en plusieurs langues — voir [Internationalisation](Internationalisation.fr.md).
+
 ## 🎯 1. Pensez en *situations d’erreur*, pas seulement en échecs
 
 Chaque erreur documentée doit représenter :

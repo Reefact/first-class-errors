@@ -142,6 +142,6 @@ peut utiliser cette bibliothèque.
 
 ---
 
-Section précédente: [Architecture du pipeline de documentation](ArchitectureOfTheDocumentationPipeline.fr.md)
+Section précédente: [Internationalisation](Internationalisation.fr.md)
 
 ---

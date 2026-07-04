@@ -5,6 +5,8 @@ This guide helps you use them in a consistent and meaningful way.
 
 The goal is not just to throw exceptions, but to **express errors clearly, precisely, and usefully** for humans.
 
+> The prose you write below (title, description, rule, causes, …) can be authored as plain strings or sourced from localized resources so the catalog is generated in several languages — see [Internationalization](Internationalization.en.md).
+
 ## 🎯 1. Think in *error situations*, not just failures
 
 Each documented error should represent:

@@ -15,6 +15,8 @@ La documentation des erreurs doit être générée automatiquement pendant la CI
 
 Cela garantit que la documentation correspond toujours à la version du système déployée. Aucune mise à jour manuelle n’est nécessaire et aucune dérive ne peut apparaître.
 
+Vous pouvez produire le catalogue par langue en ajoutant `--language <…>` (par ex. une matrice CI sur `en`, `fr`, `sv`) ; les noms de fichiers et les ancres restent stables d’une langue à l’autre. Voir [Internationalisation](Internationalisation.fr.md).
+
 ## 🌍 Publication de la documentation
 
 La documentation générée peut être :

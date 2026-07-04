@@ -24,7 +24,7 @@ public interface IErrorDocumentationRenderer {
 `RenderRequest` carries the two per-call choices:
 
 * **`Layout`** — the value of `fce generate --layout <…>`. Declare the layouts you support in `SupportedLayouts` and reject any other with `LayoutNotSupportedException` (the built-in `json` renderer supports only `single`; `markdown` supports `single` and `split`). A layout is a free-form string, so a renderer may define its own.
-* **`Culture`** — the target language (`fce generate --language <…>`). Localize any boilerplate you emit for `request.Culture`; the built-in Markdown renderer reads its headings and labels from resources keyed by it. The error *content* is already localized upstream by the extractor, so a renderer only localizes its own template text.
+* **`Culture`** — the target language. Localize any boilerplate you emit for `request.Culture` (the error *content* is already localized upstream by the extractor, so a renderer only localizes its own template text). See [Internationalization](Internationalization.en.md).
 
 The contract and the model (`ErrorDocumentation`, `ErrorDiagnostic`, …) ship in the `FirstClassErrors` package, which targets **.NET Standard 2.0** — so a renderer needs only that one reference, which most projects already have.
 
@@ -107,6 +107,6 @@ foreach (RenderedDocument document in new CsvErrorDocumentationRenderer().Render
 
 ---
 
-Previous section: [Architecture of the Documentation Pipeline](ArchitectureOfTheDocumentationPipeline.en.md) | Next section: [FAQ](FAQ.en.md)
+Previous section: [Architecture of the Documentation Pipeline](ArchitectureOfTheDocumentationPipeline.en.md) | Next section: [Internationalization](Internationalization.en.md)
 
 ---
