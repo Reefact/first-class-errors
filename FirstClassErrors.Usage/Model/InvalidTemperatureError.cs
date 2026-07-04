@@ -28,7 +28,7 @@ public static class InvalidTemperatureError {
                                DocumentationFormatter.Format("Failed to instantiate temperature: the value {0} {1} is below absolute zero.", invalidValue, invalidValueUnit))
                           .WithPublicMessage(
                                "Temperature is invalid.",
-                               "The temperature {0} {1} is below absolute zero.");
+                               DocumentationFormatter.Format("The temperature {0} {1} is below absolute zero.", invalidValue, invalidValueUnit));
     }
 
     private static ErrorDocumentation BelowAbsoluteZeroDocumentation() {
