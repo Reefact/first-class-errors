@@ -172,4 +172,166 @@
   <data name="Bank_TransactionDate_Context" xml:space="preserve">
     <value>La fecha de la transacción que se está procesando.</value>
   </data>
+  <data name="MoneyTransfer_Source" xml:space="preserve">
+    <value>Errores generados al validar una transferencia de dinero entre cuentas.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Title" xml:space="preserve">
+    <value>Importe de transferencia no positivo</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Description" xml:space="preserve">
+    <value>Este error se produce cuando se solicita una transferencia con un importe cero o negativo.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Rule" xml:space="preserve">
+    <value>El importe de una transferencia debe ser estrictamente positivo.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Cause1" xml:space="preserve">
+    <value>El importe se introdujo o se calculó como cero o un valor negativo.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Hint1" xml:space="preserve">
+    <value>Compruebe el importe de transferencia solicitado y confirme que es mayor que cero.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_ShortMessage" xml:space="preserve">
+    <value>El importe de la transferencia debe ser positivo.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Message" xml:space="preserve">
+    <value>No se puede transferir {0}: el importe debe ser estrictamente positivo.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Title" xml:space="preserve">
+    <value>Transferencia de dinero no válida</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Description" xml:space="preserve">
+    <value>Este error agrupa todas las reglas de dominio incumplidas al validar una transferencia, de modo que el llamador ve todos los problemas a la vez en lugar de uno por uno.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Rule" xml:space="preserve">
+    <value>Una transferencia debe cumplir todas las reglas de dominio (un importe estrictamente positivo, monedas coincidentes, ...).</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Cause1" xml:space="preserve">
+    <value>La transferencia solicitada incumplió una o varias reglas de dominio.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Hint1" xml:space="preserve">
+    <value>Examine los errores internos agregados para ver cada infracción de regla individual.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_ShortMessage" xml:space="preserve">
+    <value>Transferencia no válida.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Message" xml:space="preserve">
+    <value>La transferencia no es válida: incumple una o varias reglas de dominio.</value>
+  </data>
+  <data name="MoneyTransfer_TransferAmount_Context" xml:space="preserve">
+    <value>El importe monetario de la transferencia intentada.</value>
+  </data>
+  <data name="StatementUpload_Source" xml:space="preserve">
+    <value>Errores generados por el endpoint HTTP que ingiere los extractos bancarios subidos (un adaptador entrante, de puerto primario).</value>
+  </data>
+  <data name="StatementUpload_Malformed_Title" xml:space="preserve">
+    <value>Carga útil de extracto mal formada</value>
+  </data>
+  <data name="StatementUpload_Malformed_Description" xml:space="preserve">
+    <value>Este error se produce cuando el endpoint de subida de extractos recibe una solicitud cuyo cuerpo omite un campo obligatorio o contiene un valor no válido.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Rule" xml:space="preserve">
+    <value>Una solicitud de extracto subida debe incluir todos los campos obligatorios con un valor válido.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Cause1" xml:space="preserve">
+    <value>El cliente envió un cuerpo de solicitud incompleto o mal formado.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Hint1" xml:space="preserve">
+    <value>Examine el campo indicado en el contexto y confirme que el cliente lo envía con un valor válido.</value>
+  </data>
+  <data name="StatementUpload_Malformed_ShortMessage" xml:space="preserve">
+    <value>Carga útil de extracto mal formada.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Message" xml:space="preserve">
+    <value>La solicitud de subida de extracto {0} está mal formada: falta el campo «{1}» o no es válido.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Title" xml:space="preserve">
+    <value>Subida de extracto con límite de frecuencia</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Description" xml:space="preserve">
+    <value>Este error se produce cuando llegan demasiadas subidas de extractos en un intervalo corto y el endpoint limita la solicitud. Es transitorio: la misma solicitud puede reintentarse más tarde.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Rule" xml:space="preserve">
+    <value>Los llamadores deben respetar el límite de frecuencia de subida del endpoint.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Cause1" xml:space="preserve">
+    <value>El llamador superó la frecuencia de solicitudes permitida.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Hint1" xml:space="preserve">
+    <value>Espere y reintente tras el retardo indicado en el mensaje.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_ShortMessage" xml:space="preserve">
+    <value>Subida de extracto con límite de frecuencia.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Message" xml:space="preserve">
+    <value>La solicitud de subida de extracto {0} se limitó por frecuencia; reintente tras {1} segundos.</value>
+  </data>
+  <data name="StatementUpload_RequestId_Context" xml:space="preserve">
+    <value>El identificador de la solicitud entrante.</value>
+  </data>
+  <data name="StatementUpload_Field_Context" xml:space="preserve">
+    <value>El campo de la solicitud que no superó la validación.</value>
+  </data>
+  <data name="ExchangeRate_Source" xml:space="preserve">
+    <value>Errores generados al llamar al proveedor externo de tipos de cambio (un adaptador saliente, de puerto secundario).</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Title" xml:space="preserve">
+    <value>Servicio de tipos de cambio no disponible</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Description" xml:space="preserve">
+    <value>Este error se produce cuando no se puede contactar con el proveedor externo de tipos de cambio (un tiempo de espera agotado, un reinicio de conexión o una respuesta 5xx). Es transitorio: la llamada puede reintentarse.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Rule" xml:space="preserve">
+    <value>La conversión de divisas depende de un proveedor de tipos de cambio accesible.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Cause1" xml:space="preserve">
+    <value>El proveedor agotó el tiempo de espera o devolvió un error de servidor.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Hint1" xml:space="preserve">
+    <value>Compruebe el estado del proveedor y reintente la llamada, idealmente con una espera progresiva.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Cause2" xml:space="preserve">
+    <value>La ruta de red saliente hacia el proveedor está interrumpida.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Hint2" xml:space="preserve">
+    <value>Verifique la conectividad saliente y cualquier proxy o cortafuegos entre el servicio y el proveedor.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_ShortMessage" xml:space="preserve">
+    <value>Servicio de tipos de cambio no disponible.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Message" xml:space="preserve">
+    <value>El proveedor de tipos de cambio «{0}» no está disponible (correlación {1}).</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Title" xml:space="preserve">
+    <value>Par de divisas no admitido</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Description" xml:space="preserve">
+    <value>Este error se produce cuando el proveedor de tipos de cambio no cotiza un tipo para el par de divisas origen/destino solicitado.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Rule" xml:space="preserve">
+    <value>Una conversión de divisas solo puede realizarse para un par que el proveedor cotice.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Cause1" xml:space="preserve">
+    <value>El par de divisas solicitado no lo ofrece el proveedor.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Hint1" xml:space="preserve">
+    <value>Confirme que el proveedor admite tanto la moneda de origen como la de destino antes de solicitar una conversión.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_ShortMessage" xml:space="preserve">
+    <value>Par de divisas no admitido.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Message" xml:space="preserve">
+    <value>El proveedor de tipos de cambio no cotiza el par de divisas {0} a {1}.</value>
+  </data>
+  <data name="ExchangeRate_Provider_Context" xml:space="preserve">
+    <value>El proveedor externo al que se llamó.</value>
+  </data>
+  <data name="ExchangeRate_CorrelationId_Context" xml:space="preserve">
+    <value>El identificador de correlación de la llamada saliente.</value>
+  </data>
+  <data name="ExchangeRate_FromCurrency_Context" xml:space="preserve">
+    <value>La moneda de origen de la conversión.</value>
+  </data>
+  <data name="ExchangeRate_ToCurrency_Context" xml:space="preserve">
+    <value>La moneda de destino de la conversión.</value>
+  </data>
 </root>

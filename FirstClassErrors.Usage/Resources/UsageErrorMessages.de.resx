@@ -172,4 +172,166 @@
   <data name="Bank_TransactionDate_Context" xml:space="preserve">
     <value>Das Datum der gerade verarbeiteten Transaktion.</value>
   </data>
+  <data name="MoneyTransfer_Source" xml:space="preserve">
+    <value>Fehler, die bei der Validierung einer Geldüberweisung zwischen Konten ausgelöst werden.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Title" xml:space="preserve">
+    <value>Nicht positiver Überweisungsbetrag</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Description" xml:space="preserve">
+    <value>Dieser Fehler tritt auf, wenn eine Überweisung mit einem Betrag von null oder negativ angefordert wird.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Rule" xml:space="preserve">
+    <value>Der Betrag einer Überweisung muss strikt positiv sein.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Cause1" xml:space="preserve">
+    <value>Der Betrag wurde als null oder negativer Wert eingegeben oder berechnet.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Hint1" xml:space="preserve">
+    <value>Prüfen Sie den angeforderten Überweisungsbetrag und bestätigen Sie, dass er größer als null ist.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_ShortMessage" xml:space="preserve">
+    <value>Der Überweisungsbetrag muss positiv sein.</value>
+  </data>
+  <data name="MoneyTransfer_AmountNotPositive_Message" xml:space="preserve">
+    <value>{0} kann nicht überwiesen werden: Der Betrag muss strikt positiv sein.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Title" xml:space="preserve">
+    <value>Ungültige Geldüberweisung</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Description" xml:space="preserve">
+    <value>Dieser Fehler fasst alle bei der Validierung einer Überweisung verletzten Domänenregeln zusammen, sodass der Aufrufer alle Probleme auf einmal statt einzeln sieht.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Rule" xml:space="preserve">
+    <value>Eine Überweisung muss alle Domänenregeln erfüllen (ein strikt positiver Betrag, übereinstimmende Währungen, ...).</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Cause1" xml:space="preserve">
+    <value>Die angeforderte Überweisung hat eine oder mehrere Domänenregeln verletzt.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Hint1" xml:space="preserve">
+    <value>Untersuchen Sie die zusammengefassten inneren Fehler, um jede einzelne Regelverletzung zu sehen.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_ShortMessage" xml:space="preserve">
+    <value>Ungültige Überweisung.</value>
+  </data>
+  <data name="MoneyTransfer_Invalid_Message" xml:space="preserve">
+    <value>Die Überweisung ist ungültig: Sie verletzt eine oder mehrere Domänenregeln.</value>
+  </data>
+  <data name="MoneyTransfer_TransferAmount_Context" xml:space="preserve">
+    <value>Der Geldbetrag der versuchten Überweisung.</value>
+  </data>
+  <data name="StatementUpload_Source" xml:space="preserve">
+    <value>Fehler, die vom HTTP-Endpunkt ausgelöst werden, der hochgeladene Kontoauszüge entgegennimmt (ein eingehender Primary-Port-Adapter).</value>
+  </data>
+  <data name="StatementUpload_Malformed_Title" xml:space="preserve">
+    <value>Fehlerhafte Auszugsnutzlast</value>
+  </data>
+  <data name="StatementUpload_Malformed_Description" xml:space="preserve">
+    <value>Dieser Fehler tritt auf, wenn der Endpunkt zum Hochladen von Auszügen eine Anfrage erhält, deren Body ein Pflichtfeld auslässt oder einen ungültigen Wert enthält.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Rule" xml:space="preserve">
+    <value>Eine hochgeladene Auszugsanfrage muss alle Pflichtfelder mit einem gültigen Wert enthalten.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Cause1" xml:space="preserve">
+    <value>Der Client hat einen unvollständigen oder fehlerhaften Anfrage-Body gesendet.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Hint1" xml:space="preserve">
+    <value>Prüfen Sie das im Kontext genannte Feld und bestätigen Sie, dass der Client es mit einem gültigen Wert sendet.</value>
+  </data>
+  <data name="StatementUpload_Malformed_ShortMessage" xml:space="preserve">
+    <value>Fehlerhafte Auszugsnutzlast.</value>
+  </data>
+  <data name="StatementUpload_Malformed_Message" xml:space="preserve">
+    <value>Die Auszugs-Upload-Anfrage {0} ist fehlerhaft: Das Feld „{1}“ fehlt oder ist ungültig.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Title" xml:space="preserve">
+    <value>Auszug-Upload gedrosselt</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Description" xml:space="preserve">
+    <value>Dieser Fehler tritt auf, wenn zu viele Auszug-Uploads in kurzer Zeit eintreffen und der Endpunkt die Anfrage drosselt. Er ist transient: Dieselbe Anfrage kann später erneut versucht werden.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Rule" xml:space="preserve">
+    <value>Aufrufer müssen das Upload-Ratenlimit des Endpunkts einhalten.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Cause1" xml:space="preserve">
+    <value>Der Aufrufer hat die zulässige Anfragerate überschritten.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Hint1" xml:space="preserve">
+    <value>Warten Sie und versuchen Sie es nach der in der Nachricht angegebenen Verzögerung erneut.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_ShortMessage" xml:space="preserve">
+    <value>Auszug-Upload gedrosselt.</value>
+  </data>
+  <data name="StatementUpload_RateLimited_Message" xml:space="preserve">
+    <value>Die Auszug-Upload-Anfrage {0} wurde gedrosselt; versuchen Sie es nach {1} Sekunden erneut.</value>
+  </data>
+  <data name="StatementUpload_RequestId_Context" xml:space="preserve">
+    <value>Die Kennung der eingehenden Anfrage.</value>
+  </data>
+  <data name="StatementUpload_Field_Context" xml:space="preserve">
+    <value>Das Anfragefeld, das die Validierung nicht bestanden hat.</value>
+  </data>
+  <data name="ExchangeRate_Source" xml:space="preserve">
+    <value>Fehler, die beim Aufruf des externen Wechselkursanbieters ausgelöst werden (ein ausgehender Secondary-Port-Adapter).</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Title" xml:space="preserve">
+    <value>Wechselkursdienst nicht verfügbar</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Description" xml:space="preserve">
+    <value>Dieser Fehler tritt auf, wenn der externe Wechselkursanbieter nicht erreichbar ist (ein Timeout, ein Verbindungsabbruch oder eine 5xx-Antwort). Er ist transient: Der Aufruf kann wiederholt werden.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Rule" xml:space="preserve">
+    <value>Die Währungsumrechnung hängt von einem erreichbaren Wechselkursanbieter ab.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Cause1" xml:space="preserve">
+    <value>Der Anbieter hat das Zeitlimit überschritten oder einen Serverfehler zurückgegeben.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Hint1" xml:space="preserve">
+    <value>Prüfen Sie den Zustand des Anbieters und wiederholen Sie den Aufruf, idealerweise mit einem Backoff.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Cause2" xml:space="preserve">
+    <value>Der ausgehende Netzwerkpfad zum Anbieter ist gestört.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Hint2" xml:space="preserve">
+    <value>Überprüfen Sie die ausgehende Konnektivität sowie jeden Proxy oder jede Firewall zwischen dem Dienst und dem Anbieter.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_ShortMessage" xml:space="preserve">
+    <value>Wechselkursdienst nicht verfügbar.</value>
+  </data>
+  <data name="ExchangeRate_ServiceUnavailable_Message" xml:space="preserve">
+    <value>Der Wechselkursanbieter „{0}“ ist nicht verfügbar (Korrelation {1}).</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Title" xml:space="preserve">
+    <value>Nicht unterstütztes Währungspaar</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Description" xml:space="preserve">
+    <value>Dieser Fehler tritt auf, wenn der Wechselkursanbieter keinen Kurs für das angeforderte Quell-/Zielwährungspaar notiert.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Rule" xml:space="preserve">
+    <value>Eine Währungsumrechnung kann nur für ein vom Anbieter notiertes Paar durchgeführt werden.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Cause1" xml:space="preserve">
+    <value>Das angeforderte Währungspaar wird vom Anbieter nicht angeboten.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Hint1" xml:space="preserve">
+    <value>Bestätigen Sie, dass der Anbieter sowohl die Quell- als auch die Zielwährung unterstützt, bevor Sie eine Umrechnung anfordern.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_ShortMessage" xml:space="preserve">
+    <value>Nicht unterstütztes Währungspaar.</value>
+  </data>
+  <data name="ExchangeRate_UnsupportedPair_Message" xml:space="preserve">
+    <value>Der Wechselkursanbieter notiert das Währungspaar {0} zu {1} nicht.</value>
+  </data>
+  <data name="ExchangeRate_Provider_Context" xml:space="preserve">
+    <value>Der externe Anbieter, der aufgerufen wurde.</value>
+  </data>
+  <data name="ExchangeRate_CorrelationId_Context" xml:space="preserve">
+    <value>Die Korrelationskennung des ausgehenden Aufrufs.</value>
+  </data>
+  <data name="ExchangeRate_FromCurrency_Context" xml:space="preserve">
+    <value>Die Quellwährung der Umrechnung.</value>
+  </data>
+  <data name="ExchangeRate_ToCurrency_Context" xml:space="preserve">
+    <value>Die Zielwährung der Umrechnung.</value>
+  </data>
 </root>

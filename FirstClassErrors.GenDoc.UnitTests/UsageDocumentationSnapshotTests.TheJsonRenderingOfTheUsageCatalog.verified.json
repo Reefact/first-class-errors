@@ -108,6 +108,168 @@
       "context": []
     },
     {
+      "code": "EXCHANGE_RATE_SERVICE_UNAVAILABLE",
+      "title": "Exchange-rate service unavailable",
+      "explanation": "This error occurs when the external exchange-rate provider cannot be reached (a timeout, a connection reset, or a 5xx response). It is transient: the call can be retried.",
+      "businessRule": "Currency conversion depends on a reachable exchange-rate provider.",
+      "source": "ExchangeRateProvider",
+      "diagnostics": [
+        {
+          "possibleCause": "The provider timed out or returned a server error.",
+          "origin": "External",
+          "analysisHint": "Check the provider\u0027s health and retry the call, ideally with a backoff."
+        },
+        {
+          "possibleCause": "The outgoing network path to the provider is disrupted.",
+          "origin": "InternalOrExternal",
+          "analysisHint": "Verify outbound connectivity and any proxy or firewall between the service and the provider."
+        }
+      ],
+      "examples": [
+        {
+          "detailedMessage": "The exchange-rate provider \u0027acme-fx\u0027 is unavailable (correlation 22222222-2222-2222-2222-222222222222).",
+          "shortMessage": "Exchange-rate service unavailable."
+        }
+      ],
+      "context": [
+        {
+          "key": "PROVIDER",
+          "valueType": "System.String",
+          "description": "The external provider that was called.",
+          "exampleValues": [
+            "acme-fx"
+          ]
+        },
+        {
+          "key": "CORRELATION_ID",
+          "valueType": "System.Guid",
+          "description": "The correlation identifier of the outgoing call.",
+          "exampleValues": [
+            "22222222-2222-2222-2222-222222222222"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "MALFORMED_STATEMENT_PAYLOAD",
+      "title": "Malformed statement payload",
+      "explanation": "This error occurs when the statement upload endpoint receives a request whose body is missing a required field or carries an invalid value.",
+      "businessRule": "An uploaded statement request must carry every required field with a valid value.",
+      "source": "StatementUploadEndpoint",
+      "diagnostics": [
+        {
+          "possibleCause": "The client sent an incomplete or malformed request body.",
+          "origin": "External",
+          "analysisHint": "Inspect the field named in the context and confirm the client sends it with a valid value."
+        }
+      ],
+      "examples": [
+        {
+          "detailedMessage": "The statement upload request 11111111-1111-1111-1111-111111111111 is malformed: the \u0027statementPeriod\u0027 field is missing or invalid.",
+          "shortMessage": "Malformed statement payload."
+        }
+      ],
+      "context": [
+        {
+          "key": "REQUEST_ID",
+          "valueType": "System.Guid",
+          "description": "The identifier of the incoming request.",
+          "exampleValues": [
+            "11111111-1111-1111-1111-111111111111"
+          ]
+        },
+        {
+          "key": "FIELD",
+          "valueType": "System.String",
+          "description": "The request field that failed validation.",
+          "exampleValues": [
+            "statementPeriod"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "MONEY_TRANSFER_AMOUNT_NOT_POSITIVE",
+      "title": "Non-positive transfer amount",
+      "explanation": "This error occurs when a money transfer is requested with an amount that is zero or negative.",
+      "businessRule": "A money transfer amount must be strictly positive.",
+      "source": "MoneyTransfer",
+      "diagnostics": [
+        {
+          "possibleCause": "The amount was entered or computed as zero or a negative value.",
+          "origin": "External",
+          "analysisHint": "Check the requested transfer amount and confirm it is greater than zero."
+        }
+      ],
+      "examples": [
+        {
+          "detailedMessage": "Cannot transfer -25 EUR: the amount must be strictly positive.",
+          "shortMessage": "Transfer amount must be positive."
+        }
+      ],
+      "context": [
+        {
+          "key": "TRANSFER_AMOUNT",
+          "valueType": "FirstClassErrors.Usage.Model.Amount",
+          "description": "The monetary amount of the attempted transfer.",
+          "exampleValues": [
+            "-25 EUR"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "MONEY_TRANSFER_INVALID",
+      "title": "Invalid money transfer",
+      "explanation": "This error aggregates every domain rule violated while validating a money transfer, so the caller sees all the problems at once rather than one at a time.",
+      "businessRule": "A money transfer must satisfy every domain rule (a strictly positive amount, matching currencies, ...).",
+      "source": "MoneyTransfer",
+      "diagnostics": [
+        {
+          "possibleCause": "One or more domain rules were violated by the requested transfer.",
+          "origin": "External",
+          "analysisHint": "Inspect the aggregated inner errors to see each individual rule violation."
+        }
+      ],
+      "examples": [
+        {
+          "detailedMessage": "The money transfer is invalid: it violates one or more domain rules.",
+          "shortMessage": "Invalid money transfer."
+        }
+      ],
+      "context": []
+    },
+    {
+      "code": "STATEMENT_UPLOAD_RATE_LIMITED",
+      "title": "Statement upload rate-limited",
+      "explanation": "This error occurs when too many statement uploads arrive in a short window and the endpoint throttles the request. It is transient: the same request can be retried later.",
+      "businessRule": "Callers must stay within the endpoint\u0027s upload rate limit.",
+      "source": "StatementUploadEndpoint",
+      "diagnostics": [
+        {
+          "possibleCause": "The caller exceeded the allowed request rate.",
+          "origin": "External",
+          "analysisHint": "Back off and retry after the delay indicated in the message."
+        }
+      ],
+      "examples": [
+        {
+          "detailedMessage": "The statement upload request 11111111-1111-1111-1111-111111111111 was rate-limited; retry after 30 seconds.",
+          "shortMessage": "Statement upload rate-limited."
+        }
+      ],
+      "context": [
+        {
+          "key": "REQUEST_ID",
+          "valueType": "System.Guid",
+          "description": "The identifier of the incoming request.",
+          "exampleValues": [
+            "11111111-1111-1111-1111-111111111111"
+          ]
+        }
+      ]
+    },
+    {
       "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO",
       "title": "Temperature below absolute zero",
       "explanation": "This error occurs when trying to instantiate a temperature with a value that is below absolute zero.",
@@ -151,6 +313,44 @@
         }
       ],
       "context": []
+    },
+    {
+      "code": "UNSUPPORTED_CURRENCY_PAIR",
+      "title": "Unsupported currency pair",
+      "explanation": "This error occurs when the exchange-rate provider does not quote a rate for the requested source/target currency pair.",
+      "businessRule": "A currency conversion can only be performed for a pair the provider quotes.",
+      "source": "ExchangeRateProvider",
+      "diagnostics": [
+        {
+          "possibleCause": "The requested currency pair is not offered by the provider.",
+          "origin": "External",
+          "analysisHint": "Confirm the provider supports both the source and target currencies before requesting a conversion."
+        }
+      ],
+      "examples": [
+        {
+          "detailedMessage": "The exchange-rate provider does not quote the EUR to USD currency pair.",
+          "shortMessage": "Unsupported currency pair."
+        }
+      ],
+      "context": [
+        {
+          "key": "FROM_CURRENCY",
+          "valueType": "FirstClassErrors.Usage.Model.Currency",
+          "description": "The source currency of the conversion.",
+          "exampleValues": [
+            "EUR"
+          ]
+        },
+        {
+          "key": "TO_CURRENCY",
+          "valueType": "FirstClassErrors.Usage.Model.Currency",
+          "description": "The target currency of the conversion.",
+          "exampleValues": [
+            "USD"
+          ]
+        }
+      ]
     }
   ]
 }
