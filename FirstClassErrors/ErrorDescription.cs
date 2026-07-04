@@ -1,63 +1,78 @@
-﻿namespace FirstClassErrors;
+namespace FirstClassErrors;
 
 /// <summary>
-///     Represents a description of an error, providing both a short and a detailed message.
+///     Represents the messages produced by a concrete error example: its public short summary, its optional controlled
+///     public detail, and its internal diagnostic message.
 /// </summary>
 /// <remarks>
-///     This class is used to encapsulate error information, including a concise summary of the error
-///     and a more detailed explanation. It is typically utilized in exception handling scenarios to
-///     provide meaningful error descriptions.
+///     This class captures, for a documented example, the same three-way message separation carried by an
+///     <see cref="Error" />:
+///     <list type="bullet">
+///         <item><see cref="ShortMessage" /> — short public summary.</item>
+///         <item><see cref="DetailedMessage" /> — optional controlled public detail (opt-in exposure).</item>
+///         <item><see cref="DiagnosticMessage" /> — internal diagnostic message; never exposed to external clients by default.</item>
+///     </list>
 /// </remarks>
 public sealed class ErrorDescription {
 
     #region Constructors declarations
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ErrorDescription" /> class with a detailed message
-    ///     and an optional short message.
+    ///     Initializes a new instance of the <see cref="ErrorDescription" /> class.
     /// </summary>
-    /// <param name="detailedMessage">
-    ///     The detailed message describing the error. This parameter cannot be <c>null</c>, empty, or whitespace.
-    /// </param>
     /// <param name="shortMessage">
-    ///     An optional short message providing a concise summary of the error. If not provided or whitespace, it will be set
-    ///     to <c>null</c>.
+    ///     The mandatory short public summary of the error. This parameter cannot be <c>null</c>, empty, or whitespace.
+    /// </param>
+    /// <param name="diagnosticMessage">
+    ///     The mandatory internal diagnostic message. This parameter cannot be <c>null</c>, empty, or whitespace.
+    /// </param>
+    /// <param name="detailedMessage">
+    ///     An optional controlled public detail. If not provided or whitespace, it is set to <c>null</c>.
     /// </param>
     /// <exception cref="ArgumentNullException">
-    ///     Thrown when <paramref name="detailedMessage" /> is <c>null</c>.
+    ///     Thrown when <paramref name="shortMessage" /> or <paramref name="diagnosticMessage" /> is <c>null</c>.
     /// </exception>
     /// <exception cref="ArgumentException">
-    ///     Thrown when <paramref name="detailedMessage" /> is empty or consists only of whitespace.
+    ///     Thrown when <paramref name="shortMessage" /> or <paramref name="diagnosticMessage" /> is empty or whitespace.
     /// </exception>
-    public ErrorDescription(string detailedMessage, string? shortMessage = null) {
-        if (detailedMessage is null) { throw new ArgumentNullException(nameof(detailedMessage)); }
-        if (string.IsNullOrWhiteSpace(detailedMessage)) { throw new ArgumentException("Value cannot be empty or whitespace.", nameof(detailedMessage)); }
+    public ErrorDescription(string shortMessage, string diagnosticMessage, string? detailedMessage = null) {
+        if (shortMessage is null) { throw new ArgumentNullException(nameof(shortMessage)); }
+        if (string.IsNullOrWhiteSpace(shortMessage)) { throw new ArgumentException("Value cannot be empty or whitespace.", nameof(shortMessage)); }
+        if (diagnosticMessage is null) { throw new ArgumentNullException(nameof(diagnosticMessage)); }
+        if (string.IsNullOrWhiteSpace(diagnosticMessage)) { throw new ArgumentException("Value cannot be empty or whitespace.", nameof(diagnosticMessage)); }
 
-        DetailedMessage = detailedMessage.Trim();
-        ShortMessage    = string.IsNullOrWhiteSpace(shortMessage) ? null : shortMessage?.Trim();
+        ShortMessage      = shortMessage.Trim();
+        DiagnosticMessage = diagnosticMessage.Trim();
+        DetailedMessage   = string.IsNullOrWhiteSpace(detailedMessage) ? null : detailedMessage?.Trim();
     }
 
     #endregion
 
     /// <summary>
-    ///     Gets or sets the detailed message describing the error.
+    ///     Gets the short public summary of the error.
     /// </summary>
-    /// <value>
-    ///     A string containing a detailed explanation of the error. Defaults to an empty string if not set.
-    /// </value>
     /// <remarks>
-    ///     This property provides a more comprehensive description of the error, which can be useful for logging,
-    ///     debugging, or displaying detailed error information to users or developers.
+    ///     A brief, safe-to-expose description, suitable for an end user or an API client (for instance the <c>title</c> of
+    ///     an RFC 9457 problem detail).
     /// </remarks>
-    public string DetailedMessage { get; }
+    public string ShortMessage { get; }
 
     /// <summary>
-    ///     Gets or sets a concise summary of the error.
+    ///     Gets the internal diagnostic message of the error.
     /// </summary>
     /// <remarks>
-    ///     This property provides a brief description of the error, suitable for display in user interfaces where a short and
-    ///     clear message is required.
+    ///     A technical message meant for logs, support and developers. It must never be exposed to external clients by
+    ///     default.
     /// </remarks>
-    public string? ShortMessage { get; }
+    public string DiagnosticMessage { get; }
+
+    /// <summary>
+    ///     Gets the optional controlled public detail of the error.
+    /// </summary>
+    /// <remarks>
+    ///     A more complete public explanation that the application may choose to expose (for instance the <c>detail</c> of an
+    ///     RFC 9457 problem detail), or <c>null</c> when none is provided.
+    /// </remarks>
+    public string? DetailedMessage { get; }
 
 }

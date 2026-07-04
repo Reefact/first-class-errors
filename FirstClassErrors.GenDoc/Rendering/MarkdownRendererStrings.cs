@@ -63,6 +63,12 @@ internal sealed class MarkdownRendererStrings {
     /// <summary>The examples section heading.</summary>
     public string ExamplesHeading => Get(nameof(ExamplesHeading));
 
+    /// <summary>The label preceding an example's public RFC 9457 response block.</summary>
+    public string ExamplePublicResponseLabel => Get(nameof(ExamplePublicResponseLabel));
+
+    /// <summary>The label preceding an example's internal diagnostic (log) block.</summary>
+    public string ExampleDiagnosticLabel => Get(nameof(ExampleDiagnosticLabel));
+
     /// <summary>The context section heading.</summary>
     public string ContextHeading => Get(nameof(ContextHeading));
 

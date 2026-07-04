@@ -103,4 +103,10 @@
   <data name="ContextExampleValuesHeader" xml:space="preserve">
     <value>Exempelvärden</value>
   </data>
+  <data name="ExamplePublicResponseLabel" xml:space="preserve">
+    <value>Publikt svar (RFC 9457)</value>
+  </data>
+  <data name="ExampleDiagnosticLabel" xml:space="preserve">
+    <value>Diagnostik (intern — inte avsedd för extern exponering)</value>
+  </data>
 </root>
