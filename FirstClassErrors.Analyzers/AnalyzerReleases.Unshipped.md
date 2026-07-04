@@ -12,4 +12,5 @@ FCE007  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByInvalidS
 FCE008  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByWithoutProvidesErrorsForAnalyzer
 FCE009  | FirstClassErrors.DocumentationWiring | Warning  | ErrorFactoryNotDocumentedAnalyzer
 FCE010  | FirstClassErrors.DocumentationWiring | Warning  | MultipleFactoriesShareDocumentationAnalyzer
+FCE012  | FirstClassErrors.DocumentationContent| Warning  | EmptyExamplesAnalyzer
 FCE016  | FirstClassErrors.Usage               | Warning  | UnusedToExceptionResultAnalyzer
