@@ -58,4 +58,44 @@ internal static class Descriptors {
         description: "Documentation extraction only scans types annotated with [ProvidesErrorsFor]; [DocumentedBy] methods on an unannotated type are never extracted.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.DocumentedByWithoutProvidesErrorsFor));
 
+    public static readonly DiagnosticDescriptor UnusedToExceptionResult = new(
+        id: DiagnosticIds.UnusedToExceptionResult,
+        title: "The result of ToException() is not used",
+        messageFormat: "The result of ToException() is discarded; did you mean to throw it?",
+        category: DiagnosticCategories.Usage,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "ToException() only builds an exception; discarding it as a standalone statement means nothing is thrown and the error is lost.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.UnusedToExceptionResult));
+
+    public static readonly DiagnosticDescriptor ErrorFactoryNotDocumented = new(
+        id: DiagnosticIds.ErrorFactoryNotDocumented,
+        title: "Error factory is not documented",
+        messageFormat: "Factory '{0}' returns an error but has no [DocumentedBy]; it will not appear in the generated documentation",
+        category: DiagnosticCategories.DocumentationWiring,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "A non-private static factory in a [ProvidesErrorsFor] type that returns an Error is expected to carry [DocumentedBy]; without it the error is left out of the generated catalog.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.ErrorFactoryNotDocumented));
+
+    public static readonly DiagnosticDescriptor MultipleFactoriesShareDocumentation = new(
+        id: DiagnosticIds.MultipleFactoriesShareDocumentation,
+        title: "Multiple factories share the same documentation",
+        messageFormat: "Documentation method '{0}' is referenced by more than one factory; each error should have its own documentation",
+        category: DiagnosticCategories.DocumentationWiring,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "One documentation method describes one error (its title, description and examples). Sharing it between factories means at least one error is mis-documented.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.MultipleFactoriesShareDocumentation));
+
+    public static readonly DiagnosticDescriptor EmptyExamples = new(
+        id: DiagnosticIds.EmptyExamples,
+        title: "Documentation declares no examples",
+        messageFormat: "WithExamples was called without any example factory; add at least one representative example",
+        category: DiagnosticCategories.DocumentationContent,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Examples expose the real messages an error produces; calling WithExamples with no factory yields documentation that shows none.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.EmptyExamples));
+
 }

@@ -31,3 +31,8 @@ jobs:
 
       - name: Test
         run: dotnet test FirstClassErrors.Analyzers.UnitTests/FirstClassErrors.Analyzers.UnitTests.csproj -c Release --no-build --logger "console;verbosity=detailed"
+
+      # Dogfood: build the sample with the analyzers wired in. Fails on any Error-severity FCExxx and surfaces
+      # the warnings in the log. Doc generation is off here so this stays a pure analyzer check.
+      - name: Build usage (dogfood analyzers)
+        run: dotnet build FirstClassErrors.Usage/FirstClassErrors.Usage.csproj -c Release -p:GenerateErrorDocumentation=false
