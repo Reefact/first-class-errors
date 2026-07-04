@@ -39,6 +39,10 @@ FCE008  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByWithoutP
 =======
 =======
 FCE009  | FirstClassErrors.DocumentationWiring | Warning  | ErrorFactoryNotDocumentedAnalyzer
+<<<<<<< 906c991f34df57e7390a0e7bf1e8bfc00c89a922
 >>>>>>> e8ea977457cba6404369a7eb5c5530147d4ee52d
+=======
+FCE010  | FirstClassErrors.DocumentationWiring | Warning  | MultipleFactoriesShareDocumentationAnalyzer
+>>>>>>> ee4e6faead546d60fd6995f2a279ccc7c2bf7934
 FCE016  | FirstClassErrors.Usage               | Warning  | UnusedToExceptionResultAnalyzer
 >>>>>>> e82f3b87253ce42f9e0497e6d8a41054cd608b17
