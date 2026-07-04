@@ -28,4 +28,14 @@ internal static class Descriptors {
         description: "[DocumentedBy] references its documentation method by name; a name that resolves to nothing is silently skipped when documentation is extracted.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.DocumentedByTargetNotFound));
 
+    public static readonly DiagnosticDescriptor DocumentedByInvalidSignature = new(
+        id: DiagnosticIds.DocumentedByInvalidSignature,
+        title: "[DocumentedBy] target has an invalid signature",
+        messageFormat: "Method '{0}' must be static, parameterless and return ErrorDocumentation to be used by [DocumentedBy]",
+        category: DiagnosticCategories.DocumentationWiring,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "The documentation factory referenced by [DocumentedBy] is invoked as a static parameterless method returning ErrorDocumentation; any other shape is skipped at extraction time.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.DocumentedByInvalidSignature));
+
 }
