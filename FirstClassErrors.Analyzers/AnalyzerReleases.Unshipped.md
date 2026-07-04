@@ -8,6 +8,7 @@
 ### New Rules
 
 Rule ID | Category | Severity | Notes
+<<<<<<< b99d792aab6c528239b0e92feef667084d9dea0a
 <<<<<<< b57606bb883403c1b1a6d14247e5e03a167aa892
 --------|--------------------------------------|----------|-------------------------------------
 FCE002  | FirstClassErrors.ErrorCodes          | Error    | EmptyErrorCodeAnalyzer
@@ -20,3 +21,8 @@ FCE008  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByWithoutP
 --------|-----------------------------|----------|-------------------------
 FCE002  | FirstClassErrors.ErrorCodes | Error    | EmptyErrorCodeAnalyzer
 >>>>>>> 8229f61d518a97b78334466dffa438b4a7426c3d
+=======
+--------|--------------------------------------|----------|-------------------------------------
+FCE002  | FirstClassErrors.ErrorCodes          | Error    | EmptyErrorCodeAnalyzer
+FCE006  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByTargetNotFoundAnalyzer
+>>>>>>> 25f33ab91f85a53fce3220cf3b67a341780288de

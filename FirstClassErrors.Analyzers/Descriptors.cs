@@ -18,7 +18,10 @@ internal static class Descriptors {
         description: "ErrorCode.Create requires a non-empty code; an empty or whitespace literal throws an ArgumentException at runtime.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.EmptyErrorCode));
 
+<<<<<<< b99d792aab6c528239b0e92feef667084d9dea0a
 <<<<<<< b57606bb883403c1b1a6d14247e5e03a167aa892
+=======
+>>>>>>> 25f33ab91f85a53fce3220cf3b67a341780288de
     public static readonly DiagnosticDescriptor DocumentedByTargetNotFound = new(
         id: DiagnosticIds.DocumentedByTargetNotFound,
         title: "Documentation method referenced by [DocumentedBy] was not found",
@@ -29,6 +32,7 @@ internal static class Descriptors {
         description: "[DocumentedBy] references its documentation method by name; a name that resolves to nothing is silently skipped when documentation is extracted.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.DocumentedByTargetNotFound));
 
+<<<<<<< b99d792aab6c528239b0e92feef667084d9dea0a
     public static readonly DiagnosticDescriptor DocumentedByInvalidSignature = new(
         id: DiagnosticIds.DocumentedByInvalidSignature,
         title: "[DocumentedBy] target has an invalid signature",
@@ -51,4 +55,6 @@ internal static class Descriptors {
 
 =======
 >>>>>>> 8229f61d518a97b78334466dffa438b4a7426c3d
+=======
+>>>>>>> 25f33ab91f85a53fce3220cf3b67a341780288de
 }
