@@ -18,6 +18,7 @@ internal static class Descriptors {
         description: "ErrorCode.Create requires a non-empty code; an empty or whitespace literal throws an ArgumentException at runtime.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.EmptyErrorCode));
 
+<<<<<<< b57606bb883403c1b1a6d14247e5e03a167aa892
     public static readonly DiagnosticDescriptor DocumentedByTargetNotFound = new(
         id: DiagnosticIds.DocumentedByTargetNotFound,
         title: "Documentation method referenced by [DocumentedBy] was not found",
@@ -48,4 +49,6 @@ internal static class Descriptors {
         description: "Documentation extraction only scans types annotated with [ProvidesErrorsFor]; [DocumentedBy] methods on an unannotated type are never extracted.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.DocumentedByWithoutProvidesErrorsFor));
 
+=======
+>>>>>>> 8229f61d518a97b78334466dffa438b4a7426c3d
 }
