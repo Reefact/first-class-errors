@@ -43,6 +43,10 @@ FCE009  | FirstClassErrors.DocumentationWiring | Warning  | ErrorFactoryNotDocum
 >>>>>>> e8ea977457cba6404369a7eb5c5530147d4ee52d
 =======
 FCE010  | FirstClassErrors.DocumentationWiring | Warning  | MultipleFactoriesShareDocumentationAnalyzer
+<<<<<<< b2642695b7e235070c2ef66b55d1aedc4dc5159e
 >>>>>>> ee4e6faead546d60fd6995f2a279ccc7c2bf7934
+=======
+FCE012  | FirstClassErrors.DocumentationContent| Warning  | EmptyExamplesAnalyzer
+>>>>>>> fa43e3873d390a51a58a51b6e9e5119f10aae02a
 FCE016  | FirstClassErrors.Usage               | Warning  | UnusedToExceptionResultAnalyzer
 >>>>>>> e82f3b87253ce42f9e0497e6d8a41054cd608b17

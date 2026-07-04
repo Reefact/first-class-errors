@@ -117,5 +117,18 @@ internal static class Descriptors {
         description: "One documentation method describes one error (its title, description and examples). Sharing it between factories means at least one error is mis-documented.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.MultipleFactoriesShareDocumentation));
 
+<<<<<<< b2642695b7e235070c2ef66b55d1aedc4dc5159e
 >>>>>>> ee4e6faead546d60fd6995f2a279ccc7c2bf7934
+=======
+    public static readonly DiagnosticDescriptor EmptyExamples = new(
+        id: DiagnosticIds.EmptyExamples,
+        title: "Documentation declares no examples",
+        messageFormat: "WithExamples was called without any example factory; add at least one representative example",
+        category: DiagnosticCategories.DocumentationContent,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Examples expose the real messages an error produces; calling WithExamples with no factory yields documentation that shows none.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.EmptyExamples));
+
+>>>>>>> fa43e3873d390a51a58a51b6e9e5119f10aae02a
 }
