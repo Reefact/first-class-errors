@@ -1,54 +1,75 @@
-﻿namespace FirstClassErrors;
+namespace FirstClassErrors;
 
 /// <summary>
 ///     Represents an error specific to the domain layer of an application.
 /// </summary>
 /// <remarks>
 ///     This class is a specialization of the <see cref="Error" /> class, designed to handle domain-related errors.
-///     It provides constructors to define the error code, detailed message, optional short message,
-///     and additional context or inner errors for enhanced diagnostic capabilities.
+///     Instances are created through the staged builder: <see cref="Create(ErrorCode, string, Action{ErrorContextBuilder})" />
+///     captures the mandatory internal information (code and diagnostic message) and returns a
+///     <see cref="PublicMessageStage{TError}" />; the final error is produced by
+///     <see cref="PublicMessageStage{TError}.WithPublicMessage(string, string?)" />.
 /// </remarks>
 public class DomainError : Error {
 
     #region Constructors declarations
 
+    internal DomainError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, Action<ErrorContextBuilder>? configureContext = null)
+        : base(code, diagnosticMessage, shortMessage, detailedMessage, configureContext) { }
+
+    internal DomainError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, DomainError innerError, Action<ErrorContextBuilder>? configureContext = null)
+        : base(code, diagnosticMessage, shortMessage, detailedMessage, innerError, configureContext) { }
+
+    internal DomainError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, IEnumerable<DomainError> innerErrors, Action<ErrorContextBuilder>? configureContext = null)
+        : base(code, diagnosticMessage, shortMessage, detailedMessage, innerErrors, configureContext) { }
+
+    #endregion
+
+    #region Statics members declarations
+
     /// <summary>
-    ///     Initializes a new instance of the <see cref="DomainError" /> class with the specified error code, detailed message,
-    ///     optional short message, and an optional action to configure the error context.
+    ///     Begins the creation of a <see cref="DomainError" /> with its mandatory internal information.
     /// </summary>
     /// <param name="code">The error code that identifies the type of error.</param>
-    /// <param name="detailedMessage">A detailed message describing the error.</param>
-    /// <param name="shortMessage">An optional short message providing a concise description of the error.</param>
-    /// <param name="configureContext">
-    ///     An optional action to configure the <see cref="ErrorContextBuilder" /> for additional error context.
-    /// </param>
-    public DomainError(ErrorCode code, string detailedMessage, string? shortMessage = null, Action<ErrorContextBuilder>? configureContext = null) : base(code, detailedMessage, shortMessage, configureContext) { }
+    /// <param name="diagnosticMessage">The mandatory internal diagnostic message (for logs, support and developers).</param>
+    /// <param name="configureContext">An optional action to configure additional error context.</param>
+    /// <returns>A <see cref="PublicMessageStage{TError}" /> to supply the public messages and finalize the error.</returns>
+    public static PublicMessageStage<DomainError> Create(ErrorCode code, string diagnosticMessage, Action<ErrorContextBuilder>? configureContext = null) {
+        string safeDiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
+
+        return new PublicMessageStage<DomainError>((shortMessage, detailedMessage) =>
+                                                       new DomainError(code, safeDiagnosticMessage, shortMessage, detailedMessage, configureContext));
+    }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="DomainError" /> class with the specified error code, detailed message,
-    ///     inner error, optional short message, and an optional context configuration action.
+    ///     Begins the creation of a <see cref="DomainError" /> that wraps a single inner domain error.
     /// </summary>
-    /// <param name="code">The <see cref="ErrorCode" /> representing the specific error.</param>
-    /// <param name="detailedMessage">A detailed description of the error.</param>
-    /// <param name="innerError">The inner <see cref="DomainError" /> that provides additional context for this error.</param>
-    /// <param name="shortMessage">An optional short message summarizing the error.</param>
-    /// <param name="configureContext">
-    ///     An optional action to configure additional context for the error using an <see cref="ErrorContextBuilder" />.
-    /// </param>
-    public DomainError(ErrorCode code, string detailedMessage, DomainError innerError, string? shortMessage = null, Action<ErrorContextBuilder>? configureContext = null) : base(code, detailedMessage, shortMessage, innerError, configureContext) { }
+    /// <param name="code">The error code that identifies the type of error.</param>
+    /// <param name="diagnosticMessage">The mandatory internal diagnostic message (for logs, support and developers).</param>
+    /// <param name="innerError">The inner <see cref="DomainError" /> that provides additional context.</param>
+    /// <param name="configureContext">An optional action to configure additional error context.</param>
+    /// <returns>A <see cref="PublicMessageStage{TError}" /> to supply the public messages and finalize the error.</returns>
+    public static PublicMessageStage<DomainError> Create(ErrorCode code, string diagnosticMessage, DomainError innerError, Action<ErrorContextBuilder>? configureContext = null) {
+        string safeDiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
+
+        return new PublicMessageStage<DomainError>((shortMessage, detailedMessage) =>
+                                                       new DomainError(code, safeDiagnosticMessage, shortMessage, detailedMessage, innerError, configureContext));
+    }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="DomainError" /> class with the specified error code, detailed message,
-    ///     a collection of inner domain errors, an optional short message, and an optional context configuration action.
+    ///     Begins the creation of an aggregated <see cref="DomainError" /> that collects several inner domain errors.
     /// </summary>
-    /// <param name="code">The <see cref="ErrorCode" /> representing the specific error condition.</param>
-    /// <param name="detailedMessage">A detailed message describing the error.</param>
-    /// <param name="innerErrors">A collection of <see cref="DomainError" /> instances representing inner errors.</param>
-    /// <param name="shortMessage">An optional short message providing a brief description of the error.</param>
-    /// <param name="configureContext">
-    ///     An optional action to configure additional context for the error using an <see cref="ErrorContextBuilder" />.
-    /// </param>
-    public DomainError(ErrorCode code, string detailedMessage, IEnumerable<DomainError> innerErrors, string? shortMessage = null, Action<ErrorContextBuilder>? configureContext = null) : base(code, detailedMessage, shortMessage, innerErrors, configureContext) { }
+    /// <param name="code">The error code that identifies the type of error.</param>
+    /// <param name="diagnosticMessage">The mandatory internal diagnostic message (for logs, support and developers).</param>
+    /// <param name="innerErrors">A collection of <see cref="DomainError" /> instances representing the inner errors.</param>
+    /// <param name="configureContext">An optional action to configure additional error context.</param>
+    /// <returns>A <see cref="PublicMessageStage{TError}" /> to supply the public messages and finalize the error.</returns>
+    public static PublicMessageStage<DomainError> Create(ErrorCode code, string diagnosticMessage, IEnumerable<DomainError> innerErrors, Action<ErrorContextBuilder>? configureContext = null) {
+        string safeDiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
+
+        return new PublicMessageStage<DomainError>((shortMessage, detailedMessage) =>
+                                                       new DomainError(code, safeDiagnosticMessage, shortMessage, detailedMessage, innerErrors, configureContext));
+    }
 
     #endregion
 

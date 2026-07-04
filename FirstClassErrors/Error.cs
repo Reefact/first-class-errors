@@ -1,4 +1,4 @@
-﻿#region Usings declarations
+#region Usings declarations
 
 using System.Diagnostics;
 
@@ -10,23 +10,32 @@ namespace FirstClassErrors;
 ///     Represents the base class for all diagnosable errors within the application.
 /// </summary>
 /// <remarks>
-///     This abstract class provides a foundation for defining errors with detailed diagnostic information.
-///     It includes properties for error identification, occurrence time, detailed and short messages,
-///     inner errors for nested diagnostics, and a context for additional metadata.
-///     Derived classes can extend this functionality to represent specific types of errors.
+///     <para>
+///         This abstract class provides a foundation for defining errors with a clear separation between what is safe to
+///         expose to a caller and what is meant to stay internal. Every error carries three distinct messages:
+///     </para>
+///     <list type="bullet">
+///         <item>
+///             <see cref="ShortMessage" /> — a short public summary, safe to surface to an end user or an API client.
+///         </item>
+///         <item>
+///             <see cref="DetailedMessage" /> — an optional, controlled public detail. It may be exposed (for instance in
+///             an RFC 9457 <c>problem+json</c> response) but only when the application explicitly chooses to.
+///         </item>
+///         <item>
+///             <see cref="DiagnosticMessage" /> — the mandatory internal diagnostic message, intended for logs, support and
+///             developers. It must never be exposed to external clients by default.
+///         </item>
+///     </list>
+///     <para>
+///         Instances are not created through public constructors. Each concrete error type exposes a <c>Create(...)</c>
+///         staged-builder entry point that captures the mandatory internal information (<see cref="Code" /> and
+///         <see cref="DiagnosticMessage" />) and returns a <see cref="PublicMessageStage{TError}" />; the final error is
+///         produced by <see cref="PublicMessageStage{TError}.WithPublicMessage(string, string?)" />.
+///     </para>
 /// </remarks>
 [DebuggerDisplay("{ToString()}")]
 public abstract class Error {
-
-    /// <summary>
-    ///     Represents the fallback detailed message used when no error message is provided.
-    /// </summary>
-    /// <remarks>
-    ///     This constant is used when an exception is created without an error message,
-    ///     typically due to missing or incomplete initialization. It ensures that a
-    ///     meaningful diagnostic message is always available.
-    /// </remarks>
-    private const string UnknownDetailedMessage = "Exception created without an error message. This typically indicates a missing or incomplete exception initialization.";
 
     #region Statics members declarations
 
@@ -34,8 +43,23 @@ public abstract class Error {
         return errorCode == null ? ErrorCode.Unspecified : errorCode;
     }
 
-    private static string CreateSafeDetailedMessage(string? detailedMessage) {
-        return string.IsNullOrWhiteSpace(detailedMessage) ? UnknownDetailedMessage : detailedMessage!.Trim();
+    /// <summary>
+    ///     Validates a mandatory message and returns its trimmed value.
+    /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value" /> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="value" /> is empty or whitespace.</exception>
+    internal static string RequireMessage(string value, string paramName) {
+        if (value is null) { throw new ArgumentNullException(paramName); }
+        if (string.IsNullOrWhiteSpace(value)) { throw new ArgumentException("Value cannot be empty or whitespace.", paramName); }
+
+        return value.Trim();
+    }
+
+    /// <summary>
+    ///     Normalizes an optional message: <c>null</c> or whitespace becomes <c>null</c>, otherwise the value is trimmed.
+    /// </summary>
+    internal static string? NormalizeOptionalMessage(string? value) {
+        return string.IsNullOrWhiteSpace(value) ? null : value!.Trim();
     }
 
     private static ErrorContext BuildContext(Action<ErrorContextBuilder>? configure) {
@@ -65,17 +89,20 @@ public abstract class Error {
     #region Constructors declarations
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="Error" /> class with the specified error code, detailed message,
-    ///     optional short message, and an optional configuration for the error context.
+    ///     Initializes a new instance of the <see cref="Error" /> class with the specified error code, diagnostic message,
+    ///     public short message, optional public detailed message, and an optional configuration for the error context.
     /// </summary>
     /// <param name="code">
     ///     The <see cref="ErrorCode" /> identifying the error. If <c>null</c>, <see cref="ErrorCode.Unspecified" /> is used.
     /// </param>
-    /// <param name="detailedMessage">
-    ///     A detailed description of the error. This value cannot be null or whitespace.
+    /// <param name="diagnosticMessage">
+    ///     The mandatory internal diagnostic message. This value cannot be null or whitespace.
     /// </param>
     /// <param name="shortMessage">
-    ///     An optional short description of the error. This value can be null.
+    ///     The mandatory public short summary of the error. This value cannot be null or whitespace.
+    /// </param>
+    /// <param name="detailedMessage">
+    ///     An optional, controlled public detail. This value can be null.
     /// </param>
     /// <param name="configureContext">
     ///     An optional action to configure the <see cref="ErrorContext" /> using an <see cref="ErrorContextBuilder" />.
@@ -85,67 +112,59 @@ public abstract class Error {
     ///     and initializes the error context using the provided configuration.
     /// </remarks>
     protected Error(ErrorCode                    code,
-                    string                       detailedMessage, string? shortMessage,
+                    string                       diagnosticMessage, string shortMessage, string? detailedMessage,
                     Action<ErrorContextBuilder>? configureContext = null) {
-        InstanceId      = Guid.NewGuid();
-        Code            = CreateSafeCode(code);
-        OccurredAt      = DateTimeOffset.UtcNow;
-        DetailedMessage = CreateSafeDetailedMessage(detailedMessage);
-        ShortMessage    = shortMessage;
-        InnerErrors     = new List<Error>();
-        Context         = BuildContext(configureContext);
+        InstanceId        = Guid.NewGuid();
+        Code              = CreateSafeCode(code);
+        OccurredAt        = DateTimeOffset.UtcNow;
+        DiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
+        ShortMessage      = RequireMessage(shortMessage, nameof(shortMessage));
+        DetailedMessage   = NormalizeOptionalMessage(detailedMessage);
+        InnerErrors       = new List<Error>();
+        Context           = BuildContext(configureContext);
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="Error" /> class with the specified error code, detailed message,
-    ///     optional short message, and an optional configuration for the error context.
+    ///     Initializes a new instance of the <see cref="Error" /> class with the specified error code, diagnostic message,
+    ///     public short message, optional public detailed message, an inner error, and an optional context configuration.
     /// </summary>
     /// <param name="code">
     ///     The <see cref="ErrorCode" /> identifying the error. If <c>null</c>, <see cref="ErrorCode.Unspecified" /> is used.
     /// </param>
-    /// <param name="detailedMessage">
-    ///     A detailed description of the error. This value cannot be null or whitespace.
-    /// </param>
-    /// <param name="shortMessage">
-    ///     An optional short description of the error. This value can be null.
-    /// </param>
+    /// <param name="diagnosticMessage">The mandatory internal diagnostic message. This value cannot be null or whitespace.</param>
+    /// <param name="shortMessage">The mandatory public short summary of the error. This value cannot be null or whitespace.</param>
+    /// <param name="detailedMessage">An optional, controlled public detail. This value can be null.</param>
     /// <param name="innerError">
     ///     The inner <see cref="Error" /> that provides additional context for the error.
     /// </param>
     /// <param name="configureContext">
     ///     An optional action to configure the <see cref="ErrorContext" /> using an <see cref="ErrorContextBuilder" />.
     /// </param>
-    /// <remarks>
-    ///     This constructor generates a unique identifier for the error instance, sets the occurrence timestamp,
-    ///     and initializes the error context using the provided configuration.
-    /// </remarks>
     protected Error(ErrorCode                    code,
-                    string                       detailedMessage, string? shortMessage,
+                    string                       diagnosticMessage, string shortMessage, string? detailedMessage,
                     Error                        innerError,
                     Action<ErrorContextBuilder>? configureContext = null) {
-        InstanceId      = Guid.NewGuid();
-        Code            = CreateSafeCode(code);
-        OccurredAt      = DateTimeOffset.UtcNow;
-        DetailedMessage = CreateSafeDetailedMessage(detailedMessage);
-        ShortMessage    = shortMessage;
-        InnerErrors     = CreateSafeInnerErrors(innerError);
-        Context         = BuildContext(configureContext);
+        InstanceId        = Guid.NewGuid();
+        Code              = CreateSafeCode(code);
+        OccurredAt        = DateTimeOffset.UtcNow;
+        DiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
+        ShortMessage      = RequireMessage(shortMessage, nameof(shortMessage));
+        DetailedMessage   = NormalizeOptionalMessage(detailedMessage);
+        InnerErrors       = CreateSafeInnerErrors(innerError);
+        Context           = BuildContext(configureContext);
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="Error" /> class with the specified error code, detailed message,
-    ///     optional short message, a collection of inner errors, and an optional context configuration.
+    ///     Initializes a new instance of the <see cref="Error" /> class with the specified error code, diagnostic message,
+    ///     public short message, optional public detailed message, a collection of inner errors, and an optional context
+    ///     configuration.
     /// </summary>
     /// <param name="code">
-    ///     The error code that uniquely identifies the error. If the provided value is null or whitespace, a default code is
-    ///     used.
+    ///     The error code that uniquely identifies the error. If <c>null</c>, <see cref="ErrorCode.Unspecified" /> is used.
     /// </param>
-    /// <param name="detailedMessage">
-    ///     A detailed message describing the error. If the provided value is null or whitespace, a default message is used.
-    /// </param>
-    /// <param name="shortMessage">
-    ///     An optional short message providing a concise description of the error.
-    /// </param>
+    /// <param name="diagnosticMessage">The mandatory internal diagnostic message. This value cannot be null or whitespace.</param>
+    /// <param name="shortMessage">The mandatory public short summary of the error. This value cannot be null or whitespace.</param>
+    /// <param name="detailedMessage">An optional, controlled public detail. This value can be null.</param>
     /// <param name="innerErrors">
     ///     A collection of inner <see cref="Error" /> instances that provide additional context for the error.
     ///     If null, an empty collection is used.
@@ -155,16 +174,17 @@ public abstract class Error {
     ///     created.
     /// </param>
     protected Error(ErrorCode                    code,
-                    string                       detailedMessage, string? shortMessage,
+                    string                       diagnosticMessage, string shortMessage, string? detailedMessage,
                     IEnumerable<Error>           innerErrors,
                     Action<ErrorContextBuilder>? configureContext = null) {
-        InstanceId      = Guid.NewGuid();
-        Code            = CreateSafeCode(code);
-        OccurredAt      = DateTimeOffset.UtcNow;
-        DetailedMessage = CreateSafeDetailedMessage(detailedMessage);
-        ShortMessage    = shortMessage;
-        InnerErrors     = CreateSafeInnerErrors(innerErrors);
-        Context         = BuildContext(configureContext);
+        InstanceId        = Guid.NewGuid();
+        Code              = CreateSafeCode(code);
+        OccurredAt        = DateTimeOffset.UtcNow;
+        DiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
+        ShortMessage      = RequireMessage(shortMessage, nameof(shortMessage));
+        DetailedMessage   = NormalizeOptionalMessage(detailedMessage);
+        InnerErrors       = CreateSafeInnerErrors(innerErrors);
+        Context           = BuildContext(configureContext);
     }
 
     #endregion
@@ -197,30 +217,48 @@ public abstract class Error {
     public DateTimeOffset OccurredAt { get; }
 
     /// <summary>
-    ///     Gets the detailed message associated with the error.
+    ///     Gets the mandatory internal diagnostic message associated with the error.
     /// </summary>
     /// <value>
-    ///     An auto-descriptive error message that fully explains the nature of the failure.
+    ///     A technical message describing the failure precisely, meant for logs, support and developers.
     /// </value>
     /// <remarks>
-    ///     This property provides a detailed error message that can be used for diagnostic logs
-    ///     or exposed to end users in reports when a more complete explanation is needed.
+    ///     <para>
+    ///         This message carries the diagnostic knowledge about the failure: it may contain technical, operational or
+    ///         support-oriented details (identifiers, offending values, internal state, ...).
+    ///     </para>
+    ///     <para>
+    ///         It is <b>not</b> safe for external exposure and must never be used by default in an HTTP response or returned
+    ///         to an external client. It is intended for diagnostics, support, observability and developers.
+    ///     </para>
     /// </remarks>
-    public string DetailedMessage { get; }
+    public string DiagnosticMessage { get; }
 
     /// <summary>
-    ///     Gets a concise message that summarizes the error described by this error.
+    ///     Gets the short public summary of the error.
     /// </summary>
     /// <value>
-    ///     A short, human-readable string that provides a brief description of the error.
+    ///     A short, human-readable string that briefly describes the error.
     /// </value>
     /// <remarks>
-    ///     This property is intended to provide a simplified error message that can be displayed
-    ///     in user interfaces where a full error message might be too verbose. Unlike
-    ///     <see cref="DetailedMessage" />, the value is stored verbatim: it is neither trimmed nor substituted
-    ///     when <c>null</c> or whitespace.
+    ///     This message is a concise public summary, safe to surface to an end user or an API client (for instance as the
+    ///     <c>title</c> of an RFC 9457 problem detail). It is mandatory.
     /// </remarks>
-    public string? ShortMessage { get; }
+    public string ShortMessage { get; }
+
+    /// <summary>
+    ///     Gets the optional controlled public detail of the error.
+    /// </summary>
+    /// <value>
+    ///     A more complete public explanation of the error, or <c>null</c> when none is provided.
+    /// </value>
+    /// <remarks>
+    ///     This message is a controlled public detail. It may be exposed to a caller (for instance as the <c>detail</c> of an
+    ///     RFC 9457 problem detail) but only when the application explicitly chooses to. Unlike
+    ///     <see cref="DiagnosticMessage" />, it must not carry sensitive or purely internal information.
+    /// </remarks>
+    public string? DetailedMessage { get; }
+
     /// <summary>
     ///     Gets a collection of inner errors that provide additional context or details about this error.
     /// </summary>
@@ -259,7 +297,7 @@ public abstract class Error {
 
     /// <inheritdoc />
     public override string ToString() {
-        return $"{DetailedMessage} ({Code})";
+        return $"{DiagnosticMessage} ({Code})";
     }
 
 }
