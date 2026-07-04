@@ -12,6 +12,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
+    <!-- Dogfood the analyzers on this sample: OutputItemType=Analyzer runs them at build/IDE time,
+         ReferenceOutputAssembly=false keeps the analyzer off the runtime graph. -->
+    <ProjectReference Include="..\FirstClassErrors.Analyzers\FirstClassErrors.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>
