@@ -99,4 +99,15 @@ internal static class Descriptors {
         description: "Examples expose the real messages an error produces; calling WithExamples with no factory yields documentation that shows none.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.EmptyExamples));
 
+    public static readonly DiagnosticDescriptor DuplicateDocumentedCode = new(
+        id: DiagnosticIds.DuplicateDocumentedCode,
+        title: "Duplicate documented error code",
+        messageFormat: "Error code '{0}' is produced by more than one documented factory; documentation extraction keeps only one of them",
+        category: DiagnosticCategories.DocumentationContent,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "Documentation extraction groups by error code and keeps a single entry per code. Two documented factories that share the same code field silently collapse to one in the catalog.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.DuplicateDocumentedCode),
+        customTags: new[] { WellKnownDiagnosticTags.CompilationEnd });
+
 }
