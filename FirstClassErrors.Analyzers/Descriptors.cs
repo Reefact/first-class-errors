@@ -16,7 +16,8 @@ internal static class Descriptors {
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
         description: "ErrorCode.Create registers each code in a process-wide set and throws when the same code is created twice. Detection is per-compilation and limited to literal codes.",
-        helpLinkUri: HelpLinks.For(DiagnosticIds.DuplicateErrorCode));
+        helpLinkUri: HelpLinks.For(DiagnosticIds.DuplicateErrorCode),
+        customTags: new[] { WellKnownDiagnosticTags.CompilationEnd });
 
     public static readonly DiagnosticDescriptor EmptyErrorCode = new(
         id: DiagnosticIds.EmptyErrorCode,
