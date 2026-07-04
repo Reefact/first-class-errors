@@ -81,22 +81,26 @@ public sealed class HtmlErrorDocumentationRendererTests {
              .Throws<LayoutNotSupportedException>();
     }
 
-    [Fact(DisplayName = "Every layout emits the self-contained assets (CSS, JS, search index).")]
-    public void EveryLayoutEmitsTheSelfContainedAssets() {
+    [Fact(DisplayName = "Each page is self-contained: the CSS and JS are inlined, with no external dependency.")]
+    public void EachPageIsSelfContained() {
         // Exercise
         IReadOnlyList<RenderedDocument> single = RenderSingle(TemperatureError());
         IReadOnlyList<RenderedDocument> split  = RenderSplit(TemperatureError());
 
-        // Verify
+        // Verify: every layout emits its page(s) plus the external search index (the only external asset).
         foreach (IReadOnlyList<RenderedDocument> documents in new[] { single, split }) {
-            Check.That(documents.Select(d => d.RelativePath)).Contains("index.html", "assets/app.css", "assets/app.js", "assets/search-index.json");
+            Check.That(documents.Select(d => d.RelativePath)).Contains("index.html", "assets/search-index.json");
         }
 
-        // No external dependency: the stylesheet and script are inlined, referenced by relative path only.
-        Check.That(ContentOf(single, "assets/app.css")).Not.IsEmpty();
-        Check.That(ContentOf(single, "assets/app.js")).Not.IsEmpty();
-        Check.That(ContentOf(single, "index.html")).Not.Contains("http://");
-        Check.That(ContentOf(single, "index.html")).Not.Contains("https://");
+        // The CSS and JS are inlined into the page — no external stylesheet/script link and no remote URL.
+        string html = ContentOf(single, "index.html");
+        Check.That(html).Contains("<style>");
+        Check.That(html).Contains("</style>");
+        Check.That(html).Contains("<script>");
+        Check.That(html).Not.Contains("<link rel=\"stylesheet\"");
+        Check.That(html).Not.Contains("app.css");
+        Check.That(html).Not.Contains("http://");
+        Check.That(html).Not.Contains("https://");
     }
 
     [Fact(DisplayName = "The single layout inlines every error and its three messages under a code anchor.")]
@@ -138,7 +142,7 @@ public sealed class HtmlErrorDocumentationRendererTests {
         string page = ContentOf(documents, "errors/TEMPERATURE_BELOW_ABSOLUTE_ZERO.html");
         Check.That(page).StartsWith("<!doctype html>");
         Check.That(page).Contains("id=\"err-TEMPERATURE_BELOW_ABSOLUTE_ZERO\"");
-        Check.That(page).Contains("../assets/app.css");
+        Check.That(page).Contains("<style>");
         Check.That(page).Contains("../index.html");
     }
 
@@ -197,7 +201,8 @@ public sealed class HtmlErrorDocumentationRendererTests {
         string html = ContentOf(documents, "index.html");
         Check.That(html).StartsWith("<!doctype html>");
         Check.That(html).Contains("No documented errors.");
-        Check.That(documents.Select(d => d.RelativePath)).Contains("assets/app.css", "assets/app.js", "assets/search-index.json");
+        Check.That(html).Contains("<style>");
+        Check.That(documents.Select(d => d.RelativePath)).Contains("assets/search-index.json");
     }
 
 }

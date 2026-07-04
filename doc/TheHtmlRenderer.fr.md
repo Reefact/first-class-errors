@@ -26,21 +26,19 @@ La sortie est un dossier complet, prêt à ouvrir en local ou à publier sur n�
 
 ```text
 error-catalog/
-  index.html
+  index.html                   (CSS et JS intégrés — autonome)
   errors/                      (mode split uniquement)
     ORDER_ALREADY_SHIPPED.html
     TEMPERATURE_BELOW_ABSOLUTE_ZERO.html
   assets/
-    app.css
-    app.js
-    search-index.json
+    search-index.json          (pour l'outillage ; la recherche in-page est autonome)
 ```
 
 Chaque erreur a une URL stable dérivée de son **code** (`errors/ORDER_ALREADY_SHIPPED.html`, ou `#err-ORDER_ALREADY_SHIPPED` en page unique) — jamais du message, du titre ou de l’ordre de génération.
 
 ## Fonctionnalités
 
-- **Aucune dépendance externe.** Le CSS et le JS sont intégrés dans `assets/`, les icônes sont du SVG inline, la police est celle du système — le site fonctionne hors-ligne depuis un simple dossier, sans CDN.
+- **Aucune dépendance externe.** Le CSS et le JS sont intégrés dans chaque page, les icônes sont du SVG inline, la police est celle du système — chaque page est autonome et fonctionne hors-ligne depuis un simple dossier (ou seule), sans CDN.
 - **Thème clair / sombre.** Suit la préférence système (`prefers-color-scheme`) par défaut, avec une bascule manuelle mémorisée dans `localStorage`.
 - **Recherche et filtres.** Une recherche côté client sur toutes les erreurs (code, messages, documentation, contexte) et des filtres par source et par présence d’un détail public. La recherche fonctionne hors-ligne (elle lit des données intégrées à la page, sans requête réseau).
 - **Localisation.** Les libellés sont localisés selon `--language` (par ex. `--language fr`), comme le renderer Markdown. Les messages publics suivent la culture ; le message de diagnostic interne reste dans la langue auteur.
