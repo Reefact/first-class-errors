@@ -106,6 +106,172 @@
       SourceDescription: Errors raised while validating an uploaded bank statement file against its declared metadata (statement period and totals).
     },
     {
+      Code: EXCHANGE_RATE_SERVICE_UNAVAILABLE,
+      Title: Exchange-rate service unavailable,
+      Explanation: This error occurs when the external exchange-rate provider cannot be reached (a timeout, a connection reset, or a 5xx response). It is transient: the call can be retried.,
+      BusinessRule: Currency conversion depends on a reachable exchange-rate provider.,
+      Diagnostics: [
+        {
+          PossibleCause: The provider timed out or returned a server error.,
+          Origin: External,
+          AnalysisHint: Check the provider's health and retry the call, ideally with a backoff.
+        },
+        {
+          PossibleCause: The outgoing network path to the provider is disrupted.,
+          Origin: InternalOrExternal,
+          AnalysisHint: Verify outbound connectivity and any proxy or firewall between the service and the provider.
+        }
+      ],
+      Examples: [
+        {
+          DetailedMessage: The exchange-rate provider 'acme-fx' is unavailable (correlation 22222222-2222-2222-2222-222222222222).,
+          ShortMessage: Exchange-rate service unavailable.
+        }
+      ],
+      Context: [
+        {
+          Key: PROVIDER,
+          Description: The external provider that was called.,
+          ValueType: System.String,
+          ExampleValues: [
+            acme-fx
+          ]
+        },
+        {
+          Key: CORRELATION_ID,
+          Description: The correlation identifier of the outgoing call.,
+          ValueType: System.Guid,
+          ExampleValues: [
+            Guid_1
+          ]
+        }
+      ],
+      Source: ExchangeRateProvider,
+      SourceDescription: Errors raised while calling the external exchange-rate provider (an outgoing, secondary-port adapter).
+    },
+    {
+      Code: MALFORMED_STATEMENT_PAYLOAD,
+      Title: Malformed statement payload,
+      Explanation: This error occurs when the statement upload endpoint receives a request whose body is missing a required field or carries an invalid value.,
+      BusinessRule: An uploaded statement request must carry every required field with a valid value.,
+      Diagnostics: [
+        {
+          PossibleCause: The client sent an incomplete or malformed request body.,
+          Origin: External,
+          AnalysisHint: Inspect the field named in the context and confirm the client sends it with a valid value.
+        }
+      ],
+      Examples: [
+        {
+          DetailedMessage: The statement upload request 11111111-1111-1111-1111-111111111111 is malformed: the 'statementPeriod' field is missing or invalid.,
+          ShortMessage: Malformed statement payload.
+        }
+      ],
+      Context: [
+        {
+          Key: REQUEST_ID,
+          Description: The identifier of the incoming request.,
+          ValueType: System.Guid,
+          ExampleValues: [
+            Guid_2
+          ]
+        },
+        {
+          Key: FIELD,
+          Description: The request field that failed validation.,
+          ValueType: System.String,
+          ExampleValues: [
+            statementPeriod
+          ]
+        }
+      ],
+      Source: StatementUploadEndpoint,
+      SourceDescription: Errors raised by the HTTP endpoint that ingests uploaded bank statements (an incoming, primary-port adapter).
+    },
+    {
+      Code: MONEY_TRANSFER_AMOUNT_NOT_POSITIVE,
+      Title: Non-positive transfer amount,
+      Explanation: This error occurs when a money transfer is requested with an amount that is zero or negative.,
+      BusinessRule: A money transfer amount must be strictly positive.,
+      Diagnostics: [
+        {
+          PossibleCause: The amount was entered or computed as zero or a negative value.,
+          Origin: External,
+          AnalysisHint: Check the requested transfer amount and confirm it is greater than zero.
+        }
+      ],
+      Examples: [
+        {
+          DetailedMessage: Cannot transfer -25 EUR: the amount must be strictly positive.,
+          ShortMessage: Transfer amount must be positive.
+        }
+      ],
+      Context: [
+        {
+          Key: TRANSFER_AMOUNT,
+          Description: The monetary amount of the attempted transfer.,
+          ValueType: FirstClassErrors.Usage.Model.Amount,
+          ExampleValues: [
+            -25 EUR
+          ]
+        }
+      ],
+      Source: MoneyTransfer,
+      SourceDescription: Errors raised while validating a money transfer between accounts.
+    },
+    {
+      Code: MONEY_TRANSFER_INVALID,
+      Title: Invalid money transfer,
+      Explanation: This error aggregates every domain rule violated while validating a money transfer, so the caller sees all the problems at once rather than one at a time.,
+      BusinessRule: A money transfer must satisfy every domain rule (a strictly positive amount, matching currencies, ...).,
+      Diagnostics: [
+        {
+          PossibleCause: One or more domain rules were violated by the requested transfer.,
+          Origin: External,
+          AnalysisHint: Inspect the aggregated inner errors to see each individual rule violation.
+        }
+      ],
+      Examples: [
+        {
+          DetailedMessage: The money transfer is invalid: it violates one or more domain rules.,
+          ShortMessage: Invalid money transfer.
+        }
+      ],
+      Source: MoneyTransfer,
+      SourceDescription: Errors raised while validating a money transfer between accounts.
+    },
+    {
+      Code: STATEMENT_UPLOAD_RATE_LIMITED,
+      Title: Statement upload rate-limited,
+      Explanation: This error occurs when too many statement uploads arrive in a short window and the endpoint throttles the request. It is transient: the same request can be retried later.,
+      BusinessRule: Callers must stay within the endpoint's upload rate limit.,
+      Diagnostics: [
+        {
+          PossibleCause: The caller exceeded the allowed request rate.,
+          Origin: External,
+          AnalysisHint: Back off and retry after the delay indicated in the message.
+        }
+      ],
+      Examples: [
+        {
+          DetailedMessage: The statement upload request 11111111-1111-1111-1111-111111111111 was rate-limited; retry after 30 seconds.,
+          ShortMessage: Statement upload rate-limited.
+        }
+      ],
+      Context: [
+        {
+          Key: REQUEST_ID,
+          Description: The identifier of the incoming request.,
+          ValueType: System.Guid,
+          ExampleValues: [
+            Guid_2
+          ]
+        }
+      ],
+      Source: StatementUploadEndpoint,
+      SourceDescription: Errors raised by the HTTP endpoint that ingests uploaded bank statements (an incoming, primary-port adapter).
+    },
+    {
       Code: TEMPERATURE_BELOW_ABSOLUTE_ZERO,
       Title: Temperature below absolute zero,
       Explanation: This error occurs when trying to instantiate a temperature with a value that is below absolute zero.,
@@ -148,6 +314,45 @@
       ],
       Source: Temperature,
       SourceDescription: Errors raised when constructing a Temperature value from an out-of-range input.
+    },
+    {
+      Code: UNSUPPORTED_CURRENCY_PAIR,
+      Title: Unsupported currency pair,
+      Explanation: This error occurs when the exchange-rate provider does not quote a rate for the requested source/target currency pair.,
+      BusinessRule: A currency conversion can only be performed for a pair the provider quotes.,
+      Diagnostics: [
+        {
+          PossibleCause: The requested currency pair is not offered by the provider.,
+          Origin: External,
+          AnalysisHint: Confirm the provider supports both the source and target currencies before requesting a conversion.
+        }
+      ],
+      Examples: [
+        {
+          DetailedMessage: The exchange-rate provider does not quote the EUR to USD currency pair.,
+          ShortMessage: Unsupported currency pair.
+        }
+      ],
+      Context: [
+        {
+          Key: FROM_CURRENCY,
+          Description: The source currency of the conversion.,
+          ValueType: FirstClassErrors.Usage.Model.Currency,
+          ExampleValues: [
+            EUR
+          ]
+        },
+        {
+          Key: TO_CURRENCY,
+          Description: The target currency of the conversion.,
+          ValueType: FirstClassErrors.Usage.Model.Currency,
+          ExampleValues: [
+            USD
+          ]
+        }
+      ],
+      Source: ExchangeRateProvider,
+      SourceDescription: Errors raised while calling the external exchange-rate provider (an outgoing, secondary-port adapter).
     }
   ],
   HasFailures: false
