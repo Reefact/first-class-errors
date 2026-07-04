@@ -13,9 +13,9 @@ Rule ID | Category | Severity | Notes
 --------|--------------------------------------|----------|-------------------------------------
 FCE001  | FirstClassErrors.ErrorCodes          | Error    | DuplicateErrorCodeAnalyzer
 FCE002  | FirstClassErrors.ErrorCodes          | Error    | EmptyErrorCodeAnalyzer
-FCE003  | FirstClassErrors.ErrorCodes          | Info     | NonLiteralErrorCodeAnalyzer (disabled by default)
-FCE004  | FirstClassErrors.ErrorCodes          | Info     | InvalidErrorCodeFormatAnalyzer (disabled by default)
-FCE005  | FirstClassErrors.ErrorCodes          | Info     | TooGenericErrorCodeAnalyzer (disabled by default)
+FCE003  | FirstClassErrors.ErrorCodes          | Disabled | NonLiteralErrorCodeAnalyzer
+FCE004  | FirstClassErrors.ErrorCodes          | Disabled | InvalidErrorCodeFormatAnalyzer
+FCE005  | FirstClassErrors.ErrorCodes          | Disabled | TooGenericErrorCodeAnalyzer
 FCE006  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByTargetNotFoundAnalyzer
 FCE007  | FirstClassErrors.DocumentationWiring | Error    | DocumentedByInvalidSignatureAnalyzer
 <<<<<<< 993934e7f8182457844cd4b01cded521601592e6
@@ -62,10 +62,14 @@ FCE013  | FirstClassErrors.DocumentationContent| Warning  | ExampleDoesNotCallDo
 >>>>>>> 6b9bac398957700cc935135cb9decc007d4cdf60
 =======
 FCE014  | FirstClassErrors.DocumentationContent| Info     | ShortMessageSameAsDetailedMessageAnalyzer
+<<<<<<< 1d9cd8b4e79443a1302ab4e3d9fd1fb95d5d559b
 <<<<<<< 257dc34cc90bcf323082afeceee0af40210cc29a
 >>>>>>> 33f2b6c0380c98d5a9cc87d3fa834786017363cf
 =======
 FCE015  | FirstClassErrors.DocumentationContent| Info     | DocumentationTitleTooGenericAnalyzer (disabled by default)
 >>>>>>> 60c027495ed52dfaf11feee3b82122d063fe82b8
+=======
+FCE015  | FirstClassErrors.DocumentationContent| Disabled | DocumentationTitleTooGenericAnalyzer
+>>>>>>> 34737f8873e6196620cd571851ca6880b8270a48
 FCE016  | FirstClassErrors.Usage               | Warning  | UnusedToExceptionResultAnalyzer
 >>>>>>> e82f3b87253ce42f9e0497e6d8a41054cd608b17
