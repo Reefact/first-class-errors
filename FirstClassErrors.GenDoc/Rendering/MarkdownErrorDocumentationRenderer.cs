@@ -214,15 +214,19 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
     }
 
     /// <summary>
-    ///     Builds a structured log-line rendering of an example's internal diagnostic message: a placeholder timestamp,
-    ///     the level, the source used as the logger category, the diagnostic message, and the error code as a structured
-    ///     field. The timestamp (and the error's instance id) are injected by the logging pipeline at runtime, so a
-    ///     <c>&lt;timestamp&gt;</c> placeholder is emitted to keep the output deterministic. It is illustrative, stays in
-    ///     the author (invariant) language, and is never a public message.
+    ///     A fixed, illustrative timestamp used by the diagnostic log-line examples. A real logger injects the actual
+    ///     time at runtime; this constant keeps the rendered documentation deterministic.
+    /// </summary>
+    private const string SampleLogTimestamp = "2026-07-04T13:42:18.734Z";
+
+    /// <summary>
+    ///     Builds a structured log-line rendering of an example's internal diagnostic message: a fixed illustrative
+    ///     timestamp, the level, the source used as the logger category, the diagnostic message, and the error code as a
+    ///     structured field. It is illustrative, stays in the author (invariant) language, and is never a public message.
     /// </summary>
     private static string DiagnosticLogLine(ErrorDescription example, string? code, string? source) {
         StringBuilder line = new();
-        line.Append("<timestamp> ERROR");
+        line.Append($"{SampleLogTimestamp} ERROR");
         if (string.IsNullOrWhiteSpace(source) is false) {
             line.Append($" [{source!.Trim()}]");
         }
