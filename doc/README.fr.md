@@ -63,7 +63,7 @@ Les erreurs portent :
 
 * un code d’erreur stable
 * un horodatage
-* un message court et/ou détaillé
+* trois messages distincts — un résumé public court (obligatoire), un détail public optionnel et un message de diagnostic interne (obligatoire)
 * des données de contexte
 * des diagnostics structurés
 
@@ -72,6 +72,18 @@ L’exception, elle, n’expose que son `.Error`, et est conçue pour être :
 * loguées de manière cohérente
 * comprises par des humains
 * exploitées par des outils
+
+#### Trois messages, trois publics
+
+Une `Error` sépare délibérément ce qui peut être montré à un appelant de ce qui est destiné aux développeurs et au support :
+
+| Message | Obligatoire | Public | Exposition |
+| --- | --- | --- | --- |
+| `ShortMessage` | Oui | Utilisateurs finaux / clients d’API | Un résumé public court, exposable tel quel (par ex. le `title` d’un problem detail RFC 9457). |
+| `DetailedMessage` | Non | Utilisateurs finaux / clients d’API | Un détail public maîtrisé (par ex. le `detail` d’un problem detail RFC 9457), exposé **uniquement** si l’application le décide explicitement. Ne doit contenir aucune information sensible ou interne. |
+| `DiagnosticMessage` | Oui | Logs, support, développeurs | Le message de diagnostic interne. Il peut contenir des détails techniques/opérationnels (identifiants, valeurs fautives, état interne) ; il n’est **jamais** exposé aux clients externes par défaut. |
+
+Le cœur du modèle est agnostique vis-à-vis d’HTTP : `DiagnosticMessage` n’est jamais utilisé comme corps de réponse HTTP par défaut. Lorsque vous transformez une erreur en exception avec `.ToException()`, le `Exception.Message` obtenu est le `DiagnosticMessage` — le texte destiné aux développeurs et aux logs.
 
 ### 2️⃣ Des diagnostics structurés
 
@@ -139,10 +151,12 @@ public static class InvalidTemperatureError {
 
     [DocumentedBy(nameof(BelowAbsoluteZeroDocumentation))]
     internal static DomainError BelowAbsoluteZero(decimal invalidValue, TemperatureUnit invalidValueUnit) {
-        return new DomainError(
-            Code.TemperatureBelowAbsoluteZero,
-            $"Failed to instantiate temperature: the value {invalidValue} {invalidValueUnit} is below absolute zero.",
-            "Temperature is below absolute zero.");
+        return DomainError.Create(
+                Code.TemperatureBelowAbsoluteZero,
+                diagnosticMessage: $"Failed to instantiate temperature: the value {invalidValue} {invalidValueUnit} is below absolute zero.")
+            .WithPublicMessage(
+                shortMessage: "Temperature is below absolute zero.",
+                detailedMessage: "The provided temperature is below absolute zero, which is not physically valid.");
     }
 
     private static ErrorDocumentation BelowAbsoluteZeroDocumentation() {

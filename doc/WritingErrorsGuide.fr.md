@@ -159,6 +159,18 @@ La documentation des erreurs doit se concentrer sur :
 * des détails du framework  
 * des noms de classes internes  
 
+## 🗂️ 10. Les trois messages que porte une erreur
+
+Les éléments ci-dessus décrivent la **documentation** d’une erreur. En complément, chaque factory définit les trois messages que l’erreur porte à l’exécution, via le builder étagé `Type.Create(code, diagnosticMessage, …).WithPublicMessage(shortMessage, detailedMessage)` :
+
+| Message             | Obligatoire | Public                       | Exposition                                                                                                    |
+| ------------------- | ----------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `ShortMessage`      | Oui         | Utilisateurs finaux / API    | Résumé public sûr (par ex. un `title` RFC 9457).                                                               |
+| `DetailedMessage`   | Non         | Utilisateurs finaux / API    | Détail public maîtrisé, exposé uniquement si l’application le décide (par ex. un `detail` RFC 9457) ; jamais sensible ni interne. |
+| `DiagnosticMessage` | Oui         | Logs, support, développeurs  | Détail de diagnostic interne (identifiants, valeurs fautives, état interne) ; jamais exposé aux clients externes par défaut. |
+
+Gardez le message de diagnostic riche et technique ; gardez les messages publics sûrs et exempts de détail interne. `error.ToException()` utilise le message de diagnostic comme `Message` de l’exception.
+
 ## 🏁 Résumé
 
 Quand vous écrivez une erreur :
@@ -166,6 +178,9 @@ Quand vous écrivez une erreur :
 | Élément         | Rôle                          |
 | --------------- | ----------------------------- |
 | Code d’erreur   | Identifiant stable            |
+| Message court   | Résumé public sûr             |
+| Message détaillé | Détail public maîtrisé (optionnel) |
+| Message de diagnostic | Interne, pour logs et support |
 | Titre           | Résumé humain court           |
 | Description     | Signification de l’erreur     |
 | Règle           | Invariant violé               |

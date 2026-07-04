@@ -6,10 +6,19 @@ Two things can be localized, at two different stages of the pipeline:
 
 | What | Localized when | How |
 | --- | --- | --- |
-| **Error content** — titles, explanations, rules, diagnostics, messages, source and context descriptions | at **extraction** | your factories read localized resources under the current UI culture |
+| **Error content** — titles, explanations, rules, diagnostics, the public messages (short and detailed), source and context descriptions | at **extraction** | your factories read localized resources under the current UI culture |
 | **Renderer templates** — headings, labels, table headers | at **rendering** | the renderer reads its own boilerplate for `RenderRequest.Culture` |
 
-Everything else stays **culture-invariant**, so links never break across languages: error codes, source names (`nameof(...)`), `ErrorOrigin` values, and the generated file names and anchors.
+Everything else stays **culture-invariant**, so links never break across languages — and so diagnostics stay in one consistent language for logs and support: error codes, source names (`nameof(...)`), `ErrorOrigin` values, the **internal diagnostic message** of each error, and the generated file names and anchors.
+
+### Public messages are localized, the diagnostic message is not
+
+An error carries three messages, and they localize differently:
+
+* **`ShortMessage`** and **`DetailedMessage`** are public content, so they are localized at extraction like any other prose — read them from resources under the current UI culture.
+* **`DiagnosticMessage`** is deliberately **kept in the author language (culture-invariant)**. It is meant for logs, support and developers, and diagnostic text is most useful when it always reads in one consistent language, regardless of the caller's locale — a deliberate best practice.
+
+As a result, in the generated documentation the public messages render localized while the diagnostic message renders in the invariant (author) language.
 
 The `.Usage` sample ships five languages — English, French, Spanish, German and Swedish (`en`, `fr`, `es`, `de`, `sv`).
 
@@ -99,10 +108,10 @@ IReadOnlyList<RenderedDocument> documents = new MarkdownErrorDocumentationRender
 
 | Stage | Culture source | What it localizes |
 | --- | --- | --- |
-| Worker / extraction | `CultureInfo.CurrentUICulture` (set from `--language`) | error content (titles, explanations, rules, diagnostics, messages, source and context descriptions) |
+| Worker / extraction | `CultureInfo.CurrentUICulture` (set from `--language`) | error content (titles, explanations, rules, diagnostics, the public short and detailed messages, source and context descriptions) |
 | Renderer | `RenderRequest.Culture` | the renderer's own templates (headings, labels, table headers) |
 
-Content is localized at extraction; boilerplate at rendering. File names and anchors stay culture-invariant.
+Content is localized at extraction; boilerplate at rendering. File names, anchors, and each error's internal diagnostic message stay culture-invariant.
 
 ---
 

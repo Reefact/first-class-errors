@@ -64,12 +64,14 @@ internal static class ErrCtxKey {
 Attachez le contexte là où l’erreur est créée, pour garantir la cohérence de chaque occurrence :
 
 ```csharp
-return new PrimaryPortError(
-    Code.DateOutOfStatementPeriod,
-    $"Transaction datée du {transactionDate} hors période du relevé.",
-    Transience.NonTransient,
-    "La date de transaction est hors période du relevé.",
-    ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate));
+return PrimaryPortError.Create(
+        Code.DateOutOfStatementPeriod,
+        diagnosticMessage: $"Transaction datée du {transactionDate} hors période du relevé.",
+        transience: Transience.NonTransient,
+        configureContext: ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate))
+    .WithPublicMessage(
+        shortMessage: "La date de transaction est hors période du relevé.",
+        detailedMessage: "La date de transaction se situe hors de la période du relevé autorisée.");
 ```
 
 ### 3) Garder des valeurs simples et sérialisables

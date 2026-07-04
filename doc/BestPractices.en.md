@@ -158,10 +158,12 @@ public static class InvalidAmountOperationError {
 
     [DocumentedBy(nameof(CurrencyMismatchDocumentation))]
     internal static DomainError CurrencyMismatch(Amount left, Amount right) {
-        return new DomainError(
-            Code.CurrencyMismatch,
-            $"Cannot operate on amounts with different currencies: {left.Currency} and {right.Currency}.",
-            "Amounts use different currencies.");
+        return DomainError.Create(
+                Code.CurrencyMismatch,
+                diagnosticMessage: $"Cannot operate on amounts with different currencies: {left.Currency} and {right.Currency}.")
+            .WithPublicMessage(
+                shortMessage: "Amounts use different currencies.",
+                detailedMessage: "The amounts involved use different currencies.");
     }
 
     // ... documentation method and error codes ...
@@ -173,7 +175,7 @@ Each factory method represents a well-defined error category. Grouping them in a
 
 ## 🏭 12. Build errors through factories, throw via `ToException()`
 
-You never `new` a `DiagnosableException` in user code, and there is no string-pair constructor: an exception's only constructor takes an `Error`. Build the error through a factory method and turn it into an exception with `ToException()`.
+You never `new` a `DiagnosableException` in user code: an exception's only constructor takes an `Error`. Errors themselves are no longer built through public constructors either — those are now internal. An error is assembled through the staged builder — `Type.Create(code, diagnosticMessage, …)` captures the mandatory internal information and returns an intermediate stage, and `.WithPublicMessage(shortMessage, detailedMessage)` finalizes the real error (there is no `.Build()`). Factory methods encapsulate that call, so you simply invoke the factory and turn its result into an exception with `ToException()`.
 
 ```csharp
 // Build an Error through the factory, then throw it as an exception:

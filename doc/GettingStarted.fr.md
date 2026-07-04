@@ -32,10 +32,12 @@ public static class InvalidAmountOperationError {
 
     [DocumentedBy(nameof(CurrencyMismatchDocumentation))]
     internal static DomainError CurrencyMismatch(Amount amount1, Amount amount2) {
-        return new DomainError(
-            Code.CurrencyMismatch,
-            $"Impossible d’effectuer l’opération monétaire car les montants impliqués sont exprimés dans des devises différentes : {amount1} et {amount2}.",
-            "Devise différente");
+        return DomainError.Create(
+                Code.CurrencyMismatch,
+                diagnosticMessage: $"Impossible d’effectuer l’opération monétaire car les montants impliqués sont exprimés dans des devises différentes : {amount1} et {amount2}.")
+            .WithPublicMessage(
+                shortMessage: "Devise différente",
+                detailedMessage: "Les montants impliqués dans l’opération sont exprimés dans des devises différentes.");
     }
 
     private static class Code {
@@ -52,7 +54,9 @@ Ici :
 * Le **code d’erreur** est stable et lisible par machine.
 * C’est la méthode factory qui sera documentée.
 
-Vous ne faites jamais `new` sur l’exception vous-même : pour lever, vous appelez `error.ToException()` (voir section 4).
+L’erreur est construite en deux étapes : `DomainError.Create(...)` capture l’information interne obligatoire (le `code` d’erreur et le `diagnosticMessage` interne), et `.WithPublicMessage(shortMessage, detailedMessage)` fournit les messages publics et produit l’erreur finale. Le `shortMessage` obligatoire est un résumé public sûr, le `detailedMessage` optionnel est un détail public maîtrisé, et le `diagnosticMessage` est destiné aux logs, au support et aux développeurs — jamais exposé aux clients par défaut. Il n’y a pas de `.Build()`, et les constructeurs publics sont internes, de sorte qu’une erreur ne peut jamais rester sans son message public.
+
+Vous ne faites jamais `new` sur l’erreur ni sur l’exception vous-même : l’erreur est créée via le builder étagé dans la factory, et pour lever, vous appelez `error.ToException()` (voir section 4).
 
 ## 2️⃣ Lier la factory à une documentation structurée
 
@@ -93,12 +97,14 @@ Il s’agit de connaissance structurée, pas d’un commentaire.
 Quand une information est utile pour diagnostiquer **une occurrence précise**, ajoutez-la dans le contexte.
 
 ```csharp
-return new PrimaryPortError(
-    Code.DateOutOfStatementPeriod,
-    $"Transaction datée du {transactionDate} hors période [{periodStart};{periodEnd}].",
-    Transience.NonTransient,
-    "Date de transaction hors période.",
-    ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate));
+return PrimaryPortError.Create(
+        Code.DateOutOfStatementPeriod,
+        diagnosticMessage: $"Transaction datée du {transactionDate} hors période [{periodStart};{periodEnd}].",
+        transience: Transience.NonTransient,
+        configureContext: ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate))
+    .WithPublicMessage(
+        shortMessage: "Date de transaction hors période.",
+        detailedMessage: "La date de transaction se situe hors de la période du relevé autorisée.");
 ```
 
 Le contexte est porté par l’`Error` ; lorsqu’une exception est ensuite produite avec `error.ToException()`, on y accède via `exception.Error.Context`.
