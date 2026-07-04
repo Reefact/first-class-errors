@@ -7,6 +7,15 @@
 - [BankTransactionFileValidator errors](#src-bank-transaction-file-validator)
   - [Transaction date outside statement period](#err-bank-transaction-file-date-out-of-statement-period)
   - [Statement total amount mismatch](#err-bank-transaction-file-statement-total-amount-mismatch)
+- [ExchangeRateProvider errors](#src-exchange-rate-provider)
+  - [Exchange-rate service unavailable](#err-exchange-rate-service-unavailable)
+  - [Unsupported currency pair](#err-unsupported-currency-pair)
+- [StatementUploadEndpoint errors](#src-statement-upload-endpoint)
+  - [Malformed statement payload](#err-malformed-statement-payload)
+  - [Statement upload rate-limited](#err-statement-upload-rate-limited)
+- [MoneyTransfer errors](#src-money-transfer)
+  - [Non-positive transfer amount](#err-money-transfer-amount-not-positive)
+  - [Invalid money transfer](#err-money-transfer-invalid)
 - [Temperature errors](#src-temperature)
   - [Temperature below absolute zero](#err-temperature-below-absolute-zero)
 
@@ -91,6 +100,172 @@ This error occurs when trying to validate a bank statement file whose declared t
 #### Examples
 
 - The declared statement total amount (1250 EUR) does not match the computed total amount from transactions (1249.5 EUR). _(Statement total amount mismatch.)_
+
+<a id="src-exchange-rate-provider"></a>
+
+## ExchangeRateProvider errors
+
+Errors raised while calling the external exchange-rate provider (an outgoing, secondary-port adapter).
+
+<a id="err-exchange-rate-service-unavailable"></a>
+
+### Exchange-rate service unavailable
+
+- **Code:** `EXCHANGE_RATE_SERVICE_UNAVAILABLE`
+- **Source:** `ExchangeRateProvider`
+
+This error occurs when the external exchange-rate provider cannot be reached (a timeout, a connection reset, or a 5xx response). It is transient: the call can be retried.
+
+> **Business rule:** Currency conversion depends on a reachable exchange-rate provider.
+
+#### Diagnostics
+
+- **The provider timed out or returned a server error.** — _origin:_ External — Check the provider's health and retry the call, ideally with a backoff.
+- **The outgoing network path to the provider is disrupted.** — _origin:_ InternalOrExternal — Verify outbound connectivity and any proxy or firewall between the service and the provider.
+
+#### Examples
+
+- The exchange-rate provider 'acme-fx' is unavailable (correlation 22222222-2222-2222-2222-222222222222). _(Exchange-rate service unavailable.)_
+
+#### Context
+
+| Key | Type | Description | Example values |
+| --- | --- | --- | --- |
+| `PROVIDER` | `System.String` | The external provider that was called. | `acme-fx` |
+| `CORRELATION_ID` | `System.Guid` | The correlation identifier of the outgoing call. | `22222222-2222-2222-2222-222222222222` |
+
+<a id="err-unsupported-currency-pair"></a>
+
+### Unsupported currency pair
+
+- **Code:** `UNSUPPORTED_CURRENCY_PAIR`
+- **Source:** `ExchangeRateProvider`
+
+This error occurs when the exchange-rate provider does not quote a rate for the requested source/target currency pair.
+
+> **Business rule:** A currency conversion can only be performed for a pair the provider quotes.
+
+#### Diagnostics
+
+- **The requested currency pair is not offered by the provider.** — _origin:_ External — Confirm the provider supports both the source and target currencies before requesting a conversion.
+
+#### Examples
+
+- The exchange-rate provider does not quote the EUR to USD currency pair. _(Unsupported currency pair.)_
+
+#### Context
+
+| Key | Type | Description | Example values |
+| --- | --- | --- | --- |
+| `FROM_CURRENCY` | `FirstClassErrors.Usage.Model.Currency` | The source currency of the conversion. | `EUR` |
+| `TO_CURRENCY` | `FirstClassErrors.Usage.Model.Currency` | The target currency of the conversion. | `USD` |
+
+<a id="src-statement-upload-endpoint"></a>
+
+## StatementUploadEndpoint errors
+
+Errors raised by the HTTP endpoint that ingests uploaded bank statements (an incoming, primary-port adapter).
+
+<a id="err-malformed-statement-payload"></a>
+
+### Malformed statement payload
+
+- **Code:** `MALFORMED_STATEMENT_PAYLOAD`
+- **Source:** `StatementUploadEndpoint`
+
+This error occurs when the statement upload endpoint receives a request whose body is missing a required field or carries an invalid value.
+
+> **Business rule:** An uploaded statement request must carry every required field with a valid value.
+
+#### Diagnostics
+
+- **The client sent an incomplete or malformed request body.** — _origin:_ External — Inspect the field named in the context and confirm the client sends it with a valid value.
+
+#### Examples
+
+- The statement upload request 11111111-1111-1111-1111-111111111111 is malformed: the 'statementPeriod' field is missing or invalid. _(Malformed statement payload.)_
+
+#### Context
+
+| Key | Type | Description | Example values |
+| --- | --- | --- | --- |
+| `REQUEST_ID` | `System.Guid` | The identifier of the incoming request. | `11111111-1111-1111-1111-111111111111` |
+| `FIELD` | `System.String` | The request field that failed validation. | `statementPeriod` |
+
+<a id="err-statement-upload-rate-limited"></a>
+
+### Statement upload rate-limited
+
+- **Code:** `STATEMENT_UPLOAD_RATE_LIMITED`
+- **Source:** `StatementUploadEndpoint`
+
+This error occurs when too many statement uploads arrive in a short window and the endpoint throttles the request. It is transient: the same request can be retried later.
+
+> **Business rule:** Callers must stay within the endpoint's upload rate limit.
+
+#### Diagnostics
+
+- **The caller exceeded the allowed request rate.** — _origin:_ External — Back off and retry after the delay indicated in the message.
+
+#### Examples
+
+- The statement upload request 11111111-1111-1111-1111-111111111111 was rate-limited; retry after 30 seconds. _(Statement upload rate-limited.)_
+
+#### Context
+
+| Key | Type | Description | Example values |
+| --- | --- | --- | --- |
+| `REQUEST_ID` | `System.Guid` | The identifier of the incoming request. | `11111111-1111-1111-1111-111111111111` |
+
+<a id="src-money-transfer"></a>
+
+## MoneyTransfer errors
+
+Errors raised while validating a money transfer between accounts.
+
+<a id="err-money-transfer-amount-not-positive"></a>
+
+### Non-positive transfer amount
+
+- **Code:** `MONEY_TRANSFER_AMOUNT_NOT_POSITIVE`
+- **Source:** `MoneyTransfer`
+
+This error occurs when a money transfer is requested with an amount that is zero or negative.
+
+> **Business rule:** A money transfer amount must be strictly positive.
+
+#### Diagnostics
+
+- **The amount was entered or computed as zero or a negative value.** — _origin:_ External — Check the requested transfer amount and confirm it is greater than zero.
+
+#### Examples
+
+- Cannot transfer -25 EUR: the amount must be strictly positive. _(Transfer amount must be positive.)_
+
+#### Context
+
+| Key | Type | Description | Example values |
+| --- | --- | --- | --- |
+| `TRANSFER_AMOUNT` | `FirstClassErrors.Usage.Model.Amount` | The monetary amount of the attempted transfer. | `-25 EUR` |
+
+<a id="err-money-transfer-invalid"></a>
+
+### Invalid money transfer
+
+- **Code:** `MONEY_TRANSFER_INVALID`
+- **Source:** `MoneyTransfer`
+
+This error aggregates every domain rule violated while validating a money transfer, so the caller sees all the problems at once rather than one at a time.
+
+> **Business rule:** A money transfer must satisfy every domain rule (a strictly positive amount, matching currencies, ...).
+
+#### Diagnostics
+
+- **One or more domain rules were violated by the requested transfer.** — _origin:_ External — Inspect the aggregated inner errors to see each individual rule violation.
+
+#### Examples
+
+- The money transfer is invalid: it violates one or more domain rules. _(Invalid money transfer.)_
 
 <a id="src-temperature"></a>
 

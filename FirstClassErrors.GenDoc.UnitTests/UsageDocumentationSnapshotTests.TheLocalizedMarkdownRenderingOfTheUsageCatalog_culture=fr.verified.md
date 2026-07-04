@@ -7,6 +7,15 @@
 - [Erreurs BankTransactionFileValidator](#src-bank-transaction-file-validator)
   - [Date de transaction hors de la période du relevé](#err-bank-transaction-file-date-out-of-statement-period)
   - [Incohérence du montant total du relevé](#err-bank-transaction-file-statement-total-amount-mismatch)
+- [Erreurs ExchangeRateProvider](#src-exchange-rate-provider)
+  - [Service de taux de change indisponible](#err-exchange-rate-service-unavailable)
+  - [Paire de devises non prise en charge](#err-unsupported-currency-pair)
+- [Erreurs StatementUploadEndpoint](#src-statement-upload-endpoint)
+  - [Charge utile de relevé mal formée](#err-malformed-statement-payload)
+  - [Téléversement de relevé limité en débit](#err-statement-upload-rate-limited)
+- [Erreurs MoneyTransfer](#src-money-transfer)
+  - [Montant de virement non positif](#err-money-transfer-amount-not-positive)
+  - [Virement invalide](#err-money-transfer-invalid)
 - [Erreurs Temperature](#src-temperature)
   - [Temperature below absolute zero](#err-temperature-below-absolute-zero)
 
@@ -91,6 +100,172 @@ Cette erreur se produit lorsqu'on tente de valider un relevé bancaire dont le m
 #### Exemples
 
 - Le montant total déclaré du relevé (1250 EUR) ne correspond pas au montant total calculé à partir des transactions (1249.5 EUR). _(Incohérence du montant total du relevé.)_
+
+<a id="src-exchange-rate-provider"></a>
+
+## Erreurs ExchangeRateProvider
+
+Erreurs levées lors de l'appel au fournisseur de taux de change externe (un adaptateur sortant, secondary port).
+
+<a id="err-exchange-rate-service-unavailable"></a>
+
+### Service de taux de change indisponible
+
+- **Code :** `EXCHANGE_RATE_SERVICE_UNAVAILABLE`
+- **Source :** `ExchangeRateProvider`
+
+Cette erreur se produit lorsque le fournisseur de taux de change externe est injoignable (un dépassement de délai, une réinitialisation de connexion ou une réponse 5xx). Elle est transitoire : l'appel peut être réessayé.
+
+> **Règle métier :** La conversion de devises dépend d'un fournisseur de taux de change joignable.
+
+#### Diagnostics
+
+- **Le fournisseur a dépassé le délai ou a renvoyé une erreur serveur.** — _origine :_ External — Vérifiez l'état de santé du fournisseur et réessayez l'appel, idéalement avec une temporisation.
+- **Le chemin réseau sortant vers le fournisseur est perturbé.** — _origine :_ InternalOrExternal — Vérifiez la connectivité sortante ainsi que tout proxy ou pare-feu entre le service et le fournisseur.
+
+#### Exemples
+
+- Le fournisseur de taux de change « acme-fx » est indisponible (corrélation 22222222-2222-2222-2222-222222222222). _(Service de taux de change indisponible.)_
+
+#### Contexte
+
+| Clé | Type | Description | Exemples de valeurs |
+| --- | --- | --- | --- |
+| `PROVIDER` | `System.String` | Le fournisseur externe qui a été appelé. | `acme-fx` |
+| `CORRELATION_ID` | `System.Guid` | L'identifiant de corrélation de l'appel sortant. | `22222222-2222-2222-2222-222222222222` |
+
+<a id="err-unsupported-currency-pair"></a>
+
+### Paire de devises non prise en charge
+
+- **Code :** `UNSUPPORTED_CURRENCY_PAIR`
+- **Source :** `ExchangeRateProvider`
+
+Cette erreur se produit lorsque le fournisseur de taux de change ne cote pas de taux pour la paire de devises source/cible demandée.
+
+> **Règle métier :** Une conversion de devises ne peut être effectuée que pour une paire cotée par le fournisseur.
+
+#### Diagnostics
+
+- **La paire de devises demandée n'est pas proposée par le fournisseur.** — _origine :_ External — Confirmez que le fournisseur prend en charge les devises source et cible avant de demander une conversion.
+
+#### Exemples
+
+- Le fournisseur de taux de change ne cote pas la paire de devises EUR vers USD. _(Paire de devises non prise en charge.)_
+
+#### Contexte
+
+| Clé | Type | Description | Exemples de valeurs |
+| --- | --- | --- | --- |
+| `FROM_CURRENCY` | `FirstClassErrors.Usage.Model.Currency` | La devise source de la conversion. | `EUR` |
+| `TO_CURRENCY` | `FirstClassErrors.Usage.Model.Currency` | La devise cible de la conversion. | `USD` |
+
+<a id="src-statement-upload-endpoint"></a>
+
+## Erreurs StatementUploadEndpoint
+
+Erreurs levées par le point d'entrée HTTP qui ingère les relevés bancaires téléversés (un adaptateur entrant, primary port).
+
+<a id="err-malformed-statement-payload"></a>
+
+### Charge utile de relevé mal formée
+
+- **Code :** `MALFORMED_STATEMENT_PAYLOAD`
+- **Source :** `StatementUploadEndpoint`
+
+Cette erreur se produit lorsque le point d'entrée de téléversement de relevé reçoit une requête dont le corps omet un champ obligatoire ou contient une valeur invalide.
+
+> **Règle métier :** Une requête de relevé téléversée doit porter tous les champs obligatoires avec une valeur valide.
+
+#### Diagnostics
+
+- **Le client a envoyé un corps de requête incomplet ou mal formé.** — _origine :_ External — Examinez le champ nommé dans le contexte et confirmez que le client l'envoie avec une valeur valide.
+
+#### Exemples
+
+- La requête de téléversement de relevé 11111111-1111-1111-1111-111111111111 est mal formée : le champ « statementPeriod » est manquant ou invalide. _(Charge utile de relevé mal formée.)_
+
+#### Contexte
+
+| Clé | Type | Description | Exemples de valeurs |
+| --- | --- | --- | --- |
+| `REQUEST_ID` | `System.Guid` | L'identifiant de la requête entrante. | `11111111-1111-1111-1111-111111111111` |
+| `FIELD` | `System.String` | Le champ de la requête qui a échoué à la validation. | `statementPeriod` |
+
+<a id="err-statement-upload-rate-limited"></a>
+
+### Téléversement de relevé limité en débit
+
+- **Code :** `STATEMENT_UPLOAD_RATE_LIMITED`
+- **Source :** `StatementUploadEndpoint`
+
+Cette erreur se produit lorsque trop de téléversements de relevés arrivent dans un court laps de temps et que le point d'entrée limite la requête. Elle est transitoire : la même requête peut être réessayée plus tard.
+
+> **Règle métier :** Les appelants doivent rester dans la limite de débit de téléversement du point d'entrée.
+
+#### Diagnostics
+
+- **L'appelant a dépassé le débit de requêtes autorisé.** — _origine :_ External — Temporisez et réessayez après le délai indiqué dans le message.
+
+#### Exemples
+
+- La requête de téléversement de relevé 11111111-1111-1111-1111-111111111111 a été limitée en débit ; réessayez après 30 secondes. _(Téléversement de relevé limité en débit.)_
+
+#### Contexte
+
+| Clé | Type | Description | Exemples de valeurs |
+| --- | --- | --- | --- |
+| `REQUEST_ID` | `System.Guid` | L'identifiant de la requête entrante. | `11111111-1111-1111-1111-111111111111` |
+
+<a id="src-money-transfer"></a>
+
+## Erreurs MoneyTransfer
+
+Erreurs levées lors de la validation d'un virement entre comptes.
+
+<a id="err-money-transfer-amount-not-positive"></a>
+
+### Montant de virement non positif
+
+- **Code :** `MONEY_TRANSFER_AMOUNT_NOT_POSITIVE`
+- **Source :** `MoneyTransfer`
+
+Cette erreur se produit lorsqu'un virement est demandé avec un montant nul ou négatif.
+
+> **Règle métier :** Le montant d'un virement doit être strictement positif.
+
+#### Diagnostics
+
+- **Le montant a été saisi ou calculé comme nul ou négatif.** — _origine :_ External — Vérifiez le montant de virement demandé et confirmez qu'il est supérieur à zéro.
+
+#### Exemples
+
+- Impossible de virer -25 EUR : le montant doit être strictement positif. _(Le montant du virement doit être positif.)_
+
+#### Contexte
+
+| Clé | Type | Description | Exemples de valeurs |
+| --- | --- | --- | --- |
+| `TRANSFER_AMOUNT` | `FirstClassErrors.Usage.Model.Amount` | Le montant monétaire du virement tenté. | `-25 EUR` |
+
+<a id="err-money-transfer-invalid"></a>
+
+### Virement invalide
+
+- **Code :** `MONEY_TRANSFER_INVALID`
+- **Source :** `MoneyTransfer`
+
+Cette erreur regroupe toutes les règles métier violées lors de la validation d'un virement, afin que l'appelant voie tous les problèmes d'un coup plutôt qu'un par un.
+
+> **Règle métier :** Un virement doit satisfaire toutes les règles métier (un montant strictement positif, des devises identiques, ...).
+
+#### Diagnostics
+
+- **Une ou plusieurs règles métier ont été violées par le virement demandé.** — _origine :_ External — Examinez les erreurs internes agrégées pour voir chaque violation de règle individuelle.
+
+#### Exemples
+
+- Le virement est invalide : il viole une ou plusieurs règles métier. _(Virement invalide.)_
 
 <a id="src-temperature"></a>
 

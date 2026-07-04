@@ -7,6 +7,15 @@
 - [BankTransactionFileValidator-fel](#src-bank-transaction-file-validator)
   - [Transaktionsdatum utanför utdragsperioden](#err-bank-transaction-file-date-out-of-statement-period)
   - [Avvikelse i utdragets totalbelopp](#err-bank-transaction-file-statement-total-amount-mismatch)
+- [ExchangeRateProvider-fel](#src-exchange-rate-provider)
+  - [Växelkurstjänsten är otillgänglig](#err-exchange-rate-service-unavailable)
+  - [Valutapar som inte stöds](#err-unsupported-currency-pair)
+- [StatementUploadEndpoint-fel](#src-statement-upload-endpoint)
+  - [Felaktig utdragspayload](#err-malformed-statement-payload)
+  - [Utdragsuppladdning hastighetsbegränsad](#err-statement-upload-rate-limited)
+- [MoneyTransfer-fel](#src-money-transfer)
+  - [Icke-positivt överföringsbelopp](#err-money-transfer-amount-not-positive)
+  - [Ogiltig penningöverföring](#err-money-transfer-invalid)
 - [Temperature-fel](#src-temperature)
   - [Temperature below absolute zero](#err-temperature-below-absolute-zero)
 
@@ -91,6 +100,172 @@ Det här felet uppstår när man försöker validera en kontoutdragsfil vars dek
 #### Exempel
 
 - Utdragets deklarerade totalbelopp (1250 EUR) stämmer inte med det totalbelopp som beräknats från transaktionerna (1249.5 EUR). _(Avvikelse i utdragets totalbelopp.)_
+
+<a id="src-exchange-rate-provider"></a>
+
+## ExchangeRateProvider-fel
+
+Fel som uppstår vid anrop till den externa växelkursleverantören (en utgående secondary-port-adapter).
+
+<a id="err-exchange-rate-service-unavailable"></a>
+
+### Växelkurstjänsten är otillgänglig
+
+- **Kod:** `EXCHANGE_RATE_SERVICE_UNAVAILABLE`
+- **Källa:** `ExchangeRateProvider`
+
+Det här felet uppstår när den externa växelkursleverantören inte kan nås (en timeout, en återställd anslutning eller ett 5xx-svar). Det är övergående: anropet kan försökas igen.
+
+> **Affärsregel:** Valutakonvertering är beroende av en nåbar växelkursleverantör.
+
+#### Diagnostik
+
+- **Leverantören nådde en timeout eller returnerade ett serverfel.** — _ursprung:_ External — Kontrollera leverantörens hälsa och försök anropet igen, helst med en backoff.
+- **Den utgående nätverksvägen till leverantören är störd.** — _ursprung:_ InternalOrExternal — Verifiera utgående anslutning och eventuell proxy eller brandvägg mellan tjänsten och leverantören.
+
+#### Exempel
+
+- Växelkursleverantören ”acme-fx” är otillgänglig (korrelation 22222222-2222-2222-2222-222222222222). _(Växelkurstjänsten är otillgänglig.)_
+
+#### Kontext
+
+| Nyckel | Typ | Beskrivning | Exempelvärden |
+| --- | --- | --- | --- |
+| `PROVIDER` | `System.String` | Den externa leverantören som anropades. | `acme-fx` |
+| `CORRELATION_ID` | `System.Guid` | Korrelationsidentifieraren för det utgående anropet. | `22222222-2222-2222-2222-222222222222` |
+
+<a id="err-unsupported-currency-pair"></a>
+
+### Valutapar som inte stöds
+
+- **Kod:** `UNSUPPORTED_CURRENCY_PAIR`
+- **Källa:** `ExchangeRateProvider`
+
+Det här felet uppstår när växelkursleverantören inte noterar någon kurs för det begärda käll-/målvalutaparet.
+
+> **Affärsregel:** En valutakonvertering kan endast utföras för ett par som leverantören noterar.
+
+#### Diagnostik
+
+- **Det begärda valutaparet erbjuds inte av leverantören.** — _ursprung:_ External — Bekräfta att leverantören stöder både käll- och målvalutan innan du begär en konvertering.
+
+#### Exempel
+
+- Växelkursleverantören noterar inte valutaparet EUR till USD. _(Valutapar som inte stöds.)_
+
+#### Kontext
+
+| Nyckel | Typ | Beskrivning | Exempelvärden |
+| --- | --- | --- | --- |
+| `FROM_CURRENCY` | `FirstClassErrors.Usage.Model.Currency` | Källvalutan för konverteringen. | `EUR` |
+| `TO_CURRENCY` | `FirstClassErrors.Usage.Model.Currency` | Målvalutan för konverteringen. | `USD` |
+
+<a id="src-statement-upload-endpoint"></a>
+
+## StatementUploadEndpoint-fel
+
+Fel som utlöses av HTTP-slutpunkten som tar emot uppladdade kontoutdrag (en inkommande primary-port-adapter).
+
+<a id="err-malformed-statement-payload"></a>
+
+### Felaktig utdragspayload
+
+- **Kod:** `MALFORMED_STATEMENT_PAYLOAD`
+- **Källa:** `StatementUploadEndpoint`
+
+Det här felet uppstår när slutpunkten för uppladdning av utdrag tar emot en begäran vars body saknar ett obligatoriskt fält eller innehåller ett ogiltigt värde.
+
+> **Affärsregel:** En uppladdad utdragsbegäran måste innehålla alla obligatoriska fält med ett giltigt värde.
+
+#### Diagnostik
+
+- **Klienten skickade en ofullständig eller felaktig begärans-body.** — _ursprung:_ External — Granska fältet som anges i kontexten och bekräfta att klienten skickar det med ett giltigt värde.
+
+#### Exempel
+
+- Utdragsuppladdningsbegäran 11111111-1111-1111-1111-111111111111 är felaktig: fältet ”statementPeriod” saknas eller är ogiltigt. _(Felaktig utdragspayload.)_
+
+#### Kontext
+
+| Nyckel | Typ | Beskrivning | Exempelvärden |
+| --- | --- | --- | --- |
+| `REQUEST_ID` | `System.Guid` | Identifieraren för den inkommande begäran. | `11111111-1111-1111-1111-111111111111` |
+| `FIELD` | `System.String` | Begäransfältet som inte klarade valideringen. | `statementPeriod` |
+
+<a id="err-statement-upload-rate-limited"></a>
+
+### Utdragsuppladdning hastighetsbegränsad
+
+- **Kod:** `STATEMENT_UPLOAD_RATE_LIMITED`
+- **Källa:** `StatementUploadEndpoint`
+
+Det här felet uppstår när för många utdragsuppladdningar anländer under ett kort intervall och slutpunkten stryper begäran. Det är övergående: samma begäran kan försökas igen senare.
+
+> **Affärsregel:** Anropare måste hålla sig inom slutpunktens hastighetsgräns för uppladdning.
+
+#### Diagnostik
+
+- **Anroparen överskred den tillåtna begärandefrekvensen.** — _ursprung:_ External — Vänta och försök igen efter fördröjningen som anges i meddelandet.
+
+#### Exempel
+
+- Utdragsuppladdningsbegäran 11111111-1111-1111-1111-111111111111 hastighetsbegränsades; försök igen efter 30 sekunder. _(Utdragsuppladdning hastighetsbegränsad.)_
+
+#### Kontext
+
+| Nyckel | Typ | Beskrivning | Exempelvärden |
+| --- | --- | --- | --- |
+| `REQUEST_ID` | `System.Guid` | Identifieraren för den inkommande begäran. | `11111111-1111-1111-1111-111111111111` |
+
+<a id="src-money-transfer"></a>
+
+## MoneyTransfer-fel
+
+Fel som uppstår vid validering av en penningöverföring mellan konton.
+
+<a id="err-money-transfer-amount-not-positive"></a>
+
+### Icke-positivt överföringsbelopp
+
+- **Kod:** `MONEY_TRANSFER_AMOUNT_NOT_POSITIVE`
+- **Källa:** `MoneyTransfer`
+
+Det här felet uppstår när en överföring begärs med ett belopp som är noll eller negativt.
+
+> **Affärsregel:** Beloppet för en överföring måste vara strikt positivt.
+
+#### Diagnostik
+
+- **Beloppet angavs eller beräknades som noll eller ett negativt värde.** — _ursprung:_ External — Kontrollera det begärda överföringsbeloppet och bekräfta att det är större än noll.
+
+#### Exempel
+
+- Kan inte överföra -25 EUR: beloppet måste vara strikt positivt. _(Överföringsbeloppet måste vara positivt.)_
+
+#### Kontext
+
+| Nyckel | Typ | Beskrivning | Exempelvärden |
+| --- | --- | --- | --- |
+| `TRANSFER_AMOUNT` | `FirstClassErrors.Usage.Model.Amount` | Det monetära beloppet för den försökta överföringen. | `-25 EUR` |
+
+<a id="err-money-transfer-invalid"></a>
+
+### Ogiltig penningöverföring
+
+- **Kod:** `MONEY_TRANSFER_INVALID`
+- **Källa:** `MoneyTransfer`
+
+Det här felet samlar alla domänregler som bröts vid valideringen av en överföring, så att anroparen ser alla problem på en gång i stället för ett i taget.
+
+> **Affärsregel:** En överföring måste uppfylla alla domänregler (ett strikt positivt belopp, matchande valutor, ...).
+
+#### Diagnostik
+
+- **Den begärda överföringen bröt mot en eller flera domänregler.** — _ursprung:_ External — Granska de sammanslagna inre felen för att se varje enskild regelöverträdelse.
+
+#### Exempel
+
+- Överföringen är ogiltig: den bryter mot en eller flera domänregler. _(Ogiltig överföring.)_
 
 <a id="src-temperature"></a>
 
