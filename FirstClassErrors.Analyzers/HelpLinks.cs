@@ -9,7 +9,7 @@ internal static class HelpLinks {
     private const string Base = "https://github.com/Reefact/first-class-errors/blob/main/doc/analyzers";
 
     public static string For(string diagnosticId) {
-        return $"{Base}/{diagnosticId}.md";
+        return $"{Base}/{diagnosticId}.en.md";
     }
 
 }
