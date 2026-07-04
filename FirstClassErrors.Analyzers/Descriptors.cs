@@ -145,5 +145,18 @@ internal static class Descriptors {
         helpLinkUri: HelpLinks.For(DiagnosticIds.DuplicateDocumentedCode),
         customTags: new[] { WellKnownDiagnosticTags.CompilationEnd });
 
+<<<<<<< 8b1cd7af60fadf279bc7a6db4401d132a5b4cda7
 >>>>>>> fe13baf310cee0ef8a50260c9618a900c9c052c8
+=======
+    public static readonly DiagnosticDescriptor ExampleDoesNotCallDocumentedFactory = new(
+        id: DiagnosticIds.ExampleDoesNotCallDocumentedFactory,
+        title: "Documentation example does not construct the documented error",
+        messageFormat: "This example does not call any factory of '{0}'; an example should build the error it documents",
+        category: DiagnosticCategories.DocumentationContent,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Examples are meant to expose the real messages of the documented error, so each should invoke a factory of the type that declares the documentation.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.ExampleDoesNotCallDocumentedFactory));
+
+>>>>>>> 6b9bac398957700cc935135cb9decc007d4cdf60
 }

@@ -51,6 +51,10 @@ FCE010  | FirstClassErrors.DocumentationWiring | Warning  | MultipleFactoriesSha
 FCE011  | FirstClassErrors.DocumentationContent| Error    | DuplicateDocumentedCodeAnalyzer
 >>>>>>> fe13baf310cee0ef8a50260c9618a900c9c052c8
 FCE012  | FirstClassErrors.DocumentationContent| Warning  | EmptyExamplesAnalyzer
+<<<<<<< 8b1cd7af60fadf279bc7a6db4401d132a5b4cda7
 >>>>>>> fa43e3873d390a51a58a51b6e9e5119f10aae02a
+=======
+FCE013  | FirstClassErrors.DocumentationContent| Warning  | ExampleDoesNotCallDocumentedFactoryAnalyzer
+>>>>>>> 6b9bac398957700cc935135cb9decc007d4cdf60
 FCE016  | FirstClassErrors.Usage               | Warning  | UnusedToExceptionResultAnalyzer
 >>>>>>> e82f3b87253ce42f9e0497e6d8a41054cd608b17
