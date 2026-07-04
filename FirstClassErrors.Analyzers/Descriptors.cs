@@ -78,4 +78,14 @@ internal static class Descriptors {
         description: "A non-private static factory in a [ProvidesErrorsFor] type that returns an Error is expected to carry [DocumentedBy]; without it the error is left out of the generated catalog.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.ErrorFactoryNotDocumented));
 
+    public static readonly DiagnosticDescriptor MultipleFactoriesShareDocumentation = new(
+        id: DiagnosticIds.MultipleFactoriesShareDocumentation,
+        title: "Multiple factories share the same documentation",
+        messageFormat: "Documentation method '{0}' is referenced by more than one factory; each error should have its own documentation",
+        category: DiagnosticCategories.DocumentationWiring,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "One documentation method describes one error (its title, description and examples). Sharing it between factories means at least one error is mis-documented.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.MultipleFactoriesShareDocumentation));
+
 }
