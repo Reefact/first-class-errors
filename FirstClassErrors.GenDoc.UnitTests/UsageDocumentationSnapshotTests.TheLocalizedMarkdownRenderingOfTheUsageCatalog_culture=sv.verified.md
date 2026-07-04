@@ -43,7 +43,21 @@ Det här felet uppstår när flera belopp används tillsammans i en operation tr
 
 #### Exempel
 
-- Den monetära operationen misslyckades eftersom de berörda beloppen uttrycks i olika valutor: 127.33 EUR och 57689 USD. _(Valutakonflikt)_
+**Publikt svar (RFC 9457)**
+
+```json
+{
+  "title": "Valutakonflikt",
+  "detail": "De två beloppen använder olika valutor och kan inte kombineras.",
+  "code": "AMOUNT_CURRENCY_MISMATCH"
+}
+```
+
+**Diagnostik (intern — inte avsedd för extern exponering)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [Amount] Failed to perform the monetary operation because the involved amounts are expressed in different currencies: 127.33 EUR and 57689 USD. error.code=AMOUNT_CURRENCY_MISMATCH
+```
 
 <a id="src-bank-transaction-file-validator"></a>
 
@@ -71,7 +85,21 @@ Det här felet uppstår när man försöker validera en kontoutdragsfil som inne
 
 #### Exempel
 
-- Transaktionen daterad 2024-02-02 ligger utanför utdragsperioden [2024-01-05;2024-01-31]. _(Transaktionsdatumet ligger utanför utdragsperioden.)_
+**Publikt svar (RFC 9457)**
+
+```json
+{
+  "title": "Transaktionsdatumet ligger utanför utdragsperioden.",
+  "detail": "Ett transaktionsdatum ligger utanför kontoutdragets period.",
+  "code": "BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD"
+}
+```
+
+**Diagnostik (intern — inte avsedd för extern exponering)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [BankTransactionFileValidator] Transaction dated 2024-02-02 is outside the statement period [2024-01-05;2024-01-31]. error.code=BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD
+```
 
 #### Kontext
 
@@ -99,7 +127,21 @@ Det här felet uppstår när man försöker validera en kontoutdragsfil vars dek
 
 #### Exempel
 
-- Utdragets deklarerade totalbelopp (1250 EUR) stämmer inte med det totalbelopp som beräknats från transaktionerna (1249.5 EUR). _(Avvikelse i utdragets totalbelopp.)_
+**Publikt svar (RFC 9457)**
+
+```json
+{
+  "title": "Avvikelse i utdragets totalbelopp.",
+  "detail": "Det angivna totalbeloppet för kontoutdraget stämmer inte med det beräknade totalbeloppet.",
+  "code": "BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH"
+}
+```
+
+**Diagnostik (intern — inte avsedd för extern exponering)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [BankTransactionFileValidator] The declared statement total amount (1250 EUR) does not match the computed total amount from transactions (1249.5 EUR). error.code=BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH
+```
 
 <a id="src-exchange-rate-provider"></a>
 
@@ -125,7 +167,21 @@ Det här felet uppstår när den externa växelkursleverantören inte kan nås (
 
 #### Exempel
 
-- Växelkursleverantören ”acme-fx” är otillgänglig (korrelation 22222222-2222-2222-2222-222222222222). _(Växelkurstjänsten är otillgänglig.)_
+**Publikt svar (RFC 9457)**
+
+```json
+{
+  "title": "Växelkurstjänsten är otillgänglig.",
+  "detail": "Växelkurstjänsten är tillfälligt otillgänglig; försök igen senare.",
+  "code": "EXCHANGE_RATE_SERVICE_UNAVAILABLE"
+}
+```
+
+**Diagnostik (intern — inte avsedd för extern exponering)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [ExchangeRateProvider] The exchange-rate provider 'acme-fx' is unavailable (correlation 22222222-2222-2222-2222-222222222222). error.code=EXCHANGE_RATE_SERVICE_UNAVAILABLE
+```
 
 #### Kontext
 
@@ -151,7 +207,21 @@ Det här felet uppstår när växelkursleverantören inte noterar någon kurs f�
 
 #### Exempel
 
-- Växelkursleverantören noterar inte valutaparet EUR till USD. _(Valutapar som inte stöds.)_
+**Publikt svar (RFC 9457)**
+
+```json
+{
+  "title": "Valutapar som inte stöds.",
+  "detail": "Det begärda valutaparet stöds inte.",
+  "code": "UNSUPPORTED_CURRENCY_PAIR"
+}
+```
+
+**Diagnostik (intern — inte avsedd för extern exponering)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [ExchangeRateProvider] The exchange-rate provider does not quote the EUR to USD currency pair. error.code=UNSUPPORTED_CURRENCY_PAIR
+```
 
 #### Kontext
 
@@ -183,7 +253,21 @@ Det här felet uppstår när slutpunkten för uppladdning av utdrag tar emot en 
 
 #### Exempel
 
-- Utdragsuppladdningsbegäran 11111111-1111-1111-1111-111111111111 är felaktig: fältet ”statementPeriod” saknas eller är ogiltigt. _(Felaktig utdragspayload.)_
+**Publikt svar (RFC 9457)**
+
+```json
+{
+  "title": "Felaktig utdragspayload.",
+  "detail": "Den uppladdade utdragsbegäran saknar ett obligatoriskt fält eller innehåller ett ogiltigt värde.",
+  "code": "MALFORMED_STATEMENT_PAYLOAD"
+}
+```
+
+**Diagnostik (intern — inte avsedd för extern exponering)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [StatementUploadEndpoint] The statement upload request 11111111-1111-1111-1111-111111111111 is malformed: the 'statementPeriod' field is missing or invalid. error.code=MALFORMED_STATEMENT_PAYLOAD
+```
 
 #### Kontext
 
@@ -209,7 +293,21 @@ Det här felet uppstår när för många utdragsuppladdningar anländer under et
 
 #### Exempel
 
-- Utdragsuppladdningsbegäran 11111111-1111-1111-1111-111111111111 hastighetsbegränsades; försök igen efter 30 sekunder. _(Utdragsuppladdning hastighetsbegränsad.)_
+**Publikt svar (RFC 9457)**
+
+```json
+{
+  "title": "Utdragsuppladdning hastighetsbegränsad.",
+  "detail": "För många utdragsuppladdningar skickades under kort tid; försök igen senare.",
+  "code": "STATEMENT_UPLOAD_RATE_LIMITED"
+}
+```
+
+**Diagnostik (intern — inte avsedd för extern exponering)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [StatementUploadEndpoint] The statement upload request 11111111-1111-1111-1111-111111111111 was rate-limited; retry after 30 seconds. error.code=STATEMENT_UPLOAD_RATE_LIMITED
+```
 
 #### Kontext
 
@@ -240,7 +338,21 @@ Det här felet uppstår när en överföring begärs med ett belopp som är noll
 
 #### Exempel
 
-- Kan inte överföra -25 EUR: beloppet måste vara strikt positivt. _(Överföringsbeloppet måste vara positivt.)_
+**Publikt svar (RFC 9457)**
+
+```json
+{
+  "title": "Överföringsbeloppet måste vara positivt.",
+  "detail": "Överföringsbeloppet måste vara större än noll.",
+  "code": "MONEY_TRANSFER_AMOUNT_NOT_POSITIVE"
+}
+```
+
+**Diagnostik (intern — inte avsedd för extern exponering)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [MoneyTransfer] Cannot transfer -25 EUR: the amount must be strictly positive. error.code=MONEY_TRANSFER_AMOUNT_NOT_POSITIVE
+```
 
 #### Kontext
 
@@ -265,7 +377,21 @@ Det här felet samlar alla domänregler som bröts vid valideringen av en överf
 
 #### Exempel
 
-- Överföringen är ogiltig: den bryter mot en eller flera domänregler. _(Ogiltig överföring.)_
+**Publikt svar (RFC 9457)**
+
+```json
+{
+  "title": "Ogiltig överföring.",
+  "detail": "Överföringen uppfyller inte alla nödvändiga regler.",
+  "code": "MONEY_TRANSFER_INVALID"
+}
+```
+
+**Diagnostik (intern — inte avsedd för extern exponering)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [MoneyTransfer] The money transfer is invalid: it violates one or more domain rules. error.code=MONEY_TRANSFER_INVALID
+```
 
 <a id="src-temperature"></a>
 
@@ -294,6 +420,35 @@ This error occurs when trying to instantiate a temperature with a value that is 
 
 #### Exempel
 
-- Failed to instantiate temperature: the value -1 K is below absolute zero. _(Temperature is below absolute zero.)_
-- Failed to instantiate temperature: the value -280 °C is below absolute zero. _(Temperature is below absolute zero.)_
+**Publikt svar (RFC 9457)**
+
+```json
+{
+  "title": "Temperature is invalid.",
+  "detail": "The temperature -1 K is below absolute zero.",
+  "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"
+}
+```
+
+**Diagnostik (intern — inte avsedd för extern exponering)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [Temperature] Failed to instantiate temperature: the value -1 K is below absolute zero. error.code=TEMPERATURE_BELOW_ABSOLUTE_ZERO
+```
+
+**Publikt svar (RFC 9457)**
+
+```json
+{
+  "title": "Temperature is invalid.",
+  "detail": "The temperature -280 °C is below absolute zero.",
+  "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"
+}
+```
+
+**Diagnostik (intern — inte avsedd för extern exponering)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [Temperature] Failed to instantiate temperature: the value -280 °C is below absolute zero. error.code=TEMPERATURE_BELOW_ABSOLUTE_ZERO
+```
 

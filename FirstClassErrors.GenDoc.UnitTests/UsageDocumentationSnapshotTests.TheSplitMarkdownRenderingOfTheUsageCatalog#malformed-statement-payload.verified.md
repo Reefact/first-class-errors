@@ -13,7 +13,21 @@ This error occurs when the statement upload endpoint receives a request whose bo
 
 ## Examples
 
-- The statement upload request 11111111-1111-1111-1111-111111111111 is malformed: the 'statementPeriod' field is missing or invalid. _(Malformed statement payload.)_
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Malformed statement payload.",
+  "detail": "The uploaded statement request is missing a required field or contains an invalid value.",
+  "code": "MALFORMED_STATEMENT_PAYLOAD"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [StatementUploadEndpoint] The statement upload request 11111111-1111-1111-1111-111111111111 is malformed: the 'statementPeriod' field is missing or invalid. error.code=MALFORMED_STATEMENT_PAYLOAD
+```
 
 ## Context
 

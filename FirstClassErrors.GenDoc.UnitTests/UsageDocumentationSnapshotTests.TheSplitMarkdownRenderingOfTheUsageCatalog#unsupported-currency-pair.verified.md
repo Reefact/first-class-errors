@@ -13,7 +13,21 @@ This error occurs when the exchange-rate provider does not quote a rate for the 
 
 ## Examples
 
-- The exchange-rate provider does not quote the EUR to USD currency pair. _(Unsupported currency pair.)_
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Unsupported currency pair.",
+  "detail": "The requested currency pair is not supported.",
+  "code": "UNSUPPORTED_CURRENCY_PAIR"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [ExchangeRateProvider] The exchange-rate provider does not quote the EUR to USD currency pair. error.code=UNSUPPORTED_CURRENCY_PAIR
+```
 
 ## Context
 

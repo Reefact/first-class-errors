@@ -16,5 +16,19 @@ This error occurs when trying to validate a bank statement file whose declared t
 
 ## Examples
 
-- The declared statement total amount (1250 EUR) does not match the computed total amount from transactions (1249.5 EUR). _(Statement total amount mismatch.)_
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Statement total amount mismatch.",
+  "detail": "The declared statement total does not match the computed total.",
+  "code": "BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [BankTransactionFileValidator] The declared statement total amount (1250 EUR) does not match the computed total amount from transactions (1249.5 EUR). error.code=BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH
+```
 

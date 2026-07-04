@@ -14,5 +14,19 @@ This error occurs when trying to use multiple amounts together in an operation w
 
 ## Examples
 
-- Failed to perform the monetary operation because the involved amounts are expressed in different currencies: 127.33 EUR and 57689 USD. _(Currency mismatch)_
+**Public response (RFC 9457)**
+
+```json
+{
+  "title": "Currency mismatch",
+  "detail": "The two amounts use different currencies and cannot be combined.",
+  "code": "AMOUNT_CURRENCY_MISMATCH"
+}
+```
+
+**Diagnostic (internal — not for external exposure)**
+
+```text
+2026-07-04T13:42:18.734Z ERROR [Amount] Failed to perform the monetary operation because the involved amounts are expressed in different currencies: 127.33 EUR and 57689 USD. error.code=AMOUNT_CURRENCY_MISMATCH
+```
 
