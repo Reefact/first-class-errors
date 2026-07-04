@@ -58,7 +58,20 @@ internal static class Descriptors {
         description: "A consistent code format keeps catalogs and logs scannable. This convention check is opt-in.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.InvalidErrorCodeFormat));
 
+<<<<<<< d379671e044fdd5ea821a46286ec3fff839a863f
 >>>>>>> 004ead8f5bec3b420b50ac32c98ca284b5a09f29
+=======
+    public static readonly DiagnosticDescriptor TooGenericErrorCode = new(
+        id: DiagnosticIds.TooGenericErrorCode,
+        title: "Error code is too generic",
+        messageFormat: "Error code '{0}' is too generic to identify a specific failure",
+        category: DiagnosticCategories.ErrorCodes,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: false,
+        description: "A code such as ERROR or INVALID carries no diagnostic value. Prefer a code that names the specific condition. Opt-in.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.TooGenericErrorCode));
+
+>>>>>>> 6d80c43b5e04157b0bcc3bd242c25b6081b0981a
     public static readonly DiagnosticDescriptor DocumentedByTargetNotFound = new(
         id: DiagnosticIds.DocumentedByTargetNotFound,
         title: "Documentation method referenced by [DocumentedBy] was not found",
