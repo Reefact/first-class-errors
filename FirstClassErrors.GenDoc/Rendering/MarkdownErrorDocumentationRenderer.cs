@@ -162,15 +162,18 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         if (error.Examples.Count > 0) {
             markdown.Append($"{subHeading} {strings.ExamplesHeading}\n\n");
             foreach (ErrorDescription example in error.Examples) {
-                markdown.Append($"- {Inline(example.DetailedMessage)}");
-                if (string.IsNullOrWhiteSpace(example.ShortMessage) is false) {
-                    markdown.Append($" _({Inline(example.ShortMessage)})_");
-                }
+                // Public, exposable form: an RFC 9457 problem detail built only from the controlled public messages.
+                markdown.Append($"**{Inline(strings.ExamplePublicResponseLabel)}**\n\n");
+                markdown.Append("```json\n");
+                markdown.Append(ProblemDetailsJson(example, error.Code));
+                markdown.Append("\n```\n\n");
 
-                markdown.Append('\n');
+                // Internal form: how the same failure reads in the logs. Never exposed to external clients.
+                markdown.Append($"**{Inline(strings.ExampleDiagnosticLabel)}**\n\n");
+                markdown.Append("```text\n");
+                markdown.Append(DiagnosticLogLine(example, error.Code));
+                markdown.Append("\n```\n\n");
             }
-
-            markdown.Append('\n');
         }
 
         if (error.Context.Count > 0) {
@@ -186,6 +189,46 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
     }
 
     #region Helpers
+
+    /// <summary>
+    ///     Builds the public, exposable RFC 9457 (<c>problem+json</c>) representation of an example, using only the
+    ///     controlled public messages — never the diagnostic message. <c>detail</c> is omitted when there is no public
+    ///     detail. No HTTP <c>status</c> is emitted: the core model is HTTP-agnostic and the application maps it.
+    /// </summary>
+    private static string ProblemDetailsJson(ErrorDescription example, string? code) {
+        StringBuilder json = new();
+        json.Append("{\n");
+        json.Append("  \"type\": \"about:blank\",\n");
+        json.Append($"  \"title\": \"{JsonString(example.ShortMessage)}\"");
+        if (string.IsNullOrWhiteSpace(example.DetailedMessage) is false) {
+            json.Append($",\n  \"detail\": \"{JsonString(example.DetailedMessage!)}\"");
+        }
+
+        if (string.IsNullOrWhiteSpace(code) is false) {
+            json.Append($",\n  \"code\": \"{JsonString(code!.Trim())}\"");
+        }
+
+        json.Append("\n}");
+
+        return json.ToString();
+    }
+
+    /// <summary>
+    ///     Builds a log-style rendering of an example's internal diagnostic message. It is illustrative and stays in the
+    ///     author (invariant) language; it is never a public message.
+    /// </summary>
+    private static string DiagnosticLogLine(ErrorDescription example, string? code) {
+        string message = Inline(example.DiagnosticMessage);
+
+        return string.IsNullOrWhiteSpace(code)
+                   ? $"error: {message}"
+                   : $"error: [{code!.Trim()}] {message}";
+    }
+
+    /// <summary>Escapes a value for inclusion inside a JSON string literal (folding line breaks to spaces first).</summary>
+    private static string JsonString(string value) {
+        return Inline(value).Replace("\\", "\\\\").Replace("\"", "\\\"");
+    }
 
     private static IReadOnlyList<Entry> BuildEntries(IEnumerable<ErrorDocumentation> catalog) {
         List<Entry>     entries   = [];

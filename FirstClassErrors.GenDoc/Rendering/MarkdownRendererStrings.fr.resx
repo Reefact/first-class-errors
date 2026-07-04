@@ -103,4 +103,10 @@
   <data name="ContextExampleValuesHeader" xml:space="preserve">
     <value>Exemples de valeurs</value>
   </data>
+  <data name="ExamplePublicResponseLabel" xml:space="preserve">
+    <value>Réponse publique (RFC 9457)</value>
+  </data>
+  <data name="ExampleDiagnosticLabel" xml:space="preserve">
+    <value>Diagnostic (interne — non destiné à l'exposition externe)</value>
+  </data>
 </root>

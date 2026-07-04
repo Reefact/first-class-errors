@@ -137,7 +137,7 @@ internal sealed class ErrorDocumentationBuilder :
 
             _doc.Code = error.Code;
 
-            yield return new ErrorDescription(error.DetailedMessage, error.ShortMessage);
+            yield return new ErrorDescription(error.ShortMessage, error.DiagnosticMessage, error.DetailedMessage);
         }
     }
 
