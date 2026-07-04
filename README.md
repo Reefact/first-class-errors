@@ -155,8 +155,8 @@ public static class InvalidTemperatureError {
                 Code.TemperatureBelowAbsoluteZero,
                 diagnosticMessage: $"Failed to instantiate temperature: the value {invalidValue} {invalidValueUnit} is below absolute zero.")
             .WithPublicMessage(
-                shortMessage: "Temperature is below absolute zero.",
-                detailedMessage: "The provided temperature is below absolute zero, which is not physically valid.");
+                shortMessage: "Temperature is invalid.",
+                detailedMessage: $"The temperature {invalidValue} {invalidValueUnit} is below absolute zero.");
     }
 
     private static ErrorDocumentation BelowAbsoluteZeroDocumentation() {
