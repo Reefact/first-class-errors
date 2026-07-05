@@ -2,7 +2,8 @@ namespace FirstClassErrors.GenDoc;
 
 /// <summary>
 ///     Describes a single failure encountered while extracting documentation from an assembly — a type that could not
-///     be loaded, a <c>[DocumentedBy]</c> reference that could not be resolved, or a documentation factory that threw.
+///     be loaded, a <c>[DocumentedBy]</c> reference that could not be resolved, a documentation factory that threw, or
+///     a duplicate error code whose documentation had to be dropped to keep the catalog single-valued.
 /// </summary>
 public sealed class ErrorDocumentationExtractionFailure {
 

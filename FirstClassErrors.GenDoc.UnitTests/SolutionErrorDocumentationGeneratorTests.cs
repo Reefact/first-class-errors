@@ -162,4 +162,57 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
         }
     }
 
+    [Fact(DisplayName = "Cross-assembly deduplication keeps a single entry per code and warns about the collision.")]
+    public void CrossAssemblyDeduplicationWarnsAboutTheCollision() {
+        // Setup: the same code declared by two different sources (i.e. two different assemblies' workers).
+        RecordingLogger logger = new();
+        List<ErrorDocumentation> documentation = new() {
+            new ErrorDocumentation { Code = "SHARED", Title = "From A", Source = "AssemblyA" },
+            new ErrorDocumentation { Code = "SHARED", Title = "From B", Source = "AssemblyB" },
+            new ErrorDocumentation { Code = "UNIQUE", Title = "Alone",  Source = "AssemblyA" }
+        };
+
+        // Exercise
+        IReadOnlyList<ErrorDocumentation> catalog =
+            SolutionErrorDocumentationGenerator.DeduplicateAcrossAssemblies(documentation, logger);
+
+        // Verify: the code collapses to a single entry (the first-seen survives), the unique code is untouched...
+        Check.That(catalog.Select(doc => doc.Code)).ContainsExactly("SHARED", "UNIQUE");
+        Check.That(catalog.Single(doc => doc.Code == "SHARED").Source).IsEqualTo("AssemblyA");
+
+        // ...and the drop is not silent: a warning names the code and the dropped source.
+        Check.That(logger.Warnings).HasSize(1);
+        Check.That(logger.Warnings[0]).Contains("SHARED");
+        Check.That(logger.Warnings[0]).Contains("AssemblyB");
+    }
+
+    [Fact(DisplayName = "Cross-assembly deduplication stays silent when there is no duplicate code.")]
+    public void CrossAssemblyDeduplicationStaysSilentWithoutDuplicates() {
+        // Setup
+        RecordingLogger logger = new();
+        List<ErrorDocumentation> documentation = new() {
+            new ErrorDocumentation { Code = "A", Source = "AssemblyA" },
+            new ErrorDocumentation { Code = "B", Source = "AssemblyB" }
+        };
+
+        // Exercise
+        IReadOnlyList<ErrorDocumentation> catalog =
+            SolutionErrorDocumentationGenerator.DeduplicateAcrossAssemblies(documentation, logger);
+
+        // Verify
+        Check.That(catalog.Select(doc => doc.Code)).ContainsExactly("A", "B");
+        Check.That(logger.Warnings).IsEmpty();
+    }
+
+    private sealed class RecordingLogger : IGenerationLogger {
+
+        public List<string> Warnings { get; } = new();
+
+        public void Info(string    message) { }
+        public void Warning(string message) { Warnings.Add(message); }
+        public void Error(string   message) { }
+        public void Debug(string   message) { }
+
+    }
+
 }
