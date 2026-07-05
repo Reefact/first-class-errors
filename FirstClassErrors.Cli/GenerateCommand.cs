@@ -99,7 +99,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
             RenderRequest                   request   = new(layout, culture);
             IReadOnlyList<RenderedDocument> documents = renderer.Render(catalog, request);
 
-            WriteOutput(documents, output, logger);
+            WriteOutput(documents, renderer.Format, output, logger);
 
             return 0;
         } catch (Exception exception) {
@@ -133,7 +133,13 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
         }
     }
 
-    private static void WriteOutput(IReadOnlyList<RenderedDocument> documents, string? outputPath, ConsoleGenerationLogger logger) {
+    private static void WriteOutput(IReadOnlyList<RenderedDocument> documents, string format, string? outputPath, ConsoleGenerationLogger logger) {
+        // A renderer must honour its contract of returning at least one document. If a (custom) renderer returns an
+        // empty list, fail with a clear message rather than an opaque IndexOutOfRange from documents[0] below.
+        if (documents.Count == 0) {
+            throw new InvalidOperationException($"The '{format}' renderer produced no documents; a renderer must return at least one document.");
+        }
+
         bool hasOutput = string.IsNullOrWhiteSpace(outputPath) is false;
 
         // No target: only a single document can go to standard output.
