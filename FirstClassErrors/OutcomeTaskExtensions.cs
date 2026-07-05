@@ -37,7 +37,7 @@ public static class OutcomeTaskExtensions {
         where TResult : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome? outcome = await task.ConfigureAwait(false);
+        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return outcome.Then(next);
     }
@@ -58,7 +58,7 @@ public static class OutcomeTaskExtensions {
     public static async Task<Outcome> Then(this Task<Outcome> task, Func<Outcome> next) {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome? outcome = await task.ConfigureAwait(false);
+        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return outcome.Then(next);
     }
@@ -86,7 +86,7 @@ public static class OutcomeTaskExtensions {
         where TResult : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome? outcome = await task.ConfigureAwait(false);
+        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return await outcome.Then(next, cancellationToken).ConfigureAwait(false);
     }
@@ -116,7 +116,7 @@ public static class OutcomeTaskExtensions {
                                            CancellationToken                      cancellationToken = default) {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome? outcome = await task.ConfigureAwait(false);
+        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return await outcome.Then(next, cancellationToken).ConfigureAwait(false);
     }
@@ -144,7 +144,7 @@ public static class OutcomeTaskExtensions {
     public static async Task<Outcome> Recover(this Task<Outcome> task, Func<Error, Outcome> fallback) {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome? outcome = await task.ConfigureAwait(false);
+        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return outcome.Recover(fallback);
     }
@@ -176,7 +176,7 @@ public static class OutcomeTaskExtensions {
                                               CancellationToken                             cancellationToken = default) {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome? outcome = await task.ConfigureAwait(false);
+        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return await outcome.Recover(fallback, cancellationToken).ConfigureAwait(false);
     }
@@ -211,7 +211,7 @@ public static class OutcomeTaskExtensions {
                                                        Func<Error, TResult> onFailure) {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome? outcome = await task.ConfigureAwait(false);
+        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return outcome.Finally(onSuccess, onFailure);
     }
@@ -232,7 +232,7 @@ public static class OutcomeTaskExtensions {
                                      Action<Error>      onFailure) {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome? outcome = await task.ConfigureAwait(false);
+        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         outcome.Finally(onSuccess, onFailure);
     }
@@ -266,7 +266,7 @@ public static class OutcomeTaskExtensions {
                                                        CancellationToken                             cancellationToken = default) {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome? outcome = await task.ConfigureAwait(false);
+        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return await outcome.Finally(onSuccess, onFailure, cancellationToken).ConfigureAwait(false);
     }
@@ -296,7 +296,7 @@ public static class OutcomeTaskExtensions {
                                      CancellationToken                    cancellationToken = default) {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome? outcome = await task.ConfigureAwait(false);
+        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         await outcome.Finally(onSuccess, onFailure, cancellationToken).ConfigureAwait(false);
     }
@@ -328,7 +328,7 @@ public static class OutcomeTaskExtensions {
         where TResult : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome<T>? outcome = await task.ConfigureAwait(false);
+        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return outcome.Then(next);
     }
@@ -352,7 +352,7 @@ public static class OutcomeTaskExtensions {
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome<T>? outcome = await task.ConfigureAwait(false);
+        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return outcome.Then(next);
     }
@@ -381,7 +381,7 @@ public static class OutcomeTaskExtensions {
         where TResult : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome<T>? outcome = await task.ConfigureAwait(false);
+        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return await outcome.Then(next, cancellationToken).ConfigureAwait(false);
     }
@@ -414,7 +414,7 @@ public static class OutcomeTaskExtensions {
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome<T>? outcome = await task.ConfigureAwait(false);
+        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return await outcome.Then(next, cancellationToken).ConfigureAwait(false);
     }
@@ -445,7 +445,7 @@ public static class OutcomeTaskExtensions {
         where TResult : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome<T>? outcome = await task.ConfigureAwait(false);
+        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return outcome.To(convert);
     }
@@ -478,7 +478,7 @@ public static class OutcomeTaskExtensions {
         where TResult : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome<T>? outcome = await task.ConfigureAwait(false);
+        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return await outcome.To(convert, cancellationToken).ConfigureAwait(false);
     }
@@ -513,7 +513,7 @@ public static class OutcomeTaskExtensions {
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome<T>? outcome = await task.ConfigureAwait(false);
+        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return outcome.Recover(fallback);
     }
@@ -543,7 +543,7 @@ public static class OutcomeTaskExtensions {
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome<T>? outcome = await task.ConfigureAwait(false);
+        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return outcome.Recover(fallback);
     }
@@ -577,7 +577,7 @@ public static class OutcomeTaskExtensions {
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome<T>? outcome = await task.ConfigureAwait(false);
+        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return await outcome.Recover(fallback, cancellationToken).ConfigureAwait(false);
     }
@@ -612,7 +612,7 @@ public static class OutcomeTaskExtensions {
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome<T>? outcome = await task.ConfigureAwait(false);
+        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return await outcome.Recover(fallback, cancellationToken).ConfigureAwait(false);
     }
@@ -652,7 +652,7 @@ public static class OutcomeTaskExtensions {
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome<T>? outcome = await task.ConfigureAwait(false);
+        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return outcome.Finally(onSuccess, onFailure);
     }
@@ -677,7 +677,7 @@ public static class OutcomeTaskExtensions {
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome<T>? outcome = await task.ConfigureAwait(false);
+        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         outcome.Finally(onSuccess, onFailure);
     }
@@ -716,7 +716,7 @@ public static class OutcomeTaskExtensions {
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome<T>? outcome = await task.ConfigureAwait(false);
+        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         return await outcome.Finally(onSuccess, onFailure, cancellationToken).ConfigureAwait(false);
     }
@@ -755,9 +755,34 @@ public static class OutcomeTaskExtensions {
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
 
-        Outcome<T>? outcome = await task.ConfigureAwait(false);
+        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
         await outcome.Finally(onSuccess, onFailure, cancellationToken).ConfigureAwait(false);
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    ///     Guards against an awaited task that resolved to a <c>null</c> outcome. While the
+    ///     <see cref="Task{TResult}" /> contract (e.g. <c>Task&lt;Outcome&gt;</c>) declares a non-nullable result, a
+    ///     misbehaving producer can still hand back a <c>null</c> (for instance via
+    ///     <c>Task.FromResult&lt;Outcome&gt;(null!)</c>). This helper turns that contract violation into an explicit,
+    ///     diagnosable failure at the point of the await rather than an opaque
+    ///     <see cref="NullReferenceException" /> raised later when the outcome is dereferenced.
+    /// </summary>
+    /// <typeparam name="TOutcome">The outcome type, either <see cref="Outcome" /> or <see cref="Outcome{T}" />.</typeparam>
+    /// <param name="outcome">The awaited outcome to validate.</param>
+    /// <returns>The <paramref name="outcome" />, guaranteed to be non-<c>null</c>.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if <paramref name="outcome" /> is <c>null</c>.</exception>
+    private static TOutcome EnsureNotNull<TOutcome>(TOutcome? outcome)
+        where TOutcome : class {
+        if (outcome is null) {
+            throw new InvalidOperationException("The awaited task resolved to a null Outcome, which violates the Task<Outcome> contract.");
+        }
+
+        return outcome;
     }
 
     #endregion
