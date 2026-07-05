@@ -28,11 +28,11 @@ internal sealed class GenerateSettings : ConfigScopedSettings {
     public string? OutputPath { get; set; }
 
     [CommandOption("-f|--format <FORMAT>")]
-    [Description("Output format: json or markdown (alias: md). Falls back to the configuration, then json.")]
+    [Description("Output format: json, markdown (alias: md) or html. Falls back to the configuration, then json.")]
     public string? Format { get; set; }
 
     [CommandOption("--layout <LAYOUT>")]
-    [Description("Markdown layout: single or split. Falls back to the configuration, then single.")]
+    [Description("Document layout: single or split. Applies to the markdown and html formats (json is single only). Falls back to the configuration, then single.")]
     public string? Layout { get; set; }
 
     [CommandOption("-l|--language <LANGUAGE>")]

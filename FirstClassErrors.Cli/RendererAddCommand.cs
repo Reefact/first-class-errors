@@ -1,5 +1,6 @@
 #region Usings declarations
 
+using System.ComponentModel;
 using System.Reflection;
 
 using FirstClassErrors.GenDoc.Rendering;
@@ -14,6 +15,7 @@ namespace FirstClassErrors.Cli;
 internal sealed class RendererReferenceSettings : ConfigScopedSettings {
 
     [CommandArgument(0, "<PATH>")]
+    [Description("Path to the renderer library (.dll) to register; stored as given, so relative paths stay portable.")]
     public string LibraryPath { get; set; } = string.Empty;
 
 }
