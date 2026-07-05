@@ -17,10 +17,10 @@ internal sealed class CliConfiguration {
     /// <summary>Default assemblies to document (used when neither --solution nor --assemblies is given).</summary>
     public List<string>? Assemblies { get; set; }
 
-    /// <summary>Default output format (e.g. <c>json</c>, <c>markdown</c>).</summary>
+    /// <summary>Default output format (<c>json</c>, <c>markdown</c> or <c>html</c>).</summary>
     public string? Format { get; set; }
 
-    /// <summary>Default Markdown layout (<c>single</c> or <c>split</c>).</summary>
+    /// <summary>Default document layout (<c>single</c> or <c>split</c>); applies to the <c>markdown</c> and <c>html</c> formats.</summary>
     public string? Layout { get; set; }
 
     /// <summary>Default language of the generated documentation (e.g. <c>en</c>, <c>fr</c>, <c>es</c>, <c>de</c>, <c>sv</c>).</summary>
