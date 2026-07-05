@@ -6,6 +6,7 @@
       "explanation": "This error occurs when trying to use multiple amounts together in an operation while they are expressed in different currencies.",
       "businessRule": "All monetary operations must involve amounts expressed in the same currency.",
       "source": "Amount",
+      "sourceDescription": "Errors raised when performing operations that combine monetary Amount values.",
       "diagnostics": [
         {
           "possibleCause": "Amounts were used in a monetary operation without having been converted to the same currency.",
@@ -33,6 +34,7 @@
       "explanation": "This error occurs when trying to validate a bank statement file that contains one or more transactions dated outside the statement period.",
       "businessRule": "All transactions must occur within the statement period.",
       "source": "BankTransactionFileValidator",
+      "sourceDescription": "Errors raised while validating an uploaded bank statement file against its declared metadata (statement period and totals).",
       "diagnostics": [
         {
           "possibleCause": "The transaction date provided in the statement file is incorrect or inconsistent with the actual transaction date.",
@@ -79,6 +81,7 @@
       "explanation": "This error occurs when trying to validate a bank statement file whose declared total amount does not match the sum of the individual transaction amounts.",
       "businessRule": "The statement total amount must equal the sum of all transaction amounts included in the statement.",
       "source": "BankTransactionFileValidator",
+      "sourceDescription": "Errors raised while validating an uploaded bank statement file against its declared metadata (statement period and totals).",
       "diagnostics": [
         {
           "possibleCause": "The total amount declared in the statement file does not match the sum of the individual transaction amounts.",
@@ -116,6 +119,7 @@
       "explanation": "This error occurs when the external exchange-rate provider cannot be reached (a timeout, a connection reset, or a 5xx response). It is transient: the call can be retried.",
       "businessRule": "Currency conversion depends on a reachable exchange-rate provider.",
       "source": "ExchangeRateProvider",
+      "sourceDescription": "Errors raised while calling the external exchange-rate provider (an outgoing, secondary-port adapter).",
       "diagnostics": [
         {
           "possibleCause": "The provider timed out or returned a server error.",
@@ -160,6 +164,7 @@
       "explanation": "This error occurs when the statement upload endpoint receives a request whose body is missing a required field or carries an invalid value.",
       "businessRule": "An uploaded statement request must carry every required field with a valid value.",
       "source": "StatementUploadEndpoint",
+      "sourceDescription": "Errors raised by the HTTP endpoint that ingests uploaded bank statements (an incoming, primary-port adapter).",
       "diagnostics": [
         {
           "possibleCause": "The client sent an incomplete or malformed request body.",
@@ -199,6 +204,7 @@
       "explanation": "This error occurs when a money transfer is requested with an amount that is zero or negative.",
       "businessRule": "A money transfer amount must be strictly positive.",
       "source": "MoneyTransfer",
+      "sourceDescription": "Errors raised while validating a money transfer between accounts.",
       "diagnostics": [
         {
           "possibleCause": "The amount was entered or computed as zero or a negative value.",
@@ -230,6 +236,7 @@
       "explanation": "This error aggregates every domain rule violated while validating a money transfer, so the caller sees all the problems at once rather than one at a time.",
       "businessRule": "A money transfer must satisfy every domain rule (a strictly positive amount, matching currencies, ...).",
       "source": "MoneyTransfer",
+      "sourceDescription": "Errors raised while validating a money transfer between accounts.",
       "diagnostics": [
         {
           "possibleCause": "One or more domain rules were violated by the requested transfer.",
@@ -252,6 +259,7 @@
       "explanation": "This error occurs when too many statement uploads arrive in a short window and the endpoint throttles the request. It is transient: the same request can be retried later.",
       "businessRule": "Callers must stay within the endpoint\u0027s upload rate limit.",
       "source": "StatementUploadEndpoint",
+      "sourceDescription": "Errors raised by the HTTP endpoint that ingests uploaded bank statements (an incoming, primary-port adapter).",
       "diagnostics": [
         {
           "possibleCause": "The caller exceeded the allowed request rate.",
@@ -283,6 +291,7 @@
       "explanation": "This error occurs when trying to instantiate a temperature with a value that is below absolute zero.",
       "businessRule": "Temperature cannot go below absolute zero because absolute zero is the point where particles have minimum possible energy.",
       "source": "Temperature",
+      "sourceDescription": "Errors raised when constructing a Temperature value from an out-of-range input.",
       "diagnostics": [
         {
           "possibleCause": "The value entered manually by a user is invalid.",
@@ -330,6 +339,7 @@
       "explanation": "This error occurs when the exchange-rate provider does not quote a rate for the requested source/target currency pair.",
       "businessRule": "A currency conversion can only be performed for a pair the provider quotes.",
       "source": "ExchangeRateProvider",
+      "sourceDescription": "Errors raised while calling the external exchange-rate provider (an outgoing, secondary-port adapter).",
       "diagnostics": [
         {
           "possibleCause": "The requested currency pair is not offered by the provider.",

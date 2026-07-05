@@ -46,11 +46,12 @@ public sealed class JsonErrorDocumentationRenderer : IErrorDocumentationRenderer
         // and enum-as-string, without exposing the internal model or maintaining parallel DTO types.
         var document = new {
             errors = catalog.Select(error => new {
-                code         = error.Code,
-                title        = error.Title,
-                explanation  = error.Explanation,
-                businessRule = error.BusinessRule,
-                source       = error.Source,
+                code              = error.Code,
+                title             = error.Title,
+                explanation       = error.Explanation,
+                businessRule      = error.BusinessRule,
+                source            = error.Source,
+                sourceDescription = error.SourceDescription,
                 diagnostics = error.Diagnostics.Select(diagnostic => new {
                     possibleCause = diagnostic.PossibleCause,
                     origin        = diagnostic.Origin.ToString(),
