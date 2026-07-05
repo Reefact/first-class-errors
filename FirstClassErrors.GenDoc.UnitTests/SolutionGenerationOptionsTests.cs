@@ -23,9 +23,11 @@ public sealed class SolutionGenerationOptionsTests {
         Check.That(options.FailureBehavior).IsEqualTo(FailureBehavior.Stop);
         Check.That(options.IncludeProjectsWithoutOptIn).IsFalse();
         Check.That(options.OptInPropertyName).IsEqualTo("GenerateErrorDocumentation");
-        Check.That(options.DotNetBuildAdditionalArguments).IsEqualTo("--nologo");
+        Check.That(options.DotNetBuildAdditionalArguments).ContainsExactly("--nologo");
         Check.That(options.WorkerAssemblyPath).IsNull();
         Check.That(options.WorkerTimeout).IsEqualTo(TimeSpan.FromMinutes(2));
+        Check.That(options.BuildTimeout).IsEqualTo(TimeSpan.FromMinutes(10));
+        Check.That(options.SdkQueryTimeout).IsEqualTo(TimeSpan.FromMinutes(2));
         Check.That(options.Culture).IsNull();
         Check.That(options.Logger).IsNotNull();
     }

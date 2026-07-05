@@ -114,7 +114,7 @@ public static class SolutionErrorDocumentationGenerator {
         // the generator free of the heavy Microsoft.Build dependency and handles both .sln and .slnx uniformly.
         string solutionDirectory = Path.GetDirectoryName(solutionPath) ?? ".";
 
-        ProcessResult result = RunProcess("dotnet", $"sln \"{solutionPath}\" list", solutionDirectory, options.Logger);
+        ProcessResult result = RunProcess("dotnet", ["sln", solutionPath, "list"], solutionDirectory, options.Logger, options.SdkQueryTimeout);
         if (result.ExitCode != 0) {
             throw new SolutionDocumentationGenerationException(
                 $"Failed to list the projects of solution '{solutionPath}' (exit code {result.ExitCode}).\n{result.StandardError}");
@@ -177,7 +177,7 @@ public static class SolutionErrorDocumentationGenerator {
         // to the installed SDK keeps the result authoritative across project styles.
         string tfm = ResolveTargetFrameworkMoniker(projectPath, options);
 
-        return DotNetGetProperty(projectPath, options.Configuration, tfm, "TargetPath", options.Logger);
+        return DotNetGetProperty(projectPath, options.Configuration, tfm, "TargetPath", options);
     }
 
     private static string ResolveTargetFrameworkMoniker(string projectPath, SolutionGenerationOptions options) {
@@ -219,20 +219,18 @@ public static class SolutionErrorDocumentationGenerator {
     }
 
     private static void DotNetBuild(string solutionPath, SolutionGenerationOptions options) {
-        StringBuilder args = new();
-        args.Append("build ");
-        args.Append('"').Append(solutionPath).Append('"');
-        args.Append(" -c ").Append(options.Configuration);
+        List<string> args = ["build", solutionPath, "-c", options.Configuration];
 
         if (string.IsNullOrWhiteSpace(options.TargetFramework) is false) {
-            args.Append(" -f ").Append(options.TargetFramework);
+            args.Add("-f");
+            args.Add(options.TargetFramework);
         }
 
-        if (string.IsNullOrWhiteSpace(options.DotNetBuildAdditionalArguments) is false) {
-            args.Append(' ').Append(options.DotNetBuildAdditionalArguments);
+        foreach (string additionalArgument in options.DotNetBuildAdditionalArguments) {
+            if (string.IsNullOrWhiteSpace(additionalArgument) is false) { args.Add(additionalArgument); }
         }
 
-        ProcessResult result = RunProcess("dotnet", args.ToString(), Path.GetDirectoryName(solutionPath)!, options.Logger);
+        ProcessResult result = RunProcess("dotnet", args, Path.GetDirectoryName(solutionPath)!, options.Logger, options.BuildTimeout);
 
         if (result.ExitCode != 0) {
             throw new SolutionDocumentationGenerationException(
@@ -240,21 +238,17 @@ public static class SolutionErrorDocumentationGenerator {
         }
     }
 
-    private static string? DotNetGetProperty(string projectPath, string configuration, string targetFramework, string propertyName, IGenerationLogger logger) {
+    private static string? DotNetGetProperty(string projectPath, string configuration, string targetFramework, string propertyName, SolutionGenerationOptions options) {
         // dotnet msbuild <proj> -getProperty:TargetPath -property:Configuration=Release -property:TargetFramework=net8.0 -nologo
-        StringBuilder args = new();
-        args.Append("msbuild ");
-        args.Append('"').Append(projectPath).Append('"');
-        args.Append(" -getProperty:").Append(propertyName);
-        args.Append(" -property:Configuration=").Append(configuration);
+        List<string> args = ["msbuild", projectPath, $"-getProperty:{propertyName}", $"-property:Configuration={configuration}"];
 
         if (string.IsNullOrWhiteSpace(targetFramework) is false) {
-            args.Append(" -property:TargetFramework=").Append(targetFramework);
+            args.Add($"-property:TargetFramework={targetFramework}");
         }
 
-        args.Append(" -nologo");
+        args.Add("-nologo");
 
-        ProcessResult result = RunProcess("dotnet", args.ToString(), Path.GetDirectoryName(projectPath)!, logger);
+        ProcessResult result = RunProcess("dotnet", args, Path.GetDirectoryName(projectPath)!, options.Logger, options.SdkQueryTimeout);
 
         if (result.ExitCode != 0) {
             return null;
@@ -298,16 +292,21 @@ public static class SolutionErrorDocumentationGenerator {
         return afterName.Trim();
     }
 
-    private static ProcessResult RunProcess(string fileName, string arguments, string workingDirectory, IGenerationLogger logger, TimeSpan? timeout = null) {
+    private static ProcessResult RunProcess(string fileName, IReadOnlyList<string> arguments, string workingDirectory, IGenerationLogger logger, TimeSpan? timeout = null) {
         ProcessStartInfo psi = new() {
             FileName               = fileName,
-            Arguments              = arguments,
             WorkingDirectory       = workingDirectory,
             RedirectStandardOutput = true,
             RedirectStandardError  = true,
             UseShellExecute        = false,
             CreateNoWindow         = true
         };
+
+        // Pass arguments one token at a time so the runtime applies the platform-correct escaping. Composing the command
+        // line by hand breaks as soon as a token (typically a path) contains a space or a quote.
+        foreach (string argument in arguments) {
+            psi.ArgumentList.Add(argument);
+        }
 
         using Process process = new();
         process.StartInfo = psi;
@@ -434,24 +433,26 @@ public static class SolutionErrorDocumentationGenerator {
             // Run the worker on its own runtimeconfig (RollForward=Major) but against the TARGET's dependency graph, so
             // the target and its own FirstClassErrors resolve from the target's deps.json. The worker's own directory is
             // added as a fallback probing path (consulted only for assemblies the target's deps.json does not provide).
-            StringBuilder args = new();
-            args.Append("exec ");
+            List<string> args = ["exec"];
             if (File.Exists(depsFile)) {
-                args.Append("--depsfile \"").Append(depsFile).Append("\" ");
+                args.Add("--depsfile");
+                args.Add(depsFile);
             }
 
-            args.Append("--additionalprobingpath \"").Append(workerDirectory).Append("\" ");
-            args.Append('"').Append(workerAssemblyPath).Append("\" ");
-            args.Append('"').Append(targetAssemblyPath).Append("\" ");
-            args.Append('"').Append(outputPath).Append('"');
+            args.Add("--additionalprobingpath");
+            args.Add(workerDirectory);
+            args.Add(workerAssemblyPath);
+            args.Add(targetAssemblyPath);
+            args.Add(outputPath);
 
             // Run the extraction under the requested culture so localized documentation resources resolve to that
             // language. The worker treats it as an option, keeping the two positional paths above intact.
             if (options.Culture is not null) {
-                args.Append(" --culture \"").Append(options.Culture.Name).Append('"');
+                args.Add("--culture");
+                args.Add(options.Culture.Name);
             }
 
-            ProcessResult result = RunProcess("dotnet", args.ToString(), workerDirectory, options.Logger, options.WorkerTimeout);
+            ProcessResult result = RunProcess("dotnet", args, workerDirectory, options.Logger, options.WorkerTimeout);
 
             if (result.ExitCode != 0) {
                 HandleFailure(options, $"The documentation worker failed (exit code {result.ExitCode}) for '{targetAssemblyPath}'.\n{result.StandardError}");
