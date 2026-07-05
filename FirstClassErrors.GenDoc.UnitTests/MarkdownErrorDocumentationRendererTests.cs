@@ -1,6 +1,7 @@
 #region Usings declarations
 
 using System.Globalization;
+using System.Text.Json;
 
 using JetBrains.Annotations;
 
@@ -238,6 +239,39 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         // Verify
         Check.That(documents).HasSize(1);
         Check.That(documents[0].Content).Contains("_No documented errors._");
+    }
+
+    [Fact(DisplayName = "The Markdown renderer escapes control characters so the RFC 9457 sample stays valid JSON.")]
+    public void TheMarkdownRendererEscapesControlCharactersInJson() {
+        // Setup: public messages carrying a tab and other control characters (< U+0020) that a naive escaper would leave
+        // raw, producing an invalid JSON block.
+        ErrorDocumentation error = new() {
+            Code     = "CONTROL_CHARS",
+            Title    = "Control chars",
+            Source   = "Danger",
+            Examples = new[] { new ErrorDescription("Short\tmessage", "Diagnostic message", "Detail with\ttab") }
+        };
+
+        // Exercise
+        string markdown = RenderSingle(error)[0].Content;
+
+        // Verify: the fenced JSON block parses and the tab is rendered as a proper \t escape (not a raw tab).
+        string json = ExtractFencedJson(markdown);
+        Check.ThatCode(() => JsonDocument.Parse(json)).DoesNotThrow();
+        Check.That(json).Contains("Short\\tmessage");
+        Check.That(json).Not.Contains("Short\tmessage");
+
+        using JsonDocument parsed = JsonDocument.Parse(json);
+        Check.That(parsed.RootElement.GetProperty("title").GetString()).IsEqualTo("Short\tmessage");
+        Check.That(parsed.RootElement.GetProperty("detail").GetString()).IsEqualTo("Detail with\ttab");
+    }
+
+    private static string ExtractFencedJson(string markdown) {
+        const string fence = "```json\n";
+        int          start = markdown.IndexOf(fence, StringComparison.Ordinal) + fence.Length;
+        int          end   = markdown.IndexOf("```", start, StringComparison.Ordinal);
+
+        return markdown.Substring(start, end - start);
     }
 
     [Fact(DisplayName = "The Markdown renderer guards against a null catalog.")]

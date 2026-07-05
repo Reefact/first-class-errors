@@ -1,6 +1,8 @@
 #region Usings declarations
 
 using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 
 #endregion
 
@@ -239,9 +241,13 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         return line.ToString();
     }
 
-    /// <summary>Escapes a value for inclusion inside a JSON string literal (folding line breaks to spaces first).</summary>
+    /// <summary>
+    ///     Escapes a value for inclusion inside a JSON string literal (folding line breaks to spaces first). Escaping is
+    ///     delegated to <see cref="JsonEncodedText" /> so every control character (tab and anything below U+0020) is
+    ///     emitted as a valid escape sequence; the relaxed encoder keeps non-ASCII characters readable.
+    /// </summary>
     private static string JsonString(string value) {
-        return Inline(value).Replace("\\", "\\\\").Replace("\"", "\\\"");
+        return JsonEncodedText.Encode(Inline(value), JavaScriptEncoder.UnsafeRelaxedJsonEscaping).ToString();
     }
 
     private static IReadOnlyList<Entry> BuildEntries(IEnumerable<ErrorDocumentation> catalog) {
