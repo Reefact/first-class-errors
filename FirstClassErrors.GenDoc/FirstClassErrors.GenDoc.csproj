@@ -10,4 +10,10 @@
     <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>FirstClassErrors.GenDoc.UnitTests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
 </Project>

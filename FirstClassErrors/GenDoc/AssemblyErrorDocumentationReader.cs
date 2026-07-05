@@ -50,17 +50,46 @@ public static class AssemblyErrorDocumentationReader {
             ExtractFromType(type, documentation, failures);
         }
 
-        IReadOnlyList<ErrorDocumentation> deduplicated = documentation
-                                                          // Order before grouping so that, when several factories share the same Code, the surviving
-                                                          // documentation is chosen deterministically (reflection ordering is not guaranteed).
-                                                         .OrderBy(doc => doc.Code, StringComparer.OrdinalIgnoreCase)
-                                                         .ThenBy(doc => doc.Source, StringComparer.Ordinal)
-                                                         .GroupBy(doc => doc.Code, StringComparer.OrdinalIgnoreCase)
-                                                         .Select(group => group.First())
-                                                         .OrderBy(doc => doc.Code, StringComparer.OrdinalIgnoreCase)
-                                                         .ToList();
+        List<ErrorDocumentation> deduplicated = new();
+
+        // Order before grouping so that, when several factories share the same Code, the surviving documentation is
+        // chosen deterministically (reflection ordering is not guaranteed).
+        IEnumerable<IGrouping<string?, ErrorDocumentation>> groups = documentation
+                                                                    .OrderBy(doc => doc.Code, StringComparer.OrdinalIgnoreCase)
+                                                                    .ThenBy(doc => doc.Source, StringComparer.Ordinal)
+                                                                    .GroupBy(doc => doc.Code, StringComparer.OrdinalIgnoreCase);
+
+        foreach (IGrouping<string?, ErrorDocumentation> group in groups) {
+            ErrorDocumentation survivor = group.First();
+            deduplicated.Add(survivor);
+
+            // A code shared by several factories collapses to a single catalog entry. The drop is deterministic, but it
+            // must not be silent: record it as a failure so the caller can report or escalate a code collision that the
+            // FCE001/FCE011 analyzers cannot always catch at compile time.
+            List<ErrorDocumentation> dropped = group.Skip(1).ToList();
+            if (dropped.Count > 0) {
+                failures.Add(BuildDuplicateCodeFailure(survivor, dropped));
+            }
+        }
+
+        deduplicated = deduplicated
+                      .OrderBy(doc => doc.Code, StringComparer.OrdinalIgnoreCase)
+                      .ToList();
 
         return new ErrorDocumentationExtractionResult(deduplicated, failures);
+    }
+
+    private static ErrorDocumentationExtractionFailure BuildDuplicateCodeFailure(ErrorDocumentation survivor, IReadOnlyList<ErrorDocumentation> dropped) {
+        string code           = survivor.Code   ?? "<null>";
+        string survivorSource = survivor.Source ?? "<unknown source>";
+        string droppedSources = string.Join(", ", dropped.Select(doc => $"'{doc.Source ?? "<unknown source>"}'"));
+
+        string message =
+            $"Duplicate error code '{code}': {dropped.Count + 1} documentation factories declare it. " +
+            $"Keeping the entry from source '{survivorSource}' and dropping {dropped.Count} other(s) from source(s) {droppedSources}. " +
+            "Give each documented error a unique code so no documentation is silently lost.";
+
+        return new ErrorDocumentationExtractionFailure(survivorSource, null, message, null);
     }
 
     private static IEnumerable<Type> GetLoadableTypes(Assembly assembly, List<ErrorDocumentationExtractionFailure> failures) {

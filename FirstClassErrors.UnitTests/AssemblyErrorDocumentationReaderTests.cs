@@ -108,6 +108,21 @@ public sealed class AssemblyErrorDocumentationReaderTests {
         Check.That(count).IsEqualTo(1);
     }
 
+    [Fact(DisplayName = "A duplicate error code is not dropped silently: the collision is recorded as a failure.")]
+    public void ADuplicateErrorCodeIsRecordedAsAFailure() {
+        // Exercise
+        ErrorDocumentationExtractionResult result = Extract();
+
+        // Verify: the collision on READER_DUP surfaces as a failure that names the code and the sources involved, rather
+        // than vanishing without a trace.
+        ErrorDocumentationExtractionFailure? failure =
+            result.Failures.FirstOrDefault(f => f.Message.Contains("READER_DUP"));
+
+        Check.That(failure).IsNotNull();
+        Check.That(failure!.Message).Contains("Duplicate error code");
+        Check.That(failure.Message).Contains("ReaderDupSource");
+    }
+
     [Fact(DisplayName = "The extracted documentation is ordered by error code, case-insensitively.")]
     public void TheExtractedDocumentationIsOrderedByErrorCode() {
         // Exercise

@@ -385,10 +385,35 @@ public static class SolutionErrorDocumentationGenerator {
 
         // Deduplicate across assemblies as well: the same error Code declared in two assemblies must collapse to a
         // single catalog entry, mirroring the per-assembly deduplication performed by the reader.
-        return results
-              .GroupBy(x => x.Code, StringComparer.OrdinalIgnoreCase)
-              .Select(g => g.First())
-              .OrderBy(x => x.Code, StringComparer.OrdinalIgnoreCase);
+        return DeduplicateAcrossAssemblies(results, options.Logger);
+    }
+
+    internal static IReadOnlyList<ErrorDocumentation> DeduplicateAcrossAssemblies(IReadOnlyList<ErrorDocumentation> documentation, IGenerationLogger logger) {
+        List<ErrorDocumentation> catalog = new();
+
+        foreach (IGrouping<string?, ErrorDocumentation> group in documentation.GroupBy(doc => doc.Code, StringComparer.OrdinalIgnoreCase)) {
+            ErrorDocumentation survivor = group.First();
+            catalog.Add(survivor);
+
+            List<ErrorDocumentation> dropped = group.Skip(1).ToList();
+            if (dropped.Count == 0) { continue; }
+
+            // Each source assembly is deduplicated in its own worker, so a code that still collides here is declared by
+            // distinct assemblies — exactly the cross-assembly case the compile-time analyzers cannot see. Warn instead
+            // of dropping it silently.
+            string code           = group.Key      ?? "<null>";
+            string survivorSource = survivor.Source ?? "<unknown source>";
+            string droppedSources = string.Join(", ", dropped.Select(doc => $"'{doc.Source ?? "<unknown source>"}'"));
+
+            logger.Warning(
+                $"Duplicate error code '{code}' declared in more than one assembly: keeping the entry from source " +
+                $"'{survivorSource}' and dropping {dropped.Count} other(s) from source(s) {droppedSources}. Cross-assembly " +
+                "duplicate codes are not caught at compile time (see FCE001/FCE011); give each documented error a unique code.");
+        }
+
+        return catalog
+              .OrderBy(doc => doc.Code, StringComparer.OrdinalIgnoreCase)
+              .ToList();
     }
 
     private static string ResolveWorkerAssemblyPath(SolutionGenerationOptions options) {
