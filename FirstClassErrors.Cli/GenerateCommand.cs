@@ -166,10 +166,34 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
         }
 
         foreach (RenderedDocument document in documents) {
-            WriteFile(Path.Combine(fullOutput, document.RelativePath), document.Content);
+            WriteFile(ResolveWithinOutput(fullOutput, document.RelativePath), document.Content);
         }
 
         logger.Info($"Documentation written to '{fullOutput}' ({documents.Count} file(s)).");
+    }
+
+    /// <summary>
+    ///     Combines the output directory with a renderer-supplied relative path and guarantees the result stays inside
+    ///     that directory. Renderers are third-party code (loaded via <c>fce config renderer add</c>) and may hand back,
+    ///     by mistake, an absolute path or one containing '..' — <see cref="Path.Combine(string, string)" /> would then
+    ///     resolve to a location outside the requested target, silently writing files where they are not expected.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when the resolved path escapes <paramref name="outputDirectory" />.</exception>
+    private static string ResolveWithinOutput(string outputDirectory, string relativePath) {
+        string target = Path.GetFullPath(Path.Combine(outputDirectory, relativePath));
+
+        // Compare against the directory suffixed with a separator so a sibling such as 'out-evil' is not mistaken for a
+        // path inside 'out'. The directory itself is not a valid file target either, so an exact match is rejected too.
+        string root = outputDirectory.EndsWith(Path.DirectorySeparatorChar)
+                          ? outputDirectory
+                          : outputDirectory + Path.DirectorySeparatorChar;
+
+        if (target.StartsWith(root, StringComparison.Ordinal) is false) {
+            throw new InvalidOperationException(
+                $"The renderer produced a document whose path '{relativePath}' escapes the output directory '{outputDirectory}'.");
+        }
+
+        return target;
     }
 
     private static void WriteFile(string path, string content) {
