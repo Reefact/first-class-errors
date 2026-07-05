@@ -155,6 +155,34 @@ public sealed class HtmlErrorDocumentationRendererTests {
         Check.That(page).Contains("../index.html");
     }
 
+    [Fact(DisplayName = "The split search index links each error to its own page.")]
+    public void TheSplitSearchIndexLinksEachErrorToItsPage() {
+        // Exercise
+        string json = ContentOf(RenderSplit(TemperatureError(), EmailError()), "assets/search-index.json");
+
+        // Verify: in split, the errors/… pages exist, so the index points at them.
+        Check.That(json).Contains("\"href\": \"errors/TEMPERATURE_BELOW_ABSOLUTE_ZERO.html\"");
+        Check.That(json).Contains("\"href\": \"errors/INVALID_EMAIL.html\"");
+    }
+
+    [Fact(DisplayName = "The single search index links each error to its in-page anchor, not a missing page.")]
+    public void TheSingleSearchIndexLinksEachErrorToItsInPageAnchor() {
+        // Exercise
+        IReadOnlyList<RenderedDocument> documents = RenderSingle(TemperatureError(), EmailError());
+        string                         json       = ContentOf(documents, "assets/search-index.json");
+
+        // Verify: single emits only index.html (no errors/… files), so the index must point at #err-… anchors there.
+        Check.That(documents.Select(d => d.RelativePath)).Not.Contains("errors/TEMPERATURE_BELOW_ABSOLUTE_ZERO.html");
+        Check.That(json).Contains("\"href\": \"index.html#err-TEMPERATURE_BELOW_ABSOLUTE_ZERO\"");
+        Check.That(json).Contains("\"href\": \"index.html#err-INVALID_EMAIL\"");
+        Check.That(json).Not.Contains("\"href\": \"errors/");
+
+        // The referenced anchors actually exist in the single page.
+        string html = ContentOf(documents, "index.html");
+        Check.That(html).Contains("id=\"err-TEMPERATURE_BELOW_ABSOLUTE_ZERO\"");
+        Check.That(html).Contains("id=\"err-INVALID_EMAIL\"");
+    }
+
     [Fact(DisplayName = "The HTML renderer escapes catalog content.")]
     public void TheHtmlRendererEscapesCatalogContent() {
         // Setup: a title and a message carrying HTML metacharacters.

@@ -53,7 +53,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
 
         // The CSS and JS are inlined into every page (see BuildPage) so each file is self-contained and stays styled
         // even when opened on its own. Only the search index remains an external asset, for external tooling.
-        documents.Add(new RenderedDocument("assets/search-index.json", BuildSearchIndex(entries)));
+        documents.Add(new RenderedDocument("assets/search-index.json", BuildSearchIndex(entries, split)));
 
         return documents;
     }
@@ -389,19 +389,22 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         return anchor;
     }
 
-    private static string BuildSearchIndex(IReadOnlyList<Entry> entries) {
+    private static string BuildSearchIndex(IReadOnlyList<Entry> entries, bool split) {
         // A curated, deterministic index for external tooling. In-page search uses the embedded row data instead,
         // so it keeps working when the site is opened from file:// (where fetch of a local JSON is often blocked).
+        // The href must match the actual layout: one page per error in split, an in-page anchor in single (where
+        // there is no errors/… file — the errors are #err-… anchors inside index.html).
         StringBuilder json = new();
         json.Append("[\n");
         for (int index = 0; index < entries.Count; index++) {
-            Entry entry = entries[index];
+            Entry  entry = entries[index];
+            string href  = split ? $"errors/{entry.FileName}" : $"index.html#err-{entry.Anchor}";
             json.Append("  {\n");
             json.Append($"    \"code\": \"{JsonString(entry.Code)}\",\n");
             json.Append($"    \"title\": \"{JsonString(entry.Title)}\",\n");
             json.Append($"    \"summary\": \"{JsonString(entry.Summary)}\",\n");
             json.Append($"    \"source\": \"{JsonString(entry.Source ?? string.Empty)}\",\n");
-            json.Append($"    \"href\": \"errors/{JsonString(entry.FileName)}\",\n");
+            json.Append($"    \"href\": \"{JsonString(href)}\",\n");
             json.Append($"    \"text\": \"{JsonString(entry.SearchText)}\"\n");
             json.Append(index == entries.Count - 1 ? "  }\n" : "  },\n");
         }
