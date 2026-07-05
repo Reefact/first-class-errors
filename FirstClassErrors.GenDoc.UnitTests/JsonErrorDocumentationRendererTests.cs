@@ -23,13 +23,14 @@ public sealed class JsonErrorDocumentationRendererTests {
     public void TheJsonRendererProducesACuratedCamelCaseCatalog() {
         // Setup
         ErrorDocumentation documentation = new() {
-            Code         = "TEMPERATURE_BELOW_ABSOLUTE_ZERO",
-            Title        = "Temperature below absolute zero",
-            Explanation  = "A temperature was instantiated below absolute zero.",
-            BusinessRule = "Temperature cannot go below absolute zero.",
-            Source       = "Temperature",
-            Diagnostics  = new[] { new ErrorDiagnostic("A value entered by a user is invalid.", ErrorOrigin.External, "Verify the user input.") },
-            Examples     = new[] { new ErrorDescription("Below absolute zero.", "Failed to instantiate temperature: -300 is below absolute zero.", "The temperature is invalid.") },
+            Code              = "TEMPERATURE_BELOW_ABSOLUTE_ZERO",
+            Title             = "Temperature below absolute zero",
+            Explanation       = "A temperature was instantiated below absolute zero.",
+            BusinessRule      = "Temperature cannot go below absolute zero.",
+            Source            = "Temperature",
+            SourceDescription = "Errors raised while validating a temperature value object.",
+            Diagnostics       = new[] { new ErrorDiagnostic("A value entered by a user is invalid.", ErrorOrigin.External, "Verify the user input.") },
+            Examples          = new[] { new ErrorDescription("Below absolute zero.", "Failed to instantiate temperature: -300 is below absolute zero.", "The temperature is invalid.") },
             Context = new[] {
                 new ErrorContextEntryDocumentation {
                     Key           = "AttemptedValue",
@@ -58,6 +59,7 @@ public sealed class JsonErrorDocumentationRendererTests {
         Check.That(error.GetProperty("code").GetString()).IsEqualTo("TEMPERATURE_BELOW_ABSOLUTE_ZERO");
         Check.That(error.GetProperty("title").GetString()).IsEqualTo("Temperature below absolute zero");
         Check.That(error.GetProperty("source").GetString()).IsEqualTo("Temperature");
+        Check.That(error.GetProperty("sourceDescription").GetString()).IsEqualTo("Errors raised while validating a temperature value object.");
 
         Check.That(error.GetProperty("diagnostics")[0].GetProperty("possibleCause").GetString()).IsEqualTo("A value entered by a user is invalid.");
         Check.That(error.GetProperty("diagnostics")[0].GetProperty("origin").GetString()).IsEqualTo("External");

@@ -59,6 +59,7 @@ main { padding: 24px 0 64px; }
 .toc-item code { font-size: 0.9rem; }
 .error-group { margin-top: 40px; }
 .group-title { font-size: 1.5rem; margin: 0 0 4px; padding-bottom: 8px; border-bottom: 2px solid var(--border); scroll-margin-top: 72px; }
+.group-description { color: var(--text-soft); margin: 12px 0 4px; }
 .error-detail { border-top: 1px solid var(--border); padding: 24px 0; }
 .error-group .error-detail:first-of-type { border-top: 0; }
 .error-title { font-size: 1.15rem; margin: 0; scroll-margin-top: 72px; }
@@ -136,6 +137,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <p id="no-results" class="no-results" hidden>Aucune erreur correspondante.</p>
 <section class="error-group" id="src-Amount">
 <h2 class="group-title">Amount</h2>
+<p class="group-description">Erreurs lev&#233;es lors d&#39;op&#233;rations combinant des valeurs mon&#233;taires Amount.</p>
 <article class="error-detail" id="err-AMOUNT_CURRENCY_MISMATCH">
 <h3 class="error-title"><code>AMOUNT_CURRENCY_MISMATCH</code> <a class="anchor" href="#err-AMOUNT_CURRENCY_MISMATCH" aria-label="Copier le lien vers cette erreur" data-anchor>#</a></h3>
 <p class="error-subtitle">Incoh&#233;rence de devise entre montants</p>
@@ -168,6 +170,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 </section>
 <section class="error-group" id="src-BankTransactionFileValidator">
 <h2 class="group-title">BankTransactionFileValidator</h2>
+<p class="group-description">Erreurs lev&#233;es lors de la validation d&#39;un relev&#233; bancaire t&#233;l&#233;vers&#233; au regard de ses m&#233;tadonn&#233;es d&#233;clar&#233;es (p&#233;riode et totaux du relev&#233;).</p>
 <article class="error-detail" id="err-BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD">
 <h3 class="error-title"><code>BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD</code> <a class="anchor" href="#err-BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD" aria-label="Copier le lien vers cette erreur" data-anchor>#</a></h3>
 <p class="error-subtitle">Date de transaction hors de la p&#233;riode du relev&#233;</p>
@@ -243,6 +246,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 </section>
 <section class="error-group" id="src-ExchangeRateProvider">
 <h2 class="group-title">ExchangeRateProvider</h2>
+<p class="group-description">Erreurs lev&#233;es lors de l&#39;appel au fournisseur de taux de change externe (un adaptateur sortant, secondary port).</p>
 <article class="error-detail" id="err-EXCHANGE_RATE_SERVICE_UNAVAILABLE">
 <h3 class="error-title"><code>EXCHANGE_RATE_SERVICE_UNAVAILABLE</code> <a class="anchor" href="#err-EXCHANGE_RATE_SERVICE_UNAVAILABLE" aria-label="Copier le lien vers cette erreur" data-anchor>#</a></h3>
 <p class="error-subtitle">Service de taux de change indisponible</p>
@@ -325,6 +329,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 </section>
 <section class="error-group" id="src-StatementUploadEndpoint">
 <h2 class="group-title">StatementUploadEndpoint</h2>
+<p class="group-description">Erreurs lev&#233;es par le point d&#39;entr&#233;e HTTP qui ing&#232;re les relev&#233;s bancaires t&#233;l&#233;vers&#233;s (un adaptateur entrant, primary port).</p>
 <article class="error-detail" id="err-MALFORMED_STATEMENT_PAYLOAD">
 <h3 class="error-title"><code>MALFORMED_STATEMENT_PAYLOAD</code> <a class="anchor" href="#err-MALFORMED_STATEMENT_PAYLOAD" aria-label="Copier le lien vers cette erreur" data-anchor>#</a></h3>
 <p class="error-subtitle">Charge utile de relev&#233; mal form&#233;e</p>
@@ -405,6 +410,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 </section>
 <section class="error-group" id="src-MoneyTransfer">
 <h2 class="group-title">MoneyTransfer</h2>
+<p class="group-description">Erreurs lev&#233;es lors de la validation d&#39;un virement entre comptes.</p>
 <article class="error-detail" id="err-MONEY_TRANSFER_AMOUNT_NOT_POSITIVE">
 <h3 class="error-title"><code>MONEY_TRANSFER_AMOUNT_NOT_POSITIVE</code> <a class="anchor" href="#err-MONEY_TRANSFER_AMOUNT_NOT_POSITIVE" aria-label="Copier le lien vers cette erreur" data-anchor>#</a></h3>
 <p class="error-subtitle">Montant de virement non positif</p>
@@ -474,6 +480,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 </section>
 <section class="error-group" id="src-Temperature">
 <h2 class="group-title">Temperature</h2>
+<p class="group-description">Errors raised when constructing a Temperature value from an out-of-range input.</p>
 <article class="error-detail" id="err-TEMPERATURE_BELOW_ABSOLUTE_ZERO">
 <h3 class="error-title"><code>TEMPERATURE_BELOW_ABSOLUTE_ZERO</code> <a class="anchor" href="#err-TEMPERATURE_BELOW_ABSOLUTE_ZERO" aria-label="Copier le lien vers cette erreur" data-anchor>#</a></h3>
 <p class="error-subtitle">Temperature below absolute zero</p>
