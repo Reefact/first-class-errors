@@ -46,6 +46,29 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
         }
     }
 
+    [Theory(DisplayName = "GetErrorDocumentationFrom accepts the .sln and .slnx solution formats.")]
+    [InlineData(".sln")]
+    [InlineData(".slnx")]
+    public void GetErrorDocumentationFromAcceptsSolutionFormats(string extension) {
+        // Setup: a real file carrying a solution extension. It is not a valid solution, so the enumeration further
+        // down the pipeline will ultimately fail — but only *after* the extension validation, which is what this test
+        // guards. The rejected-extension path is the one that throws ArgumentException (see the sibling test); proving
+        // the format is accepted therefore means the call throws anything *but* an ArgumentException.
+        string path = Path.ChangeExtension(Path.GetTempFileName(), extension);
+        File.WriteAllText(path, string.Empty);
+
+        try {
+            // Exercise
+            Exception? caught = Record.Exception(
+                () => SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(path, new SolutionGenerationOptions { BuildSolution = false }).ToList());
+
+            // Verify: the extension was accepted, so no ArgumentException was raised for it.
+            Check.That(caught).IsNotInstanceOf<ArgumentException>();
+        } finally {
+            File.Delete(path);
+        }
+    }
+
     [Fact(DisplayName = "GetErrorDocumentationFromAssemblies rejects a null path list.")]
     public void GetErrorDocumentationFromAssembliesRejectsANullPathList() {
         // Exercise & verify
