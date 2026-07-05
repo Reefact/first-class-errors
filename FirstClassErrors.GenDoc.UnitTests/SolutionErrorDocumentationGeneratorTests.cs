@@ -96,6 +96,34 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
         Check.That(result).IsEmpty();
     }
 
+    [Fact(DisplayName = "A skipped assembly is logged as a warning (never silent) when the failure behavior is Continue.")]
+    public void ASkippedAssemblyIsLoggedWhenContinuing() {
+        // Setup
+        RecordingGenerationLogger logger = new();
+        SolutionGenerationOptions options = new() {
+            FailureBehavior = FailureBehavior.Continue,
+            Logger          = logger
+        };
+
+        // Exercise
+        SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies(new[] { "this-assembly-does-not-exist.dll" }, options);
+
+        // Verify: the skipped assembly leaves a warning trace mentioning the missing file.
+        Check.That(logger.Warnings).HasSize(1);
+        Check.That(logger.Warnings[0]).Contains("this-assembly-does-not-exist.dll");
+    }
+
+    private sealed class RecordingGenerationLogger : IGenerationLogger {
+
+        public List<string> Warnings { get; } = new();
+
+        public void Info(string    message) { }
+        public void Warning(string message) { Warnings.Add(message); }
+        public void Error(string   message) { }
+        public void Debug(string   message) { }
+
+    }
+
     [Fact(DisplayName = "A missing assembly aborts when the failure behavior is Stop.")]
     public void AMissingAssemblyAbortsWhenStopping() {
         // Setup
