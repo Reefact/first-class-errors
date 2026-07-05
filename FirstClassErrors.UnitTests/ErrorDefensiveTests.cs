@@ -132,6 +132,35 @@ public sealed class ErrorDefensiveTests {
         Check.That(error.InnerErrors).CountIs(1);
     }
 
+    [Fact(DisplayName = "Null entries in the provided inner errors collection are filtered out.")]
+    public void NullEntriesInTheProvidedInnerErrorsCollectionAreFilteredOut() {
+        // Setup
+        List<DomainError> innerErrors = new() {
+            ErrorFactory.Domain(ErrorCode.Unspecified, "first"),
+            null!,
+            ErrorFactory.Domain(ErrorCode.Unspecified, "second")
+        };
+
+        // Exercise
+        DomainError error = DomainError.Create(ErrorCode.Unspecified, "diagnostic", innerErrors).WithPublicMessage("short");
+
+        // Verify
+        Check.That(error.InnerErrors).CountIs(2);
+        Check.That(error.InnerErrors.Select(innerError => innerError.DiagnosticMessage)).ContainsExactly("first", "second");
+    }
+
+    [Fact(DisplayName = "A collection made only of null inner errors yields an empty inner errors list.")]
+    public void ACollectionMadeOnlyOfNullInnerErrorsYieldsAnEmptyInnerErrorsList() {
+        // Setup
+        List<DomainError> innerErrors = new() { null!, null! };
+
+        // Exercise
+        DomainError error = DomainError.Create(ErrorCode.Unspecified, "diagnostic", innerErrors).WithPublicMessage("short");
+
+        // Verify
+        Check.That(error.InnerErrors).IsEmpty();
+    }
+
     [Fact(DisplayName = "The string representation combines the diagnostic message and the code.")]
     public void TheStringRepresentationCombinesTheDiagnosticMessageAndTheCode() {
         // Exercise

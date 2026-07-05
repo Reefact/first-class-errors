@@ -77,7 +77,9 @@ public abstract class Error {
     }
 
     private static IReadOnlyList<Error> CreateSafeInnerErrors(IEnumerable<Error>? innerErrors) {
-        return innerErrors == null ? new List<Error>() : innerErrors.ToList();
+        return innerErrors == null
+                   ? new List<Error>()
+                   : innerErrors.Where(innerError => innerError is not null).ToList();
     }
 
     private static IReadOnlyList<Error> CreateSafeInnerErrors(Error? innerError) {
