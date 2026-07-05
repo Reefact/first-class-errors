@@ -679,4 +679,28 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
              .Throws<ArgumentNullException>();
     }
 
+    // -------------------------------------------------------------------------
+    // Null-outcome guard (task that resolves to a null Outcome)
+    // -------------------------------------------------------------------------
+
+    [Fact(DisplayName = "Then over a Task<Outcome> that resolves to null throws an InvalidOperationException.")]
+    public void ThenOverATaskResolvingToANullOutcomeThrows() {
+        // Setup
+        Task<Outcome> task = Task.FromResult<Outcome>(null!);
+
+        // Exercise & verify
+        Check.ThatCode(() => task.Then(() => Outcome<int>.Success(1)).GetAwaiter().GetResult())
+             .Throws<InvalidOperationException>();
+    }
+
+    [Fact(DisplayName = "Then over a Task<Outcome<T>> that resolves to null throws an InvalidOperationException.")]
+    public void ThenOverAGenericTaskResolvingToANullOutcomeThrows() {
+        // Setup
+        Task<Outcome<int>> task = Task.FromResult<Outcome<int>>(null!);
+
+        // Exercise & verify
+        Check.ThatCode(() => task.Then(value => Outcome<int>.Success(value + 1)).GetAwaiter().GetResult())
+             .Throws<InvalidOperationException>();
+    }
+
 }
