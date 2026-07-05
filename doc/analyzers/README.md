@@ -1,6 +1,6 @@
 # FirstClassErrors analyzers
 
-Roslyn analyzers that catch, at build time, the mistakes the FirstClassErrors runtime and documentation pipeline would otherwise surface late or silently. They ship **inside the `FirstClassErrors` NuGet package** — any project that references it gets the rules automatically, no extra install.
+The FirstClassErrors analyzers are Roslyn rules that run while your project compiles. They turn mistakes that the FirstClassErrors runtime and documentation pipeline would otherwise report late — or never report at all — into build-time diagnostics. The rules ship **inside the `FirstClassErrors` NuGet package**: any project that references it picks them up automatically, with no extra install.
 
 Each rule has a stable id `FCExxx`. Errors are hard defects; warnings flag likely mistakes; the info rules are conventions, and several are opt-in (see each page for how to enable them).
 
