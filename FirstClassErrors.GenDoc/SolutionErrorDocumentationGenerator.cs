@@ -357,7 +357,15 @@ public static class SolutionErrorDocumentationGenerator {
     }
 
     private static void HandleFailure(SolutionGenerationOptions options, string message, Exception? ex = null) {
-        if (options.FailureBehavior == FailureBehavior.Continue) { return; }
+        if (options.FailureBehavior == FailureBehavior.Continue) {
+            // In Continue mode the failure is swallowed so the generation proceeds with the remaining assemblies, but it
+            // must never be silent: log it as a warning (with the exception detail when present) so the skipped assembly
+            // leaves a trace the caller can diagnose.
+            options.Logger.Warning(ex is not null ? $"{message} {ex}" : message);
+
+            return;
+        }
+
         if (ex is not null) { throw new SolutionDocumentationGenerationException(message, ex); }
 
         throw new SolutionDocumentationGenerationException(message);
