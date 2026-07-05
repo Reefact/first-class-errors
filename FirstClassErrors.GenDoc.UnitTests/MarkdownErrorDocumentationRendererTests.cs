@@ -249,7 +249,7 @@ public sealed class MarkdownErrorDocumentationRendererTests {
             Code     = "CONTROL_CHARS",
             Title    = "Control chars",
             Source   = "Danger",
-            Examples = new[] { new ErrorDescription("Short\tmessage", "Detail with\ttab") }
+            Examples = new[] { new ErrorDescription("Short\tmessage", "Diagnostic message", "Detail with\ttab") }
         };
 
         // Exercise
