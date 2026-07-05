@@ -26,10 +26,12 @@ public sealed class SolutionGenerationOptions {
     public string OptInPropertyName { get; init; } = "GenerateErrorDocumentation";
 
     /// <summary>
-    ///     Additional arguments appended verbatim to the "dotnet build" command line (e.g. "--no-restore").
-    ///     Defaults to "--nologo".
+    ///     Additional arguments passed to the "dotnet build" command, one token per element (e.g.
+    ///     <c>["--no-restore", "--nologo"]</c>). Each token is forwarded as-is through
+    ///     <see cref="System.Diagnostics.ProcessStartInfo.ArgumentList" />, so values containing spaces or quotes need no
+    ///     manual escaping. Defaults to <c>["--nologo"]</c>.
     /// </summary>
-    public string? DotNetBuildAdditionalArguments { get; init; } = "--nologo";
+    public IReadOnlyList<string> DotNetBuildAdditionalArguments { get; init; } = ["--nologo"];
 
     /// <summary>
     ///     Absolute path to the documentation worker assembly (<c>FirstClassErrors.GenDoc.Worker.dll</c>). When
@@ -42,6 +44,19 @@ public sealed class SolutionGenerationOptions {
     ///     treated as a failure. Defaults to two minutes.
     /// </summary>
     public TimeSpan WorkerTimeout { get; init; } = TimeSpan.FromMinutes(2);
+
+    /// <summary>
+    ///     Maximum time to wait for the "dotnet build" invocation before it is killed and the generation fails.
+    ///     Prevents a hung build (e.g. on a suspended CI agent) from blocking indefinitely. Defaults to ten minutes.
+    /// </summary>
+    public TimeSpan BuildTimeout { get; init; } = TimeSpan.FromMinutes(10);
+
+    /// <summary>
+    ///     Maximum time to wait for the short-lived SDK queries used to enumerate projects ("dotnet sln list") and to
+    ///     resolve their output paths ("dotnet msbuild -getProperty") before they are killed. Prevents a hung query
+    ///     from blocking indefinitely. Defaults to two minutes.
+    /// </summary>
+    public TimeSpan SdkQueryTimeout { get; init; } = TimeSpan.FromMinutes(2);
 
     /// <summary>
     ///     The culture the extraction runs under, so documentation factories that read localized resources produce
