@@ -69,13 +69,17 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
             IReadOnlyList<Group> groups = GroupBySource(entries);
 
             AppendSearch(body, entries, strings);
-            AppendToc(body, groups, strings, entry => $"#err-{Attr(entry.Anchor)}", group => $"#{Attr(group.Anchor)}");
+            AppendToc(body, groups, strings, entry => $"#err-{Attr(entry.Anchor)}", group => $"#{Attr(group.Anchor)}", showGroupDescriptions: false);
             body.Append($"<p id=\"no-results\" class=\"no-results\" hidden>{Text(strings.NoResults)}</p>\n");
 
             // Body grouped by source: a section per source (its errors inlined below).
             foreach (Group group in groups) {
                 body.Append($"<section class=\"error-group\" id=\"{Attr(group.Anchor)}\">\n");
                 body.Append($"<h2 class=\"group-title\">{Text(group.Label)}</h2>\n");
+
+                string? description = GroupDescription(group);
+                if (description is not null) { body.Append($"<p class=\"group-description\">{Text(description)}</p>\n"); }
+
                 foreach (Entry entry in group.Entries) {
                     AppendErrorDetail(body, entry, strings, headingLevel: 3);
                 }
@@ -103,7 +107,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
             IReadOnlyList<Group> groups = GroupBySource(entries);
 
             AppendSearch(home, entries, strings);
-            AppendToc(home, groups, strings, entry => $"errors/{Attr(entry.FileName)}", _ => null);
+            AppendToc(home, groups, strings, entry => $"errors/{Attr(entry.FileName)}", _ => null, showGroupDescriptions: true);
             home.Append($"<p id=\"no-results\" class=\"no-results\" hidden>{Text(strings.NoResults)}</p>\n");
         }
 
@@ -169,7 +173,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         html.Append("</div>\n");
     }
 
-    private static void AppendToc(StringBuilder html, IReadOnlyList<Group> groups, HtmlRendererStrings strings, Func<Entry, string> errorHref, Func<Group, string?> groupHref) {
+    private static void AppendToc(StringBuilder html, IReadOnlyList<Group> groups, HtmlRendererStrings strings, Func<Entry, string> errorHref, Func<Group, string?> groupHref, bool showGroupDescriptions) {
         html.Append($"<nav class=\"toc\" id=\"toc\" aria-label=\"{Attr(strings.ErrorCatalog)}\">\n<ul>\n");
         foreach (Group group in groups) {
             html.Append("<li class=\"toc-group\">");
@@ -177,6 +181,11 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
             html.Append(href is null
                             ? $"<span class=\"toc-source\">{Text(group.Label)}</span>"
                             : $"<a class=\"toc-source\" href=\"{Attr(href)}\">{Text(group.Label)}</a>");
+            if (showGroupDescriptions) {
+                string? description = GroupDescription(group);
+                if (description is not null) { html.Append($"\n<p class=\"group-description\">{Text(description)}</p>"); }
+            }
+
             html.Append("\n<ul>\n");
             foreach (Entry entry in group.Entries) {
                 html.Append($"<li class=\"toc-item\" data-search=\"{Attr(entry.SearchText)}\"><a href=\"{Attr(errorHref(entry))}\"><code>{Text(entry.Code)}</code></a></li>\n");
@@ -410,6 +419,17 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
     private static string? FirstNonEmpty(params string?[] values) {
         foreach (string? value in values) {
             if (string.IsNullOrWhiteSpace(value) is false) { return value.Trim(); }
+        }
+
+        return null;
+    }
+
+    /// <summary>Gets the group's source description (shared by its errors), or <c>null</c> when none is set.</summary>
+    private static string? GroupDescription(Group group) {
+        foreach (Entry entry in group.Entries) {
+            if (string.IsNullOrWhiteSpace(entry.Error.SourceDescription) is false) {
+                return entry.Error.SourceDescription!.Trim();
+            }
         }
 
         return null;

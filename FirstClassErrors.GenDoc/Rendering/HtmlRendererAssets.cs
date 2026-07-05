@@ -72,6 +72,7 @@ internal static class HtmlRendererAssets {
         .toc-item code { font-size: 0.9rem; }
         .error-group { margin-top: 40px; }
         .group-title { font-size: 1.5rem; margin: 0 0 4px; padding-bottom: 8px; border-bottom: 2px solid var(--border); scroll-margin-top: 72px; }
+        .group-description { color: var(--text-soft); margin: 12px 0 4px; }
         .error-detail { border-top: 1px solid var(--border); padding: 24px 0; }
         .error-group .error-detail:first-of-type { border-top: 0; }
         .error-title { font-size: 1.15rem; margin: 0; scroll-margin-top: 72px; }

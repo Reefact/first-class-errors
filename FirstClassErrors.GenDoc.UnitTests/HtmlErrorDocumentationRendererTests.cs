@@ -29,14 +29,15 @@ public sealed class HtmlErrorDocumentationRendererTests {
 
     private static ErrorDocumentation TemperatureError() {
         return new ErrorDocumentation {
-            Code         = "TEMPERATURE_BELOW_ABSOLUTE_ZERO",
-            Title        = "Temperature below absolute zero",
-            Explanation  = "A temperature was instantiated below absolute zero.",
-            BusinessRule = "Temperature cannot go below absolute zero.",
-            Source       = "Temperature",
-            Diagnostics  = new[] { new ErrorDiagnostic("A value entered by a user is invalid.", ErrorOrigin.External, "Verify the user input.") },
-            Examples     = new[] { new ErrorDescription("Temperature is invalid.", "Failed to instantiate temperature: -300 is below absolute zero.", "The temperature is invalid.") },
-            Context = new[] {
+            Code              = "TEMPERATURE_BELOW_ABSOLUTE_ZERO",
+            Title             = "Temperature below absolute zero",
+            Explanation       = "A temperature was instantiated below absolute zero.",
+            BusinessRule      = "Temperature cannot go below absolute zero.",
+            Source            = "Temperature",
+            SourceDescription = "Errors raised while validating a temperature value object.",
+            Diagnostics       = new[] { new ErrorDiagnostic("A value entered by a user is invalid.", ErrorOrigin.External, "Verify the user input.") },
+            Examples          = new[] { new ErrorDescription("Temperature is invalid.", "Failed to instantiate temperature: -300 is below absolute zero.", "The temperature is invalid.") },
+            Context           = new[] {
                 new ErrorContextEntryDocumentation {
                     Key           = "AttemptedValue",
                     ValueType     = "System.Double",
@@ -117,8 +118,9 @@ public sealed class HtmlErrorDocumentationRendererTests {
         Check.That(html).Contains("<li class=\"toc-item\"");
         Check.That(html).Contains("<a href=\"#err-TEMPERATURE_BELOW_ABSOLUTE_ZERO\"><code>TEMPERATURE_BELOW_ABSOLUTE_ZERO</code></a>");
 
-        // Body grouped by source (h2), each error keyed by its code (h3).
+        // Body grouped by source (h2), the shared source description as an intro paragraph, each error keyed by its code (h3).
         Check.That(html).Contains("<h2 class=\"group-title\">Temperature</h2>");
+        Check.That(html).Contains("<p class=\"group-description\">Errors raised while validating a temperature value object.</p>");
         Check.That(html).Contains("<h3 class=\"error-title\"><code>TEMPERATURE_BELOW_ABSOLUTE_ZERO</code>");
         Check.That(html).Contains("id=\"err-INVALID_EMAIL\"");
 
@@ -146,6 +148,9 @@ public sealed class HtmlErrorDocumentationRendererTests {
         string home = ContentOf(documents, "index.html");
         Check.That(home).Contains("<a href=\"errors/TEMPERATURE_BELOW_ABSOLUTE_ZERO.html\"");
         Check.That(home).Not.Contains("id=\"err-TEMPERATURE_BELOW_ABSOLUTE_ZERO\"");
+
+        // The home has no group body, so the shared source description rides along in the table of contents.
+        Check.That(home).Contains("<p class=\"group-description\">Errors raised while validating a temperature value object.</p>");
 
         string page = ContentOf(documents, "errors/TEMPERATURE_BELOW_ABSOLUTE_ZERO.html");
         Check.That(page).StartsWith("<!doctype html>");
