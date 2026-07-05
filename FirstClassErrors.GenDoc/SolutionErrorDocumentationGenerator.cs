@@ -31,7 +31,14 @@ public static class SolutionErrorDocumentationGenerator {
 
         string fullSolutionPath = Path.GetFullPath(solutionPath);
         if (File.Exists(fullSolutionPath) is false) { throw new FileNotFoundException($"Solution file not found: '{fullSolutionPath}'", fullSolutionPath); }
-        if (string.Equals(Path.GetExtension(fullSolutionPath), ".sln", StringComparison.OrdinalIgnoreCase) is false) { throw new ArgumentException($"Expected a .sln file path, got: '{fullSolutionPath}'", nameof(solutionPath)); }
+
+        // Accept both the classic (.sln) and the XML (.slnx) solution formats: "dotnet sln list", used below to
+        // enumerate the projects, handles the two uniformly. Solution filters (.slnf) are intentionally excluded —
+        // the "dotnet sln" subcommand does not process them.
+        string extension = Path.GetExtension(fullSolutionPath);
+        bool isSolution = string.Equals(extension, ".sln", StringComparison.OrdinalIgnoreCase)
+                       || string.Equals(extension, ".slnx", StringComparison.OrdinalIgnoreCase);
+        if (isSolution is false) { throw new ArgumentException($"Expected a .sln or .slnx file path, got: '{fullSolutionPath}'", nameof(solutionPath)); }
 
         if (options.BuildSolution) {
             DotNetBuild(fullSolutionPath, options);
