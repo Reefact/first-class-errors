@@ -1,6 +1,7 @@
 #region Usings declarations
 
 using System.Globalization;
+using System.Text.Json;
 
 using JetBrains.Annotations;
 
@@ -172,6 +173,32 @@ public sealed class HtmlErrorDocumentationRendererTests {
         Check.That(html).Contains("&lt;script&gt;alert(1)&lt;/script&gt;");
         Check.That(html).Contains("&lt;b&gt;bold&lt;/b&gt;");
         Check.That(html).Contains("Danger &amp; Co");
+    }
+
+    [Fact(DisplayName = "The HTML renderer escapes control characters so the hand-built JSON stays valid.")]
+    public void TheHtmlRendererEscapesControlCharactersInJson() {
+        // Setup: messages carrying a tab and other control characters (< U+0020) that a naive escaper would leave raw,
+        // producing invalid JSON in both the search index and the RFC 9457 sample.
+        ErrorDocumentation error = new() {
+            Code     = "CONTROL_CHARS",
+            Title    = "Tab\tandcontrol",
+            Source   = "Danger",
+            Examples = new[] { new ErrorDescription("Short\tmessage", "Detail with\ttab and  control") }
+        };
+
+        // Exercise
+        IReadOnlyList<RenderedDocument> documents = RenderSingle(error);
+
+        // Verify: the standalone search index is valid, parseable JSON and the tab is a proper \t escape.
+        string searchIndex = ContentOf(documents, "assets/search-index.json");
+        Check.ThatCode(() => JsonDocument.Parse(searchIndex)).DoesNotThrow();
+        Check.That(searchIndex).Contains("Tab\\tand");
+        Check.That(searchIndex).Not.Contains("Tab\tand");
+
+        using JsonDocument parsed  = JsonDocument.Parse(searchIndex);
+        JsonElement        entries = parsed.RootElement;
+        Check.That(entries.GetArrayLength()).IsEqualTo(1);
+        Check.That(entries[0].GetProperty("title").GetString()).IsEqualTo("Tab\tandcontrol");
     }
 
     [Fact(DisplayName = "The HTML output is deterministic and orders errors by code.")]
