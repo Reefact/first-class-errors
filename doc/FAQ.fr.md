@@ -143,6 +143,26 @@ Tout système qui bénéficie de :
 
 peut utiliser cette bibliothèque.
 
+## ❓ Pourquoi une erreur de domaine ne peut-elle imbriquer que des erreurs de domaine, alors qu’une erreur d’infrastructure peut aussi imbriquer une erreur de domaine ?
+
+Parce que le type d’une erreur **suit la nature de la défaillance — quelle règle a été violée — et non l’endroit où la défaillance est détectée.**
+
+Une `DomainError` signifie qu’une règle métier a été enfreinte ; sa cause n’est jamais qu’une autre défaillance métier, donc elle n’imbrique que des `DomainError`. Lui donner une cause d’infrastructure ferait fuiter une préoccupation technique dans le vocabulaire du domaine — et étiquetterait une panne technique comme une faute métier.
+
+Une erreur d’infrastructure / de port *peut*, elle, imbriquer une `DomainError`, parce qu’une frontière signale légitimement une défaillance *au niveau de la requête* dont la *cause* est une règle métier. Le cas d’école : un adapter entrant (port primaire) mappe un DTO en value objects, et un value object refuse d’être construit parce qu’un invariant est violé. Deux faits distincts coexistent :
+
+* la **cause** — « cette valeur est invalide » — appartient au domaine (le value object a produit une `DomainError`) ;
+* la **condition de frontière** — « cette requête est rejetée au bord » — appartient à l’adapter (une `PrimaryPortError`).
+
+Imbriquer l’erreur de domaine dans l’erreur de port conserve les deux. C’est une *erreur d’infrastructure **causée par** une erreur de domaine* — pas l’une ou l’autre.
+
+Attention au sens : le value object reste du code de domaine et émet la `DomainError` ; c’est l’adapter qui classe la condition de frontière comme infrastructure. Un value object ne doit jamais émettre lui-même une erreur d’infrastructure — cela ferait dépendre le domaine de l’infrastructure.
+
+Pourquoi cette distinction en vaut-elle la peine ?
+
+* **Indépendance au transport** — la même `DomainError` se rend en HTTP 400/422, en gRPC `INVALID_ARGUMENT`, ou en code de sortie CLI. Le statut HTTP est un *rendu* de l’erreur, pas son identité.
+* **Exploitation** — on alerte et on rejoue sur `InteractionDirection` et `Transience`, pas sur le seul type. Un utilisateur qui saisit un mauvais email produit une erreur de port *entrante* non-transitoire qui ne doit jamais réveiller personne ; un timeout de base de données produit une erreur *sortante* transitoire qui, elle, le peut. Mettre une saisie invalide dans le même panier que de vraies pannes empoisonnerait ce signal.
+
 ---
 
 Section précédente: [Internationalisation](Internationalisation.fr.md)

@@ -166,6 +166,22 @@ public sealed class ErrorTests : IDisposable {
         Check.That(rootError.InnerErrors[0]).IsSameReferenceAs(innerError);
     }
 
+    [Fact(DisplayName = "An infrastructure error preserves a single inner error.")]
+    public void AnInfrastructureErrorPreservesASingleInnerError() {
+        // Setup
+        string      anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
+        ErrorCode   anyErrorCode    = ErrorCodeFactory.CreateAny();
+        DomainError innerError      = DomainError.Create(anyErrorCode, "inner").WithPublicMessage("inner");
+
+        // Exercise
+        InfrastructureError rootError = InfrastructureError.Create(anyErrorCode, anyErrorMessage, InteractionDirection.Incoming, Transience.NonTransient, innerError)
+                                                           .WithPublicMessage(anyErrorMessage);
+
+        // Verify
+        Check.That(rootError.InnerErrors).CountIs(1);
+        Check.That(rootError.InnerErrors[0]).IsSameReferenceAs(innerError);
+    }
+
     [Fact(DisplayName = "An error preserves multiple inner errors.")]
     public void ADiagnosableExceptionPreservesMultipleInnerExceptions() {
         // Setup
