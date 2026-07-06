@@ -100,9 +100,9 @@ Errors become:
 
 <table width="100%">
 <tr>
-<td align="left">Previous section: <a href="BestPractices.en.md">Best Practices</a></td>
-<td align="center"><a href="../README.md#-next-steps">📚 Table of contents</a></td>
-<td align="right">Next section: <a href="ArchitectureOfTheDocumentationPipeline.en.md">Architecture of the Documentation Pipeline</a></td>
+<td align="left"><a href="BestPractices.en.md">← Best Practices</a></td>
+<td align="center"><a href="../README.md#-next-steps">↑ Table of contents</a></td>
+<td align="right"><a href="ArchitectureOfTheDocumentationPipeline.en.md">Architecture of the Documentation Pipeline →</a></td>
 </tr>
 </table>
 

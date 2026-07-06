@@ -100,9 +100,9 @@ Si la majorité des réponses est oui, c’est un bon candidat.
 
 <table width="100%">
 <tr>
-<td align="left">Section précédente: <a href="CoreConcepts.fr.md">Concepts fondamentaux</a></td>
-<td align="center"><a href="README.fr.md#-étapes-suivantes">📚 Table des matières</a></td>
-<td align="right">Section suivante: <a href="WritingErrorsGuide.fr.md">Guide d’écriture des erreurs</a></td>
+<td align="left"><a href="CoreConcepts.fr.md">← Concepts fondamentaux</a></td>
+<td align="center"><a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a></td>
+<td align="right"><a href="WritingErrorsGuide.fr.md">Guide d’écriture des erreurs →</a></td>
 </tr>
 </table>
 

@@ -167,8 +167,8 @@ Pourquoi cette distinction en vaut-elle la peine ?
 
 <table width="100%">
 <tr>
-<td align="left">Section précédente: <a href="Internationalisation.fr.md">Internationalisation</a></td>
-<td align="center"><a href="README.fr.md#-étapes-suivantes">📚 Table des matières</a></td>
+<td align="left"><a href="Internationalisation.fr.md">← Internationalisation</a></td>
+<td align="center"><a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a></td>
 <td align="right"></td>
 </tr>
 </table>

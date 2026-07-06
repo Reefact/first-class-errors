@@ -155,9 +155,9 @@ The code is the source of truth.
 
 <table width="100%">
 <tr>
-<td align="left">Previous section: <a href="OperationalIntegration.en.md">CI/CD and Operational Integration</a></td>
-<td align="center"><a href="../README.md#-next-steps">📚 Table of contents</a></td>
-<td align="right">Next section: <a href="WritingACustomRenderer.en.md">Writing a custom renderer</a></td>
+<td align="left"><a href="OperationalIntegration.en.md">← CI/CD and Operational Integration</a></td>
+<td align="center"><a href="../README.md#-next-steps">↑ Table of contents</a></td>
+<td align="right"><a href="WritingACustomRenderer.en.md">Writing a custom renderer →</a></td>
 </tr>
 </table>
 

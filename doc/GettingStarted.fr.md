@@ -190,8 +190,8 @@ Vous passez de :
 <table width="100%">
 <tr>
 <td align="left"></td>
-<td align="center"><a href="README.fr.md#-étapes-suivantes">📚 Table des matières</a></td>
-<td align="right">Section suivante: <a href="DesignPrinciples.fr.md">Principes de conception</a></td>
+<td align="center"><a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a></td>
+<td align="right"><a href="DesignPrinciples.fr.md">Principes de conception →</a></td>
 </tr>
 </table>
 
