@@ -41,7 +41,7 @@ Each rule has a stable id `FCExxx`. Errors are hard defects; warnings flag likel
 
 | Rule | Severity | Default | Description |
 |------|----------|---------|-------------|
-| [FCE016 UnusedToExceptionResult](FCE016.en.md) | 🟠 Warning | on | Error.ToException() is called as a standalone statement and its result is discarded. |
+| [FCE016 UnusedToExceptionResult](FCE016.en.md) | 🟠 Warning | on | Error.ToException() is called as a standalone statement, or its result is explicitly discarded with `_ =`. |
 
 ## Configuring
 
