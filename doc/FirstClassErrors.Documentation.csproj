@@ -3,15 +3,15 @@
   <!--
     Documentation-only project.
 
-    This project compiles nothing. Its sole purpose is to surface every
-    Markdown documentation file under doc/ (both the English *.en.md and the
-    French *.fr.md files, including the analyzer pages under analyzers/) in the
-    Visual Studio Solution Explorer, so the documentation is easy to find,
-    read and edit right next to the code.
+    This project compiles nothing. Its sole purpose is to surface the
+    documentation under doc/ in the Visual Studio Solution Explorer, so it is
+    easy to find, read and edit right next to the code: the Markdown pages
+    (English *.en.md and French *.fr.md, including the analyzer pages under
+    analyzers/) and the image assets they reference (doc/images/*).
 
-    The <None> glob below picks up new documentation files automatically: no
-    need to touch this project or the solution when a doc page is added or
-    renamed.
+    The <None> globs below pick up new documentation files automatically: no
+    need to touch this project or the solution when a doc page or image is
+    added or renamed.
 
     Nothing is built: no *.cs is compiled (EnableDefaultItems=false) and no
     assembly is produced (IncludeBuildOutput=false). The project is also
@@ -33,7 +33,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Markdown documentation pages (English *.en.md and French *.fr.md). -->
     <None Include="**\*.md" />
+    <!-- Image assets referenced by the documentation (e.g. doc/images/*.png). -->
+    <None Include="**\*.png" />
+    <None Include="**\*.jpg" />
+    <None Include="**\*.jpeg" />
+    <None Include="**\*.gif" />
+    <None Include="**\*.svg" />
   </ItemGroup>
 
 </Project>
