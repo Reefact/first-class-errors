@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Documentation-only project.
+
+    This project compiles nothing. Its sole purpose is to surface every
+    Markdown documentation file under doc/ (both the English *.en.md and the
+    French *.fr.md files, including the analyzer pages under analyzers/) in the
+    Visual Studio Solution Explorer, so the documentation is easy to find,
+    read and edit right next to the code.
+
+    The <None> glob below picks up new documentation files automatically: no
+    need to touch this project or the solution when a doc page is added or
+    renamed.
+
+    Nothing is built: no *.cs is compiled (EnableDefaultItems=false) and no
+    assembly is produced (IncludeBuildOutput=false). The project is also
+    excluded from the solution build configurations, so both
+    `dotnet build FirstClassErrors.sln` and "Build Solution" in Visual Studio
+    simply skip it. It therefore adds no build cost and no new dependency.
+
+    TargetFramework is set only because the SDK requires one; it reuses the
+    netstandard2.0 targeting pack already restored by the main library.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="**\*.md" />
+  </ItemGroup>
+
+</Project>
