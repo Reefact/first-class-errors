@@ -1,5 +1,8 @@
 # Design Principles
 
+🌍 **Languages:**  
+🇬🇧 English (this file) | 🇫🇷 [Français](./DesignPrinciples.fr.md)
+
 FirstClassErrors is built on the idea that errors are not accidental by-products of code, but meaningful parts of the system’s knowledge. In many applications, errors are treated as technical noise — something to log, catch, or hide. This library takes the opposite stance: when an error is expressed, it reveals something about the rules, assumptions, and boundaries of the system.
 
 An **error** is not merely a failure of execution. It represents a situation the system recognizes and gives a name to. By turning error situations into explicit concepts — through factory methods, codes, diagnostics, and documentation — the system becomes more readable, more explainable, and more supportable.

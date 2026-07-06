@@ -1,5 +1,8 @@
 # Writing a custom renderer
 
+🌍 **Languages:**  
+🇬🇧 English (this file) | 🇫🇷 [Français](./WritingACustomRenderer.fr.md)
+
 The built-in `json` and `markdown` formats cover the common cases, but any output format — HTML, CSV, a company documentation template — can be added as a **custom renderer**. A renderer depends only on the documentation model, not on how the catalog was produced, so writing one is small and self-contained.
 
 ## The contract

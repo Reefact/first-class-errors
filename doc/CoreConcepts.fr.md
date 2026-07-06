@@ -1,5 +1,8 @@
 # Concepts clés
 
+🌍 **Langues:**  
+🇬🇧 [English](./CoreConcepts.en.md) | 🇫🇷 Français (ce fichier)
+
 FirstClassErrors n’est pas simplement une bibliothèque utilitaire.  Il introduit une autre manière de penser les erreurs applicatives.
 
 Au lieu de considérer les exceptions comme des incidents techniques, elles sont vues comme **une connaissance structurée sur ce qui s’est mal passé**.
