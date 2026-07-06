@@ -52,10 +52,8 @@ public class InfrastructureError : Error {
     /// <param name="configureContext">An optional action to configure additional error context.</param>
     /// <returns>A <see cref="PublicMessageStage{TError}" /> to supply the public messages and finalize the error.</returns>
     public static PublicMessageStage<InfrastructureError> Create(ErrorCode code, string diagnosticMessage, InteractionDirection direction, Transience transience, Action<ErrorContextBuilder>? configureContext = null) {
-        string safeDiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
-
         return new PublicMessageStage<InfrastructureError>((shortMessage, detailedMessage) =>
-                                                               new InfrastructureError(code, safeDiagnosticMessage, shortMessage, detailedMessage, direction, transience, configureContext));
+                                                               new InfrastructureError(code, diagnosticMessage, shortMessage, detailedMessage, direction, transience, configureContext));
     }
 
     /// <summary>
@@ -69,10 +67,8 @@ public class InfrastructureError : Error {
     /// <param name="configureContext">An optional action to configure additional error context.</param>
     /// <returns>A <see cref="PublicMessageStage{TError}" /> to supply the public messages and finalize the error.</returns>
     public static PublicMessageStage<InfrastructureError> Create(ErrorCode code, string diagnosticMessage, InteractionDirection direction, Transience transience, Error innerError, Action<ErrorContextBuilder>? configureContext = null) {
-        string safeDiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
-
         return new PublicMessageStage<InfrastructureError>((shortMessage, detailedMessage) =>
-                                                               new InfrastructureError(code, safeDiagnosticMessage, shortMessage, detailedMessage, direction, transience, innerError, configureContext));
+                                                               new InfrastructureError(code, diagnosticMessage, shortMessage, detailedMessage, direction, transience, innerError, configureContext));
     }
 
     /// <summary>
@@ -86,10 +82,8 @@ public class InfrastructureError : Error {
     /// <param name="configureContext">An optional action to configure additional error context.</param>
     /// <returns>A <see cref="PublicMessageStage{TError}" /> to supply the public messages and finalize the error.</returns>
     public static PublicMessageStage<InfrastructureError> Create(ErrorCode code, string diagnosticMessage, InteractionDirection direction, Transience transience, IEnumerable<Error> innerErrors, Action<ErrorContextBuilder>? configureContext = null) {
-        string safeDiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
-
         return new PublicMessageStage<InfrastructureError>((shortMessage, detailedMessage) =>
-                                                               new InfrastructureError(code, safeDiagnosticMessage, shortMessage, detailedMessage, direction, transience, innerErrors, configureContext));
+                                                               new InfrastructureError(code, diagnosticMessage, shortMessage, detailedMessage, direction, transience, innerErrors, configureContext));
     }
 
     #endregion

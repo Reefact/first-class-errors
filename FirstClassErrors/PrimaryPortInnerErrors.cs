@@ -11,7 +11,8 @@ namespace FirstClassErrors;
 /// </summary>
 /// <remarks>
 ///     This class provides methods to add domain-specific and primary port-specific errors to the collection.
-///     It ensures that the added errors are not null and supports method chaining for convenience.
+///     A <c>null</c> error is ignored rather than rejected (manufacturing an error never throws), and the methods support
+///     method chaining for convenience.
 /// </remarks>
 [DebuggerDisplay("{ToString()}")]
 public sealed class PrimaryPortInnerErrors {
@@ -26,13 +27,14 @@ public sealed class PrimaryPortInnerErrors {
     ///     Adds a domain-specific error to the collection of inner errors.
     /// </summary>
     /// <param name="error">
-    ///     The <see cref="DomainError" /> instance representing the domain-specific error to add.
+    ///     The <see cref="DomainError" /> instance representing the domain-specific error to add. If <c>null</c>, the call is
+    ///     ignored.
     /// </param>
     /// <returns>
     ///     The current instance of <see cref="PrimaryPortInnerErrors" />, allowing for method chaining.
     /// </returns>
     /// <remarks>
-    ///     This method ensures that the provided <paramref name="error" /> is not null before adding it to the collection.
+    ///     A <c>null</c> <paramref name="error" /> is ignored rather than rejected (manufacturing an error never throws).
     /// </remarks>
     public PrimaryPortInnerErrors Add(DomainError error) {
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
@@ -47,13 +49,14 @@ public sealed class PrimaryPortInnerErrors {
     ///     Adds a primary port-specific error to the collection of inner errors.
     /// </summary>
     /// <param name="error">
-    ///     The <see cref="PrimaryPortError" /> instance representing the primary port-specific error to add.
+    ///     The <see cref="PrimaryPortError" /> instance representing the primary port-specific error to add. If <c>null</c>,
+    ///     the call is ignored.
     /// </param>
     /// <returns>
     ///     The current instance of <see cref="PrimaryPortInnerErrors" />, allowing for method chaining.
     /// </returns>
     /// <remarks>
-    ///     This method ensures that the provided <paramref name="error" /> is not null before adding it to the collection.
+    ///     A <c>null</c> <paramref name="error" /> is ignored rather than rejected (manufacturing an error never throws).
     /// </remarks>
     public PrimaryPortInnerErrors Add(PrimaryPortError error) {
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract

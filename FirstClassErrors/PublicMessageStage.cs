@@ -38,21 +38,19 @@ public sealed class PublicMessageStage<TError>
     ///     Supplies the public-facing messages and produces the final error instance.
     /// </summary>
     /// <param name="shortMessage">
-    ///     The mandatory short public summary of the error, safe to surface to an end user or an API client. This value
-    ///     cannot be null or whitespace.
+    ///     The mandatory short public summary of the error, safe to surface to an end user or an API client. Following the
+    ///     library's "manufacturing an error never throws" doctrine, a <c>null</c> or whitespace value is not rejected: it is
+    ///     replaced by <see cref="Error.MissingShortMessage" /> and the omission is recorded in the error context.
     /// </param>
     /// <param name="detailedMessage">
     ///     An optional, controlled public detail. It may be exposed to a caller, but only when the application explicitly
     ///     chooses to. Defaults to <c>null</c>.
     /// </param>
     /// <returns>The finalized <typeparamref name="TError" /> instance.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="shortMessage" /> is <c>null</c>.</exception>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="shortMessage" /> is empty or whitespace.</exception>
     public TError WithPublicMessage(string shortMessage, string? detailedMessage = null) {
-        string  safeShortMessage    = Error.RequireMessage(shortMessage, nameof(shortMessage));
-        string? safeDetailedMessage = Error.NormalizeOptionalMessage(detailedMessage);
-
-        return _finalize(safeShortMessage, safeDetailedMessage);
+        // The base Error constructor is the single place that normalizes messages (coalesces missing mandatory ones to a
+        // documented sentinel and trims the rest), so the raw values are forwarded as-is here.
+        return _finalize(shortMessage, detailedMessage);
     }
 
 }

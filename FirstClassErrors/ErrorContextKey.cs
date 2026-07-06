@@ -53,6 +53,18 @@ public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
     internal static readonly ErrorContextKey CannotBuildErrorContext = Create<Exception>("#CANNOT_BUILD_ERROR_CONTEXT", "The exception responsible for the failure to construct the error context.");
 
     /// <summary>
+    ///     Represents the key that lists the mandatory messages (by parameter name) that were missing at error construction
+    ///     and were replaced by a fallback sentinel.
+    /// </summary>
+    /// <remarks>
+    ///     This key materializes, as queryable diagnostic data, a violation of the invariant that every error carries a
+    ///     diagnostic and a short message. It is added during <see cref="Error" /> construction under the library's
+    ///     "manufacturing an error never throws" doctrine. The associated value is an
+    ///     <see cref="IReadOnlyList{T}" /> of <see cref="string" />.
+    /// </remarks>
+    internal static readonly ErrorContextKey MissingRequiredMessages = Create<IReadOnlyList<string>>("#MISSING_REQUIRED_MESSAGE", "The mandatory messages (by parameter name) that were missing and replaced by a fallback sentinel.");
+
+    /// <summary>
     ///     Creates a new instance of <see cref="ErrorContextKey{T}" /> with the specified name and optional description.
     /// </summary>
     /// <typeparam name="T">The type associated with the error context key.</typeparam>

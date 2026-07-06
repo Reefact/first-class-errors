@@ -26,14 +26,14 @@ public sealed class SecondaryPortInnerErrors {
     ///     Adds a <see cref="DomainError" /> to the collection of errors.
     /// </summary>
     /// <param name="error">
-    ///     The <see cref="DomainError" /> instance to add. Must not be <c>null</c>.
+    ///     The <see cref="DomainError" /> instance to add. If <c>null</c>, the call is ignored.
     /// </param>
     /// <returns>
     ///     The current <see cref="SecondaryPortInnerErrors" /> instance, allowing for method chaining.
     /// </returns>
     /// <remarks>
     ///     This method appends a domain-specific error to the internal collection of errors.
-    ///     It ensures that the provided error is not <c>null</c> before adding it.
+    ///     A <c>null</c> <paramref name="error" /> is ignored rather than rejected (manufacturing an error never throws).
     /// </remarks>
     public SecondaryPortInnerErrors Add(DomainError error) {
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
@@ -48,14 +48,14 @@ public sealed class SecondaryPortInnerErrors {
     ///     Adds a <see cref="SecondaryPortError" /> to the collection of errors.
     /// </summary>
     /// <param name="error">
-    ///     The <see cref="SecondaryPortError" /> instance to add. Must not be <c>null</c>.
+    ///     The <see cref="SecondaryPortError" /> instance to add. If <c>null</c>, the call is ignored.
     /// </param>
     /// <returns>
     ///     The current <see cref="SecondaryPortInnerErrors" /> instance, allowing for method chaining.
     /// </returns>
     /// <remarks>
     ///     This method appends a secondary port error to the internal collection of errors.
-    ///     It ensures that the provided error is not <c>null</c> before adding it.
+    ///     A <c>null</c> <paramref name="error" /> is ignored rather than rejected (manufacturing an error never throws).
     /// </remarks>
     public SecondaryPortInnerErrors Add(SecondaryPortError error) {
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
