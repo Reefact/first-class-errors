@@ -41,7 +41,7 @@ Chaque règle a un identifiant stable `FCExxx`. Les erreurs sont des défauts du
 
 | Règle | Sévérité | Défaut | Description |
 |------|----------|---------|-------------|
-| [FCE016 UnusedToExceptionResult](FCE016.fr.md) | 🟠 Warning | activée | Error.ToException() est appelé comme instruction isolée et son résultat est ignoré. |
+| [FCE016 UnusedToExceptionResult](FCE016.fr.md) | 🟠 Warning | activée | Error.ToException() est appelé comme instruction isolée, ou son résultat est explicitement ignoré avec `_ =`. |
 
 ## Configuration
 
