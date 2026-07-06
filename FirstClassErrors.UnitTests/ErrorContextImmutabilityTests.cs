@@ -18,7 +18,6 @@ public sealed class ErrorContextImmutabilityTests : IDisposable {
 
     public ErrorContextImmutabilityTests() {
         ErrorContextKey.ResetForTests();
-        ErrorCode.ResetForTests();
     }
 
     #endregion
@@ -26,7 +25,6 @@ public sealed class ErrorContextImmutabilityTests : IDisposable {
     [SuppressMessage("Usage", "CA1816", Justification = "xUnit teardown hook.")]
     public void Dispose() {
         ErrorContextKey.ResetForTests();
-        ErrorCode.ResetForTests();
     }
 
     [Fact(DisplayName = "The context values are read-only and cannot be mutated.")]

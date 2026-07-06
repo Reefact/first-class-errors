@@ -1,7 +1,5 @@
 ﻿#region Usings declarations
 
-using System.Diagnostics.CodeAnalysis;
-
 using JetBrains.Annotations;
 
 using NFluent;
@@ -11,15 +9,7 @@ using NFluent;
 namespace FirstClassErrors.UnitTests;
 
 [TestSubject(typeof(ErrorCode))]
-public class ErrorCodeTests : IDisposable {
-
-    #region Constructors & Destructor
-
-    public ErrorCodeTests() {
-        ErrorCode.ResetForTests();
-    }
-
-    #endregion
+public class ErrorCodeTests {
 
     [Theory(DisplayName = "Creating an error code with a valid code succeeds.")]
     [InlineData("ERROR_001")]
@@ -45,16 +35,17 @@ public class ErrorCodeTests : IDisposable {
              .WithMessage("Error code cannot be null or whitespace. (Parameter 'code')");
     }
 
-    [Fact(DisplayName = "Creating an error code with a duplicate code is rejected.")]
-    public void CreatingErrorCodeWithDuplicateCodeIsRejected() {
+    [Fact(DisplayName = "Creating the same code twice is allowed and produces equal instances.")]
+    public void CreatingTheSameCodeTwiceIsAllowedAndProducesEqualInstances() {
         // Setup
         const string code = "DUPLICATE_ERROR";
-        ErrorCode.Create(code);
 
-        // Exercise & verify
-        Check.ThatCode(() => ErrorCode.Create(code))
-             .Throws<InvalidOperationException>()
-             .WithMessage("Error code 'DUPLICATE_ERROR' has already been registered.");
+        // Exercise
+        ErrorCode first  = ErrorCode.Create(code);
+        ErrorCode second = ErrorCode.Create(code);
+
+        // Verify
+        Check.That(first).IsEqualTo(second);
     }
 
     [Fact(DisplayName = "Error codes with the same code are equal.")]
@@ -62,8 +53,7 @@ public class ErrorCodeTests : IDisposable {
         // Setup
         const string code       = "EQUALS_TEST";
         ErrorCode    errorCode1 = ErrorCode.Create(code);
-        ErrorCode.ResetForTests();
-        ErrorCode errorCode2 = ErrorCode.Create(code);
+        ErrorCode    errorCode2 = ErrorCode.Create(code);
 
         // Exercise & verify
         Check.That(errorCode1).IsEqualTo(errorCode2);
@@ -73,7 +63,6 @@ public class ErrorCodeTests : IDisposable {
     public void ErrorCodesWithDifferentCodesAreNotEqual() {
         // Setup
         ErrorCode errorCode1 = ErrorCode.Create("ERROR_1");
-        ErrorCode.ResetForTests();
         ErrorCode errorCode2 = ErrorCode.Create("ERROR_2");
 
         // Exercise & verify
@@ -97,7 +86,6 @@ public class ErrorCodeTests : IDisposable {
         // Setup
         string    code       = "OPERATOR_EQUALS";
         ErrorCode errorCode1 = ErrorCode.Create(code);
-        ErrorCode.ResetForTests();
         ErrorCode errorCode2 = ErrorCode.Create(code);
 
         // Exercise
@@ -111,7 +99,6 @@ public class ErrorCodeTests : IDisposable {
     public void InequalityOperatorReturnsTrueForErrorCodesWithDifferentCodes() {
         // Setup
         ErrorCode errorCode1 = ErrorCode.Create("ERROR_1");
-        ErrorCode.ResetForTests();
         ErrorCode errorCode2 = ErrorCode.Create("ERROR_2");
 
         // Exercise
@@ -139,8 +126,7 @@ public class ErrorCodeTests : IDisposable {
         // Setup
         const string code       = "HASH_TEST";
         ErrorCode    errorCode1 = ErrorCode.Create(code);
-        ErrorCode.ResetForTests();
-        ErrorCode errorCode2 = ErrorCode.Create(code);
+        ErrorCode    errorCode2 = ErrorCode.Create(code);
 
         // Exercise
         int hash1 = errorCode1.GetHashCode();
@@ -154,7 +140,6 @@ public class ErrorCodeTests : IDisposable {
     public void ErrorCodesWithDifferentCodesMayProduceDifferentHashCodes() {
         // Setup
         ErrorCode errorCode1 = ErrorCode.Create("HASH_1");
-        ErrorCode.ResetForTests();
         ErrorCode errorCode2 = ErrorCode.Create("HASH_2");
 
         // Exercise
@@ -178,29 +163,19 @@ public class ErrorCodeTests : IDisposable {
         Check.That(result).IsFalse();
     }
 
-    [Fact(DisplayName = "Concurrent creation of the same error code results in a single registration.")]
-    public void ConcurrentCreationOfSameErrorCodeResultsInSingleRegistration() {
-        const string code = "CONCURRENT";
+    [Fact(DisplayName = "Concurrent creation of the same code always succeeds and yields equal instances.")]
+    public void ConcurrentCreationOfSameCodeAlwaysSucceedsAndYieldsEqualInstances() {
+        // Setup
+        const string code      = "CONCURRENT";
+        ErrorCode    reference = ErrorCode.Create(code);
 
-        int successes = 0;
-        int failures  = 0;
+        ErrorCode[] created = new ErrorCode[20];
 
-        Parallel.For(0, 20, _ => {
-            try {
-                ErrorCode.Create(code);
-                Interlocked.Increment(ref successes);
-            } catch (InvalidOperationException) {
-                Interlocked.Increment(ref failures);
-            }
-        });
+        // Exercise
+        Parallel.For(0, 20, index => created[index] = ErrorCode.Create(code));
 
-        Check.That(successes).IsEqualTo(1);
-        Check.That(failures).IsEqualTo(19);
-    }
-
-    [SuppressMessage("Usage", "CA1816", Justification = "IDisposable is used as an xUnit teardown hook. The class has no finalizer and does not own unmanaged resources.")]
-    public void Dispose() {
-        ErrorCode.ResetForTests();
+        // Verify
+        Check.That(created.All(errorCode => errorCode == reference)).IsTrue();
     }
 
 }

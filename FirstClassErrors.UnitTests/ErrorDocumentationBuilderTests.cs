@@ -17,7 +17,6 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
 
     public ErrorDocumentationBuilderTests() {
         ErrorContextKey.ResetForTests();
-        ErrorCode.ResetForTests();
     }
 
     #endregion
@@ -25,7 +24,6 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
     [SuppressMessage("Usage", "CA1816", Justification = "IDisposable is used as an xUnit teardown hook. The class has no finalizer and does not own unmanaged resources.")]
     public void Dispose() {
         ErrorContextKey.ResetForTests();
-        ErrorCode.ResetForTests();
     }
 
     [Fact(DisplayName = "An error documentation title cannot be null.")]

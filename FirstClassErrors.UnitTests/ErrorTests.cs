@@ -18,7 +18,6 @@ public sealed class ErrorTests : IDisposable {
 
     public ErrorTests() {
         ErrorContextKey.ResetForTests();
-        ErrorCode.ResetForTests();
     }
 
     #endregion
@@ -26,7 +25,6 @@ public sealed class ErrorTests : IDisposable {
     [SuppressMessage("Usage", "CA1816", Justification = "IDisposable is used as an xUnit teardown hook. The class has no finalizer and does not own unmanaged resources.")]
     public void Dispose() {
         ErrorContextKey.ResetForTests();
-        ErrorCode.ResetForTests();
     }
 
     [Fact(DisplayName = "An error has a unique instance identifier.")]

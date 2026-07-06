@@ -7,9 +7,6 @@ public sealed class ErrorCode : IEquatable<ErrorCode> {
 
     #region Statics members declarations
 
-    private static readonly HashSet<string> Registered = new(StringComparer.Ordinal);
-    private static readonly object          Lock       = new();
-
     /// <summary>
     ///     Represents an unspecified error condition. This is used as a default value when no specific error code is provided.
     /// </summary>
@@ -18,34 +15,22 @@ public sealed class ErrorCode : IEquatable<ErrorCode> {
     /// <summary>
     ///     Creates a new instance of the <see cref="ErrorCode" /> class with the specified code.
     /// </summary>
-    /// <param name="code">The unique string identifier for the error condition.</param>
+    /// <param name="code">The string identifier for the error condition.</param>
     /// <returns>A new <see cref="ErrorCode" /> instance representing the specified error condition.</returns>
+    /// <remarks>
+    ///     An error code is a value: two <see cref="ErrorCode" /> instances built from the same <paramref name="code" />
+    ///     compare equal, so creating the same code more than once is allowed and never throws. A code is an identity, not a
+    ///     runtime registry entry — a duplicated code silently merges two distinct errors into one, which the <c>FCE001</c>
+    ///     analyzer flags at build time.
+    /// </remarks>
     /// <exception cref="ArgumentException">
     ///     Thrown when the <paramref name="code" /> is null, empty, or consists only of
     ///     whitespace.
     /// </exception>
-    /// <exception cref="InvalidOperationException">Thrown when the <paramref name="code" /> has already been registered.</exception>
     public static ErrorCode Create(string code) {
         if (string.IsNullOrWhiteSpace(code)) { throw new ArgumentException("Error code cannot be null or whitespace.", nameof(code)); }
 
-        lock (Lock) {
-            if (!Registered.Add(code)) { throw new InvalidOperationException($"Error code '{code}' has already been registered."); }
-        }
-
         return new ErrorCode(code);
-    }
-
-    /// <summary>
-    ///     Resets the internal state of registered <see cref="ErrorCode" /> values.
-    /// </summary>
-    /// <remarks>
-    ///     This method is intended for use in testing scenarios only. It clears all registered error codes,
-    ///     allowing a clean slate for subsequent tests that rely on <see cref="ErrorCode" /> registration.
-    /// </remarks>
-    internal static void ResetForTests() {
-        lock (Lock) {
-            Registered.Clear();
-        }
     }
 
     #endregion
