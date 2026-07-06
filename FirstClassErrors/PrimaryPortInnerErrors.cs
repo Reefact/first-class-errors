@@ -89,20 +89,7 @@ public sealed class PrimaryPortInnerErrors {
     ///     It determines the transience based on the <see cref="InfrastructureError.Transience" /> property.
     /// </remarks>
     public Transience ComputeTransience() {
-        IEnumerable<InfrastructureError> infraErrors = _errors.OfType<InfrastructureError>();
-
-        bool hasTransient = false;
-
-        foreach (InfrastructureError? error in infraErrors) {
-            switch (error.Transience) {
-                case Transience.NonTransient: return Transience.NonTransient;
-                case Transience.Transient:    hasTransient = true; break;
-            }
-        }
-
-        return hasTransient
-            ? Transience.Transient
-            : Transience.Unknown;
+        return TransienceCalculator.Compute(_errors);
     }
 
     internal IReadOnlyList<Error> ToList() {
