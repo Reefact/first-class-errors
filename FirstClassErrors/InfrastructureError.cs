@@ -8,6 +8,13 @@ namespace FirstClassErrors;
 ///     about the interaction direction and whether the error is transient, allowing for more granular handling of
 ///     infrastructure-related issues. Instances are created through the staged builder
 ///     (<see cref="Create(ErrorCode, string, InteractionDirection, Transience, Action{ErrorContextBuilder})" />).
+///     <para>
+///         An infrastructure error may nest other errors as causes — either infrastructure errors or
+///         <see cref="DomainError" />s (for instance a boundary rejection whose cause is a domain-invariant violation
+///         surfaced while mapping an incoming request). For direction-aware nesting that constrains inner infrastructure
+///         errors to a single <see cref="InteractionDirection" />, prefer <see cref="PrimaryPortError" /> /
+///         <see cref="SecondaryPortError" />, which enforce it through their typed inner-error builders.
+///     </para>
 /// </remarks>
 public class InfrastructureError : Error {
 
@@ -15,6 +22,12 @@ public class InfrastructureError : Error {
 
     internal InfrastructureError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, InteractionDirection direction, Transience transience, Action<ErrorContextBuilder>? configureContext = null)
         : base(code, diagnosticMessage, shortMessage, detailedMessage, configureContext) {
+        Direction  = direction;
+        Transience = transience;
+    }
+
+    internal InfrastructureError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, InteractionDirection direction, Transience transience, Error innerError, Action<ErrorContextBuilder>? configureContext = null)
+        : base(code, diagnosticMessage, shortMessage, detailedMessage, innerError, configureContext) {
         Direction  = direction;
         Transience = transience;
     }
@@ -43,6 +56,23 @@ public class InfrastructureError : Error {
 
         return new PublicMessageStage<InfrastructureError>((shortMessage, detailedMessage) =>
                                                                new InfrastructureError(code, safeDiagnosticMessage, shortMessage, detailedMessage, direction, transience, configureContext));
+    }
+
+    /// <summary>
+    ///     Begins the creation of an <see cref="InfrastructureError" /> that wraps a single inner error.
+    /// </summary>
+    /// <param name="code">The error code representing the type of the error.</param>
+    /// <param name="diagnosticMessage">The mandatory internal diagnostic message (for logs, support and developers).</param>
+    /// <param name="direction">The direction of the interaction associated with the error.</param>
+    /// <param name="transience">The transience level of the error.</param>
+    /// <param name="innerError">The inner <see cref="Error" /> that provides additional context (an infrastructure error or a <see cref="DomainError" /> cause).</param>
+    /// <param name="configureContext">An optional action to configure additional error context.</param>
+    /// <returns>A <see cref="PublicMessageStage{TError}" /> to supply the public messages and finalize the error.</returns>
+    public static PublicMessageStage<InfrastructureError> Create(ErrorCode code, string diagnosticMessage, InteractionDirection direction, Transience transience, Error innerError, Action<ErrorContextBuilder>? configureContext = null) {
+        string safeDiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
+
+        return new PublicMessageStage<InfrastructureError>((shortMessage, detailedMessage) =>
+                                                               new InfrastructureError(code, safeDiagnosticMessage, shortMessage, detailedMessage, direction, transience, innerError, configureContext));
     }
 
     /// <summary>

@@ -94,6 +94,14 @@ Errors are modeled as a hierarchy rooted in the abstract `Error` type:
 
 The Port errors replace the old Adapter exceptions. When a port failure wraps several causes, `PrimaryPortInnerErrors` / `SecondaryPortInnerErrors` aggregate the inner errors and compute the overall transience.
 
+**Nesting rules.** Inner errors capture *causes*, and the model enforces what may nest in what — by construction, not by convention:
+
+* A **`DomainError`** nests **only** other `DomainError`s. A domain failure is only ever caused by — or aggregated from — other domain failures; it never carries an infrastructure cause (that would leak a technical concern into the domain vocabulary).
+* A **`PrimaryPortError`** / **`SecondaryPortError`** nests **infrastructure errors of its own direction** (a primary port nests primary-port errors, a secondary port nests secondary-port errors) **and/or** `DomainError`s — for example a boundary rejection whose cause is a domain-invariant violation surfaced while mapping an incoming request. The typed `PrimaryPortInnerErrors` / `SecondaryPortInnerErrors` builders make anything else unrepresentable: they only expose `Add(DomainError)` and `Add(`_same-direction port error_`)`.
+* The base **`InfrastructureError`** is the permissive general case and accepts any `Error` as inner. Prefer the Port types in real code: they pin the `InteractionDirection` and keep nesting consistent.
+
+In short: **a domain error contains only domain errors; an infrastructure error contains same-direction infrastructure errors and/or domain errors.**
+
 Each error has a paired exception reached via `error.ToException()`: `DomainException`, `InfrastructureException`, `PrimaryPortException`, `SecondaryPortException`. You never `new` these directly; the exception exposes its `Error` (and through it the context and inner errors).
 
 ## 🔁 Error or data? Both are supported

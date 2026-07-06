@@ -93,6 +93,14 @@ Les erreurs sont modélisées sous forme de hiérarchie ayant pour racine le typ
 
 Les erreurs de Port remplacent les anciennes exceptions d’Adapter. Lorsqu’une défaillance de port enveloppe plusieurs causes, `PrimaryPortInnerErrors` / `SecondaryPortInnerErrors` agrègent les erreurs internes et calculent la transience globale.
 
+**Règles d’imbrication.** Les erreurs internes capturent des *causes*, et le modèle contraint ce qui peut s’imbriquer dans quoi — par construction, pas par convention :
+
+* Une **`DomainError`** n’imbrique **que** d’autres `DomainError`. Une défaillance métier n’a jamais pour cause — ou pour agrégat — que d’autres défaillances métier ; elle ne porte jamais une cause d’infrastructure (ce serait faire fuiter une préoccupation technique dans le vocabulaire du domaine).
+* Une **`PrimaryPortError`** / **`SecondaryPortError`** imbrique des **erreurs d’infrastructure de sa propre direction** (un port primaire imbrique des erreurs de port primaire, un port secondaire des erreurs de port secondaire) **et/ou** des `DomainError` — par exemple un rejet à la frontière dont la cause est une violation d’invariant métier détectée lors du mapping d’une requête entrante. Les collections typées `PrimaryPortInnerErrors` / `SecondaryPortInnerErrors` rendent tout le reste non représentable : elles n’exposent que `Add(DomainError)` et `Add(`_erreur de port de même direction_`)`.
+* La base **`InfrastructureError`** est le cas général permissif et accepte n’importe quelle `Error` comme cause interne. Dans du vrai code, préfère les types de Port : ils fixent l’`InteractionDirection` et gardent l’imbrication cohérente.
+
+En résumé : **une erreur de domaine ne contient que des erreurs de domaine ; une erreur d’infrastructure contient des erreurs d’infrastructure de même direction et/ou des erreurs de domaine.**
+
 Chaque erreur possède une exception associée, obtenue via `error.ToException()` : `DomainException`, `InfrastructureException`, `PrimaryPortException`, `SecondaryPortException`. On ne les instancie jamais directement avec `new` ; l’exception expose son `Error` (et, à travers lui, le contexte et les erreurs internes).
 
 ## 🔁 Erreur ou donnée ? Les deux sont possibles
