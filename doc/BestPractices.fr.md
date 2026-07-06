@@ -207,6 +207,12 @@ Des erreurs bien écrites améliorent :
 
 ---
 
-Section précédente: [Cas d’usage](UsagePatterns.fr.md) | Section suivante: [Intégration CI/CD et exploitation](OperationalIntegration.fr.md) | [📚 Table des matières](README.fr.md#-étapes-suivantes)
+<table width="100%">
+<tr>
+<td align="left">Section précédente: <a href="UsagePatterns.fr.md">Cas d’usage</a></td>
+<td align="center"><a href="README.fr.md#-étapes-suivantes">📚 Table des matières</a></td>
+<td align="right">Section suivante: <a href="OperationalIntegration.fr.md">Intégration CI/CD et exploitation</a></td>
+</tr>
+</table>
 
 ---

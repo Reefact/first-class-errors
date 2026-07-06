@@ -98,6 +98,12 @@ Les erreurs deviennent :
 
 ---
 
-Section précédente: [Bonnes pratiques](BestPractices.fr.md) | Section suivante: [Architecture du pipeline de documentation](ArchitectureOfTheDocumentationPipeline.fr.md) | [📚 Table des matières](README.fr.md#-étapes-suivantes)
+<table width="100%">
+<tr>
+<td align="left">Section précédente: <a href="BestPractices.fr.md">Bonnes pratiques</a></td>
+<td align="center"><a href="README.fr.md#-étapes-suivantes">📚 Table des matières</a></td>
+<td align="right">Section suivante: <a href="ArchitectureOfTheDocumentationPipeline.fr.md">Architecture du pipeline de documentation</a></td>
+</tr>
+</table>
 
 ---

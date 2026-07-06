@@ -98,6 +98,12 @@ Si la majorité des réponses est oui, c’est un bon candidat.
 
 ---
 
-Section précédente: [Concepts fondamentaux](CoreConcepts.fr.md) | Section suivante: [Guide d’écriture des erreurs](WritingErrorsGuide.fr.md) | [📚 Table des matières](README.fr.md#-étapes-suivantes)
+<table width="100%">
+<tr>
+<td align="left">Section précédente: <a href="CoreConcepts.fr.md">Concepts fondamentaux</a></td>
+<td align="center"><a href="README.fr.md#-étapes-suivantes">📚 Table des matières</a></td>
+<td align="right">Section suivante: <a href="WritingErrorsGuide.fr.md">Guide d’écriture des erreurs</a></td>
+</tr>
+</table>
 
 ---
