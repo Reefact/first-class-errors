@@ -3,15 +3,14 @@
   <!--
     Documentation-only project.
 
-    This project compiles nothing. Its sole purpose is to surface the
-    documentation under doc/ in the Visual Studio Solution Explorer, so it is
+    This project compiles nothing. Its sole purpose is to surface everything
+    under doc/ in the Visual Studio Solution Explorer, so the documentation is
     easy to find, read and edit right next to the code: the Markdown pages
     (English *.en.md and French *.fr.md, including the analyzer pages under
-    analyzers/) and the image assets they reference (doc/images/*).
+    analyzers/), the images, and any other asset that may be added later.
 
-    The <None> globs below pick up new documentation files automatically: no
-    need to touch this project or the solution when a doc page or image is
-    added or renamed.
+    The <None> glob below picks up new files automatically: no need to touch
+    this project or the solution when documentation is added or renamed.
 
     Nothing is built: no *.cs is compiled (EnableDefaultItems=false) and no
     assembly is produced (IncludeBuildOutput=false). The project is also
@@ -33,14 +32,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Markdown documentation pages (English *.en.md and French *.fr.md). -->
-    <None Include="**\*.md" />
-    <!-- Image assets referenced by the documentation (e.g. doc/images/*.png). -->
-    <None Include="**\*.png" />
-    <None Include="**\*.jpg" />
-    <None Include="**\*.jpeg" />
-    <None Include="**\*.gif" />
-    <None Include="**\*.svg" />
+    <!--
+      Show every file under doc/ (Markdown pages, images and any other asset),
+      so nothing is ever missing from the Solution Explorer view. Only the
+      build artifacts (obj/, bin/) and this project file itself are excluded.
+    -->
+    <None Include="**\*" Exclude="obj\**;bin\**;*.csproj" />
   </ItemGroup>
 
 </Project>
