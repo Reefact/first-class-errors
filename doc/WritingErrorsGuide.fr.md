@@ -195,6 +195,12 @@ Des erreurs bien écrites ne sont pas simplement levées. Elles deviennent une p
 
 ---
 
-Section précédente: [Guide du contexte d’erreur](ErrorContext.fr.md) | Section suivante: [Cas d’usage](UsagePatterns.fr.md) | [📚 Table des matières](README.fr.md#-étapes-suivantes)
+<table width="100%">
+<tr>
+<td align="left">Section précédente: <a href="ErrorContext.fr.md">Guide du contexte d’erreur</a></td>
+<td align="center"><a href="README.fr.md#-étapes-suivantes">📚 Table des matières</a></td>
+<td align="right">Section suivante: <a href="UsagePatterns.fr.md">Cas d’usage</a></td>
+</tr>
+</table>
 
 ---

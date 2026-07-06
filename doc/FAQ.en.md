@@ -165,6 +165,12 @@ Why does the distinction earn its keep?
 
 ---
 
-Previous section: [Internationalization](Internationalization.en.md) | [📚 Table of contents](../README.md#-next-steps)
+<table width="100%">
+<tr>
+<td align="left">Previous section: <a href="Internationalization.en.md">Internationalization</a></td>
+<td align="center"><a href="../README.md#-next-steps">📚 Table of contents</a></td>
+<td align="right"></td>
+</tr>
+</table>
 
 ---

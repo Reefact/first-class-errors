@@ -209,6 +209,12 @@ but **what it means, why it might have happened, and where to look**.
 
 ---
 
-Previous section : [Writing Errors Guide](WritingErrorsGuide.en.md) | Next section: [Best Practices](BestPractices.en.md) | [📚 Table of contents](../README.md#-next-steps)
+<table width="100%">
+<tr>
+<td align="left">Previous section: <a href="WritingErrorsGuide.en.md">Writing Errors Guide</a></td>
+<td align="center"><a href="../README.md#-next-steps">📚 Table of contents</a></td>
+<td align="right">Next section: <a href="BestPractices.en.md">Best Practices</a></td>
+</tr>
+</table>
 
 ---

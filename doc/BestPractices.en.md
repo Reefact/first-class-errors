@@ -207,6 +207,12 @@ Well-written errors improve:
 
 ---
 
-Previous section: [Usage Patterns](UsagePatterns.en.md) | Next section: [CI/CD and Operational Integration](OperationalIntegration.en.md) | [📚 Table of contents](../README.md#-next-steps)
+<table width="100%">
+<tr>
+<td align="left">Previous section: <a href="UsagePatterns.en.md">Usage Patterns</a></td>
+<td align="center"><a href="../README.md#-next-steps">📚 Table of contents</a></td>
+<td align="right">Next section: <a href="OperationalIntegration.en.md">CI/CD and Operational Integration</a></td>
+</tr>
+</table>
 
 ---
