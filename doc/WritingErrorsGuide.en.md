@@ -198,12 +198,8 @@ They become part of the **shared understanding of how the system works — and f
 
 ---
 
-<table width="100%">
-<tr>
-<td align="left"><a href="ErrorContext.en.md">← Error Context Guide</a></td>
-<td align="center"><a href="../README.md#-next-steps">↑ Table of contents</a></td>
-<td align="right"><a href="UsagePatterns.en.md">Usage Patterns →</a></td>
-</tr>
-</table>
+<div align="center">
+<a href="ErrorContext.en.md">← Error Context Guide</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="UsagePatterns.en.md">Usage Patterns →</a>
+</div>
 
 ---
