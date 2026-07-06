@@ -31,6 +31,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirstClassErrors.Documentation", "doc\FirstClassErrors.Documentation.csproj", "{0FD6C7A3-6832-491A-96C1-F33F62C56EEB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "doc", "doc", "{F75115F0-25B9-49BC-AE36-A39F2175727A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,6 +77,8 @@ Global
 			{2BE1F2DB-4A9E-4616-89BA-9A597B721217}.Debug|Any CPU.Build.0 = Debug|Any CPU
 			{2BE1F2DB-4A9E-4616-89BA-9A597B721217}.Release|Any CPU.ActiveCfg = Release|Any CPU
 			{2BE1F2DB-4A9E-4616-89BA-9A597B721217}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0FD6C7A3-6832-491A-96C1-F33F62C56EEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0FD6C7A3-6832-491A-96C1-F33F62C56EEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -87,6 +93,7 @@ Global
 		{D8B4E1F6-2C7A-4F93-8B05-1E6D9A3C4B72} = {B7C3D08D-EFC5-4F5D-8DE4-5B7938354DBB}
 			{47052422-15BC-482A-8FC0-65F9AAAB0291} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 			{2BE1F2DB-4A9E-4616-89BA-9A597B721217} = {B7C3D08D-EFC5-4F5D-8DE4-5B7938354DBB}
+		{0FD6C7A3-6832-491A-96C1-F33F62C56EEB} = {F75115F0-25B9-49BC-AE36-A39F2175727A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4988972E-3E0D-4F48-8656-0E67ECE994BF}
