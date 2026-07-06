@@ -98,6 +98,6 @@ If yes to most of these, it is a good candidate.
 
 ---
 
-Previous section: [Core Concepts](CoreConcepts.en.md) | Next section: [Writing Errors Guide](WritingErrorsGuide.en.md)
+Previous section: [Core Concepts](CoreConcepts.en.md) | Next section: [Writing Errors Guide](WritingErrorsGuide.en.md) | [📚 Table of contents](../README.md#-next-steps)
 
 ---

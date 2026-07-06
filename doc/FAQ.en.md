@@ -165,6 +165,6 @@ Why does the distinction earn its keep?
 
 ---
 
-Previous section: [Internationalization](Internationalization.en.md)
+Previous section: [Internationalization](Internationalization.en.md) | [📚 Table of contents](../README.md#-next-steps)
 
 ---

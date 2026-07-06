@@ -19,6 +19,6 @@ En essence, la bibliothèque encourage les équipes à considérer les erreurs c
 
 ---
 
-Section précédente: [Premiers pas](GettingStarted.fr.md) | Section suivante: [Quand ne pas utiliser FirstClassErrors](WhenNotToUseFirstClassErrors.fr.md)
+Section précédente: [Premiers pas](GettingStarted.fr.md) | Section suivante: [Quand ne pas utiliser FirstClassErrors](WhenNotToUseFirstClassErrors.fr.md) | [📚 Table des matières](README.fr.md#-étapes-suivantes)
 
 ---
