@@ -13,7 +13,8 @@ namespace FirstClassErrors;
 ///     <para>
 ///         An <see cref="ErrorContextKey" /> defines the identity of a piece of contextual information associated with an
 ///         error (for example: <c>DealId</c>, <c>UserId</c>, or <c>CorrelationId</c>). Each key is globally unique by its
-///         <see cref="Name" /> and is registered once at application startup.
+///         <see cref="Name" /> and is registered once: re-declaring a key with the same name and value type returns the
+///         registered instance, while a same-named key with a different value type is rejected.
 ///     </para>
 ///     <para>
 ///         Keys are strongly typed through the generic subclass <see cref="ErrorContextKey{T}" />, which specifies the
@@ -65,19 +66,26 @@ public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
     internal static readonly ErrorContextKey MissingRequiredMessages = Create<IReadOnlyList<string>>("#MISSING_REQUIRED_MESSAGE", "The mandatory messages (by parameter name) that were missing and replaced by a fallback sentinel.");
 
     /// <summary>
-    ///     Creates a new instance of <see cref="ErrorContextKey{T}" /> with the specified name and optional description.
+    ///     Gets or creates the <see cref="ErrorContextKey{T}" /> with the specified name and optional description.
     /// </summary>
+    /// <remarks>
+    ///     Creation is idempotent: re-declaring a key with the same <paramref name="name" /> and the same
+    ///     <typeparamref name="T" /> returns the already-registered instance (whose description wins), so a declaration
+    ///     that is executed again — a reloaded plugin, a re-run test fixture — never fails. A same-named key with a
+    ///     different value type is rejected: keys compare by name inside error contexts, so the two keys would silently
+    ///     collide and make the stored value unreadable through the typed API.
+    /// </remarks>
     /// <typeparam name="T">The type associated with the error context key.</typeparam>
     /// <param name="name">The unique name of the error context key. Must not be <c>null</c>, empty, or whitespace.</param>
     /// <param name="description">An optional description providing additional context for the error context key.</param>
-    /// <returns>A new instance of <see cref="ErrorContextKey{T}" />.</returns>
+    /// <returns>The registered <see cref="ErrorContextKey{T}" /> instance for <paramref name="name" />.</returns>
     /// <exception cref="ArgumentException">
     ///     Thrown when <paramref name="name" /> is <c>null</c>, empty, or consists only of
     ///     whitespace.
     /// </exception>
     /// <exception cref="InvalidOperationException">
-    ///     Thrown when an error context key with the specified
-    ///     <paramref name="name" /> has already been registered.
+    ///     Thrown when a key with the specified <paramref name="name" /> is
+    ///     already registered with a different value type.
     /// </exception>
     public static ErrorContextKey<T> Create<T>(string name, string? description = null) {
         Func<string?>? descriptionProvider = null;
@@ -87,22 +95,24 @@ public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
     }
 
     /// <summary>
-    ///     Creates a new <see cref="ErrorContextKey{T}" /> whose description is resolved lazily, on each read of
+    ///     Gets or creates the <see cref="ErrorContextKey{T}" /> whose description is resolved lazily, on each read of
     ///     <see cref="Description" />.
     /// </summary>
     /// <remarks>
     ///     Use this to supply a <b>localized</b> description — for example one read from a
     ///     <see cref="System.Resources.ResourceManager" /> under the current UI culture — so the same registered key
     ///     documents itself in whatever language is in effect when the documentation is extracted. A key is still
-    ///     registered once by its <paramref name="name" />; only the description text is deferred.
+    ///     registered once by its <paramref name="name" />; only the description text is deferred. Re-declaring a key
+    ///     with the same name and the same <typeparamref name="T" /> returns the already-registered instance (whose
+    ///     description provider wins); a different value type is rejected.
     /// </remarks>
     /// <typeparam name="T">The type associated with the error context key.</typeparam>
     /// <param name="name">The unique name of the error context key. Must not be <c>null</c>, empty, or whitespace.</param>
     /// <param name="descriptionProvider">A function returning the description; invoked each time <see cref="Description" /> is read.</param>
-    /// <returns>A new instance of <see cref="ErrorContextKey{T}" />.</returns>
+    /// <returns>The registered <see cref="ErrorContextKey{T}" /> instance for <paramref name="name" />.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="name" /> is <c>null</c>, empty, or whitespace.</exception>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="descriptionProvider" /> is <c>null</c>.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when a key with the specified <paramref name="name" /> is already registered.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when a key with the specified <paramref name="name" /> is already registered with a different value type.</exception>
     public static ErrorContextKey<T> Create<T>(string name, Func<string?> descriptionProvider) {
         if (descriptionProvider is null) { throw new ArgumentNullException(nameof(descriptionProvider)); }
 
@@ -113,7 +123,17 @@ public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
         if (string.IsNullOrWhiteSpace(name)) { throw new ArgumentException("Value cannot be null or whitespace.", nameof(name)); }
 
         lock (Lock) {
-            if (Registered.ContainsKey(name)) { throw new InvalidOperationException($"An error context key '{name}' has already been registered."); }
+            if (Registered.TryGetValue(name, out ErrorContextKey? existing)) {
+                if (existing.ValueType != typeof(T)) {
+                    throw new InvalidOperationException(
+                        $"An error context key '{name}' is already registered with value type '{existing.ValueType}'; it cannot be re-registered with value type '{typeof(T)}'.");
+                }
+
+                // Same name, same value type: the declaration is being re-executed (a reloaded plugin, a re-run test
+                // fixture), not conflicting. The first registered instance is the canonical one — its description
+                // (or provider) wins — and the cast is safe because ErrorContextKey<T> is the only subclass.
+                return (ErrorContextKey<T>)existing;
+            }
 
             ErrorContextKey<T> instance = new(name, descriptionProvider);
             Registered.Add(name, instance);
