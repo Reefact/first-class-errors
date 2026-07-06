@@ -165,6 +165,12 @@ Pourquoi cette distinction en vaut-elle la peine ?
 
 ---
 
-Section précédente: [Internationalisation](Internationalisation.fr.md) | [📚 Table des matières](README.fr.md#-étapes-suivantes)
+<table width="100%">
+<tr>
+<td align="left"><a href="Internationalisation.fr.md">← Internationalisation</a></td>
+<td align="center"><a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a></td>
+<td align="right"></td>
+</tr>
+</table>
 
 ---

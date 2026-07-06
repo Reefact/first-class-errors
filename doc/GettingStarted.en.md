@@ -187,6 +187,12 @@ to
 
 ---
 
-Next section: [Design Principles](DesignPrinciples.en.md) | [📚 Table of contents](../README.md#-next-steps)
+<table width="100%">
+<tr>
+<td align="left"></td>
+<td align="center"><a href="../README.md#-next-steps">↑ Table of contents</a></td>
+<td align="right"><a href="DesignPrinciples.en.md">Design Principles →</a></td>
+</tr>
+</table>
 
 ---

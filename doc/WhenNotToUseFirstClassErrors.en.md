@@ -72,6 +72,12 @@ The goal of this library is not to make every exception richer. It is to make me
 
 ---
 
-Previous section: [Design Principles](DesignPrinciples.en.md) | Next section: [Core Concepts](CoreConcepts.en.md) | [📚 Table of contents](../README.md#-next-steps)
+<table width="100%">
+<tr>
+<td align="left"><a href="DesignPrinciples.en.md">← Design Principles</a></td>
+<td align="center"><a href="../README.md#-next-steps">↑ Table of contents</a></td>
+<td align="right"><a href="CoreConcepts.en.md">Core Concepts →</a></td>
+</tr>
+</table>
 
 ---

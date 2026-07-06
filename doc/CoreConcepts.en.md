@@ -146,6 +146,12 @@ All based on the same source of truth: the code.
 
 ---
 
-Previous section: [When Not to Use FirstClassErrors](WhenNotToUseFirstClassErrors.en.md) | Next section: [Error Context Guide](ErrorContext.en.md) | [📚 Table of contents](../README.md#-next-steps)
+<table width="100%">
+<tr>
+<td align="left"><a href="WhenNotToUseFirstClassErrors.en.md">← When Not to Use FirstClassErrors</a></td>
+<td align="center"><a href="../README.md#-next-steps">↑ Table of contents</a></td>
+<td align="right"><a href="ErrorContext.en.md">Error Context Guide →</a></td>
+</tr>
+</table>
 
 ---

@@ -98,6 +98,12 @@ Errors become:
 
 ---
 
-Previous section: [Best Practices](BestPractices.en.md) | Next section: [Architecture of the Documentation Pipeline](ArchitectureOfTheDocumentationPipeline.en.md) | [📚 Table of contents](../README.md#-next-steps)
+<table width="100%">
+<tr>
+<td align="left"><a href="BestPractices.en.md">← Best Practices</a></td>
+<td align="center"><a href="../README.md#-next-steps">↑ Table of contents</a></td>
+<td align="right"><a href="ArchitectureOfTheDocumentationPipeline.en.md">Architecture of the Documentation Pipeline →</a></td>
+</tr>
+</table>
 
 ---

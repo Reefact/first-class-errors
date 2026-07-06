@@ -118,6 +118,12 @@ Content is localized at extraction; boilerplate at rendering. File names, anchor
 
 ---
 
-Previous section: [Writing a custom renderer](WritingACustomRenderer.en.md) | Next section: [FAQ](FAQ.en.md) | [📚 Table of contents](../README.md#-next-steps)
+<table width="100%">
+<tr>
+<td align="left"><a href="WritingACustomRenderer.en.md">← Writing a custom renderer</a></td>
+<td align="center"><a href="../README.md#-next-steps">↑ Table of contents</a></td>
+<td align="right"><a href="FAQ.en.md">FAQ →</a></td>
+</tr>
+</table>
 
 ---

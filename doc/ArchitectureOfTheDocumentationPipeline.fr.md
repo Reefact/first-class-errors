@@ -153,6 +153,12 @@ Le code est la source de vérité.
 
 ---
 
-Section précédente: [Intégration CI/CD et exploitation](OperationalIntegration.fr.md) | Section suivante: [Écrire son propre renderer](WritingACustomRenderer.fr.md) | [📚 Table des matières](README.fr.md#-étapes-suivantes)
+<table width="100%">
+<tr>
+<td align="left"><a href="OperationalIntegration.fr.md">← Intégration CI/CD et exploitation</a></td>
+<td align="center"><a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a></td>
+<td align="right"><a href="WritingACustomRenderer.fr.md">Écrire son propre renderer →</a></td>
+</tr>
+</table>
 
 ---

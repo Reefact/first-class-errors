@@ -98,6 +98,12 @@ If yes to most of these, it is a good candidate.
 
 ---
 
-Previous section: [Core Concepts](CoreConcepts.en.md) | Next section: [Writing Errors Guide](WritingErrorsGuide.en.md) | [📚 Table of contents](../README.md#-next-steps)
+<table width="100%">
+<tr>
+<td align="left"><a href="CoreConcepts.en.md">← Core Concepts</a></td>
+<td align="center"><a href="../README.md#-next-steps">↑ Table of contents</a></td>
+<td align="right"><a href="WritingErrorsGuide.en.md">Writing Errors Guide →</a></td>
+</tr>
+</table>
 
 ---

@@ -118,6 +118,12 @@ Le contenu est localisé à l’extraction ; le texte fixe au rendu. Les noms de
 
 ---
 
-Section précédente: [Écrire son propre renderer](WritingACustomRenderer.fr.md) | Section suivante: [FAQ](FAQ.fr.md) | [📚 Table des matières](README.fr.md#-étapes-suivantes)
+<table width="100%">
+<tr>
+<td align="left"><a href="WritingACustomRenderer.fr.md">← Écrire son propre renderer</a></td>
+<td align="center"><a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a></td>
+<td align="right"><a href="FAQ.fr.md">FAQ →</a></td>
+</tr>
+</table>
 
 ---
