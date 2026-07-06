@@ -35,10 +35,8 @@ public class DomainError : Error {
     /// <param name="configureContext">An optional action to configure additional error context.</param>
     /// <returns>A <see cref="PublicMessageStage{TError}" /> to supply the public messages and finalize the error.</returns>
     public static PublicMessageStage<DomainError> Create(ErrorCode code, string diagnosticMessage, Action<ErrorContextBuilder>? configureContext = null) {
-        string safeDiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
-
         return new PublicMessageStage<DomainError>((shortMessage, detailedMessage) =>
-                                                       new DomainError(code, safeDiagnosticMessage, shortMessage, detailedMessage, configureContext));
+                                                       new DomainError(code, diagnosticMessage, shortMessage, detailedMessage, configureContext));
     }
 
     /// <summary>
@@ -50,10 +48,8 @@ public class DomainError : Error {
     /// <param name="configureContext">An optional action to configure additional error context.</param>
     /// <returns>A <see cref="PublicMessageStage{TError}" /> to supply the public messages and finalize the error.</returns>
     public static PublicMessageStage<DomainError> Create(ErrorCode code, string diagnosticMessage, DomainError innerError, Action<ErrorContextBuilder>? configureContext = null) {
-        string safeDiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
-
         return new PublicMessageStage<DomainError>((shortMessage, detailedMessage) =>
-                                                       new DomainError(code, safeDiagnosticMessage, shortMessage, detailedMessage, innerError, configureContext));
+                                                       new DomainError(code, diagnosticMessage, shortMessage, detailedMessage, innerError, configureContext));
     }
 
     /// <summary>
@@ -65,10 +61,8 @@ public class DomainError : Error {
     /// <param name="configureContext">An optional action to configure additional error context.</param>
     /// <returns>A <see cref="PublicMessageStage{TError}" /> to supply the public messages and finalize the error.</returns>
     public static PublicMessageStage<DomainError> Create(ErrorCode code, string diagnosticMessage, IEnumerable<DomainError> innerErrors, Action<ErrorContextBuilder>? configureContext = null) {
-        string safeDiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
-
         return new PublicMessageStage<DomainError>((shortMessage, detailedMessage) =>
-                                                       new DomainError(code, safeDiagnosticMessage, shortMessage, detailedMessage, innerErrors, configureContext));
+                                                       new DomainError(code, diagnosticMessage, shortMessage, detailedMessage, innerErrors, configureContext));
     }
 
     #endregion

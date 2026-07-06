@@ -34,10 +34,8 @@ public class PrimaryPortError : InfrastructureError {
     /// <param name="configureContext">An optional action to configure additional error context.</param>
     /// <returns>A <see cref="PublicMessageStage{TError}" /> to supply the public messages and finalize the error.</returns>
     public static PublicMessageStage<PrimaryPortError> Create(ErrorCode code, string diagnosticMessage, Transience transience, Action<ErrorContextBuilder>? configureContext = null) {
-        string safeDiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
-
         return new PublicMessageStage<PrimaryPortError>((shortMessage, detailedMessage) =>
-                                                            new PrimaryPortError(code, safeDiagnosticMessage, shortMessage, detailedMessage, transience, configureContext));
+                                                            new PrimaryPortError(code, diagnosticMessage, shortMessage, detailedMessage, transience, configureContext));
     }
 
     /// <summary>
@@ -50,10 +48,8 @@ public class PrimaryPortError : InfrastructureError {
     /// <param name="configureContext">An optional action to configure additional error context.</param>
     /// <returns>A <see cref="PublicMessageStage{TError}" /> to supply the public messages and finalize the error.</returns>
     public static PublicMessageStage<PrimaryPortError> Create(ErrorCode code, string diagnosticMessage, PrimaryPortInnerErrors innerErrors, Action<ErrorContextBuilder>? configureContext = null) {
-        string safeDiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
-
         return new PublicMessageStage<PrimaryPortError>((shortMessage, detailedMessage) =>
-                                                            new PrimaryPortError(code, safeDiagnosticMessage, shortMessage, detailedMessage, innerErrors, configureContext));
+                                                            new PrimaryPortError(code, diagnosticMessage, shortMessage, detailedMessage, innerErrors, configureContext));
     }
 
     #endregion
