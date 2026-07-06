@@ -33,9 +33,51 @@ namespace FirstClassErrors;
 ///         <see cref="DiagnosticMessage" />) and returns a <see cref="PublicMessageStage{TError}" />; the final error is
 ///         produced by <see cref="PublicMessageStage{TError}.WithPublicMessage(string, string?)" />.
 ///     </para>
+///     <para>
+///         <b>Doctrine — manufacturing an error never throws.</b> Because an error is frequently built on a failure path
+///         (inside a <c>catch</c>, while logging, or on top of another failure), the construction is designed to always
+///         succeed rather than raise a secondary exception that would mask the original problem. Invalid or missing inputs
+///         degrade to <b>documented, visible</b> fallbacks instead of being rejected:
+///     </para>
+///     <list type="bullet">
+///         <item>a <c>null</c> <see cref="Code" /> becomes <see cref="ErrorCode.Unspecified" /> (<c>#UNSPECIFIED</c>);</item>
+///         <item>
+///             a missing (<c>null</c> or whitespace) mandatory message becomes a sentinel
+///             (<see cref="MissingDiagnosticMessage" /> / <see cref="MissingShortMessage" />), and the omission is recorded
+///             in <see cref="Context" /> under the <c>#MISSING_REQUIRED_MESSAGE</c> key so it stays diagnosable;
+///         </item>
+///         <item><c>null</c> inner errors are dropped;</item>
+///         <item>
+///             a <c>configureContext</c> delegate that throws is captured as data under the
+///             <c>#CANNOT_BUILD_ERROR_CONTEXT</c> key, and the context entries it added before failing are preserved.
+///         </item>
+///     </list>
 /// </remarks>
 [DebuggerDisplay("{ToString()}")]
 public abstract class Error {
+
+    #region Constants declarations
+
+    /// <summary>
+    ///     The value substituted for a missing (<c>null</c> or whitespace) <see cref="DiagnosticMessage" />.
+    /// </summary>
+    /// <remarks>
+    ///     Under the library's doctrine, manufacturing an error never throws: a missing mandatory diagnostic message is not
+    ///     rejected but replaced by this visible, self-documenting sentinel, and the omission is recorded in
+    ///     <see cref="Context" /> under the <c>#MISSING_REQUIRED_MESSAGE</c> key.
+    /// </remarks>
+    public const string MissingDiagnosticMessage = "#MISSING_DIAGNOSTIC_MESSAGE";
+
+    /// <summary>
+    ///     The value substituted for a missing (<c>null</c> or whitespace) <see cref="ShortMessage" />.
+    /// </summary>
+    /// <remarks>
+    ///     See <see cref="MissingDiagnosticMessage" /> for the rationale. Because <see cref="ShortMessage" /> is public-facing,
+    ///     this sentinel is intentionally non-sensitive and clearly signals a construction defect if it ever surfaces.
+    /// </remarks>
+    public const string MissingShortMessage = "#MISSING_SHORT_MESSAGE";
+
+    #endregion
 
     #region Statics members declarations
 
@@ -44,15 +86,23 @@ public abstract class Error {
     }
 
     /// <summary>
-    ///     Validates a mandatory message and returns its trimmed value.
+    ///     Normalizes a mandatory message under the "manufacturing an error never throws" doctrine: a <c>null</c> or
+    ///     whitespace value is replaced by <paramref name="fallback" />; otherwise the value is trimmed.
     /// </summary>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value" /> is <c>null</c>.</exception>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="value" /> is empty or whitespace.</exception>
-    internal static string RequireMessage(string value, string paramName) {
-        if (value is null) { throw new ArgumentNullException(paramName); }
-        if (string.IsNullOrWhiteSpace(value)) { throw new ArgumentException("Value cannot be empty or whitespace.", paramName); }
+    private static string CoalesceRequiredMessage(string? value, string fallback) {
+        return string.IsNullOrWhiteSpace(value) ? fallback : value!.Trim();
+    }
 
-        return value.Trim();
+    /// <summary>
+    ///     Returns the parameter names of the mandatory messages that are missing (<c>null</c> or whitespace) and were
+    ///     therefore replaced by a fallback sentinel. The list is empty when both messages are present.
+    /// </summary>
+    private static IReadOnlyList<string> CollectMissingMessageNames(string? diagnosticMessage, string? shortMessage) {
+        List<string> missing = new(2);
+        if (string.IsNullOrWhiteSpace(diagnosticMessage)) { missing.Add(nameof(diagnosticMessage)); }
+        if (string.IsNullOrWhiteSpace(shortMessage)) { missing.Add(nameof(shortMessage)); }
+
+        return missing;
     }
 
     /// <summary>
@@ -62,15 +112,20 @@ public abstract class Error {
         return string.IsNullOrWhiteSpace(value) ? null : value!.Trim();
     }
 
-    private static ErrorContext BuildContext(Action<ErrorContextBuilder>? configure) {
+    private static ErrorContext BuildContext(Action<ErrorContextBuilder>? configure, IReadOnlyList<string> missingRequiredMessages) {
         ErrorContextBuilder builder = new();
 
         try {
             configure?.Invoke(builder);
         } catch (Exception ex) {
-            Dictionary<ErrorContextKey, object?> dictionary = new() { { ErrorContextKey.CannotBuildErrorContext, ex } };
+            // Doctrine: manufacturing an error never throws. A failing context configuration is captured as data rather
+            // than propagated. The entries the delegate added before failing are kept (they are often the most useful
+            // part of the diagnostic) instead of being discarded along with the exception.
+            builder.SetInternalValue(ErrorContextKey.CannotBuildErrorContext, ex);
+        }
 
-            return new ErrorContext(dictionary);
+        if (missingRequiredMessages.Count > 0) {
+            builder.SetInternalValue(ErrorContextKey.MissingRequiredMessages, missingRequiredMessages);
         }
 
         return builder.Build();
@@ -98,10 +153,12 @@ public abstract class Error {
     ///     The <see cref="ErrorCode" /> identifying the error. If <c>null</c>, <see cref="ErrorCode.Unspecified" /> is used.
     /// </param>
     /// <param name="diagnosticMessage">
-    ///     The mandatory internal diagnostic message. This value cannot be null or whitespace.
+    ///     The mandatory internal diagnostic message. If <c>null</c> or whitespace, it is replaced by
+    ///     <see cref="MissingDiagnosticMessage" /> and the omission is recorded in the context; the error is never rejected.
     /// </param>
     /// <param name="shortMessage">
-    ///     The mandatory public short summary of the error. This value cannot be null or whitespace.
+    ///     The mandatory public short summary of the error. If <c>null</c> or whitespace, it is replaced by
+    ///     <see cref="MissingShortMessage" /> and the omission is recorded in the context; the error is never rejected.
     /// </param>
     /// <param name="detailedMessage">
     ///     An optional, controlled public detail. This value can be null.
@@ -119,11 +176,11 @@ public abstract class Error {
         InstanceId        = Guid.NewGuid();
         Code              = CreateSafeCode(code);
         OccurredAt        = DateTimeOffset.UtcNow;
-        DiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
-        ShortMessage      = RequireMessage(shortMessage, nameof(shortMessage));
+        DiagnosticMessage = CoalesceRequiredMessage(diagnosticMessage, MissingDiagnosticMessage);
+        ShortMessage      = CoalesceRequiredMessage(shortMessage, MissingShortMessage);
         DetailedMessage   = NormalizeOptionalMessage(detailedMessage);
         InnerErrors       = new List<Error>();
-        Context           = BuildContext(configureContext);
+        Context           = BuildContext(configureContext, CollectMissingMessageNames(diagnosticMessage, shortMessage));
     }
 
     /// <summary>
@@ -133,8 +190,8 @@ public abstract class Error {
     /// <param name="code">
     ///     The <see cref="ErrorCode" /> identifying the error. If <c>null</c>, <see cref="ErrorCode.Unspecified" /> is used.
     /// </param>
-    /// <param name="diagnosticMessage">The mandatory internal diagnostic message. This value cannot be null or whitespace.</param>
-    /// <param name="shortMessage">The mandatory public short summary of the error. This value cannot be null or whitespace.</param>
+    /// <param name="diagnosticMessage">The mandatory internal diagnostic message. If <c>null</c> or whitespace, it is replaced by <see cref="MissingDiagnosticMessage" /> and the omission is recorded in the context (the error is never rejected).</param>
+    /// <param name="shortMessage">The mandatory public short summary of the error. If <c>null</c> or whitespace, it is replaced by <see cref="MissingShortMessage" /> and the omission is recorded in the context (the error is never rejected).</param>
     /// <param name="detailedMessage">An optional, controlled public detail. This value can be null.</param>
     /// <param name="innerError">
     ///     The inner <see cref="Error" /> that provides additional context for the error.
@@ -149,11 +206,11 @@ public abstract class Error {
         InstanceId        = Guid.NewGuid();
         Code              = CreateSafeCode(code);
         OccurredAt        = DateTimeOffset.UtcNow;
-        DiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
-        ShortMessage      = RequireMessage(shortMessage, nameof(shortMessage));
+        DiagnosticMessage = CoalesceRequiredMessage(diagnosticMessage, MissingDiagnosticMessage);
+        ShortMessage      = CoalesceRequiredMessage(shortMessage, MissingShortMessage);
         DetailedMessage   = NormalizeOptionalMessage(detailedMessage);
         InnerErrors       = CreateSafeInnerErrors(innerError);
-        Context           = BuildContext(configureContext);
+        Context           = BuildContext(configureContext, CollectMissingMessageNames(diagnosticMessage, shortMessage));
     }
 
     /// <summary>
@@ -164,8 +221,8 @@ public abstract class Error {
     /// <param name="code">
     ///     The error code that uniquely identifies the error. If <c>null</c>, <see cref="ErrorCode.Unspecified" /> is used.
     /// </param>
-    /// <param name="diagnosticMessage">The mandatory internal diagnostic message. This value cannot be null or whitespace.</param>
-    /// <param name="shortMessage">The mandatory public short summary of the error. This value cannot be null or whitespace.</param>
+    /// <param name="diagnosticMessage">The mandatory internal diagnostic message. If <c>null</c> or whitespace, it is replaced by <see cref="MissingDiagnosticMessage" /> and the omission is recorded in the context (the error is never rejected).</param>
+    /// <param name="shortMessage">The mandatory public short summary of the error. If <c>null</c> or whitespace, it is replaced by <see cref="MissingShortMessage" /> and the omission is recorded in the context (the error is never rejected).</param>
     /// <param name="detailedMessage">An optional, controlled public detail. This value can be null.</param>
     /// <param name="innerErrors">
     ///     A collection of inner <see cref="Error" /> instances that provide additional context for the error.
@@ -182,11 +239,11 @@ public abstract class Error {
         InstanceId        = Guid.NewGuid();
         Code              = CreateSafeCode(code);
         OccurredAt        = DateTimeOffset.UtcNow;
-        DiagnosticMessage = RequireMessage(diagnosticMessage, nameof(diagnosticMessage));
-        ShortMessage      = RequireMessage(shortMessage, nameof(shortMessage));
+        DiagnosticMessage = CoalesceRequiredMessage(diagnosticMessage, MissingDiagnosticMessage);
+        ShortMessage      = CoalesceRequiredMessage(shortMessage, MissingShortMessage);
         DetailedMessage   = NormalizeOptionalMessage(detailedMessage);
         InnerErrors       = CreateSafeInnerErrors(innerErrors);
-        Context           = BuildContext(configureContext);
+        Context           = BuildContext(configureContext, CollectMissingMessageNames(diagnosticMessage, shortMessage));
     }
 
     #endregion
@@ -233,6 +290,10 @@ public abstract class Error {
     ///         It is <b>not</b> safe for external exposure and must never be used by default in an HTTP response or returned
     ///         to an external client. It is intended for diagnostics, support, observability and developers.
     ///     </para>
+    ///     <para>
+    ///         This message is mandatory. When it is omitted at construction, it holds <see cref="MissingDiagnosticMessage" />
+    ///         and the <c>#MISSING_REQUIRED_MESSAGE</c> context key lists the omission (see the doctrine on <see cref="Error" />).
+    ///     </para>
     /// </remarks>
     public string DiagnosticMessage { get; }
 
@@ -244,7 +305,9 @@ public abstract class Error {
     /// </value>
     /// <remarks>
     ///     This message is a concise public summary, safe to surface to an end user or an API client (for instance as the
-    ///     <c>title</c> of an RFC 9457 problem detail). It is mandatory.
+    ///     <c>title</c> of an RFC 9457 problem detail). It is mandatory. When it is omitted at construction, it holds
+    ///     <see cref="MissingShortMessage" /> and the <c>#MISSING_REQUIRED_MESSAGE</c> context key lists the omission (see the
+    ///     doctrine on <see cref="Error" />).
     /// </remarks>
     public string ShortMessage { get; }
 

@@ -35,6 +35,15 @@ public sealed class ErrorContextBuilder {
         return this;
     }
 
+    /// <summary>
+    ///     Sets a value for a framework-owned (non-generic) context key, bypassing the strongly-typed public
+    ///     <see cref="Add{T}" /> API. Used during error construction to record diagnostics about the construction itself
+    ///     (a failed context configuration or a missing mandatory message) without discarding the entries already added.
+    /// </summary>
+    internal void SetInternalValue(ErrorContextKey key, object? value) {
+        _values[key] = value;
+    }
+
     internal ErrorContext Build() {
         return new ErrorContext(_values);
     }
