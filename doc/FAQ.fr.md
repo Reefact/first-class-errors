@@ -14,7 +14,7 @@ La différence est que cette bibliothèque ajoute :
 * une documentation liée  
 * un modèle cohérent  
 
-Elle transforme les exceptions de *signaux techniques* en *unités de connaissance documentées*.
+L’exception reste le mécanisme qui signale et propage une défaillance — la bibliothèque ne la remplace pas. Ce qu’elle transforme, c’est l’**erreur** portée par l’exception : d’un simple *signal technique*, celle-ci devient une *unité de connaissance documentée*.
 
 ## ❓ Pourquoi ne pas utiliser `Result<T, string>` à la place ?
 
