@@ -10,7 +10,8 @@
     analyzers/), the images, and any other asset that may be added later.
 
     The <None> glob below picks up new files automatically: no need to touch
-    this project or the solution when documentation is added or renamed.
+    this project or the solution when documentation is added or renamed. The
+    repository's root README.md is also linked in, so it is browsable here too.
 
     Nothing is built: no *.cs is compiled (EnableDefaultItems=false) and no
     assembly is produced (IncludeBuildOutput=false). The project is also
@@ -38,6 +39,16 @@
       build artifacts (obj/, bin/) and this project file itself are excluded.
     -->
     <None Include="**\*" Exclude="obj\**;bin\**;*.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      The repository's main README lives at the solution root, outside doc/, so
+      the glob above cannot reach it. Reference it as a link so it is browsable
+      from this project too. Link metadata is required for files located outside
+      the project directory.
+    -->
+    <None Include="..\README.md" Link="README.md" />
   </ItemGroup>
 
 </Project>
