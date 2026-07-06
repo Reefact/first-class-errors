@@ -5,7 +5,7 @@
 
 FirstClassErrors n’est pas simplement une bibliothèque utilitaire.  Il introduit une autre manière de penser les erreurs applicatives.
 
-Au lieu de considérer les exceptions comme des incidents techniques, elles sont vues comme **une connaissance structurée sur ce qui s’est mal passé**.
+Au lieu de réduire une défaillance à un simple incident technique, elle fait de l’**erreur** qui la sous-tend **une connaissance structurée sur ce qui s’est mal passé** — l’exception restant le mécanisme qui la signale et la propage.
 
 ## 🧠 Une erreur n’est pas juste un message
 
