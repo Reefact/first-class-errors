@@ -7,7 +7,7 @@
 
 ---
 
-**Turn your exceptions into structured, living knowledge about your system.**
+**Turn your errors into structured, living knowledge about your system.**
 
 ![FirstClassErrors](./doc/images/first-class-errors.png "FirstClassErrors")
 
@@ -134,10 +134,10 @@ The library supports both:
 * **throwing errors** (traditional exception flow)
 * **transporting errors without throwing** via `Outcome` and `Outcome<T>`
 
-This allows you to use exceptions as:
+This lets you treat the same error either way:
 
-> runtime signals
-> or structured error data
+> as a runtime signal you throw
+> or as structured data you transport
 
 depending on the context (domain logic, validation, pipelines, etc.).
 

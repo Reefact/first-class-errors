@@ -14,7 +14,7 @@ The difference is that this library adds:
 * linked documentation
 * a consistent model
 
-It turns exceptions from *technical signals* into *documented knowledge units*.
+The exception stays what it has always been: the mechanism that signals and propagates a failure — the library doesn’t replace it. What it transforms is the **error** the exception carries: from a mere *technical signal*, it becomes a *documented knowledge unit*.
 
 ## ❓ Why not use `Result<T, string>` instead?
 
