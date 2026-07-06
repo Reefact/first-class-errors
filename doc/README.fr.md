@@ -7,7 +7,7 @@
 
 ---
 
-**Transformez vos exceptions en connaissance structurée et vivante sur votre système.**
+**Transformez vos erreurs en connaissance structurée et vivante sur votre système.**
 
 ![FirstClassErrors](./images/first-class-errors.png "FirstClassErrors")
 
@@ -134,10 +134,10 @@ La bibliothèque supporte à la fois :
 * **les erreurs levées** (flux classique par exceptions)
 * **les erreurs transportées sans être levées** via `Outcome` et `Outcome<T>`
 
-Cela vous permet d’utiliser les exceptions :
+Cela vous permet de traiter la même erreur, au choix :
 
-> comme signaux d’exécution
-> ou comme données d’erreur structurées
+> comme un signal d’exécution que vous levez
+> ou comme une donnée structurée que vous transportez
 
 selon le contexte (domaine, validation, pipelines, etc.).
 

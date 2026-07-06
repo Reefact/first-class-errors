@@ -13,7 +13,7 @@ Diagnostics are not post-mortem analysis; they are structured hypotheses. The go
 
 The library also separates semantics from mechanics. Throwing, catching, logging, or transporting errors are mechanical concerns. The meaning of an error — what rule was violated, what situation occurred, what might explain it — belongs to the domain of knowledge. FirstClassErrors focuses on preserving that meaning, regardless of how the error travels through the system.
 
-Finally, the design acknowledges that not every failure should be exceptional in the runtime sense. Some errors are expected parts of normal flow, such as validation failures or parsing issues. By allowing exceptions to be used as structured error information through `Outcome<T>`, the model supports both throwing and non-throwing flows without losing semantic richness.
+Finally, the design acknowledges that not every failure should be exceptional in the runtime sense. Some errors are expected parts of normal flow, such as validation failures or parsing issues. By allowing errors to be carried as structured data through `Outcome<T>` instead of thrown, the model supports both throwing and non-throwing flows without losing semantic richness.
 
 In essence, the library encourages teams to treat errors as first-class knowledge artifacts. When errors are explicit, documented, and structured, they improve communication between developers, support teams, and the system itself.
 
