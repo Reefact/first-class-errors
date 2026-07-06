@@ -1,5 +1,8 @@
 # FAQ
 
+🌍 **Langues:**  
+🇬🇧 [English](./FAQ.en.md) | 🇫🇷 Français (ce fichier)
+
 ## ❓ Pourquoi ne pas simplement utiliser des exceptions normales ?
 
 C’est possible — et FirstClassErrors repose toujours sur les exceptions standard .NET.

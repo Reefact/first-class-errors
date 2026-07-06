@@ -1,5 +1,8 @@
 # Analyseurs FirstClassErrors
 
+🌍 **Langues:**  
+🇬🇧 [English](./README.md) | 🇫🇷 Français (ce fichier)
+
 Les analyseurs FirstClassErrors sont des règles Roslyn qui s'exécutent pendant la compilation de votre projet. Ils transforment en diagnostics de compilation des erreurs que le runtime et le pipeline de documentation de FirstClassErrors ne signaleraient sinon que tardivement — voire jamais. Ces règles sont **incluses dans le package NuGet `FirstClassErrors`** : tout projet qui le référence en bénéficie automatiquement, sans installation supplémentaire.
 
 Chaque règle a un identifiant stable `FCExxx`. Les erreurs sont des défauts durs ; les avertissements signalent des fautes probables ; les règles d'info sont des conventions, et plusieurs sont opt-in (voir chaque page pour les activer).

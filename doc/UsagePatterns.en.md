@@ -1,5 +1,8 @@
 # Usage Patterns
 
+🌍 **Languages:**  
+🇬🇧 English (this file) | 🇫🇷 [Français](./UsagePatterns.fr.md)
+
 FirstClassErrors is most useful when errors are not just technical failures, but **meaningful events in the life of the system**.
 Below are common patterns where the library brings clarity and structure.
 

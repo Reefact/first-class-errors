@@ -1,5 +1,8 @@
 # Writing Errors Guide
 
+🌍 **Languages:**  
+🇬🇧 English (this file) | 🇫🇷 [Français](./WritingErrorsGuide.fr.md)
+
 FirstClassErrors gives you tools.
 This guide helps you use them in a consistent and meaningful way.
 

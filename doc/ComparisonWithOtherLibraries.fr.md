@@ -1,5 +1,8 @@
 # Comparaison avec les librairies de gestion d’erreurs
 
+🌍 **Langues:**  
+🇬🇧 [English](./ComparisonWithOtherLibraries.en.md) | 🇫🇷 Français (ce fichier)
+
 [ErrorOr](https://github.com/amantinband/error-or) et [FluentResults](https://github.com/altmann/FluentResults) sont d’excellentes librairies, matures. Si votre objectif est un type *Result* léger — retourner les erreurs comme des valeurs plutôt que de les lever — ce sont des choix ciblés et largement adoptés, faits exactement pour ça.
 
 FirstClassErrors répond à une **question différente**. Ce n’est pas d’abord une librairie *Result* : c’est une manière de faire des erreurs une **connaissance de première classe, documentée et diagnosticable** sur votre système — des erreurs que vous pouvez *transporter* comme valeurs **ou** *lever* comme exceptions, avec un seul et même modèle.

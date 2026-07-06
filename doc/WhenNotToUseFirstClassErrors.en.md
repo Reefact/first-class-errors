@@ -1,5 +1,8 @@
 # When Not to Use FirstClassErrors
 
+🌍 **Languages:**  
+🇬🇧 English (this file) | 🇫🇷 [Français](./WhenNotToUseFirstClassErrors.fr.md)
+
 FirstClassErrors is designed for systems where errors carry meaning, rules, and operational consequences. It is not intended to be used everywhere.
 
 ## 🧪 Prototypes and throwaway code

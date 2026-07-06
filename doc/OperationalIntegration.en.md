@@ -1,5 +1,8 @@
 # CI/CD and Operational Integration
 
+🌍 **Languages:**  
+🇬🇧 English (this file) | 🇫🇷 [Français](./OperationalIntegration.fr.md)
+
 FirstClassErrors reaches its full value when it is integrated into the delivery pipeline and operational tooling. The goal is not only to define error knowledge, but to make it automatically available to the people who need it: developers, support teams, and operators.
 
 ## 📦 Documentation as a build artifact

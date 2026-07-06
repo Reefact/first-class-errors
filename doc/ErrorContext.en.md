@@ -1,5 +1,8 @@
 # Error Context: When and Why to Use It
 
+🌍 **Languages:**  
+🇬🇧 English (this file) | 🇫🇷 [Français](./ErrorContext.fr.md)
+
 `ErrorContext` lets you attach **structured, typed, and stable** metadata to an `Error` (via `Error.Context`), reached from a thrown exception through `exception.Error.Context`.
 
 It complements the error code and messages by answering:

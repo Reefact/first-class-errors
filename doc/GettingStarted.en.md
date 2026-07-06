@@ -1,5 +1,8 @@
 # Getting Started
 
+🌍 **Languages:**  
+🇬🇧 English (this file) | 🇫🇷 [Français](./GettingStarted.fr.md)
+
 FirstClassErrors helps you treat errors as **structured, diagnosable knowledge** instead of simple exception messages.
 
 In a few minutes, you will see how to:

@@ -1,5 +1,8 @@
 # Écrire son propre renderer
 
+🌍 **Langues:**  
+🇬🇧 [English](./WritingACustomRenderer.en.md) | 🇫🇷 Français (ce fichier)
+
 Les formats intégrés `json` et `markdown` couvrent les cas courants, mais n’importe quel format de sortie — HTML, CSV, un gabarit de documentation maison — peut être ajouté sous forme de **renderer personnalisé**. Un renderer ne dépend que du modèle de documentation, pas de la façon dont le catalogue a été produit : en écrire un est donc court et autonome.
 
 ## Le contrat

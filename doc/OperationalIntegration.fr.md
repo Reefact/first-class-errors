@@ -1,5 +1,8 @@
 # CI/CD et intégration opérationnelle
 
+🌍 **Langues:**  
+🇬🇧 [English](./OperationalIntegration.en.md) | 🇫🇷 Français (ce fichier)
+
 FirstClassErrors révèle toute sa valeur lorsqu’il est intégré dans la chaîne de livraison et les outils opérationnels. L’objectif n’est pas seulement de définir la connaissance liée aux erreurs, mais de la rendre automatiquement accessible aux personnes qui en ont besoin : développeurs, équipes de support et opérateurs.
 
 ## 📦 La documentation comme artefact de build

@@ -1,5 +1,8 @@
 # The HTML renderer
 
+🌍 **Languages:**  
+🇬🇧 English (this file) | 🇫🇷 [Français](./TheHtmlRenderer.fr.md)
+
 The **html** renderer turns the error catalog into a **self-contained static website**: a searchable home page with a two-level table of contents (grouped by source, then by error code) and — in the multi-page layout — one page per error. It is a final, human-facing output, not a pivot format.
 
 ## When to use HTML vs Markdown vs JSON

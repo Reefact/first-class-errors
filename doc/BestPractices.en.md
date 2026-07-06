@@ -1,5 +1,8 @@
 # Best Practices
 
+🌍 **Languages:**  
+🇬🇧 English (this file) | 🇫🇷 [Français](./BestPractices.fr.md)
+
 FirstClassErrors is most effective when used consistently and with intention.
 These practices help keep errors meaningful, readable, and useful.
 

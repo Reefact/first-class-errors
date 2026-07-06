@@ -1,5 +1,8 @@
 # Internationalization
 
+🌍 **Languages:**  
+🇬🇧 English (this file) | 🇫🇷 [Français](./Internationalisation.fr.md)
+
 FirstClassErrors can produce the error catalog in several languages. Internationalization is **opt-in and granular**: with no setup the documentation is English, and you localize only what you choose.
 
 Two things can be localized, at two different stages of the pipeline:

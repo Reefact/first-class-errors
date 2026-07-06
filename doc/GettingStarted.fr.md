@@ -1,5 +1,8 @@
 # Premier pas
 
+🌍 **Langues:**  
+🇬🇧 [English](./GettingStarted.en.md) | 🇫🇷 Français (ce fichier)
+
 FirstClassErrors vous aide à considérer les erreurs comme une **connaissance structurée et diagnostiquable**, plutôt que comme de simples messages d’exception.
 
 En quelques minutes, vous allez voir comment :

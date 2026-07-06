@@ -1,5 +1,8 @@
 # Architecture of the Documentation Pipeline
 
+🌍 **Languages:**  
+🇬🇧 English (this file) | 🇫🇷 [Français](./ArchitectureOfTheDocumentationPipeline.fr.md)
+
 FirstClassErrors does not treat documentation as an external artifact.
 Documentation is derived directly from the code and flows through a structured pipeline.
 

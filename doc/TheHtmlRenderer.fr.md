@@ -1,5 +1,8 @@
 # Le renderer HTML
 
+🌍 **Langues:**  
+🇬🇧 [English](./TheHtmlRenderer.en.md) | 🇫🇷 Français (ce fichier)
+
 Le renderer **html** transforme le catalogue d’erreurs en un **site statique autonome** : une page d’accueil consultable avec une table des matières à deux niveaux (groupée par source, puis par code d’erreur) et — en mode multi-pages — une page par erreur. C’est une sortie finale destinée à la lecture humaine, pas un format pivot.
 
 ## Quand utiliser HTML plutôt que Markdown ou JSON
