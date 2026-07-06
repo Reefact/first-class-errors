@@ -1,5 +1,8 @@
 # Guide d’écriture des erreurs
 
+🌍 **Langues:**  
+🇬🇧 [English](./WritingErrorsGuide.en.md) | 🇫🇷 Français (ce fichier)
+
 FirstClassErrors vous fournit des outils. Ce guide vous aide à les utiliser de manière cohérente et porteuse de sens.
 
 L’objectif n’est pas seulement de lever des exceptions, mais d’**exprimer les erreurs de façon claire, précise et utile** pour des humains.

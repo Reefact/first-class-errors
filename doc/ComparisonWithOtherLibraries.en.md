@@ -1,5 +1,8 @@
 # Comparison with error-handling libraries
 
+🌍 **Languages:**  
+🇬🇧 English (this file) | 🇫🇷 [Français](./ComparisonWithOtherLibraries.fr.md)
+
 [ErrorOr](https://github.com/amantinband/error-or) and [FluentResults](https://github.com/altmann/FluentResults) are excellent, mature libraries. If your goal is a lightweight *Result* type — returning errors as values instead of throwing — they are focused, well-adopted choices for exactly that.
 
 FirstClassErrors answers a **different question**. It is not primarily a *Result* library: it is a way to make errors **first-class, documented and diagnosable knowledge** about your system — errors you can *carry* as values **or** *throw* as exceptions, using one and the same model.

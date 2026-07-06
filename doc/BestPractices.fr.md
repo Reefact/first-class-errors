@@ -1,5 +1,8 @@
 # Bonnes pratiques
 
+🌍 **Langues:**  
+🇬🇧 [English](./BestPractices.en.md) | 🇫🇷 Français (ce fichier)
+
 FirstClassErrors est le plus efficace lorsqu’il est utilisé de manière cohérente et intentionnelle.  
 Ces pratiques aident à garder des erreurs significatives, lisibles et réellement utiles.
 

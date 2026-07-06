@@ -1,5 +1,8 @@
 # Core Concepts
 
+🌍 **Languages:**  
+🇬🇧 English (this file) | 🇫🇷 [Français](./CoreConcepts.fr.md)
+
 FirstClassErrors is not just a utility library.
 It introduces a different way to think about application errors.
 

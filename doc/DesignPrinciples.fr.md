@@ -1,5 +1,8 @@
 # Principes de conception
 
+🌍 **Langues:**  
+🇬🇧 [English](./DesignPrinciples.en.md) | 🇫🇷 Français (ce fichier)
+
 FirstClassErrors repose sur l’idée que les erreurs ne sont pas des sous-produits accidentels du code, mais des éléments porteurs de sens dans la connaissance du système. Dans de nombreuses applications, les erreurs sont traitées comme du bruit technique — quelque chose à logger, attraper ou masquer. Cette bibliothèque adopte la position inverse : lorsqu’une erreur est exprimée, elle révèle quelque chose sur les règles, les hypothèses et les frontières du système.
 
 Une **erreur** n’est pas simplement un échec d’exécution. Elle représente une situation que le système reconnaît et à laquelle il donne un nom. En transformant les situations d’erreur en concepts explicites — via des méthodes factory, des codes, des diagnostics et de la documentation — le système devient plus lisible, plus explicable et plus facile à maintenir.
