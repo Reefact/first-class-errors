@@ -6,7 +6,7 @@
 FirstClassErrors is not just a utility library.
 It introduces a different way to think about application errors.
 
-Instead of treating exceptions as technical incidents, it treats them as **structured knowledge about what went wrong**.
+Instead of reducing a failure to a mere technical incident, it turns the **error** behind it into **structured knowledge about what went wrong** — while the exception stays the mechanism that signals and propagates that failure.
 
 ## 🧠 An error is not just a message
 
