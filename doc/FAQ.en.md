@@ -165,12 +165,8 @@ Why does the distinction earn its keep?
 
 ---
 
-<table width="100%">
-<tr>
-<td align="left"><a href="Internationalization.en.md">← Internationalization</a></td>
-<td align="center"><a href="../README.md#-next-steps">↑ Table of contents</a></td>
-<td align="right"></td>
-</tr>
-</table>
+<div align="center">
+<a href="Internationalization.en.md">← Internationalization</a> · <a href="../README.md#-next-steps">↑ Table of contents</a>
+</div>
 
 ---

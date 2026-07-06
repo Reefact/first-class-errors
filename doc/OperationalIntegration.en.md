@@ -98,12 +98,8 @@ Errors become:
 
 ---
 
-<table width="100%">
-<tr>
-<td align="left"><a href="BestPractices.en.md">← Best Practices</a></td>
-<td align="center"><a href="../README.md#-next-steps">↑ Table of contents</a></td>
-<td align="right"><a href="ArchitectureOfTheDocumentationPipeline.en.md">Architecture of the Documentation Pipeline →</a></td>
-</tr>
-</table>
+<div align="center">
+<a href="BestPractices.en.md">← Best Practices</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="ArchitectureOfTheDocumentationPipeline.en.md">Architecture of the Documentation Pipeline →</a>
+</div>
 
 ---

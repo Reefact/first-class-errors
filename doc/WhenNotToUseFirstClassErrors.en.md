@@ -72,12 +72,8 @@ The goal of this library is not to make every exception richer. It is to make me
 
 ---
 
-<table width="100%">
-<tr>
-<td align="left"><a href="DesignPrinciples.en.md">← Design Principles</a></td>
-<td align="center"><a href="../README.md#-next-steps">↑ Table of contents</a></td>
-<td align="right"><a href="CoreConcepts.en.md">Core Concepts →</a></td>
-</tr>
-</table>
+<div align="center">
+<a href="DesignPrinciples.en.md">← Design Principles</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="CoreConcepts.en.md">Core Concepts →</a>
+</div>
 
 ---

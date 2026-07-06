@@ -209,12 +209,8 @@ but **what it means, why it might have happened, and where to look**.
 
 ---
 
-<table width="100%">
-<tr>
-<td align="left"><a href="WritingErrorsGuide.en.md">← Writing Errors Guide</a></td>
-<td align="center"><a href="../README.md#-next-steps">↑ Table of contents</a></td>
-<td align="right"><a href="BestPractices.en.md">Best Practices →</a></td>
-</tr>
-</table>
+<div align="center">
+<a href="WritingErrorsGuide.en.md">← Writing Errors Guide</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="BestPractices.en.md">Best Practices →</a>
+</div>
 
 ---

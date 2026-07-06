@@ -19,12 +19,8 @@ En essence, la bibliothèque encourage les équipes à considérer les erreurs c
 
 ---
 
-<table width="100%">
-<tr>
-<td align="left"><a href="GettingStarted.fr.md">← Premiers pas</a></td>
-<td align="center"><a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a></td>
-<td align="right"><a href="WhenNotToUseFirstClassErrors.fr.md">Quand ne pas utiliser FirstClassErrors →</a></td>
-</tr>
-</table>
+<div align="center">
+<a href="GettingStarted.fr.md">← Premiers pas</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="WhenNotToUseFirstClassErrors.fr.md">Quand ne pas utiliser FirstClassErrors →</a>
+</div>
 
 ---

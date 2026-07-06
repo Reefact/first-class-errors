@@ -98,12 +98,8 @@ If yes to most of these, it is a good candidate.
 
 ---
 
-<table width="100%">
-<tr>
-<td align="left"><a href="CoreConcepts.en.md">← Core Concepts</a></td>
-<td align="center"><a href="../README.md#-next-steps">↑ Table of contents</a></td>
-<td align="right"><a href="WritingErrorsGuide.en.md">Writing Errors Guide →</a></td>
-</tr>
-</table>
+<div align="center">
+<a href="CoreConcepts.en.md">← Core Concepts</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="WritingErrorsGuide.en.md">Writing Errors Guide →</a>
+</div>
 
 ---
