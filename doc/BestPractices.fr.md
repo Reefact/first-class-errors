@@ -209,9 +209,9 @@ Des erreurs bien écrites améliorent :
 
 <table width="100%">
 <tr>
-<td align="left">Section précédente: <a href="UsagePatterns.fr.md">Cas d’usage</a></td>
-<td align="center"><a href="README.fr.md#-étapes-suivantes">📚 Table des matières</a></td>
-<td align="right">Section suivante: <a href="OperationalIntegration.fr.md">Intégration CI/CD et exploitation</a></td>
+<td align="left"><a href="UsagePatterns.fr.md">← Cas d’usage</a></td>
+<td align="center"><a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a></td>
+<td align="right"><a href="OperationalIntegration.fr.md">Intégration CI/CD et exploitation →</a></td>
 </tr>
 </table>
 

@@ -112,9 +112,9 @@ foreach (RenderedDocument document in new CsvErrorDocumentationRenderer().Render
 
 <table width="100%">
 <tr>
-<td align="left">Previous section: <a href="ArchitectureOfTheDocumentationPipeline.en.md">Architecture of the Documentation Pipeline</a></td>
-<td align="center"><a href="../README.md#-next-steps">📚 Table of contents</a></td>
-<td align="right">Next section: <a href="Internationalization.en.md">Internationalization</a></td>
+<td align="left"><a href="ArchitectureOfTheDocumentationPipeline.en.md">← Architecture of the Documentation Pipeline</a></td>
+<td align="center"><a href="../README.md#-next-steps">↑ Table of contents</a></td>
+<td align="right"><a href="Internationalization.en.md">Internationalization →</a></td>
 </tr>
 </table>
 

@@ -74,9 +74,9 @@ L’objectif de cette bibliothèque n’est pas de rendre toutes les exceptions 
 
 <table width="100%">
 <tr>
-<td align="left">Section précédente: <a href="DesignPrinciples.fr.md">Principes de conception</a></td>
-<td align="center"><a href="README.fr.md#-étapes-suivantes">📚 Table des matières</a></td>
-<td align="right">Section suivante: <a href="CoreConcepts.fr.md">Concepts clés</a></td>
+<td align="left"><a href="DesignPrinciples.fr.md">← Principes de conception</a></td>
+<td align="center"><a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a></td>
+<td align="right"><a href="CoreConcepts.fr.md">Concepts clés →</a></td>
 </tr>
 </table>
 

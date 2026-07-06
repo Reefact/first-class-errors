@@ -120,9 +120,9 @@ Le contenu est localisé à l’extraction ; le texte fixe au rendu. Les noms de
 
 <table width="100%">
 <tr>
-<td align="left">Section précédente: <a href="WritingACustomRenderer.fr.md">Écrire son propre renderer</a></td>
-<td align="center"><a href="README.fr.md#-étapes-suivantes">📚 Table des matières</a></td>
-<td align="right">Section suivante: <a href="FAQ.fr.md">FAQ</a></td>
+<td align="left"><a href="WritingACustomRenderer.fr.md">← Écrire son propre renderer</a></td>
+<td align="center"><a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a></td>
+<td align="right"><a href="FAQ.fr.md">FAQ →</a></td>
 </tr>
 </table>
 

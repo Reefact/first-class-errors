@@ -209,9 +209,9 @@ Well-written errors improve:
 
 <table width="100%">
 <tr>
-<td align="left">Previous section: <a href="UsagePatterns.en.md">Usage Patterns</a></td>
-<td align="center"><a href="../README.md#-next-steps">📚 Table of contents</a></td>
-<td align="right">Next section: <a href="OperationalIntegration.en.md">CI/CD and Operational Integration</a></td>
+<td align="left"><a href="UsagePatterns.en.md">← Usage Patterns</a></td>
+<td align="center"><a href="../README.md#-next-steps">↑ Table of contents</a></td>
+<td align="right"><a href="OperationalIntegration.en.md">CI/CD and Operational Integration →</a></td>
 </tr>
 </table>
 
