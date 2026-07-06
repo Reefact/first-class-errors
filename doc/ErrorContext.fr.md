@@ -98,12 +98,8 @@ Si la majorité des réponses est oui, c’est un bon candidat.
 
 ---
 
-<table width="100%">
-<tr>
-<td align="left"><a href="CoreConcepts.fr.md">← Concepts fondamentaux</a></td>
-<td align="center"><a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a></td>
-<td align="right"><a href="WritingErrorsGuide.fr.md">Guide d’écriture des erreurs →</a></td>
-</tr>
-</table>
+<div align="center">
+<a href="CoreConcepts.fr.md">← Concepts fondamentaux</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="WritingErrorsGuide.fr.md">Guide d’écriture des erreurs →</a>
+</div>
 
 ---

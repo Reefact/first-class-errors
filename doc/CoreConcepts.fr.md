@@ -145,12 +145,8 @@ Le tout basé sur une même source de vérité : le code.
 
 ---
 
-<table width="100%">
-<tr>
-<td align="left"><a href="WhenNotToUseFirstClassErrors.fr.md">← Quand ne pas utiliser FirstClassErrors</a></td>
-<td align="center"><a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a></td>
-<td align="right"><a href="ErrorContext.fr.md">Guide du contexte d’erreur →</a></td>
-</tr>
-</table>
+<div align="center">
+<a href="WhenNotToUseFirstClassErrors.fr.md">← Quand ne pas utiliser FirstClassErrors</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="ErrorContext.fr.md">Guide du contexte d’erreur →</a>
+</div>
 
 ---

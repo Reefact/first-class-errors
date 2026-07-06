@@ -19,12 +19,8 @@ In essence, the library encourages teams to treat errors as first-class knowledg
 
 ---
 
-<table width="100%">
-<tr>
-<td align="left"><a href="GettingStarted.en.md">← Getting Started</a></td>
-<td align="center"><a href="../README.md#-next-steps">↑ Table of contents</a></td>
-<td align="right"><a href="WhenNotToUseFirstClassErrors.en.md">When Not to Use FirstClassErrors →</a></td>
-</tr>
-</table>
+<div align="center">
+<a href="GettingStarted.en.md">← Getting Started</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="WhenNotToUseFirstClassErrors.en.md">When Not to Use FirstClassErrors →</a>
+</div>
 
 ---

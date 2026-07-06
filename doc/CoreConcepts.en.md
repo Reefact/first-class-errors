@@ -146,12 +146,8 @@ All based on the same source of truth: the code.
 
 ---
 
-<table width="100%">
-<tr>
-<td align="left"><a href="WhenNotToUseFirstClassErrors.en.md">← When Not to Use FirstClassErrors</a></td>
-<td align="center"><a href="../README.md#-next-steps">↑ Table of contents</a></td>
-<td align="right"><a href="ErrorContext.en.md">Error Context Guide →</a></td>
-</tr>
-</table>
+<div align="center">
+<a href="WhenNotToUseFirstClassErrors.en.md">← When Not to Use FirstClassErrors</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="ErrorContext.en.md">Error Context Guide →</a>
+</div>
 
 ---
