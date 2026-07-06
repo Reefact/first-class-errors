@@ -81,16 +81,31 @@ public class ErrorContextKeyTests : IDisposable {
              .WithMessage("Value cannot be null or whitespace. (Parameter 'name')");
     }
 
-    [Fact(DisplayName = "Registering a key with a duplicate name is rejected.")]
-    public void RegisteringKeyWithDuplicateNameIsRejected() {
+    [Fact(DisplayName = "Re-declaring a key with the same name and type returns the registered instance.")]
+    public void RedeclaringKeyWithSameNameAndTypeReturnsTheRegisteredInstance() {
         // Setup
-        const string name = "Duplicate";
-        ErrorContextKey.Create<string>(name);
+        const string            name  = "Duplicate";
+        ErrorContextKey<string> first = ErrorContextKey.Create<string>(name);
 
-        // Exercise & verify
-        Check.ThatCode(() => ErrorContextKey.Create<int>(name))
-             .Throws<InvalidOperationException>()
-             .WithMessage("An error context key 'Duplicate' has already been registered.");
+        // Exercise
+        ErrorContextKey<string> second = ErrorContextKey.Create<string>(name);
+
+        // Verify
+        Check.That(second).IsSameReferenceAs(first);
+        Check.That(ErrorContextKey.GetRegisteredKeys().Count).IsEqualTo(1);
+    }
+
+    [Fact(DisplayName = "Re-declaring a key with a different description keeps the first registered description.")]
+    public void RedeclaringKeyWithDifferentDescriptionKeepsTheFirstRegisteredDescription() {
+        // Setup
+        const string name = "DescribedTwice";
+        ErrorContextKey.Create<string>(name, "first");
+
+        // Exercise
+        ErrorContextKey<string> second = ErrorContextKey.Create<string>(name, "second");
+
+        // Verify
+        Check.That(second.Description).IsEqualTo("first");
     }
 
     [Fact(DisplayName = "Registering a key with the same name but a different type is rejected.")]
@@ -101,7 +116,8 @@ public class ErrorContextKeyTests : IDisposable {
 
         // Exercise & verify
         Check.ThatCode(() => ErrorContextKey.Create<Guid>(name))
-             .Throws<InvalidOperationException>();
+             .Throws<InvalidOperationException>()
+             .WithMessage("An error context key 'SameName' is already registered with value type 'System.String'; it cannot be re-registered with value type 'System.Guid'.");
     }
 
     [Fact(DisplayName = "The registry returns all registered keys.")]
@@ -245,22 +261,14 @@ public class ErrorContextKeyTests : IDisposable {
         // Setup
         const string name = "Concurrent";
 
-        int successes = 0;
-        int failures  = 0;
+        ErrorContextKey<string>[] created = new ErrorContextKey<string>[20];
 
         // Exercise
-        Parallel.For(0, 20, _ => {
-            try {
-                ErrorContextKey.Create<string>(name);
-                Interlocked.Increment(ref successes);
-            } catch (InvalidOperationException) {
-                Interlocked.Increment(ref failures);
-            }
-        });
+        Parallel.For(0, 20, index => created[index] = ErrorContextKey.Create<string>(name));
 
         // Verify
-        Check.That(successes).IsEqualTo(1);
-        Check.That(failures).IsEqualTo(19);
+        Check.That(created.All(key => ReferenceEquals(key, created[0]))).IsTrue();
+        Check.That(ErrorContextKey.GetRegisteredKeys().Count).IsEqualTo(1);
     }
 
     [SuppressMessage("Usage", "CA1816",

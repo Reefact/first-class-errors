@@ -10,9 +10,10 @@ namespace FirstClassErrors.Analyzers;
 
 /// <summary>
 ///     FCE001 — reports the same error code created by more than one <c>ErrorCode.Create("X")</c> literal in the
-///     compilation. <c>ErrorCode.Create</c> registers each code in a process-wide set and throws when a code is created
-///     twice. Detection is per-compilation (cross-assembly duplicates still surface only at runtime) and limited to
-///     literal codes — a non-literal code is FCE003's concern.
+///     compilation. <c>ErrorCode</c> is compared by value, so a duplicated code yields equal instances that silently
+///     collapse two distinct errors into one identity (documentation extraction and dictionary lookups keep a single
+///     entry). Detection is per-compilation (cross-assembly duplicates are not seen here — they surface only as a
+///     documentation-pipeline warning) and limited to literal codes — a non-literal code is FCE003's concern.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class DuplicateErrorCodeAnalyzer : DiagnosticAnalyzer {
