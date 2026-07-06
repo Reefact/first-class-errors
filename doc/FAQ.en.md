@@ -140,6 +140,26 @@ Any system that benefits from:
 
 can use this library.
 
+## ❓ Why can a domain error only nest domain errors, while an infrastructure error can also nest a domain error?
+
+Because an error's **type follows the nature of the failure — which rule was violated — not the place where the failure is detected.**
+
+A `DomainError` means a business rule was broken; its cause is only ever another business-rule failure, so it nests only `DomainError`s. Giving it an infrastructure cause would leak a technical concern into the domain vocabulary — and mislabel a technical failure as a business one.
+
+An infrastructure / port error *can* nest a `DomainError`, because a boundary legitimately reports a *request-level* failure whose *cause* is a domain rule. The textbook case: an incoming (primary-port) adapter maps a DTO into value objects, and a value object refuses to build because an invariant is violated. Two distinct facts coexist:
+
+* the **cause** — “this value is invalid” — belongs to the domain (the value object produced a `DomainError`);
+* the **boundary condition** — “this request is rejected at the edge” — belongs to the adapter (a `PrimaryPortError`).
+
+Nesting the domain error inside the port error keeps both. It is an *infrastructure error **caused by** a domain error* — not one or the other.
+
+Mind the direction: the value object stays domain code and emits the `DomainError`; the adapter is what classifies the boundary condition as infrastructure. A value object must never emit an infrastructure error itself — that would make the domain depend on infrastructure.
+
+Why does the distinction earn its keep?
+
+* **Transport independence** — the same `DomainError` renders as an HTTP 400/422, a gRPC `INVALID_ARGUMENT`, or a CLI exit code. The HTTP status is a *rendering* of the error, not its identity.
+* **Operations** — you alert and retry on `InteractionDirection` and `Transience`, not on the error type alone. A user who typed a bad email produces a non-transient *inbound* port error that must never page anyone; a database timeout produces a *transient* *outbound* one that might. Collapsing invalid input into the same bucket as real outages would poison that signal.
+
 ---
 
 Previous section: [Internationalization](Internationalization.en.md)

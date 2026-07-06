@@ -100,7 +100,7 @@ The Port errors replace the old Adapter exceptions. When a port failure wraps se
 * A **`PrimaryPortError`** / **`SecondaryPortError`** nests **infrastructure errors of its own direction** (a primary port nests primary-port errors, a secondary port nests secondary-port errors) **and/or** `DomainError`s — for example a boundary rejection whose cause is a domain-invariant violation surfaced while mapping an incoming request. The typed `PrimaryPortInnerErrors` / `SecondaryPortInnerErrors` builders make anything else unrepresentable: they only expose `Add(DomainError)` and `Add(`_same-direction port error_`)`.
 * The base **`InfrastructureError`** is the permissive general case and accepts any `Error` as inner. Prefer the Port types in real code: they pin the `InteractionDirection` and keep nesting consistent.
 
-In short: **a domain error contains only domain errors; an infrastructure error contains same-direction infrastructure errors and/or domain errors.**
+In short: **a domain error contains only domain errors; an infrastructure error contains same-direction infrastructure errors and/or domain errors.** The [FAQ](FAQ.en.md) explains *why* this asymmetry exists.
 
 Each error has a paired exception reached via `error.ToException()`: `DomainException`, `InfrastructureException`, `PrimaryPortException`, `SecondaryPortException`. You never `new` these directly; the exception exposes its `Error` (and through it the context and inner errors).
 
