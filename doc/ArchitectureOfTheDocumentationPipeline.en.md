@@ -153,6 +153,6 @@ The code is the source of truth.
 
 ---
 
-Previous section: [CI/CD and Operational Integration](OperationalIntegration.en.md) | Next section: [Writing a custom renderer](WritingACustomRenderer.en.md)
+Previous section: [CI/CD and Operational Integration](OperationalIntegration.en.md) | Next section: [Writing a custom renderer](WritingACustomRenderer.en.md) | [📚 Table of contents](../README.md#-next-steps)
 
 ---

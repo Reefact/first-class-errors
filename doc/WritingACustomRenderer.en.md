@@ -110,6 +110,6 @@ foreach (RenderedDocument document in new CsvErrorDocumentationRenderer().Render
 
 ---
 
-Previous section: [Architecture of the Documentation Pipeline](ArchitectureOfTheDocumentationPipeline.en.md) | Next section: [Internationalization](Internationalization.en.md)
+Previous section: [Architecture of the Documentation Pipeline](ArchitectureOfTheDocumentationPipeline.en.md) | Next section: [Internationalization](Internationalization.en.md) | [📚 Table of contents](../README.md#-next-steps)
 
 ---

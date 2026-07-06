@@ -209,6 +209,6 @@ but **what it means, why it might have happened, and where to look**.
 
 ---
 
-Previous section : [Writing Errors Guide](WritingErrorsGuide.en.md) | Next section: [Best Practices](BestPractices.en.md)
+Previous section : [Writing Errors Guide](WritingErrorsGuide.en.md) | Next section: [Best Practices](BestPractices.en.md) | [📚 Table of contents](../README.md#-next-steps)
 
 ---

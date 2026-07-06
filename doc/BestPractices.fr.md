@@ -207,6 +207,6 @@ Des erreurs bien écrites améliorent :
 
 ---
 
-Section précédente: [Cas d’usage](UsagePatterns.fr.md) | Section suivante: [Intégration CI/CD et exploitation](OperationalIntegration.fr.md)
+Section précédente: [Cas d’usage](UsagePatterns.fr.md) | Section suivante: [Intégration CI/CD et exploitation](OperationalIntegration.fr.md) | [📚 Table des matières](README.fr.md#-étapes-suivantes)
 
 ---

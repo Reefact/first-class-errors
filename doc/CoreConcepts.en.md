@@ -146,6 +146,6 @@ All based on the same source of truth: the code.
 
 ---
 
-Previous section: [When Not to Use FirstClassErrors](WhenNotToUseFirstClassErrors.en.md) | Next section: [Error Context Guide](ErrorContext.en.md)
+Previous section: [When Not to Use FirstClassErrors](WhenNotToUseFirstClassErrors.en.md) | Next section: [Error Context Guide](ErrorContext.en.md) | [📚 Table of contents](../README.md#-next-steps)
 
 ---

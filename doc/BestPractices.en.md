@@ -207,6 +207,6 @@ Well-written errors improve:
 
 ---
 
-Previous section: [Usage Patterns](UsagePatterns.en.md) | Next section: [CI/CD and Operational Integration](OperationalIntegration.en.md)
+Previous section: [Usage Patterns](UsagePatterns.en.md) | Next section: [CI/CD and Operational Integration](OperationalIntegration.en.md) | [📚 Table of contents](../README.md#-next-steps)
 
 ---

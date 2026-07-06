@@ -72,6 +72,6 @@ The goal of this library is not to make every exception richer. It is to make me
 
 ---
 
-Previous section: [Design Principles](DesignPrinciples.en.md) | Next section: [Core Concepts](CoreConcepts.en.md)
+Previous section: [Design Principles](DesignPrinciples.en.md) | Next section: [Core Concepts](CoreConcepts.en.md) | [📚 Table of contents](../README.md#-next-steps)
 
 ---

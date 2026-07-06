@@ -145,6 +145,6 @@ Le tout basé sur une même source de vérité : le code.
 
 ---
 
-Section précédente: [Quand ne pas utiliser FirstClassErrors](WhenNotToUseFirstClassErrors.fr.md) | Section suivante: [Guide du contexte d’erreur](ErrorContext.fr.md)
+Section précédente: [Quand ne pas utiliser FirstClassErrors](WhenNotToUseFirstClassErrors.fr.md) | Section suivante: [Guide du contexte d’erreur](ErrorContext.fr.md) | [📚 Table des matières](README.fr.md#-étapes-suivantes)
 
 ---
