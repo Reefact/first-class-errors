@@ -42,10 +42,19 @@ public sealed class UnusedToExceptionResultAnalyzer : DiagnosticAnalyzer {
         if (method.Name != ToExceptionMethodName || method.Parameters.Length != 0) { return; }
         if (!SymbolFacts.IsOrInheritsFrom(method.ContainingType, errorType)) { return; }
 
-        // The result is used unless the invocation stands alone as an expression statement.
-        if (invocation.Parent is not IExpressionStatementOperation) { return; }
+        if (!IsResultDiscarded(invocation)) { return; }
 
         context.ReportDiagnostic(Diagnostic.Create(Descriptors.UnusedToExceptionResult, invocation.Syntax.GetLocation()));
+    }
+
+    // The result is thrown away either when the call stands alone as a statement or when it is explicitly discarded
+    // (`_ = error.ToException();`). ToException() is a pure builder, so an explicit discard is just as pointless.
+    private static bool IsResultDiscarded(IInvocationOperation invocation) {
+        return invocation.Parent switch {
+            IExpressionStatementOperation                          => true,
+            ISimpleAssignmentOperation { Target: IDiscardOperation } => true,
+            _                                                      => false,
+        };
     }
 
 }

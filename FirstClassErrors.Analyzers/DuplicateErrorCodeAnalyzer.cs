@@ -17,9 +17,6 @@ namespace FirstClassErrors.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class DuplicateErrorCodeAnalyzer : DiagnosticAnalyzer {
 
-    private const string ErrorCodeMetadataName = "FirstClassErrors.ErrorCode";
-    private const string CreateMethodName      = "Create";
-
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
         ImmutableArray.Create(Descriptors.DuplicateErrorCode);
@@ -32,7 +29,7 @@ public sealed class DuplicateErrorCodeAnalyzer : DiagnosticAnalyzer {
     }
 
     private static void OnCompilationStart(CompilationStartAnalysisContext context) {
-        INamedTypeSymbol? errorCodeType = context.Compilation.GetTypeByMetadataName(ErrorCodeMetadataName);
+        INamedTypeSymbol? errorCodeType = context.Compilation.GetTypeByMetadataName(ErrorCodeFacts.ErrorCodeMetadataName);
         if (errorCodeType is null) { return; }
 
         // Per-compilation state; ErrorCode registers with ordinal comparison, so duplicates are case-sensitive.
@@ -48,17 +45,12 @@ public sealed class DuplicateErrorCodeAnalyzer : DiagnosticAnalyzer {
         ConcurrentDictionary<string, ConcurrentBag<Location>> occurrences) {
 
         IInvocationOperation invocation = (IInvocationOperation)context.Operation;
-        IMethodSymbol        method     = invocation.TargetMethod;
 
-        if (!method.IsStatic || method.Name != CreateMethodName) { return; }
-        if (!SymbolEqualityComparer.Default.Equals(method.ContainingType, errorCodeType)) { return; }
-        if (invocation.Arguments.Length != 1) { return; }
+        IOperation? argument = ErrorCodeFacts.GetCreateArgument(invocation, errorCodeType);
+        if (argument is null) { return; }
 
-        IOperation        argument = invocation.Arguments[0].Value;
-        Optional<object?> constant = argument.ConstantValue;
-
-        if (!constant.HasValue) { return; }                                                     // non-literal → FCE003
-        if (constant.Value is not string code || string.IsNullOrWhiteSpace(code)) { return; }   // empty → FCE002
+        // Non-literal codes are FCE003's concern, empty ones FCE002's; only real codes can collide.
+        if (!ErrorCodeFacts.TryGetNonEmptyLiteralCode(argument, out string code)) { return; }
 
         occurrences.GetOrAdd(code, _ => new ConcurrentBag<Location>()).Add(argument.Syntax.GetLocation());
     }

@@ -14,9 +14,6 @@ namespace FirstClassErrors.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class InvalidErrorCodeFormatAnalyzer : DiagnosticAnalyzer {
 
-    private const string ErrorCodeMetadataName = "FirstClassErrors.ErrorCode";
-    private const string CreateMethodName      = "Create";
-
     private static readonly Regex UpperSnakeCase = new("^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$", RegexOptions.CultureInvariant);
 
     /// <inheritdoc />
@@ -31,7 +28,7 @@ public sealed class InvalidErrorCodeFormatAnalyzer : DiagnosticAnalyzer {
     }
 
     private static void OnCompilationStart(CompilationStartAnalysisContext context) {
-        INamedTypeSymbol? errorCodeType = context.Compilation.GetTypeByMetadataName(ErrorCodeMetadataName);
+        INamedTypeSymbol? errorCodeType = context.Compilation.GetTypeByMetadataName(ErrorCodeFacts.ErrorCodeMetadataName);
         if (errorCodeType is null) { return; }
 
         context.RegisterOperationAction(operationContext => Analyze(operationContext, errorCodeType), OperationKind.Invocation);
@@ -39,15 +36,12 @@ public sealed class InvalidErrorCodeFormatAnalyzer : DiagnosticAnalyzer {
 
     private static void Analyze(OperationAnalysisContext context, INamedTypeSymbol errorCodeType) {
         IInvocationOperation invocation = (IInvocationOperation)context.Operation;
-        IMethodSymbol        method     = invocation.TargetMethod;
 
-        if (!method.IsStatic || method.Name != CreateMethodName) { return; }
-        if (!SymbolEqualityComparer.Default.Equals(method.ContainingType, errorCodeType)) { return; }
-        if (invocation.Arguments.Length != 1) { return; }
+        IOperation? argument = ErrorCodeFacts.GetCreateArgument(invocation, errorCodeType);
+        if (argument is null) { return; }
 
-        IOperation argument = invocation.Arguments[0].Value;
-        if (argument.ConstantValue.Value is not string code) { return; }   // non-literal → FCE003
-        if (string.IsNullOrWhiteSpace(code)) { return; }                   // empty → FCE002
+        // Non-literal codes are FCE003's concern, empty ones FCE002's.
+        if (!ErrorCodeFacts.TryGetNonEmptyLiteralCode(argument, out string code)) { return; }
         if (UpperSnakeCase.IsMatch(code)) { return; }
 
         context.ReportDiagnostic(Diagnostic.Create(Descriptors.InvalidErrorCodeFormat, argument.Syntax.GetLocation(), code));
