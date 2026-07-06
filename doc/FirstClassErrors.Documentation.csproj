@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Documentation-only project.
+
+    This project compiles nothing. Its sole purpose is to surface everything
+    under doc/ in the Visual Studio Solution Explorer, so the documentation is
+    easy to find, read and edit right next to the code: the Markdown pages
+    (English *.en.md and French *.fr.md, including the analyzer pages under
+    analyzers/), the images, and any other asset that may be added later.
+
+    The <None> glob below picks up new files automatically: no need to touch
+    this project or the solution when documentation is added or renamed. The
+    repository's root README.md is also linked in, so it is browsable here too.
+
+    Nothing is built: no *.cs is compiled (EnableDefaultItems=false) and no
+    assembly is produced (IncludeBuildOutput=false). The project is also
+    excluded from the solution build configurations, so both
+    `dotnet build FirstClassErrors.sln` and "Build Solution" in Visual Studio
+    simply skip it. It therefore adds no build cost and no new dependency.
+
+    TargetFramework is set only because the SDK requires one; it reuses the
+    netstandard2.0 targeting pack already restored by the main library.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Show every file under doc/ (Markdown pages, images and any other asset),
+      so nothing is ever missing from the Solution Explorer view. Only the
+      build artifacts (obj/, bin/) and this project file itself are excluded.
+    -->
+    <None Include="**\*" Exclude="obj\**;bin\**;*.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      The repository's main README lives at the solution root, outside doc/, so
+      the glob above cannot reach it. Reference it as a link so it is browsable
+      from this project too. Link metadata is required for files located outside
+      the project directory.
+    -->
+    <None Include="..\README.md" Link="README.md" />
+  </ItemGroup>
+
+</Project>
