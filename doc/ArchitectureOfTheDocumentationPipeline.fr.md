@@ -153,6 +153,6 @@ Le code est la source de vérité.
 
 ---
 
-Section précédente: [Intégration CI/CD et exploitation](OperationalIntegration.fr.md) | Section suivante: [Écrire son propre renderer](WritingACustomRenderer.fr.md)
+Section précédente: [Intégration CI/CD et exploitation](OperationalIntegration.fr.md) | Section suivante: [Écrire son propre renderer](WritingACustomRenderer.fr.md) | [📚 Table des matières](README.fr.md#-étapes-suivantes)
 
 ---

@@ -72,6 +72,6 @@ L’objectif de cette bibliothèque n’est pas de rendre toutes les exceptions 
 
 ---
 
-Section précédente: [Principes de conception](DesignPrinciples.fr.md) | Section suivante: [Concepts clés](CoreConcepts.fr.md)
+Section précédente: [Principes de conception](DesignPrinciples.fr.md) | Section suivante: [Concepts clés](CoreConcepts.fr.md) | [📚 Table des matières](README.fr.md#-étapes-suivantes)
 
 ---

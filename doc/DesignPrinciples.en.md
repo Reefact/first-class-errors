@@ -19,6 +19,6 @@ In essence, the library encourages teams to treat errors as first-class knowledg
 
 ---
 
-Previous section: [Getting Started](GettingStarted.en.md) | Next section: [When Not to Use FirstClassErrors](WhenNotToUseFirstClassErrors.en.md)
+Previous section: [Getting Started](GettingStarted.en.md) | Next section: [When Not to Use FirstClassErrors](WhenNotToUseFirstClassErrors.en.md) | [📚 Table of contents](../README.md#-next-steps)
 
 ---

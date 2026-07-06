@@ -165,6 +165,6 @@ Pourquoi cette distinction en vaut-elle la peine ?
 
 ---
 
-Section précédente: [Internationalisation](Internationalisation.fr.md)
+Section précédente: [Internationalisation](Internationalisation.fr.md) | [📚 Table des matières](README.fr.md#-étapes-suivantes)
 
 ---

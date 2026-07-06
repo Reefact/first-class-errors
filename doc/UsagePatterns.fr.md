@@ -195,6 +195,6 @@ La bibliothèque vous aide à exprimer non seulement qu’un échec s’est prod
 
 ---
 
-Section précédente: [Guide d’écriture des erreurs](WritingErrorsGuide.fr.md) | Section suivante: [Bonnes pratiques](BestPractices.fr.md)
+Section précédente: [Guide d’écriture des erreurs](WritingErrorsGuide.fr.md) | Section suivante: [Bonnes pratiques](BestPractices.fr.md) | [📚 Table des matières](README.fr.md#-étapes-suivantes)
 
 ---

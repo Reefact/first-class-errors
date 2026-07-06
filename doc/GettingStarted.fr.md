@@ -187,6 +187,6 @@ Vous passez de :
 
 ---
 
-Section suivante: [Principes de conception](DesignPrinciples.fr.md)
+Section suivante: [Principes de conception](DesignPrinciples.fr.md) | [📚 Table des matières](README.fr.md#-étapes-suivantes)
 
 ---

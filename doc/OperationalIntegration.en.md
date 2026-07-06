@@ -98,6 +98,6 @@ Errors become:
 
 ---
 
-Previous section: [Best Practices](BestPractices.en.md) | Next section: [Architecture of the Documentation Pipeline](ArchitectureOfTheDocumentationPipeline.en.md)
+Previous section: [Best Practices](BestPractices.en.md) | Next section: [Architecture of the Documentation Pipeline](ArchitectureOfTheDocumentationPipeline.en.md) | [📚 Table of contents](../README.md#-next-steps)
 
 ---

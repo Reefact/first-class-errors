@@ -118,6 +118,6 @@ Le contenu est localisé à l’extraction ; le texte fixe au rendu. Les noms de
 
 ---
 
-Section précédente: [Écrire son propre renderer](WritingACustomRenderer.fr.md) | Section suivante: [FAQ](FAQ.fr.md)
+Section précédente: [Écrire son propre renderer](WritingACustomRenderer.fr.md) | Section suivante: [FAQ](FAQ.fr.md) | [📚 Table des matières](README.fr.md#-étapes-suivantes)
 
 ---

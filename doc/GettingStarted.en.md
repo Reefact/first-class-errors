@@ -187,6 +187,6 @@ to
 
 ---
 
-Next section: [Design Principles](DesignPrinciples.en.md)
+Next section: [Design Principles](DesignPrinciples.en.md) | [📚 Table of contents](../README.md#-next-steps)
 
 ---

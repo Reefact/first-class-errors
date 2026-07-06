@@ -98,6 +98,6 @@ Si la majorité des réponses est oui, c’est un bon candidat.
 
 ---
 
-Section précédente: [Concepts fondamentaux](CoreConcepts.fr.md) | Section suivante: [Guide d’écriture des erreurs](WritingErrorsGuide.fr.md)
+Section précédente: [Concepts fondamentaux](CoreConcepts.fr.md) | Section suivante: [Guide d’écriture des erreurs](WritingErrorsGuide.fr.md) | [📚 Table des matières](README.fr.md#-étapes-suivantes)
 
 ---

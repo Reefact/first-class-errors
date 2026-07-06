@@ -118,6 +118,6 @@ Content is localized at extraction; boilerplate at rendering. File names, anchor
 
 ---
 
-Previous section: [Writing a custom renderer](WritingACustomRenderer.en.md) | Next section: [FAQ](FAQ.en.md)
+Previous section: [Writing a custom renderer](WritingACustomRenderer.en.md) | Next section: [FAQ](FAQ.en.md) | [📚 Table of contents](../README.md#-next-steps)
 
 ---

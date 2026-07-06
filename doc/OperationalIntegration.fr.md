@@ -98,6 +98,6 @@ Les erreurs deviennent :
 
 ---
 
-Section précédente: [Bonnes pratiques](BestPractices.fr.md) | Section suivante: [Architecture du pipeline de documentation](ArchitectureOfTheDocumentationPipeline.fr.md)
+Section précédente: [Bonnes pratiques](BestPractices.fr.md) | Section suivante: [Architecture du pipeline de documentation](ArchitectureOfTheDocumentationPipeline.fr.md) | [📚 Table des matières](README.fr.md#-étapes-suivantes)
 
 ---
