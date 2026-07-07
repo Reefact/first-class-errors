@@ -16,12 +16,14 @@ public sealed class HtmlErrorDocumentationRendererTests {
 
     #region Statics members declarations
 
+    private const string SampleService = "sample-service";
+
     private static IReadOnlyList<RenderedDocument> RenderSingle(params ErrorDocumentation[] catalog) {
-        return new HtmlErrorDocumentationRenderer().Render(catalog, new RenderRequest(RenderLayouts.Single));
+        return new HtmlErrorDocumentationRenderer().Render(catalog, new RenderRequest(RenderLayouts.Single, CultureInfo.InvariantCulture, SampleService));
     }
 
     private static IReadOnlyList<RenderedDocument> RenderSplit(params ErrorDocumentation[] catalog) {
-        return new HtmlErrorDocumentationRenderer().Render(catalog, new RenderRequest(RenderLayouts.Split));
+        return new HtmlErrorDocumentationRenderer().Render(catalog, new RenderRequest(RenderLayouts.Split, CultureInfo.InvariantCulture, SampleService));
     }
 
     private static string ContentOf(IReadOnlyList<RenderedDocument> documents, string relativePath) {
@@ -251,13 +253,33 @@ public sealed class HtmlErrorDocumentationRendererTests {
         // Exercise: render for French.
         IReadOnlyList<RenderedDocument> documents =
             new HtmlErrorDocumentationRenderer().Render(new[] { TemperatureError() },
-                                                        new RenderRequest(RenderLayouts.Single, CultureInfo.GetCultureInfo("fr")));
+                                                        new RenderRequest(RenderLayouts.Single, CultureInfo.GetCultureInfo("fr"), SampleService));
         string html = ContentOf(documents, "index.html");
 
         // Verify: the title and lang come from the French resources; the diagnostic log line stays invariant.
         Check.That(html).Contains("<html lang=\"fr\">");
         Check.That(html).Contains("Catalogue des erreurs");
         Check.That(html).Contains("2026-07-04T13:42:18.734Z ERROR [Temperature]");
+    }
+
+    [Fact(DisplayName = "The RFC 9457 example carries a problem type built from the configured service name and the error code.")]
+    public void TheProblemDetailCarriesATypeBuiltFromTheServiceNameAndCode() {
+        // Exercise: render with a configured service name.
+        IReadOnlyList<RenderedDocument> documents =
+            new HtmlErrorDocumentationRenderer().Render(new[] { TemperatureError() },
+                                                        new RenderRequest(RenderLayouts.Single, CultureInfo.InvariantCulture, "Temperature Simulator"));
+        string html = ContentOf(documents, "index.html");
+
+        // Verify: the service name and the code are slugified into a urn:problem type in the (HTML-escaped) problem detail.
+        Check.That(html).Contains("&quot;type&quot;: &quot;urn:problem:temperature-simulator:temperature-below-absolute-zero&quot;");
+    }
+
+    [Fact(DisplayName = "The HTML renderer refuses to render without a service name (the invariant is enforced by the renderer, not only the CLI).")]
+    public void TheHtmlRendererRefusesToRenderWithoutAServiceName() {
+        // Exercise & verify: a RenderRequest without a service name is rejected by the renderer itself — the format
+        // embeds RFC 9457 examples that must carry a real problem type, so it will not silently emit a type-less one.
+        Check.ThatCode(() => new HtmlErrorDocumentationRenderer().Render(new[] { TemperatureError() }, new RenderRequest(RenderLayouts.Single)))
+             .Throws<ServiceNameRequiredException>();
     }
 
     [Fact(DisplayName = "The HTML renderer produces a valid page for an empty catalog.")]

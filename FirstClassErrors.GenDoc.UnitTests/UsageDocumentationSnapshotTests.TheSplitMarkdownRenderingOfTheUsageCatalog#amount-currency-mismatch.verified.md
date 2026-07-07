@@ -18,6 +18,7 @@ This error occurs when trying to use multiple amounts together in an operation w
 
 ```json
 {
+  "type": "urn:problem:sample-service:amount-currency-mismatch",
   "title": "Currency mismatch",
   "detail": "The two amounts use different currencies and cannot be combined.",
   "code": "AMOUNT_CURRENCY_MISMATCH"

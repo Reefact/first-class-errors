@@ -44,6 +44,13 @@ internal sealed class CliConfiguration {
     /// <summary>Path to the documentation worker assembly.</summary>
     public string? Worker { get; set; }
 
+    /// <summary>
+    ///     Default service name used to build the RFC 9457 problem <c>type</c> of the rendered examples
+    ///     (<c>urn:problem:{service}:{code}</c>). Required by the <c>markdown</c> and <c>html</c> formats;
+    ///     <c>fce generate</c> fails with a clear message when it is missing.
+    /// </summary>
+    public string? ServiceName { get; set; }
+
     /// <summary>Paths of the custom renderer assemblies to load.</summary>
     public List<string> Renderers { get; set; } = [];
 

@@ -158,6 +158,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:amount-currency-mismatch&quot;,
   &quot;title&quot;: &quot;Discrepancia de moneda&quot;,
   &quot;detail&quot;: &quot;Los dos importes usan monedas diferentes y no pueden combinarse.&quot;,
   &quot;code&quot;: &quot;AMOUNT_CURRENCY_MISMATCH&quot;
@@ -193,6 +194,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:bank-transaction-file-date-out-of-statement-period&quot;,
   &quot;title&quot;: &quot;La fecha de transacci&#243;n est&#225; fuera del per&#237;odo del extracto.&quot;,
   &quot;detail&quot;: &quot;Una fecha de transacci&#243;n queda fuera del per&#237;odo del extracto.&quot;,
   &quot;code&quot;: &quot;BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD&quot;
@@ -234,6 +236,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:bank-transaction-file-statement-total-amount-mismatch&quot;,
   &quot;title&quot;: &quot;Discrepancia del importe total del extracto.&quot;,
   &quot;detail&quot;: &quot;El total declarado del extracto no coincide con el total calculado.&quot;,
   &quot;code&quot;: &quot;BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH&quot;
@@ -267,6 +270,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:exchange-rate-service-unavailable&quot;,
   &quot;title&quot;: &quot;Servicio de tipos de cambio no disponible.&quot;,
   &quot;detail&quot;: &quot;El servicio de tipos de cambio no est&#225; disponible temporalmente; int&#233;ntelo de nuevo m&#225;s tarde.&quot;,
   &quot;code&quot;: &quot;EXCHANGE_RATE_SERVICE_UNAVAILABLE&quot;
@@ -306,6 +310,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:unsupported-currency-pair&quot;,
   &quot;title&quot;: &quot;Par de divisas no admitido.&quot;,
   &quot;detail&quot;: &quot;El par de divisas solicitado no es compatible.&quot;,
   &quot;code&quot;: &quot;UNSUPPORTED_CURRENCY_PAIR&quot;
@@ -349,6 +354,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:malformed-statement-payload&quot;,
   &quot;title&quot;: &quot;Carga &#250;til de extracto mal formada.&quot;,
   &quot;detail&quot;: &quot;La solicitud de extracto subida omite un campo obligatorio o contiene un valor no v&#225;lido.&quot;,
   &quot;code&quot;: &quot;MALFORMED_STATEMENT_PAYLOAD&quot;
@@ -388,6 +394,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:statement-upload-rate-limited&quot;,
   &quot;title&quot;: &quot;Subida de extracto con l&#237;mite de frecuencia.&quot;,
   &quot;detail&quot;: &quot;Se enviaron demasiadas subidas de extractos en poco tiempo; int&#233;ntelo de nuevo m&#225;s tarde.&quot;,
   &quot;code&quot;: &quot;STATEMENT_UPLOAD_RATE_LIMITED&quot;
@@ -430,6 +437,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:money-transfer-amount-not-positive&quot;,
   &quot;title&quot;: &quot;El importe de la transferencia debe ser positivo.&quot;,
   &quot;detail&quot;: &quot;El importe de la transferencia debe ser mayor que cero.&quot;,
   &quot;code&quot;: &quot;MONEY_TRANSFER_AMOUNT_NOT_POSITIVE&quot;
@@ -468,6 +476,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:money-transfer-invalid&quot;,
   &quot;title&quot;: &quot;Transferencia no v&#225;lida.&quot;,
   &quot;detail&quot;: &quot;La transferencia no cumple todas las reglas requeridas.&quot;,
   &quot;code&quot;: &quot;MONEY_TRANSFER_INVALID&quot;
@@ -504,6 +513,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:temperature-below-absolute-zero&quot;,
   &quot;title&quot;: &quot;Temperature is invalid.&quot;,
   &quot;detail&quot;: &quot;The temperature -1 K is below absolute zero.&quot;,
   &quot;code&quot;: &quot;TEMPERATURE_BELOW_ABSOLUTE_ZERO&quot;
@@ -514,6 +524,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Respuesta p&#250;blica (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:temperature-below-absolute-zero&quot;,
   &quot;title&quot;: &quot;Temperature is invalid.&quot;,
   &quot;detail&quot;: &quot;The temperature -280 &#176;C is below absolute zero.&quot;,
   &quot;code&quot;: &quot;TEMPERATURE_BELOW_ABSOLUTE_ZERO&quot;

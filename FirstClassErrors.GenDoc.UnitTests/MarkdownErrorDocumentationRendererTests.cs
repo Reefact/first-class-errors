@@ -16,12 +16,14 @@ public sealed class MarkdownErrorDocumentationRendererTests {
 
     #region Statics members declarations
 
+    private const string SampleService = "sample-service";
+
     private static IReadOnlyList<RenderedDocument> RenderSingle(params ErrorDocumentation[] catalog) {
-        return new MarkdownErrorDocumentationRenderer().Render(catalog, new RenderRequest(RenderLayouts.Single));
+        return new MarkdownErrorDocumentationRenderer().Render(catalog, new RenderRequest(RenderLayouts.Single, CultureInfo.InvariantCulture, SampleService));
     }
 
     private static IReadOnlyList<RenderedDocument> RenderSplit(params ErrorDocumentation[] catalog) {
-        return new MarkdownErrorDocumentationRenderer().Render(catalog, new RenderRequest(RenderLayouts.Split));
+        return new MarkdownErrorDocumentationRenderer().Render(catalog, new RenderRequest(RenderLayouts.Split, CultureInfo.InvariantCulture, SampleService));
     }
 
     private static ErrorDocumentation TemperatureError() {
@@ -293,7 +295,7 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         // Exercise: render the same catalog for French.
         IReadOnlyList<RenderedDocument> documents =
             new MarkdownErrorDocumentationRenderer().Render(new[] { TemperatureError() },
-                                                           new RenderRequest(RenderLayouts.Single, CultureInfo.GetCultureInfo("fr")));
+                                                           new RenderRequest(RenderLayouts.Single, CultureInfo.GetCultureInfo("fr"), SampleService));
         string markdown = documents[0].Content;
 
         // Verify: headings, labels and table headers come from the French resources.
@@ -351,6 +353,40 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         // A value that begins and ends with a backtick is padded with a space so the fence does not merge with it.
         Check.That(markdown).Contains("`` `edge` ``");
         Check.That(markdown).Not.Contains("'edge'");
+    }
+
+    [Fact(DisplayName = "The RFC 9457 example carries a problem type built from the configured service name and the error code.")]
+    public void TheProblemDetailCarriesATypeBuiltFromTheServiceNameAndCode() {
+        // Setup
+        ErrorDocumentation error = new() {
+            Code     = "TEMPERATURE_BELOW_ABSOLUTE_ZERO",
+            Title    = "Below absolute zero",
+            Source   = "Temperature",
+            Examples = new[] { new ErrorDescription("Below absolute zero.", "Failed.", "The temperature is invalid.") }
+        };
+
+        // Exercise: render with a configured service name.
+        string markdown = new MarkdownErrorDocumentationRenderer()
+                         .Render(new[] { error }, new RenderRequest(RenderLayouts.Single, CultureInfo.InvariantCulture, "Temperature Simulator"))[0]
+                         .Content;
+
+        // Verify: the service name and the code are slugified into a urn:problem type in the problem detail.
+        Check.That(markdown).Contains("\"type\": \"urn:problem:temperature-simulator:temperature-below-absolute-zero\"");
+    }
+
+    [Fact(DisplayName = "The Markdown renderer refuses to render without a service name (the invariant is enforced by the renderer, not only the CLI).")]
+    public void TheMarkdownRendererRefusesToRenderWithoutAServiceName() {
+        // Setup
+        ErrorDocumentation error = new() {
+            Code     = "TEMPERATURE_BELOW_ABSOLUTE_ZERO",
+            Title    = "Below absolute zero",
+            Examples = new[] { new ErrorDescription("short", "diagnostic", "detail") }
+        };
+
+        // Exercise & verify: a RenderRequest without a service name is rejected by the renderer itself — the format
+        // embeds RFC 9457 examples that must carry a real problem type, so it will not silently emit a type-less one.
+        Check.ThatCode(() => new MarkdownErrorDocumentationRenderer().Render(new[] { error }, new RenderRequest(RenderLayouts.Single)))
+             .Throws<ServiceNameRequiredException>();
     }
 
 }

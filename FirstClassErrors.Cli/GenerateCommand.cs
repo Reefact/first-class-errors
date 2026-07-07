@@ -61,6 +61,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
             string  buildConfig = FirstNonEmpty(settings.Configuration, configuration.Configuration) ?? "Debug";
             string? framework   = FirstNonEmpty(settings.Framework, configuration.Framework);
             string? worker      = FirstNonEmpty(settings.WorkerPath, configuration.Worker);
+            string? serviceName = FirstNonEmpty(settings.ServiceName, configuration.ServiceName);
             bool    noBuild     = settings.NoBuild || (configuration.NoBuild ?? false);
             bool    strict      = settings.Strict  || (configuration.Strict ?? false);
 
@@ -76,6 +77,15 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
 
             if (renderer.SupportedLayouts.Contains(layout, StringComparer.OrdinalIgnoreCase) is false) {
                 logger.Error($"The '{format}' format does not support the '{layout}' layout. Supported layouts: {string.Join(", ", renderer.SupportedLayouts)}.");
+
+                return 1;
+            }
+
+            // The markdown/html formats embed RFC 9457 examples whose problem type is urn:problem:{service}:{code}. The
+            // service segment cannot be invented, so require it (from --service-name or the configuration) rather than
+            // emit a type-less example. The json format carries no such example and is exempt.
+            if ((format is "markdown" or "html") && string.IsNullOrWhiteSpace(serviceName)) {
+                logger.Error($"No service name: the '{format}' format embeds RFC 9457 examples whose problem type is urn:problem:{{service}}:{{code}}. Pass --service-name <name> (for example --service-name temperature-simulator), or set 'serviceName' in the configuration.");
 
                 return 1;
             }
@@ -96,7 +106,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
                     : SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies(assemblies, options);
 
             // The catalog is enumerated here (by the renderer), so generation failures surface as a clean error.
-            RenderRequest                   request   = new(layout, culture);
+            RenderRequest                   request   = new(layout, culture, serviceName);
             IReadOnlyList<RenderedDocument> documents = renderer.Render(catalog, request);
 
             WriteOutput(documents, renderer.Format, output, logger);

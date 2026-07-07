@@ -30,16 +30,22 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
             throw new LayoutNotSupportedException(Format, request.Layout, SupportedLayouts);
         }
 
+        // This format embeds RFC 9457 examples whose problem type is urn:problem:{service}:{code}. The invariant "an
+        // example carries a real type" is enforced here, where the examples are produced, not only at the CLI edge.
+        if (string.IsNullOrWhiteSpace(request.ServiceName)) {
+            throw new ServiceNameRequiredException(Format);
+        }
+
         // Materialize once, assigning each error a stable title and a unique slug used for file names and anchors.
         IReadOnlyList<Entry>    entries = BuildEntries(catalog);
         MarkdownRendererStrings strings = new(request.Culture);
 
         return string.Equals(request.Layout, RenderLayouts.Split, StringComparison.OrdinalIgnoreCase)
-                   ? RenderSplit(entries, strings)
-                   : RenderSingle(entries, strings);
+                   ? RenderSplit(entries, strings, request.ServiceName)
+                   : RenderSingle(entries, strings, request.ServiceName);
     }
 
-    private static IReadOnlyList<RenderedDocument> RenderSingle(IReadOnlyList<Entry> entries, MarkdownRendererStrings strings) {
+    private static IReadOnlyList<RenderedDocument> RenderSingle(IReadOnlyList<Entry> entries, MarkdownRendererStrings strings, string? serviceName) {
         StringBuilder markdown = new();
         markdown.Append($"# {strings.ErrorCatalog}\n\n");
 
@@ -73,14 +79,14 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
 
             foreach (Entry entry in group.Entries) {
                 markdown.Append($"<a id=\"err-{entry.Slug}\"></a>\n\n");
-                AppendErrorBody(markdown, entry, headingLevel: 3, strings);
+                AppendErrorBody(markdown, entry, headingLevel: 3, strings, serviceName);
             }
         }
 
         return [new RenderedDocument("errors.md", markdown.ToString())];
     }
 
-    private static IReadOnlyList<RenderedDocument> RenderSplit(IReadOnlyList<Entry> entries, MarkdownRendererStrings strings) {
+    private static IReadOnlyList<RenderedDocument> RenderSplit(IReadOnlyList<Entry> entries, MarkdownRendererStrings strings, string? serviceName) {
         List<RenderedDocument> documents = [];
 
         StringBuilder index = new();
@@ -123,14 +129,14 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         // One file per error.
         foreach (Entry entry in entries) {
             StringBuilder markdown = new();
-            AppendErrorBody(markdown, entry, headingLevel: 1, strings);
+            AppendErrorBody(markdown, entry, headingLevel: 1, strings, serviceName);
             documents.Add(new RenderedDocument($"{entry.Slug}.md", markdown.ToString()));
         }
 
         return documents;
     }
 
-    private static void AppendErrorBody(StringBuilder markdown, Entry entry, int headingLevel, MarkdownRendererStrings strings) {
+    private static void AppendErrorBody(StringBuilder markdown, Entry entry, int headingLevel, MarkdownRendererStrings strings, string? serviceName) {
         ErrorDocumentation error       = entry.Error;
         string             heading     = new('#', headingLevel);
         string             subHeading  = new('#', headingLevel + 1);
@@ -167,7 +173,7 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
                 // Public, exposable form: an RFC 9457 problem detail built only from the controlled public messages.
                 markdown.Append($"**{Inline(strings.ExamplePublicResponseLabel)}**\n\n");
                 markdown.Append("```json\n");
-                markdown.Append(ProblemDetailsJson(example, error.Code));
+                markdown.Append(ProblemDetailsJson(example, error.Code, serviceName));
                 markdown.Append("\n```\n\n");
 
                 // Internal form: how the same failure reads in the logs. Never exposed to external clients.
@@ -195,12 +201,19 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
     /// <summary>
     ///     Builds the public, exposable RFC 9457 (<c>problem+json</c>) representation of an example, using only the
     ///     controlled public messages — never the diagnostic message. <c>detail</c> is omitted when there is no public
-    ///     detail. Neither <c>type</c> nor <c>status</c> is emitted: both are the application's concern (an absent
-    ///     <c>type</c> defaults to <c>about:blank</c> per RFC 9457 §4.1, and the core model is HTTP-agnostic).
+    ///     detail. The <c>type</c> is the error's problem type (see <see cref="ProblemType" />), built from
+    ///     <paramref name="serviceName" /> and the error code; it is omitted only when neither yields a segment.
+    ///     <c>status</c> is not emitted: it remains the application's concern, and the core model is HTTP-agnostic.
     /// </summary>
-    private static string ProblemDetailsJson(ErrorDescription example, string? code) {
+    private static string ProblemDetailsJson(ErrorDescription example, string? code, string? serviceName) {
         StringBuilder json = new();
         json.Append("{\n");
+
+        string? type = ProblemType.For(serviceName, code);
+        if (type is not null) {
+            json.Append($"  \"type\": \"{JsonString(type)}\",\n");
+        }
+
         json.Append($"  \"title\": \"{JsonString(example.ShortMessage)}\"");
         if (string.IsNullOrWhiteSpace(example.DetailedMessage) is false) {
             json.Append($",\n  \"detail\": \"{JsonString(example.DetailedMessage!)}\"");
