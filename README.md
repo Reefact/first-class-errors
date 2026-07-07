@@ -83,7 +83,7 @@ An `Error` carries three messages but deliberately splits them across just **two
 | `DetailedMessage` | No | End users / API clients | A controlled public detail (e.g. the `detail` of an RFC 9457 problem detail), exposed **only** when the application explicitly chooses to. Must not carry sensitive or internal information. |
 | `DiagnosticMessage` | Yes | Logs, support, developers | The internal diagnostic message. May contain technical/operational detail (identifiers, offending values, internal state); it is **never** exposed to external clients by default. |
 
-The core model is HTTP-agnostic: `DiagnosticMessage` is never used as a default HTTP response body. When you turn an error into an exception with `.ToException()`, the resulting `Exception.Message` is the `DiagnosticMessage` — the developer- and log-facing text.
+The core model is HTTP-agnostic: `DiagnosticMessage` is never used as a default HTTP response body, and `type` and `status` remain the application's concern. When an error is exposed over HTTP, its `Code` is the natural RFC 9457 `type`: surface it as a stable URI such as `urn:problem:{service}:{code}`, where `{code}` is the error code in lowercase kebab-case — for example `urn:problem:temperature-simulator:temperature-below-absolute-zero` or `urn:problem:banking-api:money-transfer-amount-not-positive` — so clients can branch on the problem type. When you turn an error into an exception with `.ToException()`, the resulting `Exception.Message` is the `DiagnosticMessage` — the developer- and log-facing text.
 
 ### 2️⃣ Structured diagnostics
 

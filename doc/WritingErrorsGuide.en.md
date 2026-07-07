@@ -174,7 +174,7 @@ The elements above describe the **documentation** of an error. In addition, each
 | `DetailedMessage`   | No        | End users / API clients | Controlled public detail, exposed only when the application chooses to (e.g. an RFC 9457 `detail`); never sensitive or internal. |
 | `DiagnosticMessage` | Yes       | Logs, support, devs     | Internal diagnostic detail (identifiers, offending values, internal state); never exposed to external clients by default. |
 
-Keep the diagnostic message rich and technical; keep the public messages safe and free of internal detail. `error.ToException()` uses the diagnostic message as the exception's `Message`.
+Keep the diagnostic message rich and technical; keep the public messages safe and free of internal detail. `error.ToException()` uses the diagnostic message as the exception's `Message`. When the error is exposed over HTTP, its `Code` is the natural RFC 9457 `type`: surface it as a stable URI such as `urn:problem:{service}:{code}`, where `{code}` is the error code in lowercase kebab-case — for example `urn:problem:temperature-simulator:temperature-below-absolute-zero` or `urn:problem:banking-api:money-transfer-amount-not-positive` — so clients can branch on the problem type (`type` and `status` remain the application's concern).
 
 ## 🏁 Summary
 
