@@ -19,11 +19,8 @@ public sealed class Outcome {
     #region Statics members declarations
 
     /// <summary>
-    ///     Provides a successful outcome.
+    ///     A successful <see cref="Outcome" /> that carries no value.
     /// </summary>
-    /// <returns>
-    ///     A <see cref="Outcome" /> representing success.
-    /// </returns>
     public static readonly Outcome Success = new(null);
 
     /// <summary>
@@ -145,7 +142,7 @@ public sealed class Outcome {
         where TResult : notnull {
         if (next is null) { throw new ArgumentNullException(nameof(next)); }
 
-        return IsSuccess ? next(cancellationToken) : Task.FromResult(Outcome<TResult>.Failure(Error!));
+        return IsSuccess ? AsyncCallbackGuard.EnsureTask(next(cancellationToken)) : Task.FromResult(Outcome<TResult>.Failure(Error!));
     }
 
     /// <summary>
@@ -169,7 +166,7 @@ public sealed class Outcome {
             throw new ArgumentNullException(nameof(next));
         }
 
-        return IsSuccess ? next(cancellationToken) : Task.FromResult(this);
+        return IsSuccess ? AsyncCallbackGuard.EnsureTask(next(cancellationToken)) : Task.FromResult(this);
     }
 
     /// <summary>
@@ -218,7 +215,7 @@ public sealed class Outcome {
                                  CancellationToken                             cancellationToken = default) {
         if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
 
-        return IsSuccess ? Task.FromResult(this) : fallback(Error!, cancellationToken);
+        return IsSuccess ? Task.FromResult(this) : AsyncCallbackGuard.EnsureTask(fallback(Error!, cancellationToken));
     }
 
     /// <summary>
@@ -294,7 +291,7 @@ public sealed class Outcome {
         if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
         if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        return IsSuccess ? onSuccess(cancellationToken) : onFailure(Error!, cancellationToken);
+        return IsSuccess ? AsyncCallbackGuard.EnsureTask(onSuccess(cancellationToken)) : AsyncCallbackGuard.EnsureTask(onFailure(Error!, cancellationToken));
     }
 
     /// <summary>
@@ -318,7 +315,7 @@ public sealed class Outcome {
         if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
         if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        return IsSuccess ? onSuccess(cancellationToken) : onFailure(Error!, cancellationToken);
+        return IsSuccess ? AsyncCallbackGuard.EnsureTask(onSuccess(cancellationToken)) : AsyncCallbackGuard.EnsureTask(onFailure(Error!, cancellationToken));
     }
 
 }
@@ -545,7 +542,7 @@ public sealed class Outcome<T>
         where TResult : notnull {
         if (next is null) { throw new ArgumentNullException(nameof(next)); }
 
-        return IsSuccess ? next(_result!, cancellationToken) : Task.FromResult(Outcome<TResult>.Failure(Error!));
+        return IsSuccess ? AsyncCallbackGuard.EnsureTask(next(_result!, cancellationToken)) : Task.FromResult(Outcome<TResult>.Failure(Error!));
     }
 
     /// <summary>
@@ -568,7 +565,7 @@ public sealed class Outcome<T>
                               CancellationToken                         cancellationToken = default) {
         if (next is null) { throw new ArgumentNullException(nameof(next)); }
 
-        return IsSuccess ? next(_result!, cancellationToken) : Task.FromResult(Outcome.Failure(Error!));
+        return IsSuccess ? AsyncCallbackGuard.EnsureTask(next(_result!, cancellationToken)) : Task.FromResult(Outcome.Failure(Error!));
     }
 
     /// <summary>
@@ -588,7 +585,8 @@ public sealed class Outcome<T>
     ///     a success, or the original error if the current instance represents a failure.
     /// </returns>
     /// <exception cref="ArgumentNullException">
-    ///     Thrown if the <paramref name="convert" /> function is <c>null</c>.
+    ///     Thrown if the <paramref name="convert" /> function is <c>null</c>, or if <paramref name="convert" /> returns
+    ///     <c>null</c> (the returned value flows through <see cref="Success" />, which rejects <c>null</c>).
     /// </exception>
     public Outcome<TResult> To<TResult>(Func<T, TResult> convert)
         where TResult : notnull {
@@ -615,7 +613,8 @@ public sealed class Outcome<T>
     ///     A <see cref="Task{TResult}" /> representing the asynchronous operation.
     /// </returns>
     /// <exception cref="ArgumentNullException">
-    ///     Thrown if the <paramref name="convert" /> function is <c>null</c>.
+    ///     Thrown if the <paramref name="convert" /> function is <c>null</c>, or if the awaited <paramref name="convert" />
+    ///     result is <c>null</c> (it flows through <see cref="Success" />, which rejects <c>null</c>).
     /// </exception>
     public async Task<Outcome<TResult>> To<TResult>(Func<T, CancellationToken, Task<TResult>> convert, CancellationToken cancellationToken = default)
         where TResult : notnull {
@@ -698,7 +697,7 @@ public sealed class Outcome<T>
                                     CancellationToken                                cancellationToken = default) {
         if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
 
-        return IsSuccess ? Task.FromResult(this) : fallback(Error!, cancellationToken);
+        return IsSuccess ? Task.FromResult(this) : AsyncCallbackGuard.EnsureTask(fallback(Error!, cancellationToken));
     }
 
     /// <summary>
@@ -813,7 +812,7 @@ public sealed class Outcome<T>
         if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
         if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        return IsSuccess ? onSuccess(_result!, cancellationToken) : onFailure(Error!, cancellationToken);
+        return IsSuccess ? AsyncCallbackGuard.EnsureTask(onSuccess(_result!, cancellationToken)) : AsyncCallbackGuard.EnsureTask(onFailure(Error!, cancellationToken));
     }
 
     /// <summary>
@@ -837,7 +836,38 @@ public sealed class Outcome<T>
         if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
         if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        return IsSuccess ? onSuccess(_result!, cancellationToken) : onFailure(Error!, cancellationToken);
+        return IsSuccess ? AsyncCallbackGuard.EnsureTask(onSuccess(_result!, cancellationToken)) : AsyncCallbackGuard.EnsureTask(onFailure(Error!, cancellationToken));
     }
+
+}
+
+/// <summary>
+///     Guards the tasks returned by the asynchronous callbacks passed to <see cref="Outcome" /> and
+///     <see cref="Outcome{T}" />.
+/// </summary>
+internal static class AsyncCallbackGuard {
+
+    #region Statics members declarations
+
+    /// <summary>
+    ///     Ensures an asynchronous callback did not return a <c>null</c> task. The success/failure overloads forward the
+    ///     callback's task directly (rather than awaiting it), so a <c>null</c> would otherwise escape and surface as an
+    ///     opaque <see cref="NullReferenceException" /> when the caller awaits it. This turns that contract violation into
+    ///     an explicit, diagnosable failure at the point the callback is invoked.
+    /// </summary>
+    /// <typeparam name="TTask">The concrete <see cref="Task" /> type the callback returns.</typeparam>
+    /// <param name="task">The task returned by the callback.</param>
+    /// <returns>The <paramref name="task" />, guaranteed to be non-<c>null</c>.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if <paramref name="task" /> is <c>null</c>.</exception>
+    internal static TTask EnsureTask<TTask>(TTask? task)
+        where TTask : Task {
+        if (task is null) {
+            throw new InvalidOperationException("An asynchronous Outcome callback returned a null task. Callbacks must return a non-null task.");
+        }
+
+        return task;
+    }
+
+    #endregion
 
 }

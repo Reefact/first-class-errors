@@ -194,6 +194,80 @@ public sealed class OutcomeAsyncInstanceCoverageTests {
              .Throws<ArgumentNullException>();
     }
 
+    // -------------------------------------------------------------------------
+    // Null-task guard: the async forward overloads return the callback's task
+    // directly, so a callback that hands back a null task fails with an explicit
+    // InvalidOperationException instead of letting the null escape and surface as
+    // a NullReferenceException when the caller awaits it.
+    // -------------------------------------------------------------------------
+
+    [Fact(DisplayName = "The async Then to a typed outcome throws when the next callback returns a null task.")]
+    public void TheAsyncThenToATypedOutcomeThrowsWhenNextReturnsANullTask() {
+        // Setup
+        CancellationToken token   = TestContext.Current.CancellationToken;
+        Outcome           outcome = Outcome.Success;
+
+        // Exercise & verify
+        Check.ThatCode(() => outcome.Then((Func<CancellationToken, Task<Outcome<int>>>)(_ => null!), token)
+                                    .GetAwaiter()
+                                    .GetResult())
+             .Throws<InvalidOperationException>();
+    }
+
+    [Fact(DisplayName = "The async Then throws when the next callback returns a null task.")]
+    public void TheAsyncThenThrowsWhenNextReturnsANullTask() {
+        // Setup
+        CancellationToken token   = TestContext.Current.CancellationToken;
+        Outcome           outcome = Outcome.Success;
+
+        // Exercise & verify
+        Check.ThatCode(() => outcome.Then((Func<CancellationToken, Task<Outcome>>)(_ => null!), token)
+                                    .GetAwaiter()
+                                    .GetResult())
+             .Throws<InvalidOperationException>();
+    }
+
+    [Fact(DisplayName = "The async Recover throws when the fallback callback returns a null task.")]
+    public void TheAsyncRecoverThrowsWhenFallbackReturnsANullTask() {
+        // Setup
+        CancellationToken token   = TestContext.Current.CancellationToken;
+        DomainError       error   = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        Outcome           outcome = Outcome.Failure(error);
+
+        // Exercise & verify
+        Check.ThatCode(() => outcome.Recover((Func<Error, CancellationToken, Task<Outcome>>)((_, _) => null!), token)
+                                    .GetAwaiter()
+                                    .GetResult())
+             .Throws<InvalidOperationException>();
+    }
+
+    [Fact(DisplayName = "The async Finally with a value throws when the onSuccess callback returns a null task.")]
+    public void TheAsyncFinallyWithAValueThrowsWhenOnSuccessReturnsANullTask() {
+        // Setup
+        CancellationToken token   = TestContext.Current.CancellationToken;
+        Outcome           outcome = Outcome.Success;
+
+        // Exercise & verify
+        Check.ThatCode(() => outcome.Finally((Func<CancellationToken, Task<string>>)(_ => null!), (_, _) => Task.FromResult("ko"), token)
+                                    .GetAwaiter()
+                                    .GetResult())
+             .Throws<InvalidOperationException>();
+    }
+
+    [Fact(DisplayName = "The async Finally with actions throws when the onFailure callback returns a null task.")]
+    public void TheAsyncFinallyWithActionsThrowsWhenOnFailureReturnsANullTask() {
+        // Setup
+        CancellationToken token   = TestContext.Current.CancellationToken;
+        DomainError       error   = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        Outcome           outcome = Outcome.Failure(error);
+
+        // Exercise & verify
+        Check.ThatCode(() => outcome.Finally(_ => Task.CompletedTask, (Func<Error, CancellationToken, Task>)((_, _) => null!), token)
+                                    .GetAwaiter()
+                                    .GetResult())
+             .Throws<InvalidOperationException>();
+    }
+
 }
 
 /// <summary>
@@ -512,6 +586,78 @@ public sealed class OutcomeGenericAsyncInstanceCoverageTests {
                                     .GetAwaiter()
                                     .GetResult())
              .Throws<ArgumentNullException>();
+    }
+
+    // -------------------------------------------------------------------------
+    // Null-task guard (see the non-generic suite): a callback returning a null
+    // task fails with InvalidOperationException instead of forwarding the null.
+    // -------------------------------------------------------------------------
+
+    [Fact(DisplayName = "The async Then to a typed outcome throws when the next callback returns a null task.")]
+    public void TheAsyncThenToATypedOutcomeThrowsWhenNextReturnsANullTask() {
+        // Setup
+        CancellationToken token   = TestContext.Current.CancellationToken;
+        Outcome<int>      outcome = Outcome<int>.Success(1);
+
+        // Exercise & verify
+        Check.ThatCode(() => outcome.Then((Func<int, CancellationToken, Task<Outcome<string>>>)((_, _) => null!), token)
+                                    .GetAwaiter()
+                                    .GetResult())
+             .Throws<InvalidOperationException>();
+    }
+
+    [Fact(DisplayName = "The async Then discarding the value throws when the next callback returns a null task.")]
+    public void TheAsyncThenDiscardingTheValueThrowsWhenNextReturnsANullTask() {
+        // Setup
+        CancellationToken token   = TestContext.Current.CancellationToken;
+        Outcome<int>      outcome = Outcome<int>.Success(1);
+
+        // Exercise & verify
+        Check.ThatCode(() => outcome.Then((Func<int, CancellationToken, Task<Outcome>>)((_, _) => null!), token)
+                                    .GetAwaiter()
+                                    .GetResult())
+             .Throws<InvalidOperationException>();
+    }
+
+    [Fact(DisplayName = "The async Recover with an outcome fallback throws when the fallback returns a null task.")]
+    public void TheAsyncRecoverWithAnOutcomeFallbackThrowsWhenFallbackReturnsANullTask() {
+        // Setup
+        CancellationToken token   = TestContext.Current.CancellationToken;
+        DomainError       error   = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        Outcome<int>      outcome = Outcome<int>.Failure(error);
+
+        // Exercise & verify
+        Check.ThatCode(() => outcome.Recover((Func<Error, CancellationToken, Task<Outcome<int>>>)((_, _) => null!), token)
+                                    .GetAwaiter()
+                                    .GetResult())
+             .Throws<InvalidOperationException>();
+    }
+
+    [Fact(DisplayName = "The async Finally with a value throws when the onSuccess callback returns a null task.")]
+    public void TheAsyncFinallyWithAValueThrowsWhenOnSuccessReturnsANullTask() {
+        // Setup
+        CancellationToken token   = TestContext.Current.CancellationToken;
+        Outcome<int>      outcome = Outcome<int>.Success(1);
+
+        // Exercise & verify
+        Check.ThatCode(() => outcome.Finally((Func<int, CancellationToken, Task<string>>)((_, _) => null!), (_, _) => Task.FromResult("ko"), token)
+                                    .GetAwaiter()
+                                    .GetResult())
+             .Throws<InvalidOperationException>();
+    }
+
+    [Fact(DisplayName = "The async Finally with actions throws when the onFailure callback returns a null task.")]
+    public void TheAsyncFinallyWithActionsThrowsWhenOnFailureReturnsANullTask() {
+        // Setup
+        CancellationToken token   = TestContext.Current.CancellationToken;
+        DomainError       error   = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        Outcome<int>      outcome = Outcome<int>.Failure(error);
+
+        // Exercise & verify
+        Check.ThatCode(() => outcome.Finally((_, _) => Task.CompletedTask, (Func<Error, CancellationToken, Task>)((_, _) => null!), token)
+                                    .GetAwaiter()
+                                    .GetResult())
+             .Throws<InvalidOperationException>();
     }
 
 }
