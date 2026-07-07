@@ -385,6 +385,17 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         Check.ThatCode(() => builder.WithDiagnostics(errorDiagnostics)).Throws<ArgumentNullException>();
     }
 
+    [Fact(DisplayName = "An error documentation builder cannot accept a null diagnostic element.")]
+    public void AnErrorDocumentationBuilderCannotAcceptANullDiagnosticElement() {
+        // Setup
+        ErrorDocumentationBuilder builder = new();
+        ErrorDiagnostic           valid   = new("cause-1", ErrorOrigin.External, "lead-1");
+
+        // Exercise & verify: a null element must be rejected at the call site rather than slipping into the
+        // documentation and surfacing later as a NullReferenceException while a renderer reads its members.
+        Check.ThatCode(() => builder.WithDiagnostics(valid, null!)).Throws<ArgumentException>();
+    }
+
     [Fact(DisplayName = "Diagnostics can be added through the diagnostics stage interface.")]
     public void DiagnosticsCanBeAddedThroughTheDiagnosticsStageInterface() {
         // Setup

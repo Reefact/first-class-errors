@@ -123,6 +123,15 @@ internal sealed class ErrorDocumentationBuilder :
     public IErrorExamplesStage WithDiagnostics(params ErrorDiagnostic[] diagnostics) {
         if (diagnostics is null) { throw new ArgumentNullException(nameof(diagnostics)); }
 
+        // Reject null elements at the call site: a null diagnostic would otherwise flow into _doc.Diagnostics and only
+        // surface much later as a NullReferenceException while a renderer reads its members. This mirrors the per-item
+        // validation WithExamples performs on its factories.
+        for (int diagnosticIndex = 0; diagnosticIndex < diagnostics.Length; diagnosticIndex++) {
+            if (diagnostics[diagnosticIndex] is null) {
+                throw new ArgumentException($"Diagnostic at index {diagnosticIndex} is null. All diagnostics must be valid instances.", nameof(diagnostics));
+            }
+        }
+
         _diagnostics.AddRange(diagnostics);
 
         return this;
