@@ -5,6 +5,12 @@ namespace FirstClassErrors;
 ///     <see cref="Outcome" /> or <see cref="Outcome{T}" /> results. These methods enable chaining, error recovery,
 ///     and finalization of asynchronous operations in a fluent and expressive manner.
 /// </summary>
+/// <remarks>
+///     Every overload validates its arguments eagerly: a <c>null</c> task or callback throws
+///     <see cref="ArgumentNullException" /> synchronously at the call site instead of being captured into the returned
+///     task and surfaced only when it is awaited. The awaiting work is delegated to a private local function so the guard
+///     clauses run before the first <c>await</c>.
+/// </remarks>
 public static class OutcomeTaskExtensions {
 
     #region Statics members declarations
@@ -33,13 +39,18 @@ public static class OutcomeTaskExtensions {
     ///     If the preceding <see cref="Outcome" /> is not successful, the continuation function is not invoked, and the
     ///     original <see cref="Outcome" /> is returned.
     /// </remarks>
-    public static async Task<Outcome<TResult>> Then<TResult>(this Task<Outcome> task, Func<Outcome<TResult>> next)
+    public static Task<Outcome<TResult>> Then<TResult>(this Task<Outcome> task, Func<Outcome<TResult>> next)
         where TResult : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (next is null) { throw new ArgumentNullException(nameof(next)); }
 
-        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return outcome.Then(next);
+        async Task<Outcome<TResult>> Core() {
+            Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return outcome.Then(next);
+        }
     }
 
     /// <summary>
@@ -55,12 +66,17 @@ public static class OutcomeTaskExtensions {
     ///     <paramref name="next" /> function.
     /// </returns>
     /// <exception cref="ArgumentNullException">Thrown if the <paramref name="task" /> is <c>null</c>.</exception>
-    public static async Task<Outcome> Then(this Task<Outcome> task, Func<Outcome> next) {
+    public static Task<Outcome> Then(this Task<Outcome> task, Func<Outcome> next) {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (next is null) { throw new ArgumentNullException(nameof(next)); }
 
-        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return outcome.Then(next);
+        async Task<Outcome> Core() {
+            Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return outcome.Then(next);
+        }
     }
 
     /// <summary>
@@ -80,15 +96,20 @@ public static class OutcomeTaskExtensions {
     ///     A task that represents the asynchronous operation. The task's result is an <see cref="Outcome{TResult}" />.
     /// </returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="task" /> is <c>null</c>.</exception>
-    public static async Task<Outcome<TResult>> Then<TResult>(this Task<Outcome>                              task,
-                                                             Func<CancellationToken, Task<Outcome<TResult>>> next,
-                                                             CancellationToken                               cancellationToken = default)
+    public static Task<Outcome<TResult>> Then<TResult>(this Task<Outcome>                              task,
+                                                       Func<CancellationToken, Task<Outcome<TResult>>> next,
+                                                       CancellationToken                               cancellationToken = default)
         where TResult : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (next is null) { throw new ArgumentNullException(nameof(next)); }
 
-        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return await outcome.Then(next, cancellationToken).ConfigureAwait(false);
+        async Task<Outcome<TResult>> Core() {
+            Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return await outcome.Then(next, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -111,14 +132,19 @@ public static class OutcomeTaskExtensions {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if <paramref name="task" /> is <c>null</c>.
     /// </exception>
-    public static async Task<Outcome> Then(this Task<Outcome>                     task,
-                                           Func<CancellationToken, Task<Outcome>> next,
-                                           CancellationToken                      cancellationToken = default) {
+    public static Task<Outcome> Then(this Task<Outcome>                     task,
+                                     Func<CancellationToken, Task<Outcome>> next,
+                                     CancellationToken                      cancellationToken = default) {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (next is null) { throw new ArgumentNullException(nameof(next)); }
 
-        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return await outcome.Then(next, cancellationToken).ConfigureAwait(false);
+        async Task<Outcome> Core() {
+            Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return await outcome.Then(next, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -141,12 +167,17 @@ public static class OutcomeTaskExtensions {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="task" /> is <c>null</c>.
     /// </exception>
-    public static async Task<Outcome> Recover(this Task<Outcome> task, Func<Error, Outcome> fallback) {
+    public static Task<Outcome> Recover(this Task<Outcome> task, Func<Error, Outcome> fallback) {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
 
-        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return outcome.Recover(fallback);
+        async Task<Outcome> Core() {
+            Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return outcome.Recover(fallback);
+        }
     }
 
     /// <summary>
@@ -171,14 +202,19 @@ public static class OutcomeTaskExtensions {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="task" /> is <c>null</c>.
     /// </exception>
-    public static async Task<Outcome> Recover(this Task<Outcome>                            task,
-                                              Func<Error, CancellationToken, Task<Outcome>> fallback,
-                                              CancellationToken                             cancellationToken = default) {
+    public static Task<Outcome> Recover(this Task<Outcome>                            task,
+                                        Func<Error, CancellationToken, Task<Outcome>> fallback,
+                                        CancellationToken                             cancellationToken = default) {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
 
-        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return await outcome.Recover(fallback, cancellationToken).ConfigureAwait(false);
+        async Task<Outcome> Core() {
+            Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return await outcome.Recover(fallback, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -206,14 +242,20 @@ public static class OutcomeTaskExtensions {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="task" /> is <c>null</c>.
     /// </exception>
-    public static async Task<TResult> Finally<TResult>(this Task<Outcome>   task,
-                                                       Func<TResult>        onSuccess,
-                                                       Func<Error, TResult> onFailure) {
+    public static Task<TResult> Finally<TResult>(this Task<Outcome>   task,
+                                                 Func<TResult>        onSuccess,
+                                                 Func<Error, TResult> onFailure) {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
+        if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return outcome.Finally(onSuccess, onFailure);
+        async Task<TResult> Core() {
+            Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return outcome.Finally(onSuccess, onFailure);
+        }
     }
 
     /// <summary>
@@ -227,14 +269,20 @@ public static class OutcomeTaskExtensions {
     ///     This method awaits the completion of the <paramref name="task" /> and invokes the appropriate action
     ///     depending on whether the outcome is successful or contains an error.
     /// </remarks>
-    public static async Task Finally(this Task<Outcome> task,
-                                     Action             onSuccess,
-                                     Action<Error>      onFailure) {
+    public static Task Finally(this Task<Outcome> task,
+                               Action             onSuccess,
+                               Action<Error>      onFailure) {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
+        if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        outcome.Finally(onSuccess, onFailure);
+        async Task Core() {
+            Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            outcome.Finally(onSuccess, onFailure);
+        }
     }
 
     /// <summary>
@@ -260,15 +308,21 @@ public static class OutcomeTaskExtensions {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if <paramref name="task" /> is <c>null</c>.
     /// </exception>
-    public static async Task<TResult> Finally<TResult>(this Task<Outcome>                            task,
-                                                       Func<CancellationToken, Task<TResult>>        onSuccess,
-                                                       Func<Error, CancellationToken, Task<TResult>> onFailure,
-                                                       CancellationToken                             cancellationToken = default) {
+    public static Task<TResult> Finally<TResult>(this Task<Outcome>                            task,
+                                                 Func<CancellationToken, Task<TResult>>        onSuccess,
+                                                 Func<Error, CancellationToken, Task<TResult>> onFailure,
+                                                 CancellationToken                             cancellationToken = default) {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
+        if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return await outcome.Finally(onSuccess, onFailure, cancellationToken).ConfigureAwait(false);
+        async Task<TResult> Core() {
+            Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return await outcome.Finally(onSuccess, onFailure, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -290,15 +344,21 @@ public static class OutcomeTaskExtensions {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="task" /> is <c>null</c>.
     /// </exception>
-    public static async Task Finally(this Task<Outcome>                   task,
-                                     Func<CancellationToken, Task>        onSuccess,
-                                     Func<Error, CancellationToken, Task> onFailure,
-                                     CancellationToken                    cancellationToken = default) {
+    public static Task Finally(this Task<Outcome>                   task,
+                               Func<CancellationToken, Task>        onSuccess,
+                               Func<Error, CancellationToken, Task> onFailure,
+                               CancellationToken                    cancellationToken = default) {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
+        if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        await outcome.Finally(onSuccess, onFailure, cancellationToken).ConfigureAwait(false);
+        async Task Core() {
+            Outcome outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            await outcome.Finally(onSuccess, onFailure, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -322,15 +382,20 @@ public static class OutcomeTaskExtensions {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="task" /> is <c>null</c>.
     /// </exception>
-    public static async Task<Outcome<TResult>> Then<T, TResult>(this Task<Outcome<T>>     task,
-                                                                Func<T, Outcome<TResult>> next)
+    public static Task<Outcome<TResult>> Then<T, TResult>(this Task<Outcome<T>>     task,
+                                                          Func<T, Outcome<TResult>> next)
         where T : notnull
         where TResult : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (next is null) { throw new ArgumentNullException(nameof(next)); }
 
-        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return outcome.Then(next);
+        async Task<Outcome<TResult>> Core() {
+            Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return outcome.Then(next);
+        }
     }
 
     /// <summary>
@@ -347,14 +412,19 @@ public static class OutcomeTaskExtensions {
     ///     that represents the result of the operation.
     /// </returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="task" /> is <c>null</c>.</exception>
-    public static async Task<Outcome> Then<T>(this Task<Outcome<T>> task,
-                                              Func<T, Outcome>      next)
+    public static Task<Outcome> Then<T>(this Task<Outcome<T>> task,
+                                        Func<T, Outcome>      next)
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (next is null) { throw new ArgumentNullException(nameof(next)); }
 
-        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return outcome.Then(next);
+        async Task<Outcome> Core() {
+            Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return outcome.Then(next);
+        }
     }
 
     /// <summary>
@@ -374,16 +444,21 @@ public static class OutcomeTaskExtensions {
     ///     A task that represents the asynchronous operation, producing an <see cref="Outcome{TResult}" />.
     /// </returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="task" /> is <c>null</c>.</exception>
-    public static async Task<Outcome<TResult>> Then<T, TResult>(this Task<Outcome<T>>                              task,
-                                                                Func<T, CancellationToken, Task<Outcome<TResult>>> next,
-                                                                CancellationToken                                  cancellationToken = default)
+    public static Task<Outcome<TResult>> Then<T, TResult>(this Task<Outcome<T>>                              task,
+                                                          Func<T, CancellationToken, Task<Outcome<TResult>>> next,
+                                                          CancellationToken                                  cancellationToken = default)
         where T : notnull
         where TResult : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (next is null) { throw new ArgumentNullException(nameof(next)); }
 
-        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return await outcome.Then(next, cancellationToken).ConfigureAwait(false);
+        async Task<Outcome<TResult>> Core() {
+            Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return await outcome.Then(next, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -408,15 +483,20 @@ public static class OutcomeTaskExtensions {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if <paramref name="task" /> is <c>null</c>.
     /// </exception>
-    public static async Task<Outcome> Then<T>(this Task<Outcome<T>>                     task,
-                                              Func<T, CancellationToken, Task<Outcome>> next,
-                                              CancellationToken                         cancellationToken = default)
+    public static Task<Outcome> Then<T>(this Task<Outcome<T>>                     task,
+                                        Func<T, CancellationToken, Task<Outcome>> next,
+                                        CancellationToken                         cancellationToken = default)
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (next is null) { throw new ArgumentNullException(nameof(next)); }
 
-        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return await outcome.Then(next, cancellationToken).ConfigureAwait(false);
+        async Task<Outcome> Core() {
+            Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return await outcome.Then(next, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -439,15 +519,20 @@ public static class OutcomeTaskExtensions {
     ///     containing the converted <see cref="Outcome{TResult}" />.
     /// </returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="task" /> is <c>null</c>.</exception>
-    public static async Task<Outcome<TResult>> To<T, TResult>(this Task<Outcome<T>> task,
-                                                              Func<T, TResult>      convert)
+    public static Task<Outcome<TResult>> To<T, TResult>(this Task<Outcome<T>> task,
+                                                        Func<T, TResult>      convert)
         where T : notnull
         where TResult : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (convert is null) { throw new ArgumentNullException(nameof(convert)); }
 
-        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return outcome.To(convert);
+        async Task<Outcome<TResult>> Core() {
+            Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return outcome.To(convert);
+        }
     }
 
     /// <summary>
@@ -471,16 +556,21 @@ public static class OutcomeTaskExtensions {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="task" /> is <c>null</c>.
     /// </exception>
-    public static async Task<Outcome<TResult>> To<T, TResult>(this Task<Outcome<T>>                     task,
-                                                              Func<T, CancellationToken, Task<TResult>> convert,
-                                                              CancellationToken                         cancellationToken = default)
+    public static Task<Outcome<TResult>> To<T, TResult>(this Task<Outcome<T>>                     task,
+                                                        Func<T, CancellationToken, Task<TResult>> convert,
+                                                        CancellationToken                         cancellationToken = default)
         where T : notnull
         where TResult : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (convert is null) { throw new ArgumentNullException(nameof(convert)); }
 
-        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return await outcome.To(convert, cancellationToken).ConfigureAwait(false);
+        async Task<Outcome<TResult>> Core() {
+            Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return await outcome.To(convert, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -508,14 +598,19 @@ public static class OutcomeTaskExtensions {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="task" /> is <c>null</c>.
     /// </exception>
-    public static async Task<Outcome<T>> Recover<T>(this Task<Outcome<T>>   task,
-                                                    Func<Error, Outcome<T>> fallback)
+    public static Task<Outcome<T>> Recover<T>(this Task<Outcome<T>>   task,
+                                              Func<Error, Outcome<T>> fallback)
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
 
-        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return outcome.Recover(fallback);
+        async Task<Outcome<T>> Core() {
+            Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return outcome.Recover(fallback);
+        }
     }
 
     /// <summary>
@@ -538,14 +633,19 @@ public static class OutcomeTaskExtensions {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="task" /> is <c>null</c>.
     /// </exception>
-    public static async Task<Outcome<T>> Recover<T>(this Task<Outcome<T>> task,
-                                                    Func<Error, T>        fallback)
+    public static Task<Outcome<T>> Recover<T>(this Task<Outcome<T>> task,
+                                              Func<Error, T>        fallback)
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
 
-        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return outcome.Recover(fallback);
+        async Task<Outcome<T>> Core() {
+            Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return outcome.Recover(fallback);
+        }
     }
 
     /// <summary>
@@ -571,15 +671,20 @@ public static class OutcomeTaskExtensions {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="task" /> is <c>null</c>.
     /// </exception>
-    public static async Task<Outcome<T>> Recover<T>(this Task<Outcome<T>>                            task,
-                                                    Func<Error, CancellationToken, Task<Outcome<T>>> fallback,
-                                                    CancellationToken                                cancellationToken = default)
+    public static Task<Outcome<T>> Recover<T>(this Task<Outcome<T>>                            task,
+                                              Func<Error, CancellationToken, Task<Outcome<T>>> fallback,
+                                              CancellationToken                                cancellationToken = default)
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
 
-        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return await outcome.Recover(fallback, cancellationToken).ConfigureAwait(false);
+        async Task<Outcome<T>> Core() {
+            Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return await outcome.Recover(fallback, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -606,15 +711,20 @@ public static class OutcomeTaskExtensions {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="task" /> is <c>null</c>.
     /// </exception>
-    public static async Task<Outcome<T>> Recover<T>(this Task<Outcome<T>>                   task,
-                                                    Func<Error, CancellationToken, Task<T>> fallback,
-                                                    CancellationToken                       cancellationToken = default)
+    public static Task<Outcome<T>> Recover<T>(this Task<Outcome<T>>                   task,
+                                              Func<Error, CancellationToken, Task<T>> fallback,
+                                              CancellationToken                       cancellationToken = default)
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
 
-        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return await outcome.Recover(fallback, cancellationToken).ConfigureAwait(false);
+        async Task<Outcome<T>> Core() {
+            Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return await outcome.Recover(fallback, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -646,15 +756,21 @@ public static class OutcomeTaskExtensions {
     ///     <see cref="Outcome{T}" />.
     /// </returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="task" /> is <c>null</c>.</exception>
-    public static async Task<TResult> Finally<T, TResult>(this Task<Outcome<T>> task,
-                                                          Func<T, TResult>      onSuccess,
-                                                          Func<Error, TResult>  onFailure)
+    public static Task<TResult> Finally<T, TResult>(this Task<Outcome<T>> task,
+                                                    Func<T, TResult>      onSuccess,
+                                                    Func<Error, TResult>  onFailure)
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
+        if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return outcome.Finally(onSuccess, onFailure);
+        async Task<TResult> Core() {
+            Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return outcome.Finally(onSuccess, onFailure);
+        }
     }
 
     /// <summary>
@@ -671,15 +787,21 @@ public static class OutcomeTaskExtensions {
     ///     The error is passed as a parameter to this action.
     /// </param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="task" /> is <c>null</c>.</exception>
-    public static async Task Finally<T>(this Task<Outcome<T>> task,
-                                        Action<T>             onSuccess,
-                                        Action<Error>         onFailure)
+    public static Task Finally<T>(this Task<Outcome<T>> task,
+                                  Action<T>             onSuccess,
+                                  Action<Error>         onFailure)
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
+        if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        outcome.Finally(onSuccess, onFailure);
+        async Task Core() {
+            Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            outcome.Finally(onSuccess, onFailure);
+        }
     }
 
     /// <summary>
@@ -709,16 +831,22 @@ public static class OutcomeTaskExtensions {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if <paramref name="task" /> is <c>null</c>.
     /// </exception>
-    public static async Task<TResult> Finally<T, TResult>(this Task<Outcome<T>>                         task,
-                                                          Func<T, CancellationToken, Task<TResult>>     onSuccess,
-                                                          Func<Error, CancellationToken, Task<TResult>> onFailure,
-                                                          CancellationToken                             cancellationToken = default)
+    public static Task<TResult> Finally<T, TResult>(this Task<Outcome<T>>                         task,
+                                                    Func<T, CancellationToken, Task<TResult>>     onSuccess,
+                                                    Func<Error, CancellationToken, Task<TResult>> onFailure,
+                                                    CancellationToken                             cancellationToken = default)
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
+        if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        return await outcome.Finally(onSuccess, onFailure, cancellationToken).ConfigureAwait(false);
+        async Task<TResult> Core() {
+            Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            return await outcome.Finally(onSuccess, onFailure, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -748,16 +876,22 @@ public static class OutcomeTaskExtensions {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="task" /> is <c>null</c>.
     /// </exception>
-    public static async Task Finally<T>(this Task<Outcome<T>>                task,
-                                        Func<T, CancellationToken, Task>     onSuccess,
-                                        Func<Error, CancellationToken, Task> onFailure,
-                                        CancellationToken                    cancellationToken = default)
+    public static Task Finally<T>(this Task<Outcome<T>>                task,
+                                  Func<T, CancellationToken, Task>     onSuccess,
+                                  Func<Error, CancellationToken, Task> onFailure,
+                                  CancellationToken                    cancellationToken = default)
         where T : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
+        if (onSuccess is null) { throw new ArgumentNullException(nameof(onSuccess)); }
+        if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
-        Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+        return Core();
 
-        await outcome.Finally(onSuccess, onFailure, cancellationToken).ConfigureAwait(false);
+        async Task Core() {
+            Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
+
+            await outcome.Finally(onSuccess, onFailure, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     // -------------------------------------------------------------------------
