@@ -20,6 +20,8 @@ This ensures that documentation always matches the version of the system that is
 
 You can emit the catalog per locale by adding `--language <…>` (e.g. a CI matrix over `en`, `fr`, `sv`); file names and anchors stay stable across languages. See [Internationalization](Internationalization.en.md).
 
+The public RFC 9457 examples carry a problem `type` of the shape `urn:problem:{service}:{code}`. Provide the service segment with `--service-name <name>` (or `serviceName` in `fce.json`); it is required for the `markdown` and `html` formats — `fce generate` fails with a clear message when it is missing — while `json` (which carries no such example) does not need it.
+
 ## 🌍 Publishing documentation
 
 The generated documentation can be:

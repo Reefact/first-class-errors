@@ -48,8 +48,8 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         bool split = string.Equals(request.Layout, RenderLayouts.Split, StringComparison.OrdinalIgnoreCase);
 
         List<RenderedDocument> documents = split
-                                               ? RenderSplit(entries, strings, htmlLang)
-                                               : RenderSingle(entries, strings, htmlLang);
+                                               ? RenderSplit(entries, strings, htmlLang, request.ServiceName)
+                                               : RenderSingle(entries, strings, htmlLang, request.ServiceName);
 
         // The CSS and JS are inlined into every page (see BuildPage) so each file is self-contained and stays styled
         // even when opened on its own. Only the search index remains an external asset, for external tooling.
@@ -60,7 +60,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
 
     #region Layouts
 
-    private static List<RenderedDocument> RenderSingle(IReadOnlyList<Entry> entries, HtmlRendererStrings strings, string htmlLang) {
+    private static List<RenderedDocument> RenderSingle(IReadOnlyList<Entry> entries, HtmlRendererStrings strings, string htmlLang, string? serviceName) {
         StringBuilder body = new();
         AppendHeader(body, strings);
         body.Append("<main id=\"main\" class=\"container\">\n");
@@ -83,7 +83,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
                 if (description is not null) { body.Append($"<p class=\"group-description\">{Text(description)}</p>\n"); }
 
                 foreach (Entry entry in group.Entries) {
-                    AppendErrorDetail(body, entry, strings, headingLevel: 3);
+                    AppendErrorDetail(body, entry, strings, headingLevel: 3, serviceName);
                 }
 
                 body.Append("</section>\n");
@@ -95,7 +95,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         return [new RenderedDocument("index.html", BuildPage(strings.ErrorCatalog, body.ToString(), strings, htmlLang))];
     }
 
-    private static List<RenderedDocument> RenderSplit(IReadOnlyList<Entry> entries, HtmlRendererStrings strings, string htmlLang) {
+    private static List<RenderedDocument> RenderSplit(IReadOnlyList<Entry> entries, HtmlRendererStrings strings, string htmlLang, string? serviceName) {
         List<RenderedDocument> documents = [];
 
         // Home page: the two-level table of contents (source, then error code) linking to one page per error.
@@ -122,7 +122,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
             AppendHeader(page, strings);
             page.Append("<main id=\"main\" class=\"container\">\n");
             page.Append($"<p class=\"back\"><a href=\"../index.html\">&#8592; {Text(strings.BackToCatalog)}</a></p>\n");
-            AppendErrorDetail(page, entry, strings, headingLevel: 2);
+            AppendErrorDetail(page, entry, strings, headingLevel: 2, serviceName);
             page.Append("</main>\n");
 
             string title = $"{entry.Code} — {strings.ErrorCatalog}";
@@ -199,7 +199,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         html.Append("</ul>\n</nav>\n");
     }
 
-    private static void AppendErrorDetail(StringBuilder html, Entry entry, HtmlRendererStrings strings, int headingLevel) {
+    private static void AppendErrorDetail(StringBuilder html, Entry entry, HtmlRendererStrings strings, int headingLevel, string? serviceName) {
         ErrorDocumentation error = entry.Error;
         string             h      = "h" + headingLevel;
         string             hSub   = "h" + (headingLevel + 1);
@@ -241,7 +241,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
             foreach (ErrorDescription example in error.Examples) {
                 html.Append("<div class=\"example\">\n");
                 html.Append($"<p class=\"example-label\">{Text(strings.PublicResponseLabel)}</p>\n");
-                html.Append($"<pre class=\"json\"><code>{Text(ProblemDetailsJson(example, error.Code))}</code></pre>\n");
+                html.Append($"<pre class=\"json\"><code>{Text(ProblemDetailsJson(example, error.Code, serviceName))}</code></pre>\n");
                 html.Append($"<p class=\"example-label\">{Text(strings.DiagnosticExampleLabel)}</p>\n");
                 html.Append($"<pre class=\"log\"><code>{Text(DiagnosticLogLine(example, error.Code, error.Source))}</code></pre>\n");
                 html.Append("</div>\n");
@@ -279,11 +279,18 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
 
     /// <summary>
     ///     The public, exposable RFC 9457 (<c>problem+json</c>) representation of an example — public messages plus the
-    ///     code, never the diagnostic message. No <c>type</c>/<c>status</c> (the application's concern).
+    ///     code, never the diagnostic message. The <c>type</c> is the error's problem type (see <see cref="ProblemType" />)
+    ///     built from <paramref name="serviceName" /> and the code; <c>status</c> stays the application's concern.
     /// </summary>
-    private static string ProblemDetailsJson(ErrorDescription example, string? code) {
+    private static string ProblemDetailsJson(ErrorDescription example, string? code, string? serviceName) {
         StringBuilder json = new();
         json.Append("{\n");
+
+        string? type = ProblemType.For(serviceName, code);
+        if (type is not null) {
+            json.Append($"  \"type\": \"{JsonString(type)}\",\n");
+        }
+
         json.Append($"  \"title\": \"{JsonString(example.ShortMessage)}\"");
         if (string.IsNullOrWhiteSpace(example.DetailedMessage) is false) {
             json.Append($",\n  \"detail\": \"{JsonString(example.DetailedMessage!)}\"");

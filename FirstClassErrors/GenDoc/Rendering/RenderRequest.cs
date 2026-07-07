@@ -30,9 +30,23 @@ public sealed class RenderRequest {
     /// <param name="layout">The requested layout (see <see cref="RenderLayouts" />).</param>
     /// <param name="culture">The culture to localize the rendered boilerplate for.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="layout" /> or <paramref name="culture" /> is <c>null</c>.</exception>
-    public RenderRequest(string layout, CultureInfo culture) {
-        Layout  = layout  ?? throw new ArgumentNullException(nameof(layout));
-        Culture = culture ?? throw new ArgumentNullException(nameof(culture));
+    public RenderRequest(string layout, CultureInfo culture)
+        : this(layout, culture, null) { }
+
+    /// <summary>
+    ///     Initializes a new <see cref="RenderRequest" /> for the given layout, culture and service name.
+    /// </summary>
+    /// <param name="layout">The requested layout (see <see cref="RenderLayouts" />).</param>
+    /// <param name="culture">The culture to localize the rendered boilerplate for.</param>
+    /// <param name="serviceName">
+    ///     The service name the documented errors are exposed under, used to build the RFC 9457 problem <c>type</c> of the
+    ///     rendered examples (<c>urn:problem:{service}:{code}</c>), or <c>null</c> when none is configured.
+    /// </param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="layout" /> or <paramref name="culture" /> is <c>null</c>.</exception>
+    public RenderRequest(string layout, CultureInfo culture, string? serviceName) {
+        Layout      = layout  ?? throw new ArgumentNullException(nameof(layout));
+        Culture     = culture ?? throw new ArgumentNullException(nameof(culture));
+        ServiceName = serviceName;
     }
 
     #endregion
@@ -42,5 +56,11 @@ public sealed class RenderRequest {
 
     /// <summary>Gets the culture the rendered boilerplate should be localized for.</summary>
     public CultureInfo Culture { get; }
+
+    /// <summary>
+    ///     Gets the service name used to build the RFC 9457 problem <c>type</c> of the rendered examples, or <c>null</c>
+    ///     when none is configured (no <c>type</c> is then emitted).
+    /// </summary>
+    public string? ServiceName { get; }
 
 }

@@ -59,6 +59,10 @@ internal sealed class GenerateSettings : ConfigScopedSettings {
     [Description("Path to FirstClassErrors.GenDoc.Worker.dll (default: next to this tool).")]
     public string? WorkerPath { get; set; }
 
+    [CommandOption("--service-name <NAME>")]
+    [Description("Service name for the RFC 9457 problem type of rendered examples (urn:problem:{service}:{code}). Falls back to the configuration; required for the markdown and html formats.")]
+    public string? ServiceName { get; set; }
+
     [CommandOption("--verbose")] // Long-only to stay clear of Spectre's built-in --version/-h help options.
     [Description("Emit diagnostic logging to standard error.")]
     public bool Verbose { get; set; }
