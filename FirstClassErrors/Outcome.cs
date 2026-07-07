@@ -19,11 +19,8 @@ public sealed class Outcome {
     #region Statics members declarations
 
     /// <summary>
-    ///     Provides a successful outcome.
+    ///     A successful <see cref="Outcome" /> that carries no value.
     /// </summary>
-    /// <returns>
-    ///     A <see cref="Outcome" /> representing success.
-    /// </returns>
     public static readonly Outcome Success = new(null);
 
     /// <summary>
