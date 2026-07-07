@@ -318,4 +318,39 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         Check.That(markdown).Contains("- [Erreurs Temperature](#src-temperature)");
     }
 
+    [Fact(DisplayName = "The Markdown renderer preserves backticks in inline code spans by fencing them, not rewriting them.")]
+    public void TheMarkdownRendererPreservesBackticksInInlineCode() {
+        // Setup: a code and example values containing backticks. The previous escaper rewrote a backtick to an
+        // apostrophe, silently altering the value; the renderer must instead fence the span so the value survives
+        // verbatim.
+        ErrorDocumentation error = new() {
+            Code   = "A`B",
+            Title  = "Backtick code",
+            Source = "Danger",
+            Context = new[] {
+                new ErrorContextEntryDocumentation {
+                    Key           = "Key",
+                    ValueType     = "System.String",
+                    Description   = "The rejected value.",
+                    ExampleValues = new[] { "va`lue", "`edge`" }
+                }
+            }
+        };
+
+        // Exercise
+        string markdown = RenderSingle(error)[0].Content;
+
+        // Verify: a backtick in the code lengthens the fence to two backticks and is never rewritten as an apostrophe.
+        Check.That(markdown).Contains("``A`B``");
+        Check.That(markdown).Not.Contains("A'B");
+
+        // A backtick in the middle of an example value bumps the fence; the value survives verbatim.
+        Check.That(markdown).Contains("``va`lue``");
+        Check.That(markdown).Not.Contains("va'lue");
+
+        // A value that begins and ends with a backtick is padded with a space so the fence does not merge with it.
+        Check.That(markdown).Contains("`` `edge` ``");
+        Check.That(markdown).Not.Contains("'edge'");
+    }
+
 }
