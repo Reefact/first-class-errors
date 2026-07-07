@@ -139,8 +139,8 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
 
         bool hasCode   = string.IsNullOrWhiteSpace(error.Code) is false;
         bool hasSource = string.IsNullOrWhiteSpace(error.Source) is false;
-        if (hasCode) { markdown.Append($"- **{strings.CodeLabel}** `{error.Code!.Trim()}`\n"); }
-        if (hasSource) { markdown.Append($"- **{strings.SourceLabel}** `{error.Source!.Trim()}`\n"); }
+        if (hasCode) { markdown.Append($"- **{strings.CodeLabel}** {CodeSpan(error.Code!.Trim())}\n"); }
+        if (hasSource) { markdown.Append($"- **{strings.SourceLabel}** {CodeSpan(error.Source!.Trim())}\n"); }
         if (hasCode || hasSource) { markdown.Append('\n'); }
 
         if (string.IsNullOrWhiteSpace(error.Explanation) is false) {
@@ -370,7 +370,37 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
 
     /// <summary>A table cell holding an inline code span, or an empty cell when there is no value.</summary>
     private static string CodeCell(string? value) {
-        return string.IsNullOrWhiteSpace(value) ? string.Empty : $"`{Inline(value).Replace("`", "'")}`";
+        return string.IsNullOrWhiteSpace(value) ? string.Empty : CodeSpan(Inline(value));
+    }
+
+    /// <summary>
+    ///     Wraps <paramref name="content" /> in a CommonMark inline code span. A backtick cannot be escaped inside a code
+    ///     span, so the fence is made longer than the longest backtick run in the content, and padded with a space when
+    ///     the content itself begins or ends with a backtick. This preserves the content verbatim rather than rewriting
+    ///     its backticks.
+    /// </summary>
+    private static string CodeSpan(string content) {
+        string fence   = new string('`', LongestRun(content, '`') + 1);
+        string padding = content.Length > 0 && (content[0] == '`' || content[content.Length - 1] == '`') ? " " : string.Empty;
+
+        return $"{fence}{padding}{content}{padding}{fence}";
+    }
+
+    /// <summary>The length of the longest run of <paramref name="c" /> in <paramref name="value" />.</summary>
+    private static int LongestRun(string value, char c) {
+        int longest = 0;
+        int current = 0;
+
+        foreach (char ch in value) {
+            if (ch == c) {
+                current++;
+                if (current > longest) { longest = current; }
+            } else {
+                current = 0;
+            }
+        }
+
+        return longest;
     }
 
     private static string ExampleValuesCell(IReadOnlyList<string?> values) {
