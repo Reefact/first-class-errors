@@ -122,7 +122,8 @@ public static class OutcomeTaskExtensions {
     ///     representing the next operation to be executed.
     /// </param>
     /// <param name="cancellationToken">
-    ///     A <see cref="CancellationToken" /> to observe while waiting for the task to complete. Defaults to
+    ///     A token forwarded to the asynchronous <paramref name="next" /> callback so the operation it starts can observe
+    ///     cancellation requests. It is not applied to the await of the preceding <paramref name="task" />. Defaults to
     ///     <see cref="CancellationToken.None" />.
     /// </param>
     /// <returns>
@@ -192,8 +193,8 @@ public static class OutcomeTaskExtensions {
     ///     and a <see cref="CancellationToken" /> as parameters.
     /// </param>
     /// <param name="cancellationToken">
-    ///     A <see cref="CancellationToken" /> to observe while waiting for the task to complete or for the fallback function
-    ///     to execute.
+    ///     A token forwarded to the asynchronous <paramref name="fallback" /> callback so the operation it starts can
+    ///     observe cancellation requests. It is not applied to the await of the preceding <paramref name="task" />.
     /// </param>
     /// <returns>
     ///     A task that represents the asynchronous operation. The result of the task is the original <see cref="Outcome" /> if
@@ -438,7 +439,9 @@ public static class OutcomeTaskExtensions {
     ///     and returns a task producing the next <see cref="Outcome{TResult}" />.
     /// </param>
     /// <param name="cancellationToken">
-    ///     A token to observe while waiting for the task to complete. Defaults to <see cref="CancellationToken.None" />.
+    ///     A token forwarded to the asynchronous <paramref name="next" /> callback so the operation it starts can observe
+    ///     cancellation requests. It is not applied to the await of the preceding <paramref name="task" />. Defaults to
+    ///     <see cref="CancellationToken.None" />.
     /// </param>
     /// <returns>
     ///     A task that represents the asynchronous operation, producing an <see cref="Outcome{TResult}" />.
@@ -475,7 +478,9 @@ public static class OutcomeTaskExtensions {
     ///     and returns a task producing the next <see cref="Outcome" />. Cannot be <c>null</c>.
     /// </param>
     /// <param name="cancellationToken">
-    ///     A token to observe while waiting for the task to complete. Defaults to <see cref="CancellationToken.None" />.
+    ///     A token forwarded to the asynchronous <paramref name="next" /> callback so the operation it starts can observe
+    ///     cancellation requests. It is not applied to the await of the preceding <paramref name="task" />. Defaults to
+    ///     <see cref="CancellationToken.None" />.
     /// </param>
     /// <returns>
     ///     A task that represents the asynchronous operation, producing the resulting <see cref="Outcome" />.
@@ -547,7 +552,8 @@ public static class OutcomeTaskExtensions {
     ///     to a result of type <typeparamref name="TResult" />.
     /// </param>
     /// <param name="cancellationToken">
-    ///     A <see cref="CancellationToken" /> to observe while waiting for the task to complete.
+    ///     A token forwarded to the asynchronous <paramref name="convert" /> callback so the conversion it starts can
+    ///     observe cancellation requests. It is not applied to the await of the preceding <paramref name="task" />.
     /// </param>
     /// <returns>
     ///     A task that represents the asynchronous operation. The task result contains the converted
@@ -822,7 +828,9 @@ public static class OutcomeTaskExtensions {
     ///     The function receives the <see cref="Error" /> and a <see cref="CancellationToken" /> as parameters.
     /// </param>
     /// <param name="cancellationToken">
-    ///     A <see cref="CancellationToken" /> to observe while waiting for the task to complete.
+    ///     A token forwarded to the asynchronous <paramref name="onSuccess" /> and <paramref name="onFailure" /> callbacks
+    ///     so the operation they start can observe cancellation requests. It is not applied to the await of the preceding
+    ///     <paramref name="task" />.
     /// </param>
     /// <returns>
     ///     A task that represents the asynchronous operation. The task's result is the value returned by either
@@ -868,7 +876,9 @@ public static class OutcomeTaskExtensions {
     ///     The function receives an <see cref="Error" /> and a <see cref="CancellationToken" />.
     /// </param>
     /// <param name="cancellationToken">
-    ///     A <see cref="CancellationToken" /> to observe while waiting for the task to complete.
+    ///     A token forwarded to the asynchronous <paramref name="onSuccess" /> and <paramref name="onFailure" /> callbacks
+    ///     so the operation they start can observe cancellation requests. It is not applied to the await of the preceding
+    ///     <paramref name="task" />.
     /// </param>
     /// <returns>
     ///     A <see cref="Task" /> that represents the asynchronous execution of the specified actions.
