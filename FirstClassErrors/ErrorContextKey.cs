@@ -32,8 +32,12 @@ namespace FirstClassErrors;
 /// <example>
 ///     Declaring a key:
 ///     <code>public static readonly ErrorContextKey&lt;string&gt; DealId = ErrorContextKey.Create&lt;string&gt;("DealId", "Business identifier of the deal.");</code>
-///     Using the key when throwing an exception:
-///     <code>throw new DiagnosableException("Deal not found", ctx => ctx.Add(ErrorContextKeys.DealId, dealId));</code>
+///     Attaching the key to an error's context, then throwing it as a <see cref="DiagnosableException" />:
+///     <code>
+///     throw DomainError.Create(ErrorCode.Create("DEAL_NOT_FOUND"), "Deal not found", ctx => ctx.Add(DealId, dealId))
+///                      .WithPublicMessage("The requested deal could not be found.")
+///                      .ToException();
+///     </code>
 /// </example>
 [DebuggerDisplay("{Name}")]
 public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
