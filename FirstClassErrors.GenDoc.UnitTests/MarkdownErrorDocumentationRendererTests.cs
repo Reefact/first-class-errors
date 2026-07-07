@@ -353,4 +353,41 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         Check.That(markdown).Not.Contains("'edge'");
     }
 
+    [Fact(DisplayName = "The RFC 9457 example carries a problem type built from the configured service name and the error code.")]
+    public void TheProblemDetailCarriesATypeBuiltFromTheServiceNameAndCode() {
+        // Setup
+        ErrorDocumentation error = new() {
+            Code     = "TEMPERATURE_BELOW_ABSOLUTE_ZERO",
+            Title    = "Below absolute zero",
+            Source   = "Temperature",
+            Examples = new[] { new ErrorDescription("Below absolute zero.", "Failed.", "The temperature is invalid.") }
+        };
+
+        // Exercise: render with a configured service name.
+        string markdown = new MarkdownErrorDocumentationRenderer()
+                         .Render(new[] { error }, new RenderRequest(RenderLayouts.Single, CultureInfo.InvariantCulture, "Temperature Simulator"))[0]
+                         .Content;
+
+        // Verify: the service name and the code are slugified into a urn:problem type in the problem detail.
+        Check.That(markdown).Contains("\"type\": \"urn:problem:temperature-simulator:temperature-below-absolute-zero\"");
+    }
+
+    [Fact(DisplayName = "Without a service name the renderer emits no problem type (and never falls back to about:blank).")]
+    public void WithoutAServiceNameTheRendererEmitsNoProblemType() {
+        // Setup
+        ErrorDocumentation error = new() {
+            Code     = "TEMPERATURE_BELOW_ABSOLUTE_ZERO",
+            Title    = "Below absolute zero",
+            Examples = new[] { new ErrorDescription("short", "diagnostic", "detail") }
+        };
+
+        // Exercise: no service name configured (the default RenderRequest). The CLI requires one for markdown/html, but
+        // the renderer itself simply omits the type when none is supplied — so the existing snapshots stay type-less.
+        string markdown = RenderSingle(error)[0].Content;
+
+        // Verify: no type is emitted, and about:blank is never used.
+        Check.That(markdown).Not.Contains("\"type\"");
+        Check.That(markdown).Not.Contains("about:blank");
+    }
+
 }
