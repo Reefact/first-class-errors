@@ -17,6 +17,7 @@ This error occurs when too many statement uploads arrive in a short window and t
 
 ```json
 {
+  "type": "urn:problem:sample-service:statement-upload-rate-limited",
   "title": "Statement upload rate-limited.",
   "detail": "Too many statement uploads were sent in a short period; please retry later.",
   "code": "STATEMENT_UPLOAD_RATE_LIMITED"

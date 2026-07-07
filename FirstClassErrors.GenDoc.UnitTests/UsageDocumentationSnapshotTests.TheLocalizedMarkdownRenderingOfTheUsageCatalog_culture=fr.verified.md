@@ -47,6 +47,7 @@ Cette erreur se produit lorsqu'on tente d'utiliser ensemble plusieurs montants d
 
 ```json
 {
+  "type": "urn:problem:sample-service:amount-currency-mismatch",
   "title": "Incohérence de devise",
   "detail": "Les deux montants utilisent des devises différentes et ne peuvent pas être combinés.",
   "code": "AMOUNT_CURRENCY_MISMATCH"
@@ -89,6 +90,7 @@ Cette erreur se produit lorsqu'on tente de valider un relevé bancaire contenant
 
 ```json
 {
+  "type": "urn:problem:sample-service:bank-transaction-file-date-out-of-statement-period",
   "title": "La date de transaction est en dehors de la période du relevé.",
   "detail": "Une date de transaction se situe en dehors de la période du relevé.",
   "code": "BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD"
@@ -131,6 +133,7 @@ Cette erreur se produit lorsqu'on tente de valider un relevé bancaire dont le m
 
 ```json
 {
+  "type": "urn:problem:sample-service:bank-transaction-file-statement-total-amount-mismatch",
   "title": "Incohérence du montant total du relevé.",
   "detail": "Le total déclaré du relevé ne correspond pas au total calculé.",
   "code": "BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH"
@@ -171,6 +174,7 @@ Cette erreur se produit lorsque le fournisseur de taux de change externe est inj
 
 ```json
 {
+  "type": "urn:problem:sample-service:exchange-rate-service-unavailable",
   "title": "Service de taux de change indisponible.",
   "detail": "Le service de taux de change est temporairement indisponible ; veuillez réessayer plus tard.",
   "code": "EXCHANGE_RATE_SERVICE_UNAVAILABLE"
@@ -211,6 +215,7 @@ Cette erreur se produit lorsque le fournisseur de taux de change ne cote pas de 
 
 ```json
 {
+  "type": "urn:problem:sample-service:unsupported-currency-pair",
   "title": "Paire de devises non prise en charge.",
   "detail": "La paire de devises demandée n'est pas prise en charge.",
   "code": "UNSUPPORTED_CURRENCY_PAIR"
@@ -257,6 +262,7 @@ Cette erreur se produit lorsque le point d'entrée de téléversement de relevé
 
 ```json
 {
+  "type": "urn:problem:sample-service:malformed-statement-payload",
   "title": "Charge utile de relevé mal formée.",
   "detail": "La requête de relevé téléversée omet un champ obligatoire ou contient une valeur invalide.",
   "code": "MALFORMED_STATEMENT_PAYLOAD"
@@ -297,6 +303,7 @@ Cette erreur se produit lorsque trop de téléversements de relevés arrivent da
 
 ```json
 {
+  "type": "urn:problem:sample-service:statement-upload-rate-limited",
   "title": "Téléversement de relevé limité en débit.",
   "detail": "Trop de téléversements de relevés ont été envoyés en peu de temps ; veuillez réessayer plus tard.",
   "code": "STATEMENT_UPLOAD_RATE_LIMITED"
@@ -342,6 +349,7 @@ Cette erreur se produit lorsqu'un virement est demandé avec un montant nul ou n
 
 ```json
 {
+  "type": "urn:problem:sample-service:money-transfer-amount-not-positive",
   "title": "Le montant du virement doit être positif.",
   "detail": "Le montant du virement doit être supérieur à zéro.",
   "code": "MONEY_TRANSFER_AMOUNT_NOT_POSITIVE"
@@ -381,6 +389,7 @@ Cette erreur regroupe toutes les règles métier violées lors de la validation 
 
 ```json
 {
+  "type": "urn:problem:sample-service:money-transfer-invalid",
   "title": "Virement invalide.",
   "detail": "Le virement ne respecte pas toutes les règles requises.",
   "code": "MONEY_TRANSFER_INVALID"
@@ -424,6 +433,7 @@ This error occurs when trying to instantiate a temperature with a value that is 
 
 ```json
 {
+  "type": "urn:problem:sample-service:temperature-below-absolute-zero",
   "title": "Temperature is invalid.",
   "detail": "The temperature -1 K is below absolute zero.",
   "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"
@@ -440,6 +450,7 @@ This error occurs when trying to instantiate a temperature with a value that is 
 
 ```json
 {
+  "type": "urn:problem:sample-service:temperature-below-absolute-zero",
   "title": "Temperature is invalid.",
   "detail": "The temperature -280 °C is below absolute zero.",
   "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"

@@ -20,6 +20,7 @@ This error occurs when trying to validate a bank statement file that contains on
 
 ```json
 {
+  "type": "urn:problem:sample-service:bank-transaction-file-date-out-of-statement-period",
   "title": "Transaction date is outside the statement period.",
   "detail": "A transaction date falls outside the statement period.",
   "code": "BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD"

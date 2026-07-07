@@ -17,6 +17,7 @@ This error occurs when the exchange-rate provider does not quote a rate for the 
 
 ```json
 {
+  "type": "urn:problem:sample-service:unsupported-currency-pair",
   "title": "Unsupported currency pair.",
   "detail": "The requested currency pair is not supported.",
   "code": "UNSUPPORTED_CURRENCY_PAIR"

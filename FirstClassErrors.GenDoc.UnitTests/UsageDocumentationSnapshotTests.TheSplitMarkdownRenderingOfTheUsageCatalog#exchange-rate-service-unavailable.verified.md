@@ -18,6 +18,7 @@ This error occurs when the external exchange-rate provider cannot be reached (a 
 
 ```json
 {
+  "type": "urn:problem:sample-service:exchange-rate-service-unavailable",
   "title": "Exchange-rate service unavailable.",
   "detail": "The exchange-rate service is temporarily unavailable; please retry later.",
   "code": "EXCHANGE_RATE_SERVICE_UNAVAILABLE"

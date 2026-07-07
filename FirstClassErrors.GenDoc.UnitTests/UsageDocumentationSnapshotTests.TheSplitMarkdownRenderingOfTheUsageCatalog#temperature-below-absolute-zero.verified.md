@@ -21,6 +21,7 @@ This error occurs when trying to instantiate a temperature with a value that is 
 
 ```json
 {
+  "type": "urn:problem:sample-service:temperature-below-absolute-zero",
   "title": "Temperature is invalid.",
   "detail": "The temperature -1 K is below absolute zero.",
   "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"
@@ -37,6 +38,7 @@ This error occurs when trying to instantiate a temperature with a value that is 
 
 ```json
 {
+  "type": "urn:problem:sample-service:temperature-below-absolute-zero",
   "title": "Temperature is invalid.",
   "detail": "The temperature -280 °C is below absolute zero.",
   "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"

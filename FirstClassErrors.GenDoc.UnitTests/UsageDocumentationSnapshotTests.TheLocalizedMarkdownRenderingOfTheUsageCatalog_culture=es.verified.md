@@ -47,6 +47,7 @@ Este error se produce al intentar usar juntos varios importes en una operación 
 
 ```json
 {
+  "type": "urn:problem:sample-service:amount-currency-mismatch",
   "title": "Discrepancia de moneda",
   "detail": "Los dos importes usan monedas diferentes y no pueden combinarse.",
   "code": "AMOUNT_CURRENCY_MISMATCH"
@@ -89,6 +90,7 @@ Este error se produce al intentar validar un archivo de extracto bancario que co
 
 ```json
 {
+  "type": "urn:problem:sample-service:bank-transaction-file-date-out-of-statement-period",
   "title": "La fecha de transacción está fuera del período del extracto.",
   "detail": "Una fecha de transacción queda fuera del período del extracto.",
   "code": "BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD"
@@ -131,6 +133,7 @@ Este error se produce al intentar validar un archivo de extracto bancario cuyo i
 
 ```json
 {
+  "type": "urn:problem:sample-service:bank-transaction-file-statement-total-amount-mismatch",
   "title": "Discrepancia del importe total del extracto.",
   "detail": "El total declarado del extracto no coincide con el total calculado.",
   "code": "BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH"
@@ -171,6 +174,7 @@ Este error se produce cuando no se puede contactar con el proveedor externo de t
 
 ```json
 {
+  "type": "urn:problem:sample-service:exchange-rate-service-unavailable",
   "title": "Servicio de tipos de cambio no disponible.",
   "detail": "El servicio de tipos de cambio no está disponible temporalmente; inténtelo de nuevo más tarde.",
   "code": "EXCHANGE_RATE_SERVICE_UNAVAILABLE"
@@ -211,6 +215,7 @@ Este error se produce cuando el proveedor de tipos de cambio no cotiza un tipo p
 
 ```json
 {
+  "type": "urn:problem:sample-service:unsupported-currency-pair",
   "title": "Par de divisas no admitido.",
   "detail": "El par de divisas solicitado no es compatible.",
   "code": "UNSUPPORTED_CURRENCY_PAIR"
@@ -257,6 +262,7 @@ Este error se produce cuando el endpoint de subida de extractos recibe una solic
 
 ```json
 {
+  "type": "urn:problem:sample-service:malformed-statement-payload",
   "title": "Carga útil de extracto mal formada.",
   "detail": "La solicitud de extracto subida omite un campo obligatorio o contiene un valor no válido.",
   "code": "MALFORMED_STATEMENT_PAYLOAD"
@@ -297,6 +303,7 @@ Este error se produce cuando llegan demasiadas subidas de extractos en un interv
 
 ```json
 {
+  "type": "urn:problem:sample-service:statement-upload-rate-limited",
   "title": "Subida de extracto con límite de frecuencia.",
   "detail": "Se enviaron demasiadas subidas de extractos en poco tiempo; inténtelo de nuevo más tarde.",
   "code": "STATEMENT_UPLOAD_RATE_LIMITED"
@@ -342,6 +349,7 @@ Este error se produce cuando se solicita una transferencia con un importe cero o
 
 ```json
 {
+  "type": "urn:problem:sample-service:money-transfer-amount-not-positive",
   "title": "El importe de la transferencia debe ser positivo.",
   "detail": "El importe de la transferencia debe ser mayor que cero.",
   "code": "MONEY_TRANSFER_AMOUNT_NOT_POSITIVE"
@@ -381,6 +389,7 @@ Este error agrupa todas las reglas de dominio incumplidas al validar una transfe
 
 ```json
 {
+  "type": "urn:problem:sample-service:money-transfer-invalid",
   "title": "Transferencia no válida.",
   "detail": "La transferencia no cumple todas las reglas requeridas.",
   "code": "MONEY_TRANSFER_INVALID"
@@ -424,6 +433,7 @@ This error occurs when trying to instantiate a temperature with a value that is 
 
 ```json
 {
+  "type": "urn:problem:sample-service:temperature-below-absolute-zero",
   "title": "Temperature is invalid.",
   "detail": "The temperature -1 K is below absolute zero.",
   "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"
@@ -440,6 +450,7 @@ This error occurs when trying to instantiate a temperature with a value that is 
 
 ```json
 {
+  "type": "urn:problem:sample-service:temperature-below-absolute-zero",
   "title": "Temperature is invalid.",
   "detail": "The temperature -280 °C is below absolute zero.",
   "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"

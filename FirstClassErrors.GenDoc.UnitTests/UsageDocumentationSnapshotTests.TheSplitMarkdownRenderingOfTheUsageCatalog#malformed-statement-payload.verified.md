@@ -17,6 +17,7 @@ This error occurs when the statement upload endpoint receives a request whose bo
 
 ```json
 {
+  "type": "urn:problem:sample-service:malformed-statement-payload",
   "title": "Malformed statement payload.",
   "detail": "The uploaded statement request is missing a required field or contains an invalid value.",
   "code": "MALFORMED_STATEMENT_PAYLOAD"

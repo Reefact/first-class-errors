@@ -16,12 +16,14 @@ public sealed class MarkdownErrorDocumentationRendererTests {
 
     #region Statics members declarations
 
+    private const string SampleService = "sample-service";
+
     private static IReadOnlyList<RenderedDocument> RenderSingle(params ErrorDocumentation[] catalog) {
-        return new MarkdownErrorDocumentationRenderer().Render(catalog, new RenderRequest(RenderLayouts.Single));
+        return new MarkdownErrorDocumentationRenderer().Render(catalog, new RenderRequest(RenderLayouts.Single, CultureInfo.InvariantCulture, SampleService));
     }
 
     private static IReadOnlyList<RenderedDocument> RenderSplit(params ErrorDocumentation[] catalog) {
-        return new MarkdownErrorDocumentationRenderer().Render(catalog, new RenderRequest(RenderLayouts.Split));
+        return new MarkdownErrorDocumentationRenderer().Render(catalog, new RenderRequest(RenderLayouts.Split, CultureInfo.InvariantCulture, SampleService));
     }
 
     private static ErrorDocumentation TemperatureError() {
@@ -293,7 +295,7 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         // Exercise: render the same catalog for French.
         IReadOnlyList<RenderedDocument> documents =
             new MarkdownErrorDocumentationRenderer().Render(new[] { TemperatureError() },
-                                                           new RenderRequest(RenderLayouts.Single, CultureInfo.GetCultureInfo("fr")));
+                                                           new RenderRequest(RenderLayouts.Single, CultureInfo.GetCultureInfo("fr"), SampleService));
         string markdown = documents[0].Content;
 
         // Verify: headings, labels and table headers come from the French resources.
@@ -372,8 +374,8 @@ public sealed class MarkdownErrorDocumentationRendererTests {
         Check.That(markdown).Contains("\"type\": \"urn:problem:temperature-simulator:temperature-below-absolute-zero\"");
     }
 
-    [Fact(DisplayName = "Without a service name the renderer emits no problem type (and never falls back to about:blank).")]
-    public void WithoutAServiceNameTheRendererEmitsNoProblemType() {
+    [Fact(DisplayName = "The Markdown renderer refuses to render without a service name (the invariant is enforced by the renderer, not only the CLI).")]
+    public void TheMarkdownRendererRefusesToRenderWithoutAServiceName() {
         // Setup
         ErrorDocumentation error = new() {
             Code     = "TEMPERATURE_BELOW_ABSOLUTE_ZERO",
@@ -381,13 +383,10 @@ public sealed class MarkdownErrorDocumentationRendererTests {
             Examples = new[] { new ErrorDescription("short", "diagnostic", "detail") }
         };
 
-        // Exercise: no service name configured (the default RenderRequest). The CLI requires one for markdown/html, but
-        // the renderer itself simply omits the type when none is supplied — so the existing snapshots stay type-less.
-        string markdown = RenderSingle(error)[0].Content;
-
-        // Verify: no type is emitted, and about:blank is never used.
-        Check.That(markdown).Not.Contains("\"type\"");
-        Check.That(markdown).Not.Contains("about:blank");
+        // Exercise & verify: a RenderRequest without a service name is rejected by the renderer itself — the format
+        // embeds RFC 9457 examples that must carry a real problem type, so it will not silently emit a type-less one.
+        Check.ThatCode(() => new MarkdownErrorDocumentationRenderer().Render(new[] { error }, new RenderRequest(RenderLayouts.Single)))
+             .Throws<ServiceNameRequiredException>();
     }
 
 }

@@ -47,6 +47,7 @@ Dieser Fehler tritt auf, wenn mehrere Beträge gemeinsam in einer Operation verw
 
 ```json
 {
+  "type": "urn:problem:sample-service:amount-currency-mismatch",
   "title": "Währungskonflikt",
   "detail": "Die beiden Beträge verwenden unterschiedliche Währungen und können nicht kombiniert werden.",
   "code": "AMOUNT_CURRENCY_MISMATCH"
@@ -89,6 +90,7 @@ Dieser Fehler tritt auf, wenn versucht wird, eine Kontoauszugsdatei zu validiere
 
 ```json
 {
+  "type": "urn:problem:sample-service:bank-transaction-file-date-out-of-statement-period",
   "title": "Das Transaktionsdatum liegt außerhalb des Auszugszeitraums.",
   "detail": "Ein Transaktionsdatum liegt außerhalb des Auszugszeitraums.",
   "code": "BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD"
@@ -131,6 +133,7 @@ Dieser Fehler tritt auf, wenn versucht wird, eine Kontoauszugsdatei zu validiere
 
 ```json
 {
+  "type": "urn:problem:sample-service:bank-transaction-file-statement-total-amount-mismatch",
   "title": "Abweichung des Gesamtbetrags des Auszugs.",
   "detail": "Der angegebene Auszugsgesamtbetrag stimmt nicht mit dem berechneten Gesamtbetrag überein.",
   "code": "BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH"
@@ -171,6 +174,7 @@ Dieser Fehler tritt auf, wenn der externe Wechselkursanbieter nicht erreichbar i
 
 ```json
 {
+  "type": "urn:problem:sample-service:exchange-rate-service-unavailable",
   "title": "Wechselkursdienst nicht verfügbar.",
   "detail": "Der Wechselkursdienst ist vorübergehend nicht verfügbar; bitte versuchen Sie es später erneut.",
   "code": "EXCHANGE_RATE_SERVICE_UNAVAILABLE"
@@ -211,6 +215,7 @@ Dieser Fehler tritt auf, wenn der Wechselkursanbieter keinen Kurs für das angef
 
 ```json
 {
+  "type": "urn:problem:sample-service:unsupported-currency-pair",
   "title": "Nicht unterstütztes Währungspaar.",
   "detail": "Das angeforderte Währungspaar wird nicht unterstützt.",
   "code": "UNSUPPORTED_CURRENCY_PAIR"
@@ -257,6 +262,7 @@ Dieser Fehler tritt auf, wenn der Endpunkt zum Hochladen von Auszügen eine Anfr
 
 ```json
 {
+  "type": "urn:problem:sample-service:malformed-statement-payload",
   "title": "Fehlerhafte Auszugsnutzlast.",
   "detail": "Der hochgeladenen Auszugsanfrage fehlt ein Pflichtfeld oder sie enthält einen ungültigen Wert.",
   "code": "MALFORMED_STATEMENT_PAYLOAD"
@@ -297,6 +303,7 @@ Dieser Fehler tritt auf, wenn zu viele Auszug-Uploads in kurzer Zeit eintreffen 
 
 ```json
 {
+  "type": "urn:problem:sample-service:statement-upload-rate-limited",
   "title": "Auszug-Upload gedrosselt.",
   "detail": "Es wurden zu viele Auszug-Uploads in kurzer Zeit gesendet; bitte versuchen Sie es später erneut.",
   "code": "STATEMENT_UPLOAD_RATE_LIMITED"
@@ -342,6 +349,7 @@ Dieser Fehler tritt auf, wenn eine Überweisung mit einem Betrag von null oder n
 
 ```json
 {
+  "type": "urn:problem:sample-service:money-transfer-amount-not-positive",
   "title": "Der Überweisungsbetrag muss positiv sein.",
   "detail": "Der Überweisungsbetrag muss größer als null sein.",
   "code": "MONEY_TRANSFER_AMOUNT_NOT_POSITIVE"
@@ -381,6 +389,7 @@ Dieser Fehler fasst alle bei der Validierung einer Überweisung verletzten Domä
 
 ```json
 {
+  "type": "urn:problem:sample-service:money-transfer-invalid",
   "title": "Ungültige Überweisung.",
   "detail": "Die Überweisung erfüllt nicht alle erforderlichen Regeln.",
   "code": "MONEY_TRANSFER_INVALID"
@@ -424,6 +433,7 @@ This error occurs when trying to instantiate a temperature with a value that is 
 
 ```json
 {
+  "type": "urn:problem:sample-service:temperature-below-absolute-zero",
   "title": "Temperature is invalid.",
   "detail": "The temperature -1 K is below absolute zero.",
   "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"
@@ -440,6 +450,7 @@ This error occurs when trying to instantiate a temperature with a value that is 
 
 ```json
 {
+  "type": "urn:problem:sample-service:temperature-below-absolute-zero",
   "title": "Temperature is invalid.",
   "detail": "The temperature -280 °C is below absolute zero.",
   "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"

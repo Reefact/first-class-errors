@@ -17,6 +17,7 @@ This error occurs when a money transfer is requested with an amount that is zero
 
 ```json
 {
+  "type": "urn:problem:sample-service:money-transfer-amount-not-positive",
   "title": "Transfer amount must be positive.",
   "detail": "The transfer amount must be greater than zero.",
   "code": "MONEY_TRANSFER_AMOUNT_NOT_POSITIVE"

@@ -20,6 +20,7 @@ This error occurs when trying to validate a bank statement file whose declared t
 
 ```json
 {
+  "type": "urn:problem:sample-service:bank-transaction-file-statement-total-amount-mismatch",
   "title": "Statement total amount mismatch.",
   "detail": "The declared statement total does not match the computed total.",
   "code": "BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH"

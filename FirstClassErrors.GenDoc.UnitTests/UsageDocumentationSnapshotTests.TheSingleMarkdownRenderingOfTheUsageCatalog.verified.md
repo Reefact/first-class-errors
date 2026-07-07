@@ -47,6 +47,7 @@ This error occurs when trying to use multiple amounts together in an operation w
 
 ```json
 {
+  "type": "urn:problem:sample-service:amount-currency-mismatch",
   "title": "Currency mismatch",
   "detail": "The two amounts use different currencies and cannot be combined.",
   "code": "AMOUNT_CURRENCY_MISMATCH"
@@ -89,6 +90,7 @@ This error occurs when trying to validate a bank statement file that contains on
 
 ```json
 {
+  "type": "urn:problem:sample-service:bank-transaction-file-date-out-of-statement-period",
   "title": "Transaction date is outside the statement period.",
   "detail": "A transaction date falls outside the statement period.",
   "code": "BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD"
@@ -131,6 +133,7 @@ This error occurs when trying to validate a bank statement file whose declared t
 
 ```json
 {
+  "type": "urn:problem:sample-service:bank-transaction-file-statement-total-amount-mismatch",
   "title": "Statement total amount mismatch.",
   "detail": "The declared statement total does not match the computed total.",
   "code": "BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH"
@@ -171,6 +174,7 @@ This error occurs when the external exchange-rate provider cannot be reached (a 
 
 ```json
 {
+  "type": "urn:problem:sample-service:exchange-rate-service-unavailable",
   "title": "Exchange-rate service unavailable.",
   "detail": "The exchange-rate service is temporarily unavailable; please retry later.",
   "code": "EXCHANGE_RATE_SERVICE_UNAVAILABLE"
@@ -211,6 +215,7 @@ This error occurs when the exchange-rate provider does not quote a rate for the 
 
 ```json
 {
+  "type": "urn:problem:sample-service:unsupported-currency-pair",
   "title": "Unsupported currency pair.",
   "detail": "The requested currency pair is not supported.",
   "code": "UNSUPPORTED_CURRENCY_PAIR"
@@ -257,6 +262,7 @@ This error occurs when the statement upload endpoint receives a request whose bo
 
 ```json
 {
+  "type": "urn:problem:sample-service:malformed-statement-payload",
   "title": "Malformed statement payload.",
   "detail": "The uploaded statement request is missing a required field or contains an invalid value.",
   "code": "MALFORMED_STATEMENT_PAYLOAD"
@@ -297,6 +303,7 @@ This error occurs when too many statement uploads arrive in a short window and t
 
 ```json
 {
+  "type": "urn:problem:sample-service:statement-upload-rate-limited",
   "title": "Statement upload rate-limited.",
   "detail": "Too many statement uploads were sent in a short period; please retry later.",
   "code": "STATEMENT_UPLOAD_RATE_LIMITED"
@@ -342,6 +349,7 @@ This error occurs when a money transfer is requested with an amount that is zero
 
 ```json
 {
+  "type": "urn:problem:sample-service:money-transfer-amount-not-positive",
   "title": "Transfer amount must be positive.",
   "detail": "The transfer amount must be greater than zero.",
   "code": "MONEY_TRANSFER_AMOUNT_NOT_POSITIVE"
@@ -381,6 +389,7 @@ This error aggregates every domain rule violated while validating a money transf
 
 ```json
 {
+  "type": "urn:problem:sample-service:money-transfer-invalid",
   "title": "Invalid money transfer.",
   "detail": "The money transfer does not satisfy all the required rules.",
   "code": "MONEY_TRANSFER_INVALID"
@@ -424,6 +433,7 @@ This error occurs when trying to instantiate a temperature with a value that is 
 
 ```json
 {
+  "type": "urn:problem:sample-service:temperature-below-absolute-zero",
   "title": "Temperature is invalid.",
   "detail": "The temperature -1 K is below absolute zero.",
   "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"
@@ -440,6 +450,7 @@ This error occurs when trying to instantiate a temperature with a value that is 
 
 ```json
 {
+  "type": "urn:problem:sample-service:temperature-below-absolute-zero",
   "title": "Temperature is invalid.",
   "detail": "The temperature -280 °C is below absolute zero.",
   "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"
