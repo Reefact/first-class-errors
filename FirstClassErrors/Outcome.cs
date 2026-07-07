@@ -588,7 +588,8 @@ public sealed class Outcome<T>
     ///     a success, or the original error if the current instance represents a failure.
     /// </returns>
     /// <exception cref="ArgumentNullException">
-    ///     Thrown if the <paramref name="convert" /> function is <c>null</c>.
+    ///     Thrown if the <paramref name="convert" /> function is <c>null</c>, or if <paramref name="convert" /> returns
+    ///     <c>null</c> (the returned value flows through <see cref="Success" />, which rejects <c>null</c>).
     /// </exception>
     public Outcome<TResult> To<TResult>(Func<T, TResult> convert)
         where TResult : notnull {
@@ -615,7 +616,8 @@ public sealed class Outcome<T>
     ///     A <see cref="Task{TResult}" /> representing the asynchronous operation.
     /// </returns>
     /// <exception cref="ArgumentNullException">
-    ///     Thrown if the <paramref name="convert" /> function is <c>null</c>.
+    ///     Thrown if the <paramref name="convert" /> function is <c>null</c>, or if the awaited <paramref name="convert" />
+    ///     result is <c>null</c> (it flows through <see cref="Success" />, which rejects <c>null</c>).
     /// </exception>
     public async Task<Outcome<TResult>> To<TResult>(Func<T, CancellationToken, Task<TResult>> convert, CancellationToken cancellationToken = default)
         where TResult : notnull {
