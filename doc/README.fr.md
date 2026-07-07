@@ -83,7 +83,7 @@ Une `Error` sépare délibérément ce qui peut être montré à un appelant de 
 | `DetailedMessage` | Non | Utilisateurs finaux / clients d’API | Un détail public maîtrisé (par ex. le `detail` d’un problem detail RFC 9457), exposé **uniquement** si l’application le décide explicitement. Ne doit contenir aucune information sensible ou interne. |
 | `DiagnosticMessage` | Oui | Logs, support, développeurs | Le message de diagnostic interne. Il peut contenir des détails techniques/opérationnels (identifiants, valeurs fautives, état interne) ; il n’est **jamais** exposé aux clients externes par défaut. |
 
-Le cœur du modèle est agnostique vis-à-vis d’HTTP : `DiagnosticMessage` n’est jamais utilisé comme corps de réponse HTTP par défaut. Lorsque vous transformez une erreur en exception avec `.ToException()`, le `Exception.Message` obtenu est le `DiagnosticMessage` — le texte destiné aux développeurs et aux logs.
+Le cœur du modèle est agnostique vis-à-vis d’HTTP : `DiagnosticMessage` n’est jamais utilisé comme corps de réponse HTTP par défaut, et `type` et `status` restent l’affaire de l’application. Lorsqu’une erreur est exposée en HTTP, son `Code` est le `type` RFC 9457 naturel : exposez-le comme un URI stable tel que `urn:problem:{service}:{code}`, où `{code}` est le code d’erreur en minuscules et en kebab-case — par exemple `urn:problem:temperature-simulator:temperature-below-absolute-zero` ou `urn:problem:banking-api:money-transfer-amount-not-positive` — afin que les clients puissent aiguiller sur le type de problème. Lorsque vous transformez une erreur en exception avec `.ToException()`, le `Exception.Message` obtenu est le `DiagnosticMessage` — le texte destiné aux développeurs et aux logs.
 
 ### 2️⃣ Des diagnostics structurés
 

@@ -172,7 +172,7 @@ Les éléments ci-dessus décrivent la **documentation** d’une erreur. En comp
 | `DetailedMessage`   | Non         | Utilisateurs finaux / API    | Détail public maîtrisé, exposé uniquement si l’application le décide (par ex. un `detail` RFC 9457) ; jamais sensible ni interne. |
 | `DiagnosticMessage` | Oui         | Logs, support, développeurs  | Détail de diagnostic interne (identifiants, valeurs fautives, état interne) ; jamais exposé aux clients externes par défaut. |
 
-Gardez le message de diagnostic riche et technique ; gardez les messages publics sûrs et exempts de détail interne. `error.ToException()` utilise le message de diagnostic comme `Message` de l’exception.
+Gardez le message de diagnostic riche et technique ; gardez les messages publics sûrs et exempts de détail interne. `error.ToException()` utilise le message de diagnostic comme `Message` de l’exception. Lorsque l’erreur est exposée en HTTP, son `Code` est le `type` RFC 9457 naturel : exposez-le comme un URI stable tel que `urn:problem:{service}:{code}`, où `{code}` est le code d’erreur en minuscules et en kebab-case — par exemple `urn:problem:temperature-simulator:temperature-below-absolute-zero` ou `urn:problem:banking-api:money-transfer-amount-not-positive` — afin que les clients puissent aiguiller sur le type de problème (`type` et `status` restent l’affaire de l’application).
 
 ## 🏁 Résumé
 

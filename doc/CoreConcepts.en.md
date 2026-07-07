@@ -32,7 +32,7 @@ An error carries three messages but deliberately splits them across just **two a
 * **`DetailedMessage`** (optional) — a controlled public detail, exposable **only** when the application explicitly chooses to (e.g. the `detail` of an RFC 9457 problem detail). It must never carry sensitive or internal information.
 * **`DiagnosticMessage`** (mandatory) — the internal diagnostic message for logs, support and developers. It may contain technical/operational detail (identifiers, offending values, internal state) and is **never** exposed to external clients by default. `error.ToException()` uses it as the exception's `Message`.
 
-The core model stays HTTP-agnostic: the diagnostic message is never a default HTTP response body.
+The core model stays HTTP-agnostic: the diagnostic message is never a default HTTP response body, and `type` and `status` remain the application's concern. When an error is exposed over HTTP, its `Code` is the natural RFC 9457 `type`: surface it as a stable URI such as `urn:problem:{service}:{code}`, where `{code}` is the error code in lowercase kebab-case — for example `urn:problem:temperature-simulator:temperature-below-absolute-zero` or `urn:problem:banking-api:money-transfer-amount-not-positive` — so clients can branch on the problem type.
 
 ## 🧩 A factory represents an error situation
 
