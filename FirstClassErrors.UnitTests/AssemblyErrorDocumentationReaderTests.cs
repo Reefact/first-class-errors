@@ -84,6 +84,39 @@ public sealed class AssemblyErrorDocumentationReaderTests {
         Check.That(failure.Message).Contains("No parameterless static method");
     }
 
+    [Fact(DisplayName = "A [DocumentedBy] reference binds to the concrete factory even when a parameterless generic overload shares its name.")]
+    public void ADocumentedByReferenceIgnoresAParameterlessGenericOverload() {
+        // Exercise
+        ErrorDocumentationExtractionResult result = Extract();
+
+        // Verify: `Foo()` and `Foo<T>()` are legal same-name overloads that both look parameterless via reflection.
+        // The concrete OverloadedDoc() must be selected (the generic overload would have thrown), so the documentation
+        // is produced and no ambiguity failure is recorded for it.
+        ErrorDocumentation? doc = DocumentationWithCode(result, "READER_GENERIC_OVERLOAD");
+        Check.That(doc).IsNotNull();
+        Check.That(doc!.Title).IsEqualTo("Overloaded");
+
+        ErrorDocumentationExtractionFailure? failure =
+            result.Failures.FirstOrDefault(f => f.MemberName == "OverloadedDoc");
+        Check.That(failure).IsNull();
+    }
+
+    [Fact(DisplayName = "A [DocumentedBy] reference whose only match is a generic method definition is reported as unresolved, not invoked.")]
+    public void ADocumentedByReferenceMatchingOnlyAGenericMethodIsUnresolved() {
+        // Exercise
+        ErrorDocumentationExtractionResult result = Extract();
+
+        // Verify: an open generic definition cannot be invoked without a type argument, so it must never be treated as a
+        // candidate. The reference resolves to "No parameterless static method" rather than being invoked (which would
+        // otherwise surface as a misleading "the factory threw" failure).
+        ErrorDocumentationExtractionFailure? failure =
+            result.Failures.FirstOrDefault(f => f.MemberName == "GenericOnlyDoc");
+
+        Check.That(failure).IsNotNull();
+        Check.That(failure!.TypeName).Contains("ReaderGenericOnlyFixture");
+        Check.That(failure.Message).Contains("No parameterless static method");
+    }
+
     [Fact(DisplayName = "A documentation factory that returns the wrong type is recorded as a failure.")]
     public void ADocumentationFactoryReturningTheWrongTypeIsRecordedAsAFailure() {
         // Exercise
@@ -220,6 +253,46 @@ public static class ReaderResourceKeyFixture {
 
     public static ErrorDocumentation ResourceKeyDoc() {
         return new ErrorDocumentation { Code = "READER_RESKEY", Title = "Resource keyed" };
+    }
+
+}
+
+[ProvidesErrorsFor("ReaderGenericOverloadSource")]
+[UsedImplicitly]
+public static class ReaderGenericOverloadFixture {
+
+    [DocumentedBy(nameof(OverloadedDoc))]
+    public static object OverloadedFactory() {
+        return new object();
+    }
+
+    // A parameterless generic overload legally shares the name with the real factory. The resolver must ignore the open
+    // generic definition (it cannot be invoked without a type argument) and bind to the concrete method below.
+    public static ErrorDocumentation OverloadedDoc() {
+        return new ErrorDocumentation { Code = "READER_GENERIC_OVERLOAD", Title = "Overloaded" };
+    }
+
+    [UsedImplicitly]
+    public static ErrorDocumentation OverloadedDoc<T>() {
+        throw new InvalidOperationException("the generic overload must never be selected");
+    }
+
+}
+
+[ProvidesErrorsFor("ReaderGenericOnlySource")]
+[UsedImplicitly]
+public static class ReaderGenericOnlyFixture {
+
+    [DocumentedBy("GenericOnlyDoc")]
+    public static object GenericOnlyFactory() {
+        return new object();
+    }
+
+    // The only method with this name is an open generic definition, which is not a usable parameterless factory. The
+    // reference must resolve to "not found" rather than being invoked (invoking an open generic definition throws).
+    [UsedImplicitly]
+    public static ErrorDocumentation GenericOnlyDoc<T>() {
+        return new ErrorDocumentation { Code = "READER_GENERIC_ONLY", Title = "Generic only" };
     }
 
 }

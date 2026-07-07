@@ -170,12 +170,15 @@ public static class AssemblyErrorDocumentationReader {
 
     private static MethodInfo? ResolveDocumentationMethod(Type type, string methodName, List<ErrorDocumentationExtractionFailure> failures) {
         // Resolve by hand rather than Type.GetMethod(name, flags), which throws AmbiguousMatchException when the name
-        // is overloaded. We only ever invoke a parameterless static method, so we filter to that shape; C# forbids two
-        // static parameterless methods sharing a name, so this yields at most one candidate.
+        // is overloaded. We only ever invoke a parameterless static method with no type arguments, so we filter to that
+        // shape. Open generic definitions are excluded: `Foo()` and `Foo<T>()` are distinct, legal overloads that both
+        // look parameterless via reflection, yet an open generic definition cannot be invoked without a type argument
+        // and could never serve as a documentation factory — so it is never a candidate.
         List<MethodInfo> candidates = type
                                      .GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
                                      .Where(method => string.Equals(method.Name, methodName, StringComparison.Ordinal))
                                      .Where(method => method.GetParameters().Length == 0)
+                                     .Where(method => !method.IsGenericMethodDefinition)
                                      .ToList();
 
         if (candidates.Count == 1) { return candidates[0]; }
