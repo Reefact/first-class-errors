@@ -30,14 +30,14 @@ public static class OutcomeTaskExtensions {
     /// </param>
     /// <returns>
     ///     A task that represents the asynchronous operation. The task result contains the <see cref="Outcome{TResult}" />
-    ///     produced by the continuation function if the preceding <see cref="Outcome" /> is successful; otherwise, it contains
-    ///     the original <see cref="Outcome" />.
+    ///     produced by the continuation function if the preceding <see cref="Outcome" /> is successful; otherwise, a failed
+    ///     <see cref="Outcome{TResult}" /> propagating the original error.
     /// </returns>
     /// <remarks>
     ///     This method ensures that the continuation function is executed only if the preceding <see cref="Outcome" /> is
     ///     successful.
-    ///     If the preceding <see cref="Outcome" /> is not successful, the continuation function is not invoked, and the
-    ///     original <see cref="Outcome" /> is returned.
+    ///     If the preceding <see cref="Outcome" /> is not successful, the continuation function is not invoked, and its error
+    ///     is propagated as a failed <see cref="Outcome{TResult}" />.
     /// </remarks>
     public static Task<Outcome<TResult>> Then<TResult>(this Task<Outcome> task, Func<Outcome<TResult>> next)
         where TResult : notnull {
