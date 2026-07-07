@@ -51,12 +51,38 @@ internal static class ConfigurationStore {
         return configuration;
     }
 
-    /// <summary>Writes the configuration to the given path (creating parent directories as needed).</summary>
+    /// <summary>
+    ///     Writes the configuration to the given path (creating parent directories as needed). The write is atomic:
+    ///     the JSON is written to a temporary file in the same directory and then renamed over the target, so a crash
+    ///     mid-write leaves the previous <c>fce.json</c> intact rather than a truncated one.
+    /// </summary>
     public static void Save(string path, CliConfiguration configuration) {
         string? directory = Path.GetDirectoryName(path);
         if (string.IsNullOrEmpty(directory) is false) { Directory.CreateDirectory(directory); }
 
-        File.WriteAllText(path, JsonSerializer.Serialize(configuration, SerializerOptions));
+        string json     = JsonSerializer.Serialize(configuration, SerializerOptions);
+        string tempPath = path + ".tmp";
+
+        // Write the whole payload to a sibling temp file first, then rename it over the target. The rename stays on a
+        // single volume, so a reader only ever sees either the old file or the fully written new one, never a partial write.
+        File.WriteAllText(tempPath, json);
+
+        try {
+            File.Move(tempPath, path, overwrite: true);
+        } catch {
+            TryDelete(tempPath);
+
+            throw;
+        }
+    }
+
+    /// <summary>Best-effort deletion used to clean up a temporary file; a leftover temp is harmless and reused.</summary>
+    private static void TryDelete(string path) {
+        try {
+            File.Delete(path);
+        } catch {
+            // Ignore: cleanup is best-effort, and the next Save overwrites the temp file anyway.
+        }
     }
 
     #endregion
