@@ -17,6 +17,7 @@ This error aggregates every domain rule violated while validating a money transf
 
 ```json
 {
+  "type": "urn:problem:sample-service:money-transfer-invalid",
   "title": "Invalid money transfer.",
   "detail": "The money transfer does not satisfy all the required rules.",
   "code": "MONEY_TRANSFER_INVALID"

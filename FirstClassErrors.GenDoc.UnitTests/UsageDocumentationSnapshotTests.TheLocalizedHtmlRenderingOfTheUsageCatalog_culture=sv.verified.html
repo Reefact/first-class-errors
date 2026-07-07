@@ -158,6 +158,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Publikt svar (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:amount-currency-mismatch&quot;,
   &quot;title&quot;: &quot;Valutakonflikt&quot;,
   &quot;detail&quot;: &quot;De tv&#229; beloppen anv&#228;nder olika valutor och kan inte kombineras.&quot;,
   &quot;code&quot;: &quot;AMOUNT_CURRENCY_MISMATCH&quot;
@@ -193,6 +194,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Publikt svar (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:bank-transaction-file-date-out-of-statement-period&quot;,
   &quot;title&quot;: &quot;Transaktionsdatumet ligger utanf&#246;r utdragsperioden.&quot;,
   &quot;detail&quot;: &quot;Ett transaktionsdatum ligger utanf&#246;r kontoutdragets period.&quot;,
   &quot;code&quot;: &quot;BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD&quot;
@@ -234,6 +236,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Publikt svar (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:bank-transaction-file-statement-total-amount-mismatch&quot;,
   &quot;title&quot;: &quot;Avvikelse i utdragets totalbelopp.&quot;,
   &quot;detail&quot;: &quot;Det angivna totalbeloppet f&#246;r kontoutdraget st&#228;mmer inte med det ber&#228;knade totalbeloppet.&quot;,
   &quot;code&quot;: &quot;BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH&quot;
@@ -267,6 +270,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Publikt svar (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:exchange-rate-service-unavailable&quot;,
   &quot;title&quot;: &quot;V&#228;xelkurstj&#228;nsten &#228;r otillg&#228;nglig.&quot;,
   &quot;detail&quot;: &quot;V&#228;xelkurstj&#228;nsten &#228;r tillf&#228;lligt otillg&#228;nglig; f&#246;rs&#246;k igen senare.&quot;,
   &quot;code&quot;: &quot;EXCHANGE_RATE_SERVICE_UNAVAILABLE&quot;
@@ -306,6 +310,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Publikt svar (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:unsupported-currency-pair&quot;,
   &quot;title&quot;: &quot;Valutapar som inte st&#246;ds.&quot;,
   &quot;detail&quot;: &quot;Det beg&#228;rda valutaparet st&#246;ds inte.&quot;,
   &quot;code&quot;: &quot;UNSUPPORTED_CURRENCY_PAIR&quot;
@@ -349,6 +354,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Publikt svar (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:malformed-statement-payload&quot;,
   &quot;title&quot;: &quot;Felaktig utdragspayload.&quot;,
   &quot;detail&quot;: &quot;Den uppladdade utdragsbeg&#228;ran saknar ett obligatoriskt f&#228;lt eller inneh&#229;ller ett ogiltigt v&#228;rde.&quot;,
   &quot;code&quot;: &quot;MALFORMED_STATEMENT_PAYLOAD&quot;
@@ -388,6 +394,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Publikt svar (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:statement-upload-rate-limited&quot;,
   &quot;title&quot;: &quot;Utdragsuppladdning hastighetsbegr&#228;nsad.&quot;,
   &quot;detail&quot;: &quot;F&#246;r m&#229;nga utdragsuppladdningar skickades under kort tid; f&#246;rs&#246;k igen senare.&quot;,
   &quot;code&quot;: &quot;STATEMENT_UPLOAD_RATE_LIMITED&quot;
@@ -430,6 +437,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Publikt svar (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:money-transfer-amount-not-positive&quot;,
   &quot;title&quot;: &quot;&#214;verf&#246;ringsbeloppet m&#229;ste vara positivt.&quot;,
   &quot;detail&quot;: &quot;&#214;verf&#246;ringsbeloppet m&#229;ste vara st&#246;rre &#228;n noll.&quot;,
   &quot;code&quot;: &quot;MONEY_TRANSFER_AMOUNT_NOT_POSITIVE&quot;
@@ -468,6 +476,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Publikt svar (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:money-transfer-invalid&quot;,
   &quot;title&quot;: &quot;Ogiltig &#246;verf&#246;ring.&quot;,
   &quot;detail&quot;: &quot;&#214;verf&#246;ringen uppfyller inte alla n&#246;dv&#228;ndiga regler.&quot;,
   &quot;code&quot;: &quot;MONEY_TRANSFER_INVALID&quot;
@@ -504,6 +513,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Publikt svar (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:temperature-below-absolute-zero&quot;,
   &quot;title&quot;: &quot;Temperature is invalid.&quot;,
   &quot;detail&quot;: &quot;The temperature -1 K is below absolute zero.&quot;,
   &quot;code&quot;: &quot;TEMPERATURE_BELOW_ABSOLUTE_ZERO&quot;
@@ -514,6 +524,7 @@ pre code { font-size: 0.86rem; white-space: pre; }
 <div class="example">
 <p class="example-label">Publikt svar (RFC 9457)</p>
 <pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:sample-service:temperature-below-absolute-zero&quot;,
   &quot;title&quot;: &quot;Temperature is invalid.&quot;,
   &quot;detail&quot;: &quot;The temperature -280 &#176;C is below absolute zero.&quot;,
   &quot;code&quot;: &quot;TEMPERATURE_BELOW_ABSOLUTE_ZERO&quot;

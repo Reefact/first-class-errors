@@ -30,6 +30,12 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
             throw new LayoutNotSupportedException(Format, request.Layout, SupportedLayouts);
         }
 
+        // This format embeds RFC 9457 examples whose problem type is urn:problem:{service}:{code}. The invariant "an
+        // example carries a real type" is enforced here, where the examples are produced, not only at the CLI edge.
+        if (string.IsNullOrWhiteSpace(request.ServiceName)) {
+            throw new ServiceNameRequiredException(Format);
+        }
+
         // Materialize once, assigning each error a stable title and a unique slug used for file names and anchors.
         IReadOnlyList<Entry>    entries = BuildEntries(catalog);
         MarkdownRendererStrings strings = new(request.Culture);

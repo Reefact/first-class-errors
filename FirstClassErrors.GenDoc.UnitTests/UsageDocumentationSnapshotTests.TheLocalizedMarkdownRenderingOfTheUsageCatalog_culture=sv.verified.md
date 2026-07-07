@@ -47,6 +47,7 @@ Det här felet uppstår när flera belopp används tillsammans i en operation tr
 
 ```json
 {
+  "type": "urn:problem:sample-service:amount-currency-mismatch",
   "title": "Valutakonflikt",
   "detail": "De två beloppen använder olika valutor och kan inte kombineras.",
   "code": "AMOUNT_CURRENCY_MISMATCH"
@@ -89,6 +90,7 @@ Det här felet uppstår när man försöker validera en kontoutdragsfil som inne
 
 ```json
 {
+  "type": "urn:problem:sample-service:bank-transaction-file-date-out-of-statement-period",
   "title": "Transaktionsdatumet ligger utanför utdragsperioden.",
   "detail": "Ett transaktionsdatum ligger utanför kontoutdragets period.",
   "code": "BANK_TRANSACTION_FILE_DATE_OUT_OF_STATEMENT_PERIOD"
@@ -131,6 +133,7 @@ Det här felet uppstår när man försöker validera en kontoutdragsfil vars dek
 
 ```json
 {
+  "type": "urn:problem:sample-service:bank-transaction-file-statement-total-amount-mismatch",
   "title": "Avvikelse i utdragets totalbelopp.",
   "detail": "Det angivna totalbeloppet för kontoutdraget stämmer inte med det beräknade totalbeloppet.",
   "code": "BANK_TRANSACTION_FILE_STATEMENT_TOTAL_AMOUNT_MISMATCH"
@@ -171,6 +174,7 @@ Det här felet uppstår när den externa växelkursleverantören inte kan nås (
 
 ```json
 {
+  "type": "urn:problem:sample-service:exchange-rate-service-unavailable",
   "title": "Växelkurstjänsten är otillgänglig.",
   "detail": "Växelkurstjänsten är tillfälligt otillgänglig; försök igen senare.",
   "code": "EXCHANGE_RATE_SERVICE_UNAVAILABLE"
@@ -211,6 +215,7 @@ Det här felet uppstår när växelkursleverantören inte noterar någon kurs f�
 
 ```json
 {
+  "type": "urn:problem:sample-service:unsupported-currency-pair",
   "title": "Valutapar som inte stöds.",
   "detail": "Det begärda valutaparet stöds inte.",
   "code": "UNSUPPORTED_CURRENCY_PAIR"
@@ -257,6 +262,7 @@ Det här felet uppstår när slutpunkten för uppladdning av utdrag tar emot en 
 
 ```json
 {
+  "type": "urn:problem:sample-service:malformed-statement-payload",
   "title": "Felaktig utdragspayload.",
   "detail": "Den uppladdade utdragsbegäran saknar ett obligatoriskt fält eller innehåller ett ogiltigt värde.",
   "code": "MALFORMED_STATEMENT_PAYLOAD"
@@ -297,6 +303,7 @@ Det här felet uppstår när för många utdragsuppladdningar anländer under et
 
 ```json
 {
+  "type": "urn:problem:sample-service:statement-upload-rate-limited",
   "title": "Utdragsuppladdning hastighetsbegränsad.",
   "detail": "För många utdragsuppladdningar skickades under kort tid; försök igen senare.",
   "code": "STATEMENT_UPLOAD_RATE_LIMITED"
@@ -342,6 +349,7 @@ Det här felet uppstår när en överföring begärs med ett belopp som är noll
 
 ```json
 {
+  "type": "urn:problem:sample-service:money-transfer-amount-not-positive",
   "title": "Överföringsbeloppet måste vara positivt.",
   "detail": "Överföringsbeloppet måste vara större än noll.",
   "code": "MONEY_TRANSFER_AMOUNT_NOT_POSITIVE"
@@ -381,6 +389,7 @@ Det här felet samlar alla domänregler som bröts vid valideringen av en överf
 
 ```json
 {
+  "type": "urn:problem:sample-service:money-transfer-invalid",
   "title": "Ogiltig överföring.",
   "detail": "Överföringen uppfyller inte alla nödvändiga regler.",
   "code": "MONEY_TRANSFER_INVALID"
@@ -424,6 +433,7 @@ This error occurs when trying to instantiate a temperature with a value that is 
 
 ```json
 {
+  "type": "urn:problem:sample-service:temperature-below-absolute-zero",
   "title": "Temperature is invalid.",
   "detail": "The temperature -1 K is below absolute zero.",
   "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"
@@ -440,6 +450,7 @@ This error occurs when trying to instantiate a temperature with a value that is 
 
 ```json
 {
+  "type": "urn:problem:sample-service:temperature-below-absolute-zero",
   "title": "Temperature is invalid.",
   "detail": "The temperature -280 °C is below absolute zero.",
   "code": "TEMPERATURE_BELOW_ABSOLUTE_ZERO"

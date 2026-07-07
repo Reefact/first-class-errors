@@ -26,6 +26,8 @@ public sealed class UsageDocumentationSnapshotTests {
 
     #region Statics members declarations
 
+    private const string SampleService = "sample-service";
+
     // The Usage catalog is now localized, so the snapshots pin the invariant (English) culture to stay deterministic
     // regardless of the machine's culture.
     private static ErrorDocumentationExtractionResult Extract() {
@@ -58,7 +60,7 @@ public sealed class UsageDocumentationSnapshotTests {
 
     [Fact(DisplayName = "The single-file Markdown rendering of the Usage catalog matches its snapshot.")]
     public async Task TheSingleMarkdownRenderingOfTheUsageCatalog() {
-        string markdown = new MarkdownErrorDocumentationRenderer().Render(Extract().Documentation, new RenderRequest(RenderLayouts.Single))[0].Content;
+        string markdown = new MarkdownErrorDocumentationRenderer().Render(Extract().Documentation, new RenderRequest(RenderLayouts.Single, CultureInfo.InvariantCulture, SampleService))[0].Content;
 
         await Verifier.Verify(markdown, extension: "md");
     }
@@ -66,7 +68,7 @@ public sealed class UsageDocumentationSnapshotTests {
     [Fact(DisplayName = "Each file of the split Markdown rendering of the Usage catalog matches its snapshot.")]
     public async Task TheSplitMarkdownRenderingOfTheUsageCatalog() {
         IReadOnlyList<RenderedDocument> documents =
-            new MarkdownErrorDocumentationRenderer().Render(Extract().Documentation, new RenderRequest(RenderLayouts.Split));
+            new MarkdownErrorDocumentationRenderer().Render(Extract().Documentation, new RenderRequest(RenderLayouts.Split, CultureInfo.InvariantCulture, SampleService));
 
         // A single Verify call that emits one snapshot file per produced document (each file its own pure Markdown,
         // no wrapper). A per-document loop would not work: the first Verify throws on a missing snapshot and aborts
@@ -92,7 +94,7 @@ public sealed class UsageDocumentationSnapshotTests {
         CultureInfo cultureInfo = CultureInfo.GetCultureInfo(culture);
 
         string markdown = new MarkdownErrorDocumentationRenderer()
-                         .Render(ExtractFor(cultureInfo).Documentation, new RenderRequest(RenderLayouts.Single, cultureInfo))[0]
+                         .Render(ExtractFor(cultureInfo).Documentation, new RenderRequest(RenderLayouts.Single, cultureInfo, SampleService))[0]
                          .Content;
 
         await Verifier.Verify(markdown, extension: "md").UseParameters(culture);
@@ -100,7 +102,7 @@ public sealed class UsageDocumentationSnapshotTests {
 
     [Fact(DisplayName = "The single-page HTML rendering of the Usage catalog matches its snapshot.")]
     public async Task TheSingleHtmlRenderingOfTheUsageCatalog() {
-        string html = new HtmlErrorDocumentationRenderer().Render(Extract().Documentation, new RenderRequest(RenderLayouts.Single))[0].Content;
+        string html = new HtmlErrorDocumentationRenderer().Render(Extract().Documentation, new RenderRequest(RenderLayouts.Single, CultureInfo.InvariantCulture, SampleService))[0].Content;
 
         await Verifier.Verify(html, extension: "html");
     }
@@ -108,7 +110,7 @@ public sealed class UsageDocumentationSnapshotTests {
     [Fact(DisplayName = "Each file of the split HTML rendering of the Usage catalog matches its snapshot.")]
     public async Task TheSplitHtmlRenderingOfTheUsageCatalog() {
         IReadOnlyList<RenderedDocument> documents =
-            new HtmlErrorDocumentationRenderer().Render(Extract().Documentation, new RenderRequest(RenderLayouts.Split));
+            new HtmlErrorDocumentationRenderer().Render(Extract().Documentation, new RenderRequest(RenderLayouts.Split, CultureInfo.InvariantCulture, SampleService));
 
         // One snapshot file per produced document (pages and assets). The target name is the relative path with its
         // separators flattened so a sub-folder never collides (e.g. assets/app.css and assets/app.js stay distinct).
@@ -134,7 +136,7 @@ public sealed class UsageDocumentationSnapshotTests {
         CultureInfo cultureInfo = CultureInfo.GetCultureInfo(culture);
 
         string html = new HtmlErrorDocumentationRenderer()
-                     .Render(ExtractFor(cultureInfo).Documentation, new RenderRequest(RenderLayouts.Single, cultureInfo))[0]
+                     .Render(ExtractFor(cultureInfo).Documentation, new RenderRequest(RenderLayouts.Single, cultureInfo, SampleService))[0]
                      .Content;
 
         await Verifier.Verify(html, extension: "html").UseParameters(culture);

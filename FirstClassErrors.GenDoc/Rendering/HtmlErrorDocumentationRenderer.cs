@@ -41,6 +41,12 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
             throw new LayoutNotSupportedException(Format, request.Layout, SupportedLayouts);
         }
 
+        // This format embeds RFC 9457 examples whose problem type is urn:problem:{service}:{code}. The invariant "an
+        // example carries a real type" is enforced here, where the examples are produced, not only at the CLI edge.
+        if (string.IsNullOrWhiteSpace(request.ServiceName)) {
+            throw new ServiceNameRequiredException(Format);
+        }
+
         IReadOnlyList<Entry> entries  = BuildEntries(catalog);
         HtmlRendererStrings  strings  = new(request.Culture);
         string               htmlLang = HtmlLang(request.Culture);
