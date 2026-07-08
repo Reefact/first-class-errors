@@ -175,7 +175,7 @@ public abstract class Error {
                     Action<ErrorContextBuilder>? configureContext = null) {
         InstanceId        = Guid.NewGuid();
         Code              = CreateSafeCode(code);
-        OccurredAt        = DateTimeOffset.UtcNow;
+        OccurredAt        = Clock.UtcNow;
         DiagnosticMessage = CoalesceRequiredMessage(diagnosticMessage, MissingDiagnosticMessage);
         ShortMessage      = CoalesceRequiredMessage(shortMessage, MissingShortMessage);
         DetailedMessage   = NormalizeOptionalMessage(detailedMessage);
@@ -205,7 +205,7 @@ public abstract class Error {
                     Action<ErrorContextBuilder>? configureContext = null) {
         InstanceId        = Guid.NewGuid();
         Code              = CreateSafeCode(code);
-        OccurredAt        = DateTimeOffset.UtcNow;
+        OccurredAt        = Clock.UtcNow;
         DiagnosticMessage = CoalesceRequiredMessage(diagnosticMessage, MissingDiagnosticMessage);
         ShortMessage      = CoalesceRequiredMessage(shortMessage, MissingShortMessage);
         DetailedMessage   = NormalizeOptionalMessage(detailedMessage);
@@ -238,7 +238,7 @@ public abstract class Error {
                     Action<ErrorContextBuilder>? configureContext = null) {
         InstanceId        = Guid.NewGuid();
         Code              = CreateSafeCode(code);
-        OccurredAt        = DateTimeOffset.UtcNow;
+        OccurredAt        = Clock.UtcNow;
         DiagnosticMessage = CoalesceRequiredMessage(diagnosticMessage, MissingDiagnosticMessage);
         ShortMessage      = CoalesceRequiredMessage(shortMessage, MissingShortMessage);
         DetailedMessage   = NormalizeOptionalMessage(detailedMessage);

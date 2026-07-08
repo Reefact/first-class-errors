@@ -6,6 +6,8 @@ using JetBrains.Annotations;
 
 using NFluent;
 
+using NSubstitute;
+
 #endregion
 
 namespace FirstClassErrors.UnitTests;
@@ -63,6 +65,28 @@ public sealed class ErrorTests : IDisposable {
         // captured during construction, not that it is strictly greater.
         Check.That(error.OccurredAt >= before).IsTrue();
         Check.That(error.OccurredAt <= after).IsTrue();
+    }
+
+    [Fact(DisplayName = "An error captures its occurrence time from the ambient clock.")]
+    public void AnErrorCapturesItsOccurrenceTimeFromTheAmbientClock() {
+        // Setup
+        ErrorCode      anyErrorCode    = ErrorCodeFactory.CreateAny();
+        string         anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
+        DateTimeOffset instant         = new(2026, 7, 8, 10, 30, 0, TimeSpan.Zero);
+        IClock         clock           = Substitute.For<IClock>();
+        clock.UtcNow.Returns(instant);
+
+        // Exercise
+        using (Clock.Use(clock)) {
+            DomainError error = DomainError.Create(anyErrorCode, anyErrorMessage).WithPublicMessage(anyErrorMessage);
+
+            // Verify: the occurrence time is exactly the mocked instant, no time-window juggling required.
+            Check.That(error.OccurredAt).IsEqualTo(instant);
+        }
+
+        // Verify: the override is restored once the scope ends; a new error no longer sees the mocked instant.
+        DomainError afterScope = DomainError.Create(anyErrorCode, anyErrorMessage).WithPublicMessage(anyErrorMessage);
+        Check.That(afterScope.OccurredAt).IsNotEqualTo(instant);
     }
 
     [Fact(DisplayName = "An error preserves the provided error code.")]
