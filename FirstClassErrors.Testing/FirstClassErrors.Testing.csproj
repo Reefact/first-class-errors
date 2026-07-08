@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Build -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+
+    <!-- XML documentation -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- Version -->
+    <Version>0.1.0</Version>
+
+    <!-- NuGet identity -->
+    <PackageId>FirstClassErrors.Testing</PackageId>
+    <Authors>Sylvain AURAT</Authors>
+    <Company>Reefact</Company>
+
+    <!-- Description -->
+    <Description>
+      Testing helpers for FirstClassErrors: fluent, framework-agnostic assertions on Outcome and Error, plus a freezable clock and instance ids so an error's OccurredAt and InstanceId become deterministic in your tests.
+    </Description>
+
+    <!-- Metadata -->
+    <PackageTags>error-handling;errors;testing;assertions;outcome;clock;determinism;firstclasserrors</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+
+    <!-- Links -->
+    <PackageProjectUrl>https://github.com/Reefact/first-class-errors</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Reefact/first-class-errors.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <Copyright>© Reefact 2026</Copyright>
+
+    <!-- Package assets -->
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
+    <PackageReleaseNotes>Initial release of the FirstClassErrors testing helpers.</PackageReleaseNotes>
+
+    <!-- Generate package -->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\icon.png" Pack="true" PackagePath="/" />
+    <None Include="README.nuget.md" Pack="true" PackagePath="readme.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
+  </ItemGroup>
+
+</Project>

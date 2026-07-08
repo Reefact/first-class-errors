@@ -48,6 +48,10 @@
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>FirstClassErrors.UnitTests</_Parameter1>
     </AssemblyAttribute>
+    <!-- The companion testing package surfaces the internal AmbientClock as a public, mockable seam. -->
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>FirstClassErrors.Testing</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 
   <ItemGroup>

@@ -173,9 +173,9 @@ public abstract class Error {
     protected Error(ErrorCode                    code,
                     string                       diagnosticMessage, string shortMessage, string? detailedMessage,
                     Action<ErrorContextBuilder>? configureContext = null) {
-        InstanceId        = Guid.NewGuid();
+        InstanceId        = AmbientInstanceId.Next();
         Code              = CreateSafeCode(code);
-        OccurredAt        = DateTimeOffset.UtcNow;
+        OccurredAt        = AmbientClock.UtcNow;
         DiagnosticMessage = CoalesceRequiredMessage(diagnosticMessage, MissingDiagnosticMessage);
         ShortMessage      = CoalesceRequiredMessage(shortMessage, MissingShortMessage);
         DetailedMessage   = NormalizeOptionalMessage(detailedMessage);
@@ -203,9 +203,9 @@ public abstract class Error {
                     string                       diagnosticMessage, string shortMessage, string? detailedMessage,
                     Error                        innerError,
                     Action<ErrorContextBuilder>? configureContext = null) {
-        InstanceId        = Guid.NewGuid();
+        InstanceId        = AmbientInstanceId.Next();
         Code              = CreateSafeCode(code);
-        OccurredAt        = DateTimeOffset.UtcNow;
+        OccurredAt        = AmbientClock.UtcNow;
         DiagnosticMessage = CoalesceRequiredMessage(diagnosticMessage, MissingDiagnosticMessage);
         ShortMessage      = CoalesceRequiredMessage(shortMessage, MissingShortMessage);
         DetailedMessage   = NormalizeOptionalMessage(detailedMessage);
@@ -236,9 +236,9 @@ public abstract class Error {
                     string                       diagnosticMessage, string shortMessage, string? detailedMessage,
                     IEnumerable<Error>           innerErrors,
                     Action<ErrorContextBuilder>? configureContext = null) {
-        InstanceId        = Guid.NewGuid();
+        InstanceId        = AmbientInstanceId.Next();
         Code              = CreateSafeCode(code);
-        OccurredAt        = DateTimeOffset.UtcNow;
+        OccurredAt        = AmbientClock.UtcNow;
         DiagnosticMessage = CoalesceRequiredMessage(diagnosticMessage, MissingDiagnosticMessage);
         ShortMessage      = CoalesceRequiredMessage(shortMessage, MissingShortMessage);
         DetailedMessage   = NormalizeOptionalMessage(detailedMessage);

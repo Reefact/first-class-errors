@@ -2,9 +2,13 @@
 
 using System.Diagnostics.CodeAnalysis;
 
+using FirstClassErrors.Testing;
+
 using JetBrains.Annotations;
 
 using NFluent;
+
+using NSubstitute;
 
 #endregion
 
@@ -63,6 +67,66 @@ public sealed class ErrorTests : IDisposable {
         // captured during construction, not that it is strictly greater.
         Check.That(error.OccurredAt >= before).IsTrue();
         Check.That(error.OccurredAt <= after).IsTrue();
+    }
+
+    [Fact(DisplayName = "An error captures its occurrence time from the ambient clock.")]
+    public void AnErrorCapturesItsOccurrenceTimeFromTheAmbientClock() {
+        // Setup
+        ErrorCode      anyErrorCode    = ErrorCodeFactory.CreateAny();
+        string         anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
+        DateTimeOffset instant         = new(2026, 7, 8, 10, 30, 0, TimeSpan.Zero);
+        IClock         clock           = Substitute.For<IClock>();
+        clock.UtcNow.Returns(instant);
+
+        // Exercise
+        using (Clock.Use(clock)) {
+            DomainError error = DomainError.Create(anyErrorCode, anyErrorMessage).WithPublicMessage(anyErrorMessage);
+
+            // Verify: the occurrence time is exactly the mocked instant, no time-window juggling required.
+            Check.That(error.OccurredAt).IsEqualTo(instant);
+        }
+
+        // Verify: the override is restored once the scope ends; a new error no longer sees the mocked instant.
+        DomainError afterScope = DomainError.Create(anyErrorCode, anyErrorMessage).WithPublicMessage(anyErrorMessage);
+        Check.That(afterScope.OccurredAt).IsNotEqualTo(instant);
+    }
+
+    [Fact(DisplayName = "An error captures its instance id from the ambient source.")]
+    public void AnErrorCapturesItsInstanceIdFromTheAmbientSource() {
+        // Setup
+        ErrorCode anyErrorCode    = ErrorCodeFactory.CreateAny();
+        string    anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
+        Guid      fixedId         = new("11111111-1111-1111-1111-111111111111");
+
+        // Exercise
+        using (InstanceIds.UseFixed(fixedId)) {
+            DomainError error = DomainError.Create(anyErrorCode, anyErrorMessage).WithPublicMessage(anyErrorMessage);
+
+            // Verify
+            Check.That(error.InstanceId).IsEqualTo(fixedId);
+        }
+
+        // Verify: the override is restored once the scope ends.
+        DomainError afterScope = DomainError.Create(anyErrorCode, anyErrorMessage).WithPublicMessage(anyErrorMessage);
+        Check.That(afterScope.InstanceId).IsNotEqualTo(fixedId);
+    }
+
+    [Fact(DisplayName = "A custom id source assigns distinct identifiers within the scope.")]
+    public void ACustomIdSourceAssignsDistinctIdentifiersWithinTheScope() {
+        // Setup
+        ErrorCode anyErrorCode    = ErrorCodeFactory.CreateAny();
+        string    anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
+        int       counter         = 0;
+
+        // Exercise: callers who want a sequence roll their own through Use(Func<Guid>).
+        using (InstanceIds.Use(() => new Guid(++counter, 0, 0, new byte[8]))) {
+            DomainError first  = DomainError.Create(anyErrorCode, anyErrorMessage).WithPublicMessage(anyErrorMessage);
+            DomainError second = DomainError.Create(anyErrorCode, anyErrorMessage).WithPublicMessage(anyErrorMessage);
+
+            // Verify
+            Check.That(first.InstanceId).IsEqualTo(new Guid("00000001-0000-0000-0000-000000000000"));
+            Check.That(second.InstanceId).IsEqualTo(new Guid("00000002-0000-0000-0000-000000000000"));
+        }
     }
 
     [Fact(DisplayName = "An error preserves the provided error code.")]

@@ -208,7 +208,7 @@ Well-written errors improve:
 ---
 
 <div align="center">
-<a href="UsagePatterns.en.md">← Usage Patterns</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="OperationalIntegration.en.md">CI/CD and Operational Integration →</a>
+<a href="UsagePatterns.en.md">← Usage Patterns</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="Testing.en.md">Testing Guide →</a>
 </div>
 
 ---

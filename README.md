@@ -211,6 +211,7 @@ See the full documentation:
 - [Writing Errors Guide](doc/WritingErrorsGuide.en.md)
 - [Usage Patterns](doc/UsagePatterns.en.md)
 - [Best Practices](doc/BestPractices.en.md)
+- [Testing Guide](doc/Testing.en.md)
 - [CI/CD and Operational Integration](doc/OperationalIntegration.en.md)
 - [Architecture of the Documentation Pipeline](doc/ArchitectureOfTheDocumentationPipeline.en.md)
 - [Writing a custom renderer](doc/WritingACustomRenderer.en.md)

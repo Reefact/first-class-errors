@@ -1,0 +1,46 @@
+namespace FirstClassErrors.Testing;
+
+/// <summary>
+///     Test-only entry point for controlling the identifier that FirstClassErrors assigns to each error occurrence
+///     (<c>Error.InstanceId</c>). Overriding it makes the otherwise-random id deterministic, which is what snapshot and
+///     equality assertions over a whole error need.
+/// </summary>
+/// <remarks>
+///     <para>
+///         Same contract as <see cref="Clock" />: always scope an override with <c>using</c>; the override flows with
+///         the current execution context and does not leak across parallel tests. Outside a scope — in production — a
+///         fresh <see cref="Guid" /> is generated as before.
+///     </para>
+///     <example>
+///         <code>
+///         using (InstanceIds.UseSequential()) {
+///             MyError first  = MyError.Create(...); // InstanceId 00000001-0000-0000-0000-000000000000
+///             MyError second = MyError.Create(...); // InstanceId 00000002-0000-0000-0000-000000000000
+///         }
+///         </code>
+///     </example>
+/// </remarks>
+public static class InstanceIds {
+
+    /// <summary>
+    ///     Pins every error created within the scope to the same fixed identifier.
+    /// </summary>
+    /// <param name="id">The identifier to assign.</param>
+    /// <returns>A scope that restores the default (random) identifier when disposed.</returns>
+    public static IDisposable UseFixed(Guid id) {
+        return AmbientInstanceId.Use(() => id);
+    }
+
+    /// <summary>
+    ///     Assigns identifiers from the supplied source. Use this for a custom or mocked id strategy.
+    /// </summary>
+    /// <param name="next">A function returning the identifier for each error created within the scope.</param>
+    /// <returns>A scope that restores the default (random) identifier when disposed.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="next" /> is <c>null</c>.</exception>
+    public static IDisposable Use(Func<Guid> next) {
+        if (next is null) { throw new ArgumentNullException(nameof(next)); }
+
+        return AmbientInstanceId.Use(next);
+    }
+
+}
