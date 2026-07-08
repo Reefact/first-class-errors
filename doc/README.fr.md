@@ -211,6 +211,7 @@ Consultez la documentation complète :
 - [Guide d’écriture des erreurs](WritingErrorsGuide.fr.md)
 - [Cas d’usage](UsagePatterns.fr.md)
 - [Bonnes pratiques](BestPractices.fr.md)
+- [Guide des tests](Testing.fr.md)
 - [Intégration CI/CD et exploitation](OperationalIntegration.fr.md)
 - [Architecture du pipeline de documentation](ArchitectureOfTheDocumentationPipeline.fr.md)
 - [Écrire son propre renderer](WritingACustomRenderer.fr.md)

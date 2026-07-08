@@ -208,7 +208,7 @@ Des erreurs bien écrites améliorent :
 ---
 
 <div align="center">
-<a href="UsagePatterns.fr.md">← Cas d’usage</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="OperationalIntegration.fr.md">Intégration CI/CD et exploitation →</a>
+<a href="UsagePatterns.fr.md">← Cas d’usage</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="Testing.fr.md">Guide des tests →</a>
 </div>
 
 ---
