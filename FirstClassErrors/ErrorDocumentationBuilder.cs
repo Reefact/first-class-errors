@@ -48,8 +48,8 @@ internal sealed class ErrorDocumentationBuilder :
                    Description = g.First().Description,
                    ExampleValues = g.Select(x => x.ExampleValue)
                                     .Where(v => v != null)
+                                    .Select(v => v!.ToString())
                                     .Distinct()
-                                    .Select(v => v?.ToString())
                                     .ToArray()
                });
     }
