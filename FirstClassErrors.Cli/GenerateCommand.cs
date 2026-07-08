@@ -133,20 +133,20 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
 
     #region Helpers
 
-    private static string? FirstNonEmpty(string? primary, string? fallback) {
+    internal static string? FirstNonEmpty(string? primary, string? fallback) {
         if (string.IsNullOrWhiteSpace(primary) is false) { return primary; }
         if (string.IsNullOrWhiteSpace(fallback) is false) { return fallback; }
 
         return null;
     }
 
-    private static string NormalizeFormat(string format) {
+    internal static string NormalizeFormat(string format) {
         string normalized = format.Trim().ToLowerInvariant();
 
         return normalized == "md" ? "markdown" : normalized;
     }
 
-    private static CultureInfo ResolveCulture(string language) {
+    internal static CultureInfo ResolveCulture(string language) {
         try {
             return CultureInfo.GetCultureInfo(language.Trim());
         } catch (CultureNotFoundException) {
