@@ -3,6 +3,12 @@
 /// <summary>
 ///     Specifies the method that documents the error produced by the annotated error factory method.
 /// </summary>
+/// <remarks>
+///     The named method is resolved at extraction time as a parameterless, non-generic <c>static</c> method declared on
+///     the <b>same type</b> as the annotated factory. Inherited members are not considered: a documentation method
+///     declared only on a base type is not resolved. Declare the documentation method on the type itself. The FCE006
+///     analyzer reports a reference whose target does not exist on the containing type.
+/// </remarks>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public sealed class DocumentedByAttribute : Attribute {
 
