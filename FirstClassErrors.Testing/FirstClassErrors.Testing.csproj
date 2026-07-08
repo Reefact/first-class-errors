@@ -20,11 +20,11 @@
 
     <!-- Description -->
     <Description>
-      Testing helpers for FirstClassErrors. Override the ambient clock so an error's OccurredAt becomes deterministic in your tests, instead of asserting over a time window.
+      Testing helpers for FirstClassErrors: fluent, framework-agnostic assertions on Outcome and Error, plus a freezable clock and instance ids so an error's OccurredAt and InstanceId become deterministic in your tests.
     </Description>
 
     <!-- Metadata -->
-    <PackageTags>error-handling;errors;testing;clock;time;determinism;firstclasserrors</PackageTags>
+    <PackageTags>error-handling;errors;testing;assertions;outcome;clock;determinism;firstclasserrors</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 
@@ -34,7 +34,20 @@
     <RepositoryType>git</RepositoryType>
 
     <Copyright>© Reefact 2026</Copyright>
+
+    <!-- Package assets -->
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
+    <PackageReleaseNotes>Initial release of the FirstClassErrors testing helpers.</PackageReleaseNotes>
+
+    <!-- Generate package -->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\icon.png" Pack="true" PackagePath="/" />
+    <None Include="README.nuget.md" Pack="true" PackagePath="readme.md" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
