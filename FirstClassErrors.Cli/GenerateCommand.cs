@@ -113,8 +113,11 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
 
             return 0;
         } catch (Exception exception) {
-            // Report expected failures (missing solution, worker crash, …) as a terse line, not a stack trace.
+            // Report expected failures (missing solution, worker crash, …) as a terse line, not a stack trace. The full
+            // exception (type, stack trace, inner exceptions) goes to the debug channel, which surfaces only under
+            // --verbose, so it is available for diagnosis without cluttering the default output.
             logger.Error(exception.Message);
+            logger.Debug(exception.ToString());
 
             return 1;
         }
