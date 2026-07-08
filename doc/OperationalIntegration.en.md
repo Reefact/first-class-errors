@@ -101,7 +101,7 @@ Errors become:
 ---
 
 <div align="center">
-<a href="BestPractices.en.md">← Best Practices</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="ArchitectureOfTheDocumentationPipeline.en.md">Architecture of the Documentation Pipeline →</a>
+<a href="Testing.en.md">← Testing Guide</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="ArchitectureOfTheDocumentationPipeline.en.md">Architecture of the Documentation Pipeline →</a>
 </div>
 
 ---

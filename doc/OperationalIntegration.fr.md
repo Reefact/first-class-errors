@@ -101,7 +101,7 @@ Les erreurs deviennent :
 ---
 
 <div align="center">
-<a href="BestPractices.fr.md">← Bonnes pratiques</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="ArchitectureOfTheDocumentationPipeline.fr.md">Architecture du pipeline de documentation →</a>
+<a href="Testing.fr.md">← Guide des tests</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="ArchitectureOfTheDocumentationPipeline.fr.md">Architecture du pipeline de documentation →</a>
 </div>
 
 ---
