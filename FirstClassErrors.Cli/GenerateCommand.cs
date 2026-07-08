@@ -97,7 +97,8 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
                 FailureBehavior    = strict ? FailureBehavior.Stop : FailureBehavior.Continue,
                 WorkerAssemblyPath = worker,
                 Culture            = culture,
-                Logger             = logger
+                Logger             = logger,
+                CancellationToken  = cancellationToken
             };
 
             IEnumerable<ErrorDocumentation> catalog =
@@ -112,6 +113,13 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
             WriteOutput(documents, renderer.Format, output, logger);
 
             return 0;
+        } catch (OperationCanceledException) {
+            // Cancellation (Ctrl+C) is an abort, not a failure: the child processes are already killed through the
+            // token, so report it as its own concise line and the conventional SIGINT exit code (128 + 2) rather than a
+            // generic error.
+            logger.Error("Generation canceled.");
+
+            return 130;
         } catch (Exception exception) {
             // Report expected failures (missing solution, worker crash, …) as a terse line, not a stack trace. The full
             // exception (type, stack trace, inner exceptions) goes to the debug channel, which surfaces only under

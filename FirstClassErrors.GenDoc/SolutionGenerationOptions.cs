@@ -66,4 +66,12 @@ public sealed class SolutionGenerationOptions {
 
     public IGenerationLogger Logger { get; init; } = new NullGenerationLogger();
 
+    /// <summary>
+    ///     Signals that the generation should be abandoned. When cancellation is requested, the currently running child
+    ///     process (a <c>dotnet</c> build, SDK query, or worker) is killed together with its whole process tree, and the
+    ///     generation stops with an <see cref="OperationCanceledException" /> rather than running to completion. Defaults
+    ///     to <see cref="CancellationToken.None" /> (no cancellation).
+    /// </summary>
+    public CancellationToken CancellationToken { get; init; } = CancellationToken.None;
+
 }
