@@ -20,7 +20,31 @@ namespace FirstClassErrors.Cli;
 /// </summary>
 internal sealed class GenerateCommand : Command<GenerateSettings> {
 
+    #region Fields
+
+    private readonly IErrorDocumentationGenerator _generator;
+
+    #endregion
+
+    #region Constructors & Destructor
+
+    /// <summary>Production constructor used by the CLI host: wires the real generation pipeline.</summary>
+    public GenerateCommand() : this(new SolutionErrorDocumentationGeneratorAdapter()) { }
+
+    /// <summary>Test seam: injects the generation pipeline so it can be substituted by a fake.</summary>
+    internal GenerateCommand(IErrorDocumentationGenerator generator) {
+        _generator = generator;
+    }
+
+    #endregion
+
     protected override int Execute(CommandContext context, GenerateSettings settings, CancellationToken cancellationToken) {
+        // The command body uses no CommandContext state, so it lives in a context-free seam that tests can drive
+        // directly (they need only build a GenerateSettings, not a Spectre CommandContext).
+        return Run(settings, cancellationToken);
+    }
+
+    internal int Run(GenerateSettings settings, CancellationToken cancellationToken) {
         ConsoleGenerationLogger logger = new(settings.Verbose);
 
         try {
@@ -103,8 +127,8 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
 
             IEnumerable<ErrorDocumentation> catalog =
                 hasSolution
-                    ? SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(solution!, options)
-                    : SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies(assemblies, options);
+                    ? _generator.GetErrorDocumentationFrom(solution!, options)
+                    : _generator.GetErrorDocumentationFromAssemblies(assemblies, options);
 
             // The catalog is enumerated here (by the renderer), so generation failures surface as a clean error.
             RenderRequest                   request   = new(layout, culture, serviceName);
