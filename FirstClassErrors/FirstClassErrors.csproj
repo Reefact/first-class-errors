@@ -48,6 +48,10 @@
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>FirstClassErrors.UnitTests</_Parameter1>
     </AssemblyAttribute>
+    <!-- Lets a dynamic-proxy mocking library (NSubstitute/Castle) substitute internal interfaces such as IClock in tests. -->
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>DynamicProxyGenAssembly2</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 
   <ItemGroup>
