@@ -111,14 +111,15 @@ public sealed class ErrorTests : IDisposable {
         Check.That(afterScope.InstanceId).IsNotEqualTo(fixedId);
     }
 
-    [Fact(DisplayName = "Sequential ids assign distinct, ordered identifiers within the scope.")]
-    public void SequentialIdsAssignDistinctOrderedIdentifiersWithinTheScope() {
+    [Fact(DisplayName = "A custom id source assigns distinct identifiers within the scope.")]
+    public void ACustomIdSourceAssignsDistinctIdentifiersWithinTheScope() {
         // Setup
         ErrorCode anyErrorCode    = ErrorCodeFactory.CreateAny();
         string    anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
+        int       counter         = 0;
 
-        // Exercise
-        using (InstanceIds.UseSequential()) {
+        // Exercise: callers who want a sequence roll their own through Use(Func<Guid>).
+        using (InstanceIds.Use(() => new Guid(++counter, 0, 0, new byte[8]))) {
             DomainError first  = DomainError.Create(anyErrorCode, anyErrorMessage).WithPublicMessage(anyErrorMessage);
             DomainError second = DomainError.Create(anyErrorCode, anyErrorMessage).WithPublicMessage(anyErrorMessage);
 
