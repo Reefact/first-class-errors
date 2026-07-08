@@ -91,6 +91,43 @@ public sealed class ErrorTests : IDisposable {
         Check.That(afterScope.OccurredAt).IsNotEqualTo(instant);
     }
 
+    [Fact(DisplayName = "An error captures its instance id from the ambient source.")]
+    public void AnErrorCapturesItsInstanceIdFromTheAmbientSource() {
+        // Setup
+        ErrorCode anyErrorCode    = ErrorCodeFactory.CreateAny();
+        string    anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
+        Guid      fixedId         = new("11111111-1111-1111-1111-111111111111");
+
+        // Exercise
+        using (InstanceIds.UseFixed(fixedId)) {
+            DomainError error = DomainError.Create(anyErrorCode, anyErrorMessage).WithPublicMessage(anyErrorMessage);
+
+            // Verify
+            Check.That(error.InstanceId).IsEqualTo(fixedId);
+        }
+
+        // Verify: the override is restored once the scope ends.
+        DomainError afterScope = DomainError.Create(anyErrorCode, anyErrorMessage).WithPublicMessage(anyErrorMessage);
+        Check.That(afterScope.InstanceId).IsNotEqualTo(fixedId);
+    }
+
+    [Fact(DisplayName = "Sequential ids assign distinct, ordered identifiers within the scope.")]
+    public void SequentialIdsAssignDistinctOrderedIdentifiersWithinTheScope() {
+        // Setup
+        ErrorCode anyErrorCode    = ErrorCodeFactory.CreateAny();
+        string    anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
+
+        // Exercise
+        using (InstanceIds.UseSequential()) {
+            DomainError first  = DomainError.Create(anyErrorCode, anyErrorMessage).WithPublicMessage(anyErrorMessage);
+            DomainError second = DomainError.Create(anyErrorCode, anyErrorMessage).WithPublicMessage(anyErrorMessage);
+
+            // Verify
+            Check.That(first.InstanceId).IsEqualTo(new Guid("00000001-0000-0000-0000-000000000000"));
+            Check.That(second.InstanceId).IsEqualTo(new Guid("00000002-0000-0000-0000-000000000000"));
+        }
+    }
+
     [Fact(DisplayName = "An error preserves the provided error code.")]
     public void ADiagnosableExceptionPreservesTheProvidedErrorCode() {
         // Setup
