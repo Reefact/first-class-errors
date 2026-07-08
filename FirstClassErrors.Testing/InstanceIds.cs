@@ -43,15 +43,4 @@ public static class InstanceIds {
         return AmbientInstanceId.Use(next);
     }
 
-    /// <summary>
-    ///     Assigns readable, monotonically increasing identifiers (<c>00000001-0000-0000-0000-000000000000</c>,
-    ///     <c>00000002-...</c>, ...) so several errors created within the scope get distinct yet stable ids.
-    /// </summary>
-    /// <returns>A scope that restores the default (random) identifier when disposed.</returns>
-    public static IDisposable UseSequential() {
-        int counter = 0;
-
-        return AmbientInstanceId.Use(() => new Guid(++counter, 0, 0, new byte[8]));
-    }
-
 }
