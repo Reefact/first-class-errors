@@ -41,6 +41,18 @@ errors should stay structured, documented, and close to the code.
 * Do not introduce new dependencies without a clear reason.
 * Do not make public API changes unless they are required by the task.
 * Treat renamed error codes, diagnostic IDs, and public types as breaking changes unless explicitly stated otherwise.
+* **Value objects and results are reference types (`class`), never structs.**
+  Types that enforce invariants — `Error` and its hierarchy, `ErrorCode`,
+  `ErrorContextKey`, `Outcome`/`Outcome<T>`, and any future value object — must be
+  declared `class`. A `struct` always exposes an unsuppressable default/parameterless
+  constructor (`default(T)`, `new T[]`, uninitialized fields) that yields a
+  zero-initialized instance bypassing every validating constructor; nullable
+  reference types only warn at compile time and cannot prevent it. A validating
+  class keeps its constructor/factory as the single entry point. Do not convert
+  these types to `struct`/`readonly struct` for allocation reasons: error/result
+  paths are not hot loops, and invariant correctness takes precedence. (Enums such
+  as `Transience` and `ErrorOrigin` are the legitimate value-type case — they carry
+  no invariant to bypass.)
 * Preserve compatibility with **.NET Standard 2.0**.
 * Code style and inspection severities are defined in `FirstClassErrors.sln.DotSettings`
   (ReSharper/Rider). Follow it; do not reformat code against these settings.

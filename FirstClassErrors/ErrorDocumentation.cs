@@ -14,6 +14,13 @@ namespace FirstClassErrors;
 ///     diagnose, and provide examples for specific error cases.
 /// </remarks>
 [DebuggerDisplay("{ToString()}")]
+// AI-NOTE (by design): This is an OUTPUT data model, not part of the enforcement
+// surface. Invariants are guaranteed at *authoring* time by the staged builder
+// (IErrorTitleStage -> ... -> WithExamples); once generated, the documentation is
+// plain, serializable data owned by the consumer. Public setters are intentional
+// (single serializable model, no transport DTO -- see commit 6d629aa; the reader
+// also stamps Source/SourceDescription post-build). Do NOT "fix" this to
+// init/get-only or reintroduce a separate DTO.
 public sealed class ErrorDocumentation {
 
     /// <summary>
