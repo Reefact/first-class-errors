@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Build -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+
+    <!-- XML documentation -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- Version -->
+    <Version>0.1.0</Version>
+
+    <!-- NuGet identity -->
+    <PackageId>FirstClassErrors.Testing</PackageId>
+    <Authors>Sylvain AURAT</Authors>
+    <Company>Reefact</Company>
+
+    <!-- Description -->
+    <Description>
+      Testing helpers for FirstClassErrors. Override the ambient clock so an error's OccurredAt becomes deterministic in your tests, instead of asserting over a time window.
+    </Description>
+
+    <!-- Metadata -->
+    <PackageTags>error-handling;errors;testing;clock;time;determinism;firstclasserrors</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+
+    <!-- Links -->
+    <PackageProjectUrl>https://github.com/Reefact/first-class-errors</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Reefact/first-class-errors.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <Copyright>© Reefact 2026</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
+  </ItemGroup>
+
+</Project>

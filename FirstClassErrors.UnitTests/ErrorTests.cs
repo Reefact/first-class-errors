@@ -2,6 +2,8 @@
 
 using System.Diagnostics.CodeAnalysis;
 
+using FirstClassErrors.Testing;
+
 using JetBrains.Annotations;
 
 using NFluent;

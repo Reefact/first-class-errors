@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
+    <ProjectReference Include="..\FirstClassErrors.Testing\FirstClassErrors.Testing.csproj" />
   </ItemGroup>
 
   <ItemGroup>
