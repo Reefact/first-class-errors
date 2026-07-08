@@ -375,6 +375,33 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
         Check.That(entry.ExampleValues).ContainsExactly("x");
     }
 
+    [Fact(DisplayName = "An error documentation builder deduplicates context example values by their rendered text.")]
+    public void AnErrorDocumentationBuilderDeduplicatesContextExampleValuesByTheirRenderedText() {
+        // Setup: two examples carry distinct reference-type instances that render to the same text. Deduplication must
+        // apply to the rendered string, not to object identity — otherwise reference-unequal values that look identical
+        // in the documentation would appear twice.
+        ErrorContextKey<Label> label = ErrorContextKey.Create<Label>("Label", "A label.");
+        ErrorCode              code  = ErrorCode.Create("ANY_CODE");
+
+        Func<DomainError> ex1 = () => DomainError.Create(
+            code,
+            "m1",
+            ctx => ctx.Add(label, new Label("same"))).WithPublicMessage("m1");
+
+        Func<DomainError> ex2 = () => DomainError.Create(
+            code,
+            "m2",
+            ctx => ctx.Add(label, new Label("same"))).WithPublicMessage("m2");
+
+        // Exercise
+        ErrorDocumentation doc = new ErrorDocumentationBuilder()
+           .WithExamples(ex1, ex2);
+
+        // Verify
+        ErrorContextEntryDocumentation entry = doc.Context.Single(x => x.Key == "Label");
+        Check.That(entry.ExampleValues).ContainsExactly("same");
+    }
+
     [Fact(DisplayName = "An error documentation builder cannot accept a null diagnostics collection.")]
     public void AnErrorDocumentationBuilderCannotAcceptANullDiagnosticsCollection() {
         // Setup
@@ -417,6 +444,25 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
     }
 
     #region Nested types declarations
+
+    /// <summary>
+    ///     A reference type that renders to a fixed text but does not override equality, so two instances built from the
+    ///     same text are reference-unequal yet render identically. Used to prove context example values are deduplicated
+    ///     on their rendered text rather than on object identity.
+    /// </summary>
+    private sealed class Label {
+
+        private readonly string _text;
+
+        public Label(string text) {
+            _text = text;
+        }
+
+        public override string ToString() {
+            return _text;
+        }
+
+    }
 
     private static class StringFactory {
 
