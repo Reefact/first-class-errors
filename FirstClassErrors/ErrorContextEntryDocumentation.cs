@@ -8,6 +8,10 @@
 ///     This class is used to describe the structure and metadata of a context entry in error documentation, enabling
 ///     better understanding and diagnostics of errors.
 /// </remarks>
+// AI-NOTE (by design): OUTPUT data model, like ErrorDocumentation. It is plain,
+// serializable data assembled by the builder (BuildContext) and owned by the
+// consumer once generated. Public setters are intentional (single serializable
+// model, no transport DTO). Do NOT "fix" this to init/get-only.
 public sealed class ErrorContextEntryDocumentation {
 
     /// <summary>
