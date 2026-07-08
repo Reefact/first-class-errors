@@ -162,6 +162,32 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
         }
     }
 
+    [Fact(DisplayName = "Generation is abandoned when cancellation is already requested.")]
+    public void GenerationIsAbandonedWhenCancellationIsRequested() {
+        // Setup: a resolvable assembly and a resolvable worker, so nothing fails on its own — the only reason to stop is
+        // the cancellation. The token is already cancelled, so the per-assembly loop must abandon before launching any
+        // worker process and surface an OperationCanceledException.
+        string assemblyPath = Path.GetTempFileName();
+        string workerPath   = Path.GetTempFileName();
+
+        using CancellationTokenSource cts = new();
+        cts.Cancel();
+
+        SolutionGenerationOptions options = new() {
+            WorkerAssemblyPath = workerPath,
+            CancellationToken  = cts.Token
+        };
+
+        try {
+            // Exercise & verify
+            Check.ThatCode(() => SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies(new[] { assemblyPath }, options))
+                 .Throws<OperationCanceledException>();
+        } finally {
+            File.Delete(assemblyPath);
+            File.Delete(workerPath);
+        }
+    }
+
     [Fact(DisplayName = "Cross-assembly deduplication keeps a single entry per code and warns about the collision.")]
     public void CrossAssemblyDeduplicationWarnsAboutTheCollision() {
         // Setup: the same code declared by two different sources (i.e. two different assemblies' workers).

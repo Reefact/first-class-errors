@@ -30,6 +30,7 @@ public sealed class SolutionGenerationOptionsTests {
         Check.That(options.SdkQueryTimeout).IsEqualTo(TimeSpan.FromMinutes(2));
         Check.That(options.Culture).IsNull();
         Check.That(options.Logger).IsNotNull();
+        Check.That(options.CancellationToken).IsEqualTo(CancellationToken.None);
     }
 
     [Fact(DisplayName = "The default logger accepts every level without throwing.")]

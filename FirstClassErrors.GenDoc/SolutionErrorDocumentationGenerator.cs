@@ -114,7 +114,7 @@ public static class SolutionErrorDocumentationGenerator {
         // the generator free of the heavy Microsoft.Build dependency and handles both .sln and .slnx uniformly.
         string solutionDirectory = Path.GetDirectoryName(solutionPath) ?? ".";
 
-        ProcessResult result = RunProcess("dotnet", ["sln", solutionPath, "list"], solutionDirectory, options.Logger, options.SdkQueryTimeout);
+        ProcessResult result = RunProcess("dotnet", ["sln", solutionPath, "list"], solutionDirectory, options.Logger, options.SdkQueryTimeout, options.CancellationToken);
         if (result.ExitCode != 0) {
             throw new SolutionDocumentationGenerationException(
                 $"Failed to list the projects of solution '{solutionPath}' (exit code {result.ExitCode}).\n{result.StandardError}");
@@ -230,7 +230,7 @@ public static class SolutionErrorDocumentationGenerator {
             if (string.IsNullOrWhiteSpace(additionalArgument) is false) { args.Add(additionalArgument); }
         }
 
-        ProcessResult result = RunProcess("dotnet", args, Path.GetDirectoryName(solutionPath)!, options.Logger, options.BuildTimeout);
+        ProcessResult result = RunProcess("dotnet", args, Path.GetDirectoryName(solutionPath)!, options.Logger, options.BuildTimeout, options.CancellationToken);
 
         if (result.ExitCode != 0) {
             throw new SolutionDocumentationGenerationException(
@@ -248,7 +248,7 @@ public static class SolutionErrorDocumentationGenerator {
 
         args.Add("-nologo");
 
-        ProcessResult result = RunProcess("dotnet", args, Path.GetDirectoryName(projectPath)!, options.Logger, options.SdkQueryTimeout);
+        ProcessResult result = RunProcess("dotnet", args, Path.GetDirectoryName(projectPath)!, options.Logger, options.SdkQueryTimeout, options.CancellationToken);
 
         if (result.ExitCode != 0) {
             return null;
@@ -292,7 +292,7 @@ public static class SolutionErrorDocumentationGenerator {
         return afterName.Trim();
     }
 
-    private static ProcessResult RunProcess(string fileName, IReadOnlyList<string> arguments, string workingDirectory, IGenerationLogger logger, TimeSpan? timeout = null) {
+    private static ProcessResult RunProcess(string fileName, IReadOnlyList<string> arguments, string workingDirectory, IGenerationLogger logger, TimeSpan? timeout = null, CancellationToken cancellationToken = default) {
         ProcessStartInfo psi = new() {
             FileName               = fileName,
             WorkingDirectory       = workingDirectory,
@@ -334,6 +334,18 @@ public static class SolutionErrorDocumentationGenerator {
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
 
+        // Cancellation (e.g. a Ctrl+C forwarded by the CLI host) kills the whole child process tree, so a long-running
+        // build/worker does not outlive the request. The registration is declared after the process so it is disposed
+        // first (reverse declaration order), guaranteeing the callback never fires against the disposed Process handle.
+        // A default (None) token yields a no-op registration.
+        using CancellationTokenRegistration registration = cancellationToken.Register(() => {
+            try {
+                process.Kill(entireProcessTree: true);
+            } catch {
+                // The process may already have exited between the cancellation and the kill.
+            }
+        });
+
         if (timeout is { } limit) {
             if (process.WaitForExit((int)limit.TotalMilliseconds) is false) {
                 try {
@@ -343,6 +355,9 @@ public static class SolutionErrorDocumentationGenerator {
                 }
 
                 process.WaitForExit();
+
+                // A cancellation that raced the timeout is reported as cancellation, not as a spurious timeout.
+                cancellationToken.ThrowIfCancellationRequested();
                 logger.Error($"Process '{fileName}' timed out after {limit} and was killed.");
 
                 return new ProcessResult(-1, stdout.ToString(), stderr.ToString());
@@ -351,6 +366,9 @@ public static class SolutionErrorDocumentationGenerator {
 
         // A final no-argument wait blocks until the async stdout/stderr handlers have flushed.
         process.WaitForExit();
+
+        // When cancellation killed the process, surface it as cancellation rather than as the killed process's exit code.
+        cancellationToken.ThrowIfCancellationRequested();
 
         return new ProcessResult(process.ExitCode, stdout.ToString(), stderr.ToString());
     }
@@ -385,6 +403,10 @@ public static class SolutionErrorDocumentationGenerator {
         List<ErrorDocumentation> results = new();
 
         foreach (string assemblyPath in assemblyPaths) {
+            // Stop launching new workers as soon as cancellation is requested; the running one (if any) is already
+            // killed through the token registration inside RunProcess.
+            options.CancellationToken.ThrowIfCancellationRequested();
+
             // Each assembly is documented in a dedicated worker process, launched against that assembly's own
             // dependency closure (dotnet exec --depsfile ...). This gives a fresh static registry per assembly, binds to
             // the target's own FirstClassErrors version, and isolates a crashing or hanging factory from the generator.
@@ -477,7 +499,7 @@ public static class SolutionErrorDocumentationGenerator {
                 args.Add(options.Culture.Name);
             }
 
-            ProcessResult result = RunProcess("dotnet", args, workerDirectory, options.Logger, options.WorkerTimeout);
+            ProcessResult result = RunProcess("dotnet", args, workerDirectory, options.Logger, options.WorkerTimeout, options.CancellationToken);
 
             if (result.ExitCode != 0) {
                 HandleFailure(options, $"The documentation worker failed (exit code {result.ExitCode}) for '{targetAssemblyPath}'.\n{result.StandardError}");
@@ -501,7 +523,9 @@ public static class SolutionErrorDocumentationGenerator {
             }
 
             return extraction;
-        } catch (Exception ex) when (ex is not SolutionDocumentationGenerationException) {
+        } catch (Exception ex) when (ex is not SolutionDocumentationGenerationException and not OperationCanceledException) {
+            // A cancellation must abandon the whole generation, so it is allowed to propagate rather than being recorded
+            // as a per-assembly failure and swallowed under FailureBehavior.Continue.
             HandleFailure(options, $"Failed to run the documentation worker for '{targetAssemblyPath}'.", ex);
 
             return new ErrorDocumentationExtractionResult([], []);
