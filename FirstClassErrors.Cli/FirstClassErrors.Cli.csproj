@@ -14,6 +14,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="FirstClassErrors.Cli.UnitTests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
     <ProjectReference Include="..\FirstClassErrors.GenDoc\FirstClassErrors.GenDoc.csproj" />
 
