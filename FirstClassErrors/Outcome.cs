@@ -69,7 +69,7 @@ public sealed class Outcome {
     /// <summary>
     ///     Throws the associated exception if the outcome is a failure; otherwise does nothing.
     /// </summary>
-    /// <exception cref="Exception">
+    /// <exception cref="DiagnosableException">
     ///     Thrown if the operation failed, using the exception associated with the failure.
     /// </exception>
     public void ThrowIfFailure() {
@@ -446,7 +446,7 @@ public sealed class Outcome<T>
     /// <returns>
     ///     The result of the operation if it was successful.
     /// </returns>
-    /// <exception cref="Exception">
+    /// <exception cref="DiagnosableException">
     ///     Thrown if the operation failed, using the exception associated with the failure.
     /// </exception>
     /// <remarks>
@@ -462,7 +462,7 @@ public sealed class Outcome<T>
     /// <summary>
     ///     Throws the associated exception if the outcome is a failure; otherwise does nothing.
     /// </summary>
-    /// <exception cref="Exception">
+    /// <exception cref="DiagnosableException">
     ///     Thrown if the operation failed, using the exception associated with the failure.
     /// </exception>
     /// <remarks>
