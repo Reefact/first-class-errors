@@ -10,8 +10,8 @@
     <!-- XML documentation -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-    <!-- Version -->
-    <Version>0.1.0</Version>
+    <!-- Version. This is only a local/dev fallback: release.yml overrides it with -p:Version from the Git tag. -->
+    <Version>0.1.0-dev</Version>
 
     <!-- NuGet identity -->
     <PackageId>FirstClassErrors.Testing</PackageId>
@@ -38,7 +38,7 @@
     <!-- Package assets -->
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>readme.md</PackageReadmeFile>
-    <PackageReleaseNotes>Initial release of the FirstClassErrors testing helpers.</PackageReleaseNotes>
+    <PackageReleaseNotes>Initial preview release of the FirstClassErrors testing helpers.</PackageReleaseNotes>
 
     <!-- Generate package -->
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
