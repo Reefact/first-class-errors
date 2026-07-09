@@ -1,6 +1,7 @@
 ﻿#region Usings declarations
 
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 #endregion
 
@@ -72,6 +73,13 @@ public sealed class ErrorCode : IEquatable<ErrorCode> {
     /// <param name="errorCode">The <see cref="ErrorCode" /> instance to convert.</param>
     /// <returns>The string representation of the specified <see cref="ErrorCode" />.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="errorCode" /> is <c>null</c>.</exception>
+    [SuppressMessage("Major Code Smell", "S3877:Exceptions should not be thrown from unexpected methods",
+                     Justification =
+                         "Deliberate technical guard, not domain logic: it turns the opaque NullReferenceException " +
+                         "that the following 'errorCode._code' would raise into a clear ArgumentNullException(nameof(errorCode)). " +
+                         "ErrorCode is a reference type still reachable as null via null-forgiving casts, default(ErrorCode), " +
+                         "reflection, or consumers without nullable reference types enabled. The conversion stays implicit to " +
+                         "avoid a breaking public API change, since null only arises on caller bug paths, never from legitimate use.")]
     public static implicit operator string(ErrorCode errorCode) {
         if (errorCode is null) { throw new ArgumentNullException(nameof(errorCode)); }
 
