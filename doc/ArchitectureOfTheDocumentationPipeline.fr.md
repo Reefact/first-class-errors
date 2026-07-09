@@ -82,7 +82,7 @@ Cela produit un **catalogue global des erreurs** pour l’application ou le syst
 
 ### Activer un projet (opt-in)
 
-La génération au niveau de la solution est **opt-in par projet** : un projet n’est documenté que si son fichier de build définit la propriété MSBuild
+La génération au niveau de la solution est **opt-in par projet** : un projet n’est documenté que si son fichier projet (`.csproj`) définit la propriété MSBuild
 
 ```xml
 <PropertyGroup>
@@ -100,7 +100,7 @@ Chaque projet découvert dans la solution est alors traité ainsi :
 
 Cela limite le catalogue — et les workers lancés pour le produire — aux projets qui définissent réellement des erreurs applicatives, plutôt qu’à tous les projets de la solution.
 
-La propriété est un **marqueur lu directement dans le fichier projet**, pas un interrupteur de build MSBuild : rien ne la consomme lors d’un simple `dotnet build`, et passer `-p:GenerateErrorDocumentation=…` sur une ligne de commande de build n’a aucun effet. Le mode `--assemblies` n’est pas soumis à ce filtre : il documente exactement les binaires que vous nommez.
+La propriété est un **marqueur lu directement dans le fichier projet**, pas un interrupteur de build MSBuild : rien ne la consomme lors d’un simple `dotnet build`, et passer `-p:GenerateErrorDocumentation=…` sur une ligne de commande de build n’a aucun effet. Parce qu’elle est lue dans le XML du projet plutôt qu’évaluée par MSBuild, elle doit être déclarée littéralement dans le `.csproj` : une valeur héritée d’un `Directory.Build.props` partagé, apportée par un import, ou conditionnée par un `Condition` MSBuild n’est pas prise en compte. Le mode `--assemblies` n’est pas soumis à ce filtre : il documente exactement les binaires que vous nommez.
 
 > Pour les appels programmatiques, `SolutionGenerationOptions` expose `OptInPropertyName` (renommer le marqueur) et `IncludeProjectsWithoutOptIn` (documenter tous les projets sans distinction). La CLI `fce` utilise les valeurs par défaut ci-dessus.
 
