@@ -35,20 +35,15 @@ public sealed class UsageDocumentationSnapshotTests {
     }
 
     private static ErrorDocumentationExtractionResult ExtractFor(CultureInfo culture) {
-        // Pin BOTH the formatting culture (CurrentCulture: dates, numbers, ...) and the resource culture
-        // (CurrentUICulture: localized strings). Living examples format context values such as DateOnly via
-        // CurrentCulture, so pinning only the UI culture leaves that output at the mercy of the machine's locale
-        // (e.g. "2/2/2024" on a US Windows runner vs "02/02/2024" under the invariant culture). This mirrors the
-        // worker, which sets both cultures before extraction.
-        CultureInfo previousCulture   = CultureInfo.CurrentCulture;
-        CultureInfo previousUiCulture = CultureInfo.CurrentUICulture;
-        CultureInfo.CurrentCulture   = culture;
+        // Only the resource (UI) culture is overridden here, to exercise the localized error content. The formatting
+        // culture stays invariant (pinned assembly-wide in ModuleInitializer) so example values such as a DateOnly
+        // render identically on every machine, and the generated documentation stays reproducible.
+        CultureInfo previous = CultureInfo.CurrentUICulture;
         CultureInfo.CurrentUICulture = culture;
         try {
             return AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(typeof(Temperature).Assembly);
         } finally {
-            CultureInfo.CurrentCulture   = previousCulture;
-            CultureInfo.CurrentUICulture = previousUiCulture;
+            CultureInfo.CurrentUICulture = previous;
         }
     }
 
