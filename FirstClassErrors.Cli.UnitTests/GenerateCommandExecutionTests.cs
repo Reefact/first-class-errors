@@ -20,7 +20,7 @@ public sealed class GenerateCommandExecutionTests {
         RecordingLogger   logger    = new();
         GenerateCommand   command   = new(generator, new RecordingOutputSink(), _ => logger);
         GenerateSettings settings = new() {
-            ConfigPath    = NonExistentConfigPath(),
+            ConfigPath    = CliTestHelpers.NonExistentConfigPath(),
             SolutionPath  = "app.sln",
             AssemblyPaths = ["lib.dll"]
         };
@@ -39,7 +39,7 @@ public sealed class GenerateCommandExecutionTests {
         // Setup
         ThrowingGenerator generator = new();
         GenerateCommand   command   = new(generator, new RecordingOutputSink(), _ => new RecordingLogger());
-        GenerateSettings  settings  = new() { ConfigPath = NonExistentConfigPath() };
+        GenerateSettings  settings  = new() { ConfigPath = CliTestHelpers.NonExistentConfigPath() };
 
         // Exercise
         int exitCode = command.Run(settings, CancellationToken.None);
@@ -63,7 +63,7 @@ public sealed class GenerateCommandExecutionTests {
 
                 return new RecordingLogger();
             });
-        GenerateSettings settings = new() { ConfigPath = NonExistentConfigPath(), Verbose = verbose };
+        GenerateSettings settings = new() { ConfigPath = CliTestHelpers.NonExistentConfigPath(), Verbose = verbose };
 
         // Exercise
         command.Run(settings, CancellationToken.None);
@@ -79,7 +79,7 @@ public sealed class GenerateCommandExecutionTests {
         RecordingLogger logger  = new();
         GenerateCommand command = new(new CancellingGenerator(), new RecordingOutputSink(), _ => logger);
         GenerateSettings settings = new() {
-            ConfigPath   = NonExistentConfigPath(),
+            ConfigPath   = CliTestHelpers.NonExistentConfigPath(),
             SolutionPath = "app.sln",
             Format       = "json"
         };
@@ -91,16 +91,6 @@ public sealed class GenerateCommandExecutionTests {
         Check.That(exitCode).IsEqualTo(130);
         Check.That(logger.Errors).Contains("Generation canceled.");
     }
-
-    #region Helpers
-
-    // A path that is guaranteed not to exist, so ConfigurationStore.Load returns an empty configuration and the test
-    // is independent of any fce.json in the working directory.
-    private static string NonExistentConfigPath() {
-        return Path.Combine(Path.GetTempPath(), $"fce-absent-config-{Guid.NewGuid():N}.json");
-    }
-
-    #endregion
 
     #region Nested types declarations
 
