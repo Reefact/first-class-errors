@@ -1,5 +1,7 @@
 ﻿#region Usings declarations
 
+using System.Diagnostics;
+
 using FirstClassErrors.Usage.Utils;
 
 #endregion
@@ -14,6 +16,7 @@ namespace FirstClassErrors.Usage.Model;
 ///     how documentation attributes are applied in a concrete domain scenario.
 ///     This type is not intended to be a full or production-ready Value Object implementation.
 /// </remarks>
+[DebuggerDisplay("{ToString()}")]
 public sealed class Amount : IEquatable<Amount>, IComparable<Amount> {
 
     #region Constructors declarations

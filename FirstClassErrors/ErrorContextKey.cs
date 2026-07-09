@@ -39,7 +39,7 @@ namespace FirstClassErrors;
 ///                      .ToException();
 ///     </code>
 /// </example>
-[DebuggerDisplay("{Name}")]
+[DebuggerDisplay("{ToString()}")]
 public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
 
     #region Statics members declarations
