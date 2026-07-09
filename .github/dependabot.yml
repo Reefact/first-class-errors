@@ -9,6 +9,14 @@ updates:
     open-pull-requests-limit: 10
     commit-message:
       prefix: "build"
+    ignore:
+      # The analyzer's Roslyn floor (RoslynFloorVersion in Directory.Build.props) is a product decision,
+      # not routine maintenance: bumping Microsoft.CodeAnalysis.* raises the minimum host compiler able to
+      # load the shipped analyzer and breaks it (CS8032) on older SDKs/IDEs. Real enforcement is
+      # RoslynFloorTests plus the floor CI job; this only stops Dependabot re-proposing the bump. A single
+      # nuget config cannot scope the rule to one project, so these also freeze in the analyzer test project.
+      - dependency-name: "Microsoft.CodeAnalysis.CSharp"
+      - dependency-name: "Microsoft.CodeAnalysis.Common"
 
   - package-ecosystem: "github-actions"
     directory: "/"
