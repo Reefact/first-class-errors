@@ -129,6 +129,23 @@ public sealed class ErrorTests : IDisposable {
         }
     }
 
+    [Fact(DisplayName = "UseSequential assigns readable, monotonically increasing identifiers within the scope.")]
+    public void UseSequentialAssignsMonotonicIdentifiersWithinTheScope() {
+        // Setup
+        ErrorCode anyErrorCode    = ErrorCodeFactory.CreateAny();
+        string    anyErrorMessage = ErrorMessageFactory.CreateAnyMessage();
+
+        // Exercise
+        using (InstanceIds.UseSequential()) {
+            DomainError first  = DomainError.Create(anyErrorCode, anyErrorMessage).WithPublicMessage(anyErrorMessage);
+            DomainError second = DomainError.Create(anyErrorCode, anyErrorMessage).WithPublicMessage(anyErrorMessage);
+
+            // Verify
+            Check.That(first.InstanceId).IsEqualTo(new Guid("00000001-0000-0000-0000-000000000000"));
+            Check.That(second.InstanceId).IsEqualTo(new Guid("00000002-0000-0000-0000-000000000000"));
+        }
+    }
+
     [Fact(DisplayName = "An error preserves the provided error code.")]
     public void ADiagnosableExceptionPreservesTheProvidedErrorCode() {
         // Setup
