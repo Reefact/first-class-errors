@@ -92,26 +92,4 @@ public sealed class GenerateCommandExecutionTests {
         Check.That(logger.Errors).Contains("Generation canceled.");
     }
 
-    #region Nested types declarations
-
-    private sealed class ThrowingGenerator : IErrorDocumentationGenerator {
-
-        public bool WasInvoked { get; private set; }
-
-        public IEnumerable<ErrorDocumentation> GetErrorDocumentationFrom(string solutionPath, SolutionGenerationOptions options) {
-            WasInvoked = true;
-
-            throw new InvalidOperationException("The generator must not be invoked on this path.");
-        }
-
-        public IEnumerable<ErrorDocumentation> GetErrorDocumentationFromAssemblies(IReadOnlyList<string> assemblyPaths, SolutionGenerationOptions options) {
-            WasInvoked = true;
-
-            throw new InvalidOperationException("The generator must not be invoked on this path.");
-        }
-
-    }
-
-    #endregion
-
 }

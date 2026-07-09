@@ -6,6 +6,25 @@ using FirstClassErrors.GenDoc;
 
 namespace FirstClassErrors.Cli.UnitTests;
 
+/// <summary>A generator that records whether it was reached and fails if it ever is; for "must not generate" paths.</summary>
+internal sealed class ThrowingGenerator : IErrorDocumentationGenerator {
+
+    public bool WasInvoked { get; private set; }
+
+    public IEnumerable<ErrorDocumentation> GetErrorDocumentationFrom(string solutionPath, SolutionGenerationOptions options) {
+        WasInvoked = true;
+
+        throw new InvalidOperationException("The generator must not be invoked on this path.");
+    }
+
+    public IEnumerable<ErrorDocumentation> GetErrorDocumentationFromAssemblies(IReadOnlyList<string> assemblyPaths, SolutionGenerationOptions options) {
+        WasInvoked = true;
+
+        throw new InvalidOperationException("The generator must not be invoked on this path.");
+    }
+
+}
+
 /// <summary>A generator that records nothing and returns an empty catalog; used when the generator is irrelevant.</summary>
 internal sealed class StubGenerator : IErrorDocumentationGenerator {
 
