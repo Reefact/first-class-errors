@@ -1,3 +1,9 @@
+#region Usings declarations
+
+using System.Diagnostics;
+
+#endregion
+
 namespace FirstClassErrors.GenDoc;
 
 /// <summary>
@@ -5,6 +11,7 @@ namespace FirstClassErrors.GenDoc;
 ///     be loaded, a <c>[DocumentedBy]</c> reference that could not be resolved, a documentation factory that threw, or
 ///     a duplicate error code whose documentation had to be dropped to keep the catalog single-valued.
 /// </summary>
+[DebuggerDisplay("{ToString()}")]
 public sealed class ErrorDocumentationExtractionFailure {
 
     #region Constructors declarations

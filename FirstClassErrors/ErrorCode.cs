@@ -1,8 +1,15 @@
-﻿namespace FirstClassErrors;
+﻿#region Usings declarations
+
+using System.Diagnostics;
+
+#endregion
+
+namespace FirstClassErrors;
 
 /// <summary>
 ///     Represents a stable identifier for a specific error condition.
 /// </summary>
+[DebuggerDisplay("{ToString()}")]
 public sealed class ErrorCode : IEquatable<ErrorCode> {
 
     #region Statics members declarations
