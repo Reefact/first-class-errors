@@ -22,4 +22,15 @@
     <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
+  <!--
+    The Roslyn floor for the shipped analyzer. FirstClassErrors.Analyzers is compiled against this version
+    of Microsoft.CodeAnalysis.*, which is the MINIMUM host compiler able to load it once it is packed into
+    FirstClassErrors and delivered to consumers. A higher version makes the analyzer fail to load (CS8032)
+    on older SDKs/IDEs. Kept here as the single source of truth so the analyzer csproj (the pin) and the
+    guarding test (RoslynFloorTests, via AssemblyMetadata) can never diverge. 4.8.0 == VS 2022 17.8 / .NET 8 SDK.
+  -->
+  <PropertyGroup>
+    <RoslynFloorVersion>4.8.0</RoslynFloorVersion>
+  </PropertyGroup>
+
 </Project>
