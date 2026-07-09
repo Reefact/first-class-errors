@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <!-- Opt-in marker for the FirstClassErrors error-documentation generator, NOT a build switch.
+         The GenDoc tool ("fce generate") reads this property straight from the project XML
+         (SolutionErrorDocumentationGenerator.ReadMsBuildProperty via XDocument.Load) to decide which
+         projects to document; see SolutionGenerationOptions.OptInPropertyName. No MSBuild target, .props
+         or .targets consumes it, so it has no effect on a plain "dotnet build" and passing
+         -p:GenerateErrorDocumentation=... on the build command line is a no-op. -->
     <GenerateErrorDocumentation>true</GenerateErrorDocumentation>
   </PropertyGroup>
 
