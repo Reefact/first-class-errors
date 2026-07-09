@@ -23,17 +23,19 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
     #region Fields
 
     private readonly IErrorDocumentationGenerator _generator;
+    private readonly IOutputSink                  _outputSink;
 
     #endregion
 
     #region Constructors & Destructor
 
-    /// <summary>Production constructor used by the CLI host: wires the real generation pipeline.</summary>
-    public GenerateCommand() : this(new SolutionErrorDocumentationGeneratorAdapter()) { }
+    /// <summary>Production constructor used by the CLI host: wires the real generation pipeline and output sink.</summary>
+    public GenerateCommand() : this(new SolutionErrorDocumentationGeneratorAdapter(), new ConsoleAndFileOutputSink()) { }
 
-    /// <summary>Test seam: injects the generation pipeline so it can be substituted by a fake.</summary>
-    internal GenerateCommand(IErrorDocumentationGenerator generator) {
-        _generator = generator;
+    /// <summary>Test seam: injects the collaborators so they can be substituted by fakes.</summary>
+    internal GenerateCommand(IErrorDocumentationGenerator generator, IOutputSink outputSink) {
+        _generator  = generator;
+        _outputSink = outputSink;
     }
 
     #endregion
@@ -178,7 +180,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
         }
     }
 
-    private static void WriteOutput(IReadOnlyList<RenderedDocument> documents, string format, string? outputPath, ConsoleGenerationLogger logger) {
+    internal void WriteOutput(IReadOnlyList<RenderedDocument> documents, string format, string? outputPath, ConsoleGenerationLogger logger) {
         // A renderer must honour its contract of returning at least one document. If a (custom) renderer returns an
         // empty list, fail with a clear message rather than an opaque IndexOutOfRange from documents[0] below.
         if (documents.Count == 0) {
@@ -193,7 +195,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
                 throw new InvalidOperationException("This layout produces several files; specify an output directory with --output (or 'output' in the configuration).");
             }
 
-            Console.Out.WriteLine(documents[0].Content);
+            _outputSink.WriteStandardOutput(documents[0].Content);
 
             return;
         }
@@ -204,14 +206,14 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
         // path ends with a separator. Otherwise a single document is written to the given file path verbatim.
         bool asDirectory = documents.Count > 1 || Directory.Exists(fullOutput) || EndsWithSeparator(outputPath!);
         if (asDirectory is false) {
-            WriteFile(fullOutput, documents[0].Content);
+            _outputSink.WriteFile(fullOutput, documents[0].Content);
             logger.Info($"Documentation written to '{fullOutput}'.");
 
             return;
         }
 
         foreach (RenderedDocument document in documents) {
-            WriteFile(ResolveWithinOutput(fullOutput, document.RelativePath), document.Content);
+            _outputSink.WriteFile(ResolveWithinOutput(fullOutput, document.RelativePath), document.Content);
         }
 
         logger.Info($"Documentation written to '{fullOutput}' ({documents.Count} file(s)).");
@@ -224,7 +226,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
     ///     resolve to a location outside the requested target, silently writing files where they are not expected.
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown when the resolved path escapes <paramref name="outputDirectory" />.</exception>
-    private static string ResolveWithinOutput(string outputDirectory, string relativePath) {
+    internal static string ResolveWithinOutput(string outputDirectory, string relativePath) {
         string target = Path.GetFullPath(Path.Combine(outputDirectory, relativePath));
 
         // Compare against the directory suffixed with a separator so a sibling such as 'out-evil' is not mistaken for a
@@ -241,16 +243,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
         return target;
     }
 
-    private static void WriteFile(string path, string content) {
-        string? directory = Path.GetDirectoryName(path);
-        if (string.IsNullOrEmpty(directory) is false) {
-            Directory.CreateDirectory(directory);
-        }
-
-        File.WriteAllText(path, content);
-    }
-
-    private static bool EndsWithSeparator(string path) {
+    internal static bool EndsWithSeparator(string path) {
         return path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar);
     }
 
