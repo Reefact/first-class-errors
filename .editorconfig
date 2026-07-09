@@ -1,0 +1,28 @@
+# EditorConfig — whitespace hygiene only.
+#
+# Code style, naming, and inspection severities remain governed by
+# FirstClassErrors.sln.DotSettings (ReSharper/Rider), which is the single source
+# of truth for this repository. This file intentionally defines NO C# style rules
+# so the two configurations can never disagree; it only covers basic hygiene that
+# applies uniformly across editors (indentation, final newline, trailing whitespace).
+#
+# charset is deliberately left unset: the repository mixes BOM and BOM-less files,
+# and pinning it here would rewrite existing files.
+
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{csproj,props,targets,nuspec,config,xml}]
+indent_size = 2
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
