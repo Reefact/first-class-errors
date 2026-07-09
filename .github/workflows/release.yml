@@ -1,0 +1,92 @@
+name: release
+
+on:
+  push:
+    # Publish on semantic-version tags, e.g. v1.2.3 or v1.2.3-beta.1.
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package version to publish, without the leading "v" (e.g. 1.2.3)'
+        required: true
+
+# Never publish the same ref twice concurrently.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+  NUGET_FEED: 'https://api.nuget.org/v3/index.json'
+
+jobs:
+  pack-push:
+    name: Pack & push NuGet
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            # GITHUB_REF_NAME is the tag name (e.g. v1.2.3); strip the leading "v".
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          if [ -z "$VERSION" ]; then
+            echo "::error::Could not resolve a package version."
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved package version: $VERSION"
+
+      - name: Restore
+        run: dotnet restore FirstClassErrors.sln
+
+      - name: Build
+        run: dotnet build FirstClassErrors.sln -c Release --no-restore -p:Version=${{ steps.version.outputs.version }}
+
+      - name: Test
+        run: dotnet test FirstClassErrors.sln -c Release --no-build --logger "console;verbosity=normal"
+
+      # Only the two projects that carry NuGet identity are packed. The analyzer ships
+      # bundled inside the main package, and the CLI / worker / samples are not published.
+      - name: Pack
+        run: |
+          dotnet pack FirstClassErrors/FirstClassErrors.csproj -c Release --no-build -p:Version=${{ steps.version.outputs.version }} -o artifacts
+          dotnet pack FirstClassErrors.Testing/FirstClassErrors.Testing.csproj -c Release --no-build -p:Version=${{ steps.version.outputs.version }} -o artifacts
+
+      - name: Upload packages as build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkgs
+          path: artifacts/*.nupkg
+          if-no-files-found: error
+
+      - name: Push to NuGet
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "::error::Secret NUGET_API_KEY is not set; cannot push to NuGet."
+            exit 1
+          fi
+          dotnet nuget push "artifacts/*.nupkg" \
+            --api-key "$NUGET_API_KEY" \
+            --source "$NUGET_FEED" \
+            --skip-duplicate
