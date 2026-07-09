@@ -3,16 +3,25 @@ name: analyzers
 on:
   push:
     branches:
-      - analyzers
-      - 'claude/**'
+      - main
   pull_request:
     branches:
       - main
   workflow_dispatch:
 
+# Cancel superseded runs on the same branch / PR.
+concurrency:
+  group: analyzers-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+
 jobs:
-  build-test:
-    name: Build & test analyzers
+  dogfood:
+    name: Dogfood analyzers
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -23,16 +32,9 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Restore
-        run: dotnet restore FirstClassErrors.Analyzers.UnitTests/FirstClassErrors.Analyzers.UnitTests.csproj
-
-      - name: Build
-        run: dotnet build FirstClassErrors.Analyzers.UnitTests/FirstClassErrors.Analyzers.UnitTests.csproj -c Release --no-restore
-
-      - name: Test
-        run: dotnet test FirstClassErrors.Analyzers.UnitTests/FirstClassErrors.Analyzers.UnitTests.csproj -c Release --no-build --logger "console;verbosity=detailed"
-
-      # Dogfood: build the sample with the analyzers wired in. Fails on any Error-severity FCExxx and surfaces
-      # the warnings in the log. Doc generation is off here so this stays a pure analyzer check.
+      # Dogfood: build the sample with the analyzers wired in (FirstClassErrors.Usage.csproj references
+      # them with OutputItemType=Analyzer). Fails the build on any Error-severity FCExxx diagnostic and
+      # surfaces the warnings in the log. The analyzer unit-test suite itself runs as part of the ci
+      # workflow, which builds and tests the whole solution.
       - name: Build usage (dogfood analyzers)
-        run: dotnet build FirstClassErrors.Usage/FirstClassErrors.Usage.csproj -c Release -p:GenerateErrorDocumentation=false
+        run: dotnet build FirstClassErrors.Usage/FirstClassErrors.Usage.csproj -c Release
