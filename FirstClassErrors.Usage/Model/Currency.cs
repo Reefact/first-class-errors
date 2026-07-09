@@ -1,4 +1,10 @@
-﻿namespace FirstClassErrors.Usage.Model;
+﻿#region Usings declarations
+
+using System.Diagnostics;
+
+#endregion
+
+namespace FirstClassErrors.Usage.Model;
 
 /// <summary>
 ///     Represents a currency.
@@ -8,6 +14,7 @@
 ///     how documentation attributes are applied in a concrete domain scenario.
 ///     This type is not intended to be a full or production-ready Value Object implementation.
 /// </remarks>
+[DebuggerDisplay("{ToString()}")]
 public sealed class Currency : IEquatable<Currency> {
 
     #region Static members
