@@ -25,7 +25,7 @@ public sealed class GenerateCommandEndToEndTests {
         RecordingOutputSink sink     = new();
         GenerateCommand command       = new(generator, sink, _ => new RecordingLogger());
         GenerateSettings settings = new() {
-            ConfigPath   = NonExistentConfigPath(),
+            ConfigPath   = CliTestHelpers.NonExistentConfigPath(),
             SolutionPath = "app.sln",
             Format       = "json"
         };
@@ -46,7 +46,7 @@ public sealed class GenerateCommandEndToEndTests {
         RecordingGenerator generator = new(Sample());
         GenerateCommand    command   = new(generator, new RecordingOutputSink(), _ => new RecordingLogger());
         GenerateSettings settings = new() {
-            ConfigPath    = NonExistentConfigPath(),
+            ConfigPath    = CliTestHelpers.NonExistentConfigPath(),
             AssemblyPaths = ["a.dll", "b.dll"],
             Format        = "json"
         };
@@ -66,7 +66,7 @@ public sealed class GenerateCommandEndToEndTests {
         RecordingGenerator generator = new(Sample());
         GenerateCommand    command   = new(generator, new RecordingOutputSink(), _ => new RecordingLogger());
         GenerateSettings settings = new() {
-            ConfigPath    = NonExistentConfigPath(),
+            ConfigPath    = CliTestHelpers.NonExistentConfigPath(),
             SolutionPath  = "app.sln",
             Format        = "json",
             NoBuild       = true,
@@ -97,7 +97,7 @@ public sealed class GenerateCommandEndToEndTests {
         GenerateCommand     command    = new(generator, sink, _ => new RecordingLogger());
         string              outputPath = Path.Combine(Path.GetTempPath(), $"fce-e2e-{Guid.NewGuid():N}.json");
         GenerateSettings settings = new() {
-            ConfigPath   = NonExistentConfigPath(),
+            ConfigPath   = CliTestHelpers.NonExistentConfigPath(),
             SolutionPath = "app.sln",
             Format       = "json",
             OutputPath   = outputPath
@@ -118,7 +118,7 @@ public sealed class GenerateCommandEndToEndTests {
         RecordingGenerator generator = new(Sample());
         GenerateCommand    command   = new(generator, new RecordingOutputSink(), _ => new RecordingLogger());
         GenerateSettings settings = new() {
-            ConfigPath   = NonExistentConfigPath(),
+            ConfigPath   = CliTestHelpers.NonExistentConfigPath(),
             SolutionPath = "app.sln",
             Format       = "markdown"
         };
@@ -138,7 +138,7 @@ public sealed class GenerateCommandEndToEndTests {
         RecordingOutputSink sink      = new();
         GenerateCommand     command   = new(generator, sink, _ => new RecordingLogger());
         GenerateSettings settings = new() {
-            ConfigPath   = NonExistentConfigPath(),
+            ConfigPath   = CliTestHelpers.NonExistentConfigPath(),
             SolutionPath = "app.sln",
             Format       = "md",
             ServiceName  = "temperature-simulator"
@@ -158,7 +158,7 @@ public sealed class GenerateCommandEndToEndTests {
         RecordingGenerator generator = new(Sample());
         GenerateCommand    command   = new(generator, new RecordingOutputSink(), _ => new RecordingLogger());
         GenerateSettings settings = new() {
-            ConfigPath   = NonExistentConfigPath(),
+            ConfigPath   = CliTestHelpers.NonExistentConfigPath(),
             SolutionPath = "app.sln",
             Format       = "json",
             Layout       = "split"
@@ -181,7 +181,7 @@ public sealed class GenerateCommandEndToEndTests {
             new RecordingOutputSink(),
             _ => logger);
         GenerateSettings settings = new() {
-            ConfigPath   = NonExistentConfigPath(),
+            ConfigPath   = CliTestHelpers.NonExistentConfigPath(),
             SolutionPath = "app.sln",
             Format       = "json"
         };
@@ -199,10 +199,6 @@ public sealed class GenerateCommandEndToEndTests {
 
     private static ErrorDocumentation Sample() {
         return new ErrorDocumentation { Code = "SAMPLE_CODE", Title = "Sample error" };
-    }
-
-    private static string NonExistentConfigPath() {
-        return Path.Combine(Path.GetTempPath(), $"fce-absent-config-{Guid.NewGuid():N}.json");
     }
 
     #endregion
