@@ -40,8 +40,8 @@
 
     <Copyright>© Reefact 2026</Copyright>
 
-    <!-- Generate package -->
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <!-- No GeneratePackageOnBuild: packages are produced by `dotnet pack` in the release workflow
+         (.github/workflows/release.yml), so no local or CI build ever emits a stray .nupkg. -->
   </PropertyGroup>
 
   <ItemGroup>

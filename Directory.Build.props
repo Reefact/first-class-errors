@@ -1,0 +1,25 @@
+<Project>
+
+  <!--
+    Shared packaging hardening for the NuGet packages this repository ships
+    (FirstClassErrors and FirstClassErrors.Testing).
+
+    These properties only take effect during `pack`, so they are inert for the
+    non-packable projects (CLI, workers, tests, analyzers) that also import this file.
+  -->
+  <PropertyGroup>
+    <!-- SourceLink lets debuggers step into the exact commit's sources from the published symbols.
+         Since .NET 8 the SDK bundles Source Link and auto-detects the GitHub remote, so no
+         Microsoft.SourceLink.* PackageReference is needed; setting these properties is enough. -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <!-- Ship symbols as a separate .snupkg so the main package stays lean but stays debuggable. -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <!-- Deterministic, path-normalized builds on CI; a no-op for local builds. -->
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+</Project>
