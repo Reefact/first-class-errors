@@ -230,6 +230,134 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
         Check.That(logger.Warnings).IsEmpty();
     }
 
+    [Fact(DisplayName = "A project opted in with a single literal property is included.")]
+    public void ASingleLiteralOptInIsIncluded() {
+        // Setup
+        string project = WriteTempProject("<PropertyGroup><GenerateErrorDocumentation>true</GenerateErrorDocumentation></PropertyGroup>");
+
+        try {
+            // Exercise & verify
+            Check.That(SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, new SolutionGenerationOptions()))
+                 .IsTrue();
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "A project with an explicit falsy opt-in is excluded, even under the include-everything policy.")]
+    public void AnExplicitOptOutIsExcluded() {
+        // Setup
+        string project = WriteTempProject("<PropertyGroup><GenerateErrorDocumentation>false</GenerateErrorDocumentation></PropertyGroup>");
+
+        try {
+            // Exercise & verify
+            Check.That(SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, new SolutionGenerationOptions { IncludeProjectsWithoutOptIn = true }))
+                 .IsFalse();
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "A project without the opt-in is excluded by default.")]
+    public void AnAbsentOptInIsExcludedByDefault() {
+        // Setup
+        string project = WriteTempProject("<PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup>");
+
+        try {
+            // Exercise & verify
+            Check.That(SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, new SolutionGenerationOptions()))
+                 .IsFalse();
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "A project without the opt-in is included under the include-everything policy.")]
+    public void AnAbsentOptInIsIncludedUnderTheIncludeEverythingPolicy() {
+        // Setup
+        string project = WriteTempProject("<PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup>");
+
+        try {
+            // Exercise & verify
+            Check.That(SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, new SolutionGenerationOptions { IncludeProjectsWithoutOptIn = true }))
+                 .IsTrue();
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "An opt-in defined more than once is ambiguous: the project is skipped and the skip is logged (Continue).")]
+    public void ADuplicatedOptInIsSkippedAndLoggedWhenContinuing() {
+        // Setup: two definitions of the marker — its effective value cannot be known without evaluating MSBuild.
+        RecordingGenerationLogger logger = new();
+        SolutionGenerationOptions options = new() {
+            FailureBehavior = FailureBehavior.Continue,
+            Logger          = logger
+        };
+        string project = WriteTempProject(
+            "<PropertyGroup><GenerateErrorDocumentation>false</GenerateErrorDocumentation></PropertyGroup>" +
+            "<PropertyGroup><GenerateErrorDocumentation>true</GenerateErrorDocumentation></PropertyGroup>");
+
+        try {
+            // Exercise
+            bool included = SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, options);
+
+            // Verify: the project is left out, and the skip is traced (never silent) with the property named.
+            Check.That(included).IsFalse();
+            Check.That(logger.Warnings).HasSize(1);
+            Check.That(logger.Warnings[0]).Contains("GenerateErrorDocumentation");
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "An opt-in gated behind a Condition is ambiguous: the project is skipped and the skip is logged (Continue).")]
+    public void AConditionedOptInIsSkippedAndLoggedWhenContinuing() {
+        // Setup: the marker sits under a Condition, so the raw XML value is not necessarily the effective one.
+        RecordingGenerationLogger logger = new();
+        SolutionGenerationOptions options = new() {
+            FailureBehavior = FailureBehavior.Continue,
+            Logger          = logger
+        };
+        string project = WriteTempProject(
+            "<PropertyGroup Condition=\" '$(Configuration)' == 'Release' \"><GenerateErrorDocumentation>true</GenerateErrorDocumentation></PropertyGroup>");
+
+        try {
+            // Exercise
+            bool included = SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, options);
+
+            // Verify
+            Check.That(included).IsFalse();
+            Check.That(logger.Warnings).HasSize(1);
+            Check.That(logger.Warnings[0]).Contains("Condition");
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "An ambiguous opt-in aborts when the failure behavior is Stop.")]
+    public void AnAmbiguousOptInAbortsWhenStopping() {
+        // Setup: default options use FailureBehavior.Stop.
+        string project = WriteTempProject(
+            "<PropertyGroup><GenerateErrorDocumentation>true</GenerateErrorDocumentation></PropertyGroup>" +
+            "<PropertyGroup><GenerateErrorDocumentation>true</GenerateErrorDocumentation></PropertyGroup>");
+
+        try {
+            // Exercise & verify
+            Check.ThatCode(() => SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, new SolutionGenerationOptions()))
+                 .Throws<SolutionDocumentationGenerationException>();
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    private static string WriteTempProject(string body) {
+        string path = Path.ChangeExtension(Path.GetTempFileName(), ".csproj");
+        File.WriteAllText(path, $"<Project Sdk=\"Microsoft.NET.Sdk\">{body}</Project>");
+
+        return path;
+    }
+
     private sealed class RecordingLogger : IGenerationLogger {
 
         public List<string> Warnings { get; } = new();
