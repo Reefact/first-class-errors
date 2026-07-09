@@ -1,0 +1,9 @@
+# Verify snapshot files must keep LF line endings on every platform. Verify 31.21+
+# rejects verified files that contain a carriage return (it no longer normalizes
+# them), so without this rule the Windows CI runner checks *.verified.* out as CRLF
+# (core.autocrlf) and every snapshot test fails on windows-latest.
+#
+# Scope is intentionally narrow (only Verify's files): the repository otherwise
+# leaves line-ending/charset handling untouched on purpose (see .editorconfig).
+*.verified.* text eol=lf
+*.received.* text eol=lf
