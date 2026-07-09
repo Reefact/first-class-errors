@@ -2,15 +2,18 @@
 
   <!-- Floor-SDK dogfood consumer. Deliberately NOT part of FirstClassErrors.sln: ci.yml would build it
        under the .NET 10 SDK, which proves nothing and only causes confusion. It is built solely by the
-       "floor" job in .github/workflows/analyzers.yml, whose nested tools/floor-check/global.json selects
-       the .NET 8 (Roslyn 4.8) SDK.
+       "floor" job in .github/workflows/analyzers.yml.
 
-       Unlike a ProjectReference, this project consumes the PACKED FirstClassErrors NuGet package from a
-       local feed (see nuget.config). That validates two things at once on the Roslyn floor: (1) the
-       analyzer still loads on the oldest supported host — a newer Roslyn reference would fail with CS8032;
-       and (2) the analyzer actually ships where consumers expect it (analyzers/dotnet/cs), because a
-       broken packaging path would leave the analyzer silently absent and this build green-but-meaningless
-       (the "prove the analyzer loaded" step guards against exactly that). -->
+       That job splits the work across two SDKs on purpose:
+         * FirstClassErrors is PACKED under the release SDK (.NET 10) — the .nupkg is what a consumer
+           restores, with the analyzer bundled at analyzers/dotnet/cs.
+         * THIS project then consumes that package under the floor SDK (.NET 8 / Roslyn 4.8, selected by the
+           nested tools/floor-check/global.json), i.e. the oldest supported host.
+
+       So one job proves two things about the actual shipped artifact: (1) the analyzer still loads on the
+       floor — a newer Roslyn reference would fail with CS8032; and (2) it really ships where consumers
+       expect it — a broken analyzers/dotnet/cs path would leave the analyzer silently absent. The "prove
+       the analyzer loaded" grep in the workflow turns either failure red. -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -25,11 +28,12 @@
     <!-- Reuse the dogfood sample's sources verbatim (no duplication); skip its own build output. -->
     <Compile Include="../../FirstClassErrors.Usage/**/*.cs"
              Exclude="../../FirstClassErrors.Usage/obj/**/*.cs;../../FirstClassErrors.Usage/bin/**/*.cs" />
-    <!-- Consume the packed package, NOT a ProjectReference: this is what a real consumer restores, so the
-         analyzer is wired in from the package's analyzers/dotnet/cs folder. The .nupkg is produced into
-         ./local-feed by the floor job's `dotnet pack` step; this Version MUST match the -p:Version passed
-         to that step in .github/workflows/analyzers.yml. -->
-    <PackageReference Include="FirstClassErrors" Version="1.0.0-floorcheck" />
+    <!-- Consume the packed package, NOT a ProjectReference: this is exactly what a downstream consumer
+         restores, so the analyzer is wired in from the package's analyzers/dotnet/cs folder. The floor job
+         packs a FRESH, per-run version (1.0.0-floorcheck-<run>) into ./local-feed so NuGet never serves a
+         stale copy from its global cache. The wildcard below matches whatever that run produced, which keeps
+         the exact version owned solely by the workflow (no "MUST match" duplicated across two files). -->
+    <PackageReference Include="FirstClassErrors" Version="1.0.0-floorcheck-*" />
   </ItemGroup>
 
 </Project>
