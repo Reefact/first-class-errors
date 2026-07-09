@@ -22,20 +22,25 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
 
     #region Fields
 
-    private readonly IErrorDocumentationGenerator _generator;
-    private readonly IOutputSink                  _outputSink;
+    private readonly IErrorDocumentationGenerator      _generator;
+    private readonly IOutputSink                       _outputSink;
+    private readonly Func<bool, IGenerationLogger>     _loggerFactory;
 
     #endregion
 
     #region Constructors & Destructor
 
-    /// <summary>Production constructor used by the CLI host: wires the real generation pipeline and output sink.</summary>
-    public GenerateCommand() : this(new SolutionErrorDocumentationGeneratorAdapter(), new ConsoleAndFileOutputSink()) { }
+    /// <summary>Production constructor used by the CLI host: wires the real pipeline, output sink and console logger.</summary>
+    public GenerateCommand() : this(
+        new SolutionErrorDocumentationGeneratorAdapter(),
+        new ConsoleAndFileOutputSink(),
+        verbose => new ConsoleGenerationLogger(verbose)) { }
 
     /// <summary>Test seam: injects the collaborators so they can be substituted by fakes.</summary>
-    internal GenerateCommand(IErrorDocumentationGenerator generator, IOutputSink outputSink) {
-        _generator  = generator;
-        _outputSink = outputSink;
+    internal GenerateCommand(IErrorDocumentationGenerator generator, IOutputSink outputSink, Func<bool, IGenerationLogger> loggerFactory) {
+        _generator     = generator;
+        _outputSink    = outputSink;
+        _loggerFactory = loggerFactory;
     }
 
     #endregion
@@ -47,7 +52,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
     }
 
     internal int Run(GenerateSettings settings, CancellationToken cancellationToken) {
-        ConsoleGenerationLogger logger = new(settings.Verbose);
+        IGenerationLogger logger = _loggerFactory(settings.Verbose);
 
         try {
             string           configPath    = ConfigurationStore.Resolve(settings.ConfigPath);
@@ -180,7 +185,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
         }
     }
 
-    internal void WriteOutput(IReadOnlyList<RenderedDocument> documents, string format, string? outputPath, ConsoleGenerationLogger logger) {
+    internal void WriteOutput(IReadOnlyList<RenderedDocument> documents, string format, string? outputPath, IGenerationLogger logger) {
         // A renderer must honour its contract of returning at least one document. If a (custom) renderer returns an
         // empty list, fail with a clear message rather than an opaque IndexOutOfRange from documents[0] below.
         if (documents.Count == 0) {
