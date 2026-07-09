@@ -3,9 +3,14 @@
   <!-- Floor-SDK dogfood consumer. Deliberately NOT part of FirstClassErrors.sln: ci.yml would build it
        under the .NET 10 SDK, which proves nothing and only causes confusion. It is built solely by the
        "floor" job in .github/workflows/analyzers.yml, whose nested tools/floor-check/global.json selects
-       the .NET 8 (Roslyn 4.8) SDK. It recompiles the real Usage sources with the analyzer wired in, so if
-       FirstClassErrors.Analyzers ever references a newer Roslyn the analyzer fails to load on the floor
-       host (CS8032) and this build turns red. -->
+       the .NET 8 (Roslyn 4.8) SDK.
+
+       Unlike a ProjectReference, this project consumes the PACKED FirstClassErrors NuGet package from a
+       local feed (see nuget.config). That validates two things at once on the Roslyn floor: (1) the
+       analyzer still loads on the oldest supported host — a newer Roslyn reference would fail with CS8032;
+       and (2) the analyzer actually ships where consumers expect it (analyzers/dotnet/cs), because a
+       broken packaging path would leave the analyzer silently absent and this build green-but-meaningless
+       (the "prove the analyzer loaded" step guards against exactly that). -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -20,10 +25,11 @@
     <!-- Reuse the dogfood sample's sources verbatim (no duplication); skip its own build output. -->
     <Compile Include="../../FirstClassErrors.Usage/**/*.cs"
              Exclude="../../FirstClassErrors.Usage/obj/**/*.cs;../../FirstClassErrors.Usage/bin/**/*.cs" />
-    <ProjectReference Include="../../FirstClassErrors/FirstClassErrors.csproj" />
-    <ProjectReference Include="../../FirstClassErrors.Analyzers/FirstClassErrors.Analyzers.csproj"
-                      OutputItemType="Analyzer"
-                      ReferenceOutputAssembly="false" />
+    <!-- Consume the packed package, NOT a ProjectReference: this is what a real consumer restores, so the
+         analyzer is wired in from the package's analyzers/dotnet/cs folder. The .nupkg is produced into
+         ./local-feed by the floor job's `dotnet pack` step; this Version MUST match the -p:Version passed
+         to that step in .github/workflows/analyzers.yml. -->
+    <PackageReference Include="FirstClassErrors" Version="1.0.0-floorcheck" />
   </ItemGroup>
 
 </Project>
