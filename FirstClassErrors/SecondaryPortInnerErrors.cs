@@ -111,7 +111,7 @@ public sealed class SecondaryPortInnerErrors {
 
     /// <inheritdoc />
     public override string ToString() {
-        return _errors.Count.ToString();
+        return _errors.Count == 1 ? "1 inner error" : $"{_errors.Count} inner errors";
     }
 
 }
