@@ -197,6 +197,8 @@ FirstClassErrors est particulièrement utile si :
 
 FirstClassErrors est livré avec un ensemble d’analyseurs Roslyn (identifiants de règle `FCExxx`) **inclus dans le package NuGet** — référencez le package et ils s’exécutent au build, sans installation supplémentaire. Ils détectent, avant toute exécution, les erreurs que le runtime ou le pipeline de documentation ne feraient sinon apparaître que tard, voire silencieusement : codes d’erreur dupliqués, références `[DocumentedBy]` qui ne résolvent pas, erreurs documentées qui n’atteignent jamais le catalogue, et plus encore.
 
+> **Prérequis compilateur :** les analyseurs inclus sont compilés contre Roslyn 4.8 ; ils se chargent donc dans tout hôte à partir du **SDK .NET 8 / Visual Studio 2022 17.8**. Les SDK/IDE plus anciens ne peuvent pas les charger.
+
 Voir la [référence des règles d’analyse](analyzers/README.fr.md).
 
 ## 📚 Étapes suivantes
