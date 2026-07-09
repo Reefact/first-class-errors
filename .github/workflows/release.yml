@@ -41,15 +41,23 @@ jobs:
       - name: Resolve version
         id: version
         shell: bash
+        # Read the (attacker-controllable) tag name and manual input via the environment rather than interpolating
+        # ${{ ... }} straight into the script, and validate the result against a strict SemVer allowlist. A tag such
+        # as "v1.2.3;id" is a valid Git ref that matches the v*.*.* trigger, so an unchecked value could inject shell
+        # commands into every step that uses it.
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.version }}"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            VERSION="$INPUT_VERSION"
           else
-            # GITHUB_REF_NAME is the tag name (e.g. v1.2.3); strip the leading "v".
-            VERSION="${GITHUB_REF_NAME#v}"
+            # REF_NAME is the tag name (e.g. v1.2.3); strip the leading "v".
+            VERSION="${REF_NAME#v}"
           fi
-          if [ -z "$VERSION" ]; then
-            echo "::error::Could not resolve a package version."
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'; then
+            echo "::error::Invalid version '$VERSION'; expected a SemVer value like 1.2.3 or 1.2.3-beta.1."
             exit 1
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
@@ -59,7 +67,9 @@ jobs:
         run: dotnet restore FirstClassErrors.sln
 
       - name: Build
-        run: dotnet build FirstClassErrors.sln -c Release --no-restore -p:Version=${{ steps.version.outputs.version }}
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: dotnet build FirstClassErrors.sln -c Release --no-restore -p:Version="$VERSION"
 
       - name: Test
         run: dotnet test FirstClassErrors.sln -c Release --no-build --logger "console;verbosity=normal"
@@ -67,9 +77,11 @@ jobs:
       # Only the two projects that carry NuGet identity are packed. The analyzer ships
       # bundled inside the main package, and the CLI / worker / samples are not published.
       - name: Pack
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          dotnet pack FirstClassErrors/FirstClassErrors.csproj -c Release --no-build -p:Version=${{ steps.version.outputs.version }} -o artifacts
-          dotnet pack FirstClassErrors.Testing/FirstClassErrors.Testing.csproj -c Release --no-build -p:Version=${{ steps.version.outputs.version }} -o artifacts
+          dotnet pack FirstClassErrors/FirstClassErrors.csproj -c Release --no-build -p:Version="$VERSION" -o artifacts
+          dotnet pack FirstClassErrors.Testing/FirstClassErrors.Testing.csproj -c Release --no-build -p:Version="$VERSION" -o artifacts
 
       - name: Upload packages as build artifacts
         uses: actions/upload-artifact@v4
