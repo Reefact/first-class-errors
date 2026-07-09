@@ -1,4 +1,10 @@
-﻿namespace FirstClassErrors;
+﻿#region Usings declarations
+
+using System.Globalization;
+
+#endregion
+
+namespace FirstClassErrors;
 
 internal sealed class ErrorDocumentationBuilder :
     IErrorTitleStage,
@@ -48,7 +54,13 @@ internal sealed class ErrorDocumentationBuilder :
                    Description = g.First().Description,
                    ExampleValues = g.Select(x => x.ExampleValue)
                                     .Where(v => v != null)
-                                    .Select(v => v!.ToString())
+                                    // Format example values with the invariant culture so the generated documentation is
+                                    // reproducible regardless of the machine or thread culture. Without this, an IFormattable
+                                    // value such as a DateOnly would render differently per locale (e.g. "2/2/2024" vs
+                                    // "02.02.2024"), making the "living documentation" depend on where it was generated.
+                                    .Select(v => v is IFormattable formattable
+                                                     ? formattable.ToString(null, CultureInfo.InvariantCulture)
+                                                     : v!.ToString())
                                     .Distinct()
                                     .ToArray()
                });

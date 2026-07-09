@@ -1,0 +1,113 @@
+name: release
+
+on:
+  push:
+    # Publish on semantic-version tags, e.g. v1.2.3 or v1.2.3-beta.1.
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package version to publish, without the leading "v" (e.g. 1.2.3)'
+        required: true
+
+# Never publish the same ref twice concurrently.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  # Allow the job to request a GitHub OIDC token, exchanged for a short-lived NuGet API key
+  # via trusted publishing (no long-lived NUGET_API_KEY secret is stored).
+  id-token: write
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+  NUGET_FEED: 'https://api.nuget.org/v3/index.json'
+
+jobs:
+  pack-push:
+    name: Pack & push NuGet
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        # Read the (attacker-controllable) tag name and manual input via the environment rather than interpolating
+        # ${{ ... }} straight into the script, and validate the result against a strict SemVer allowlist. A tag such
+        # as "v1.2.3;id" is a valid Git ref that matches the v*.*.* trigger, so an unchecked value could inject shell
+        # commands into every step that uses it.
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            VERSION="$INPUT_VERSION"
+          else
+            # REF_NAME is the tag name (e.g. v1.2.3); strip the leading "v".
+            VERSION="${REF_NAME#v}"
+          fi
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'; then
+            echo "::error::Invalid version '$VERSION'; expected a SemVer value like 1.2.3 or 1.2.3-beta.1."
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved package version: $VERSION"
+
+      - name: Restore
+        run: dotnet restore FirstClassErrors.sln
+
+      - name: Build
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: dotnet build FirstClassErrors.sln -c Release --no-restore -p:Version="$VERSION"
+
+      - name: Test
+        run: dotnet test FirstClassErrors.sln -c Release --no-build --logger "console;verbosity=normal"
+
+      # Only the two projects that carry NuGet identity are packed. The analyzer ships
+      # bundled inside the main package, and the CLI / worker / samples are not published.
+      - name: Pack
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          dotnet pack FirstClassErrors/FirstClassErrors.csproj -c Release --no-build -p:Version="$VERSION" -o artifacts
+          dotnet pack FirstClassErrors.Testing/FirstClassErrors.Testing.csproj -c Release --no-build -p:Version="$VERSION" -o artifacts
+
+      - name: Upload packages as build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkgs
+          path: artifacts/*.nupkg
+          if-no-files-found: error
+
+      # Trusted publishing: exchange the job's OIDC token for a short-lived, single-use NuGet API key.
+      # Requires a trusted publishing policy on nuget.org (owner Reefact / repo first-class-errors /
+      # workflow release.yml) for each published package, and the NUGET_USER secret set to the nuget.org
+      # account username (profile name, not the email address).
+      - name: NuGet login (OIDC)
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to NuGet
+        env:
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push "artifacts/*.nupkg" \
+            --api-key "$NUGET_API_KEY" \
+            --source "$NUGET_FEED" \
+            --skip-duplicate

@@ -35,6 +35,9 @@ public sealed class UsageDocumentationSnapshotTests {
     }
 
     private static ErrorDocumentationExtractionResult ExtractFor(CultureInfo culture) {
+        // Only the resource (UI) culture is overridden here, to exercise the localized error content. The formatting
+        // culture stays invariant (pinned assembly-wide in ModuleInitializer) so example values such as a DateOnly
+        // render identically on every machine, and the generated documentation stays reproducible.
         CultureInfo previous = CultureInfo.CurrentUICulture;
         CultureInfo.CurrentUICulture = culture;
         try {
