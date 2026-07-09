@@ -59,6 +59,16 @@ jobs:
           # job would stop testing the actual floor. Paired with rollForward: disable in the nested global.json.
           dotnet-version: '8.0.100'
 
+      - name: Pack FirstClassErrors (with bundled analyzer) into the local feed
+        # Produce the real .nupkg a consumer restores — the analyzer is included at analyzers/dotnet/cs by
+        # FirstClassErrors.csproj's _AddAnalyzerToPackage target — and drop it in the local feed that
+        # FloorCheck's nuget.config points at. Packing (not ProjectReference) is what makes this job also
+        # validate the packaging path: a broken analyzers/dotnet/cs would leave the analyzer absent and the
+        # "prove the analyzer loaded" step below would fail. Run from tools/floor-check so the nested
+        # global.json selects the floor SDK here too. -p:Version MUST match FloorCheck.csproj's PackageReference.
+        working-directory: tools/floor-check
+        run: dotnet pack ../../FirstClassErrors/FirstClassErrors.csproj -c Release -p:Version=1.0.0-floorcheck -o ./local-feed
+
       - name: Build on the floor SDK
         # tools/floor-check/global.json selects the .NET 8 (Roslyn 4.8) SDK: the repo-root global.json pins
         # .NET 10 and rollForward: latestFeature never rolls down to a lower major, so building from this

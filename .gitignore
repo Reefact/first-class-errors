@@ -287,3 +287,7 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+# FirstClassErrors floor check (tools/floor-check): CI-generated artifacts, never committed.
+# local-feed holds the packed .nupkg the floor job produces; build.log is its verbose build output.
+tools/floor-check/local-feed/
+tools/floor-check/build.log
