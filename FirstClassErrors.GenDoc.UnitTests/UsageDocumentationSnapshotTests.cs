@@ -35,12 +35,20 @@ public sealed class UsageDocumentationSnapshotTests {
     }
 
     private static ErrorDocumentationExtractionResult ExtractFor(CultureInfo culture) {
-        CultureInfo previous = CultureInfo.CurrentUICulture;
+        // Pin BOTH the formatting culture (CurrentCulture: dates, numbers, ...) and the resource culture
+        // (CurrentUICulture: localized strings). Living examples format context values such as DateOnly via
+        // CurrentCulture, so pinning only the UI culture leaves that output at the mercy of the machine's locale
+        // (e.g. "2/2/2024" on a US Windows runner vs "02/02/2024" under the invariant culture). This mirrors the
+        // worker, which sets both cultures before extraction.
+        CultureInfo previousCulture   = CultureInfo.CurrentCulture;
+        CultureInfo previousUiCulture = CultureInfo.CurrentUICulture;
+        CultureInfo.CurrentCulture   = culture;
         CultureInfo.CurrentUICulture = culture;
         try {
             return AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(typeof(Temperature).Assembly);
         } finally {
-            CultureInfo.CurrentUICulture = previous;
+            CultureInfo.CurrentCulture   = previousCulture;
+            CultureInfo.CurrentUICulture = previousUiCulture;
         }
     }
 
