@@ -14,6 +14,11 @@ concurrency:
   group: analyzers-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Least privilege: this workflow only checks out and builds, so the token
+# needs nothing beyond read access to the repository contents.
+permissions:
+  contents: read
+
 env:
   DOTNET_NOLOGO: 'true'
   DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
