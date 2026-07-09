@@ -17,7 +17,7 @@ public sealed class GenerateCommandExecutionTests {
     public void SpecifyingBothSourcesFailsWithoutInvokingTheGenerator() {
         // Setup: a generator that fails the test if it is ever reached.
         ThrowingGenerator generator = new();
-        GenerateCommand   command   = new(generator);
+        GenerateCommand   command   = new(generator, new RecordingOutputSink());
         GenerateSettings settings = new() {
             ConfigPath    = NonExistentConfigPath(),
             SolutionPath  = "app.sln",
@@ -36,7 +36,7 @@ public sealed class GenerateCommandExecutionTests {
     public void SpecifyingNoSourceFailsWithoutInvokingTheGenerator() {
         // Setup
         ThrowingGenerator generator = new();
-        GenerateCommand   command   = new(generator);
+        GenerateCommand   command   = new(generator, new RecordingOutputSink());
         GenerateSettings  settings  = new() { ConfigPath = NonExistentConfigPath() };
 
         // Exercise
