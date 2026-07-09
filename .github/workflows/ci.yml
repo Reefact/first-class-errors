@@ -51,4 +51,19 @@ jobs:
         run: dotnet build FirstClassErrors.sln -c Release --no-restore
 
       - name: Test
-        run: dotnet test FirstClassErrors.sln -c Release --no-build --logger "console;verbosity=normal"
+        # Collect OpenCover coverage via coverlet.collector (configured in coverage.runsettings).
+        # Reports land under artifacts/coverage/<guid>/coverage.opencover.xml, ready for a Sonar scan.
+        run: >-
+          dotnet test FirstClassErrors.sln -c Release --no-build
+          --collect:"XPlat Code Coverage"
+          --settings coverage.runsettings
+          --results-directory artifacts/coverage
+          --logger "console;verbosity=normal"
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          # Per-OS name so the two matrix legs do not clash when uploading.
+          name: coverage-${{ matrix.os }}
+          path: artifacts/coverage/**/coverage.opencover.xml
+          if-no-files-found: error
