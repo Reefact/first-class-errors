@@ -10,6 +10,9 @@ using NFluent;
 
 namespace FirstClassErrors.UnitTests;
 
+// Mutates the process-global ErrorContextKey registry (ResetForTests), so it must run in the non-parallel
+// collection shared by every registry-touching test — otherwise a reset races with a sibling test's keys.
+[Collection("SmartEnumSideEffects")]
 [TestSubject(typeof(ErrorDocumentationBuilder))]
 public sealed class ErrorDocumentationBuilderTests : IDisposable {
 
