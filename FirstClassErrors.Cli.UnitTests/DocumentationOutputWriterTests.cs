@@ -10,24 +10,20 @@ using NFluent;
 
 namespace FirstClassErrors.Cli.UnitTests;
 
-[TestSubject(typeof(GenerateCommand))]
-public sealed class GenerateCommandOutputTests {
+[TestSubject(typeof(DocumentationOutputWriter))]
+public sealed class DocumentationOutputWriterTests {
 
-    // A logger that records nothing meaningful here; WriteOutput's own Info lines are irrelevant to these tests.
+    // Verbose off, so the writer's Info lines are irrelevant to these tests; a recording logger keeps them off the console.
     private static readonly RecordingLogger QuietLogger = new();
-
-    private static GenerateCommand CommandWith(IOutputSink sink) {
-        return new GenerateCommand(new StubGenerator(), sink, _ => QuietLogger);
-    }
 
     [Fact(DisplayName = "A single document with no output target is written to standard output.")]
     public void ASingleDocumentWithoutATargetGoesToStandardOutput() {
         // Setup
-        RecordingOutputSink sink    = new();
-        GenerateCommand     command = CommandWith(sink);
+        RecordingOutputSink       sink   = new();
+        DocumentationOutputWriter writer = new(sink);
 
         // Exercise
-        command.WriteOutput([new RenderedDocument("errors.json", "{}")], "json", null, QuietLogger);
+        writer.Write([new RenderedDocument("errors.json", "{}")], "json", null, QuietLogger);
 
         // Verify
         Check.That(sink.StandardOutput).ContainsExactly("{}");
@@ -37,12 +33,12 @@ public sealed class GenerateCommandOutputTests {
     [Fact(DisplayName = "A single document with a file target is written to that file.")]
     public void ASingleDocumentWithAFileTargetIsWrittenToThatFile() {
         // Setup
-        RecordingOutputSink sink       = new();
-        GenerateCommand     command    = CommandWith(sink);
-        string              outputPath = Path.Combine(Path.GetTempPath(), $"fce-out-{Guid.NewGuid():N}.json");
+        RecordingOutputSink       sink       = new();
+        DocumentationOutputWriter writer     = new(sink);
+        string                    outputPath = Path.Combine(Path.GetTempPath(), $"fce-out-{Guid.NewGuid():N}.json");
 
         // Exercise
-        command.WriteOutput([new RenderedDocument("errors.json", "{}")], "json", outputPath, QuietLogger);
+        writer.Write([new RenderedDocument("errors.json", "{}")], "json", outputPath, QuietLogger);
 
         // Verify: written to the resolved full path, nothing to standard output.
         Check.That(sink.Files.Keys).ContainsExactly(Path.GetFullPath(outputPath));
@@ -53,24 +49,24 @@ public sealed class GenerateCommandOutputTests {
     [Fact(DisplayName = "Several documents without an output directory are rejected.")]
     public void SeveralDocumentsWithoutATargetAreRejected() {
         // Setup
-        GenerateCommand command = CommandWith(new RecordingOutputSink());
+        DocumentationOutputWriter writer = new(new RecordingOutputSink());
         RenderedDocument[] documents = [
             new("a.md", "a"),
             new("b.md", "b")
         ];
 
         // Exercise & verify
-        Check.ThatCode(() => command.WriteOutput(documents, "markdown", null, QuietLogger))
+        Check.ThatCode(() => writer.Write(documents, "markdown", null, QuietLogger))
              .Throws<InvalidOperationException>();
     }
 
     [Fact(DisplayName = "A renderer that produces no document is rejected.")]
     public void ARendererProducingNoDocumentIsRejected() {
         // Setup
-        GenerateCommand command = CommandWith(new RecordingOutputSink());
+        DocumentationOutputWriter writer = new(new RecordingOutputSink());
 
         // Exercise & verify
-        Check.ThatCode(() => command.WriteOutput([], "json", null, QuietLogger))
+        Check.ThatCode(() => writer.Write([], "json", null, QuietLogger))
              .Throws<InvalidOperationException>();
     }
 
@@ -80,7 +76,7 @@ public sealed class GenerateCommandOutputTests {
         string directory = Path.Combine(Path.GetTempPath(), "fce-out");
 
         // Exercise
-        string resolved = GenerateCommand.ResolveWithinOutput(directory, Path.Combine("nested", "file.md"));
+        string resolved = DocumentationOutputWriter.ResolveWithinOutput(directory, Path.Combine("nested", "file.md"));
 
         // Verify
         Check.That(resolved).IsEqualTo(Path.GetFullPath(Path.Combine(directory, "nested", "file.md")));
@@ -92,7 +88,7 @@ public sealed class GenerateCommandOutputTests {
         string directory = Path.Combine(Path.GetTempPath(), "fce-out");
 
         // Exercise & verify: a '..' segment climbing out of the directory is refused.
-        Check.ThatCode(() => GenerateCommand.ResolveWithinOutput(directory, Path.Combine("..", "escape.md")))
+        Check.ThatCode(() => DocumentationOutputWriter.ResolveWithinOutput(directory, Path.Combine("..", "escape.md")))
              .Throws<InvalidOperationException>();
     }
 
@@ -103,7 +99,7 @@ public sealed class GenerateCommandOutputTests {
         string absolute  = Path.Combine(Path.GetTempPath(), "elsewhere.md");
 
         // Exercise & verify: an absolute path resolves outside the directory and is refused.
-        Check.ThatCode(() => GenerateCommand.ResolveWithinOutput(directory, absolute))
+        Check.ThatCode(() => DocumentationOutputWriter.ResolveWithinOutput(directory, absolute))
              .Throws<InvalidOperationException>();
     }
 
