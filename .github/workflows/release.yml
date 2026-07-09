@@ -18,6 +18,9 @@ concurrency:
 
 permissions:
   contents: read
+  # Allow the job to request a GitHub OIDC token, exchanged for a short-lived NuGet API key
+  # via trusted publishing (no long-lived NUGET_API_KEY secret is stored).
+  id-token: write
 
 env:
   DOTNET_NOLOGO: 'true'
@@ -90,14 +93,20 @@ jobs:
           path: artifacts/*.nupkg
           if-no-files-found: error
 
+      # Trusted publishing: exchange the job's OIDC token for a short-lived, single-use NuGet API key.
+      # Requires a trusted publishing policy on nuget.org (owner Reefact / repo first-class-errors /
+      # workflow release.yml) for each published package, and the NUGET_USER secret set to the nuget.org
+      # account username (profile name, not the email address).
+      - name: NuGet login (OIDC)
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
       - name: Push to NuGet
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
         run: |
-          if [ -z "$NUGET_API_KEY" ]; then
-            echo "::error::Secret NUGET_API_KEY is not set; cannot push to NuGet."
-            exit 1
-          fi
           dotnet nuget push "artifacts/*.nupkg" \
             --api-key "$NUGET_API_KEY" \
             --source "$NUGET_FEED" \
