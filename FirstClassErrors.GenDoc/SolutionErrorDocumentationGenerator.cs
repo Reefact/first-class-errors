@@ -142,20 +142,7 @@ public static class SolutionErrorDocumentationGenerator {
         List<ProjectInfo> included = new();
 
         foreach (ProjectInfo project in projects) {
-            bool? optedIn = TryReadOptInFromProjectFile(project.ProjectPath, options.OptInPropertyName);
-
-            if (optedIn == true) {
-                included.Add(project);
-
-                continue;
-            }
-
-            // An explicit opt-out (property present and set to a falsy value) is always honored, even when
-            // IncludeProjectsWithoutOptIn is true.
-            if (optedIn == false) { continue; }
-
-            // The opt-in property is absent: fall back to the global policy.
-            if (options.IncludeProjectsWithoutOptIn) {
+            if (ShouldIncludeProject(project.ProjectPath, options)) {
                 included.Add(project);
             }
         }
@@ -163,11 +150,43 @@ public static class SolutionErrorDocumentationGenerator {
         return included;
     }
 
-    private static bool? TryReadOptInFromProjectFile(string projectPath, string optInPropertyName) {
-        string? value = ReadMsBuildProperty(projectPath, optInPropertyName);
+    internal static bool ShouldIncludeProject(string projectPath, SolutionGenerationOptions options) {
+        OptInReadResult optIn = ReadOptIn(projectPath, options.OptInPropertyName);
 
-        // Absent property -> no opinion (null); present (even empty) -> its truthiness.
-        return value is null ? null : IsTrue(value);
+        // The opt-in is a marker read straight from the project XML, without MSBuild evaluation. When it is defined more
+        // than once, or gated behind a Condition, its effective value cannot be known here — so we refuse to guess it.
+        // Surfacing it through the normal failure path (a warning under Continue, a hard stop otherwise) rather than
+        // silently picking one occurrence keeps a library about first-class errors honest about its own opt-in: the
+        // project is left out with a trace instead of being documented on a coin toss.
+        if (optIn.IsAmbiguous) {
+            HandleFailure(
+                options,
+                $"Cannot determine the opt-in for project '{projectPath}': the '{options.OptInPropertyName}' property is " +
+                $"{optIn.AmbiguityReason} in the project XML, which GenDoc reads without MSBuild evaluation. Declare it once, " +
+                "literally and unconditionally in the .csproj, or document the assembly explicitly with --assemblies. The project is skipped.");
+
+            return false;
+        }
+
+        if (optIn.OptedIn == true) { return true; }
+
+        // An explicit opt-out (property present and set to a falsy value) is always honored, even when
+        // IncludeProjectsWithoutOptIn is true.
+        if (optIn.OptedIn == false) { return false; }
+
+        // The opt-in property is absent: fall back to the global policy.
+        return options.IncludeProjectsWithoutOptIn;
+    }
+
+    private static OptInReadResult ReadOptIn(string projectPath, string optInPropertyName) {
+        MsBuildPropertyRead read = ReadMsBuildPropertyDetailed(projectPath, optInPropertyName);
+
+        return read.Kind switch {
+            MsBuildPropertyReadKind.Absent    => new OptInReadResult(null, null),
+            MsBuildPropertyReadKind.Ambiguous => new OptInReadResult(null, read.AmbiguityReason),
+            // Present (even empty) -> its truthiness.
+            _                                 => new OptInReadResult(IsTrue(read.Value), null)
+        };
     }
 
     private static string? ResolveTargetPath(string projectPath, SolutionGenerationOptions options) {
@@ -200,22 +219,51 @@ public static class SolutionErrorDocumentationGenerator {
     }
 
     private static string? ReadMsBuildProperty(string projectPath, string propertyName) {
+        // Raw, unevaluated read used for TargetFramework(s) resolution, where an ambiguous read is harmless: the caller
+        // falls back to an authoritative "dotnet msbuild" evaluation when the value is missing or unusable. Preserves the
+        // historical "first occurrence" behavior by collapsing an ambiguous read to its first matched value.
+        MsBuildPropertyRead read = ReadMsBuildPropertyDetailed(projectPath, propertyName);
+
+        return read.Kind == MsBuildPropertyReadKind.Absent ? null : read.Value;
+    }
+
+    private static MsBuildPropertyRead ReadMsBuildPropertyDetailed(string projectPath, string propertyName) {
         // Read a raw, unevaluated property from the project XML. This mirrors what the previous MSBuild-object-model
         // reader saw (ProjectRootElement.Open does not evaluate imports/conditions either), without the dependency.
         // Matching on the element's local name handles both SDK-style (no namespace) and legacy MSBuild-namespaced files.
         try {
             XDocument document = XDocument.Load(projectPath);
 
-            return document
-                  .Descendants()
-                  .Where(element => string.Equals(element.Name.LocalName, "PropertyGroup", StringComparison.OrdinalIgnoreCase))
-                  .SelectMany(propertyGroup => propertyGroup.Elements())
-                  .Where(property => string.Equals(property.Name.LocalName, propertyName, StringComparison.OrdinalIgnoreCase))
-                  .Select(property => property.Value)
-                  .FirstOrDefault();
+            List<XElement> matches = document
+                                    .Descendants()
+                                    .Where(element => string.Equals(element.Name.LocalName, "PropertyGroup", StringComparison.OrdinalIgnoreCase))
+                                    .SelectMany(propertyGroup => propertyGroup.Elements())
+                                    .Where(property => string.Equals(property.Name.LocalName, propertyName, StringComparison.OrdinalIgnoreCase))
+                                    .ToList();
+
+            if (matches.Count == 0) { return MsBuildPropertyRead.Absent(); }
+
+            // The XML is taken verbatim, so a property defined more than once, or gated behind a Condition (on the
+            // element itself or on its enclosing PropertyGroup), has an effective value we cannot compute without
+            // evaluating MSBuild. Report it as ambiguous and let the caller decide, rather than picking one at random.
+            if (matches.Count > 1) {
+                return MsBuildPropertyRead.Ambiguous(matches[0].Value, $"defined {matches.Count} times");
+            }
+
+            if (IsConditioned(matches[0])) {
+                return MsBuildPropertyRead.Ambiguous(matches[0].Value, "defined under an MSBuild Condition");
+            }
+
+            return MsBuildPropertyRead.Single(matches[0].Value);
         } catch {
-            return null;
+            return MsBuildPropertyRead.Absent();
         }
+    }
+
+    private static bool IsConditioned(XElement property) {
+        // MSBuild Condition attributes are unqualified even in legacy namespaced files, so a no-namespace lookup fits both.
+        return property.Attribute("Condition") is not null
+            || property.Parent?.Attribute("Condition") is not null;
     }
 
     private static void DotNetBuild(string solutionPath, SolutionGenerationOptions options) {
@@ -545,6 +593,28 @@ public static class SolutionErrorDocumentationGenerator {
     private sealed record ProjectInfo(string ProjectPath);
 
     private sealed record ProcessResult(int ExitCode, string StandardOutput, string StandardError);
+
+    private enum MsBuildPropertyReadKind {
+
+        Absent,
+        Value,
+        Ambiguous
+
+    }
+
+    private sealed record MsBuildPropertyRead(MsBuildPropertyReadKind Kind, string? Value, string? AmbiguityReason) {
+
+        public static MsBuildPropertyRead Absent()                                => new(MsBuildPropertyReadKind.Absent, null, null);
+        public static MsBuildPropertyRead Single(string?    value)                => new(MsBuildPropertyReadKind.Value, value, null);
+        public static MsBuildPropertyRead Ambiguous(string? value, string reason) => new(MsBuildPropertyReadKind.Ambiguous, value, reason);
+
+    }
+
+    private sealed record OptInReadResult(bool? OptedIn, string? AmbiguityReason) {
+
+        public bool IsAmbiguous => AmbiguityReason is not null;
+
+    }
 
     #endregion
 

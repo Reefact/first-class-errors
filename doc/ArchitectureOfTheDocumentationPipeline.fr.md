@@ -97,10 +97,11 @@ Chaque projet découvert dans la solution est alors traité ainsi :
 | `true`                       | documenté |
 | absente                      | ignoré — le défaut est l’opt-in |
 | `false`                      | toujours ignoré, même quand la politique « tout inclure » est active |
+| déclarée deux fois, ou sous `Condition` | signalé, jamais deviné — un avertissement qui ignore le projet (`Continue`), ou une erreur bloquante |
 
 Cela limite le catalogue — et les workers lancés pour le produire — aux projets qui définissent réellement des erreurs applicatives, plutôt qu’à tous les projets de la solution.
 
-La propriété est un **marqueur lu directement dans le fichier projet**, pas un interrupteur de build MSBuild : rien ne la consomme lors d’un simple `dotnet build`, et passer `-p:GenerateErrorDocumentation=…` sur une ligne de commande de build n’a aucun effet. Parce qu’elle est lue dans le XML du projet plutôt qu’évaluée par MSBuild, elle doit être déclarée littéralement dans le `.csproj` : une valeur héritée d’un `Directory.Build.props` partagé, apportée par un import, ou conditionnée par un `Condition` MSBuild n’est pas prise en compte. Le mode `--assemblies` n’est pas soumis à ce filtre : il documente exactement les binaires que vous nommez.
+La propriété est un **marqueur lu directement dans le fichier projet**, pas un interrupteur de build MSBuild : rien ne la consomme lors d’un simple `dotnet build`, et passer `-p:GenerateErrorDocumentation=…` sur une ligne de commande de build n’a aucun effet. Parce qu’elle est lue dans le XML du projet plutôt qu’évaluée par MSBuild, elle doit être déclarée littéralement dans le `.csproj` : une valeur héritée d’un `Directory.Build.props` partagé ou apportée par un import n’est pas vue, et le projet est alors traité comme si le marqueur était absent. Si le marqueur *est* dans le `.csproj` mais que sa valeur effective ne peut pas être connue depuis le seul XML — déclaré plusieurs fois, ou conditionné par un `Condition` — GenDoc ne devine pas : il signale le projet via le comportement d’échec configuré (un avertissement qui l’ignore en mode `Continue`, une erreur bloquante sinon). Le mode `--assemblies` n’est pas soumis à ce filtre : il documente exactement les binaires que vous nommez.
 
 > Pour les appels programmatiques, `SolutionGenerationOptions` expose `OptInPropertyName` (renommer le marqueur) et `IncludeProjectsWithoutOptIn` (documenter tous les projets sans distinction). La CLI `fce` utilise les valeurs par défaut ci-dessus.
 
