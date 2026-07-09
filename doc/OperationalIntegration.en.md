@@ -16,6 +16,8 @@ A typical pipeline step:
 3. Generate the error catalog (Markdown or JSON)
 4. Publish it as a pipeline artifact or deploy it to a documentation portal
 
+Generation is **opt-in per project**: only projects whose build file sets `<GenerateErrorDocumentation>true</GenerateErrorDocumentation>` are scanned; a project without it is silently skipped. If a fresh pipeline produces an empty catalog, check the opt-in first. See [Opting a project in](ArchitectureOfTheDocumentationPipeline.en.md#opting-a-project-in).
+
 This ensures that documentation always matches the version of the system that is deployed. No manual updates are required, and no drift can occur.
 
 You can emit the catalog per locale by adding `--language <…>` (e.g. a CI matrix over `en`, `fr`, `sv`); file names and anchors stay stable across languages. See [Internationalization](Internationalization.en.md).

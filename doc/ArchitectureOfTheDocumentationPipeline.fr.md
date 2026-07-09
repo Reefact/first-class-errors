@@ -74,11 +74,35 @@ Le worker écrit son `ErrorDocumentationExtractionResult` en JSON ; le générat
 
 `SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(solutionPath[, options])` — ou `GetErrorDocumentationFromAssemblies(paths, options)` pour des binaires déjà compilés — travaille à un niveau plus élevé et :
 
-* découvre les projets (via `dotnet sln list`) et, sauf indication contraire, les compile
+* découvre les projets (via `dotnet sln list`), ne garde que ceux qui ont opté (voir plus bas) et, sauf indication contraire, les compile
 * lance un worker pour chaque assembly de sortie
 * agrège tous les `ErrorDocumentation` extraits (dédupliqués par `Code`, ordonnés par `Code`)
 
 Cela produit un **catalogue global des erreurs** pour l’application ou le système.
+
+### Activer un projet (opt-in)
+
+La génération au niveau de la solution est **opt-in par projet** : un projet n’est documenté que si son fichier de build définit la propriété MSBuild
+
+```xml
+<PropertyGroup>
+  <GenerateErrorDocumentation>true</GenerateErrorDocumentation>
+</PropertyGroup>
+```
+
+Chaque projet découvert dans la solution est alors traité ainsi :
+
+| `GenerateErrorDocumentation` | Résultat |
+| ---------------------------- | -------- |
+| `true`                       | documenté |
+| absente                      | ignoré — le défaut est l’opt-in |
+| `false`                      | toujours ignoré, même quand la politique « tout inclure » est active |
+
+Cela limite le catalogue — et les workers lancés pour le produire — aux projets qui définissent réellement des erreurs applicatives, plutôt qu’à tous les projets de la solution.
+
+La propriété est un **marqueur lu directement dans le fichier projet**, pas un interrupteur de build MSBuild : rien ne la consomme lors d’un simple `dotnet build`, et passer `-p:GenerateErrorDocumentation=…` sur une ligne de commande de build n’a aucun effet. Le mode `--assemblies` n’est pas soumis à ce filtre : il documente exactement les binaires que vous nommez.
+
+> Pour les appels programmatiques, `SolutionGenerationOptions` expose `OptInPropertyName` (renommer le marqueur) et `IncludeProjectsWithoutOptIn` (documenter tous les projets sans distinction). La CLI `fce` utilise les valeurs par défaut ci-dessus.
 
 ## 🖨️ 6. Rendu vers des formats de sortie
 
