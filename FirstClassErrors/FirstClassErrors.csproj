@@ -10,8 +10,8 @@
     <!-- XML documentation -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-    <!-- Version -->
-    <Version>0.1.0</Version>
+    <!-- Version. This is only a local/dev fallback: release.yml overrides it with -p:Version from the Git tag. -->
+    <Version>0.1.0-dev</Version>
 
     <!-- NuGet identity -->
     <PackageId>FirstClassErrors</PackageId>
@@ -36,7 +36,7 @@
     <!-- Package assets -->
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>readme.md</PackageReadmeFile>
-    <PackageReleaseNotes>Initial stable release of FirstClassErrors.</PackageReleaseNotes>
+    <PackageReleaseNotes>Initial preview release of FirstClassErrors.</PackageReleaseNotes>
 
     <Copyright>© Reefact 2026</Copyright>
 
