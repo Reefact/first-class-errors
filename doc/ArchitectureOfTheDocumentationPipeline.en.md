@@ -74,11 +74,35 @@ The worker writes its `ErrorDocumentationExtractionResult` as JSON; the generato
 
 `SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(solutionPath[, options])` — or `GetErrorDocumentationFromAssemblies(paths, options)` for pre-built binaries — works at a higher level and:
 
-* discovers the projects (via `dotnet sln list`) and, unless told not to, builds them
+* discovers the projects (via `dotnet sln list`), keeps the ones that opt in (see below), and — unless told not to — builds them
 * runs a worker for each output assembly
 * aggregates all extracted `ErrorDocumentation` (deduped by `Code`, ordered by `Code`)
 
 This produces a **global error catalog** for the application or system.
+
+### Opting a project in
+
+Solution-level generation is **opt-in per project**: a project is documented only when its build file sets the MSBuild property
+
+```xml
+<PropertyGroup>
+  <GenerateErrorDocumentation>true</GenerateErrorDocumentation>
+</PropertyGroup>
+```
+
+Each project discovered in the solution is then treated as follows:
+
+| `GenerateErrorDocumentation` | Result |
+| ---------------------------- | ------ |
+| `true`                       | documented |
+| absent                       | skipped — the default is opt-in |
+| `false`                      | always skipped, even when the "include everything" policy is on |
+
+This keeps the catalog — and the worker processes spawned to build it — scoped to the projects that actually define application errors, rather than every project in the solution.
+
+The property is a **marker read straight from the project file**, not an MSBuild build switch: nothing consumes it at plain `dotnet build` time, and passing `-p:GenerateErrorDocumentation=…` on a build command line has no effect. The `--assemblies` path is not subject to this filter — it documents exactly the binaries you name.
+
+> For programmatic callers, `SolutionGenerationOptions` exposes `OptInPropertyName` (rename the marker) and `IncludeProjectsWithoutOptIn` (document every project regardless). The `fce` CLI uses the defaults shown above.
 
 ## 🖨️ 6. Rendering to output formats
 
