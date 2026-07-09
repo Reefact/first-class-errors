@@ -90,7 +90,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nupkgs
-          path: artifacts/*.nupkg
+          # Keep the symbol packages (.snupkg) alongside the .nupkg so a release run's artifacts
+          # mirror exactly what is pushed to nuget.org (dotnet nuget push sends both).
+          path: |
+            artifacts/*.nupkg
+            artifacts/*.snupkg
           if-no-files-found: error
 
       # Trusted publishing: exchange the job's OIDC token for a short-lived, single-use NuGet API key.
