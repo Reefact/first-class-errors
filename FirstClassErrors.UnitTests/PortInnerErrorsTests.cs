@@ -117,15 +117,34 @@ public sealed class PortInnerErrorsTests {
         Check.That(root.InnerErrors[1]).IsSameReferenceAs(secondInnerError);
     }
 
-    [Fact(DisplayName = "ToString returns the number of aggregated errors.")]
-    public void ToStringReturnsTheNumberOfAggregatedErrors() {
+    [Fact(DisplayName = "ToString renders the pluralized count of aggregated errors.")]
+    public void ToStringRendersThePluralizedCountOfAggregatedErrors() {
         // Setup
         PrimaryPortInnerErrors innerErrors = new PrimaryPortInnerErrors()
                                             .Add(ErrorFactory.Domain(ErrorCode.Unspecified, "first"))
                                             .Add(ErrorFactory.Primary(ErrorCode.Unspecified, "second", Transience.Transient));
 
         // Exercise & verify
-        Check.That(innerErrors.ToString()).IsEqualTo("2");
+        Check.That(innerErrors.ToString()).IsEqualTo("2 inner errors");
+    }
+
+    [Fact(DisplayName = "ToString renders the singular form for a single aggregated error.")]
+    public void ToStringRendersTheSingularFormForASingleAggregatedError() {
+        // Setup
+        PrimaryPortInnerErrors innerErrors = new PrimaryPortInnerErrors()
+            .Add(ErrorFactory.Domain(ErrorCode.Unspecified, "only"));
+
+        // Exercise & verify
+        Check.That(innerErrors.ToString()).IsEqualTo("1 inner error");
+    }
+
+    [Fact(DisplayName = "ToString renders the plural form for an empty collection.")]
+    public void ToStringRendersThePluralFormForAnEmptyCollection() {
+        // Setup
+        PrimaryPortInnerErrors innerErrors = new();
+
+        // Exercise & verify
+        Check.That(innerErrors.ToString()).IsEqualTo("0 inner errors");
     }
 
 }
@@ -206,15 +225,34 @@ public sealed class SecondaryPortInnerErrorsTests {
         Check.That(innerErrors.Add(portError)).IsSameReferenceAs(innerErrors);
     }
 
-    [Fact(DisplayName = "ToString returns the number of aggregated errors.")]
-    public void ToStringReturnsTheNumberOfAggregatedErrors() {
+    [Fact(DisplayName = "ToString renders the pluralized count of aggregated errors.")]
+    public void ToStringRendersThePluralizedCountOfAggregatedErrors() {
         // Setup
         SecondaryPortInnerErrors innerErrors = new SecondaryPortInnerErrors()
                                               .Add(ErrorFactory.Domain(ErrorCode.Unspecified, "first"))
                                               .Add(ErrorFactory.Secondary(ErrorCode.Unspecified, "second", Transience.Transient));
 
         // Exercise & verify
-        Check.That(innerErrors.ToString()).IsEqualTo("2");
+        Check.That(innerErrors.ToString()).IsEqualTo("2 inner errors");
+    }
+
+    [Fact(DisplayName = "ToString renders the singular form for a single aggregated error.")]
+    public void ToStringRendersTheSingularFormForASingleAggregatedError() {
+        // Setup
+        SecondaryPortInnerErrors innerErrors = new SecondaryPortInnerErrors()
+            .Add(ErrorFactory.Domain(ErrorCode.Unspecified, "only"));
+
+        // Exercise & verify
+        Check.That(innerErrors.ToString()).IsEqualTo("1 inner error");
+    }
+
+    [Fact(DisplayName = "ToString renders the plural form for an empty collection.")]
+    public void ToStringRendersThePluralFormForAnEmptyCollection() {
+        // Setup
+        SecondaryPortInnerErrors innerErrors = new();
+
+        // Exercise & verify
+        Check.That(innerErrors.ToString()).IsEqualTo("0 inner errors");
     }
 
     [Fact(DisplayName = "ComputeTransience of an empty collection is Unknown.")]
