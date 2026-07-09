@@ -16,7 +16,7 @@ A typical pipeline step:
 3. Generate the error catalog (Markdown or JSON)
 4. Publish it as a pipeline artifact or deploy it to a documentation portal
 
-Generation is **opt-in per project**: only projects whose build file sets `<GenerateErrorDocumentation>true</GenerateErrorDocumentation>` are scanned; a project without it is silently skipped. If a fresh pipeline produces an empty catalog, check the opt-in first. See [Opting a project in](ArchitectureOfTheDocumentationPipeline.en.md#opting-a-project-in).
+Generation is **opt-in per project**: only projects whose project file (`.csproj`) sets `<GenerateErrorDocumentation>true</GenerateErrorDocumentation>` are scanned; a project without it is silently skipped. The marker must sit in the `.csproj` itself — it is read straight from the project XML, so a value inherited from a shared `Directory.Build.props` is not picked up. If a fresh pipeline produces an empty catalog, check the opt-in first. See [Opting a project in](ArchitectureOfTheDocumentationPipeline.en.md#opting-a-project-in).
 
 This ensures that documentation always matches the version of the system that is deployed. No manual updates are required, and no drift can occur.
 

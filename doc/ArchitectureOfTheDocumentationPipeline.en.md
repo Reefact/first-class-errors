@@ -82,7 +82,7 @@ This produces a **global error catalog** for the application or system.
 
 ### Opting a project in
 
-Solution-level generation is **opt-in per project**: a project is documented only when its build file sets the MSBuild property
+Solution-level generation is **opt-in per project**: a project is documented only when its project file (`.csproj`) sets the MSBuild property
 
 ```xml
 <PropertyGroup>
@@ -100,7 +100,7 @@ Each project discovered in the solution is then treated as follows:
 
 This keeps the catalog — and the worker processes spawned to build it — scoped to the projects that actually define application errors, rather than every project in the solution.
 
-The property is a **marker read straight from the project file**, not an MSBuild build switch: nothing consumes it at plain `dotnet build` time, and passing `-p:GenerateErrorDocumentation=…` on a build command line has no effect. The `--assemblies` path is not subject to this filter — it documents exactly the binaries you name.
+The property is a **marker read straight from the project file**, not an MSBuild build switch: nothing consumes it at plain `dotnet build` time, and passing `-p:GenerateErrorDocumentation=…` on a build command line has no effect. Because it is read from the project XML rather than evaluated by MSBuild, it must be declared literally in the `.csproj`: a value inherited from a shared `Directory.Build.props`, brought in by an import, or gated behind an MSBuild `Condition` is not honored. The `--assemblies` path is not subject to this filter — it documents exactly the binaries you name.
 
 > For programmatic callers, `SolutionGenerationOptions` exposes `OptInPropertyName` (rename the marker) and `IncludeProjectsWithoutOptIn` (document every project regardless). The `fce` CLI uses the defaults shown above.
 
