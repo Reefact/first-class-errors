@@ -34,10 +34,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           dotnet-version: '10.0.x'
 
@@ -87,7 +87,7 @@ jobs:
           dotnet pack FirstClassErrors.Testing/FirstClassErrors.Testing.csproj -c Release --no-build -p:Version="$VERSION" -o artifacts
 
       - name: Upload packages as build artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: nupkgs
           # Keep the symbol packages (.snupkg) alongside the .nupkg so a release run's artifacts
@@ -103,7 +103,7 @@ jobs:
       # account username (profile name, not the email address).
       - name: NuGet login (OIDC)
         id: nuget-login
-        uses: NuGet/login@v1
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
         with:
           user: ${{ secrets.NUGET_USER }}
 
