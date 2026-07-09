@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Floor-SDK dogfood consumer. Deliberately NOT part of FirstClassErrors.sln: ci.yml would build it
+       under the .NET 10 SDK, which proves nothing and only causes confusion. It is built solely by the
+       "floor" job in .github/workflows/analyzers.yml, whose nested tools/floor-check/global.json selects
+       the .NET 8 (Roslyn 4.8) SDK. It recompiles the real Usage sources with the analyzer wired in, so if
+       FirstClassErrors.Analyzers ever references a newer Roslyn the analyzer fails to load on the floor
+       host (CS8032) and this build turns red. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <!-- An analyzer that fails to load (CS8032) or throws while loading (AD0001) must break the build,
+         not merely warn. That failure is the entire signal this project exists to produce. -->
+    <WarningsAsErrors>$(WarningsAsErrors);CS8032;AD0001</WarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Reuse the dogfood sample's sources verbatim (no duplication); skip its own build output. -->
+    <Compile Include="../../FirstClassErrors.Usage/**/*.cs"
+             Exclude="../../FirstClassErrors.Usage/obj/**/*.cs;../../FirstClassErrors.Usage/bin/**/*.cs" />
+    <ProjectReference Include="../../FirstClassErrors/FirstClassErrors.csproj" />
+    <ProjectReference Include="../../FirstClassErrors.Analyzers/FirstClassErrors.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+</Project>
