@@ -13,14 +13,18 @@ namespace FirstClassErrors.Cli.UnitTests;
 [TestSubject(typeof(GenerateCommand))]
 public sealed class GenerateCommandOutputTests {
 
-    // Verbose off, so the logger's Info lines are suppressed and the tests produce no console noise.
-    private static readonly ConsoleGenerationLogger QuietLogger = new(false);
+    // A logger that records nothing meaningful here; WriteOutput's own Info lines are irrelevant to these tests.
+    private static readonly RecordingLogger QuietLogger = new();
+
+    private static GenerateCommand CommandWith(IOutputSink sink) {
+        return new GenerateCommand(new StubGenerator(), sink, _ => QuietLogger);
+    }
 
     [Fact(DisplayName = "A single document with no output target is written to standard output.")]
     public void ASingleDocumentWithoutATargetGoesToStandardOutput() {
         // Setup
         RecordingOutputSink sink    = new();
-        GenerateCommand     command = new(new StubGenerator(), sink);
+        GenerateCommand     command = CommandWith(sink);
 
         // Exercise
         command.WriteOutput([new RenderedDocument("errors.json", "{}")], "json", null, QuietLogger);
@@ -34,7 +38,7 @@ public sealed class GenerateCommandOutputTests {
     public void ASingleDocumentWithAFileTargetIsWrittenToThatFile() {
         // Setup
         RecordingOutputSink sink       = new();
-        GenerateCommand     command    = new(new StubGenerator(), sink);
+        GenerateCommand     command    = CommandWith(sink);
         string              outputPath = Path.Combine(Path.GetTempPath(), $"fce-out-{Guid.NewGuid():N}.json");
 
         // Exercise
@@ -49,7 +53,7 @@ public sealed class GenerateCommandOutputTests {
     [Fact(DisplayName = "Several documents without an output directory are rejected.")]
     public void SeveralDocumentsWithoutATargetAreRejected() {
         // Setup
-        GenerateCommand command = new(new StubGenerator(), new RecordingOutputSink());
+        GenerateCommand command = CommandWith(new RecordingOutputSink());
         RenderedDocument[] documents = [
             new("a.md", "a"),
             new("b.md", "b")
@@ -63,7 +67,7 @@ public sealed class GenerateCommandOutputTests {
     [Fact(DisplayName = "A renderer that produces no document is rejected.")]
     public void ARendererProducingNoDocumentIsRejected() {
         // Setup
-        GenerateCommand command = new(new StubGenerator(), new RecordingOutputSink());
+        GenerateCommand command = CommandWith(new RecordingOutputSink());
 
         // Exercise & verify
         Check.ThatCode(() => command.WriteOutput([], "json", null, QuietLogger))
