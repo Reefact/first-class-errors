@@ -19,6 +19,58 @@ internal sealed class StubGenerator : IErrorDocumentationGenerator {
 
 }
 
+/// <summary>
+///     A generator that returns a fixed catalog and records how it was called: which source (solution vs assemblies),
+///     with which arguments, and with which options. Lets end-to-end command tests assert source routing and the
+///     mapping of command-line/config values onto <see cref="SolutionGenerationOptions" />.
+/// </summary>
+internal sealed class RecordingGenerator : IErrorDocumentationGenerator {
+
+    private readonly IReadOnlyList<ErrorDocumentation> _catalog;
+
+    public RecordingGenerator(params ErrorDocumentation[] catalog) {
+        _catalog = catalog;
+    }
+
+    public string?                    SolutionPath  { get; private set; }
+    public IReadOnlyList<string>?     AssemblyPaths { get; private set; }
+    public SolutionGenerationOptions? Options       { get; private set; }
+
+    public IEnumerable<ErrorDocumentation> GetErrorDocumentationFrom(string solutionPath, SolutionGenerationOptions options) {
+        SolutionPath = solutionPath;
+        Options      = options;
+
+        return _catalog;
+    }
+
+    public IEnumerable<ErrorDocumentation> GetErrorDocumentationFromAssemblies(IReadOnlyList<string> assemblyPaths, SolutionGenerationOptions options) {
+        AssemblyPaths = assemblyPaths;
+        Options       = options;
+
+        return _catalog;
+    }
+
+}
+
+/// <summary>A generator that throws an arbitrary (non-cancellation) failure, to exercise the command's error path.</summary>
+internal sealed class FailingGenerator : IErrorDocumentationGenerator {
+
+    private readonly Exception _failure;
+
+    public FailingGenerator(Exception failure) {
+        _failure = failure;
+    }
+
+    public IEnumerable<ErrorDocumentation> GetErrorDocumentationFrom(string solutionPath, SolutionGenerationOptions options) {
+        throw _failure;
+    }
+
+    public IEnumerable<ErrorDocumentation> GetErrorDocumentationFromAssemblies(IReadOnlyList<string> assemblyPaths, SolutionGenerationOptions options) {
+        throw _failure;
+    }
+
+}
+
 /// <summary>A generator that always reports the run was cancelled, to exercise the command's cancellation handling.</summary>
 internal sealed class CancellingGenerator : IErrorDocumentationGenerator {
 
