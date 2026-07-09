@@ -54,7 +54,10 @@ jobs:
       - name: Setup floor .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          # Exactly 8.0.100 (Roslyn 4.8.0 == VS 2022 17.8), the oldest supported host. A wildcard like
+          # 8.0.x would install a later feature band whose bundled Roslyn is newer than the floor, so the
+          # job would stop testing the actual floor. Paired with rollForward: disable in the nested global.json.
+          dotnet-version: '8.0.100'
 
       - name: Build on the floor SDK
         # tools/floor-check/global.json selects the .NET 8 (Roslyn 4.8) SDK: the repo-root global.json pins
@@ -69,7 +72,8 @@ jobs:
       - name: Prove the analyzer actually loaded
         # A never-loaded analyzer would otherwise leave the build green: CS8032 is emitted only when loading
         # is attempted. The assembly name alone appears in ordinary build lines ("FirstClassErrors.Analyzers ->
-        # ...dll"), so match a FCE analyzer *type* — it exists only in the ReportAnalyzer table, i.e. only if
-        # the analyzer really loaded and ran. This is what keeps the floor check from passing vacuously.
+        # ...dll" / paths), so match a fully-qualified analyzer *type* (`...<Name>Analyzer`): it appears only in
+        # the ReportAnalyzer table, i.e. only if the analyzer really loaded and ran. The pattern deliberately
+        # does not depend on the trailing diagnostic-id list, which is a Roslyn-version formatting detail.
         working-directory: tools/floor-check
-        run: grep -qE 'FirstClassErrors\.Analyzers\.[A-Za-z]+Analyzer \(FCE[0-9]' build.log
+        run: grep -qE 'FirstClassErrors\.Analyzers\.[A-Za-z]+Analyzer' build.log
