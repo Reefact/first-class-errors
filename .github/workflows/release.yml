@@ -145,9 +145,12 @@ jobs:
       # Publish the exact attested artifacts as GitHub Release assets — the byte-for-byte bytes the
       # provenance attestation covers, so `gh attestation verify <asset>.nupkg` succeeds against them
       # (unlike the nuget.org copy, which is repository-signed). `gh` is preinstalled on the runner, so no
-      # extra action is pinned. On a tag push the tag already exists; on workflow_dispatch `gh` creates it
-      # at the current commit. The `|| upload --clobber` fallback keeps a re-run idempotent if the release
-      # already exists.
+      # extra action is pinned. On a tag push the tag already exists (--target is then ignored); on
+      # workflow_dispatch the tag is missing and `gh` would otherwise auto-create it from the DEFAULT
+      # branch's latest state — --target "$GITHUB_SHA" pins it to the commit this job actually built and
+      # attested, so the release tag, source archive and attested packages all point at the same commit
+      # even when dispatched from a hotfix branch or an older SHA. The `|| upload --clobber` fallback
+      # keeps a re-run idempotent if the release already exists.
       - name: Publish GitHub Release with attested packages
         env:
           GH_TOKEN: ${{ github.token }}
@@ -155,5 +158,5 @@ jobs:
         run: |
           TAG="v$VERSION"
           gh release create "$TAG" artifacts/*.nupkg artifacts/*.snupkg \
-            --title "$TAG" --generate-notes \
+            --title "$TAG" --generate-notes --target "$GITHUB_SHA" \
           || gh release upload "$TAG" artifacts/*.nupkg artifacts/*.snupkg --clobber
