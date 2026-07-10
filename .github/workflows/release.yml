@@ -59,8 +59,12 @@ jobs:
             # REF_NAME is the tag name (e.g. v1.2.3); strip the leading "v".
             VERSION="${REF_NAME#v}"
           fi
-          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'; then
-            echo "::error::Invalid version '$VERSION'; expected a SemVer value like 1.2.3 or 1.2.3-beta.1."
+          # Build metadata (+...) is deliberately REJECTED even though SemVer allows it: NuGet strips it
+          # from the package identity, so a tag like v1.2.3+build5 packs as FirstClassErrors.1.2.3.nupkg.
+          # If 1.2.3 were already published, the push's --skip-duplicate would then turn this release into
+          # a green no-op that publishes nothing. Better to fail loudly here than to "succeed" silently.
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+            echo "::error::Invalid version '$VERSION'; expected a SemVer value like 1.2.3 or 1.2.3-beta.1 (build metadata '+...' is not allowed: NuGet drops it from the package identity)."
             exit 1
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
