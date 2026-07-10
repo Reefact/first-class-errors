@@ -206,6 +206,18 @@ FirstClassErrors ships with a set of Roslyn analyzers (rule ids `FCExxx`) **bund
 
 See the [analyzer rules reference](doc/analyzers/README.md).
 
+## 🔐 Supply chain
+
+Every released package is built and published by [`release.yml`](.github/workflows/release.yml) with two verifiable guarantees:
+
+- **Signed build provenance** ([SLSA](https://slsa.dev)) — each `.nupkg` is attested at build time, binding its checksum to this repository, the exact commit and the workflow run. Verify a downloaded package with:
+
+  ```bash
+  gh attestation verify FirstClassErrors.<version>.nupkg --repo Reefact/first-class-errors
+  ```
+
+- **Embedded SBOM** — each package carries its SPDX software bill of materials at `_manifest/spdx_2.2/manifest.spdx.json`, inventorying the files it ships and the third-party components it was built from.
+
 ## 📚 Next steps
 
 See the full documentation:
