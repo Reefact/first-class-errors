@@ -140,11 +140,15 @@ jobs:
       # Requires a trusted publishing policy on nuget.org (owner Reefact / repo first-class-errors /
       # workflow release.yml) for each published package, and the NUGET_USER secret set to the nuget.org
       # account username (profile name, not the email address).
-      # Everything from here on PUBLISHES and is skipped on a dry run. A tag push always publishes
-      # (inputs.* is empty on push events, so the event check short-circuits first); a manual dispatch
-      # publishes only with dry_run explicitly unticked.
+      #
+      # This login runs on EVERY trigger, INCLUDING a dry run: the OIDC token exchange is what validates the
+      # trusted-publishing policy, so rehearsing it here makes a dry run fail red when the policy or
+      # NUGET_USER is missing/misconfigured — instead of only ever finding out during a real release. It
+      # mints a short-lived, single-use key that a dry run never spends (the push below is skipped). Only the
+      # steps that actually PUBLISH — the push and the GitHub Release — are gated off on a dry run: a tag
+      # push always publishes (inputs.* is empty on push, so the event check short-circuits first); a manual
+      # dispatch publishes only with dry_run explicitly unticked.
       - name: NuGet login (OIDC)
-        if: github.event_name == 'push' || inputs.dry_run == false
         id: nuget-login
         uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
         with:
