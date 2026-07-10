@@ -12,8 +12,9 @@ provenance attestation, and the publish steps — otherwise runs *for the first
 time in production, on a tag, once*.
 
 The **manual dry run** lets you run that same pipeline **on demand**, all the way
-through the provenance attestation, **without publishing anything**. It is a
-rehearsal: you confirm the release machinery is healthy before it matters.
+through the provenance attestation and the NuGet OIDC login, **without publishing
+anything**. It is a rehearsal: you confirm the release machinery is healthy
+before it matters.
 
 ## What it does — and does not do
 
@@ -25,7 +26,7 @@ rehearsal: you confirm the release machinery is healthy before it matters.
 | Embed the SPDX SBOM | ✅ | ✅ |
 | Upload packages as workflow artifacts | ✅ | ✅ |
 | **Sign the provenance attestation** | ✅ | ✅ (see *Impacts*) |
-| Log in to NuGet (OIDC) | ✅ | ⛔ skipped |
+| **Log in to NuGet (OIDC)** | ✅ | ✅ (see *Impacts*) |
 | **Push to nuget.org** | ✅ | ⛔ skipped |
 | **Create the GitHub Release** | ✅ | ⛔ skipped |
 
@@ -51,7 +52,7 @@ healthy.
 
 ## Impacts
 
-A dry run is *almost* free of side effects, with one exception to be aware of:
+A dry run is *almost* free of side effects, with two things to be aware of:
 
 - **It creates a real provenance attestation.** The `Attest build provenance`
   step runs in a dry run (on purpose — OIDC and attestation-permission failures
@@ -63,6 +64,12 @@ A dry run is *almost* free of side effects, with one exception to be aware of:
     never mistaken for a real release;
   - run the manual dry run deliberately (before a real release, or after
     changing `release.yml`), not casually in a loop.
+- **It performs the real NuGet OIDC login.** The trusted-publishing token
+  exchange runs in a dry run — that is the point: it validates the nuget.org
+  policy, so a dry run **fails red** if the trusted-publishing policy or the
+  `NUGET_USER` secret is missing or misconfigured. It mints a short-lived,
+  single-use API key that the dry run never spends (the push is skipped), so
+  nothing is published.
 - **Nothing is published.** No package reaches nuget.org, and no GitHub Release
   or git tag is created.
 - **The packed `.nupkg` / `.snupkg` are uploaded as workflow-run artifacts**,
