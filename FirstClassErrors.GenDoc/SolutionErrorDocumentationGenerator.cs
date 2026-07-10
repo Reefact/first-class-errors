@@ -44,28 +44,28 @@ public static class SolutionErrorDocumentationGenerator {
             DotNetBuild(fullSolutionPath, options);
         }
 
-        IReadOnlyList<ProjectInfo> projects = ReadSolutionProjects(fullSolutionPath, options);
+        IReadOnlyList<string> projects = ReadSolutionProjects(fullSolutionPath, options);
         options.Logger.Debug($"Found {projects.Count} MSBuild projects in solution.");
 
-        IReadOnlyList<ProjectInfo> includedProjects = FilterProjects(projects, options);
+        IReadOnlyList<string> includedProjects = FilterProjects(projects, options);
         options.Logger.Info($"{includedProjects.Count} projects opted-in for error documentation.");
 
         List<string> assemblyPaths = new(includedProjects.Count);
-        foreach (ProjectInfo project in includedProjects) {
-            options.Logger.Debug($"Resolving TargetPath for project '{project.ProjectPath}'");
+        foreach (string projectPath in includedProjects) {
+            options.Logger.Debug($"Resolving TargetPath for project '{projectPath}'");
             try {
-                string? targetPath = ResolveTargetPath(project.ProjectPath, options);
+                string? targetPath = ResolveTargetPath(projectPath, options);
                 if (string.IsNullOrWhiteSpace(targetPath)) { continue; }
 
                 if (!File.Exists(targetPath)) {
-                    HandleFailure(options, $"Target assembly not found for project '{project.ProjectPath}'. Resolved TargetPath='{targetPath}'.");
+                    HandleFailure(options, $"Target assembly not found for project '{projectPath}'. Resolved TargetPath='{targetPath}'.");
 
                     continue;
                 }
 
                 assemblyPaths.Add(targetPath);
             } catch (Exception ex) {
-                HandleFailure(options, $"Failed to resolve target path for project '{project.ProjectPath}'.", ex);
+                HandleFailure(options, $"Failed to resolve target path for project '{projectPath}'.", ex);
             }
         }
 
@@ -109,7 +109,7 @@ public static class SolutionErrorDocumentationGenerator {
         return errorDocumentation;
     }
 
-    private static List<ProjectInfo> ReadSolutionProjects(string solutionPath, SolutionGenerationOptions options) {
+    private static List<string> ReadSolutionProjects(string solutionPath, SolutionGenerationOptions options) {
         // Enumerate projects via the SDK ("dotnet sln list") rather than the in-process MSBuild object model. This keeps
         // the generator free of the heavy Microsoft.Build dependency and handles both .sln and .slnx uniformly.
         string solutionDirectory = Path.GetDirectoryName(solutionPath) ?? ".";
@@ -120,7 +120,7 @@ public static class SolutionErrorDocumentationGenerator {
                 $"Failed to list the projects of solution '{solutionPath}' (exit code {result.ExitCode}).\n{result.StandardError}");
         }
 
-        List<ProjectInfo> projects = new();
+        List<string> projects = new();
 
         foreach (string rawLine in result.StandardOutput.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)) {
             string line = rawLine.Trim();
@@ -132,19 +132,32 @@ public static class SolutionErrorDocumentationGenerator {
             string projectPath = Path.GetFullPath(Path.Combine(solutionDirectory, line));
             if (File.Exists(projectPath) is false) { continue; }
 
-            projects.Add(new ProjectInfo(projectPath));
+            projects.Add(projectPath);
         }
 
         return projects;
     }
 
-    private static IReadOnlyList<ProjectInfo> FilterProjects(IReadOnlyList<ProjectInfo> projects, SolutionGenerationOptions options) {
-        List<ProjectInfo> included = new();
+    internal static IReadOnlyList<string> FilterProjects(IReadOnlyList<string> projectPaths, SolutionGenerationOptions options) {
+        List<string> included = new();
 
-        foreach (ProjectInfo project in projects) {
-            if (ShouldIncludeProject(project.ProjectPath, options)) {
-                included.Add(project);
+        foreach (string projectPath in projectPaths) {
+            if (ShouldIncludeProject(projectPath, options)) {
+                included.Add(projectPath);
             }
+        }
+
+        // An opt-in declared only in a shared build file (Directory.Build.props, an import) reads as absent in every
+        // .csproj — per project, that is indistinguishable from a genuine absence, so it cannot be diagnosed above. The
+        // one signature visible at this level is a solution where nothing opted in while the filter was active: name the
+        // most likely cause instead of handing back an empty catalog in silence. A warning, not a failure — an empty
+        // catalog is legitimate for a solution that documents no errors.
+        if (included.Count == 0 && projectPaths.Count > 0 && options.IncludeProjectsWithoutOptIn is false) {
+            options.Logger.Warning(
+                $"No project opted in to error documentation: '{options.OptInPropertyName}' was not set to a truthy value " +
+                "in any project file. GenDoc reads this property literally from the .csproj, without MSBuild evaluation: a " +
+                "value declared in a shared Directory.Build.props or another imported build file is not seen. Declare it " +
+                "in the .csproj of each project to document, or document assemblies explicitly with --assemblies.");
         }
 
         return included;
@@ -237,6 +250,7 @@ public static class SolutionErrorDocumentationGenerator {
             List<XElement> matches = document
                                     .Descendants()
                                     .Where(element => string.Equals(element.Name.LocalName, "PropertyGroup", StringComparison.OrdinalIgnoreCase))
+                                    .Where(propertyGroup => IsInsideTarget(propertyGroup) is false)
                                     .SelectMany(propertyGroup => propertyGroup.Elements())
                                     .Where(property => string.Equals(property.Name.LocalName, propertyName, StringComparison.OrdinalIgnoreCase))
                                     .ToList();
@@ -244,8 +258,9 @@ public static class SolutionErrorDocumentationGenerator {
             if (matches.Count == 0) { return MsBuildPropertyRead.Absent(); }
 
             // The XML is taken verbatim, so a property defined more than once, or gated behind a Condition (on the
-            // element itself or on its enclosing PropertyGroup), has an effective value we cannot compute without
-            // evaluating MSBuild. Report it as ambiguous and let the caller decide, rather than picking one at random.
+            // element itself, on any ancestor, or via a Choose/When/Otherwise branch), has an effective value we cannot
+            // compute without evaluating MSBuild. Report it as ambiguous and let the caller decide, rather than picking
+            // one at random.
             if (matches.Count > 1) {
                 return MsBuildPropertyRead.Ambiguous(matches[0].Value, $"defined {matches.Count} times");
             }
@@ -262,8 +277,25 @@ public static class SolutionErrorDocumentationGenerator {
 
     private static bool IsConditioned(XElement property) {
         // MSBuild Condition attributes are unqualified even in legacy namespaced files, so a no-namespace lookup fits both.
-        return property.Attribute("Condition") is not null
-            || property.Parent?.Attribute("Condition") is not null;
+        // The condition can sit on the property itself or on ANY ancestor, not only its PropertyGroup: a
+        // <Choose>/<When> block carries it two levels up. And a <When>/<Otherwise> branch is conditional by
+        // construction — <Otherwise> without bearing any Condition attribute of its own — so those ancestor names count
+        // as conditions too.
+        if (property.Attribute("Condition") is not null) { return true; }
+
+        return property
+              .Ancestors()
+              .Any(ancestor => ancestor.Attribute("Condition") is not null
+                            || string.Equals(ancestor.Name.LocalName, "When",      StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(ancestor.Name.LocalName, "Otherwise", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsInsideTarget(XElement propertyGroup) {
+        // A PropertyGroup nested inside a <Target> assigns its properties when the target RUNS, not when the project is
+        // evaluated: for an evaluation-time read it neither provides a value nor counts toward a duplicate.
+        return propertyGroup
+              .Ancestors()
+              .Any(ancestor => string.Equals(ancestor.Name.LocalName, "Target", StringComparison.OrdinalIgnoreCase));
     }
 
     private static void DotNetBuild(string solutionPath, SolutionGenerationOptions options) {
@@ -589,8 +621,6 @@ public static class SolutionErrorDocumentationGenerator {
     #endregion
 
     #region Nested types declarations
-
-    private sealed record ProjectInfo(string ProjectPath);
 
     private sealed record ProcessResult(int ExitCode, string StandardOutput, string StandardError);
 
