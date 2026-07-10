@@ -2,6 +2,8 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](README.fr.md)
 
+↑ Part of the [maintainer documentation](../README.md).
+
 > Maintainer documentation. This describes the GitHub Actions workflows that
 > build, check, and publish FirstClassErrors. It is **not** part of the
 > library's user documentation under `doc/`.

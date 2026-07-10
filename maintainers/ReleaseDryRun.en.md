@@ -1,5 +1,11 @@
 # Release dry run (manual)
 
+🌍 🇬🇧 English (this file) · 🇫🇷 [Français](ReleaseDryRun.fr.md)
+
+↑ Part of the [maintainer documentation](README.md) · see also the workflow
+reference for [`release`](workflows/release.en.md) and
+[`release-dryrun`](workflows/release-dryrun.en.md).
+
 > Maintainer / operational documentation. This is **not** part of the library's
 > user documentation under `doc/`.
 
@@ -99,3 +105,11 @@ the **attestation / OIDC** path that the automatic one deliberately leaves out.
 The actual **push to nuget.org** and the **repository-signed bytes** nuget.org
 serves cannot be exercised without publishing — nuget.org has no "dry-run push".
 That final link is only ever validated by a real release.
+
+## Related
+
+- [`release`](workflows/release.en.md) — the workflow this rehearses, described
+  structurally (triggers, jobs, the traps in its design).
+- [`release-dryrun`](workflows/release-dryrun.en.md) — the automatic,
+  side-effect-free dry run that runs on every PR and push.
+- [Maintainer documentation](README.md) — the index of all maintainer docs.

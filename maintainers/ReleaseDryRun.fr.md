@@ -1,5 +1,11 @@
 # Répétition de release à blanc (« dry run » manuel)
 
+🌍 🇬🇧 [English](ReleaseDryRun.en.md) · 🇫🇷 Français (ce fichier)
+
+↑ Fait partie de la [documentation mainteneur](README.fr.md) · voir aussi la
+référence des workflows pour [`release`](workflows/release.fr.md) et
+[`release-dryrun`](workflows/release-dryrun.fr.md).
+
 > Documentation technique / mainteneur. Elle ne fait **pas** partie de la
 > documentation utilisateur de la librairie, sous `doc/`.
 
@@ -106,3 +112,12 @@ Le **push réel vers nuget.org** et les **octets re-signés par le dépôt** que
 nuget.org sert ne peuvent pas être exercés sans publier — nuget.org n'a pas de
 « push à blanc ». Ce dernier maillon n'est jamais validé que par une vraie
 release.
+
+## En rapport
+
+- [`release`](workflows/release.fr.md) — le workflow que ceci répète, décrit
+  structurellement (déclencheurs, jobs, pièges de sa conception).
+- [`release-dryrun`](workflows/release-dryrun.fr.md) — le dry run automatique et
+  sans effet de bord qui tourne sur chaque PR et push.
+- [Documentation mainteneur](README.fr.md) — l'index de toutes les docs
+  mainteneur.
