@@ -334,7 +334,8 @@ Ordered as the rules are: type, scope, description, body, breaking, issue.
 ### Adoption
 
 This guide is the rule for commits in this repository. Deviating from it
-requires a justification — an ADR under `doc/adr/`, or an update to this guide.
+requires a justification — an ADR under `maintainers/adr/`, or an update to this
+guide.
 
 It applies from its adoption on, to every commit created after. Prior history is
 not rewritten.
