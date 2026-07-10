@@ -56,26 +56,9 @@ jobs:
       - name: Build
         run: dotnet build FirstClassErrors.sln -c Release -p:Version="$DRYRUN_VERSION"
 
-      # Mirror release.yml's Pack step exactly (same projects, same --no-build, same GenerateSBOM), so a
-      # regression there is a regression here. The unit/integration tests themselves run in ci.yml; this
-      # job's unique contribution is proving the release packaging (pack + embedded SBOM) still works.
-      - name: Pack with SBOM (the two published projects)
-        run: |
-          dotnet pack FirstClassErrors/FirstClassErrors.csproj -c Release --no-build -p:Version="$DRYRUN_VERSION" -p:GenerateSBOM=true -o artifacts
-          dotnet pack FirstClassErrors.Testing/FirstClassErrors.Testing.csproj -c Release --no-build -p:Version="$DRYRUN_VERSION" -p:GenerateSBOM=true -o artifacts
-
-      # Positive proof, not just a green pack: a pack that silently stopped embedding the manifest (a
-      # GenerateSBOM/Microsoft.Sbom.Targets regression) would otherwise pass unnoticed. Assert the SPDX
-      # file is present in every produced package.
-      - name: Verify the SBOM is embedded in each package
-        run: |
-          status=0
-          for pkg in artifacts/*.nupkg; do
-            if unzip -l "$pkg" | grep -q '_manifest/spdx_2.2/manifest.spdx.json'; then
-              echo "ok: SBOM present in $(basename "$pkg")"
-            else
-              echo "::error::SBOM manifest missing from $(basename "$pkg")"
-              status=1
-            fi
-          done
-          exit $status
+      # The SAME script release.yml packs with — it packs the two published projects with their SBOM and
+      # then asserts the SBOM is actually embedded. Sharing it is the point: this rehearsal cannot drift
+      # from the real release, because there is only one definition of "pack the release artifacts".
+      # (The unit/integration tests run in ci.yml; this job's unique contribution is the packaging.)
+      - name: Pack with SBOM (build artifacts, no publish)
+        run: tools/packaging/pack.sh "$DRYRUN_VERSION"
