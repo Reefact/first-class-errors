@@ -1,0 +1,67 @@
+name: scorecard
+
+# OpenSSF Scorecard: scores the repository's security posture — pinned actions, token permissions, branch
+# protection, signed releases, dependency-update tooling, and more — and uploads the findings to the
+# code-scanning dashboard. It also publishes the score to securityscorecards.dev, which powers the README
+# badge. It runs on the DEFAULT BRANCH only: it assesses the repository, not a pull-request diff, so there
+# is no pull_request trigger.
+
+on:
+  # Re-score when a branch-protection rule changes (feeds Scorecard's Branch-Protection check).
+  branch_protection_rule:
+  # Weekly, so newly shipped Scorecard checks run against unchanged code.
+  schedule:
+    - cron: '23 5 * * 1'
+  push:
+    branches:
+      - main
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: scorecard-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Read-only by default; the single job widens only the two write scopes it needs.
+permissions: read-all
+
+jobs:
+  analysis:
+    name: Scorecard analysis
+    runs-on: ubuntu-latest
+    # Scorecard makes external calls (branch protection, dependency tooling, publishing); ~2-3 min typical.
+    timeout-minutes: 15
+    permissions:
+      # Upload the SARIF results to the code-scanning dashboard (Security tab).
+      security-events: write
+      # Publish results to the public OpenSSF API via OIDC — this is what enables the score badge.
+      id-token: write
+      # This repository is public, so contents/actions reads are not needed in the token (the code is
+      # already checked out and the metadata is public). For a PRIVATE repository, also uncomment:
+      # contents: read
+      # actions: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          # A credential-free checkout — Scorecard's own Token-Permissions check rewards it.
+          persist-credentials: false
+
+      - name: Run Scorecard analysis
+        uses: ossf/scorecard-action@4eaacf0543bb3f2c246792bd56e8cdeffafb205a # v2.4.3
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          # Publish to securityscorecards.dev for transparency and the README badge (public repo only).
+          publish_results: true
+
+      - name: Upload SARIF as a build artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: scorecard-sarif
+          path: results.sarif
+          retention-days: 5
+
+      - name: Upload SARIF to code-scanning
+        uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4
+        with:
+          sarif_file: results.sarif
