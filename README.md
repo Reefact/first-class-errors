@@ -210,11 +210,13 @@ See the [analyzer rules reference](doc/analyzers/README.md).
 
 Every released package is built and published by [`release.yml`](.github/workflows/release.yml) with two verifiable guarantees:
 
-- **Signed build provenance** ([SLSA](https://slsa.dev)) — each `.nupkg` is attested at build time, binding its checksum to this repository, the exact commit and the workflow run. Verify a downloaded package with:
+- **Signed build provenance** ([SLSA](https://slsa.dev)) — each package is attested at build time, binding its checksum to this repository, the exact commit and the workflow run. The attested bytes are attached to the matching [GitHub Release](https://github.com/Reefact/first-class-errors/releases); download the `.nupkg` from there and verify with:
 
   ```bash
   gh attestation verify FirstClassErrors.<version>.nupkg --repo Reefact/first-class-errors
   ```
+
+  (nuget.org serves a repository-signed copy with a different checksum, so verify **that** one with `dotnet nuget verify` instead.)
 
 - **Embedded SBOM** — each package carries its SPDX software bill of materials at `_manifest/spdx_2.2/manifest.spdx.json`, inventorying the files it ships and the third-party components it was built from.
 

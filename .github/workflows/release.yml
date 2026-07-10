@@ -17,12 +17,13 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  # Create the GitHub Release and upload the attested .nupkg/.snupkg as its assets (see the publish step).
+  contents: write
   # Allow the job to request a GitHub OIDC token, exchanged for a short-lived NuGet API key
   # via trusted publishing (no long-lived NUGET_API_KEY secret is stored).
   id-token: write
   # Store the signed build-provenance attestations in the repository's attestation store,
-  # so anyone can verify a published package with `gh attestation verify`.
+  # so anyone can verify a released package with `gh attestation verify`.
   attestations: write
 
 env:
@@ -110,11 +111,11 @@ jobs:
 
       # SLSA build provenance: sign an attestation binding each artifact's SHA-256 to this repository,
       # workflow, commit and runner (via Sigstore + the job's OIDC identity), and store it in the repo's
-      # attestation store. Anyone can then verify a downloaded package with:
-      #   gh attestation verify FirstClassErrors.<version>.nupkg --repo Reefact/first-class-errors
-      # Runs BEFORE the push on purpose: only attested artifacts ever reach nuget.org, and a failure
-      # here stops the release instead of leaving published-but-unattested packages. The .snupkg symbol
-      # packages are attested too, since `dotnet nuget push` publishes them alongside the .nupkg.
+      # attestation store. The attestation covers the bytes packed HERE — which are published verbatim as
+      # GitHub Release assets below. It deliberately does NOT match the nuget.org copy: nuget.org repository-
+      # signs every upload (adds a .signature.p7s inside the .nupkg), changing the checksum, so consumers
+      # verify provenance against the Release asset and the nuget.org signature via `dotnet nuget verify`.
+      # Runs BEFORE both publications on purpose: only attested artifacts are ever released or pushed.
       - name: Attest build provenance
         uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
         with:
@@ -140,3 +141,19 @@ jobs:
             --api-key "$NUGET_API_KEY" \
             --source "$NUGET_FEED" \
             --skip-duplicate
+
+      # Publish the exact attested artifacts as GitHub Release assets — the byte-for-byte bytes the
+      # provenance attestation covers, so `gh attestation verify <asset>.nupkg` succeeds against them
+      # (unlike the nuget.org copy, which is repository-signed). `gh` is preinstalled on the runner, so no
+      # extra action is pinned. On a tag push the tag already exists; on workflow_dispatch `gh` creates it
+      # at the current commit. The `|| upload --clobber` fallback keeps a re-run idempotent if the release
+      # already exists.
+      - name: Publish GitHub Release with attested packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          TAG="v$VERSION"
+          gh release create "$TAG" artifacts/*.nupkg artifacts/*.snupkg \
+            --title "$TAG" --generate-notes \
+          || gh release upload "$TAG" artifacts/*.nupkg artifacts/*.snupkg --clobber
