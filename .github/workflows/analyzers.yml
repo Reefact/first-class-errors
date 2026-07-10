@@ -77,10 +77,11 @@ jobs:
         # with — producing the exact artifact a consumer restores, analyzer bundled at analyzers/dotnet/cs by
         # FirstClassErrors.csproj's _AddAnalyzerToPackage target. Packing under the floor SDK instead would
         # test an analyzer nobody ships and would pin the whole library to C# 12 (LangVersion latest under
-        # SDK 8). The feed is wiped first so it holds only this run's package — a no-op on a fresh CI runner,
-        # but it keeps a reused/local workspace idempotent instead of accumulating stale .nupkgs.
+        # SDK 8). The feed and the project-local package cache (RestorePackagesPath in FloorCheck.csproj)
+        # are wiped first so the consume step can only see this run's package — a no-op on a fresh CI
+        # runner, but it keeps a reused/local workspace idempotent instead of accumulating stale packages.
         run: |
-          rm -rf tools/floor-check/local-feed
+          rm -rf tools/floor-check/local-feed tools/floor-check/packages
           dotnet pack FirstClassErrors/FirstClassErrors.csproj -c Release -p:Version="$FLOORCHECK_VERSION" -o tools/floor-check/local-feed
 
       - name: Consume the package on the floor SDK
