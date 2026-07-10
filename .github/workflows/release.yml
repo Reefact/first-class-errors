@@ -8,8 +8,20 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Package version to publish, without the leading "v" (e.g. 1.2.3)'
+        description: 'Package version, without the leading "v" (e.g. 1.2.3; a dry run can use any SemVer, e.g. 0.0.0-dry.1)'
         required: true
+      # release.yml is the only workflow no CI run exercises before a real tag: version resolution,
+      # pack, SBOM generation, OIDC and the attestation permissions only ever execute in production
+      # conditions. Three defects were found here that were invisible from the repository (the
+      # +metadata regex, the nuget.org re-signing mismatch, the dispatch-tag target). Dry run makes
+      # all of it testable on demand: everything runs up to AND INCLUDING the attestation — which
+      # deliberately stays in, since OIDC/permission failures are exactly what it rehearses — while
+      # NuGet login, the push and the GitHub Release are skipped. Defaults to true so an accidental
+      # dispatch publishes nothing; publishing requires explicitly unticking it.
+      dry_run:
+        description: 'Dry run: stop after pack + attestation; skip NuGet push and the GitHub Release'
+        type: boolean
+        default: true
 
 # Never publish the same ref twice concurrently.
 concurrency:
@@ -127,13 +139,18 @@ jobs:
       # Requires a trusted publishing policy on nuget.org (owner Reefact / repo first-class-errors /
       # workflow release.yml) for each published package, and the NUGET_USER secret set to the nuget.org
       # account username (profile name, not the email address).
+      # Everything from here on PUBLISHES and is skipped on a dry run. A tag push always publishes
+      # (inputs.* is empty on push events, so the event check short-circuits first); a manual dispatch
+      # publishes only with dry_run explicitly unticked.
       - name: NuGet login (OIDC)
+        if: github.event_name == 'push' || inputs.dry_run == false
         id: nuget-login
         uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
         with:
           user: ${{ secrets.NUGET_USER }}
 
       - name: Push to NuGet
+        if: github.event_name == 'push' || inputs.dry_run == false
         env:
           NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
         run: |
@@ -152,6 +169,7 @@ jobs:
       # even when dispatched from a hotfix branch or an older SHA. The `|| upload --clobber` fallback
       # keeps a re-run idempotent if the release already exists.
       - name: Publish GitHub Release with attested packages
+        if: github.event_name == 'push' || inputs.dry_run == false
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
