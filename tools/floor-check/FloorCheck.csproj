@@ -27,8 +27,8 @@
   <PropertyGroup>
     <!-- The exact package version to consume. The floor job owns it and passes -p:FloorCheckVersion (the
          same value it packs with). The default is only a local-dev fallback for building by hand after
-         `dotnet pack ... -p:Version=1.0.0-floorcheck-dev`. -->
-    <FloorCheckVersion Condition="'$(FloorCheckVersion)' == ''">1.0.0-floorcheck-dev</FloorCheckVersion>
+         `dotnet pack ... -p:Version=1.0.0-floorcheck.dev`. -->
+    <FloorCheckVersion Condition="'$(FloorCheckVersion)' == ''">1.0.0-floorcheck.dev</FloorCheckVersion>
   </PropertyGroup>
 
   <ItemGroup>
