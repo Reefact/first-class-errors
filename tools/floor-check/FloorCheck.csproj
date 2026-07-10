@@ -47,6 +47,13 @@
          makes the reset above cheap and safe (rm -rf of two ignored directories) and keeps this throwaway
          package out of the developer's real cache. -->
     <RestorePackagesPath>$(MSBuildThisFileDirectory)packages</RestorePackagesPath>
+    <!-- packages/ now lives UNDER the project directory (RestorePackagesPath above), and the SDK's default
+         globs compile every **/*.cs beneath it (they exclude only bin/ and obj/). Today the restored
+         FirstClassErrors package carries only DLLs, so nothing is swept in — but a dependency shipping
+         sources (contentFiles, PolySharp-style polyfills, source-only generators) would be silently
+         compiled into FloorCheck, producing cryptic errors in the one job whose whole purpose is a clean
+         diagnostic. Exclude the folder from the default item globs. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);packages/**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
