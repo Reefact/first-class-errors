@@ -2,15 +2,18 @@
 
   <!-- Floor-SDK dogfood consumer. Deliberately NOT part of FirstClassErrors.sln: ci.yml would build it
        under the .NET 10 SDK, which proves nothing and only causes confusion. It is built solely by the
-       "floor" job in .github/workflows/analyzers.yml, whose nested tools/floor-check/global.json selects
-       the .NET 8 (Roslyn 4.8) SDK.
+       "floor" job in .github/workflows/analyzers.yml.
 
-       Unlike a ProjectReference, this project consumes the PACKED FirstClassErrors NuGet package from a
-       local feed (see nuget.config). That validates two things at once on the Roslyn floor: (1) the
-       analyzer still loads on the oldest supported host — a newer Roslyn reference would fail with CS8032;
-       and (2) the analyzer actually ships where consumers expect it (analyzers/dotnet/cs), because a
-       broken packaging path would leave the analyzer silently absent and this build green-but-meaningless
-       (the "prove the analyzer loaded" step guards against exactly that). -->
+       That job splits the work across two SDKs on purpose:
+         * FirstClassErrors is PACKED under the release SDK (.NET 10) — the .nupkg is what a consumer
+           restores, with the analyzer bundled at analyzers/dotnet/cs.
+         * THIS project then consumes that package under the floor SDK (.NET 8 / Roslyn 4.8, selected by the
+           nested tools/floor-check/global.json), i.e. the oldest supported host.
+
+       So one job proves two things about the actual shipped artifact: (1) the analyzer still loads on the
+       floor — a newer Roslyn reference would fail with CS8032; and (2) it really ships where consumers
+       expect it — a broken analyzers/dotnet/cs path would leave the analyzer silently absent. The "prove
+       the analyzer loaded" grep in the workflow turns either failure red. -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -21,15 +24,41 @@
     <WarningsAsErrors>$(WarningsAsErrors);CS8032;AD0001</WarningsAsErrors>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- The exact package version to consume. The floor job owns it and passes -p:FloorCheckVersion (the
+         same value it packs with). The default is only a local-dev fallback for building by hand:
+           rm -rf packages local-feed bin obj
+           dotnet pack ../../FirstClassErrors/FirstClassErrors.csproj -c Release -p:Version=1.0.0-floorcheck.dev -o local-feed
+           dotnet build -c Release
+         The wipe is MANDATORY on a re-pack: the default version is fixed, and NuGet treats a version as
+         immutable — without it the build silently reuses the previously extracted package (see below). -->
+    <FloorCheckVersion Condition="'$(FloorCheckVersion)' == ''">1.0.0-floorcheck.dev</FloorCheckVersion>
+    <!-- Extract restored packages into ./packages instead of the machine-global ~/.nuget/packages. The
+         global folder is keyed by (id, version) and never re-reads a feed for a version it already holds,
+         so with the fixed local-dev version a re-pack would silently serve the STALE previously-extracted
+         copy — the exact green-but-meaningless failure this job exists to prevent. A project-local folder
+         makes the reset above cheap and safe (rm -rf of two ignored directories) and keeps this throwaway
+         package out of the developer's real cache. -->
+    <RestorePackagesPath>$(MSBuildThisFileDirectory)packages</RestorePackagesPath>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- Reuse the dogfood sample's sources verbatim (no duplication); skip its own build output. -->
     <Compile Include="../../FirstClassErrors.Usage/**/*.cs"
              Exclude="../../FirstClassErrors.Usage/obj/**/*.cs;../../FirstClassErrors.Usage/bin/**/*.cs" />
-    <!-- Consume the packed package, NOT a ProjectReference: this is what a real consumer restores, so the
-         analyzer is wired in from the package's analyzers/dotnet/cs folder. The .nupkg is produced into
-         ./local-feed by the floor job's `dotnet pack` step; this Version MUST match the -p:Version passed
-         to that step in .github/workflows/analyzers.yml. -->
-    <PackageReference Include="FirstClassErrors" Version="1.0.0-floorcheck" />
+    <!-- Consume the packed package, NOT a ProjectReference: this is exactly what a downstream consumer
+         restores, so the analyzer is wired in from the package's analyzers/dotnet/cs folder. Staleness is
+         defeated per path: in CI the floor job packs a FRESH, per-run version (never seen by any cache) and
+         passes the SAME value here via -p:FloorCheckVersion; locally the dev default is a FIXED version, so
+         the reset documented above is what guarantees freshness — RestorePackagesPath keeps it cheap.
+
+         The version is pinned EXACTLY, not floated. A floating '1.0.0-floorcheck-*' would, once a stable
+         FirstClassErrors 1.0.0 is published to nuget.org, resolve to that stable release instead — NuGet
+         ranks a stable version above any prerelease sharing its root — and the job would dogfood a
+         published package rather than the artifact under test. An exact prerelease reference resolves the
+         lowest matching version; the packageSourceMapping in nuget.config additionally pins the id to the
+         local feed, so nuget.org can never serve it at all. -->
+    <PackageReference Include="FirstClassErrors" Version="$(FloorCheckVersion)" />
   </ItemGroup>
 
 </Project>
