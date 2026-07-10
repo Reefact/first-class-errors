@@ -54,7 +54,9 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
         // down the pipeline will ultimately fail — but only *after* the extension validation, which is what this test
         // guards. The rejected-extension path is the one that throws ArgumentException (see the sibling test); proving
         // the format is accepted therefore means the call throws anything *but* an ArgumentException.
-        string path = Path.ChangeExtension(Path.GetTempFileName(), extension);
+        // Compose the path instead of deriving it from GetTempFileName(): the latter CREATES a .tmp file on disk that
+        // a mere extension rewrite would orphan on every run.
+        string path = Path.Combine(Path.GetTempPath(), $"fce-gendoc-test-{Guid.NewGuid():N}{extension}");
         File.WriteAllText(path, string.Empty);
 
         try {
