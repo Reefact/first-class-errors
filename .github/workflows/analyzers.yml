@@ -48,10 +48,11 @@ jobs:
     name: Dogfood analyzers on the Roslyn floor
     runs-on: ubuntu-latest
     env:
-      # Single source of truth for the throwaway package version. The per-run suffix makes every run produce
-      # a version NuGet has never cached, so the consume step below always restores the freshly packed .nupkg
-      # instead of a stale copy from ~/.nuget/packages. FloorCheck.csproj matches it with a wildcard
-      # (1.0.0-floorcheck-*), so the exact version lives only here.
+      # Single source of truth for the throwaway package version, passed to BOTH the pack (-p:Version) and
+      # the consume (-p:FloorCheckVersion) steps. The per-run suffix makes every run produce a version NuGet
+      # has never cached, so the consume step always restores the freshly packed .nupkg instead of a stale
+      # copy from ~/.nuget/packages. FloorCheck.csproj pins this EXACT version (not a float), so it can only
+      # resolve the local feed's package — never a future stable FirstClassErrors 1.0.0 on nuget.org.
       FLOORCHECK_VERSION: 1.0.0-floorcheck-${{ github.run_number }}
     steps:
       - name: Checkout
@@ -80,12 +81,12 @@ jobs:
       - name: Consume the package on the floor SDK
         # tools/floor-check/global.json selects the .NET 8 (Roslyn 4.8) SDK: SDK resolution is CWD-based, so
         # running from this directory is what makes the CLI pick the nested pin. This is the real test — the
-        # shipped analyzer, loaded by the oldest supported compiler. ReportAnalyzer AND detailed verbosity are
-        # both required for Roslyn's per-analyzer table to reach the log (silent at default verbosity);
-        # --no-incremental guarantees a real compilation so that table is always produced. The (verbose) log
-        # is echoed only on failure to keep a green run readable.
+        # shipped analyzer, loaded by the oldest supported compiler. -p:FloorCheckVersion pins the exact
+        # package this run packed. ReportAnalyzer AND detailed verbosity are both required for Roslyn's
+        # per-analyzer table to reach the log (silent at default verbosity); --no-incremental guarantees a
+        # real compilation so that table is always produced. The (verbose) log is echoed only on failure.
         working-directory: tools/floor-check
-        run: dotnet build -c Release --no-incremental -p:ReportAnalyzer=true -v detailed > build.log 2>&1 || { cat build.log; exit 1; }
+        run: dotnet build -c Release --no-incremental -p:FloorCheckVersion="$FLOORCHECK_VERSION" -p:ReportAnalyzer=true -v detailed > build.log 2>&1 || { cat build.log; exit 1; }
 
       - name: Prove the analyzer actually loaded
         # A never-loaded analyzer would otherwise leave the build green: CS8032 is emitted only when loading
