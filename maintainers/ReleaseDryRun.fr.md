@@ -13,9 +13,9 @@ ne tourne donc *pour la première fois qu'en production, sur un tag, une seule
 fois*.
 
 Le **dry run manuel** permet de lancer ce même pipeline **à la demande**,
-jusqu'à l'attestation de provenance incluse, **sans rien publier**. C'est une
-répétition : on vérifie que la machinerie de release est saine avant que ça ne
-compte.
+jusqu'à l'attestation de provenance et au login OIDC NuGet inclus, **sans rien
+publier**. C'est une répétition : on vérifie que la machinerie de release est
+saine avant que ça ne compte.
 
 ## Ce qu'il fait — et ne fait pas
 
@@ -27,7 +27,7 @@ compte.
 | Embarquer le SBOM SPDX | ✅ | ✅ |
 | Uploader les packages en artefacts de run | ✅ | ✅ |
 | **Signer l'attestation de provenance** | ✅ | ✅ (voir *Impacts*) |
-| Login NuGet (OIDC) | ✅ | ⛔ sauté |
+| **Login NuGet (OIDC)** | ✅ | ✅ (voir *Impacts*) |
 | **Push vers nuget.org** | ✅ | ⛔ sauté |
 | **Créer la GitHub Release** | ✅ | ⛔ sauté |
 
@@ -55,7 +55,7 @@ est sain.
 
 ## Impacts
 
-Un dry run est *presque* sans effet de bord, avec une exception à connaître :
+Un dry run est *presque* sans effet de bord, avec deux points à connaître :
 
 - **Il crée une vraie attestation de provenance.** L'étape `Attest build
   provenance` s'exécute pendant un dry run (volontairement — les échecs d'OIDC
@@ -68,6 +68,12 @@ Un dry run est *presque* sans effet de bord, avec une exception à connaître :
     attestation jetable ne soit jamais confondue avec une vraie release ;
   - lance le dry run manuel de façon délibérée (avant une vraie release, ou
     après avoir modifié `release.yml`), pas en boucle par réflexe.
+- **Il effectue le vrai login OIDC NuGet.** L'échange de jeton du trusted
+  publishing s'exécute pendant un dry run — c'est le but : il valide la policy
+  nuget.org, donc un dry run **échoue (rouge)** si la policy trusted-publishing
+  ou le secret `NUGET_USER` est absent ou mal configuré. Il génère une clé API
+  éphémère à usage unique que le dry run ne dépense jamais (le push est sauté),
+  donc rien n'est publié.
 - **Rien n'est publié.** Aucun package n'atteint nuget.org, et aucune GitHub
   Release ni aucun tag Git n'est créé.
 - **Les `.nupkg` / `.snupkg` produits sont uploadés en artefacts de run**, que
