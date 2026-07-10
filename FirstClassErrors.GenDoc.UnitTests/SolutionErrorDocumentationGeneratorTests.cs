@@ -377,20 +377,22 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
 
     [Fact(DisplayName = "No warning is emitted for an empty opt-in when the include-everything policy makes the filter inactive.")]
     public void AnEmptyOptInResultStaysSilentWhenTheFilterIsInactive() {
-        // Setup
+        // Setup: an explicit opt-out is always honored, so the result is empty even under include-everything. That
+        // empty result must stay silent — the opt-in filter is inactive, and the empty catalog is the deliberate
+        // outcome, not the shared-build-file signature the warning exists for.
         RecordingGenerationLogger logger = new();
         SolutionGenerationOptions options = new() {
             IncludeProjectsWithoutOptIn = true,
             Logger                      = logger
         };
-        string project = WriteTempProject("<PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup>");
+        string project = WriteTempProject("<PropertyGroup><GenerateErrorDocumentation>false</GenerateErrorDocumentation></PropertyGroup>");
 
         try {
             // Exercise
             IReadOnlyList<string> included = SolutionErrorDocumentationGenerator.FilterProjects(new[] { project }, options);
 
-            // Verify: the project is included by the global policy, so the silence is correct.
-            Check.That(included).ContainsExactly(project);
+            // Verify
+            Check.That(included).IsEmpty();
             Check.That(logger.Warnings).IsEmpty();
         } finally {
             File.Delete(project);
@@ -475,6 +477,57 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
         }
     }
 
+    [Fact(DisplayName = "An opt-in carrying a Condition on the property element itself is ambiguous.")]
+    public void AnOptInConditionedOnTheElementItselfIsAmbiguous() {
+        // Setup: the Condition sits on the property element directly — the one spot the ancestor walk cannot see.
+        RecordingGenerationLogger logger = new();
+        SolutionGenerationOptions options = new() {
+            FailureBehavior = FailureBehavior.Continue,
+            Logger          = logger
+        };
+        string project = WriteTempProject(
+            "<PropertyGroup><GenerateErrorDocumentation Condition=\" '$(Configuration)' == 'Release' \">true</GenerateErrorDocumentation></PropertyGroup>");
+
+        try {
+            // Exercise
+            bool included = SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, options);
+
+            // Verify
+            Check.That(included).IsFalse();
+            Check.That(logger.Warnings).HasSize(1);
+            Check.That(logger.Warnings[0]).Contains("Condition");
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "An opt-in under a When branch is ambiguous even when the malformed When carries no Condition attribute.")]
+    public void AWhenBranchWithoutConditionAttributeIsStillAmbiguous() {
+        // Setup: MSBuild requires a Condition on <When>, so this file is malformed — but the reader must not turn a
+        // malformed file into a guess. A When branch is conditional by construction, attribute or not.
+        RecordingGenerationLogger logger = new();
+        SolutionGenerationOptions options = new() {
+            FailureBehavior = FailureBehavior.Continue,
+            Logger          = logger
+        };
+        string project = WriteTempProject(
+            "<Choose><When>" +
+            "<PropertyGroup><GenerateErrorDocumentation>true</GenerateErrorDocumentation></PropertyGroup>" +
+            "</When></Choose>");
+
+        try {
+            // Exercise
+            bool included = SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, options);
+
+            // Verify
+            Check.That(included).IsFalse();
+            Check.That(logger.Warnings).HasSize(1);
+            Check.That(logger.Warnings[0]).Contains("Condition");
+        } finally {
+            File.Delete(project);
+        }
+    }
+
     [Fact(DisplayName = "An opt-in under a Choose/Otherwise branch is ambiguous even though it carries no Condition attribute.")]
     public void AChooseOtherwiseOptInIsAmbiguous() {
         // Setup: the <Otherwise> branch bears no Condition attribute anywhere on the property's ancestor chain, yet it
@@ -554,7 +607,9 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
     }
 
     private static string WriteTempProject(string body) {
-        string path = Path.ChangeExtension(Path.GetTempFileName(), ".csproj");
+        // Compose the path instead of deriving it from GetTempFileName(): the latter CREATES a .tmp file on disk that
+        // a mere extension rewrite would orphan on every run.
+        string path = Path.Combine(Path.GetTempPath(), $"fce-gendoc-test-{Guid.NewGuid():N}.csproj");
         File.WriteAllText(path, $"<Project Sdk=\"Microsoft.NET.Sdk\">{body}</Project>");
 
         return path;
