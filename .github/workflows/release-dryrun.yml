@@ -1,0 +1,64 @@
+name: release-dryrun
+
+# Continuously rehearses the SIDE-EFFECT-FREE portion of the release pipeline — build, pack, and embed the
+# SBOM for the two published projects — on every push to main and every pull request. release.yml itself
+# runs only on a tag or a manual dispatch, so its packaging path is otherwise exercised for the first time
+# in production, on a tag, once; this catches packaging/SBOM regressions in ordinary CI instead.
+#
+# It deliberately stops before every step that has a side effect:
+#   * no provenance attestation  — that writes a permanent public record (Sigstore/Rekor + the attestation
+#                                  store); it is kept to the manual `release.yml` dispatch dry-run and to
+#                                  real releases, where it runs once and on purpose;
+#   * no NuGet login / push      — nuget.org has no "dry-run push", so the actual publish stays release-only;
+#   * no GitHub Release          — no tag or release is ever created here.
+# Least privilege follows from that: this workflow only reads the repository.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Cancel superseded runs on the same branch / PR.
+concurrency:
+  group: release-dryrun-${{ github.ref }}
+  cancel-in-progress: true
+
+# Read-only: no publishing, no OIDC, no attestation — so none of release.yml's write scopes are needed.
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+  # A throwaway version: nothing is published, so the exact value is irrelevant — it only has to be a valid
+  # SemVer the pack accepts. (release.yml's version comes from the tag and is validated there.)
+  DRYRUN_VERSION: '0.0.0-dryrun'
+
+jobs:
+  pack:
+    name: Dry-run pack (build + SBOM, no publish)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          # The release SDK — the same one release.yml packs with, so this rehearses the real pack path.
+          dotnet-version: '10.0.x'
+
+      - name: Build
+        run: dotnet build FirstClassErrors.sln -c Release -p:Version="$DRYRUN_VERSION"
+
+      # The SAME script release.yml packs with — it packs the two published projects with their SBOM and
+      # then asserts the SBOM is actually embedded. Sharing it is the point: this rehearsal cannot drift
+      # from the real release, because there is only one definition of "pack the release artifacts".
+      # (The unit/integration tests run in ci.yml; this job's unique contribution is the packaging.)
+      - name: Pack with SBOM (build artifacts, no publish)
+        run: tools/packaging/pack.sh "$DRYRUN_VERSION"
