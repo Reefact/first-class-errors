@@ -206,6 +206,20 @@ FirstClassErrors est livré avec un ensemble d’analyseurs Roslyn (identifiants
 
 Voir la [référence des règles d’analyse](analyzers/README.fr.md).
 
+## 🔐 Chaîne d’approvisionnement
+
+Chaque package publié est construit et poussé par [`release.yml`](../.github/workflows/release.yml) avec deux garanties vérifiables :
+
+- **Provenance de build signée** ([SLSA](https://slsa.dev)) — chaque package est attesté au moment du build, liant son empreinte à ce dépôt, au commit exact et à l’exécution du workflow. Les octets attestés sont attachés à la [GitHub Release](https://github.com/Reefact/first-class-errors/releases) correspondante ; téléchargez-y le `.nupkg` et vérifiez avec :
+
+  ```bash
+  gh attestation verify FirstClassErrors.<version>.nupkg --repo Reefact/first-class-errors
+  ```
+
+  (nuget.org sert une copie signée par le dépôt, d’empreinte différente : vérifiez **celle-ci** plutôt avec `dotnet nuget verify`.)
+
+- **SBOM embarqué** — chaque package contient son inventaire logiciel SPDX (*software bill of materials*) à `_manifest/spdx_2.2/manifest.spdx.json`, recensant les fichiers livrés et les composants tiers utilisés pour le construire.
+
 ## 📚 Étapes suivantes
 
 Consultez la documentation complète :

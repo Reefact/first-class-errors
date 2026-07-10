@@ -59,6 +59,14 @@
     <None Include="README.nuget.md" Pack="true" PackagePath="readme.md" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Embed an SPDX SBOM (software bill of materials) inside the package at pack time
+         (_manifest/spdx_2.2/manifest.spdx.json), so the inventory of files and dependencies travels with
+         the artifact and is covered by the release's provenance attestation. Build-time only
+         (PrivateAssets=all): consumers never see this as a dependency. -->
+    <PackageReference Include="Microsoft.Sbom.Targets" Version="4.1.5" PrivateAssets="all" />
+  </ItemGroup>
+
   <!-- Ship the analyzers inside this package (analyzers/dotnet/cs) so package consumers get them automatically.
        ReferenceOutputAssembly=false + PrivateAssets=all keeps the analyzer off the runtime/dependency graph; the
        ProjectReference only guarantees the analyzer is built before this project is packed. -->
