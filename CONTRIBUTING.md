@@ -14,6 +14,20 @@ library produces. This guide defines how commits are written here.
 See [`CLAUDE.md`](CLAUDE.md) for the project layout and the broader change
 guidelines.
 
+## Enabling the commit-message hook
+
+A `commit-msg` hook checks every message against the convention below before it
+is recorded. It is versioned under `.githooks/`; enable it once per clone:
+
+```
+git config core.hooksPath .githooks
+```
+
+The same check runs in CI on every pull request, so a bypassed hook
+(`git commit --no-verify`) is caught before merge. Merge commits are exempt.
+The check itself lives in `tools/commit-lint/lint-commit-message.sh`, shared by
+the hook and CI so the two never diverge.
+
 ## Commit messages
 
 This section adapts the [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
@@ -122,7 +136,7 @@ order is alphabetical so a given pair is always written the same way, and found
 again with a single `git log --grep`.
 
 ```
-fix(cli,gendoc): thread the cancellation token through the generate command
+fix(cli,gendoc): thread cancellation through the generate command
 ```
 
 #### Description
