@@ -24,6 +24,8 @@ jobs:
   analyze:
     name: CodeQL analyze (C#)
     runs-on: ubuntu-latest
+    # Buildless CodeQL is ~2 min; cap a stuck analysis well above that.
+    timeout-minutes: 20
     permissions:
       # Required to upload results to the code-scanning dashboard.
       security-events: write

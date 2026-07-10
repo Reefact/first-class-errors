@@ -28,6 +28,8 @@ jobs:
   build-test:
     name: Build & test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    # Fail a hung run fast instead of holding a runner to the 6-hour default; build+test finishes in ~2 min.
+    timeout-minutes: 15
     strategy:
       # Run both legs to completion so a platform-specific failure is always visible.
       fail-fast: false

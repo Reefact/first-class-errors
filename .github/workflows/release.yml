@@ -48,6 +48,8 @@ jobs:
   pack-push:
     name: Pack & push NuGet
     runs-on: ubuntu-latest
+    # build + test + pack + attest + push is ~4 min; cap a hung release rather than the 6-hour default.
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7

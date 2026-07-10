@@ -28,6 +28,8 @@ jobs:
   dogfood:
     name: Dogfood analyzers
     runs-on: ubuntu-latest
+    # Dogfood build is ~30s; a generous cap over a hung run.
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
@@ -47,6 +49,8 @@ jobs:
   floor:
     name: Dogfood analyzers on the Roslyn floor
     runs-on: ubuntu-latest
+    # Downloads the floor SDK then builds (~1 min); cap a hung run.
+    timeout-minutes: 15
     env:
       # Single source of truth for the throwaway package version, passed to BOTH the pack (-p:Version) and
       # the consume (-p:FloorCheckVersion) steps. The run-number.attempt suffix makes every run produce a

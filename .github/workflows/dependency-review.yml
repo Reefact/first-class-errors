@@ -27,6 +27,8 @@ jobs:
   review:
     name: Dependency review
     runs-on: ubuntu-latest
+    # The dependency-graph diff is seconds; cap a stuck runner.
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7

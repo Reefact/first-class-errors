@@ -28,6 +28,8 @@ jobs:
   analyze:
     name: SonarQube Cloud analysis
     runs-on: ubuntu-latest
+    # Scanner + build + test + coverage is ~3 min; cap a stuck analysis well above that.
+    timeout-minutes: 20
     # PRs opened from a fork cannot read SONAR_TOKEN; skip the analysis there rather
     # than fail. Branches in this repository (the normal case) run normally.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
