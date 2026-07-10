@@ -28,6 +28,9 @@ The same check runs in CI on every pull request, so a bypassed hook
 The check itself lives in `tools/commit-lint/lint-commit-message.sh`, shared by
 the hook and CI so the two never diverge.
 
+The hook lets `fixup!`, `squash!`, and `amend!` commits through so you can build
+an autosquash rebase; CI rejects them, so squash them away before merge.
+
 ## Commit messages
 
 This section adapts the [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
