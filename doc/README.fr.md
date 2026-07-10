@@ -9,7 +9,6 @@
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=reefact_first-class-errors&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=reefact_first-class-errors)
 [![Couverture](https://sonarcloud.io/api/project_badges/measure?project=reefact_first-class-errors&metric=coverage)](https://sonarcloud.io/summary/new_code?id=reefact_first-class-errors)
 ![.NET Standard 2.0](https://img.shields.io/badge/.NET%20Standard-2.0-512BD4)
-[![Licence : Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](../LICENSE)
 
 ---
 
