@@ -83,12 +83,16 @@ jobs:
 
       # Only the two projects that carry NuGet identity are packed. The analyzer ships
       # bundled inside the main package, and the CLI / worker / samples are not published.
+      # GenerateSBOM activates Microsoft.Sbom.Targets (referenced by both packable projects): each
+      # package embeds its SPDX inventory at _manifest/spdx_2.2/manifest.spdx.json. Deliberately
+      # passed only HERE, not hardcoded in the csproj, so local packs and the floor-check job's
+      # throwaway pack stay fast and SBOM-free — only published artifacts carry one.
       - name: Pack
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          dotnet pack FirstClassErrors/FirstClassErrors.csproj -c Release --no-build -p:Version="$VERSION" -o artifacts
-          dotnet pack FirstClassErrors.Testing/FirstClassErrors.Testing.csproj -c Release --no-build -p:Version="$VERSION" -o artifacts
+          dotnet pack FirstClassErrors/FirstClassErrors.csproj -c Release --no-build -p:Version="$VERSION" -p:GenerateSBOM=true -o artifacts
+          dotnet pack FirstClassErrors.Testing/FirstClassErrors.Testing.csproj -c Release --no-build -p:Version="$VERSION" -p:GenerateSBOM=true -o artifacts
 
       - name: Upload packages as build artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
