@@ -21,6 +21,9 @@ permissions:
   # Allow the job to request a GitHub OIDC token, exchanged for a short-lived NuGet API key
   # via trusted publishing (no long-lived NUGET_API_KEY secret is stored).
   id-token: write
+  # Store the signed build-provenance attestations in the repository's attestation store,
+  # so anyone can verify a published package with `gh attestation verify`.
+  attestations: write
 
 env:
   DOTNET_NOLOGO: 'true'
@@ -104,6 +107,20 @@ jobs:
             artifacts/*.nupkg
             artifacts/*.snupkg
           if-no-files-found: error
+
+      # SLSA build provenance: sign an attestation binding each artifact's SHA-256 to this repository,
+      # workflow, commit and runner (via Sigstore + the job's OIDC identity), and store it in the repo's
+      # attestation store. Anyone can then verify a downloaded package with:
+      #   gh attestation verify FirstClassErrors.<version>.nupkg --repo Reefact/first-class-errors
+      # Runs BEFORE the push on purpose: only attested artifacts ever reach nuget.org, and a failure
+      # here stops the release instead of leaving published-but-unattested packages. The .snupkg symbol
+      # packages are attested too, since `dotnet nuget push` publishes them alongside the .nupkg.
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-path: |
+            artifacts/*.nupkg
+            artifacts/*.snupkg
 
       # Trusted publishing: exchange the job's OIDC token for a short-lived, single-use NuGet API key.
       # Requires a trusted publishing policy on nuget.org (owner Reefact / repo first-class-errors /
