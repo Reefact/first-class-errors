@@ -1,5 +1,10 @@
 <!--
-  Please write this PR in ENGLISH: summary, changes, testing notes, and related issue references.
+  Please write this PR in ENGLISH: title, summary, changes, testing notes, and related issue references.
+
+  Title: name the whole change in English. A single-intention PR mirrors its commit
+  header (type(scope): description); a multi-intention PR uses a short descriptive
+  title. Issue links go in "Related issues" below, not the title.
+  See CONTRIBUTING.md -> "Pull request titles".
 
   Fill in the applicable sections below.
   Do not invent information.
