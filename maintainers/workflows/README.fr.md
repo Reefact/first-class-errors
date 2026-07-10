@@ -1,6 +1,8 @@
 # Référence des workflows CI/CD
 
-🌍 🇬🇧 [English](README.en.md) · 🇫🇷 Français (ce fichier)
+🌍 🇬🇧 [English](README.md) · 🇫🇷 Français (ce fichier)
+
+↑ Fait partie de la [documentation mainteneur](../README.fr.md).
 
 > Documentation mainteneur. Elle décrit les workflows GitHub Actions qui
 > construisent, vérifient et publient FirstClassErrors. Elle ne fait **pas**

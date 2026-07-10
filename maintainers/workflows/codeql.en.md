@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](codeql.fr.md)
 
-> Maintainer documentation — part of the [workflow reference](README.en.md).
+> Maintainer documentation — part of the [workflow reference](README.md).
 > Not part of the user documentation under `doc/`.
 
 **Workflow file:** [`.github/workflows/codeql.yml`](../../.github/workflows/codeql.yml)
