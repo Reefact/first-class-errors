@@ -76,7 +76,13 @@ jobs:
           /d:sonar.cs.opencover.reportsPaths="artifacts/coverage/**/coverage.opencover.xml"
 
       - name: Build
-        run: dotnet build FirstClassErrors.sln -c Release
+        # Disable the CI warning ratchet (Directory.Build.props) for the analysis build only. The scanner
+        # needs this compilation to COMPLETE so it can collect the SonarAnalyzer diagnostics and upload them
+        # in `end`. The scanner already neutralises TreatWarningsAsErrors, but not MSBuildTreatWarningsAsErrors
+        # — which also promotes compiler/analyzer warnings — so a Sonar rule warning would fail this build
+        # before results are reported. The ratchet stays enforced by ci.yml (both OS legs), which is the gate;
+        # this analysis leg is not.
+        run: dotnet build FirstClassErrors.sln -c Release -p:TreatWarningsAsErrors=false -p:MSBuildTreatWarningsAsErrors=false
 
       - name: Test with coverage
         # Reuse coverage.runsettings so the OpenCover report matches the one the ci workflow produces.
