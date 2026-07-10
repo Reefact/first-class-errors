@@ -70,4 +70,6 @@ errors should stay structured, documented, and close to the code.
 * Follow `.github/pull_request_template.md` for every pull request.
 * Do not open a pull request unless I explicitly ask for one.
 * PR titles, descriptions, commits, and branch names must be written in English.
+* Write every commit message per [`CONTRIBUTING.md`](CONTRIBUTING.md): Conventional Commits, a closed type list, the scopes `core, analyzers, cli, gendoc, testing`, an imperative header within 72 characters, and `Refs: #NN` in a footer when a GitHub issue exists (issue-closing keywords belong in the PR description, not the commit).
+* Enable the local commit-message hook once per clone with `git config core.hooksPath .githooks`; the same check runs in CI on every pull request.
 * In PR descriptions, do not invent testing results. Only check items that were actually run.
