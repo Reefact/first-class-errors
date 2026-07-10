@@ -288,6 +288,8 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 # FirstClassErrors floor check (tools/floor-check): CI-generated artifacts, never committed.
-# local-feed holds the packed .nupkg the floor job produces; build.log is its verbose build output.
+# local-feed holds the packed .nupkg the floor job produces; packages/ is the project-local NuGet
+# extraction folder (RestorePackagesPath); build.log is the job's verbose build output.
 tools/floor-check/local-feed/
+tools/floor-check/packages/
 tools/floor-check/build.log
