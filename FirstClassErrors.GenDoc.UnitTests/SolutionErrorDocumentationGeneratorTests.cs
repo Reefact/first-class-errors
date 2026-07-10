@@ -54,7 +54,9 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
         // down the pipeline will ultimately fail — but only *after* the extension validation, which is what this test
         // guards. The rejected-extension path is the one that throws ArgumentException (see the sibling test); proving
         // the format is accepted therefore means the call throws anything *but* an ArgumentException.
-        string path = Path.ChangeExtension(Path.GetTempFileName(), extension);
+        // Compose the path instead of deriving it from GetTempFileName(): the latter CREATES a .tmp file on disk that
+        // a mere extension rewrite would orphan on every run.
+        string path = Path.Combine(Path.GetTempPath(), $"fce-gendoc-test-{Guid.NewGuid():N}{extension}");
         File.WriteAllText(path, string.Empty);
 
         try {
@@ -228,6 +230,391 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
         // Verify
         Check.That(catalog.Select(doc => doc.Code)).ContainsExactly("A", "B");
         Check.That(logger.Warnings).IsEmpty();
+    }
+
+    [Fact(DisplayName = "A project opted in with a single literal property is included.")]
+    public void ASingleLiteralOptInIsIncluded() {
+        // Setup
+        string project = WriteTempProject("<PropertyGroup><GenerateErrorDocumentation>true</GenerateErrorDocumentation></PropertyGroup>");
+
+        try {
+            // Exercise & verify
+            Check.That(SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, new SolutionGenerationOptions()))
+                 .IsTrue();
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "A project with an explicit falsy opt-in is excluded, even under the include-everything policy.")]
+    public void AnExplicitOptOutIsExcluded() {
+        // Setup
+        string project = WriteTempProject("<PropertyGroup><GenerateErrorDocumentation>false</GenerateErrorDocumentation></PropertyGroup>");
+
+        try {
+            // Exercise & verify
+            Check.That(SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, new SolutionGenerationOptions { IncludeProjectsWithoutOptIn = true }))
+                 .IsFalse();
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "A project without the opt-in is excluded by default.")]
+    public void AnAbsentOptInIsExcludedByDefault() {
+        // Setup
+        string project = WriteTempProject("<PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup>");
+
+        try {
+            // Exercise & verify
+            Check.That(SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, new SolutionGenerationOptions()))
+                 .IsFalse();
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "A project without the opt-in is included under the include-everything policy.")]
+    public void AnAbsentOptInIsIncludedUnderTheIncludeEverythingPolicy() {
+        // Setup
+        string project = WriteTempProject("<PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup>");
+
+        try {
+            // Exercise & verify
+            Check.That(SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, new SolutionGenerationOptions { IncludeProjectsWithoutOptIn = true }))
+                 .IsTrue();
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "An opt-in defined more than once is ambiguous: the project is skipped and the skip is logged (Continue).")]
+    public void ADuplicatedOptInIsSkippedAndLoggedWhenContinuing() {
+        // Setup: two definitions of the marker — its effective value cannot be known without evaluating MSBuild.
+        RecordingGenerationLogger logger = new();
+        SolutionGenerationOptions options = new() {
+            FailureBehavior = FailureBehavior.Continue,
+            Logger          = logger
+        };
+        string project = WriteTempProject(
+            "<PropertyGroup><GenerateErrorDocumentation>false</GenerateErrorDocumentation></PropertyGroup>" +
+            "<PropertyGroup><GenerateErrorDocumentation>true</GenerateErrorDocumentation></PropertyGroup>");
+
+        try {
+            // Exercise
+            bool included = SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, options);
+
+            // Verify: the project is left out, and the skip is traced (never silent) with the property named.
+            Check.That(included).IsFalse();
+            Check.That(logger.Warnings).HasSize(1);
+            Check.That(logger.Warnings[0]).Contains("GenerateErrorDocumentation");
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "An opt-in gated behind a Condition is ambiguous: the project is skipped and the skip is logged (Continue).")]
+    public void AConditionedOptInIsSkippedAndLoggedWhenContinuing() {
+        // Setup: the marker sits under a Condition, so the raw XML value is not necessarily the effective one.
+        RecordingGenerationLogger logger = new();
+        SolutionGenerationOptions options = new() {
+            FailureBehavior = FailureBehavior.Continue,
+            Logger          = logger
+        };
+        string project = WriteTempProject(
+            "<PropertyGroup Condition=\" '$(Configuration)' == 'Release' \"><GenerateErrorDocumentation>true</GenerateErrorDocumentation></PropertyGroup>");
+
+        try {
+            // Exercise
+            bool included = SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, options);
+
+            // Verify
+            Check.That(included).IsFalse();
+            Check.That(logger.Warnings).HasSize(1);
+            Check.That(logger.Warnings[0]).Contains("Condition");
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "An ambiguous opt-in aborts when the failure behavior is Stop.")]
+    public void AnAmbiguousOptInAbortsWhenStopping() {
+        // Setup: default options use FailureBehavior.Stop.
+        string project = WriteTempProject(
+            "<PropertyGroup><GenerateErrorDocumentation>true</GenerateErrorDocumentation></PropertyGroup>" +
+            "<PropertyGroup><GenerateErrorDocumentation>true</GenerateErrorDocumentation></PropertyGroup>");
+
+        try {
+            // Exercise & verify
+            Check.ThatCode(() => SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, new SolutionGenerationOptions()))
+                 .Throws<SolutionDocumentationGenerationException>();
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "A solution where no project opts in warns with the opt-in property name instead of staying silent.")]
+    public void AnEmptyOptInResultIsWarnedNotSilent() {
+        // Setup: two projects, neither carrying the marker — the exact signature of an opt-in declared only in a shared
+        // Directory.Build.props (invisible to the literal .csproj read) or of a misspelled property name.
+        RecordingGenerationLogger logger = new();
+        SolutionGenerationOptions options = new() { Logger = logger };
+        string                    projectA = WriteTempProject("<PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup>");
+        string                    projectB = WriteTempProject("<PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup>");
+
+        try {
+            // Exercise
+            IReadOnlyList<string> included = SolutionErrorDocumentationGenerator.FilterProjects(new[] { projectA, projectB }, options);
+
+            // Verify: nothing is retained, and the empty result is traced with the property name and the read limitation.
+            Check.That(included).IsEmpty();
+            Check.That(logger.Warnings).HasSize(1);
+            Check.That(logger.Warnings[0]).Contains("GenerateErrorDocumentation");
+            Check.That(logger.Warnings[0]).Contains("Directory.Build.props");
+        } finally {
+            File.Delete(projectA);
+            File.Delete(projectB);
+        }
+    }
+
+    [Fact(DisplayName = "No warning is emitted for an empty opt-in when the include-everything policy makes the filter inactive.")]
+    public void AnEmptyOptInResultStaysSilentWhenTheFilterIsInactive() {
+        // Setup: an explicit opt-out is always honored, so the result is empty even under include-everything. That
+        // empty result must stay silent — the opt-in filter is inactive, and the empty catalog is the deliberate
+        // outcome, not the shared-build-file signature the warning exists for.
+        RecordingGenerationLogger logger = new();
+        SolutionGenerationOptions options = new() {
+            IncludeProjectsWithoutOptIn = true,
+            Logger                      = logger
+        };
+        string project = WriteTempProject("<PropertyGroup><GenerateErrorDocumentation>false</GenerateErrorDocumentation></PropertyGroup>");
+
+        try {
+            // Exercise
+            IReadOnlyList<string> included = SolutionErrorDocumentationGenerator.FilterProjects(new[] { project }, options);
+
+            // Verify
+            Check.That(included).IsEmpty();
+            Check.That(logger.Warnings).IsEmpty();
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "No warning is emitted when at least one project opts in.")]
+    public void APartialOptInStaysSilent() {
+        // Setup
+        RecordingGenerationLogger logger  = new();
+        SolutionGenerationOptions options = new() { Logger = logger };
+        string                    optedIn = WriteTempProject("<PropertyGroup><GenerateErrorDocumentation>true</GenerateErrorDocumentation></PropertyGroup>");
+        string                    plain   = WriteTempProject("<PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup>");
+
+        try {
+            // Exercise
+            IReadOnlyList<string> included = SolutionErrorDocumentationGenerator.FilterProjects(new[] { optedIn, plain }, options);
+
+            // Verify
+            Check.That(included).ContainsExactly(optedIn);
+            Check.That(logger.Warnings).IsEmpty();
+        } finally {
+            File.Delete(optedIn);
+            File.Delete(plain);
+        }
+    }
+
+    [Fact(DisplayName = "No warning is emitted for a solution without any project to examine.")]
+    public void AnEmptySolutionStaysSilent() {
+        // Setup
+        RecordingGenerationLogger logger  = new();
+        SolutionGenerationOptions options = new() { Logger = logger };
+
+        // Exercise
+        IReadOnlyList<string> included = SolutionErrorDocumentationGenerator.FilterProjects([], options);
+
+        // Verify: with nothing to examine there is nothing to diagnose.
+        Check.That(included).IsEmpty();
+        Check.That(logger.Warnings).IsEmpty();
+    }
+
+    [Fact(DisplayName = "An opt-in under a Choose/When branch is ambiguous: the project is skipped and the skip is logged (Continue).")]
+    public void AChooseWhenOptInIsSkippedAndLoggedWhenContinuing() {
+        // Setup: the Condition sits on the <When> grandparent — neither the property nor its PropertyGroup carries it.
+        RecordingGenerationLogger logger = new();
+        SolutionGenerationOptions options = new() {
+            FailureBehavior = FailureBehavior.Continue,
+            Logger          = logger
+        };
+        string project = WriteTempProject(
+            "<Choose><When Condition=\" '$(Configuration)' == 'Release' \">" +
+            "<PropertyGroup><GenerateErrorDocumentation>true</GenerateErrorDocumentation></PropertyGroup>" +
+            "</When></Choose>");
+
+        try {
+            // Exercise
+            bool included = SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, options);
+
+            // Verify
+            Check.That(included).IsFalse();
+            Check.That(logger.Warnings).HasSize(1);
+            Check.That(logger.Warnings[0]).Contains("Condition");
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "An opt-in under a Choose/When branch aborts when the failure behavior is Stop.")]
+    public void AChooseWhenOptInAbortsWhenStopping() {
+        // Setup: default options use FailureBehavior.Stop.
+        string project = WriteTempProject(
+            "<Choose><When Condition=\" '$(Configuration)' == 'Release' \">" +
+            "<PropertyGroup><GenerateErrorDocumentation>true</GenerateErrorDocumentation></PropertyGroup>" +
+            "</When></Choose>");
+
+        try {
+            // Exercise & verify
+            Check.ThatCode(() => SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, new SolutionGenerationOptions()))
+                 .Throws<SolutionDocumentationGenerationException>();
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "An opt-in carrying a Condition on the property element itself is ambiguous.")]
+    public void AnOptInConditionedOnTheElementItselfIsAmbiguous() {
+        // Setup: the Condition sits on the property element directly — the one spot the ancestor walk cannot see.
+        RecordingGenerationLogger logger = new();
+        SolutionGenerationOptions options = new() {
+            FailureBehavior = FailureBehavior.Continue,
+            Logger          = logger
+        };
+        string project = WriteTempProject(
+            "<PropertyGroup><GenerateErrorDocumentation Condition=\" '$(Configuration)' == 'Release' \">true</GenerateErrorDocumentation></PropertyGroup>");
+
+        try {
+            // Exercise
+            bool included = SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, options);
+
+            // Verify
+            Check.That(included).IsFalse();
+            Check.That(logger.Warnings).HasSize(1);
+            Check.That(logger.Warnings[0]).Contains("Condition");
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "An opt-in under a When branch is ambiguous even when the malformed When carries no Condition attribute.")]
+    public void AWhenBranchWithoutConditionAttributeIsStillAmbiguous() {
+        // Setup: MSBuild requires a Condition on <When>, so this file is malformed — but the reader must not turn a
+        // malformed file into a guess. A When branch is conditional by construction, attribute or not.
+        RecordingGenerationLogger logger = new();
+        SolutionGenerationOptions options = new() {
+            FailureBehavior = FailureBehavior.Continue,
+            Logger          = logger
+        };
+        string project = WriteTempProject(
+            "<Choose><When>" +
+            "<PropertyGroup><GenerateErrorDocumentation>true</GenerateErrorDocumentation></PropertyGroup>" +
+            "</When></Choose>");
+
+        try {
+            // Exercise
+            bool included = SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, options);
+
+            // Verify
+            Check.That(included).IsFalse();
+            Check.That(logger.Warnings).HasSize(1);
+            Check.That(logger.Warnings[0]).Contains("Condition");
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "An opt-in under a Choose/Otherwise branch is ambiguous even though it carries no Condition attribute.")]
+    public void AChooseOtherwiseOptInIsAmbiguous() {
+        // Setup: the <Otherwise> branch bears no Condition attribute anywhere on the property's ancestor chain, yet it
+        // only applies when no <When> matched — conditional by construction.
+        RecordingGenerationLogger logger = new();
+        SolutionGenerationOptions options = new() {
+            FailureBehavior = FailureBehavior.Continue,
+            Logger          = logger
+        };
+        string project = WriteTempProject(
+            "<Choose><When Condition=\" '$(Configuration)' == 'Release' \">" +
+            "<PropertyGroup><SomeOtherProperty>x</SomeOtherProperty></PropertyGroup>" +
+            "</When><Otherwise>" +
+            "<PropertyGroup><GenerateErrorDocumentation>true</GenerateErrorDocumentation></PropertyGroup>" +
+            "</Otherwise></Choose>");
+
+        try {
+            // Exercise
+            bool included = SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, options);
+
+            // Verify
+            Check.That(included).IsFalse();
+            Check.That(logger.Warnings).HasSize(1);
+            Check.That(logger.Warnings[0]).Contains("Condition");
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "A target-local assignment does not turn a legitimate opt-in into a false duplicate.")]
+    public void ATargetLocalAssignmentIsNotAFalseDuplicate() {
+        // Setup: a clean evaluation-time opt-in, plus an occurrence inside a <Target> — assigned when the target runs,
+        // nonexistent at evaluation time. It must count neither as a duplicate nor as a value.
+        RecordingGenerationLogger logger = new();
+        SolutionGenerationOptions options = new() {
+            FailureBehavior = FailureBehavior.Continue,
+            Logger          = logger
+        };
+        string project = WriteTempProject(
+            "<PropertyGroup><GenerateErrorDocumentation>true</GenerateErrorDocumentation></PropertyGroup>" +
+            "<Target Name=\"AfterBuildTweak\">" +
+            "<PropertyGroup><GenerateErrorDocumentation>false</GenerateErrorDocumentation></PropertyGroup>" +
+            "</Target>");
+
+        try {
+            // Exercise
+            bool included = SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, options);
+
+            // Verify: the evaluation-time opt-in wins, without any ambiguity diagnostic.
+            Check.That(included).IsTrue();
+            Check.That(logger.Warnings).IsEmpty();
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    [Fact(DisplayName = "An opt-in that only exists inside a Target is absent at evaluation time.")]
+    public void ATargetOnlyOptInIsAbsent() {
+        // Setup: the only occurrence is target-local. Read as absent, the project must follow the global policy —
+        // which distinguishes absence from an explicit opt-out (the latter is honored even under include-everything).
+        string project = WriteTempProject(
+            "<Target Name=\"AfterBuildTweak\">" +
+            "<PropertyGroup><GenerateErrorDocumentation>false</GenerateErrorDocumentation></PropertyGroup>" +
+            "</Target>");
+
+        try {
+            // Exercise & verify: excluded by the default opt-in policy...
+            Check.That(SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, new SolutionGenerationOptions()))
+                 .IsFalse();
+
+            // ...but included under include-everything, proving the read was Absent and not an explicit "false".
+            Check.That(SolutionErrorDocumentationGenerator.ShouldIncludeProject(project, new SolutionGenerationOptions { IncludeProjectsWithoutOptIn = true }))
+                 .IsTrue();
+        } finally {
+            File.Delete(project);
+        }
+    }
+
+    private static string WriteTempProject(string body) {
+        // Compose the path instead of deriving it from GetTempFileName(): the latter CREATES a .tmp file on disk that
+        // a mere extension rewrite would orphan on every run.
+        string path = Path.Combine(Path.GetTempPath(), $"fce-gendoc-test-{Guid.NewGuid():N}.csproj");
+        File.WriteAllText(path, $"<Project Sdk=\"Microsoft.NET.Sdk\">{body}</Project>");
+
+        return path;
     }
 
     private sealed class RecordingLogger : IGenerationLogger {

@@ -82,7 +82,7 @@ This produces a **global error catalog** for the application or system.
 
 ### Opting a project in
 
-Solution-level generation is **opt-in per project**: a project is documented only when its build file sets the MSBuild property
+Solution-level generation is **opt-in per project**: a project is documented only when its project file (`.csproj`) sets the MSBuild property
 
 ```xml
 <PropertyGroup>
@@ -97,10 +97,11 @@ Each project discovered in the solution is then treated as follows:
 | `true`                       | documented |
 | absent                       | skipped — the default is opt-in |
 | `false`                      | always skipped, even when the "include everything" policy is on |
+| declared twice, or `Condition`-gated | reported, never guessed — a warning that skips the project (`Continue`), or a hard error |
 
 This keeps the catalog — and the worker processes spawned to build it — scoped to the projects that actually define application errors, rather than every project in the solution.
 
-The property is a **marker read straight from the project file**, not an MSBuild build switch: nothing consumes it at plain `dotnet build` time, and passing `-p:GenerateErrorDocumentation=…` on a build command line has no effect. The `--assemblies` path is not subject to this filter — it documents exactly the binaries you name.
+The property is a **marker read straight from the project file**, not an MSBuild build switch: nothing consumes it at plain `dotnet build` time, and passing `-p:GenerateErrorDocumentation=…` on a build command line has no effect. Because it is read from the project XML rather than evaluated by MSBuild, it must be declared literally in the `.csproj`: a value inherited from a shared `Directory.Build.props` or brought in by an import is not seen, so the project is treated as if the marker were absent. If the marker *is* in the `.csproj` but its effective value is unknowable from the XML alone — declared more than once, or gated behind a `Condition` — GenDoc does not guess: it reports the project through the configured failure behavior (a warning that skips it under `Continue`, a hard error otherwise). The `--assemblies` path is not subject to this filter — it documents exactly the binaries you name.
 
 > For programmatic callers, `SolutionGenerationOptions` exposes `OptInPropertyName` (rename the marker) and `IncludeProjectsWithoutOptIn` (document every project regardless). The `fce` CLI uses the defaults shown above.
 

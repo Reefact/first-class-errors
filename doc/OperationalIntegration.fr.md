@@ -16,7 +16,7 @@ La documentation des erreurs doit être générée automatiquement pendant la CI
 3. Générer le catalogue d’erreurs (Markdown ou JSON)  
 4. Le publier comme artefact du pipeline ou le déployer sur un portail documentaire  
 
-La génération est **opt-in par projet** : seuls les projets dont le fichier de build définit `<GenerateErrorDocumentation>true</GenerateErrorDocumentation>` sont analysés ; un projet sans cette propriété est silencieusement ignoré. Si un pipeline neuf produit un catalogue vide, vérifiez d’abord l’opt-in. Voir [Activer un projet (opt-in)](ArchitectureOfTheDocumentationPipeline.fr.md#activer-un-projet-opt-in).
+La génération est **opt-in par projet** : seuls les projets dont le fichier projet (`.csproj`) définit `<GenerateErrorDocumentation>true</GenerateErrorDocumentation>` sont analysés ; un projet sans cette propriété est silencieusement ignoré. Le marqueur doit figurer dans le `.csproj` lui-même — il est lu directement dans le XML du projet, donc une valeur héritée d’un `Directory.Build.props` partagé n’est pas prise en compte. Quand aucun projet n’a opté, le générateur journalise un avertissement nommant la propriété plutôt que de produire un catalogue vide en silence. Si un pipeline neuf produit un catalogue vide, vérifiez d’abord l’opt-in. Voir [Activer un projet (opt-in)](ArchitectureOfTheDocumentationPipeline.fr.md#activer-un-projet-opt-in).
 
 Cela garantit que la documentation correspond toujours à la version du système déployée. Aucune mise à jour manuelle n’est nécessaire et aucune dérive ne peut apparaître.
 
