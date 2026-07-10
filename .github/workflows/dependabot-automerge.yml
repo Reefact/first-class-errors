@@ -24,6 +24,8 @@ jobs:
   automerge:
     name: Auto-merge Dependabot patch/minor
     runs-on: ubuntu-latest
+    # Fetch metadata + enable auto-merge is seconds; cap a stuck runner.
+    timeout-minutes: 10
     # Only act on PRs raised by Dependabot.
     if: github.actor == 'dependabot[bot]'
     permissions:
