@@ -30,10 +30,18 @@
     tools/floor-check/FloorCheck.csproj opts back out — its failure signal is deliberately narrow.
   -->
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <!-- Two switches are needed for a TOTAL ratchet. TreatWarningsAsErrors is compiler-scoped (it only
+         promotes CS* diagnostics); MSBuildTreatWarningsAsErrors promotes warnings raised by MSBuild/SDK
+         tasks and pack targets (MSB*, NETSDK*, ...). With only the first, a task-emitted warning would
+         still merge unnoticed. -->
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <MSBuildTreatWarningsAsErrors>true</MSBuildTreatWarningsAsErrors>
     <!-- Keep NuGet security-audit advisories (NU1901-NU1905) as warnings: a CVE published overnight
-         against a dependency would otherwise turn every PR red without any code change. The advisory
-         still shows in logs, and Dependabot + CodeQL are the channels that act on it. -->
+         against a dependency would otherwise turn every PR red without any code change (NuGet honours
+         TreatWarningsAsErrors for its own restore warnings, so they ARE promoted by default). The
+         advisory still shows in logs; Dependabot and CodeQL are the channels that act on it. This
+         exclusion MUST live in WarningsNotAsErrors, not MSBuildWarningsNotAsErrors: NuGet reads the
+         compiler-scoped list — the MSBuild-scoped one does not suppress NU* audit errors (verified). -->
     <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904;NU1905</WarningsNotAsErrors>
   </PropertyGroup>
 

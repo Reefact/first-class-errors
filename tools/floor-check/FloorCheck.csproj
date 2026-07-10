@@ -22,11 +22,13 @@
     <!-- An analyzer that fails to load (CS8032) or throws while loading (AD0001) must break the build,
          not merely warn. That failure is the entire signal this project exists to produce. -->
     <WarningsAsErrors>$(WarningsAsErrors);CS8032;AD0001</WarningsAsErrors>
-    <!-- Opt out of the repo-wide CI warning ratchet (Directory.Build.props): this project builds under
-         the OLD floor SDK, whose toolchain may emit warnings the .NET 10 CI legs never see. Elevating
-         those would redden this job for reasons foreign to the one contract it checks — analyzer
-         loadability. The targeted CS8032/AD0001 list above stays the only escalation. -->
+    <!-- Opt out of the repo-wide CI warning ratchet (Directory.Build.props, imported from the repo root):
+         this project builds under the OLD floor SDK, whose toolchain may emit warnings the .NET 10 CI legs
+         never see. Elevating those would redden this job for reasons foreign to the one contract it checks
+         — analyzer loadability. Both ratchet switches are disabled; the targeted CS8032/AD0001 list above
+         stays the only escalation. -->
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <MSBuildTreatWarningsAsErrors>false</MSBuildTreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup>
