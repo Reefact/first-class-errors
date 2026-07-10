@@ -24,16 +24,29 @@
     <WarningsAsErrors>$(WarningsAsErrors);CS8032;AD0001</WarningsAsErrors>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- The exact package version to consume. The floor job owns it and passes -p:FloorCheckVersion (the
+         same value it packs with). The default is only a local-dev fallback for building by hand after
+         `dotnet pack ... -p:Version=1.0.0-floorcheck-dev`. -->
+    <FloorCheckVersion Condition="'$(FloorCheckVersion)' == ''">1.0.0-floorcheck-dev</FloorCheckVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- Reuse the dogfood sample's sources verbatim (no duplication); skip its own build output. -->
     <Compile Include="../../FirstClassErrors.Usage/**/*.cs"
              Exclude="../../FirstClassErrors.Usage/obj/**/*.cs;../../FirstClassErrors.Usage/bin/**/*.cs" />
     <!-- Consume the packed package, NOT a ProjectReference: this is exactly what a downstream consumer
          restores, so the analyzer is wired in from the package's analyzers/dotnet/cs folder. The floor job
-         packs a FRESH, per-run version (1.0.0-floorcheck-<run>) into ./local-feed so NuGet never serves a
-         stale copy from its global cache. The wildcard below matches whatever that run produced, which keeps
-         the exact version owned solely by the workflow (no "MUST match" duplicated across two files). -->
-    <PackageReference Include="FirstClassErrors" Version="1.0.0-floorcheck-*" />
+         packs a FRESH, per-run version into ./local-feed and passes the SAME version here via
+         -p:FloorCheckVersion, so NuGet restores that exact package and never serves a stale copy from its
+         global cache.
+
+         The version is pinned EXACTLY, not floated. A floating '1.0.0-floorcheck-*' would, once a stable
+         FirstClassErrors 1.0.0 is published to nuget.org (kept enabled in nuget.config), resolve to that
+         stable release instead — NuGet ranks a stable version above any prerelease sharing its root — and
+         the job would dogfood a published package rather than the artifact under test. An exact prerelease
+         reference resolves the lowest matching version, which only the local feed carries. -->
+    <PackageReference Include="FirstClassErrors" Version="$(FloorCheckVersion)" />
   </ItemGroup>
 
 </Project>
