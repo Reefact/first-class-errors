@@ -23,6 +23,21 @@
   </PropertyGroup>
 
   <!--
+    Warning ratchet: the codebase currently builds with ZERO warnings, and CI locks that state in by
+    turning every warning into an error — a new warning can never merge, so the count can never creep
+    up. Scoped to CI (same GITHUB_ACTIONS signal as ContinuousIntegrationBuild above) so local builds
+    stay friendly to iteration: half-finished refactorings may warn without blocking the inner loop.
+    tools/floor-check/FloorCheck.csproj opts back out — its failure signal is deliberately narrow.
+  -->
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Keep NuGet security-audit advisories (NU1901-NU1905) as warnings: a CVE published overnight
+         against a dependency would otherwise turn every PR red without any code change. The advisory
+         still shows in logs, and Dependabot + CodeQL are the channels that act on it. -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904;NU1905</WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <!--
     The Roslyn floor for the shipped analyzer. FirstClassErrors.Analyzers is compiled against this version
     of Microsoft.CodeAnalysis.*, which is the MINIMUM host compiler able to load it once it is packed into
     FirstClassErrors and delivered to consumers. A higher version makes the analyzer fail to load (CS8032)
