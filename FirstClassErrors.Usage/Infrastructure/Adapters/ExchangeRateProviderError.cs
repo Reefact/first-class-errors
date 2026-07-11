@@ -76,6 +76,8 @@ public static class ExchangeRateProviderError {
 
     #region Nested types declarations
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Critical Code Smell", "S3218:Inner class members should not shadow outer class \"static\" members",
+        Justification = "Each error-code constant deliberately mirrors the name of its factory method; both are always qualified (Code.X versus the X(...) call), so there is no real ambiguity.")]
     private static class Code {
 
         #region Statics members declarations

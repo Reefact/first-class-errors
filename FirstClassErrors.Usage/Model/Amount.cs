@@ -91,6 +91,39 @@ public sealed class Amount : IEquatable<Amount>, IComparable<Amount> {
         return Value.CompareTo(other.Value);
     }
 
+    // A type that is IComparable should also carry the comparison operators (S1210). Ordering mismatched currencies is
+    // undefined, so the ordering operators surface it the same way CompareTo/IsLessThan do — by throwing.
+    public static bool operator ==(Amount? left, Amount? right) {
+        return Equals(left, right);
+    }
+
+    public static bool operator !=(Amount? left, Amount? right) {
+        return !Equals(left, right);
+    }
+
+    public static bool operator <(Amount? left, Amount? right) {
+        return Compare(left, right) < 0;
+    }
+
+    public static bool operator >(Amount? left, Amount? right) {
+        return Compare(left, right) > 0;
+    }
+
+    public static bool operator <=(Amount? left, Amount? right) {
+        return Compare(left, right) <= 0;
+    }
+
+    public static bool operator >=(Amount? left, Amount? right) {
+        return Compare(left, right) >= 0;
+    }
+
+    private static int Compare(Amount? left, Amount? right) {
+        if (ReferenceEquals(left, right)) { return 0; }
+        if (left is null) { return -1; }
+
+        return left.CompareTo(right);
+    }
+
     /// <inheritdoc />
     public override string ToString() {
         return DocumentationFormatter.Format("{0} {1}", Value, Currency);

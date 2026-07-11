@@ -58,7 +58,7 @@ internal static class DocumentationFormatter {
 
     private static string FormatDynamic(decimal value) {
         string formattedValue = value.ToString(DocumentationCulture);
-        if (formattedValue.Contains(".")) {
+        if (formattedValue.Contains('.')) {
             formattedValue = formattedValue.TrimEnd('0').TrimEnd('.');
         }
 
