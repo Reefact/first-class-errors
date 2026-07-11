@@ -67,6 +67,20 @@ that Scorecard's own Token-Permissions check rewards.
   not here. A low Branch-Protection sub-score, for instance, is fixed by marking
   checks required on `main`, not by editing this file.
 
+## Fuzzing check
+
+Scorecard's **Fuzzing** check is satisfied here by the property-based tests in
+`FirstClassErrors.PropertyTests` (FsCheck). Scorecard credits C# property-based
+testing by scanning the source tree for `using FsCheck;`, so the fuzzers live in
+that test project, not in this workflow.
+
+- **Mind the tooling version.** C# property-based detection landed in **scorecard
+  v5.5.0**; `scorecard-action@v2.4.3` — the pin in the workflow — still bundles
+  **v5.3.0**, which predates it. The sub-check therefore only turns green once the
+  scan runs on ≥ v5.5.0: when a newer `scorecard-action` (bundling ≥ v5.5.0) ships
+  and the pin is bumped. Until then the tests still run and still guard the code —
+  only the published sub-score lags.
+
 ## Related
 
 - [`codeql`](codeql.en.md) — shares the `github/codeql-action/upload-sarif`
