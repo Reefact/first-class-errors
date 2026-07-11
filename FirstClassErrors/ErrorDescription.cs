@@ -43,7 +43,9 @@ public sealed class ErrorDescription {
 
         ShortMessage      = shortMessage.Trim();
         DiagnosticMessage = diagnosticMessage.Trim();
-        DetailedMessage   = string.IsNullOrWhiteSpace(detailedMessage) ? null : detailedMessage?.Trim();
+        // In this branch IsNullOrWhiteSpace(detailedMessage) is false, so detailedMessage is non-null; the null-forgiving
+        // '!' states that for the netstandard2.0 compiler, which does not carry the [NotNullWhen(false)] flow annotation.
+        DetailedMessage   = string.IsNullOrWhiteSpace(detailedMessage) ? null : detailedMessage!.Trim();
     }
 
     #endregion

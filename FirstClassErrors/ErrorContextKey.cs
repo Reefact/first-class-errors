@@ -1,6 +1,7 @@
 ﻿#region Usings declarations
 
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 #endregion
 
@@ -40,6 +41,12 @@ namespace FirstClassErrors;
 ///     </code>
 /// </example>
 [DebuggerDisplay("{ToString()}")]
+[SuppressMessage("Major Code Smell", "S4035:Classes implementing \"IEquatable<T>\" should be sealed",
+                 Justification =
+                     "ErrorContextKey is abstract by design — the base of the sealed ErrorContextKey<T> — so it cannot " +
+                     "itself be sealed. Identity is defined by Name for the whole hierarchy: Equals compares Name after a " +
+                     "type-agnostic 'is ErrorContextKey' check, so the single sealed subclass cannot break the symmetry of " +
+                     "the IEquatable<T> contract.")]
 public abstract class ErrorContextKey : IEquatable<ErrorContextKey> {
 
     #region Statics members declarations
