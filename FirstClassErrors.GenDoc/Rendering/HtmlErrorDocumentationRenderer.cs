@@ -34,8 +34,8 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
 
     /// <inheritdoc />
     public IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog, RenderRequest request) {
-        if (catalog is null) { throw new ArgumentNullException(nameof(catalog)); }
-        if (request is null) { throw new ArgumentNullException(nameof(request)); }
+        ArgumentNullException.ThrowIfNull(catalog);
+        ArgumentNullException.ThrowIfNull(request);
 
         if (SupportedLayouts.Contains(request.Layout, StringComparer.OrdinalIgnoreCase) is false) {
             throw new LayoutNotSupportedException(Format, request.Layout, SupportedLayouts);
@@ -340,7 +340,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
 
     #region Helpers
 
-    private static IReadOnlyList<Entry> BuildEntries(IEnumerable<ErrorDocumentation> catalog) {
+    private static List<Entry> BuildEntries(IEnumerable<ErrorDocumentation> catalog) {
         List<Entry>     entries   = [];
         HashSet<string> usedNames = new(StringComparer.OrdinalIgnoreCase);
 
@@ -376,7 +376,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         return entries;
     }
 
-    private static IReadOnlyList<Group> GroupBySource(IReadOnlyList<Entry> entries) {
+    private static List<Group> GroupBySource(IReadOnlyList<Entry> entries) {
         List<Group>               groups      = [];
         Dictionary<string, Group> byKey       = new(StringComparer.Ordinal);
         HashSet<string>           usedAnchors = new(StringComparer.OrdinalIgnoreCase);
@@ -441,8 +441,8 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
     }
 
     private static string? FirstNonEmpty(params string?[] values) {
-        foreach (string? value in values) {
-            if (string.IsNullOrWhiteSpace(value) is false) { return value.Trim(); }
+        foreach (string? value in values.Where(value => string.IsNullOrWhiteSpace(value) is false)) {
+            return value!.Trim();
         }
 
         return null;
@@ -450,10 +450,8 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
 
     /// <summary>Gets the group's source description (shared by its errors), or <c>null</c> when none is set.</summary>
     private static string? GroupDescription(Group group) {
-        foreach (Entry entry in group.Entries) {
-            if (string.IsNullOrWhiteSpace(entry.Error.SourceDescription) is false) {
-                return entry.Error.SourceDescription!.Trim();
-            }
+        foreach (Entry entry in group.Entries.Where(entry => string.IsNullOrWhiteSpace(entry.Error.SourceDescription) is false)) {
+            return entry.Error.SourceDescription!.Trim();
         }
 
         return null;

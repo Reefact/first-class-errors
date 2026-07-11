@@ -17,6 +17,9 @@ public static class SolutionErrorDocumentationGenerator {
 
     #region Statics members declarations
 
+    /// <summary>The .NET CLI executable used for every solution/project SDK query and for the build.</summary>
+    private const string DotNetCli = "dotnet";
+
     public static IEnumerable<ErrorDocumentation> GetErrorDocumentationFrom(string solutionPath) {
         ArgumentNullException.ThrowIfNull(solutionPath);
 
@@ -44,7 +47,7 @@ public static class SolutionErrorDocumentationGenerator {
             DotNetBuild(fullSolutionPath, options);
         }
 
-        IReadOnlyList<string> projects = ReadSolutionProjects(fullSolutionPath, options);
+        List<string> projects = ReadSolutionProjects(fullSolutionPath, options);
         options.Logger.Debug($"Found {projects.Count} MSBuild projects in solution.");
 
         IReadOnlyList<string> includedProjects = FilterProjects(projects, options);
@@ -114,7 +117,7 @@ public static class SolutionErrorDocumentationGenerator {
         // the generator free of the heavy Microsoft.Build dependency and handles both .sln and .slnx uniformly.
         string solutionDirectory = Path.GetDirectoryName(solutionPath) ?? ".";
 
-        ProcessResult result = RunProcess("dotnet", ["sln", solutionPath, "list"], solutionDirectory, options.Logger, options.SdkQueryTimeout, options.CancellationToken);
+        ProcessResult result = RunProcess(DotNetCli, ["sln", solutionPath, "list"], solutionDirectory, options.Logger, options.SdkQueryTimeout, options.CancellationToken);
         if (result.ExitCode != 0) {
             throw new SolutionDocumentationGenerationException(
                 $"Failed to list the projects of solution '{solutionPath}' (exit code {result.ExitCode}).\n{result.StandardError}");
@@ -141,11 +144,7 @@ public static class SolutionErrorDocumentationGenerator {
     internal static IReadOnlyList<string> FilterProjects(IReadOnlyList<string> projectPaths, SolutionGenerationOptions options) {
         List<string> included = new();
 
-        foreach (string projectPath in projectPaths) {
-            if (ShouldIncludeProject(projectPath, options)) {
-                included.Add(projectPath);
-            }
-        }
+        included.AddRange(projectPaths.Where(projectPath => ShouldIncludeProject(projectPath, options)));
 
         // An opt-in declared only in a shared build file (Directory.Build.props, an import) reads as absent in every
         // .csproj — per project, that is indistinguishable from a genuine absence, so it cannot be diagnosed above. The
@@ -306,11 +305,9 @@ public static class SolutionErrorDocumentationGenerator {
             args.Add(options.TargetFramework);
         }
 
-        foreach (string additionalArgument in options.DotNetBuildAdditionalArguments) {
-            if (string.IsNullOrWhiteSpace(additionalArgument) is false) { args.Add(additionalArgument); }
-        }
+        args.AddRange(options.DotNetBuildAdditionalArguments.Where(additionalArgument => string.IsNullOrWhiteSpace(additionalArgument) is false));
 
-        ProcessResult result = RunProcess("dotnet", args, Path.GetDirectoryName(solutionPath)!, options.Logger, options.BuildTimeout, options.CancellationToken);
+        ProcessResult result = RunProcess(DotNetCli, args, Path.GetDirectoryName(solutionPath)!, options.Logger, options.BuildTimeout, options.CancellationToken);
 
         if (result.ExitCode != 0) {
             throw new SolutionDocumentationGenerationException(
@@ -328,7 +325,7 @@ public static class SolutionErrorDocumentationGenerator {
 
         args.Add("-nologo");
 
-        ProcessResult result = RunProcess("dotnet", args, Path.GetDirectoryName(projectPath)!, options.Logger, options.SdkQueryTimeout, options.CancellationToken);
+        ProcessResult result = RunProcess(DotNetCli, args, Path.GetDirectoryName(projectPath)!, options.Logger, options.SdkQueryTimeout, options.CancellationToken);
 
         if (result.ExitCode != 0) {
             return null;
@@ -339,7 +336,7 @@ public static class SolutionErrorDocumentationGenerator {
         string output = result.StandardOutput.Trim();
         string line = output
                      .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
-                     .FirstOrDefault(l => l.IndexOf(propertyName, StringComparison.OrdinalIgnoreCase) >= 0)
+                     .FirstOrDefault(l => l.Contains(propertyName, StringComparison.OrdinalIgnoreCase))
                    ?? output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).LastOrDefault()
                    ?? string.Empty;
 
@@ -361,11 +358,11 @@ public static class SolutionErrorDocumentationGenerator {
 
         string afterName = line.Substring(idx + propertyName.Length).Trim();
 
-        if (afterName.StartsWith("=", StringComparison.Ordinal)) {
+        if (afterName.StartsWith('=')) {
             return afterName.Substring(1).Trim();
         }
 
-        if (afterName.StartsWith(":", StringComparison.Ordinal)) {
+        if (afterName.StartsWith(':')) {
             return afterName.Substring(1).Trim();
         }
 
@@ -426,22 +423,20 @@ public static class SolutionErrorDocumentationGenerator {
             }
         });
 
-        if (timeout is { } limit) {
-            if (process.WaitForExit((int)limit.TotalMilliseconds) is false) {
-                try {
-                    process.Kill(entireProcessTree: true);
-                } catch {
-                    // The process may already have exited between the timeout and the kill.
-                }
-
-                process.WaitForExit();
-
-                // A cancellation that raced the timeout is reported as cancellation, not as a spurious timeout.
-                cancellationToken.ThrowIfCancellationRequested();
-                logger.Error($"Process '{fileName}' timed out after {limit} and was killed.");
-
-                return new ProcessResult(-1, stdout.ToString(), stderr.ToString());
+        if (timeout is { } limit && process.WaitForExit((int)limit.TotalMilliseconds) is false) {
+            try {
+                process.Kill(entireProcessTree: true);
+            } catch {
+                // The process may already have exited between the timeout and the kill.
             }
+
+            process.WaitForExit();
+
+            // A cancellation that raced the timeout is reported as cancellation, not as a spurious timeout.
+            cancellationToken.ThrowIfCancellationRequested();
+            logger.Error($"Process '{fileName}' timed out after {limit} and was killed.");
+
+            return new ProcessResult(-1, stdout.ToString(), stderr.ToString());
         }
 
         // A final no-argument wait blocks until the async stdout/stderr handlers have flushed.
@@ -579,7 +574,7 @@ public static class SolutionErrorDocumentationGenerator {
                 args.Add(options.Culture.Name);
             }
 
-            ProcessResult result = RunProcess("dotnet", args, workerDirectory, options.Logger, options.WorkerTimeout, options.CancellationToken);
+            ProcessResult result = RunProcess(DotNetCli, args, workerDirectory, options.Logger, options.WorkerTimeout, options.CancellationToken);
 
             if (result.ExitCode != 0) {
                 HandleFailure(options, $"The documentation worker failed (exit code {result.ExitCode}) for '{targetAssemblyPath}'.\n{result.StandardError}");
