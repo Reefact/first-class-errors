@@ -21,8 +21,10 @@ concurrency:
   group: scorecard-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Read-only by default; the single job widens only the two write scopes it needs.
-permissions: read-all
+# Minimal read at the workflow level; the single job overrides with only the two write scopes it
+# needs. Enumerated rather than `read-all` so the default token grants exactly one explicit scope.
+permissions:
+  contents: read
 
 jobs:
   analysis:
