@@ -17,7 +17,7 @@ internal static class Descriptors {
         isEnabledByDefault: true,
         description: "An ErrorCode is compared by value, so the same literal code created more than once yields equal instances that documentation extraction and lookups collapse into a single identity. Detection is per-compilation and limited to literal codes.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.DuplicateErrorCode),
-        customTags: new[] { WellKnownDiagnosticTags.CompilationEnd });
+        WellKnownDiagnosticTags.CompilationEnd);
 
     public static readonly DiagnosticDescriptor EmptyErrorCode = new(
         id: DiagnosticIds.EmptyErrorCode,
@@ -138,7 +138,7 @@ internal static class Descriptors {
         isEnabledByDefault: true,
         description: "Documentation extraction groups by error code and keeps a single entry per code. Two documented factories that share the same code field silently collapse to one in the catalog.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.DuplicateDocumentedCode),
-        customTags: new[] { WellKnownDiagnosticTags.CompilationEnd });
+        WellKnownDiagnosticTags.CompilationEnd);
 
     public static readonly DiagnosticDescriptor ExampleDoesNotCallDocumentedFactory = new(
         id: DiagnosticIds.ExampleDoesNotCallDocumentedFactory,

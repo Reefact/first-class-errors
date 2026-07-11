@@ -47,21 +47,35 @@ public sealed class DuplicateDocumentedCodeAnalyzer : DiagnosticAnalyzer {
         if (context.OwningSymbol is not IMethodSymbol method) { return; }
         if (!SymbolFacts.HasAttribute(method, symbols.DocumentedByAttribute!)) { return; }
 
-        foreach (IOperation block in context.OperationBlocks) {
+        // The outermost error-factory Create identifies the produced code.
+        IInvocationOperation? create = FindErrorFactoryCreate(context.OperationBlocks, symbols);
+        if (create is null) { return; }
+
+        if (TryGetCodeField(create.Arguments[0].Value, out ISymbol? codeField)) {
+            usagesByCodeField.GetOrAdd(codeField!, _ => new ConcurrentBag<Location>())
+                             .Add(method.Locations.FirstOrDefault() ?? Location.None);
+        }
+    }
+
+    /// <summary>Finds the first <c>Error.Create(...)</c> invocation carrying at least one argument, across the blocks.</summary>
+    private static IInvocationOperation? FindErrorFactoryCreate(ImmutableArray<IOperation> blocks, KnownSymbols symbols) {
+        foreach (IOperation block in blocks) {
             foreach (IOperation operation in OperationFacts.EnumerateOperations(block)) {
-                if (operation is not IInvocationOperation invocation) { continue; }
-                if (invocation.TargetMethod.Name != CreateMethodName) { continue; }
-                if (!SymbolFacts.IsOrInheritsFrom(invocation.TargetMethod.ContainingType, symbols.Error!)) { continue; }
-                if (invocation.Arguments.Length == 0) { continue; }
-
-                if (TryGetCodeField(invocation.Arguments[0].Value, out ISymbol? codeField)) {
-                    usagesByCodeField.GetOrAdd(codeField!, _ => new ConcurrentBag<Location>())
-                                     .Add(method.Locations.FirstOrDefault() ?? Location.None);
-                }
-
-                return; // the outermost error-factory Create identifies the produced code
+                IInvocationOperation? create = AsErrorFactoryCreate(operation, symbols);
+                if (create is not null) { return create; }
             }
         }
+
+        return null;
+    }
+
+    /// <summary>Returns <paramref name="operation" /> as an <c>Error.Create(...)</c> invocation with arguments, or <c>null</c>.</summary>
+    private static IInvocationOperation? AsErrorFactoryCreate(IOperation operation, KnownSymbols symbols) {
+        if (operation is not IInvocationOperation invocation) { return null; }
+        if (invocation.TargetMethod.Name != CreateMethodName) { return null; }
+        if (!SymbolFacts.IsOrInheritsFrom(invocation.TargetMethod.ContainingType, symbols.Error!)) { return null; }
+
+        return invocation.Arguments.Length == 0 ? null : invocation;
     }
 
     private static bool TryGetCodeField(IOperation codeArgument, out ISymbol? codeField) {
