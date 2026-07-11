@@ -11,6 +11,10 @@ namespace FirstClassErrors.GenDoc.UnitTests;
 [TestSubject(typeof(SolutionErrorDocumentationGenerator))]
 public sealed class SolutionErrorDocumentationGeneratorTests {
 
+    // Held as static readonly fields rather than inline new[] {…} arguments so the arrays are allocated once (CA1861).
+    private static readonly string[] AppAssemblyPaths     = ["app.dll"];
+    private static readonly string[] MissingAssemblyPaths = ["this-assembly-does-not-exist.dll"];
+
     [Fact(DisplayName = "GetErrorDocumentationFrom rejects a null solution path.")]
     public void GetErrorDocumentationFromRejectsANullSolutionPath() {
         // Exercise & verify
@@ -81,7 +85,7 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
     [Fact(DisplayName = "GetErrorDocumentationFromAssemblies rejects null options.")]
     public void GetErrorDocumentationFromAssembliesRejectsNullOptions() {
         // Exercise & verify
-        Check.ThatCode(() => SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies(new[] { "app.dll" }, null!))
+        Check.ThatCode(() => SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies(AppAssemblyPaths, null!))
              .Throws<ArgumentNullException>();
     }
 
@@ -92,7 +96,7 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
 
         // Exercise
         IEnumerable<ErrorDocumentation> result =
-            SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies(new[] { "this-assembly-does-not-exist.dll" }, options);
+            SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies(MissingAssemblyPaths, options);
 
         // Verify: no worker is launched because no assembly resolved; the result is empty.
         Check.That(result).IsEmpty();
@@ -108,7 +112,7 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
         };
 
         // Exercise
-        SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies(new[] { "this-assembly-does-not-exist.dll" }, options);
+        SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies(MissingAssemblyPaths, options);
 
         // Verify: the skipped assembly leaves a warning trace mentioning the missing file.
         Check.That(logger.Warnings).HasSize(1);
@@ -132,7 +136,7 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
         SolutionGenerationOptions options = new() { FailureBehavior = FailureBehavior.Stop };
 
         // Exercise & verify
-        Check.ThatCode(() => SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies(new[] { "this-assembly-does-not-exist.dll" }, options))
+        Check.ThatCode(() => SolutionErrorDocumentationGenerator.GetErrorDocumentationFromAssemblies(MissingAssemblyPaths, options))
              .Throws<SolutionDocumentationGenerationException>();
     }
 
