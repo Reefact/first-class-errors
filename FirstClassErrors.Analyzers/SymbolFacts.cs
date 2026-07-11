@@ -17,7 +17,9 @@ internal static class SymbolFacts {
         out AttributeData? attribute,
         out string?        targetMethodName) {
 
-        foreach (AttributeData candidate in method.GetAttributes().Where(candidate => SymbolEqualityComparer.Default.Equals(candidate.AttributeClass, documentedByAttributeType))) {
+        AttributeData? candidate = method.GetAttributes()
+                                         .FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, documentedByAttributeType));
+        if (candidate is not null) {
             attribute        = candidate;
             targetMethodName = candidate.ConstructorArguments.Length == 1
                 ? candidate.ConstructorArguments[0].Value as string
