@@ -40,8 +40,10 @@ SPDX SBOM) → upload artifacts → **attest build provenance** → **NuGet logi
 
 The workflow needs three write scopes: `contents: write` (create the Release and
 upload assets), `id-token: write` (mint the short-lived NuGet key via trusted
-publishing), and `attestations: write` (store the signed provenance). No
-long-lived `NUGET_API_KEY` is stored.
+publishing), and `attestations: write` (store the signed provenance). They are
+granted on the `pack-push` job only; the top-level token stays read-only
+(`contents: read`) — the least-privilege shape OpenSSF Scorecard's
+Token-Permissions check rewards. No long-lived `NUGET_API_KEY` is stored.
 
 ## Handle with care
 
