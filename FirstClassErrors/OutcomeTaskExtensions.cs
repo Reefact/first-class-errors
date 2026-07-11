@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace FirstClassErrors;
 
 /// <summary>
@@ -39,6 +41,11 @@ public static class OutcomeTaskExtensions {
     ///     If the preceding <see cref="Outcome" /> is not successful, the continuation function is not invoked, and its error
     ///     is propagated as a failed <see cref="Outcome{TResult}" />.
     /// </remarks>
+    [SuppressMessage("Minor Code Smell", "S4136:Method overloads should be grouped together",
+                     Justification =
+                         "Overloads are organized by receiver type — Task<Outcome> first, then Task<Outcome<T>> — each block " +
+                         "covering Then/Recover/Finally/To (see the section headers). This receiver-first grouping is deliberate; " +
+                         "grouping by operation would interleave the non-generic and generic surfaces.")]
     public static Task<Outcome<TResult>> Then<TResult>(this Task<Outcome> task, Func<Outcome<TResult>> next)
         where TResult : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
@@ -168,6 +175,8 @@ public static class OutcomeTaskExtensions {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="task" /> is <c>null</c>.
     /// </exception>
+    [SuppressMessage("Minor Code Smell", "S4136:Method overloads should be grouped together",
+                     Justification = "Overloads are grouped by receiver type, not by operation; see the note on Then.")]
     public static Task<Outcome> Recover(this Task<Outcome> task, Func<Error, Outcome> fallback) {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
         if (fallback is null) { throw new ArgumentNullException(nameof(fallback)); }
@@ -243,6 +252,8 @@ public static class OutcomeTaskExtensions {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="task" /> is <c>null</c>.
     /// </exception>
+    [SuppressMessage("Minor Code Smell", "S4136:Method overloads should be grouped together",
+                     Justification = "Overloads are grouped by receiver type, not by operation; see the note on Then.")]
     public static Task<TResult> Finally<TResult>(this Task<Outcome>   task,
                                                  Func<TResult>        onSuccess,
                                                  Func<Error, TResult> onFailure) {

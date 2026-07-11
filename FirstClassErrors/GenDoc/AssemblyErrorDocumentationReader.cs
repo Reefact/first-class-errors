@@ -1,5 +1,6 @@
 #region Usings declarations
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Resources;
 
@@ -45,7 +46,7 @@ public static class AssemblyErrorDocumentationReader {
         List<ErrorDocumentationExtractionFailure> failures      = new();
 
         foreach (Type type in GetLoadableTypes(assembly, failures)) {
-            if (IsExtractableType(type) is false) { continue; }
+            if (!IsExtractableType(type)) { continue; }
 
             ExtractFromType(type, documentation, failures);
         }
@@ -117,6 +118,11 @@ public static class AssemblyErrorDocumentationReader {
         return type is { IsClass: true, IsGenericTypeDefinition: false };
     }
 
+    [SuppressMessage("Major Code Smell", "S3011:Reflection should not be used to increase accessibility of classes, methods, or fields",
+                     Justification =
+                         "Discovering [DocumentedBy] documentation factories regardless of their declared accessibility is the " +
+                         "feature: an author may keep a factory internal or private. BindingFlags.NonPublic is intentional here, " +
+                         "not an accidental accessibility bypass.")]
     private static void ExtractFromType(Type type, List<ErrorDocumentation> documentation, List<ErrorDocumentationExtractionFailure> failures) {
         ProvidesErrorsForAttribute? providesErrorsFor;
         try {
@@ -168,6 +174,10 @@ public static class AssemblyErrorDocumentationReader {
         }
     }
 
+    [SuppressMessage("Major Code Smell", "S3011:Reflection should not be used to increase accessibility of classes, methods, or fields",
+                     Justification =
+                         "The [DocumentedBy] factory it resolves may be declared non-public on purpose; scanning non-public static " +
+                         "methods is the feature, not an accidental accessibility bypass.")]
     private static MethodInfo? ResolveDocumentationMethod(Type type, string methodName, List<ErrorDocumentationExtractionFailure> failures) {
         // Resolve by hand rather than Type.GetMethod(name, flags), which throws AmbiguousMatchException when the name
         // is overloaded. We only ever invoke a parameterless static method with no type arguments, so we filter to that

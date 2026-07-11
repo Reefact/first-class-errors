@@ -34,11 +34,11 @@ public sealed class JsonErrorDocumentationRenderer : IErrorDocumentationRenderer
 
     /// <inheritdoc />
     public IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog, RenderRequest request) {
-        if (catalog is null) { throw new ArgumentNullException(nameof(catalog)); }
-        if (request is null) { throw new ArgumentNullException(nameof(request)); }
+        ArgumentNullException.ThrowIfNull(catalog);
+        ArgumentNullException.ThrowIfNull(request);
 
         // A single JSON catalog has no notion of a split layout; reject anything but the layouts we advertise.
-        if (SupportedLayouts.Contains(request.Layout, StringComparer.OrdinalIgnoreCase) is false) {
+        if (!SupportedLayouts.Contains(request.Layout, StringComparer.OrdinalIgnoreCase)) {
             throw new LayoutNotSupportedException(Format, request.Layout, SupportedLayouts);
         }
 

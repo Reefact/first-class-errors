@@ -36,7 +36,7 @@ internal static class GenerateOptionsResolver {
         // combine with a configured 'solution').
         string?  solution;
         string[] assemblies;
-        if (string.IsNullOrWhiteSpace(settings.SolutionPath) is false || settings.AssemblyPaths.Length > 0) {
+        if (!string.IsNullOrWhiteSpace(settings.SolutionPath) || settings.AssemblyPaths.Length > 0) {
             solution   = settings.SolutionPath;
             assemblies = settings.AssemblyPaths;
         } else {
@@ -47,7 +47,7 @@ internal static class GenerateOptionsResolver {
         return new ResolvedGenerateOptions(
             Solution:           solution,
             Assemblies:         assemblies,
-            HasSolution:        string.IsNullOrWhiteSpace(solution) is false,
+            HasSolution:        !string.IsNullOrWhiteSpace(solution),
             HasAssemblies:      assemblies.Length > 0,
             Format:             NormalizeFormat(FirstNonEmpty(settings.Format, configuration.Format) ?? "json"),
             Layout:             (FirstNonEmpty(settings.Layout, configuration.Layout) ?? "single").Trim().ToLowerInvariant(),
@@ -62,8 +62,8 @@ internal static class GenerateOptionsResolver {
     }
 
     internal static string? FirstNonEmpty(string? primary, string? fallback) {
-        if (string.IsNullOrWhiteSpace(primary) is false) { return primary; }
-        if (string.IsNullOrWhiteSpace(fallback) is false) { return fallback; }
+        if (!string.IsNullOrWhiteSpace(primary)) { return primary; }
+        if (!string.IsNullOrWhiteSpace(fallback)) { return fallback; }
 
         return null;
     }

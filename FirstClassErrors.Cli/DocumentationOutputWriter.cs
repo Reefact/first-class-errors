@@ -36,10 +36,10 @@ internal sealed class DocumentationOutputWriter {
             throw new InvalidOperationException($"The '{format}' renderer produced no documents; a renderer must return at least one document.");
         }
 
-        bool hasOutput = string.IsNullOrWhiteSpace(outputPath) is false;
+        bool hasOutput = !string.IsNullOrWhiteSpace(outputPath);
 
         // No target: only a single document can go to standard output.
-        if (hasOutput is false) {
+        if (!hasOutput) {
             if (documents.Count > 1) {
                 throw new InvalidOperationException("This layout produces several files; specify an output directory with --output (or 'output' in the configuration).");
             }
@@ -54,7 +54,7 @@ internal sealed class DocumentationOutputWriter {
         // Treat the target as a directory when there are several files, when it already exists as one, or when the
         // path ends with a separator. Otherwise a single document is written to the given file path verbatim.
         bool asDirectory = documents.Count > 1 || Directory.Exists(fullOutput) || EndsWithSeparator(outputPath!);
-        if (asDirectory is false) {
+        if (!asDirectory) {
             _sink.WriteFile(fullOutput, documents[0].Content);
             logger.Info($"Documentation written to '{fullOutput}'.");
 
@@ -86,7 +86,7 @@ internal sealed class DocumentationOutputWriter {
                           ? outputDirectory
                           : outputDirectory + Path.DirectorySeparatorChar;
 
-        if (target.StartsWith(root, StringComparison.Ordinal) is false) {
+        if (!target.StartsWith(root, StringComparison.Ordinal)) {
             throw new InvalidOperationException(
                 $"The renderer produced a document whose path '{relativePath}' escapes the output directory '{outputDirectory}'.");
         }

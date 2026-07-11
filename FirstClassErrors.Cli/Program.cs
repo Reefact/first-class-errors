@@ -30,4 +30,4 @@ app.Configure(config => {
 
 // Spectre handles argument parsing, validation errors and --help. Runtime failures are handled inside each command
 // so the tool reports them as a terse "error: …" line rather than a stack trace.
-return app.Run(args);
+return await app.RunAsync(args);

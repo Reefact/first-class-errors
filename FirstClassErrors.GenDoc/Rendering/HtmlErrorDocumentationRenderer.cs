@@ -34,10 +34,10 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
 
     /// <inheritdoc />
     public IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog, RenderRequest request) {
-        if (catalog is null) { throw new ArgumentNullException(nameof(catalog)); }
-        if (request is null) { throw new ArgumentNullException(nameof(request)); }
+        ArgumentNullException.ThrowIfNull(catalog);
+        ArgumentNullException.ThrowIfNull(request);
 
-        if (SupportedLayouts.Contains(request.Layout, StringComparer.OrdinalIgnoreCase) is false) {
+        if (!SupportedLayouts.Contains(request.Layout, StringComparer.OrdinalIgnoreCase)) {
             throw new LayoutNotSupportedException(Format, request.Layout, SupportedLayouts);
         }
 
@@ -216,11 +216,11 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         html.Append($"<{h} class=\"error-title\"><code>{Text(entry.Code)}</code> <a class=\"anchor\" href=\"#err-{Attr(entry.Anchor)}\" aria-label=\"{Attr(strings.CopyLinkLabel)}\" data-anchor>#</a></{h}>\n");
         html.Append($"<p class=\"error-subtitle\">{Text(entry.Title)}</p>\n");
 
-        if (string.IsNullOrWhiteSpace(error.Explanation) is false) {
+        if (!string.IsNullOrWhiteSpace(error.Explanation)) {
             html.Append($"<section class=\"doc\"><{hSub}>{Text(strings.DocumentationHeading)}</{hSub}><p>{Text(error.Explanation!.Trim())}</p></section>\n");
         }
 
-        if (string.IsNullOrWhiteSpace(error.BusinessRule) is false) {
+        if (!string.IsNullOrWhiteSpace(error.BusinessRule)) {
             html.Append($"<blockquote class=\"rule\"><strong>{Text(strings.BusinessRuleLabel)}</strong> {Text(error.BusinessRule!.Trim())}</blockquote>\n");
         }
 
@@ -298,11 +298,11 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         }
 
         json.Append($"  \"title\": \"{JsonString(example.ShortMessage)}\"");
-        if (string.IsNullOrWhiteSpace(example.DetailedMessage) is false) {
+        if (!string.IsNullOrWhiteSpace(example.DetailedMessage)) {
             json.Append($",\n  \"detail\": \"{JsonString(example.DetailedMessage!)}\"");
         }
 
-        if (string.IsNullOrWhiteSpace(code) is false) {
+        if (!string.IsNullOrWhiteSpace(code)) {
             json.Append($",\n  \"code\": \"{JsonString(code!.Trim())}\"");
         }
 
@@ -318,10 +318,10 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
     private static string DiagnosticLogLine(ErrorDescription example, string? code, string? source) {
         StringBuilder line = new();
         line.Append("2026-07-04T13:42:18.734Z ERROR");
-        if (string.IsNullOrWhiteSpace(source) is false) { line.Append($" [{source!.Trim()}]"); }
+        if (!string.IsNullOrWhiteSpace(source)) { line.Append($" [{source!.Trim()}]"); }
 
         line.Append($" {Inline(example.DiagnosticMessage)}");
-        if (string.IsNullOrWhiteSpace(code) is false) { line.Append($" error.code={code!.Trim()}"); }
+        if (!string.IsNullOrWhiteSpace(code)) { line.Append($" error.code={code!.Trim()}"); }
 
         return line.ToString();
     }
@@ -340,7 +340,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
 
     #region Helpers
 
-    private static IReadOnlyList<Entry> BuildEntries(IEnumerable<ErrorDocumentation> catalog) {
+    private static List<Entry> BuildEntries(IEnumerable<ErrorDocumentation> catalog) {
         List<Entry>     entries   = [];
         HashSet<string> usedNames = new(StringComparer.OrdinalIgnoreCase);
 
@@ -365,7 +365,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
 
             string name   = baseName;
             int    suffix = 2;
-            while (usedNames.Add(name) is false) {
+            while (!usedNames.Add(name)) {
                 name = $"{baseName}-{suffix}";
                 suffix++;
             }
@@ -376,7 +376,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         return entries;
     }
 
-    private static IReadOnlyList<Group> GroupBySource(IReadOnlyList<Entry> entries) {
+    private static List<Group> GroupBySource(IReadOnlyList<Entry> entries) {
         List<Group>               groups      = [];
         Dictionary<string, Group> byKey       = new(StringComparer.Ordinal);
         HashSet<string>           usedAnchors = new(StringComparer.OrdinalIgnoreCase);
@@ -384,7 +384,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         // Group by source (ProvidesErrorsFor target), preserving first-seen order of both groups and errors.
         foreach (Entry entry in entries) {
             string source = entry.Source ?? "Other";
-            if (byKey.TryGetValue(source, out Group? group) is false) {
+            if (!byKey.TryGetValue(source, out Group? group)) {
                 group = new Group(source, UniqueAnchor(source, usedAnchors), []);
                 byKey[source] = group;
                 groups.Add(group);
@@ -403,7 +403,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
 
         string anchor = "src-" + stem;
         int    suffix = 2;
-        while (used.Add(anchor) is false) {
+        while (!used.Add(anchor)) {
             anchor = $"src-{stem}-{suffix}";
             suffix++;
         }
@@ -441,22 +441,16 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
     }
 
     private static string? FirstNonEmpty(params string?[] values) {
-        foreach (string? value in values) {
-            if (string.IsNullOrWhiteSpace(value) is false) { return value.Trim(); }
-        }
+        string? value = values.FirstOrDefault(candidate => !string.IsNullOrWhiteSpace(candidate));
 
-        return null;
+        return value?.Trim();
     }
 
     /// <summary>Gets the group's source description (shared by its errors), or <c>null</c> when none is set.</summary>
     private static string? GroupDescription(Group group) {
-        foreach (Entry entry in group.Entries) {
-            if (string.IsNullOrWhiteSpace(entry.Error.SourceDescription) is false) {
-                return entry.Error.SourceDescription!.Trim();
-            }
-        }
+        Entry? described = group.Entries.FirstOrDefault(entry => !string.IsNullOrWhiteSpace(entry.Error.SourceDescription));
 
-        return null;
+        return described?.Error.SourceDescription!.Trim();
     }
 
     /// <summary>Turns a code or source name into a safe file-name / anchor stem (letters, digits, <c>._-</c>).</summary>
@@ -467,7 +461,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
             if (char.IsAsciiLetterOrDigit(character) || character is '_' or '-' or '.') {
                 builder.Append(character);
                 lastDash = false;
-            } else if (lastDash is false && builder.Length > 0) {
+            } else if (!lastDash && builder.Length > 0) {
                 builder.Append('-');
                 lastDash = true;
             }
@@ -499,7 +493,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
     }
 
     private static string ExampleValuesCell(IReadOnlyList<string?> values) {
-        IEnumerable<string> rendered = values.Where(value => string.IsNullOrWhiteSpace(value) is false)
+        IEnumerable<string> rendered = values.Where(value => !string.IsNullOrWhiteSpace(value))
                                              .Select(value => $"<code>{Text(value!.Trim())}</code>");
 
         return string.Join(", ", rendered);
@@ -560,7 +554,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
                 parts.Add(contextEntry.Description);
             }
 
-            string joined = string.Join(" ", parts.Where(p => string.IsNullOrWhiteSpace(p) is false)
+            string joined = string.Join(" ", parts.Where(p => !string.IsNullOrWhiteSpace(p))
                                                    .Select(p => p!.Trim().Replace("\r", " ").Replace("\n", " ")));
 
             return joined.ToLowerInvariant();

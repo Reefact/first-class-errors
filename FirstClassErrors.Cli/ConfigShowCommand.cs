@@ -12,7 +12,7 @@ internal sealed class ConfigShowCommand : Command<ConfigScopedSettings> {
     protected override int Execute(CommandContext context, ConfigScopedSettings settings, CancellationToken cancellationToken) {
         string path = ConfigurationStore.Resolve(settings.ConfigPath);
 
-        if (ConfigurationStore.Exists(path) is false) {
+        if (!ConfigurationStore.Exists(path)) {
             Console.Out.WriteLine($"No configuration at '{path}'. Run 'fce config init' to create one.");
 
             return 0;

@@ -17,15 +17,15 @@ internal static class SymbolFacts {
         out AttributeData? attribute,
         out string?        targetMethodName) {
 
-        foreach (AttributeData candidate in method.GetAttributes()) {
-            if (SymbolEqualityComparer.Default.Equals(candidate.AttributeClass, documentedByAttributeType)) {
-                attribute        = candidate;
-                targetMethodName = candidate.ConstructorArguments.Length == 1
-                    ? candidate.ConstructorArguments[0].Value as string
-                    : null;
+        AttributeData? candidate = method.GetAttributes()
+                                         .FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, documentedByAttributeType));
+        if (candidate is not null) {
+            attribute        = candidate;
+            targetMethodName = candidate.ConstructorArguments.Length == 1
+                ? candidate.ConstructorArguments[0].Value as string
+                : null;
 
-                return true;
-            }
+            return true;
         }
 
         attribute        = null;
@@ -35,13 +35,7 @@ internal static class SymbolFacts {
     }
 
     public static bool HasAttribute(ISymbol symbol, INamedTypeSymbol attributeType) {
-        foreach (AttributeData attribute in symbol.GetAttributes()) {
-            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeType)) {
-                return true;
-            }
-        }
-
-        return false;
+        return symbol.GetAttributes().Any(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeType));
     }
 
     public static bool IsOrInheritsFrom(ITypeSymbol type, INamedTypeSymbol target) {

@@ -1,6 +1,7 @@
 ﻿#region Usings declarations
 
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 using FirstClassErrors.Usage.Utils;
 
@@ -17,6 +18,11 @@ namespace FirstClassErrors.Usage.Model;
 ///     This type is not intended to be a full or production-ready Value Object implementation.
 /// </remarks>
 [DebuggerDisplay("{ToString()}")]
+[SuppressMessage("Minor Code Smell", "S1210:\"Equals\" and the comparison operators should be overridden when implementing \"IComparable\"",
+                 Justification =
+                     "Amount is an intentionally minimal illustrative model (see its remarks), not a production value object. " +
+                     "CompareTo exists to demonstrate the documentation flow; the full set of comparison operators is out of " +
+                     "scope for the example and would add untested surface to a type the tests only exercise indirectly.")]
 public sealed class Amount : IEquatable<Amount>, IComparable<Amount> {
 
     #region Constructors declarations

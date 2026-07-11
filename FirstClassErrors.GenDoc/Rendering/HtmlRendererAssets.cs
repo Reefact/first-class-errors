@@ -9,7 +9,7 @@ internal static class HtmlRendererAssets {
 
     /// <summary>Inline <c>&lt;head&gt;</c> script that applies the stored theme before first paint (avoids a flash).</summary>
     public const string ThemeInit =
-        """(function(){try{var t=localStorage.getItem('fce-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();""";
+        """(function(){try{var t=localStorage.getItem('fce-theme');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t;}}catch(e){/* localStorage may be unavailable (e.g. private mode); fall back to the default theme */}})();""";
 
     /// <summary>The theme-toggle button icon (inline SVG, inherits the current color).</summary>
     public const string ThemeIcon =
@@ -101,14 +101,24 @@ internal static class HtmlRendererAssets {
         (function () {
           var KEY = 'fce-theme';
           var root = document.documentElement;
-          function apply(t) { if (t === 'light' || t === 'dark') { root.setAttribute('data-theme', t); } else { root.removeAttribute('data-theme'); } }
-          function current() { return root.getAttribute('data-theme') || 'auto'; }
+          function apply(t) { if (t === 'light' || t === 'dark') { root.dataset.theme = t; } else { delete root.dataset.theme; } }
+          function current() { return root.dataset.theme || 'auto'; }
+          function store(theme) {
+            // localStorage throws when it is unavailable (e.g. private mode). Report that to the caller instead of
+            // swallowing it in an empty catch — persisting the theme is best effort, so the caller ignores the result.
+            try {
+              if (theme === 'auto') { localStorage.removeItem(KEY); } else { localStorage.setItem(KEY, theme); }
+              return true;
+            } catch {
+              return false;
+            }
+          }
           var btn = document.getElementById('theme-toggle');
           if (btn) {
             btn.addEventListener('click', function () {
               var order = ['auto', 'light', 'dark'];
               var next = order[(order.indexOf(current()) + 1) % order.length];
-              try { if (next === 'auto') { localStorage.removeItem(KEY); } else { localStorage.setItem(KEY, next); } } catch (e) {}
+              store(next);
               apply(next);
             });
           }
@@ -120,21 +130,21 @@ internal static class HtmlRendererAssets {
             var q = ((search && search.value) || '').toLowerCase().trim();
             var items = toc.querySelectorAll('.toc-item');
             var visible = 0;
-            for (var i = 0; i < items.length; i++) {
-              var ok = !q || (items[i].getAttribute('data-search') || '').indexOf(q) !== -1;
-              items[i].hidden = !ok;
+            for (var item of items) {
+              var ok = !q || (item.dataset.search || '').includes(q);
+              item.hidden = !ok;
               if (ok) { visible++; }
             }
             var groups = toc.querySelectorAll('.toc-group');
-            for (var g = 0; g < groups.length; g++) {
-              groups[g].hidden = groups[g].querySelectorAll('.toc-item:not([hidden])').length === 0;
+            for (var group of groups) {
+              group.hidden = group.querySelectorAll('.toc-item:not([hidden])').length === 0;
             }
             if (noResults) { noResults.hidden = visible !== 0; }
           }
           if (search) { search.addEventListener('input', filter); }
           var anchors = document.querySelectorAll('a[data-anchor]');
-          for (var j = 0; j < anchors.length; j++) {
-            anchors[j].addEventListener('click', function () {
+          for (var anchor of anchors) {
+            anchor.addEventListener('click', function () {
               var href = this.getAttribute('href') || '';
               var url = location.href.split('#')[0] + href;
               if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(url).catch(function () {}); }

@@ -84,10 +84,10 @@ internal sealed class ErrorDocumentationBuilder :
         return this;
     }
 
-    public IErrorRuleStage WithDescription(string explanation) {
-        if (explanation is null) { throw new ArgumentNullException(nameof(explanation)); }
+    public IErrorRuleStage WithDescription(string description) {
+        if (description is null) { throw new ArgumentNullException(nameof(description)); }
 
-        _doc.Explanation = explanation.Trim();
+        _doc.Explanation = description.Trim();
 
         return this;
     }
@@ -164,9 +164,9 @@ internal sealed class ErrorDocumentationBuilder :
 
     /// <inheritdoc />
     IErrorExamplesOrDiagnosticsStage IErrorDiagnosticsStage.WithDiagnostic(string cause, ErrorOrigin type, string analysisLead) {
-        _diagnostics.Add(new ErrorDiagnostic(cause, type, analysisLead));
-
-        return this;
+        // The first diagnostic ('WithDiagnostic') and any subsequent one ('AndDiagnostic') read differently at the
+        // call site but do the same thing; delegate so the two stay in step.
+        return AndDiagnostic(cause, type, analysisLead);
     }
 
 }

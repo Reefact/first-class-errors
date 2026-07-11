@@ -1,5 +1,6 @@
 #region Usings declarations
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using FirstClassErrors.GenDoc.Rendering;
@@ -16,6 +17,10 @@ namespace FirstClassErrors.Cli;
 /// </summary>
 internal sealed class RendererListCommand : Command<ConfigScopedSettings> {
 
+    [SuppressMessage("Major Code Smell", "S3885:\"Assembly.Load\" should be used instead of \"Assembly.LoadFrom\"",
+                     Justification =
+                         "Each configured library is inspected by loading it from its file path; Assembly.Load resolves by " +
+                         "name, not path. LoadFrom is deliberate — it probes the library's own directory for its dependencies.")]
     protected override int Execute(CommandContext context, ConfigScopedSettings settings, CancellationToken cancellationToken) {
         Console.Out.WriteLine("Built-in formats:");
         foreach (string format in RendererCatalog.BuiltInFormats) {
@@ -36,7 +41,7 @@ internal sealed class RendererListCommand : Command<ConfigScopedSettings> {
         Console.Out.WriteLine($"Custom renderers ({path}):");
         foreach (string reference in configuration.Renderers) {
             string library = RendererLoader.Resolve(reference, configDir);
-            if (File.Exists(library) is false) {
+            if (!File.Exists(library)) {
                 Console.Out.WriteLine($"  - {reference} (missing: {library})");
 
                 continue;

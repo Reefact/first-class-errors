@@ -1,5 +1,6 @@
 #region Usings declarations
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using FirstClassErrors.GenDoc;
@@ -32,12 +33,17 @@ internal static class RendererLoader {
     ///     Loads every renderer referenced by <paramref name="assemblyPaths" />. Problems (missing file, load error,
     ///     no renderer inside) are logged as warnings and skipped rather than aborting the run.
     /// </summary>
+    [SuppressMessage("Major Code Smell", "S3885:\"Assembly.Load\" should be used instead of \"Assembly.LoadFrom\"",
+                     Justification =
+                         "A renderer plugin is loaded from a file path, so Assembly.Load — which resolves by assembly name, " +
+                         "not by path — cannot be used. LoadFrom is deliberate: it probes the plugin's own directory for that " +
+                         "plugin's dependencies, which loading into the default context (LoadFromAssemblyPath) would not.")]
     public static IReadOnlyList<IErrorDocumentationRenderer> Load(IReadOnlyList<string> assemblyPaths, string baseDirectory, IGenerationLogger logger) {
         List<IErrorDocumentationRenderer> renderers = [];
 
         foreach (string configured in assemblyPaths) {
             string path = Resolve(configured, baseDirectory);
-            if (File.Exists(path) is false) {
+            if (!File.Exists(path)) {
                 logger.Warning($"Configured renderer library not found: '{path}'.");
 
                 continue;
@@ -73,7 +79,7 @@ internal static class RendererLoader {
         List<IErrorDocumentationRenderer> renderers = [];
         foreach (Type? type in types) {
             if (type is null || type.IsAbstract || type.IsInterface) { continue; }
-            if (typeof(IErrorDocumentationRenderer).IsAssignableFrom(type) is false) { continue; }
+            if (!typeof(IErrorDocumentationRenderer).IsAssignableFrom(type)) { continue; }
             if (type.GetConstructor(Type.EmptyTypes) is null) { continue; }
 
             if (Activator.CreateInstance(type) is IErrorDocumentationRenderer renderer) { renderers.Add(renderer); }
