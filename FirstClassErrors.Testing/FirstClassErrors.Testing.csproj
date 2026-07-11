@@ -58,7 +58,7 @@
          (_manifest/spdx_2.2/manifest.spdx.json), so the inventory of files and dependencies travels with
          the artifact and is covered by the release's provenance attestation. Build-time only
          (PrivateAssets=all): consumers never see this as a dependency. -->
-    <PackageReference Include="Microsoft.Sbom.Targets" Version="4.1.5" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Sbom.Targets" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

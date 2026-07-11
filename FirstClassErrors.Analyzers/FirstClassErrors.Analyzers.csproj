@@ -21,9 +21,11 @@
          and loaded by each consumer's compiler, so a higher version makes it silently fail to load (CS8032)
          on older SDKs/IDEs. The floor lives once in Directory.Build.props and is enforced by RoslynFloorTests.
          Microsoft.CodeAnalysis.Analyzers is only a build-time authoring analyzer (PrivateAssets=all), not part
-         of the load contract, so it is free to move. -->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(RoslynFloorVersion)" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="5.6.0" PrivateAssets="all">
+         of the load contract, so it is free to move. Under Central Package Management (Directory.Packages.props)
+         the floor is expressed as a VersionOverride so it stays property-driven and independent of the newer
+         central Microsoft.CodeAnalysis.CSharp version the analyzer tests consume. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(RoslynFloorVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
