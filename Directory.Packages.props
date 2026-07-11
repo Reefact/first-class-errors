@@ -1,0 +1,38 @@
+<Project>
+
+  <!--
+    Central Package Management (CPM). One source of truth for every NuGet version in the repository: projects
+    declare <PackageReference Include="..." /> WITHOUT a Version, and the version is resolved from the matching
+    <PackageVersion> below. This keeps versions consistent across the projects and makes the `dotnet restore`
+    steps in ci.yml / release.yml reproducible — which is also what OpenSSF Scorecard's Pinned-Dependencies
+    check rewards (an unpinned restore otherwise caps that check below 10, via "nugetCommand not pinned").
+
+    Two deliberate exceptions:
+      * FirstClassErrors.Analyzers pins Microsoft.CodeAnalysis.CSharp to $(RoslynFloorVersion) via a
+        VersionOverride, so the load-contract floor stays property-driven and independent of the (newer)
+        central version the analyzer test project consumes.
+      * tools/floor-check/FloorCheck.csproj opts OUT of CPM (ManagePackageVersionsCentrally=false): it consumes
+        the FirstClassErrors package at a dynamic $(FloorCheckVersion) and is built in isolation, outside the
+        solution.
+  -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
+    <PackageVersion Include="FsCheck" Version="3.3.3" />
+    <PackageVersion Include="JetBrains.Annotations" Version="2026.2.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.6.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.6.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
+    <PackageVersion Include="Microsoft.Sbom.Targets" Version="4.1.5" />
+    <PackageVersion Include="NFluent" Version="3.1.0" />
+    <PackageVersion Include="NSubstitute" Version="5.3.0" />
+    <PackageVersion Include="Spectre.Console.Cli" Version="0.55.0" />
+    <PackageVersion Include="Verify.XunitV3" Version="31.22.0" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="xunit.v3" Version="3.2.2" />
+  </ItemGroup>
+
+</Project>

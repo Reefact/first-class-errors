@@ -29,6 +29,10 @@
          stays the only escalation. -->
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <MSBuildTreatWarningsAsErrors>false</MSBuildTreatWarningsAsErrors>
+    <!-- Opt out of repo-wide Central Package Management (Directory.Packages.props, imported from the repo
+         root): this project consumes the FirstClassErrors package at a dynamic $(FloorCheckVersion) and is
+         built in isolation, outside the solution, so it keeps its version inline. -->
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
   </PropertyGroup>
 
   <PropertyGroup>
