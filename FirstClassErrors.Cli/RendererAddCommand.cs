@@ -36,7 +36,7 @@ internal sealed class RendererAddCommand : Command<RendererReferenceSettings> {
         string configDir = Path.GetDirectoryName(path) ?? Directory.GetCurrentDirectory();
         string library   = RendererLoader.Resolve(settings.LibraryPath, configDir);
 
-        if (File.Exists(library) is false) {
+        if (!File.Exists(library)) {
             Console.Error.WriteLine($"error: renderer library not found: '{library}'.");
 
             return 1;

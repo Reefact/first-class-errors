@@ -15,7 +15,7 @@ internal sealed class RendererRemoveCommand : Command<RendererReferenceSettings>
     protected override int Execute(CommandContext context, RendererReferenceSettings settings, CancellationToken cancellationToken) {
         string path = ConfigurationStore.Resolve(settings.ConfigPath);
 
-        if (ConfigurationStore.Exists(path) is false) {
+        if (!ConfigurationStore.Exists(path)) {
             Console.Error.WriteLine($"error: no configuration at '{path}'. Run 'fce init' first.");
 
             return 1;

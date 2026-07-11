@@ -43,7 +43,7 @@ internal static class RendererLoader {
 
         foreach (string configured in assemblyPaths) {
             string path = Resolve(configured, baseDirectory);
-            if (File.Exists(path) is false) {
+            if (!File.Exists(path)) {
                 logger.Warning($"Configured renderer library not found: '{path}'.");
 
                 continue;
@@ -79,7 +79,7 @@ internal static class RendererLoader {
         List<IErrorDocumentationRenderer> renderers = [];
         foreach (Type? type in types) {
             if (type is null || type.IsAbstract || type.IsInterface) { continue; }
-            if (typeof(IErrorDocumentationRenderer).IsAssignableFrom(type) is false) { continue; }
+            if (!typeof(IErrorDocumentationRenderer).IsAssignableFrom(type)) { continue; }
             if (type.GetConstructor(Type.EmptyTypes) is null) { continue; }
 
             if (Activator.CreateInstance(type) is IErrorDocumentationRenderer renderer) { renderers.Add(renderer); }

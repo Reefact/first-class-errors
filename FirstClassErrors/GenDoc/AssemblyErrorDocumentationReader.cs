@@ -46,7 +46,7 @@ public static class AssemblyErrorDocumentationReader {
         List<ErrorDocumentationExtractionFailure> failures      = new();
 
         foreach (Type type in GetLoadableTypes(assembly, failures)) {
-            if (IsExtractableType(type) is false) { continue; }
+            if (!IsExtractableType(type)) { continue; }
 
             ExtractFromType(type, documentation, failures);
         }

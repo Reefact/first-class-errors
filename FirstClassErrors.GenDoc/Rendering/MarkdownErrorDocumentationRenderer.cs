@@ -26,7 +26,7 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(request);
 
-        if (SupportedLayouts.Contains(request.Layout, StringComparer.OrdinalIgnoreCase) is false) {
+        if (!SupportedLayouts.Contains(request.Layout, StringComparer.OrdinalIgnoreCase)) {
             throw new LayoutNotSupportedException(Format, request.Layout, SupportedLayouts);
         }
 
@@ -143,18 +143,18 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
 
         markdown.Append($"{heading} {Inline(entry.Title)}\n\n");
 
-        bool hasCode   = string.IsNullOrWhiteSpace(error.Code) is false;
-        bool hasSource = string.IsNullOrWhiteSpace(error.Source) is false;
+        bool hasCode   = !string.IsNullOrWhiteSpace(error.Code);
+        bool hasSource = !string.IsNullOrWhiteSpace(error.Source);
         if (hasCode) { markdown.Append($"- **{strings.CodeLabel}** {CodeSpan(error.Code!.Trim())}\n"); }
         if (hasSource) { markdown.Append($"- **{strings.SourceLabel}** {CodeSpan(error.Source!.Trim())}\n"); }
         if (hasCode || hasSource) { markdown.Append('\n'); }
 
-        if (string.IsNullOrWhiteSpace(error.Explanation) is false) {
+        if (!string.IsNullOrWhiteSpace(error.Explanation)) {
             // A paragraph: keep author line breaks intact.
             markdown.Append(error.Explanation!.Trim()).Append("\n\n");
         }
 
-        if (string.IsNullOrWhiteSpace(error.BusinessRule) is false) {
+        if (!string.IsNullOrWhiteSpace(error.BusinessRule)) {
             markdown.Append($"> **{strings.BusinessRuleLabel}** {Inline(error.BusinessRule)}\n\n");
         }
 
@@ -215,11 +215,11 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         }
 
         json.Append($"  \"title\": \"{JsonString(example.ShortMessage)}\"");
-        if (string.IsNullOrWhiteSpace(example.DetailedMessage) is false) {
+        if (!string.IsNullOrWhiteSpace(example.DetailedMessage)) {
             json.Append($",\n  \"detail\": \"{JsonString(example.DetailedMessage!)}\"");
         }
 
-        if (string.IsNullOrWhiteSpace(code) is false) {
+        if (!string.IsNullOrWhiteSpace(code)) {
             json.Append($",\n  \"code\": \"{JsonString(code!.Trim())}\"");
         }
 
@@ -242,12 +242,12 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
     private static string DiagnosticLogLine(ErrorDescription example, string? code, string? source) {
         StringBuilder line = new();
         line.Append($"{SampleLogTimestamp} ERROR");
-        if (string.IsNullOrWhiteSpace(source) is false) {
+        if (!string.IsNullOrWhiteSpace(source)) {
             line.Append($" [{source!.Trim()}]");
         }
 
         line.Append($" {Inline(example.DiagnosticMessage)}");
-        if (string.IsNullOrWhiteSpace(code) is false) {
+        if (!string.IsNullOrWhiteSpace(code)) {
             line.Append($" error.code={code!.Trim()}");
         }
 
@@ -277,7 +277,7 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
 
             string slug   = baseSlug;
             int    suffix = 2;
-            while (usedSlugs.Add(slug) is false) {
+            while (!usedSlugs.Add(slug)) {
                 slug = $"{baseSlug}-{suffix}";
                 suffix++;
             }
@@ -296,7 +296,7 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         // The label is localized, but the anchor and file name stay culture-invariant so links are stable across languages.
         foreach (Entry entry in entries) {
             string source = FirstNonEmpty(entry.Error.Source) ?? "Other";
-            if (byKey.TryGetValue(source, out Group? group) is false) {
+            if (!byKey.TryGetValue(source, out Group? group)) {
                 string slug = SlugifySource(source);
                 group = new Group(strings.GroupLabel(source), $"src-{slug}", $"{slug}-errors.md", []);
                 byKey[source] = group;
@@ -310,7 +310,7 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
     }
 
     private static string? FirstNonEmpty(params string?[] values) {
-        foreach (string? value in values.Where(value => string.IsNullOrWhiteSpace(value) is false)) {
+        foreach (string? value in values.Where(value => !string.IsNullOrWhiteSpace(value))) {
             return value!.Trim();
         }
 
@@ -324,7 +324,7 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
             if (character is (>= 'a' and <= 'z') or (>= '0' and <= '9')) {
                 builder.Append(character);
                 lastDash = false;
-            } else if (lastDash is false && builder.Length > 0) {
+            } else if (!lastDash && builder.Length > 0) {
                 builder.Append('-');
                 lastDash = true;
             }
@@ -355,7 +355,7 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
 
     /// <summary>Gets the group's source description (shared by its errors), or <c>null</c> when none is set.</summary>
     private static string? GroupDescription(Group group) {
-        foreach (Entry entry in group.Entries.Where(entry => string.IsNullOrWhiteSpace(entry.Error.SourceDescription) is false)) {
+        foreach (Entry entry in group.Entries.Where(entry => !string.IsNullOrWhiteSpace(entry.Error.SourceDescription))) {
             return entry.Error.SourceDescription!.Trim();
         }
 
@@ -415,7 +415,7 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
     }
 
     private static string ExampleValuesCell(IReadOnlyList<string?> values) {
-        IEnumerable<string> rendered = values.Where(value => string.IsNullOrWhiteSpace(value) is false)
+        IEnumerable<string> rendered = values.Where(value => !string.IsNullOrWhiteSpace(value))
                                              .Select(value => CodeCell(value));
 
         return string.Join(", ", rendered);

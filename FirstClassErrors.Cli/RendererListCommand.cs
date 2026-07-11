@@ -41,7 +41,7 @@ internal sealed class RendererListCommand : Command<ConfigScopedSettings> {
         Console.Out.WriteLine($"Custom renderers ({path}):");
         foreach (string reference in configuration.Renderers) {
             string library = RendererLoader.Resolve(reference, configDir);
-            if (File.Exists(library) is false) {
+            if (!File.Exists(library)) {
                 Console.Out.WriteLine($"  - {reference} (missing: {library})");
 
                 continue;
