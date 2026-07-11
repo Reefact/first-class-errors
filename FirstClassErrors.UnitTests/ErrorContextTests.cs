@@ -146,7 +146,7 @@ public sealed class ErrorContextTests : IDisposable {
         IReadOnlyDictionary<string, object?> dict = context.ToNameDictionary();
 
         // Verify
-        string[] expectedKeys = new[] { "DealId", "UserId" }.OrderBy(x => x).ToArray();
+        string[] expectedKeys = ["DealId", "UserId"];
 
         Check.That(dict.Keys.OrderBy(x => x)).ContainsExactly(expectedKeys);
         Check.That(dict["DealId"]).IsEqualTo(123);

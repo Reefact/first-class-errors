@@ -76,13 +76,13 @@ public sealed class ErrorDescriptionPropertyTests {
 
     [Fact(DisplayName = "A blank short message is rejected with an ArgumentException.")]
     public void BlankShortMessageIsRejected() {
-        Prop.ForAll(Generators.Blank().ToArbitrary(), blank => Expect.Throws<ArgumentException>(() => new ErrorDescription(blank, "diagnostic")))
+        Prop.ForAll(Generators.Blank().ToArbitrary(), blank => Expect.Throws<ArgumentException>(() => _ = new ErrorDescription(blank, "diagnostic")))
             .QuickCheckThrowOnFailure();
     }
 
     [Fact(DisplayName = "A blank diagnostic message is rejected with an ArgumentException.")]
     public void BlankDiagnosticMessageIsRejected() {
-        Prop.ForAll(Generators.Blank().ToArbitrary(), blank => Expect.Throws<ArgumentException>(() => new ErrorDescription("short", blank)))
+        Prop.ForAll(Generators.Blank().ToArbitrary(), blank => Expect.Throws<ArgumentException>(() => _ = new ErrorDescription("short", blank)))
             .QuickCheckThrowOnFailure();
     }
 
