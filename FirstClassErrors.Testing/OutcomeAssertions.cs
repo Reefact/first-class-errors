@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace FirstClassErrors.Testing;
 
 /// <summary>
@@ -16,6 +18,11 @@ public static class OutcomeAssertions {
     /// </summary>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="outcome" /> is <c>null</c>.</exception>
     /// <exception cref="OutcomeAssertionException">Thrown when the outcome is a failure.</exception>
+    [SuppressMessage("Minor Code Smell", "S4136:Method overloads should be grouped together",
+                     Justification =
+                         "Grouped by receiver type (Outcome then Outcome<T>), each block pairing ShouldSucceed/ShouldFail, " +
+                         "parallel to OutcomeTaskExtensions. Grouping by assertion name would interleave the non-generic and " +
+                         "generic surfaces.")]
     public static void ShouldSucceed(this Outcome outcome) {
         if (outcome is null) { throw new ArgumentNullException(nameof(outcome)); }
 
@@ -30,6 +37,8 @@ public static class OutcomeAssertions {
     /// <returns>An <see cref="ErrorAssertion" /> over the failing error.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="outcome" /> is <c>null</c>.</exception>
     /// <exception cref="OutcomeAssertionException">Thrown when the outcome is a success.</exception>
+    [SuppressMessage("Minor Code Smell", "S4136:Method overloads should be grouped together",
+                     Justification = "Grouped by receiver type, not by assertion name; see the note on ShouldSucceed.")]
     public static ErrorAssertion ShouldFail(this Outcome outcome) {
         if (outcome is null) { throw new ArgumentNullException(nameof(outcome)); }
 
