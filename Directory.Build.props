@@ -56,4 +56,19 @@
     <RoslynFloorVersion>4.8.0</RoslynFloorVersion>
   </PropertyGroup>
 
+  <!--
+    Central Package Management is configured in Directory.Packages.props (ManagePackageVersionsCentrally plus
+    the <PackageVersion> list). The property is repeated here for a TOOLING reason, not an MSBuild one:
+    OpenSSF Scorecard's Pinned-Dependencies check inspects every Directory.*.props file and keeps only the
+    LAST one it reads when deciding whether CPM is enabled (it overwrites its config per file). This file is
+    read after Directory.Packages.props and carries no <PackageVersion>, so without the property here Scorecard
+    concludes "CPM disabled" and reports the solution's `dotnet restore` as an unpinned nugetCommand — capping
+    the check at 7. Declaring it here makes the winning file report CPM enabled; its empty version set trivially
+    satisfies Scorecard's "all versions are fixed" rule, so the restore counts as pinned. Redundant for MSBuild
+    (same value as Directory.Packages.props); FloorCheck still overrides it to false in its own project file.
+  -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
 </Project>
