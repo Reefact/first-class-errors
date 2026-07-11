@@ -1,8 +1,8 @@
 #region Usings declarations
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
-using System.Runtime.Loader;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -53,10 +53,7 @@ if (cultureName is not null) {
 }
 
 try {
-    // Load into the default context (not Assembly.LoadFrom): the worker already runs under the target's
-    // deps.json, so its dependency closure — the target's own FirstClassErrors included — resolves there.
-    // LoadFromAssemblyPath requires an absolute path (LoadFrom resolved relative paths against the cwd itself).
-    Assembly                           assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.GetFullPath(assemblyPath));
+    Assembly                           assembly = LoadTarget(assemblyPath);
     ErrorDocumentationExtractionResult result   = AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(assembly);
 
     JsonSerializerOptions options = new() {
@@ -112,4 +109,17 @@ static (string? assemblyPath, string? outputPath, string? cultureName, string? e
     }
 
     return (assemblyPath, outputPath, cultureName, null);
+}
+
+// Assembly.LoadFrom is deliberate here (S3885): the worker documents a target given only by a path, and the
+// generator runs it WITHOUT a deps.json when the target has none. LoadFrom probes the target's own directory for
+// the target's co-located dependencies; loading into the default context (LoadFromAssemblyPath) would not, so a
+// documentation factory referencing a sibling DLL would fail to resolve it.
+[SuppressMessage("Major Code Smell", "S3885:\"Assembly.Load\" should be used instead of \"Assembly.LoadFrom\"",
+                 Justification =
+                     "LoadFrom probes the target's own directory for its co-located dependencies, which the deps.json-optional " +
+                     "worker relies on when documenting a prebuilt assembly that ships no deps.json. Assembly.Load resolves by " +
+                     "name, not path, and cannot load the target at all.")]
+static Assembly LoadTarget(string assemblyPath) {
+    return Assembly.LoadFrom(assemblyPath);
 }
