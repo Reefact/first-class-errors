@@ -69,6 +69,21 @@ credentials que le propre check Token-Permissions de Scorecard récompense.
   dépôt**, pas ici. Un sous-score Branch-Protection faible, par exemple, se
   corrige en marquant des checks required sur `main`, pas en éditant ce fichier.
 
+## Check Fuzzing
+
+Le check **Fuzzing** de Scorecard est satisfait ici par les tests property-based
+de `FirstClassErrors.PropertyTests` (FsCheck). Scorecard crédite le property-based
+testing C# en cherchant `using FsCheck;` dans l'arborescence des sources : les
+fuzzers vivent donc dans ce projet de tests, pas dans ce workflow.
+
+- **Attention à la version de l'outillage.** La détection property-based C# est
+  arrivée dans **scorecard v5.5.0** ; `scorecard-action@v2.4.3` — le pin du
+  workflow — embarque encore **v5.3.0**, antérieure. Le sous-check ne passe donc
+  au vert qu'une fois le scan exécuté en ≥ v5.5.0 : quand une version plus récente
+  de `scorecard-action` (embarquant ≥ v5.5.0) sort et que le pin est relevé.
+  D'ici là les tests tournent et protègent le code — seul le sous-score publié est
+  en retard.
+
 ## En rapport
 
 - [`codeql`](codeql.fr.md) — partage l'action `github/codeql-action/upload-sarif`
