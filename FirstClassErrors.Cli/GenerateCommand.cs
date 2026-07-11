@@ -68,7 +68,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
                 return 1;
             }
 
-            if (resolved.HasSolution is false && resolved.HasAssemblies is false) {
+            if (!resolved.HasSolution && !resolved.HasAssemblies) {
                 logger.Error("No source: pass --solution/--assemblies, or set 'solution'/'assemblies' in the configuration.");
 
                 return 1;
@@ -84,7 +84,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
             IReadOnlyList<IErrorDocumentationRenderer> customRenderers = RendererLoader.Load(configuration.Renderers, configDir, logger);
             IErrorDocumentationRenderer                renderer        = RendererCatalog.Create(resolved.Format, customRenderers);
 
-            if (renderer.SupportedLayouts.Contains(resolved.Layout, StringComparer.OrdinalIgnoreCase) is false) {
+            if (!renderer.SupportedLayouts.Contains(resolved.Layout, StringComparer.OrdinalIgnoreCase)) {
                 logger.Error($"The '{resolved.Format}' format does not support the '{resolved.Layout}' layout. Supported layouts: {string.Join(", ", renderer.SupportedLayouts)}.");
 
                 return 1;
@@ -100,7 +100,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
             }
 
             SolutionGenerationOptions options = new() {
-                BuildSolution      = resolved.NoBuild is false,
+                BuildSolution      = !resolved.NoBuild,
                 Configuration      = resolved.BuildConfiguration,
                 TargetFramework    = resolved.Framework,
                 FailureBehavior    = resolved.Strict ? FailureBehavior.Stop : FailureBehavior.Continue,

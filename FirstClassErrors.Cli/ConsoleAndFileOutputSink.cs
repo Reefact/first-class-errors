@@ -13,7 +13,7 @@ internal sealed class ConsoleAndFileOutputSink : IOutputSink {
 
     public void WriteFile(string fullPath, string content) {
         string? directory = Path.GetDirectoryName(fullPath);
-        if (string.IsNullOrEmpty(directory) is false) {
+        if (!string.IsNullOrEmpty(directory)) {
             Directory.CreateDirectory(directory);
         }
 

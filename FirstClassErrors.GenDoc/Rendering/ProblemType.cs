@@ -55,7 +55,7 @@ internal static class ProblemType {
             if (character is (>= 'a' and <= 'z') or (>= '0' and <= '9')) {
                 builder.Append(character);
                 lastDash = false;
-            } else if (lastDash is false && builder.Length > 0) {
+            } else if (!lastDash && builder.Length > 0) {
                 builder.Append('-');
                 lastDash = true;
             }

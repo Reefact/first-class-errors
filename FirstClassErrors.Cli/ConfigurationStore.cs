@@ -38,7 +38,7 @@ internal static class ConfigurationStore {
 
     /// <summary>Loads the configuration, returning an empty one when the file is missing or blank.</summary>
     public static CliConfiguration Load(string path) {
-        if (File.Exists(path) is false) { return new CliConfiguration(); }
+        if (!File.Exists(path)) { return new CliConfiguration(); }
 
         string json = File.ReadAllText(path);
         if (string.IsNullOrWhiteSpace(json)) { return new CliConfiguration(); }
@@ -58,7 +58,7 @@ internal static class ConfigurationStore {
     /// </summary>
     public static void Save(string path, CliConfiguration configuration) {
         string? directory = Path.GetDirectoryName(path);
-        if (string.IsNullOrEmpty(directory) is false) { Directory.CreateDirectory(directory); }
+        if (!string.IsNullOrEmpty(directory)) { Directory.CreateDirectory(directory); }
 
         string json     = JsonSerializer.Serialize(configuration, SerializerOptions);
         string tempPath = path + ".tmp";

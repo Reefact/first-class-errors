@@ -33,7 +33,7 @@ public static class SolutionErrorDocumentationGenerator {
         options.Logger.Info($"Starting documentation generation for solution '{solutionPath}'");
 
         string fullSolutionPath = Path.GetFullPath(solutionPath);
-        if (File.Exists(fullSolutionPath) is false) { throw new FileNotFoundException($"Solution file not found: '{fullSolutionPath}'", fullSolutionPath); }
+        if (!File.Exists(fullSolutionPath)) { throw new FileNotFoundException($"Solution file not found: '{fullSolutionPath}'", fullSolutionPath); }
 
         // Accept both the classic (.sln) and the XML (.slnx) solution formats: "dotnet sln list", used below to
         // enumerate the projects, handles the two uniformly. Solution filters (.slnf) are intentionally excluded —
@@ -41,7 +41,7 @@ public static class SolutionErrorDocumentationGenerator {
         string extension = Path.GetExtension(fullSolutionPath);
         bool isSolution = string.Equals(extension, ".sln", StringComparison.OrdinalIgnoreCase)
                        || string.Equals(extension, ".slnx", StringComparison.OrdinalIgnoreCase);
-        if (isSolution is false) { throw new ArgumentException($"Expected a .sln or .slnx file path, got: '{fullSolutionPath}'", nameof(solutionPath)); }
+        if (!isSolution) { throw new ArgumentException($"Expected a .sln or .slnx file path, got: '{fullSolutionPath}'", nameof(solutionPath)); }
 
         if (options.BuildSolution) {
             DotNetBuild(fullSolutionPath, options);
@@ -94,7 +94,7 @@ public static class SolutionErrorDocumentationGenerator {
         List<string> resolved = new();
         foreach (string assemblyPath in assemblyPaths) {
             string fullPath = Path.GetFullPath(assemblyPath);
-            if (File.Exists(fullPath) is false) {
+            if (!File.Exists(fullPath)) {
                 HandleFailure(options, $"Assembly not found: '{fullPath}'.");
 
                 continue;
@@ -130,10 +130,10 @@ public static class SolutionErrorDocumentationGenerator {
 
             // The command prints a (localized) header followed by the project paths, relative to the solution. Keep
             // only lines that resolve to an existing project file — this is robust to the header and to localization.
-            if (line.EndsWith("proj", StringComparison.OrdinalIgnoreCase) is false) { continue; }
+            if (!line.EndsWith("proj", StringComparison.OrdinalIgnoreCase)) { continue; }
 
             string projectPath = Path.GetFullPath(Path.Combine(solutionDirectory, line));
-            if (File.Exists(projectPath) is false) { continue; }
+            if (!File.Exists(projectPath)) { continue; }
 
             projects.Add(projectPath);
         }
@@ -151,7 +151,7 @@ public static class SolutionErrorDocumentationGenerator {
         // one signature visible at this level is a solution where nothing opted in while the filter was active: name the
         // most likely cause instead of handing back an empty catalog in silence. A warning, not a failure — an empty
         // catalog is legitimate for a solution that documents no errors.
-        if (included.Count == 0 && projectPaths.Count > 0 && options.IncludeProjectsWithoutOptIn is false) {
+        if (included.Count == 0 && projectPaths.Count > 0 && !options.IncludeProjectsWithoutOptIn) {
             options.Logger.Warning(
                 $"No project opted in to error documentation: '{options.OptInPropertyName}' was not set to a truthy value " +
                 "in any project file. GenDoc reads this property literally from the .csproj, without MSBuild evaluation: a " +
@@ -212,10 +212,10 @@ public static class SolutionErrorDocumentationGenerator {
     }
 
     private static string ResolveTargetFrameworkMoniker(string projectPath, SolutionGenerationOptions options) {
-        if (string.IsNullOrWhiteSpace(options.TargetFramework) is false) { return options.TargetFramework!; }
+        if (!string.IsNullOrWhiteSpace(options.TargetFramework)) { return options.TargetFramework!; }
 
         string? single = ReadMsBuildProperty(projectPath, "TargetFramework");
-        if (string.IsNullOrWhiteSpace(single) is false) { return single; }
+        if (!string.IsNullOrWhiteSpace(single)) { return single; }
 
         string? multi = ReadMsBuildProperty(projectPath, "TargetFrameworks");
         if (string.IsNullOrWhiteSpace(multi)) {
@@ -249,7 +249,7 @@ public static class SolutionErrorDocumentationGenerator {
             List<XElement> matches = document
                                     .Descendants()
                                     .Where(element => string.Equals(element.Name.LocalName, "PropertyGroup", StringComparison.OrdinalIgnoreCase))
-                                    .Where(propertyGroup => IsInsideTarget(propertyGroup) is false)
+                                    .Where(propertyGroup => !IsInsideTarget(propertyGroup))
                                     .SelectMany(propertyGroup => propertyGroup.Elements())
                                     .Where(property => string.Equals(property.Name.LocalName, propertyName, StringComparison.OrdinalIgnoreCase))
                                     .ToList();
@@ -300,12 +300,12 @@ public static class SolutionErrorDocumentationGenerator {
     private static void DotNetBuild(string solutionPath, SolutionGenerationOptions options) {
         List<string> args = ["build", solutionPath, "-c", options.Configuration];
 
-        if (string.IsNullOrWhiteSpace(options.TargetFramework) is false) {
+        if (!string.IsNullOrWhiteSpace(options.TargetFramework)) {
             args.Add("-f");
             args.Add(options.TargetFramework);
         }
 
-        args.AddRange(options.DotNetBuildAdditionalArguments.Where(additionalArgument => string.IsNullOrWhiteSpace(additionalArgument) is false));
+        args.AddRange(options.DotNetBuildAdditionalArguments.Where(additionalArgument => !string.IsNullOrWhiteSpace(additionalArgument)));
 
         ProcessResult result = RunProcess(DotNetCli, args, Path.GetDirectoryName(solutionPath)!, options.Logger, options.BuildTimeout, options.CancellationToken);
 
@@ -319,7 +319,7 @@ public static class SolutionErrorDocumentationGenerator {
         // dotnet msbuild <proj> -getProperty:TargetPath -property:Configuration=Release -property:TargetFramework=net8.0 -nologo
         List<string> args = ["msbuild", projectPath, $"-getProperty:{propertyName}", $"-property:Configuration={configuration}"];
 
-        if (string.IsNullOrWhiteSpace(targetFramework) is false) {
+        if (!string.IsNullOrWhiteSpace(targetFramework)) {
             args.Add($"-property:TargetFramework={targetFramework}");
         }
 
@@ -406,7 +406,7 @@ public static class SolutionErrorDocumentationGenerator {
         };
 
         bool started = process.Start();
-        if (started is false) { throw new SolutionDocumentationGenerationException($"Failed to start process '{fileName}'."); }
+        if (!started) { throw new SolutionDocumentationGenerationException($"Failed to start process '{fileName}'."); }
 
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
@@ -423,7 +423,7 @@ public static class SolutionErrorDocumentationGenerator {
             }
         });
 
-        if (timeout is { } limit && process.WaitForExit((int)limit.TotalMilliseconds) is false) {
+        if (timeout is { } limit && !process.WaitForExit((int)limit.TotalMilliseconds)) {
             try {
                 process.Kill(entireProcessTree: true);
             } catch {
@@ -528,8 +528,8 @@ public static class SolutionErrorDocumentationGenerator {
     }
 
     private static string ResolveWorkerAssemblyPath(SolutionGenerationOptions options) {
-        if (string.IsNullOrWhiteSpace(options.WorkerAssemblyPath) is false) {
-            if (File.Exists(options.WorkerAssemblyPath) is false) {
+        if (!string.IsNullOrWhiteSpace(options.WorkerAssemblyPath)) {
+            if (!File.Exists(options.WorkerAssemblyPath)) {
                 throw new SolutionDocumentationGenerationException($"The configured documentation worker was not found at '{options.WorkerAssemblyPath}'.");
             }
 
@@ -582,7 +582,7 @@ public static class SolutionErrorDocumentationGenerator {
                 return new ErrorDocumentationExtractionResult([], []);
             }
 
-            if (File.Exists(outputPath) is false) {
+            if (!File.Exists(outputPath)) {
                 HandleFailure(options, $"The documentation worker produced no output for '{targetAssemblyPath}'.");
 
                 return new ErrorDocumentationExtractionResult([], []);
