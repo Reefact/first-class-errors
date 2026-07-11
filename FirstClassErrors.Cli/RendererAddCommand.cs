@@ -1,6 +1,7 @@
 #region Usings declarations
 
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using FirstClassErrors.GenDoc.Rendering;
@@ -26,6 +27,10 @@ internal sealed class RendererReferenceSettings : ConfigScopedSettings {
 /// </summary>
 internal sealed class RendererAddCommand : Command<RendererReferenceSettings> {
 
+    [SuppressMessage("Major Code Smell", "S3885:\"Assembly.Load\" should be used instead of \"Assembly.LoadFrom\"",
+                     Justification =
+                         "The renderer library is validated by loading it from its file path; Assembly.Load resolves by name, " +
+                         "not path. LoadFrom is deliberate — it probes the library's own directory for its dependencies.")]
     protected override int Execute(CommandContext context, RendererReferenceSettings settings, CancellationToken cancellationToken) {
         string path      = ConfigurationStore.Resolve(settings.ConfigPath);
         string configDir = Path.GetDirectoryName(path) ?? Directory.GetCurrentDirectory();

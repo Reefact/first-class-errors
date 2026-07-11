@@ -1,5 +1,6 @@
 #region Usings declarations
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using FirstClassErrors.GenDoc;
@@ -32,6 +33,11 @@ internal static class RendererLoader {
     ///     Loads every renderer referenced by <paramref name="assemblyPaths" />. Problems (missing file, load error,
     ///     no renderer inside) are logged as warnings and skipped rather than aborting the run.
     /// </summary>
+    [SuppressMessage("Major Code Smell", "S3885:\"Assembly.Load\" should be used instead of \"Assembly.LoadFrom\"",
+                     Justification =
+                         "A renderer plugin is loaded from a file path, so Assembly.Load — which resolves by assembly name, " +
+                         "not by path — cannot be used. LoadFrom is deliberate: it probes the plugin's own directory for that " +
+                         "plugin's dependencies, which loading into the default context (LoadFromAssemblyPath) would not.")]
     public static IReadOnlyList<IErrorDocumentationRenderer> Load(IReadOnlyList<string> assemblyPaths, string baseDirectory, IGenerationLogger logger) {
         List<IErrorDocumentationRenderer> renderers = [];
 
