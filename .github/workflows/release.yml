@@ -28,15 +28,10 @@ concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
+# Least privilege at the top level: read-only by default. The single job below widens only the write scopes it
+# needs, which is what OpenSSF Scorecard's Token-Permissions check rewards (a read-only top level, writes per job).
 permissions:
-  # Create the GitHub Release and upload the attested .nupkg/.snupkg as its assets (see the publish step).
-  contents: write
-  # Allow the job to request a GitHub OIDC token, exchanged for a short-lived NuGet API key
-  # via trusted publishing (no long-lived NUGET_API_KEY secret is stored).
-  id-token: write
-  # Store the signed build-provenance attestations in the repository's attestation store,
-  # so anyone can verify a released package with `gh attestation verify`.
-  attestations: write
+  contents: read
 
 env:
   DOTNET_NOLOGO: 'true'
@@ -50,6 +45,15 @@ jobs:
     runs-on: ubuntu-latest
     # build + test + pack + attest + push is ~4 min; cap a hung release rather than the 6-hour default.
     timeout-minutes: 20
+    permissions:
+      # Create the GitHub Release and upload the attested .nupkg/.snupkg as its assets (see the publish step).
+      contents: write
+      # Request a GitHub OIDC token, exchanged for a short-lived NuGet API key via trusted publishing
+      # (no long-lived NUGET_API_KEY secret is stored).
+      id-token: write
+      # Store the signed build-provenance attestations in the repository's attestation store,
+      # so anyone can verify a released package with `gh attestation verify`.
+      attestations: write
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
