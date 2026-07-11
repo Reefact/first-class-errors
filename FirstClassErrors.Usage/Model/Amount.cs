@@ -1,6 +1,7 @@
 ﻿#region Usings declarations
 
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 using FirstClassErrors.Usage.Utils;
 
@@ -17,6 +18,11 @@ namespace FirstClassErrors.Usage.Model;
 ///     This type is not intended to be a full or production-ready Value Object implementation.
 /// </remarks>
 [DebuggerDisplay("{ToString()}")]
+[SuppressMessage("Minor Code Smell", "S1210:\"Equals\" and the comparison operators should be overridden when implementing \"IComparable\"",
+                 Justification =
+                     "Amount is an intentionally minimal illustrative model (see its remarks), not a production value object. " +
+                     "CompareTo exists to demonstrate the documentation flow; the full set of comparison operators is out of " +
+                     "scope for the example and would add untested surface to a type the tests only exercise indirectly.")]
 public sealed class Amount : IEquatable<Amount>, IComparable<Amount> {
 
     #region Constructors declarations
@@ -89,39 +95,6 @@ public sealed class Amount : IEquatable<Amount>, IComparable<Amount> {
         EnsureSameCurrency(other);
 
         return Value.CompareTo(other.Value);
-    }
-
-    // A type that is IComparable should also carry the comparison operators (S1210). Ordering mismatched currencies is
-    // undefined, so the ordering operators surface it the same way CompareTo/IsLessThan do — by throwing.
-    public static bool operator ==(Amount? left, Amount? right) {
-        return Equals(left, right);
-    }
-
-    public static bool operator !=(Amount? left, Amount? right) {
-        return !Equals(left, right);
-    }
-
-    public static bool operator <(Amount? left, Amount? right) {
-        return Compare(left, right) < 0;
-    }
-
-    public static bool operator >(Amount? left, Amount? right) {
-        return Compare(left, right) > 0;
-    }
-
-    public static bool operator <=(Amount? left, Amount? right) {
-        return Compare(left, right) <= 0;
-    }
-
-    public static bool operator >=(Amount? left, Amount? right) {
-        return Compare(left, right) >= 0;
-    }
-
-    private static int Compare(Amount? left, Amount? right) {
-        if (ReferenceEquals(left, right)) { return 0; }
-        if (left is null) { return -1; }
-
-        return left.CompareTo(right);
     }
 
     /// <inheritdoc />
