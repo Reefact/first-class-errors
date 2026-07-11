@@ -31,6 +31,141 @@ the hook and CI so the two never diverge.
 The hook lets `fixup!`, `squash!`, and `amend!` commits through so you can build
 an autosquash rebase; CI rejects them, so squash them away before merge.
 
+## Branches
+
+### Why
+
+A pull request is read against its branch. Two branches carry the same feature.
+The first was cut from `origin/main` an hour ago and holds three commits — its
+pull request diff *is* the feature, and nothing else. The second was cut from a
+local `main` three weeks stale, then revived for a second idea once the first
+had merged; its diff carries fifteen commits, twelve already on `main`, and the
+reviewer cannot tell the request from the residue.
+
+```
+$ git log --oneline origin/main..HEAD    # the second branch
+a1b2c3d feat(core): the change the pull request is for
+9f8e7d6 feat(gendoc): a renderer already merged, dragged along
+...twelve more commits already on main...
+```
+
+The branch is not the work. It is the disposable workspace of **one** pull
+request — cut fresh from the remote, used once, discarded on merge. Everything
+below follows from that.
+
+### The rule
+
+* A branch carries **one pull request**, and that pull request carries one
+  coherent unit of work. Work unrelated to that unit MUST take its own branch —
+  the branch-level reading of *two intentions, two commits*.
+* `main` is written **only** by merge. No commit lands on `main` directly; it
+  moves when a reviewed pull request is merged.
+* A branch MUST be cut from the **tip of `origin/main`**, freshly fetched —
+  never from a local `main` that may lag, nor from another topic branch:
+
+  ```
+  git fetch origin
+  git switch -c <author>/<short-description> origin/main
+  ```
+* A branch name MUST take the form `<author>/<short-description>`. The
+  `<author>` is the branch owner's GitHub handle — the person or the tool the
+  work belongs to: `sylvain/…`, `claude/…`, `dependabot/…`. The
+  `<short-description>` MUST be English, lowercase, kebab-case, and name the
+  change, not the file it touches: `sylvain/gendoc-invalid-culture`, never
+  `sylvain/GenDoc.cs`.
+* A tool that generates its own branches owns its namespace and keeps its
+  native layout beneath it — `dependabot/nuget/Newtonsoft.Json-13.0.1`,
+  `renovate/…`. The `<author>/<short-description>` form binds the branches a
+  person or an agent cuts by hand; a generator's scheme is the generator's to
+  define, and fighting it buys nothing.
+* The branch name carries **no type**. The type is a property of each commit,
+  checked there by the hook and by CI; a branch gathers commits of several
+  types, and a single prefix would name one and hide the rest — the same reason
+  a multi-intention pull request title takes no `type:` (see *Pull request
+  titles* below). The owner is what the name adds, because the owner is what the
+  commits do not carry.
+* A branch lives exactly as long as its pull request stays **open**, and MAY be
+  reused only for that same request — review fixes, changes asked for on the
+  pull request.
+* Once the pull request is **merged or closed**, the branch is finished. It MUST
+  NOT be revived, not even for follow-up on the same topic: a merged pull
+  request cannot describe new work, and a closed one was set aside. Follow-up is
+  a new branch, cut fresh from `origin/main`.
+* To carry `main`'s progress into an open branch: while the branch is yours
+  alone, **rebase** it onto `origin/main`; once others may have based work on
+  it, **merge** `origin/main` in instead. Either keeps the branch current
+  without rewriting what a collaborator has already pulled.
+* Rewriting a branch's history — a force-push, a `git rebase -i` — is fine
+  while the branch is **yours alone**, and is how a commit message the lint or
+  a reviewer rejected gets fixed, even mid-review: a rejected message cannot be
+  corrected by a follow-up commit (see *Commit messages*). Once anyone else may
+  have **based work on it**, its history MUST NOT be rewritten — a force-push
+  discards what was built on top. Work that is not yours is not yours to
+  rewrite or delete.
+* Before opening the pull request, **read the branch** against a fresh
+  `origin/main`:
+
+  ```
+  git fetch origin
+  git log  --oneline origin/main..HEAD     # the commits the request adds
+  git diff --stat    origin/main...HEAD    # the files it touches
+  ```
+
+  If either shows something the request is not about, the branch has drifted —
+  split it before review, not after.
+
+### The doctrine
+
+**The branch is the unit of work in progress; the pull request is what it
+becomes.** One branch, one pull request, one unit of work — the same one-to-one
+the doctrine draws between the commit and its change.
+
+**The name says who, the commits say what.** A branch owns a pull request that
+may carry a feature, the refactor that prepared it, and its tests at once; no
+single type names it honestly. The type lives on each commit, where the hook
+enforces it. The branch name adds the one thing the commits omit — whose work it
+is — so `claude/…` and `dependabot/…` are not exceptions but the rule itself,
+read the same on a human or a machine.
+
+**A branch is disposable.** Its history is preserved by the merge commit that
+lands it; the ref itself is cut fresh and deleted on merge. Nothing of value
+lives only on a branch.
+
+**A merged branch is spent.** Reviving it stacks new work on settled history and
+forks from a `main` that has moved. The reviewer pays the cost, reading the
+residue as if it were the request.
+
+**Cut from the remote, not the local.** A local `main` lags silently; a branch
+cut from it drags that lag into every diff. `origin/main`, freshly fetched, is
+the only base.
+
+**Unrelated work is a new branch, not a passenger.** A branch that carries two
+changes forces a pull request that can describe neither — the branch-level form
+of the commit that carries two intentions.
+
+### Examples
+
+| Branch | Why it fits |
+|---|---|
+| `sylvain/add-html-renderer` | Owner and change, named plainly. The type it will carry lives in its commits. |
+| `claude/gendoc-invalid-culture` | An agent's branch; the description names the zone, not `GenDoc.cs`. |
+| `dependabot/nuget/Newtonsoft.Json-13.0.1` | A generator keeps its native layout under its `dependabot/` namespace. |
+| `sylvain/security-policy` | The description alone carries the subject; the branch needs no type. |
+
+### Anti-patterns
+
+| Branch or move | What is wrong |
+|---|---|
+| a commit pushed straight to `main` | `main` moves only by merge. Even a one-line fix takes a branch and a pull request. |
+| `patch-1`, `my-work`, `tmp` | No owner, and it names nothing. A branch name is read in the pull-request list; it MUST say who owns what. |
+| `feat/add-html-renderer` | A type in the owner's slot. The type belongs on the commits; the branch prefix is the owner: `sylvain/add-html-renderer`. |
+| `sylvain/GenDoc.cs` | Names a file. It should name the change: `sylvain/gendoc-invalid-culture`. |
+| `sylvain/corrige-le-rendu` | Not English. |
+| reviving a merged `claude/add-html-renderer` for a follow-up | A merged branch is spent. Cut the follow-up fresh from `origin/main`. |
+| a branch cut from a three-week-old local `main` | The pull request diff fills with commits already on `main`. Fetch first; cut from `origin/main`. |
+| one branch carrying a feature and an unrelated CI tweak | No single pull request describes both. Two branches, two requests. |
+| force-pushing a branch others have built on | Rewrites shared history and discards the work pushed on top. Rewrite only while the branch is yours alone. |
+
 ## Commit messages
 
 This section adapts the [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
