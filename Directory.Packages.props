@@ -1,5 +1,12 @@
 <Project>
 
+  <!-- Enable Central Package Management. Kept first, and as the ONLY place this property name appears in the
+       file, so a static analyzer (e.g. OpenSSF Scorecard's Pinned-Dependencies parser) reads the intended
+       "true" and never a value mentioned in prose below. -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
   <!--
     Central Package Management (CPM). One source of truth for every NuGet version in the repository: projects
     declare <PackageReference Include="..." /> WITHOUT a Version, and the version is resolved from the matching
@@ -11,13 +18,10 @@
       * FirstClassErrors.Analyzers pins Microsoft.CodeAnalysis.CSharp to $(RoslynFloorVersion) via a
         VersionOverride, so the load-contract floor stays property-driven and independent of the (newer)
         central version the analyzer test project consumes.
-      * tools/floor-check/FloorCheck.csproj opts OUT of CPM (ManagePackageVersionsCentrally=false): it consumes
-        the FirstClassErrors package at a dynamic $(FloorCheckVersion) and is built in isolation, outside the
+      * tools/floor-check/FloorCheck.csproj opts OUT of CPM in its own project file: it consumes the
+        FirstClassErrors package at a dynamic $(FloorCheckVersion) and is built in isolation, outside the
         solution.
   -->
-  <PropertyGroup>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-  </PropertyGroup>
 
   <ItemGroup>
     <PackageVersion Include="coverlet.collector" Version="10.0.1" />
