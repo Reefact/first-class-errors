@@ -310,11 +310,9 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
     }
 
     private static string? FirstNonEmpty(params string?[] values) {
-        foreach (string? value in values.Where(value => !string.IsNullOrWhiteSpace(value))) {
-            return value!.Trim();
-        }
+        string? value = values.FirstOrDefault(candidate => !string.IsNullOrWhiteSpace(candidate));
 
-        return null;
+        return value?.Trim();
     }
 
     private static string Slugify(string value) {
@@ -355,11 +353,9 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
 
     /// <summary>Gets the group's source description (shared by its errors), or <c>null</c> when none is set.</summary>
     private static string? GroupDescription(Group group) {
-        foreach (Entry entry in group.Entries.Where(entry => !string.IsNullOrWhiteSpace(entry.Error.SourceDescription))) {
-            return entry.Error.SourceDescription!.Trim();
-        }
+        Entry? described = group.Entries.FirstOrDefault(entry => !string.IsNullOrWhiteSpace(entry.Error.SourceDescription));
 
-        return null;
+        return described?.Error.SourceDescription!.Trim();
     }
 
     /// <summary>Trims a value and folds any line breaks into spaces so it stays on one Markdown line.</summary>
