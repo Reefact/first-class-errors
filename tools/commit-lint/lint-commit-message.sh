@@ -33,6 +33,7 @@ MAX=72
 strict=0
 case "${1:-}" in
   --ci|--strict) strict=1; shift ;;
+  *) ;; # any other first argument is the message file / '-', handled below
 esac
 
 # --- read the message ---------------------------------------------------------
@@ -57,6 +58,7 @@ subject="$(printf '%s\n' "$msg" | sed -n '1p' | sed 's/[[:space:]]*$//')"
 # also filters them out with --no-merges).
 case "$subject" in
   'Merge '*) exit 0 ;;
+  *) ;; # not a merge commit: fall through to validation
 esac
 # Autosquash placeholders are rewritten by a later `git rebase --autosquash`, so
 # the local hook lets them through. CI (--ci) rejects them instead: this repo
@@ -70,6 +72,7 @@ case "$subject" in
     printf 'commit-lint: autosquash placeholder must be squashed away before merge: %s\n' "$subject" >&2
     exit 1
     ;;
+  *) ;; # not an autosquash placeholder: fall through to validation
 esac
 
 errors=0
@@ -78,6 +81,7 @@ err() {
   errmsgs="${errmsgs}  - ${1}
 "
   errors=$((errors + 1))
+  return 0
 }
 
 # --- header: presence ---------------------------------------------------------
@@ -124,12 +128,14 @@ else
     desc_start="$(printf '%s' "$subject" | sed -E 's/^[^:]*: ?//' | cut -c1)"
     case "$desc_start" in
       [A-Z]) err "the description must start with a lowercase letter (imperative: 'add', not 'Add'/'Added')" ;;
+      *) ;; # already lowercase (or non-letter): nothing to report
     esac
   fi
 
   # trailing period
   case "$subject" in
     *.) err "the header must not end with a period" ;;
+    *) ;; # no trailing period: nothing to report
   esac
 
   # scope order / duplicates (only meaningful when the group is well-formed)
@@ -152,7 +158,7 @@ fi
 # --- breaking-change double signal --------------------------------------------
 prefix="${subject%%: *}"
 has_bang=0
-case "$prefix" in *!) has_bang=1 ;; esac
+case "$prefix" in *!) has_bang=1 ;; *) ;; esac
 
 has_breaking=0
 if printf '%s\n' "$msg" | grep -Eq '^BREAKING CHANGE: '; then
