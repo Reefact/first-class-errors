@@ -42,7 +42,10 @@ run.
 Le workflow a besoin de trois périmètres en écriture : `contents: write` (créer la
 Release et uploader les assets), `id-token: write` (générer la clé NuGet
 éphémère via trusted publishing) et `attestations: write` (stocker la provenance
-signée). Aucun `NUGET_API_KEY` durable n'est stocké.
+signée). Ils sont accordés uniquement sur le job `pack-push` ; le token top-level
+reste en lecture seule (`contents: read`) — la forme de moindre privilège que
+récompense le check Token-Permissions d'OpenSSF Scorecard. Aucun `NUGET_API_KEY`
+durable n'est stocké.
 
 ## À manipuler avec précaution
 
