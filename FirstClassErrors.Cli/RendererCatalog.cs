@@ -23,10 +23,11 @@ internal static class RendererCatalog {
         () => new HtmlErrorDocumentationRenderer()
     ];
 
+    /// <summary>The built-in format identifiers, computed once (the built-in renderers never change at runtime).</summary>
+    private static readonly IReadOnlyList<string> BuiltInFormatList = BuiltInFactories.Select(factory => factory().Format).ToList();
+
     /// <summary>Gets the built-in format identifiers, as declared by the built-in renderers.</summary>
-    public static IReadOnlyList<string> BuiltInFormats {
-        get { return BuiltInFactories.Select(factory => factory().Format).ToList(); }
-    }
+    public static IReadOnlyList<string> BuiltInFormats => BuiltInFormatList;
 
     /// <summary>
     ///     Creates the renderer whose declared format matches <paramref name="format" />, preferring a built-in over
@@ -43,10 +44,10 @@ internal static class RendererCatalog {
             }
         }
 
-        foreach (IErrorDocumentationRenderer renderer in customRenderers) {
-            if (string.Equals(renderer.Format, format, StringComparison.OrdinalIgnoreCase)) {
-                return renderer;
-            }
+        IErrorDocumentationRenderer? customRenderer = customRenderers
+           .FirstOrDefault(renderer => string.Equals(renderer.Format, format, StringComparison.OrdinalIgnoreCase));
+        if (customRenderer is not null) {
+            return customRenderer;
         }
 
         IEnumerable<string> available = BuiltInFormats.Concat(customRenderers.Select(renderer => renderer.Format))
