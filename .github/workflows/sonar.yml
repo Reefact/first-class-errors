@@ -66,6 +66,9 @@ jobs:
 
       # The build must sit between `begin` and `end`: the scanner hooks MSBuild to
       # observe the compilation, so it cannot use a pre-built or --no-build output.
+      # *.verified.* are Verify snapshot oracles — generated test fixtures, not production source. Excluding them
+      # keeps Sonar from analysing the emitted HTML/JS/Markdown as if it were hand-written code (and from counting
+      # the near-identical snapshots as duplication).
       - name: Begin analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -76,6 +79,7 @@ jobs:
           /d:sonar.token="$SONAR_TOKEN"
           /d:sonar.host.url="https://sonarcloud.io"
           /d:sonar.cs.opencover.reportsPaths="artifacts/coverage/**/coverage.opencover.xml"
+          /d:sonar.exclusions="**/*.verified.*"
 
       - name: Build
         # Disable the CI warning ratchet (Directory.Build.props) for the analysis build only. The scanner
