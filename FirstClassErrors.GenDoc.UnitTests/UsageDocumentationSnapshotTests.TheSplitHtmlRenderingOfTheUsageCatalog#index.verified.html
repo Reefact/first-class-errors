@@ -148,12 +148,22 @@ pre code { font-size: 0.86rem; white-space: pre; }
   var root = document.documentElement;
   function apply(t) { if (t === 'light' || t === 'dark') { root.dataset.theme = t; } else { delete root.dataset.theme; } }
   function current() { return root.dataset.theme || 'auto'; }
+  function store(theme) {
+    // localStorage throws when it is unavailable (e.g. private mode). Report that to the caller instead of
+    // swallowing it in an empty catch — persisting the theme is best effort, so the caller ignores the result.
+    try {
+      if (theme === 'auto') { localStorage.removeItem(KEY); } else { localStorage.setItem(KEY, theme); }
+      return true;
+    } catch {
+      return false;
+    }
+  }
   var btn = document.getElementById('theme-toggle');
   if (btn) {
     btn.addEventListener('click', function () {
       var order = ['auto', 'light', 'dark'];
       var next = order[(order.indexOf(current()) + 1) % order.length];
-      try { if (next === 'auto') { localStorage.removeItem(KEY); } else { localStorage.setItem(KEY, next); } } catch (e) { /* localStorage may be unavailable (e.g. private mode); the theme just will not persist */ }
+      store(next);
       apply(next);
     });
   }
