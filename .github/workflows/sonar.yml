@@ -66,6 +66,11 @@ jobs:
 
       # The build must sit between `begin` and `end`: the scanner hooks MSBuild to
       # observe the compilation, so it cannot use a pre-built or --no-build output.
+      # S1125 (Boolean literals should not be redundant) fires on the codebase-wide `x is false`
+      # idiom, a deliberate house style preferred over a leading `!`. The rule is ignored here rather
+      # than in .editorconfig (which by policy carries no rule severities — those live in DotSettings)
+      # or per call site (72 identical occurrences). Narrow to csharpsquid:S1125 so every other rule,
+      # and any genuine redundant-literal elsewhere, is still reported.
       - name: Begin analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -76,6 +81,9 @@ jobs:
           /d:sonar.token="$SONAR_TOKEN"
           /d:sonar.host.url="https://sonarcloud.io"
           /d:sonar.cs.opencover.reportsPaths="artifacts/coverage/**/coverage.opencover.xml"
+          /d:sonar.issue.ignore.multicriteria="e1"
+          /d:sonar.issue.ignore.multicriteria.e1.ruleKey="csharpsquid:S1125"
+          /d:sonar.issue.ignore.multicriteria.e1.resourceKey="**/*.cs"
 
       - name: Build
         # Disable the CI warning ratchet (Directory.Build.props) for the analysis build only. The scanner
