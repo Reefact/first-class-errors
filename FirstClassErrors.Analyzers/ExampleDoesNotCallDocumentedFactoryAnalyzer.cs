@@ -46,10 +46,8 @@ public sealed class ExampleDoesNotCallDocumentedFactoryAnalyzer : DiagnosticAnal
         INamedTypeSymbol? documentingType = context.ContainingSymbol.ContainingType;
         if (documentingType is null) { return; }
 
-        foreach (IOperation example in GetExampleOperations(invocation)) {
-            if (!ExampleInvokesMemberOf(example, documentingType)) {
-                context.ReportDiagnostic(Diagnostic.Create(Descriptors.ExampleDoesNotCallDocumentedFactory, example.Syntax.GetLocation(), documentingType.Name));
-            }
+        foreach (IOperation example in GetExampleOperations(invocation).Where(example => !ExampleInvokesMemberOf(example, documentingType))) {
+            context.ReportDiagnostic(Diagnostic.Create(Descriptors.ExampleDoesNotCallDocumentedFactory, example.Syntax.GetLocation(), documentingType.Name));
         }
     }
 
