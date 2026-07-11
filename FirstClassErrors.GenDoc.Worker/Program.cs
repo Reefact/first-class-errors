@@ -2,6 +2,7 @@
 
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.Loader;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -23,34 +24,16 @@ using FirstClassErrors.GenDoc;
 //
 // Exit codes: 0 = success, 1 = fatal extraction error, 2 = bad usage.
 
-string? assemblyPath = null;
-string? outputPath   = null;
-string? cultureName  = null;
+(string? assemblyPath, string? outputPath, string? cultureName, string? parseError) = ParseArguments(args);
 
-for (int index = 0; index < args.Length; index++) {
-    string arg = args[index];
+if (parseError is not null) {
+    await Console.Error.WriteLineAsync(parseError);
 
-    if (string.Equals(arg, "--culture", StringComparison.Ordinal)) {
-        if (index + 1 >= args.Length) {
-            Console.Error.WriteLine("Missing value for --culture.");
-
-            return 2;
-        }
-
-        cultureName = args[++index];
-
-        continue;
-    }
-
-    if (assemblyPath is null) {
-        assemblyPath = arg;
-    } else if (outputPath is null) {
-        outputPath = arg;
-    }
+    return 2;
 }
 
 if (string.IsNullOrWhiteSpace(assemblyPath)) {
-    Console.Error.WriteLine("Usage: FirstClassErrors.GenDoc.Worker <assembly-path> [output-json-path] [--culture <name>]");
+    await Console.Error.WriteLineAsync("Usage: FirstClassErrors.GenDoc.Worker <assembly-path> [output-json-path] [--culture <name>]");
 
     return 2;
 }
@@ -58,19 +41,22 @@ if (string.IsNullOrWhiteSpace(assemblyPath)) {
 if (cultureName is not null) {
     try {
         CultureInfo culture = CultureInfo.GetCultureInfo(cultureName);
-        CultureInfo.CurrentCulture              = culture;
-        CultureInfo.CurrentUICulture            = culture;
+        CultureInfo.CurrentCulture                = culture;
+        CultureInfo.CurrentUICulture              = culture;
         CultureInfo.DefaultThreadCurrentCulture   = culture;
         CultureInfo.DefaultThreadCurrentUICulture = culture;
     } catch (CultureNotFoundException) {
-        Console.Error.WriteLine($"Unknown culture '{cultureName}'.");
+        await Console.Error.WriteLineAsync($"Unknown culture '{cultureName}'.");
 
         return 2;
     }
 }
 
 try {
-    Assembly                           assembly = Assembly.LoadFrom(assemblyPath);
+    // Load into the default context (not Assembly.LoadFrom): the worker already runs under the target's
+    // deps.json, so its dependency closure — the target's own FirstClassErrors included — resolves there.
+    // LoadFromAssemblyPath requires an absolute path (LoadFrom resolved relative paths against the cwd itself).
+    Assembly                           assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.GetFullPath(assemblyPath));
     ErrorDocumentationExtractionResult result   = AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(assembly);
 
     JsonSerializerOptions options = new() {
@@ -81,14 +67,49 @@ try {
     string json = JsonSerializer.Serialize(result, options);
 
     if (outputPath is null) {
-        Console.Out.Write(json);
+        await Console.Out.WriteAsync(json);
     } else {
-        File.WriteAllText(outputPath, json);
+        await File.WriteAllTextAsync(outputPath, json);
     }
 
     return 0;
 } catch (Exception ex) {
-    Console.Error.WriteLine($"Fatal error while extracting documentation from '{assemblyPath}': {ex}");
+    await Console.Error.WriteLineAsync($"Fatal error while extracting documentation from '{assemblyPath}': {ex}");
 
     return 1;
+}
+
+// Parses the positional <assembly-path> [output-json-path] and the optional --culture <name>. Returns the parsed
+// values plus a non-null error message when --culture is given without a value. Kept as a local function so the
+// top-level flow stays a straight-line sequence of guards.
+static (string? assemblyPath, string? outputPath, string? cultureName, string? error) ParseArguments(string[] arguments) {
+    string? assemblyPath = null;
+    string? outputPath   = null;
+    string? cultureName  = null;
+
+    int index = 0;
+    while (index < arguments.Length) {
+        string arg = arguments[index];
+
+        if (string.Equals(arg, "--culture", StringComparison.Ordinal)) {
+            if (index + 1 >= arguments.Length) {
+                return (null, null, null, "Missing value for --culture.");
+            }
+
+            cultureName = arguments[index + 1];
+            index += 2;
+
+            continue;
+        }
+
+        if (assemblyPath is null) {
+            assemblyPath = arg;
+        } else if (outputPath is null) {
+            outputPath = arg;
+        }
+
+        index++;
+    }
+
+    return (assemblyPath, outputPath, cultureName, null);
 }

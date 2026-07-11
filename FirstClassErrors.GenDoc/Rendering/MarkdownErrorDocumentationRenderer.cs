@@ -23,8 +23,8 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
 
     /// <inheritdoc />
     public IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog, RenderRequest request) {
-        if (catalog is null) { throw new ArgumentNullException(nameof(catalog)); }
-        if (request is null) { throw new ArgumentNullException(nameof(request)); }
+        ArgumentNullException.ThrowIfNull(catalog);
+        ArgumentNullException.ThrowIfNull(request);
 
         if (SupportedLayouts.Contains(request.Layout, StringComparer.OrdinalIgnoreCase) is false) {
             throw new LayoutNotSupportedException(Format, request.Layout, SupportedLayouts);
@@ -86,7 +86,7 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         return [new RenderedDocument("errors.md", markdown.ToString())];
     }
 
-    private static IReadOnlyList<RenderedDocument> RenderSplit(IReadOnlyList<Entry> entries, MarkdownRendererStrings strings, string? serviceName) {
+    private static List<RenderedDocument> RenderSplit(IReadOnlyList<Entry> entries, MarkdownRendererStrings strings, string? serviceName) {
         List<RenderedDocument> documents = [];
 
         StringBuilder index = new();
@@ -263,7 +263,7 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         return JsonEncodedText.Encode(Inline(value), JavaScriptEncoder.UnsafeRelaxedJsonEscaping).ToString();
     }
 
-    private static IReadOnlyList<Entry> BuildEntries(IEnumerable<ErrorDocumentation> catalog) {
+    private static List<Entry> BuildEntries(IEnumerable<ErrorDocumentation> catalog) {
         List<Entry>     entries   = [];
         HashSet<string> usedSlugs = new(StringComparer.OrdinalIgnoreCase);
 
@@ -288,7 +288,7 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         return entries;
     }
 
-    private static IReadOnlyList<Group> GroupBySource(IReadOnlyList<Entry> entries, MarkdownRendererStrings strings) {
+    private static List<Group> GroupBySource(IReadOnlyList<Entry> entries, MarkdownRendererStrings strings) {
         List<Group>               groups = [];
         Dictionary<string, Group> byKey  = new(StringComparer.Ordinal);
 
@@ -310,8 +310,8 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
     }
 
     private static string? FirstNonEmpty(params string?[] values) {
-        foreach (string? value in values) {
-            if (string.IsNullOrWhiteSpace(value) is false) { return value.Trim(); }
+        foreach (string? value in values.Where(value => string.IsNullOrWhiteSpace(value) is false)) {
+            return value!.Trim();
         }
 
         return null;
@@ -355,10 +355,8 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
 
     /// <summary>Gets the group's source description (shared by its errors), or <c>null</c> when none is set.</summary>
     private static string? GroupDescription(Group group) {
-        foreach (Entry entry in group.Entries) {
-            if (string.IsNullOrWhiteSpace(entry.Error.SourceDescription) is false) {
-                return entry.Error.SourceDescription!.Trim();
-            }
+        foreach (Entry entry in group.Entries.Where(entry => string.IsNullOrWhiteSpace(entry.Error.SourceDescription) is false)) {
+            return entry.Error.SourceDescription!.Trim();
         }
 
         return null;
