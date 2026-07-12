@@ -5,6 +5,7 @@
 
 [![ci](https://github.com/Reefact/first-class-errors/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Reefact/first-class-errors/actions/workflows/ci.yml)
 [![codeql](https://github.com/Reefact/first-class-errors/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/Reefact/first-class-errors/actions/workflows/codeql.yml)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13567/badge)](https://www.bestpractices.dev/projects/13567)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/Reefact/first-class-errors/badge)](https://securityscorecards.dev/viewer/?uri=github.com/Reefact/first-class-errors)
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=reefact_first-class-errors&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=reefact_first-class-errors)
 [![Couverture](https://sonarcloud.io/api/project_badges/measure?project=reefact_first-class-errors&metric=coverage)](https://sonarcloud.io/summary/new_code?id=reefact_first-class-errors)
@@ -146,6 +147,14 @@ Cela vous permet de traiter la même erreur, au choix :
 
 selon le contexte (domaine, validation, pipelines, etc.).
 
+## 📦 Installation
+
+```bash
+dotnet add package FirstClassErrors
+```
+
+Cible **.NET Standard 2.0**. Les analyseurs Roslyn sont intégrés au package — aucune installation séparée.
+
 ## 🧩 Exemple
 
 Extrait du projet `FirstClassErrors.Usage` :
@@ -219,6 +228,12 @@ Chaque package publié est construit et poussé par [`release.yml`](../.github/w
   (nuget.org sert une copie signée par le dépôt, d’empreinte différente : vérifiez **celle-ci** plutôt avec `dotnet nuget verify`.)
 
 - **SBOM embarqué** — chaque package contient son inventaire logiciel SPDX (*software bill of materials*) à `_manifest/spdx_2.2/manifest.spdx.json`, recensant les fichiers livrés et les composants tiers utilisés pour le construire.
+
+## 🐛 Retours & contributions
+
+Vous avez trouvé un bug ou souhaitez proposer une fonctionnalité ? Ouvrez une issue sur le [gestionnaire d’issues GitHub](https://github.com/Reefact/first-class-errors/issues). Les contributions sont les bienvenues — voir [CONTRIBUTING.md](../CONTRIBUTING.md) pour commencer.
+
+Pour les vulnérabilités de **sécurité**, merci de suivre le processus privé décrit dans [SECURITY.md](../SECURITY.md) plutôt que d’ouvrir une issue publique.
 
 ## 📚 Étapes suivantes
 
