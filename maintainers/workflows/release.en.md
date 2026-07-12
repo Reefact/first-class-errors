@@ -82,6 +82,11 @@ deliberate:
   --clobber` fallback keeps a re-run idempotent.
 - **`concurrency` sets `cancel-in-progress: false`.** Never cancel a
   half-finished publish.
+- **The GitHub Release is flagged `--prerelease` when the version carries a
+  SemVer pre-release label** (any `-…`, e.g. `-preview.1`, `-beta.1`, `-rc.1`),
+  so a preview never appears as the repository's "Latest" release. Build
+  metadata (`+…`) is rejected upstream, so a `-` is unambiguously the
+  pre-release marker — this matches how nuget.org lists the same package.
 
 ## Related
 
