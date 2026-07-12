@@ -5,6 +5,7 @@
 
 [![ci](https://github.com/Reefact/first-class-errors/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Reefact/first-class-errors/actions/workflows/ci.yml)
 [![codeql](https://github.com/Reefact/first-class-errors/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/Reefact/first-class-errors/actions/workflows/codeql.yml)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13567/badge)](https://www.bestpractices.dev/projects/13567)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/Reefact/first-class-errors/badge)](https://securityscorecards.dev/viewer/?uri=github.com/Reefact/first-class-errors)
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=reefact_first-class-errors&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=reefact_first-class-errors)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=reefact_first-class-errors&metric=coverage)](https://sonarcloud.io/summary/new_code?id=reefact_first-class-errors)
@@ -146,6 +147,14 @@ This lets you treat the same error either way:
 
 depending on the context (domain logic, validation, pipelines, etc.).
 
+## 📦 Installation
+
+```bash
+dotnet add package FirstClassErrors
+```
+
+Targets **.NET Standard 2.0**. The Roslyn analyzers are bundled in the package — no separate install.
+
 ## 🧩 Example
 
 From the `FirstClassErrors.Usage` project:
@@ -219,6 +228,12 @@ Every released package is built and published by [`release.yml`](.github/workflo
   (nuget.org serves a repository-signed copy with a different checksum, so verify **that** one with `dotnet nuget verify` instead.)
 
 - **Embedded SBOM** — each package carries its SPDX software bill of materials at `_manifest/spdx_2.2/manifest.spdx.json`, inventorying the files it ships and the third-party components it was built from.
+
+## 🐛 Feedback & contributing
+
+Found a bug or want to request a feature? Open an issue on the [GitHub issue tracker](https://github.com/Reefact/first-class-errors/issues). Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
+
+For **security** vulnerabilities, please follow the private process in [SECURITY.md](SECURITY.md) instead of opening a public issue.
 
 ## 📚 Next steps
 
