@@ -87,6 +87,12 @@ suivants est délibéré :
   `|| … upload --clobber` garde un re-run idempotent.
 - **`concurrency` met `cancel-in-progress: false`.** Ne jamais annuler une
   publication à moitié faite.
+- **La GitHub Release est marquée `--prerelease` quand la version porte une
+  étiquette de pré-version SemVer** (tout `-…`, p. ex. `-preview.1`, `-beta.1`,
+  `-rc.1`), pour qu'une preview n'apparaisse jamais comme la release « Latest »
+  du dépôt. Les métadonnées de build (`+…`) étant rejetées en amont, un `-` est
+  sans ambiguïté le marqueur de pré-version — c'est ainsi que nuget.org liste
+  le même package.
 
 ## En rapport
 

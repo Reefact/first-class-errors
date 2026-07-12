@@ -184,6 +184,12 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           TAG="v$VERSION"
+          # A SemVer pre-release label (anything after '-') marks the GitHub Release as a pre-release,
+          # matching how NuGet lists it, so a preview never shows up as the repo's "Latest" release.
+          # Build metadata '+...' is already rejected in "Resolve version", so a '-' here is
+          # unambiguously the pre-release separator (-preview.1, -beta.1, -rc.1, ...).
+          PRERELEASE=""
+          case "$VERSION" in *-*) PRERELEASE="--prerelease" ;; esac
           gh release create "$TAG" artifacts/*.nupkg artifacts/*.snupkg \
-            --title "$TAG" --generate-notes --target "$GITHUB_SHA" \
+            --title "$TAG" --generate-notes --target "$GITHUB_SHA" $PRERELEASE \
           || gh release upload "$TAG" artifacts/*.nupkg artifacts/*.snupkg --clobber
