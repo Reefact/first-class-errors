@@ -184,6 +184,16 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           TAG="v$VERSION"
+          # A SemVer pre-release label (anything after '-') marks the GitHub Release as a pre-release,
+          # matching how NuGet lists it, so a preview never shows up as the repo's "Latest" release.
+          # Build metadata '+...' is already rejected in "Resolve version", so a '-' here is
+          # unambiguously the pre-release separator (-preview.1, -beta.1, -rc.1, ...).
+          PRERELEASE=false
+          case "$VERSION" in *-*) PRERELEASE=true ;; esac
+          # On a re-run the release already exists, so `gh release create` fails and the fallback
+          # runs: `gh release upload` refreshes the assets but cannot change the prerelease flag,
+          # so `gh release edit` reconciles it — keeping a repair run idempotent in both directions.
           gh release create "$TAG" artifacts/*.nupkg artifacts/*.snupkg \
-            --title "$TAG" --generate-notes --target "$GITHUB_SHA" \
-          || gh release upload "$TAG" artifacts/*.nupkg artifacts/*.snupkg --clobber
+            --title "$TAG" --generate-notes --target "$GITHUB_SHA" --prerelease="$PRERELEASE" \
+          || { gh release upload "$TAG" artifacts/*.nupkg artifacts/*.snupkg --clobber \
+                 && gh release edit "$TAG" --prerelease="$PRERELEASE"; }
