@@ -28,6 +28,27 @@ skipping the publish steps.
 - On **`workflow_dispatch`** with two inputs: `version` and `dry_run` (**default
   `true`**). A manual run publishes only if `dry_run` is explicitly unticked.
 
+## Pre-release labels
+
+The version is a SemVer string (a tag's leading `v` is stripped). A **stable** release
+has no label (`1.4.2`); anything after a `-` is a **pre-release** label, which the
+workflow flags as a pre-release on GitHub — and which nuget.org lists the same way.
+Common labels, from least to most mature:
+
+| Label | Meaning |
+| - | - |
+| `alpha` | Earliest phase — incomplete features, unstable, API may change wholesale. Internal / very-early testers; expect breakage. |
+| `beta` | Feature-frozen but still stabilising; the API may still shift at the edges. Open to a wider audience for feedback. |
+| `preview` | The .NET-flavoured term (≈ beta / early access). The label this project uses for its previews, e.g. `0.1.0-preview.1`. |
+| `rc` | Release candidate — the final build unless a blocker turns up; critical fixes only, no new features. Promoted to stable as-is. |
+| `nightly` / `dev` / `canary` | Automated bleeding-edge builds (nightly or per-commit), uncurated. Not part of this project's tag-driven release flow — listed for reference. |
+| `dry` | Not a real release: this repo's convention for the manual dry-run placeholder (`0.0.0-dry.1`, the `version` input's example). Never published. |
+
+SemVer precedence: a pre-release always sorts **below** its stable (`1.0.0-rc.1` < `1.0.0`),
+and labels compare alphanumerically, so `-preview.1` < `-preview.2`. On nuget.org these
+never install by default — a consumer needs `--prerelease`, which is why the README badge
+uses `nuget/vpre`.
+
 ## How it runs
 
 One job, `pack-push`: checkout → setup .NET → **resolve & validate version** →
