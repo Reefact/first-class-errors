@@ -9,12 +9,23 @@ FirstClassErrors reaches its full value when it is integrated into the delivery 
 
 Error documentation should be generated automatically during CI.
 
-A typical pipeline step:
+The `fce` generator is distributed as a .NET tool
+([`FirstClassErrors.Cli`](https://www.nuget.org/packages/FirstClassErrors.Cli)), so a
+pipeline installs it and runs it as build steps:
 
-1. Build the solution
-2. Run the `fce` documentation generator (`fce generate`)
-3. Generate the error catalog (Markdown or JSON)
+1. Install the generator: `dotnet tool install --global FirstClassErrors.Cli`
+2. Build the solution
+3. Run the generator (`fce generate`) to produce the error catalog (Markdown, HTML or JSON)
 4. Publish it as a pipeline artifact or deploy it to a documentation portal
+
+Concretely:
+
+```bash
+dotnet tool install --global FirstClassErrors.Cli
+dotnet build MyApp.sln -c Release
+fce generate --solution MyApp.sln --no-build \
+             --output artifacts/errors.md --format markdown --service-name my-api
+```
 
 Generation is **opt-in per project**: only projects whose project file (`.csproj`) sets `<GenerateErrorDocumentation>true</GenerateErrorDocumentation>` are scanned; a project without it is silently skipped. The marker must sit in the `.csproj` itself — it is read straight from the project XML, so a value inherited from a shared `Directory.Build.props` is not picked up. When not a single project opts in, the generator logs a warning naming the property rather than producing an empty catalog silently. If a fresh pipeline produces an empty catalog, check the opt-in first. See [Opting a project in](ArchitectureOfTheDocumentationPipeline.en.md#opting-a-project-in).
 
