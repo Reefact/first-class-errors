@@ -9,8 +9,69 @@
     <AssemblyName>fce</AssemblyName>
   </PropertyGroup>
 
+  <!-- NuGet packaging: this project ships as the `fce` .NET tool.
+       PackAsTool bundles the app and its dependency closure under tools/<tfm>/any, so a
+       `dotnet tool install FirstClassErrors.Cli` yields a runnable `fce`. The GenDoc worker the tool
+       spawns as a separate process is copied next to the app by the targets below and travels inside the
+       same folder, which is where the tool resolves it at runtime (AppContext.BaseDirectory). Packed by
+       tools/packaging/pack.sh alongside the two library packages. -->
+  <PropertyGroup>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>fce</ToolCommandName>
+
+    <!-- No separate symbol package for the tool. A .snupkg exists so consumers can debug into a LIBRARY
+         they reference; a global tool is executed, not referenced, and its PDBs already travel inside the
+         tool package. Overrides IncludeSymbols=true from Directory.Build.props so the release neither builds
+         nor pushes a FirstClassErrors.Cli.snupkg (which nuget.org's symbol validation does not expect for a
+         tool package). -->
+    <IncludeSymbols>false</IncludeSymbols>
+
+    <!-- NuGet identity -->
+    <PackageId>FirstClassErrors.Cli</PackageId>
+    <Authors>Sylvain AURAT</Authors>
+    <Company>Reefact</Company>
+
+    <!-- Version. This is only a local/dev fallback: release.yml overrides it with -p:Version from the Git tag. -->
+    <Version>0.1.0-dev</Version>
+
+    <!-- Description -->
+    <Description>
+      fce is the command-line error-documentation generator for FirstClassErrors. It scans a solution or built assemblies for errors documented in code and renders the catalog as Markdown, HTML or JSON — designed to run in CI so error documentation is published as a build artifact and never drifts from the deployed system.
+    </Description>
+
+    <!-- Metadata -->
+    <PackageTags>error-handling;errors;documentation;living-documentation;cli;dotnet-tool;fce;ci-cd;firstclasserrors</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+
+    <!-- Links -->
+    <PackageProjectUrl>https://github.com/Reefact/first-class-errors</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Reefact/first-class-errors.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <!-- Package assets -->
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
+    <PackageReleaseNotes>Initial preview release of the fce documentation generator.</PackageReleaseNotes>
+
+    <Copyright>© Reefact 2026</Copyright>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Spectre.Console.Cli" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\icon.png" Pack="true" PackagePath="/" />
+    <None Include="README.nuget.md" Pack="true" PackagePath="readme.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Embed an SPDX SBOM inside the package at pack time (_manifest/spdx_2.2/manifest.spdx.json), matching
+         the two library packages so tools/packaging/pack.sh's SBOM-present assertion holds for this package
+         too. Activated only when pack.sh passes -p:GenerateSBOM=true; build-time only (PrivateAssets=all),
+         so tool users never see it as a dependency. -->
+    <PackageReference Include="Microsoft.Sbom.Targets" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

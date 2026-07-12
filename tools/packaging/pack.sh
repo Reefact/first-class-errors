@@ -22,12 +22,15 @@ if [ "$#" -ne 1 ] || [ -z "$1" ]; then
 fi
 version="$1"
 
-# The two projects that carry NuGet identity. GenerateSBOM embeds an SPDX SBOM
+# The three projects that carry NuGet identity: the library, its testing helpers, and the
+# `fce` CLI (packed as a .NET tool via PackAsTool; the GenDoc worker it spawns travels bundled
+# inside that tool package). GenerateSBOM embeds an SPDX SBOM
 # (_manifest/spdx_2.2/manifest.spdx.json) inside each package; it is passed here,
 # not hardcoded in the csproj, so local and floor-check packs stay SBOM-free.
 for project in \
   FirstClassErrors/FirstClassErrors.csproj \
-  FirstClassErrors.Testing/FirstClassErrors.Testing.csproj
+  FirstClassErrors.Testing/FirstClassErrors.Testing.csproj \
+  FirstClassErrors.Cli/FirstClassErrors.Cli.csproj
 do
   dotnet pack "$project" -c Release --no-build -p:Version="$version" -p:GenerateSBOM=true -o artifacts
 done
