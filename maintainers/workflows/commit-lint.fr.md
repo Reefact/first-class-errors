@@ -10,7 +10,7 @@
 ## À quoi il sert
 
 Il impose la convention de message de commit du dépôt (Conventional Commits,
-telle que spécifiée dans [`CONTRIBUTING.md`](../../CONTRIBUTING.md)) sur **chaque
+telle que spécifiée dans [`CONTRIBUTING.fr.md`](../../doc/CONTRIBUTING.fr.md)) sur **chaque
 commit non-merge d'une pull request**. C'est le filet de sécurité côté serveur du
 hook local `commit-msg` : un contributeur qui contourne le hook avec
 `git commit --no-verify` est quand même rattrapé ici.
@@ -56,6 +56,6 @@ Un seul job, `Conventional commits` :
 
 ## En rapport
 
-- [`CONTRIBUTING.md`](../../CONTRIBUTING.md) — les conventions de commit et de PR
+- [`CONTRIBUTING.fr.md`](../../doc/CONTRIBUTING.fr.md) — les conventions de commit et de PR
   que ce workflow impose. Activez le hook local une fois par clone avec
   `git config core.hooksPath .githooks`.
