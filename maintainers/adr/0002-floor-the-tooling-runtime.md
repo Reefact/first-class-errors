@@ -84,8 +84,13 @@ The floor is guarded on both axes it can regress on:
   `net8.0;net10.0` — the net8 build gives the job a real target to document.
 
 The one surface neither guard covers is roll-forward onto a **not-yet-released**
-major: a *preview-runtime canary* (run the tooling on an SDK-preview image) is the
-optional hardening for that, left as a follow-up rather than standing infrastructure.
+major. That is the **`canary.yml`** workflow: on a weekly schedule (and on demand)
+it installs the next .NET **preview**, then runs the net8 tooling on it with
+`DOTNET_ROLL_FORWARD=LatestMajor` and `DOTNET_ROLL_FORWARD_TO_PRERELEASE=1` so both
+processes bind that prerelease major. It is deliberately **not** a pull-request gate
+— a preview is often unpublished or unstable, and that is not this repo's bug — so a
+missing preview ends the run neutral, while a genuine roll-forward regression turns
+the scheduled run red and notifies the maintainer before that major ships.
 
 ## Consequences
 
@@ -99,9 +104,9 @@ optional hardening for that, left as a follow-up rather than standing infrastruc
 - Verified end to end: a `net8.0` `fce` documents a **`net10`** target assembly on
   a machine that has **only** the .NET 10 runtime — `fce` rolls 8→10 (`Major`) and
   the worker binds the highest major (`LatestMajor`) to load the net10 target.
-- Guarded in CI on **both** ends of the range: `build-test` runs the whole suite on
-  the latest .NET (10); the `floor` job runs the shipped tooling on the .NET 8
-  runtime (see the two-guards section above).
+- Guarded in CI across the whole range: `build-test` runs the suite on the latest
+  released .NET (10); the `floor` job runs the shipped tooling on the .NET 8 runtime;
+  and `canary.yml` runs it on the next .NET preview (see the two-guards section).
 
 **Negative / accepted costs**
 
@@ -112,7 +117,8 @@ optional hardening for that, left as a follow-up rather than standing infrastruc
   already present wherever modern .NET is built).
 - `LatestMajor` on the worker will, on a box that has a **preview** of the next
   major installed, bind that preview. This is only a risk for machines that opt
-  into previews; the canary above is the mitigation if we want it.
+  into previews, and `canary.yml` is exactly the early-warning that this binding
+  still works before that major ships.
 
 ## Do I have to revise code at each new .NET release, or at each EOL?
 
@@ -145,3 +151,11 @@ once every two years.
 
 Keeping this in step with the analyzer floor (ADR 0001) keeps the product's single
 ".NET N and up" support statement true.
+
+## Maintaining the canary
+
+`canary.yml` pins the preview major it targets (`dotnet-version: 11.0.x`, quality
+`preview`). Once that major reaches GA, bump it to the next one (`12.0.x`, …) so the
+canary keeps looking one release ahead. Nothing breaks if you forget: `build-test`
+picks up the newly released major as "latest", and the canary simply stops finding a
+newer-than-build-SDK preview and ends its runs neutral until bumped.
