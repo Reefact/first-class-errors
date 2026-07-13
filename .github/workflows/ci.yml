@@ -69,3 +69,58 @@ jobs:
           name: coverage-${{ matrix.os }}
           path: artifacts/coverage/**/coverage.opencover.xml
           if-no-files-found: error
+
+  # build-test above runs the whole suite on the LATEST .NET (10). This job proves the other end of the
+  # supported range: that the fce tool and its worker, which ship targeting net8.0 (the floor — see
+  # maintainers/adr/0002-floor-the-tooling-runtime.md), actually run on the .NET 8 RUNTIME. The net8 TFM
+  # already guards the compile-time API surface on every build; what it cannot show is that the tooling
+  # executes on its advertised minimum runtime, which is what this job checks against the real artifacts.
+  floor:
+    name: Documentation tooling on the .NET 8 floor
+    runs-on: ubuntu-latest
+    # Build (~20s) plus one doc-generation run; cap a hung run like the build-test job.
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      # Two SDKs on purpose: 10.0.x satisfies the repo global.json (which pins the .NET 10 SDK) so the build
+      # runs normally, and 8.0.x brings the .NET 8 runtime — the floor the tooling ships against — so the run
+      # step below can execute the net8 binaries on it.
+      - name: Setup .NET (floor runtime + build SDK)
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      # The fce tool, its GenDoc worker (copied next to fce by the CLI build target) and a net8 build of the
+      # Usage sample as a real target to document. Built with the .NET 10 SDK — net8.0 is only a target here.
+      - name: Build the net8 tooling and a net8 target
+        run: |
+          dotnet build FirstClassErrors.Cli/FirstClassErrors.Cli.csproj -c Release
+          dotnet build FirstClassErrors.Usage/FirstClassErrors.Usage.csproj -c Release -f net8.0
+
+      # Run the net8 fce + worker on the .NET 8 RUNTIME (not rolled forward to the newer one the runner also
+      # carries) and document a net8 assembly end to end.
+      #
+      # DOTNET_ROLL_FORWARD=LatestPatch overrides the roll-forward baked into each runtimeconfig (Major on the
+      # CLI, LatestMajor on the worker): the environment variable wins over runtimeconfig, and LatestPatch stays
+      # within the requested major, so both processes bind the highest .NET 8 patch present and can never roll
+      # onto .NET 10. If .NET 8 were absent the host would fail to start — so a green step means the net8 tooling
+      # genuinely ran on the .NET 8 runtime (the worker loads the net8 target via Assembly.LoadFrom).
+      - name: Generate documentation on the .NET 8 runtime
+        env:
+          DOTNET_ROLL_FORWARD: LatestPatch
+        run: |
+          set -euo pipefail
+          dotnet FirstClassErrors.Cli/bin/Release/net8.0/fce.dll generate \
+            --assemblies FirstClassErrors.Usage/bin/Release/net8.0/FirstClassErrors.Usage.dll \
+            --format json --verbose > floor-catalog.json
+          # Positive proof, not just exit 0: the worker actually loaded the target and extracted documented errors.
+          if ! grep -q '"code"' floor-catalog.json; then
+            echo "::error::no documented errors were extracted on the .NET 8 floor"
+            cat floor-catalog.json
+            exit 1
+          fi
+          echo "ok: the net8 fce and worker documented a net8 target on the .NET 8 runtime"

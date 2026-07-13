@@ -1,7 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <!-- Multi-targeted on purpose: net10.0 is what the unit tests reference and document, while net8.0 gives the
+         CI "documentation tooling on the .NET 8 floor" job a real net8 target to feed the net8 fce/worker — and,
+         for free, dogfoods the netstandard2.0 library on the floor runtime. This is a sample, never packed. -->
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
