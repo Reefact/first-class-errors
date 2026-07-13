@@ -76,9 +76,11 @@ jobs:
       #     so both processes select the highest installed major rather than staying on a stable one;
       #   * DOTNET_ROLL_FORWARD_TO_PRERELEASE=1 lets a stable net8 app bind a *prerelease* runtime, which
       #     roll-forward refuses by default.
-      # A guard first confirms a newer major than the build SDK is actually installed, so the canary never
-      # false-passes by silently running on .NET 10. A regression in the preview runtime's roll-forward behaviour
-      # then turns this step red, and the scheduled run notifies the maintainer.
+      # The step PRINTS the installed runtimes and the highest major first, so the log shows the preview it is about
+      # to exercise instead of leaving it to be inferred. It then guards: only a runtime newer than the .NET 10 build
+      # SDK proves anything, so if the preview install did not yield one the run skips neutrally rather than
+      # false-passing on .NET 10. fce runs with --verbose, so the worker additionally logs the exact runtime it bound
+      # to (its "Documenting '…' on .NET <version>." banner).
       - name: Generate documentation on the preview runtime
         if: steps.preview.outcome == 'success'
         env:
@@ -86,8 +88,12 @@ jobs:
           DOTNET_ROLL_FORWARD_TO_PRERELEASE: '1'
         run: |
           set -euo pipefail
-          if ! dotnet --list-runtimes | grep -Eq 'Microsoft\.NETCore\.App (1[1-9]|[2-9][0-9])\.'; then
-            echo "::notice::the installed 'preview' is not a newer major than the build SDK; skipping this run"
+          echo "Installed .NET runtimes:"
+          dotnet --list-runtimes
+          newest="$(dotnet --list-runtimes | sed -nE 's/^Microsoft\.NETCore\.App ([0-9]+)\..*/\1/p' | sort -n | tail -1)"
+          echo "Highest installed .NET major: ${newest:-none}"
+          if [ "${newest:-0}" -le 10 ]; then
+            echo "::notice::no runtime newer than the .NET 10 build SDK is installed; skipping this run"
             exit 0
           fi
           dotnet FirstClassErrors.Cli/bin/Release/net8.0/fce.dll generate \
@@ -99,4 +105,4 @@ jobs:
             cat canary-catalog.json
             exit 1
           fi
-          echo "ok: the net8 fce and worker documented a net8 target on the .NET preview runtime"
+          echo "ok: the net8 fce and worker documented a net8 target on the .NET ${newest} preview runtime"
