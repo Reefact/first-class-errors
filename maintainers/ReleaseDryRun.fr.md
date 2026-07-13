@@ -113,6 +113,59 @@ nuget.org sert ne peuvent pas être exercés sans publier — nuget.org n'a pas 
 « push à blanc ». Ce dernier maillon n'est jamais validé que par une vraie
 release.
 
+Aucun dry run ne prouve non plus que l'**outil `fce` installé fonctionne
+réellement**. `fce generate` ne fait pas tout le travail en process : il lance
+`FirstClassErrors.GenDoc.Worker` dans un process enfant et le résout à côté de
+l'exécutable installé (`AppContext.BaseDirectory`). Le worker ne voyage dans le
+package du tool que parce que `PackAsTool` empaquette la sortie *publish* du CLI
+et que la cible `_PublishDocumentationWorker` y dépose la clôture du worker — un
+mécanisme que `dotnet build` et `dotnet publish` n'exercent pas (ils déposent des
+fichiers à côté d'un binaire de build, jamais dans le `.nupkg`). Voir le test de
+tool-install ci-dessous.
+
+## Le test de fumée tool-install (le worker `fce`)
+
+`tools/packaging/pack.sh` vérifie, pour le train `cli`, que le **fichier** du
+worker (`FirstClassErrors.GenDoc.Worker.dll`) est présent sous `tools/<tfm>/any/`
+dans le `.nupkg`. Ce garde est réel et tourne sur chaque train `cli` packé — mais
+un fichier présent n'est pas un tool qui marche : la clôture du worker peut rester
+incomplète (une dépendance manquante, un mauvais `.runtimeconfig.json`), ce que le
+contrôle de présence ne voit pas. Le seul oracle qui prouve que la clôture
+empaquetée s'exécute vraiment est une installation réelle suivie d'un
+`fce generate`.
+
+Lance-le **au moins une fois avant le premier tag `cli-v…`**, et de nouveau après
+tout changement de l'empaquetage du CLI (les cibles worker du `.csproj`,
+`PackAsTool`, ou les dépendances du worker) :
+
+```sh
+# 1. Builder et packer le train cli exactement comme la release.
+dotnet build FirstClassErrors.sln -c Release
+tools/packaging/pack.sh 0.0.0-workercheck.1 cli   # -> artifacts/FirstClassErrors.Cli.0.0.0-workercheck.1.nupkg
+
+# 2. Installer le tool packé en global. Installer par IDENTIFIANT DE PACKAGE
+#    (FirstClassErrors.Cli) ; ce n'est pas le nom de commande (fce).
+dotnet tool install --global --add-source ./artifacts FirstClassErrors.Cli --version 0.0.0-workercheck.1
+
+# 3. Générer un catalogue. Soit en pointant une assembly buildée et opt-in...
+fce generate --assemblies chemin/vers/VotreProjet.dll --format markdown --output ./out/catalog.md --service-name demo
+#    ...soit une solution avec au moins un projet opt-in (GenerateErrorDocumentation=true) :
+fce generate --solution chemin/vers/Votre.sln --format markdown --output ./out --service-name demo
+#    Attendu : un catalogue NON VIDE et ZÉRO « documentation worker could not be located ».
+
+# 4. Nettoyer.
+dotnet tool uninstall --global FirstClassErrors.Cli
+```
+
+Une cible pratique du dépôt pour l'étape 3 est `FirstClassErrors.Usage` : elle
+opte-in (`GenerateErrorDocumentation=true`) et définit des erreurs documentées,
+donc après un build Release son assembly, à
+`FirstClassErrors.Usage/bin/Release/net10.0/FirstClassErrors.Usage.dll`, produit
+un catalogue non vide. Deux pièges de nommage à éviter : le fichier de package est
+`FirstClassErrors.Cli.<version>.nupkg` (le `PackageId`), pas
+`fce.<version>.nupkg`, et `dotnet tool install` prend ce même identifiant de
+package, pas le nom de commande `fce`.
+
 ## En rapport
 
 - [`release`](workflows/release.fr.md) — le workflow que ceci répète, décrit

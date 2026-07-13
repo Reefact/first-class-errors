@@ -38,7 +38,7 @@ case "$scope" in
     ;;
   cli)
     # The `fce` .NET tool (PackAsTool; the GenDoc worker it spawns travels bundled inside the tool
-    # package). Released on its own cadence and version.
+    # package -- asserted after the pack, below). Released on its own cadence and version.
     projects='FirstClassErrors.Cli/FirstClassErrors.Cli.csproj'
     ;;
   *)
@@ -63,3 +63,25 @@ for package in artifacts/*.nupkg; do
     exit 1
   fi
 done
+
+# Positive proof that the fce tool ships its GenDoc worker. `fce generate` does not do the whole job
+# in-process: it spawns FirstClassErrors.GenDoc.Worker in a child process (dotnet exec) and resolves it
+# next to the installed executable (ResolveWorkerAssemblyPath -> AppContext.BaseDirectory). PackAsTool packs
+# the CLI's *publish* output, and _PublishDocumentationWorker (AfterTargets="Publish" in the .csproj) drops
+# the worker's closure into that publish directory, so it travels under tools/<tfm>/any inside the package.
+# That mechanism is easy to break silently: neither `dotnet build` nor `dotnet publish` exercises the .nupkg
+# content, so dropping the target (or PackAsTool ceasing to pack the publish output) would pass every local
+# check and only surface as "documentation worker could not be located" on a user's first `fce generate`.
+# A pack that stops bundling the worker must fail here, loudly, not in the field. This asserts presence; the
+# closure is completeness-checked out of band by the tool-install smoke test in maintainers/ReleaseDryRun.
+if [ "$scope" = "cli" ]; then
+  # The fce tool package carries the CLI's PackageId (FirstClassErrors.Cli), not the ToolCommandName (fce).
+  for package in artifacts/FirstClassErrors.Cli.*.nupkg; do
+    if unzip -l "$package" | grep -q 'tools/.*/any/.*FirstClassErrors\.GenDoc\.Worker\.dll'; then
+      echo "ok: GenDoc worker bundled in $package"
+    else
+      echo "error: GenDoc worker missing from the fce tool package $package" >&2
+      exit 1
+    fi
+  done
+fi
