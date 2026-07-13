@@ -211,31 +211,26 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
           COMPONENT: ${{ steps.version.outputs.component }}
         run: |
-<<<<<<< 84f1a3cffcd02a0373d4f771cf74909198d22982
-          TAG="v$VERSION"
+          # nullglob: a cli release ships no .snupkg (the tool has no symbol package), so the pattern
+          # must expand to nothing rather than to a literal path gh would then fail to upload.
+          shopt -s nullglob
+          TAG="${COMPONENT}-v${VERSION}"
+          assets=(artifacts/*.nupkg artifacts/*.snupkg)
           # A SemVer pre-release label (anything after '-') marks the GitHub Release as a pre-release,
           # matching how NuGet lists it, so a preview never shows up as the repo's "Latest" release.
           # Build metadata '+...' is already rejected in "Resolve version", so a '-' here is
           # unambiguously the pre-release separator (-preview.1, -beta.1, -rc.1, ...).
           PRERELEASE=false
           case "$VERSION" in *-*) PRERELEASE=true ;; esac
-          # On a re-run the release already exists, so `gh release create` fails and the fallback
-          # runs: `gh release upload` refreshes the assets but cannot change the prerelease flag,
-          # so `gh release edit` reconciles it — keeping a repair run idempotent in both directions.
-          gh release create "$TAG" artifacts/*.nupkg artifacts/*.snupkg \
-            --title "$TAG" --generate-notes --target "$GITHUB_SHA" --prerelease="$PRERELEASE" \
-          || { gh release upload "$TAG" artifacts/*.nupkg artifacts/*.snupkg --clobber \
-                 && gh release edit "$TAG" --prerelease="$PRERELEASE"; }
-=======
-          # nullglob: a cli release ships no .snupkg (the tool has no symbol package), so the pattern
-          # must expand to nothing rather than to a literal path gh would then fail to upload.
-          shopt -s nullglob
-          TAG="${COMPONENT}-v${VERSION}"
-          assets=(artifacts/*.nupkg artifacts/*.snupkg)
           # Train-scoped notes (only this train's Conventional Commit scopes) instead of --generate-notes,
-          # so a lib release never lists cli commits and vice versa.
-          tools/packaging/release-notes.sh "$COMPONENT" "$TAG" > release-notes.md
+          # so a lib release never lists cli commits and vice versa. Pass $GITHUB_SHA — not $TAG — as the
+          # range's upper bound: on a workflow_dispatch publish the tag does not exist yet (gh creates it
+          # below), so git log must resolve against the commit.
+          tools/packaging/release-notes.sh "$COMPONENT" "$TAG" "$GITHUB_SHA" > release-notes.md
+          # On a re-run the release already exists, so `gh release create` fails and the fallback runs:
+          # `gh release upload` refreshes the assets but cannot change the prerelease flag, so
+          # `gh release edit` reconciles it — keeping a repair run idempotent in both directions.
           gh release create "$TAG" "${assets[@]}" \
-            --title "$TAG" --notes-file release-notes.md --target "$GITHUB_SHA" \
-          || gh release upload "$TAG" "${assets[@]}" --clobber
->>>>>>> 4375a75b67650e56359aeed29018fdd2cd79465d
+            --title "$TAG" --notes-file release-notes.md --target "$GITHUB_SHA" --prerelease="$PRERELEASE" \
+          || { gh release upload "$TAG" "${assets[@]}" --clobber \
+                 && gh release edit "$TAG" --prerelease="$PRERELEASE"; }
