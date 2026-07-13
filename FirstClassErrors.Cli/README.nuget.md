@@ -48,6 +48,24 @@ Run `fce --help` or `fce generate --help` for the full option list.
 Emit one catalog per locale by adding `--language` (e.g. a matrix over `en`, `fr`); file
 names and anchors stay stable across languages.
 
+## Compatibility with FirstClassErrors
+
+`fce` reads the error documentation you author with FirstClassErrors' attributes and the
+`DescribeError` DSL — the *documentation contract* — and is versioned **independently** of
+the library:
+
+- a **minor** `fce` release adds support for a new FirstClassErrors contract, or a new
+  option or output format; a **major** `fce` release changes `fce`'s own command-line
+  surface or drops support for an older contract.
+- at run time `fce` documents your solution against **its** FirstClassErrors version (the
+  worker binds to your target's dependency closure), so what matters is that your `fce`
+  understands the contract the library version you use produces.
+
+While FirstClassErrors is in **0.x preview** that contract may still change between minor
+versions — use an `fce` from the same preview line as the FirstClassErrors version you
+document. From FirstClassErrors 1.0 on, `fce` will state the contract version(s) it
+supports and stop with a clear message rather than mis-read a newer, unsupported one.
+
 ## Documentation
 
 Full CI/CD integration guide and the rest of the documentation on GitHub:
