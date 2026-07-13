@@ -55,6 +55,10 @@ internal sealed class GenerateSettings : ConfigScopedSettings {
     [Description("Abort on the first extraction failure (default: continue and report).")]
     public bool Strict { get; set; }
 
+    [CommandOption("--snapshot <PATH>")]
+    [Description("Also write the canonical catalog snapshot to this file, whatever the chosen format. It reflects --language; for a culture-independent committed baseline use 'fce catalog update'. Falls back to 'snapshot' in the configuration.")]
+    public string? SnapshotPath { get; set; }
+
     [CommandOption("--worker <PATH>")]
     [Description("Path to FirstClassErrors.GenDoc.Worker.dll (default: next to this tool).")]
     public string? WorkerPath { get; set; }

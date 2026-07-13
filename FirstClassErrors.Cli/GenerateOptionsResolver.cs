@@ -19,6 +19,7 @@ internal sealed record ResolvedGenerateOptions(
     string                BuildConfiguration,
     string?               Framework,
     string?               WorkerPath,
+    string?               SnapshotPath,
     bool                  NoBuild,
     bool                  Strict);
 
@@ -57,6 +58,7 @@ internal static class GenerateOptionsResolver {
             BuildConfiguration: FirstNonEmpty(settings.Configuration, configuration.Configuration) ?? "Debug",
             Framework:          FirstNonEmpty(settings.Framework, configuration.Framework),
             WorkerPath:         FirstNonEmpty(settings.WorkerPath, configuration.Worker),
+            SnapshotPath:       FirstNonEmpty(settings.SnapshotPath, configuration.Snapshot),
             NoBuild:            settings.NoBuild || (configuration.NoBuild ?? false),
             Strict:             settings.Strict  || (configuration.Strict ?? false));
     }

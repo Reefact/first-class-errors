@@ -5,6 +5,7 @@ using System.Globalization;
 using FirstClassErrors;
 using FirstClassErrors.GenDoc;
 using FirstClassErrors.GenDoc.Rendering;
+using FirstClassErrors.GenDoc.Versioning;
 
 using Spectre.Console.Cli;
 
@@ -110,16 +111,32 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
                 CancellationToken  = cancellationToken
             };
 
-            IEnumerable<ErrorDocumentation> catalog =
-                resolved.HasSolution
-                    ? _generator.GetErrorDocumentationFrom(resolved.Solution!, options)
-                    : _generator.GetErrorDocumentationFromAssemblies(resolved.Assemblies, options);
+            // The catalog is materialized here, so generation failures surface as a clean error — and the same
+            // catalog can feed both the renderer and the optional contract snapshot below.
+            List<ErrorDocumentation> catalog =
+                (resolved.HasSolution
+                     ? _generator.GetErrorDocumentationFrom(resolved.Solution!, options)
+                     : _generator.GetErrorDocumentationFromAssemblies(resolved.Assemblies, options))
+               .ToList();
 
-            // The catalog is enumerated here (by the renderer), so generation failures surface as a clean error.
             RenderRequest                   request   = new(resolved.Layout, culture, resolved.ServiceName);
             IReadOnlyList<RenderedDocument> documents = renderer.Render(catalog, request);
 
             _outputWriter.Write(documents, renderer.Format, resolved.Output, logger);
+
+            // The canonical snapshot is renderer-independent: whatever format is published for humans, the same
+            // contract file can be produced for `fce catalog diff` and CI drift detection. It reflects the render
+            // language; a culture-independent baseline should come from `fce catalog update` (which always pins `en`),
+            // so warn when the two would diverge.
+            if (resolved.SnapshotPath is not null) {
+                if (!IsEnglish(culture)) {
+                    logger.Warning($"The snapshot reflects the '{culture.Name}' language (localized titles/sources). For a culture-independent baseline, use 'fce catalog update' or generate with --language en.");
+                }
+
+                string fullSnapshotPath = Path.GetFullPath(resolved.SnapshotPath);
+                WriteSnapshotFile(fullSnapshotPath, CatalogSnapshotSerializer.Serialize(CatalogSnapshot.FromCatalog(catalog)));
+                logger.Info($"Catalog snapshot written to '{fullSnapshotPath}'.");
+            }
 
             return 0;
         } catch (OperationCanceledException) {
@@ -148,6 +165,19 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
         } catch (CultureNotFoundException) {
             throw new InvalidOperationException($"Unknown language '{language}'. Use a culture name such as en, fr, es, de or sv.");
         }
+    }
+
+    private static bool IsEnglish(CultureInfo culture) {
+        // The canonical baseline (fce catalog update) pins "en"; a snapshot produced under English (or the invariant
+        // culture) matches it, so no warning is needed. Any other language localizes titles/sources.
+        return string.IsNullOrEmpty(culture.Name) || string.Equals(culture.TwoLetterISOLanguageName, "en", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void WriteSnapshotFile(string path, string content) {
+        string? directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(directory)) { Directory.CreateDirectory(directory); }
+
+        File.WriteAllText(path, content);
     }
 
     #endregion
