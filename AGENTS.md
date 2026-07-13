@@ -33,6 +33,10 @@ Every inline comment MUST use exactly this shape, with nothing around it:
 <optional discussion>
 ```
 
+In this shape, `< >` marks a placeholder to replace and `[ ]` marks an optional
+part — write neither the angle brackets nor the square brackets literally.
+Decorations, when present, go in parentheses (for example `(security)`).
+
 - The entire comment is written in **English** — label, decorations, subject and
   discussion. Code identifiers, API names and exception messages are quoted verbatim.
 - Never publish an unlabelled comment.
