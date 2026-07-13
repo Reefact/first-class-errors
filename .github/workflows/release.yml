@@ -2,13 +2,23 @@ name: release
 
 on:
   push:
-    # Publish on semantic-version tags, e.g. v1.2.3 or v1.2.3-beta.1.
+    # Publish on a train-prefixed semantic-version tag. The two trains version independently:
+    #   lib-v1.2.3  -> FirstClassErrors + FirstClassErrors.Testing
+    #   cli-v1.2.3  -> FirstClassErrors.Cli (the fce .NET tool)
     tags:
-      - 'v*.*.*'
+      - 'lib-v*.*.*'
+      - 'cli-v*.*.*'
   workflow_dispatch:
     inputs:
+      component:
+        description: 'Which release train to pack/publish'
+        type: choice
+        options:
+          - lib
+          - cli
+        required: true
       version:
-        description: 'Package version, without the leading "v" (e.g. 1.2.3; a dry run can use any SemVer, e.g. 0.0.0-dry.1)'
+        description: 'Package version, without any prefix (e.g. 1.2.3; a dry run can use any SemVer, e.g. 0.0.0-dry.1)'
         required: true
       # release.yml is the only workflow no CI run exercises before a real tag: version resolution,
       # pack, SBOM generation, OIDC and the attestation permissions only ever execute in production
@@ -57,6 +67,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          # Full history + tags so tools/packaging/release-notes.sh can resolve the previous
+          # same-train tag — the lower bound of the release-notes commit range.
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
@@ -66,23 +80,34 @@ jobs:
       - name: Resolve version
         id: version
         shell: bash
-        # Read the (attacker-controllable) tag name and manual input via the environment rather than interpolating
+        # Read the (attacker-controllable) tag name and manual inputs via the environment rather than interpolating
         # ${{ ... }} straight into the script, and validate the result against a strict SemVer allowlist. A tag such
-        # as "v1.2.3;id" is a valid Git ref that matches the v*.*.* trigger, so an unchecked value could inject shell
-        # commands into every step that uses it.
+        # as "lib-v1.2.3;id" is a valid Git ref that matches the release-tag trigger, so an unchecked value could
+        # inject shell commands into every step that uses it.
         env:
           EVENT_NAME: ${{ github.event_name }}
+          INPUT_COMPONENT: ${{ github.event.inputs.component }}
           INPUT_VERSION: ${{ github.event.inputs.version }}
           REF_NAME: ${{ github.ref_name }}
         run: |
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            COMPONENT="$INPUT_COMPONENT"
             VERSION="$INPUT_VERSION"
           else
-            # REF_NAME is the tag name (e.g. v1.2.3); strip the leading "v".
-            VERSION="${REF_NAME#v}"
+            # REF_NAME is the train-prefixed tag (e.g. lib-v1.2.3 / cli-v1.2.3): pick the train and strip
+            # its prefix. Anything else is not a release tag.
+            case "$REF_NAME" in
+              lib-v*) COMPONENT="lib"; VERSION="${REF_NAME#lib-v}" ;;
+              cli-v*) COMPONENT="cli"; VERSION="${REF_NAME#cli-v}" ;;
+              *) echo "::error::Tag '$REF_NAME' is not a release tag; expected lib-v*.*.* or cli-v*.*.*."; exit 1 ;;
+            esac
           fi
+          case "$COMPONENT" in
+            lib|cli) ;;
+            *) echo "::error::Invalid component '$COMPONENT'; expected 'lib' or 'cli'."; exit 1 ;;
+          esac
           # Build metadata (+...) is deliberately REJECTED even though SemVer allows it: NuGet strips it
-          # from the package identity, so a tag like v1.2.3+build5 packs as FirstClassErrors.1.2.3.nupkg.
+          # from the package identity, so a tag like lib-v1.2.3+build5 packs as FirstClassErrors.1.2.3.nupkg.
           # If 1.2.3 were already published, the push's --skip-duplicate would then turn this release into
           # a green no-op that publishes nothing. Better to fail loudly here than to "succeed" silently.
           if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
@@ -90,7 +115,8 @@ jobs:
             exit 1
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Resolved package version: $VERSION"
+          echo "component=$COMPONENT" >> "$GITHUB_OUTPUT"
+          echo "Resolved $COMPONENT release version: $VERSION"
 
       - name: Restore
         run: dotnet restore FirstClassErrors.sln
@@ -103,17 +129,18 @@ jobs:
       - name: Test
         run: dotnet test FirstClassErrors.sln -c Release --no-build --logger "console;verbosity=normal"
 
-      # Only the two projects that carry NuGet identity are packed. The analyzer ships
-      # bundled inside the main package, and the CLI / worker / samples are not published.
-      # GenerateSBOM activates Microsoft.Sbom.Targets (referenced by both packable projects): each
-      # package embeds its SPDX inventory at _manifest/spdx_2.2/manifest.spdx.json. Deliberately
-      # tools/packaging/pack.sh is the single source of truth for producing the packages (packed projects,
-      # flags, embedded SBOM, and the SBOM-present check). The release-dryrun workflow calls the same script,
-      # so the automatic rehearsal can never drift from the real release.
+      # Pack only the train this release targets (lib -> FirstClassErrors + .Testing; cli -> the fce tool),
+      # so a lib release never republishes the CLI and vice versa. The analyzer is bundled inside the main
+      # package and the GenDoc worker inside the CLI tool; the samples are not published.
+      # GenerateSBOM activates Microsoft.Sbom.Targets in each packable project: each package embeds its SPDX
+      # inventory at _manifest/spdx_2.2/manifest.spdx.json. tools/packaging/pack.sh is the single source of
+      # truth (packed projects per train, flags, embedded SBOM, and the SBOM-present check); the
+      # release-dryrun workflow calls the same script, so the rehearsal can never drift from the real release.
       - name: Pack
         env:
           VERSION: ${{ steps.version.outputs.version }}
-        run: tools/packaging/pack.sh "$VERSION"
+          COMPONENT: ${{ steps.version.outputs.component }}
+        run: tools/packaging/pack.sh "$VERSION" "$COMPONENT"
 
       - name: Upload packages as build artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -182,18 +209,28 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
+          COMPONENT: ${{ steps.version.outputs.component }}
         run: |
-          TAG="v$VERSION"
+          # nullglob: a cli release ships no .snupkg (the tool has no symbol package), so the pattern
+          # must expand to nothing rather than to a literal path gh would then fail to upload.
+          shopt -s nullglob
+          TAG="${COMPONENT}-v${VERSION}"
+          assets=(artifacts/*.nupkg artifacts/*.snupkg)
           # A SemVer pre-release label (anything after '-') marks the GitHub Release as a pre-release,
           # matching how NuGet lists it, so a preview never shows up as the repo's "Latest" release.
           # Build metadata '+...' is already rejected in "Resolve version", so a '-' here is
           # unambiguously the pre-release separator (-preview.1, -beta.1, -rc.1, ...).
           PRERELEASE=false
           case "$VERSION" in *-*) PRERELEASE=true ;; esac
-          # On a re-run the release already exists, so `gh release create` fails and the fallback
-          # runs: `gh release upload` refreshes the assets but cannot change the prerelease flag,
-          # so `gh release edit` reconciles it — keeping a repair run idempotent in both directions.
-          gh release create "$TAG" artifacts/*.nupkg artifacts/*.snupkg \
-            --title "$TAG" --generate-notes --target "$GITHUB_SHA" --prerelease="$PRERELEASE" \
-          || { gh release upload "$TAG" artifacts/*.nupkg artifacts/*.snupkg --clobber \
+          # Train-scoped notes (only this train's Conventional Commit scopes) instead of --generate-notes,
+          # so a lib release never lists cli commits and vice versa. Pass $GITHUB_SHA — not $TAG — as the
+          # range's upper bound: on a workflow_dispatch publish the tag does not exist yet (gh creates it
+          # below), so git log must resolve against the commit.
+          tools/packaging/release-notes.sh "$COMPONENT" "$TAG" "$GITHUB_SHA" > release-notes.md
+          # On a re-run the release already exists, so `gh release create` fails and the fallback runs:
+          # `gh release upload` refreshes the assets but cannot change the prerelease flag, so
+          # `gh release edit` reconciles it — keeping a repair run idempotent in both directions.
+          gh release create "$TAG" "${assets[@]}" \
+            --title "$TAG" --notes-file release-notes.md --target "$GITHUB_SHA" --prerelease="$PRERELEASE" \
+          || { gh release upload "$TAG" "${assets[@]}" --clobber \
                  && gh release edit "$TAG" --prerelease="$PRERELEASE"; }

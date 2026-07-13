@@ -10,25 +10,45 @@
 # It assumes the solution has already been built in Release (it packs with
 # --no-build). It writes the .nupkg / .snupkg into ./artifacts.
 #
-# Usage: tools/packaging/pack.sh <version>
+# Usage: tools/packaging/pack.sh <version> <scope:lib|cli>
 #   <version> is any valid SemVer (a real release passes the tag version; the
-#   dry run passes a throwaway like 0.0.0-dryrun).
+#             dry run passes a throwaway like 0.0.0-dryrun).
+#   <scope>   selects which release train to pack, since lib and the fce CLI are
+#             versioned and released independently:
+#               lib -> FirstClassErrors + FirstClassErrors.Testing (lockstep)
+#               cli -> FirstClassErrors.Cli (the `fce` .NET tool)
 
 set -eu
 
-if [ "$#" -ne 1 ] || [ -z "$1" ]; then
-  echo "usage: tools/packaging/pack.sh <version>" >&2
+if [ "$#" -ne 2 ] || [ -z "$1" ] || [ -z "$2" ]; then
+  echo "usage: tools/packaging/pack.sh <version> <scope:lib|cli>" >&2
   exit 2
 fi
 version="$1"
+scope="$2"
 
-# The two projects that carry NuGet identity. GenerateSBOM embeds an SPDX SBOM
-# (_manifest/spdx_2.2/manifest.spdx.json) inside each package; it is passed here,
-# not hardcoded in the csproj, so local and floor-check packs stay SBOM-free.
-for project in \
-  FirstClassErrors/FirstClassErrors.csproj \
-  FirstClassErrors.Testing/FirstClassErrors.Testing.csproj
-do
+# The projects that carry NuGet identity, selected by release train. GenerateSBOM embeds an SPDX SBOM
+# (_manifest/spdx_2.2/manifest.spdx.json) inside each package; it is passed here, not hardcoded in the
+# csproj, so local and floor-check packs stay SBOM-free.
+case "$scope" in
+  lib)
+    # FirstClassErrors + its testing helpers: intrinsically coupled (Testing has a ProjectReference on
+    # the library and sees its internals), so they always ship together at the same version.
+    projects='FirstClassErrors/FirstClassErrors.csproj FirstClassErrors.Testing/FirstClassErrors.Testing.csproj'
+    ;;
+  cli)
+    # The `fce` .NET tool (PackAsTool; the GenDoc worker it spawns travels bundled inside the tool
+    # package). Released on its own cadence and version.
+    projects='FirstClassErrors.Cli/FirstClassErrors.Cli.csproj'
+    ;;
+  *)
+    echo "error: unknown scope '$scope' (expected 'lib' or 'cli')" >&2
+    exit 2
+    ;;
+esac
+
+# Intentionally unquoted: $projects is a space-separated list of project paths (no spaces in paths).
+for project in $projects; do
   dotnet pack "$project" -c Release --no-build -p:Version="$version" -p:GenerateSBOM=true -o artifacts
 done
 
