@@ -28,6 +28,27 @@ l'attestation incluse tout en sautant les étapes de publication.
 - Sur **`workflow_dispatch`** avec deux entrées : `version` et `dry_run` (**défaut
   `true`**). Un run manuel ne publie que si `dry_run` est explicitement décoché.
 
+## Étiquettes de pré-version
+
+La version est une chaîne SemVer (le `v` d'un tag est retiré). Une release **stable**
+n'a pas d'étiquette (`1.4.2`) ; tout ce qui suit un `-` est une étiquette de
+**pré-version**, que le workflow marque comme pre-release sur GitHub — et que nuget.org
+liste de la même façon. Étiquettes courantes, du moins mûr au plus mûr :
+
+| Étiquette | Signification |
+| - | - |
+| `alpha` | Toute première phase — fonctionnalités incomplètes, instable, API pouvant changer du tout au tout. Test interne / adopteurs très précoces ; cassures attendues. |
+| `beta` | Périmètre gelé mais encore en stabilisation ; l'API peut bouger à la marge. Ouverte à un public plus large pour retours. |
+| `preview` | Le terme « à la .NET » (≈ beta / accès anticipé). L'étiquette que ce projet utilise pour ses previews, p. ex. `0.1.0-preview.1`. |
+| `rc` | Release candidate — la version finale sauf blocage ; correctifs critiques uniquement, aucune nouvelle fonctionnalité. Promue stable telle quelle. |
+| `nightly` / `dev` / `canary` | Builds automatiques « bleeding edge » (chaque nuit ou chaque commit), non curés. Ne font pas partie du flux de release piloté par tag de ce projet — listés pour référence. |
+| `dry` | Pas une vraie release : la convention de ce dépôt pour le placeholder du dry-run (`0.0.0-dry.1`, l'exemple de l'input `version`). Jamais publiée. |
+
+Précédence SemVer : une pré-version se classe **toujours sous** son stable
+(`1.0.0-rc.1` < `1.0.0`), et les étiquettes se comparent alphanumériquement, donc
+`-preview.1` < `-preview.2`. Sur nuget.org, elles ne s'installent jamais par défaut —
+un consommateur doit passer `--prerelease`, d'où le badge README en `nuget/vpre`.
+
 ## Comment il s'exécute
 
 Un seul job, `pack-push` : checkout → setup .NET → **résoudre & valider la
@@ -87,6 +108,12 @@ suivants est délibéré :
   `|| … upload --clobber` garde un re-run idempotent.
 - **`concurrency` met `cancel-in-progress: false`.** Ne jamais annuler une
   publication à moitié faite.
+- **La GitHub Release est marquée `--prerelease` quand la version porte une
+  étiquette de pré-version SemVer** (tout `-…`, p. ex. `-preview.1`, `-beta.1`,
+  `-rc.1`), pour qu'une preview n'apparaisse jamais comme la release « Latest »
+  du dépôt. Les métadonnées de build (`+…`) étant rejetées en amont, un `-` est
+  sans ambiguïté le marqueur de pré-version — c'est ainsi que nuget.org liste
+  le même package.
 
 ## En rapport
 
