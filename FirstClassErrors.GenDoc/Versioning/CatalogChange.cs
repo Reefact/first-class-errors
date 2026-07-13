@@ -18,7 +18,9 @@ public enum CatalogChangeImpact {
     Compatible,
 
     /// <summary>
-    ///     The change only affects the documentation identity (title, source); no consumer contract is involved.
+    ///     The change only affects the documentation identity (title, source); no consumer contract is involved. The
+    ///     machine-readable JSON report surfaces this as the enum name (<c>informational</c>); the human-readable text
+    ///     and Markdown reports label the same group "Documentation changes".
     /// </summary>
     Informational
 

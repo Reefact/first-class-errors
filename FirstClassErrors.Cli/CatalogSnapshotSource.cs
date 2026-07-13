@@ -10,11 +10,12 @@ using FirstClassErrors.GenDoc.Versioning;
 namespace FirstClassErrors.Cli;
 
 /// <summary>
-///     Extracts the canonical <see cref="CatalogSnapshot" /> for the <c>catalog</c> commands: resolves the source
-///     (command line first, then configuration), runs the documentation extraction, and projects the resulting
-///     catalog into its contract snapshot.
+///     The production <see cref="ICatalogSnapshotSource" />: resolves the source (command line first, then
+///     configuration), runs the real documentation extraction through
+///     <see cref="SolutionErrorDocumentationGenerator" />, and projects the resulting catalog into its contract
+///     snapshot. It holds no state; it only places the real pipeline behind the port the commands depend on.
 /// </summary>
-internal static class CatalogSnapshotSource {
+internal sealed class SolutionCatalogSnapshotSource : ICatalogSnapshotSource {
 
     #region Statics members declarations
 
@@ -22,14 +23,10 @@ internal static class CatalogSnapshotSource {
     // committed baseline never depends on the ambient culture of the machine that produced it.
     private static readonly CultureInfo SnapshotCulture = CultureInfo.GetCultureInfo("en");
 
-    /// <summary>
-    ///     Extracts the snapshot of the catalog as it currently stands in the configured source.
-    /// </summary>
-    /// <param name="settings">The catalog command options.</param>
-    /// <param name="configuration">The loaded configuration file.</param>
-    /// <param name="logger">The logger diagnostics are reported to.</param>
-    /// <returns>The canonical snapshot of the current catalog.</returns>
-    public static CatalogSnapshot Extract(CatalogSettings settings, CliConfiguration configuration, ConsoleGenerationLogger logger) {
+    #endregion
+
+    /// <inheritdoc />
+    public CatalogSnapshot Extract(CatalogSettings settings, CliConfiguration configuration, IGenerationLogger logger, CancellationToken cancellationToken) {
         (string? solution, string[] assemblies) = CatalogSourceResolver.Resolve(settings.SolutionPath, settings.AssemblyPaths, configuration);
 
         string  buildConfig = CatalogSourceResolver.FirstNonEmpty(settings.Configuration, configuration.Configuration) ?? "Debug";
@@ -45,7 +42,8 @@ internal static class CatalogSnapshotSource {
             FailureBehavior    = strict ? FailureBehavior.Stop : FailureBehavior.Continue,
             WorkerAssemblyPath = worker,
             Culture            = SnapshotCulture,
-            Logger             = logger
+            Logger             = logger,
+            CancellationToken  = cancellationToken
         };
 
         List<ErrorDocumentation> catalog =
@@ -61,7 +59,5 @@ internal static class CatalogSnapshotSource {
 
         return CatalogSnapshot.FromCatalog(catalog);
     }
-
-    #endregion
 
 }

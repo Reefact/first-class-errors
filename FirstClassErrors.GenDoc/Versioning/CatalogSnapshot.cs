@@ -41,8 +41,9 @@ public sealed class CatalogSnapshot {
     /// <remarks>
     ///     Entries without a code are skipped: a code is the identity under which a contract can be tracked, so an
     ///     uncoded entry has nothing to version. Should two entries still share a code (the extraction pipeline
-    ///     already deduplicates), the first one in code order wins, deterministically. Context keys are deduplicated
-    ///     by name within each error, keeping the first value type seen in name order.
+    ///     already deduplicates), the first one in <c>(code, source, title)</c> order wins — a deterministic
+    ///     tie-breaker independent of the reflection-driven input order. Context keys are deduplicated by name within
+    ///     each error, keeping the first value type seen in name order.
     /// </remarks>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="catalog" /> is <c>null</c>.</exception>
     public static CatalogSnapshot FromCatalog(IEnumerable<ErrorDocumentation> catalog) {

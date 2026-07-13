@@ -2,6 +2,7 @@
 
 using System.ComponentModel;
 
+using FirstClassErrors.GenDoc;
 using FirstClassErrors.GenDoc.Versioning;
 
 using Spectre.Console.Cli;
@@ -34,13 +35,43 @@ internal sealed class CatalogDiffSettings : CatalogSettings {
 /// </summary>
 /// <remarks>
 ///     Exit codes: <c>0</c> when no change reaches the <c>--fail-on</c> threshold, <c>2</c> when at least one does,
-///     and <c>1</c> on an execution error (missing baseline, failed extraction, …). CI pipelines can therefore
-///     distinguish "the contract changed" from "the tool failed".
+///     and <c>1</c> on an execution error (missing baseline, failed extraction, …); <c>130</c> on cancellation. CI
+///     pipelines can therefore distinguish "the contract changed" from "the tool failed".
 /// </remarks>
 internal sealed class CatalogDiffCommand : Command<CatalogDiffSettings> {
 
+    #region Fields
+
+    private readonly ICatalogSnapshotSource        _snapshotSource;
+    private readonly Func<bool, IGenerationLogger> _loggerFactory;
+    private readonly TextWriter                    _output;
+
+    #endregion
+
+    #region Constructors & Destructor
+
+    /// <summary>Production constructor used by the CLI host: wires the real extraction pipeline, console logger and stdout.</summary>
+    public CatalogDiffCommand() : this(
+        new SolutionCatalogSnapshotSource(),
+        verbose => new ConsoleGenerationLogger(verbose),
+        Console.Out) { }
+
+    /// <summary>Test seam: injects the collaborators so they can be substituted by fakes.</summary>
+    internal CatalogDiffCommand(ICatalogSnapshotSource snapshotSource, Func<bool, IGenerationLogger> loggerFactory, TextWriter output) {
+        _snapshotSource = snapshotSource;
+        _loggerFactory  = loggerFactory;
+        _output         = output;
+    }
+
+    #endregion
+
     protected override int Execute(CommandContext context, CatalogDiffSettings settings, CancellationToken cancellationToken) {
-        ConsoleGenerationLogger logger = new(settings.Verbose);
+        // The command body uses no CommandContext state, so it lives in a context-free seam that tests drive directly.
+        return Run(settings, cancellationToken);
+    }
+
+    internal int Run(CatalogDiffSettings settings, CancellationToken cancellationToken) {
+        IGenerationLogger logger = _loggerFactory(settings.Verbose);
 
         try {
             string           configPath    = ConfigurationStore.Resolve(settings.ConfigPath);
@@ -71,12 +102,12 @@ internal sealed class CatalogDiffCommand : Command<CatalogDiffSettings> {
 
             CatalogSnapshot baseline = BaselineStore.Load(baselinePath);
             CatalogSnapshot current  = string.IsNullOrWhiteSpace(settings.AgainstPath)
-                                           ? CatalogSnapshotSource.Extract(settings, configuration, logger)
+                                           ? _snapshotSource.Extract(settings, configuration, logger, cancellationToken)
                                            : BaselineStore.Load(Path.GetFullPath(settings.AgainstPath));
 
             CatalogDiff diff = CatalogDiffer.Diff(baseline, current);
 
-            Console.Out.Write(report switch {
+            _output.Write(report switch {
                 "markdown" => CatalogDiffFormatter.ToMarkdown(diff),
                 "json"     => CatalogDiffFormatter.ToJson(diff),
                 _          => CatalogDiffFormatter.ToText(diff)
@@ -97,9 +128,15 @@ internal sealed class CatalogDiffCommand : Command<CatalogDiffSettings> {
             }
 
             return 0;
+        } catch (OperationCanceledException) {
+            // Cancellation (Ctrl+C) is an abort, not a failure: report it with the conventional SIGINT exit code.
+            logger.Error("Catalog diff canceled.");
+
+            return 130;
         } catch (Exception exception) {
             // Report expected failures (missing solution, worker crash, invalid baseline, …) as a terse line.
             logger.Error(exception.Message);
+            logger.Debug(exception.ToString());
 
             return 1;
         }
