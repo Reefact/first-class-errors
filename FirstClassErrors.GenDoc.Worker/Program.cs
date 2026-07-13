@@ -3,6 +3,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -17,7 +18,10 @@ using FirstClassErrors.GenDoc;
 // The worker is meant to be launched by the generator against the target's own dependency closure
 // (dotnet exec --depsfile <target>.deps.json ... worker.dll <target>.dll), so it binds to the target's
 // FirstClassErrors version and starts from a fresh static registry. It writes the ErrorDocumentationExtractionResult
-// as JSON to the output file when provided, otherwise to stdout; diagnostics and fatal errors go to stderr.
+// as JSON to the output file when provided, otherwise to stdout. Fatal errors go to stderr. It also logs a one-line
+// runtime banner (the framework it actually bound to): on stdout when the result goes to a file — stdout then carries
+// no data and the host surfaces the banner as an 'info' diagnostic — and on stderr in the stdout-JSON mode so the
+// result stays pure.
 //
 // When --culture is given, the extraction runs under that culture, so documentation factories that read localized
 // resources produce their text in that language.
@@ -53,6 +57,17 @@ if (cultureName is not null) {
 }
 
 try {
+    // Report the runtime this worker actually bound to. Its runtimeconfig rolls forward independently of the
+    // launching tool (RollForward=LatestMajor), so this can differ from the CLI's runtime and is the authoritative
+    // record of where the target was loaded — which is what the preview canary reads back. See the header note for
+    // the stdout/stderr split.
+    string runtimeBanner = $"Documenting '{assemblyPath}' on {RuntimeInformation.FrameworkDescription}.";
+    if (outputPath is null) {
+        await Console.Error.WriteLineAsync(runtimeBanner);
+    } else {
+        await Console.Out.WriteLineAsync(runtimeBanner);
+    }
+
     Assembly                           assembly = LoadTarget(assemblyPath);
     ErrorDocumentationExtractionResult result   = AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(assembly);
 
