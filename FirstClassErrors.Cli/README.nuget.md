@@ -12,7 +12,9 @@ artifact and always matches the deployed system, with no manual upkeep.
 
     dotnet tool install --global FirstClassErrors.Cli
 
-This installs the `fce` command and requires the .NET 10 runtime. Use `--global` for a
+This installs the `fce` command and requires the **.NET 8 runtime or newer** — `fce` targets
+.NET 8 and rolls forward onto any later runtime, so a machine that has only .NET 10 (or a
+future major) runs it just as well. Use `--global` for a
 machine-wide tool, or install it into a
 [tool manifest](https://learn.microsoft.com/dotnet/core/tools/local-tools-how-to-use)
 for a version-pinned, per-repository tool.

@@ -1,9 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <!-- Loaded in-process by the fce tool, so it targets the same floor runtime as the CLI (net8.0); the runtime
+         it actually binds to is chosen by the CLI's runtimeconfig, so no RollForward is set here. -->
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- Keep modern C# despite the net8.0 floor (see the netstandard2.0 projects, which do the same). -->
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

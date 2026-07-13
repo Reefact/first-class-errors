@@ -2,9 +2,17 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <!-- Floor TFM: fce ships as a net8.0 tool so a shop whose newest runtime is .NET 8 can install and run it.
+         RollForward=Major lets the very same build run on any newer major runtime — a machine that has only
+         .NET 10 rolls 8->10 — so one floor build covers every supported runtime from .NET 8 up, with no
+         per-release target matrix. Without Major, the default Minor policy would not cross 8->major, and the
+         tool would fail to start on the (common) machine that has a newer .NET but not .NET 8. -->
+    <TargetFramework>net8.0</TargetFramework>
+    <RollForward>Major</RollForward>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- Keep modern C# despite the net8.0 floor (see the netstandard2.0 projects, which do the same). -->
+    <LangVersion>latest</LangVersion>
     <!-- The project keeps its name; only the produced executable is called "fce". -->
     <AssemblyName>fce</AssemblyName>
   </PropertyGroup>
