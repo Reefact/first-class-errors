@@ -99,5 +99,5 @@ documentées une seule fois ici plutôt que répétées sur chaque page.
 - [ADR 0001 — Verrouiller le floor Roslyn de l'analyzer](../adr/0001-lock-the-analyzer-roslyn-floor.md)
   — pourquoi la version de Roslyn de l'analyzer est gelée, ce que le workflow
   `analyzers` fait respecter. *(Rédigé en anglais.)*
-- [`CONTRIBUTING.md`](../../CONTRIBUTING.md) — les conventions de commit et de PR
+- [`CONTRIBUTING.fr.md`](../../doc/CONTRIBUTING.fr.md) — les conventions de commit et de PR
   que le workflow `commit-lint` vérifie.

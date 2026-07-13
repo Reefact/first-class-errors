@@ -39,5 +39,5 @@ par un ADR plus récent, pas édité sur place.
 
 ## En rapport
 
-- [`CONTRIBUTING.md`](../CONTRIBUTING.md) — conventions de commit et de pull
+- [`CONTRIBUTING.fr.md`](../doc/CONTRIBUTING.fr.md) — conventions de commit et de pull
   request (imposées par le workflow [`commit-lint`](workflows/commit-lint.fr.md)).
