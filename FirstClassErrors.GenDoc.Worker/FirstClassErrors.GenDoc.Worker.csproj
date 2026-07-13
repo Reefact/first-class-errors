@@ -2,13 +2,20 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- Target the floor runtime (net8.0) but keep the language at the SDK's newest C#, as the netstandard2.0
+         projects already do. The TFM only bounds the BCL surface and the runtime this process binds to; it must
+         not drag the source back to net8's default C# 12. -->
+    <LangVersion>latest</LangVersion>
     <IsPackable>false</IsPackable>
-    <!-- The worker is launched by the host against a target's own dependency closure; allow it to run on a runtime
-         newer than the one it was built for. -->
-    <RollForward>Major</RollForward>
+    <!-- The worker loads a target assembly (Assembly.LoadFrom) that may be built for ANY runtime the user
+         targets, so its process must run on a runtime >= the target's. LatestMajor (not Major) is required here:
+         Major only rolls up when the requested major is ABSENT, so on a machine carrying both .NET 8 and .NET 10 a
+         net8.0 worker would bind to 8 and fail to load a net10 target. LatestMajor always selects the highest
+         installed major, so the worker can document a target built for any runtime present on the machine. -->
+    <RollForward>LatestMajor</RollForward>
   </PropertyGroup>
 
   <ItemGroup>
