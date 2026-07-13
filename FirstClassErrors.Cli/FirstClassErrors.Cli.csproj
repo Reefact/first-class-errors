@@ -10,11 +10,14 @@
   </PropertyGroup>
 
   <!-- NuGet packaging: this project ships as the `fce` .NET tool.
-       PackAsTool bundles the app and its dependency closure under tools/<tfm>/any, so a
-       `dotnet tool install FirstClassErrors.Cli` yields a runnable `fce`. The GenDoc worker the tool
-       spawns as a separate process is copied next to the app by the targets below and travels inside the
-       same folder, which is where the tool resolves it at runtime (AppContext.BaseDirectory). Packed by
-       tools/packaging/pack.sh alongside the two library packages. -->
+       PackAsTool bundles the app and its managed dependency closure under tools/<tfm>/any, so a
+       `dotnet tool install FirstClassErrors.Cli` yields a runnable `fce`. The GenDoc worker the tool spawns as a
+       separate process is NOT a managed dependency (ReferenceOutputAssembly=false, below), so PackAsTool does not
+       embed it on its own. It reaches the package because PackAsTool packs the CLI's *publish* output and the
+       _PublishDocumentationWorker target (below) drops the worker's closure into that publish output — so it lands
+       under tools/<tfm>/any next to the executable, where the tool resolves it at runtime
+       (AppContext.BaseDirectory). tools/packaging/pack.sh packs this alongside the two library packages and asserts
+       the worker is actually present in the .nupkg, so its bundling is enforced by a test, not hoped for. -->
   <PropertyGroup>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>fce</ToolCommandName>
@@ -90,9 +93,14 @@
   </ItemGroup>
 
   <!-- Bundle the documentation worker alongside the CLI. The worker targets the same framework as the CLI, so its
-       build output sits under the sibling bin folder for the current Configuration/TargetFramework. The worker is
-       already built (via the ProjectReference above) by the time these run. Validate locally with `dotnet build`
-       and `dotnet publish`. -->
+       build output sits under the sibling bin folder for the current Configuration/TargetFramework, already built via
+       the ProjectReference above. _CopyDocumentationWorker (AfterTargets="Build") feeds $(OutDir), so running from
+       source (dev, integration tests) finds the worker; _PublishDocumentationWorker (AfterTargets="Publish") feeds
+       $(PublishDir), which is what PackAsTool zips into the tool package under tools/<tfm>/any.
+       Do NOT rely on `dotnet build` or `dotnet publish` to validate that the tool ships its worker: neither exercises
+       the .nupkg content, so both stay green even if the worker never reaches the package. The real gates are the
+       worker-present assertion in tools/packaging/pack.sh and the manual tool-install smoke test documented in
+       maintainers/ReleaseDryRun (install the packed tool, run `fce generate`, expect a non-empty catalog). -->
   <Target Name="_CopyDocumentationWorker" AfterTargets="Build">
     <ItemGroup>
       <_DocumentationWorkerFiles Include="$(MSBuildThisFileDirectory)..\FirstClassErrors.GenDoc.Worker\bin\$(Configuration)\$(TargetFramework)\**\*.*" />
