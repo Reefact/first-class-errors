@@ -1,0 +1,102 @@
+name: canary
+
+# Early-warning that the documentation tooling still runs on the NEXT, not-yet-released .NET.
+#
+# The shipped tooling targets net8.0 and reaches every newer runtime purely by roll-forward (the worker uses
+# LatestMajor; see maintainers/adr/0002-floor-the-tooling-runtime.md). A runtime breaking change in a future
+# major would surface here first — on a schedule, against the current preview — instead of in a user's CI the
+# day that major ships. It is the upper-end counterpart of the `floor` job in ci.yml, which pins the lower end.
+#
+# Deliberately NOT a pull-request gate: preview runtimes are unstable and sometimes not published yet, and their
+# breakage is not this repo's bug. It runs on a schedule (and on demand); a real regression turns the scheduled
+# run red and GitHub notifies the maintainer, while an unavailable preview ends the run neutral.
+
+on:
+  schedule:
+    # Weekly, Monday 06:00 UTC. Preview builds drop roughly monthly, so weekly catches a new one within days
+    # without adding noise. Scheduled workflows run from the default branch only.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: canary-${{ github.ref }}
+  cancel-in-progress: true
+
+# Least privilege: checkout + build only.
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+
+jobs:
+  preview:
+    name: Documentation tooling on the next .NET preview
+    runs-on: ubuntu-latest
+    # Build (~20s) plus one doc-generation run; cap a hung run like the ci jobs.
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      # Best effort: a preview for the next major may not be published yet, or may fail to install. Marking this
+      # step continue-on-error keeps that from reddening the canary — the build/run steps below are gated on its
+      # outcome and simply skip, leaving the job neutral. Bump the major (11.0.x -> 12.0.x -> ...) once the
+      # current preview reaches GA; see ADR 0002.
+      - name: Setup the next .NET preview (best effort)
+        id: preview
+        continue-on-error: true
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: '11.0.x'
+          dotnet-quality: preview
+
+      # The build SDK. net8.0 is only a target framework; global.json pins the .NET 10 SDK for the build itself.
+      - name: Setup the build SDK (.NET 10)
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: No preview available — skip (not a failure)
+        if: steps.preview.outcome != 'success'
+        run: echo "::notice::no .NET preview was available to canary against; skipping this run"
+
+      # The fce tool, its GenDoc worker (copied next to fce by the CLI build target) and a net8 build of the Usage
+      # sample as a real target to document.
+      - name: Build the net8 tooling and a net8 target
+        if: steps.preview.outcome == 'success'
+        run: |
+          dotnet build FirstClassErrors.Cli/FirstClassErrors.Cli.csproj -c Release
+          dotnet build FirstClassErrors.Usage/FirstClassErrors.Usage.csproj -c Release -f net8.0
+
+      # Force the net8 tooling onto the newest installed major, INCLUDING the prerelease preview:
+      #   * DOTNET_ROLL_FORWARD=LatestMajor overrides the CLI's Major (and, redundantly, the worker's LatestMajor)
+      #     so both processes select the highest installed major rather than staying on a stable one;
+      #   * DOTNET_ROLL_FORWARD_TO_PRERELEASE=1 lets a stable net8 app bind a *prerelease* runtime, which
+      #     roll-forward refuses by default.
+      # A guard first confirms a newer major than the build SDK is actually installed, so the canary never
+      # false-passes by silently running on .NET 10. A regression in the preview runtime's roll-forward behaviour
+      # then turns this step red, and the scheduled run notifies the maintainer.
+      - name: Generate documentation on the preview runtime
+        if: steps.preview.outcome == 'success'
+        env:
+          DOTNET_ROLL_FORWARD: LatestMajor
+          DOTNET_ROLL_FORWARD_TO_PRERELEASE: '1'
+        run: |
+          set -euo pipefail
+          if ! dotnet --list-runtimes | grep -Eq 'Microsoft\.NETCore\.App (1[1-9]|[2-9][0-9])\.'; then
+            echo "::notice::the installed 'preview' is not a newer major than the build SDK; skipping this run"
+            exit 0
+          fi
+          dotnet FirstClassErrors.Cli/bin/Release/net8.0/fce.dll generate \
+            --assemblies FirstClassErrors.Usage/bin/Release/net8.0/FirstClassErrors.Usage.dll \
+            --format json --verbose > canary-catalog.json
+          # Positive proof, not just exit 0: the worker actually loaded the target and extracted documented errors.
+          if ! grep -q '"code"' canary-catalog.json; then
+            echo "::error::the net8 tooling failed to document a target on the .NET preview runtime"
+            cat canary-catalog.json
+            exit 1
+          fi
+          echo "ok: the net8 fce and worker documented a net8 target on the .NET preview runtime"
