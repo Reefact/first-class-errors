@@ -125,17 +125,19 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
             _outputWriter.Write(documents, renderer.Format, resolved.Output, logger);
 
             // The canonical snapshot is renderer-independent: whatever format is published for humans, the same
-            // contract file can be produced for `fce catalog diff` and CI drift detection. It reflects the render
-            // language; a culture-independent baseline should come from `fce catalog update` (which always pins `en`),
-            // so warn when the two would diverge.
-            if (resolved.SnapshotPath is not null) {
+            // contract file can be produced for `fce catalog diff` and CI drift detection. A configured `snapshot`
+            // path resolves relative to fce.json (like the baseline and the renderer references), while a --snapshot
+            // command-line value resolves against the current directory. It reflects the render language; a
+            // culture-independent baseline should come from `fce catalog update` (which always pins `en`), so warn
+            // when the two would diverge.
+            string? snapshotPath = ConfigRelativePath.Resolve(settings.SnapshotPath, configuration.Snapshot, configDir);
+            if (snapshotPath is not null) {
                 if (!IsEnglish(culture)) {
                     logger.Warning($"The snapshot reflects the '{culture.Name}' language (localized titles/sources). For a culture-independent baseline, use 'fce catalog update' or generate with --language en.");
                 }
 
-                string fullSnapshotPath = Path.GetFullPath(resolved.SnapshotPath);
-                WriteSnapshotFile(fullSnapshotPath, CatalogSnapshotSerializer.Serialize(CatalogSnapshot.FromCatalog(catalog)));
-                logger.Info($"Catalog snapshot written to '{fullSnapshotPath}'.");
+                WriteSnapshotFile(snapshotPath, CatalogSnapshotSerializer.Serialize(CatalogSnapshot.FromCatalog(catalog)));
+                logger.Info($"Catalog snapshot written to '{snapshotPath}'.");
             }
 
             return 0;

@@ -27,17 +27,8 @@ internal static class BaselineStore {
     /// <param name="configuredPath">The <c>baseline</c> value from the configuration file, if any.</param>
     /// <param name="configDirectory">The directory containing the configuration file, configured paths resolve against it.</param>
     public static string Resolve(string? optionPath, string? configuredPath, string configDirectory) {
-        if (string.IsNullOrWhiteSpace(optionPath) is false) {
-            return Path.GetFullPath(optionPath!);
-        }
-
-        if (string.IsNullOrWhiteSpace(configuredPath) is false) {
-            return Path.IsPathRooted(configuredPath)
-                       ? Path.GetFullPath(configuredPath!)
-                       : Path.GetFullPath(Path.Combine(configDirectory, configuredPath!));
-        }
-
-        return Path.GetFullPath(DefaultFileName);
+        return ConfigRelativePath.Resolve(optionPath, configuredPath, configDirectory)
+            ?? Path.GetFullPath(DefaultFileName);
     }
 
     /// <summary>Determines whether a baseline exists at the given (already resolved) path.</summary>
