@@ -1,5 +1,8 @@
 # Contributing to FirstClassErrors
 
+🌍 **Languages:**  
+🇬🇧 English (this file) | 🇫🇷 [Français](./doc/CONTRIBUTING.fr.md)
+
 FirstClassErrors treats errors as first-class, documented, diagnosable
 concepts. The history of the repository should be as legible as the errors the
 library produces. This guide defines how commits are written here.
