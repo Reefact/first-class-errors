@@ -233,7 +233,7 @@ Chaque package publié est construit et poussé par [`release.yml`](../.github/w
 
 Vous avez trouvé un bug ou souhaitez proposer une fonctionnalité ? Ouvrez une issue sur le [gestionnaire d’issues GitHub](https://github.com/Reefact/first-class-errors/issues). Les contributions sont les bienvenues — voir [CONTRIBUTING.md](../CONTRIBUTING.md) pour commencer.
 
-Pour les vulnérabilités de **sécurité**, merci de suivre le processus privé décrit dans [SECURITY.md](../SECURITY.md) plutôt que d’ouvrir une issue publique.
+Pour les vulnérabilités de **sécurité**, merci de suivre le processus privé décrit dans [SECURITY.fr.md](./SECURITY.fr.md) plutôt que d’ouvrir une issue publique.
 
 ## 📚 Étapes suivantes
 
