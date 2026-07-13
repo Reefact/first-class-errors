@@ -179,7 +179,7 @@ The code is the source of truth.
 ---
 
 <div align="center">
-<a href="OperationalIntegration.en.md">← CI/CD and Operational Integration</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="WritingACustomRenderer.en.md">Writing a custom renderer →</a>
+<a href="CatalogVersioning.en.md">← Catalog Versioning</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="WritingACustomRenderer.en.md">Writing a custom renderer →</a>
 </div>
 
 ---
