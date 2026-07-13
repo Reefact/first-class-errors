@@ -1,5 +1,8 @@
 # Security Policy
 
+🌍 **Languages:**  
+🇬🇧 English (this file) | 🇫🇷 [Français](./doc/SECURITY.fr.md)
+
 ## Supported Versions
 
 Security updates are provided for the latest stable release of FirstClassErrors.
