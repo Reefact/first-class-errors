@@ -48,6 +48,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          # Full history + tags so the release-notes rehearsal below can resolve the previous same-train tag.
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
@@ -58,9 +61,19 @@ jobs:
       - name: Build
         run: dotnet build FirstClassErrors.sln -c Release -p:Version="$DRYRUN_VERSION"
 
-      # The SAME script release.yml packs with — it packs the two published projects with their SBOM and
-      # then asserts the SBOM is actually embedded. Sharing it is the point: this rehearsal cannot drift
-      # from the real release, because there is only one definition of "pack the release artifacts".
+      # The SAME script release.yml packs with — it packs each train's projects with their SBOM and then
+      # asserts the SBOM is actually embedded. Sharing it is the point: this rehearsal cannot drift from the
+      # real release, because there is only one definition of "pack the release artifacts". Both trains are
+      # rehearsed so neither packaging path first runs in production.
       # (The unit/integration tests run in ci.yml; this job's unique contribution is the packaging.)
       - name: Pack with SBOM (build artifacts, no publish)
-        run: tools/packaging/pack.sh "$DRYRUN_VERSION"
+        run: |
+          tools/packaging/pack.sh "$DRYRUN_VERSION" lib
+          tools/packaging/pack.sh "$DRYRUN_VERSION" cli
+
+      # Rehearse the train-scoped release-notes generation too (release.yml's other production-only path),
+      # so a bug in it surfaces here instead of during a real release. Prints to the log; publishes nothing.
+      - name: Rehearse release notes (both trains, no publish)
+        run: |
+          echo "----- lib notes -----"; tools/packaging/release-notes.sh lib HEAD
+          echo "----- cli notes -----"; tools/packaging/release-notes.sh cli HEAD
