@@ -223,8 +223,10 @@ jobs:
           PRERELEASE=false
           case "$VERSION" in *-*) PRERELEASE=true ;; esac
           # Train-scoped notes (only this train's Conventional Commit scopes) instead of --generate-notes,
-          # so a lib release never lists cli commits and vice versa.
-          tools/packaging/release-notes.sh "$COMPONENT" "$TAG" > release-notes.md
+          # so a lib release never lists cli commits and vice versa. Pass $GITHUB_SHA — not $TAG — as the
+          # range's upper bound: on a workflow_dispatch publish the tag does not exist yet (gh creates it
+          # below), so git log must resolve against the commit.
+          tools/packaging/release-notes.sh "$COMPONENT" "$TAG" "$GITHUB_SHA" > release-notes.md
           # On a re-run the release already exists, so `gh release create` fails and the fallback runs:
           # `gh release upload` refreshes the assets but cannot change the prerelease flag, so
           # `gh release edit` reconciles it — keeping a repair run idempotent in both directions.

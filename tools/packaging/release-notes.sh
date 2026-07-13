@@ -8,18 +8,24 @@
 # Commits with no scope (bare `ci:`, `build:`, `chore:` ...) are infrastructure and are left out
 # of both trains: these notes describe what changed for the consumer of the package, nothing else.
 #
-# Usage: tools/packaging/release-notes.sh <scope:lib|cli> <current-tag>
+# Usage: tools/packaging/release-notes.sh <scope:lib|cli> <current-tag> [<end-ref>]
 #   Emits Markdown on stdout. Needs full history + tags in the checkout (actions/checkout with
-#   fetch-depth: 0) so the previous same-train tag — the lower bound of the range — resolves.
+#   fetch-depth: 0) so the previous same-train tag — the lower bound of the range — resolves. <end-ref>
+#   is the upper bound and defaults to <current-tag>; pass the release commit when the tag does not exist
+#   yet (a workflow_dispatch publish creates the tag only after the notes are built).
 
 set -eu
 
-if [ "$#" -ne 2 ] || [ -z "$1" ] || [ -z "$2" ]; then
-  echo "usage: tools/packaging/release-notes.sh <scope:lib|cli> <current-tag>" >&2
+if [ "$#" -lt 2 ] || [ "$#" -gt 3 ] || [ -z "$1" ] || [ -z "$2" ]; then
+  echo "usage: tools/packaging/release-notes.sh <scope:lib|cli> <current-tag> [<end-ref>]" >&2
   exit 2
 fi
 scope="$1"
 current_tag="$2"
+# Upper bound of the commit range. Defaults to <current-tag>, but a caller that has not created the tag yet
+# passes the release commit (e.g. $GITHUB_SHA) so `git log` resolves. <current-tag> is used only to exclude
+# the tag being created from the previous-same-train-tag lookup, so it need not exist as a ref.
+end_ref="${3:-$current_tag}"
 
 case "$scope" in
   lib) prefix='lib-v'; train_scopes='core,analyzers,testing' ;;
@@ -31,9 +37,9 @@ esac
 # this is the train's first release: take the whole history up to the current tag.
 previous_tag="$(git tag --list "${prefix}*" --sort=-version:refname | grep -Fxv "$current_tag" | head -n1 || true)"
 if [ -n "$previous_tag" ]; then
-  range="${previous_tag}..${current_tag}"
+  range="${previous_tag}..${end_ref}"
 else
-  range="$current_tag"
+  range="$end_ref"
 fi
 
 # One line per commit: "<short-hash><TAB><subject>". Merge commits are skipped — a PR merge commit
