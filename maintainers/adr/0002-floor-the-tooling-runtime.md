@@ -62,17 +62,30 @@ bounds only the **BCL surface and target runtime**, not the C# the source may us
 One floor build + the two roll-forward settings above is strictly simpler and has
 the same reach.
 
-### This floor is self-guarding at build time
+### Two guards: the TFM at build time, a CI job at run time
 
-Unlike the analyzer's Roslyn floor — invisible on a modern CI, hence the
-`tools/floor-check` job (ADR 0001) — this floor needs **no dedicated CI guard for
-API drift**: because the projects *target* `net8.0`, every CI build (on the .NET 10
-SDK) compiles them against the **net8 reference pack**, so a `net10`-only API
-cannot slip in silently — it breaks the ordinary build. The only surface a TFM
-does not cover is runtime **roll-forward behaviour onto a not-yet-released major**;
-a *preview-runtime canary* (build net8, run the generator on an SDK-preview image)
-is the optional hardening for that, and is left as a follow-up rather than standing
-infrastructure.
+The floor is guarded on both axes it can regress on:
+
+- **API surface, at build time — the TFM itself.** Because the projects *target*
+  `net8.0`, every CI build (on the .NET 10 SDK) compiles them against the **net8
+  reference pack**, so a `net10`-only API cannot slip in silently — it breaks the
+  ordinary build. No dedicated job is needed for this, unlike the analyzer's Roslyn
+  floor, which is invisible on a modern CI and needs `tools/floor-check` (ADR 0001).
+- **Runtime execution, at run time — the `floor` job in `ci.yml`.** *Documentation
+  tooling on the .NET 8 floor* builds the net8 tooling and a net8 build of the
+  `Usage` sample, then runs `fce generate` against it with
+  `DOTNET_ROLL_FORWARD=LatestPatch` in the environment. That override wins over each
+  runtimeconfig's baked-in policy (`Major` / `LatestMajor`) and stays within the
+  requested major, so both the CLI and the worker bind the highest **.NET 8** patch
+  present and can never roll onto the newer runtime the runner also carries. A green
+  step therefore means the shipped net8 tooling genuinely executed on the .NET 8
+  runtime; were .NET 8 absent, the host would fail to start. This is the runtime
+  counterpart of the analyzer floor-check, and it is why `Usage` is multi-targeted
+  `net8.0;net10.0` — the net8 build gives the job a real target to document.
+
+The one surface neither guard covers is roll-forward onto a **not-yet-released**
+major: a *preview-runtime canary* (run the tooling on an SDK-preview image) is the
+optional hardening for that, left as a follow-up rather than standing infrastructure.
 
 ## Consequences
 
@@ -86,6 +99,9 @@ infrastructure.
 - Verified end to end: a `net8.0` `fce` documents a **`net10`** target assembly on
   a machine that has **only** the .NET 10 runtime — `fce` rolls 8→10 (`Major`) and
   the worker binds the highest major (`LatestMajor`) to load the net10 target.
+- Guarded in CI on **both** ends of the range: `build-test` runs the whole suite on
+  the latest .NET (10); the `floor` job runs the shipped tooling on the .NET 8
+  runtime (see the two-guards section above).
 
 **Negative / accepted costs**
 
@@ -119,9 +135,12 @@ once every two years.
 1. Change `<TargetFramework>` from `net8.0` to the new floor in the three tooling
    csprojs: `FirstClassErrors.Cli`, `FirstClassErrors.GenDoc`,
    `FirstClassErrors.GenDoc.Worker`. Leave the `RollForward` settings as they are.
-2. Update the runtime note in `FirstClassErrors.Cli/README.nuget.md`.
-3. Update this ADR (new floor, new minimum runtime).
-4. Optionally drop the `<LangVersion>latest</LangVersion>` overrides if the new
+2. Bump the new floor in the `Usage` sample's `<TargetFrameworks>` (so the CI floor
+   job still has a target on the new floor) and in the `floor` job of `ci.yml`
+   (`dotnet-version` `8.0.x` → the new floor's runtime).
+3. Update the runtime note in `FirstClassErrors.Cli/README.nuget.md`.
+4. Update this ADR (new floor, new minimum runtime).
+5. Optionally drop the `<LangVersion>latest</LangVersion>` overrides if the new
    floor's default C# is already the version you want.
 
 Keeping this in step with the analyzer floor (ADR 0001) keeps the product's single
