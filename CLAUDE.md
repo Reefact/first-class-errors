@@ -74,3 +74,20 @@ errors should stay structured, documented, and close to the code.
 * Write every pull request title per [`CONTRIBUTING.md`](CONTRIBUTING.md): name the whole change in English; a single-intention PR mirrors its commit header (`type(scope): description`), a multi-intention PR uses a short descriptive title, and issue references stay in the description, not the title.
 * Enable the local commit-message hook once per clone with `git config core.hooksPath .githooks`; the same check runs in CI on every pull request.
 * In PR descriptions, do not invent testing results. Only check items that were actually run.
+
+## Responding to pull request review feedback
+
+When you act on review feedback on a pull request (for example a Codex review),
+follow the escalation rules in [`AGENTS.md`](AGENTS.md) ("Responding to review
+feedback"). The essentials, inlined so they hold even if `AGENTS.md` is not read:
+
+* If you agree and the fix is clear and local, implement it, push, and reply
+  `Resolved in <sha>`.
+* If you believe a finding is wrong, reply with the concrete technical reason and
+  mention `@reefact` to arbitrate — do not argue with the reviewer bot.
+* If a finding needs a human judgement (architecture, a trade-off, an ambiguous
+  requirement, a security or compatibility policy), mention `@reefact` and wait.
+* Never mention both the reviewer bot and `@reefact` on the same thread; cap at
+  two fix/re-review cycles, then escalate to `@reefact`.
+* No agent merges a pull request or enables auto-merge on it — the human
+  maintainer merges.
