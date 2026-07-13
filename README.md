@@ -249,6 +249,7 @@ See the full documentation:
 - [Best Practices](doc/BestPractices.en.md)
 - [Testing Guide](doc/Testing.en.md)
 - [CI/CD and Operational Integration](doc/OperationalIntegration.en.md)
+- [Catalog Versioning](doc/CatalogVersioning.en.md)
 - [Architecture of the Documentation Pipeline](doc/ArchitectureOfTheDocumentationPipeline.en.md)
 - [Writing a custom renderer](doc/WritingACustomRenderer.en.md)
 - [Internationalization](doc/Internationalization.en.md)

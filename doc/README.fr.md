@@ -249,6 +249,7 @@ Consultez la documentation complète :
 - [Bonnes pratiques](BestPractices.fr.md)
 - [Guide des tests](Testing.fr.md)
 - [Intégration CI/CD et exploitation](OperationalIntegration.fr.md)
+- [Versionnage du catalogue](CatalogVersioning.fr.md)
 - [Architecture du pipeline de documentation](ArchitectureOfTheDocumentationPipeline.fr.md)
 - [Écrire son propre renderer](WritingACustomRenderer.fr.md)
 - [Internationalisation](Internationalisation.fr.md)

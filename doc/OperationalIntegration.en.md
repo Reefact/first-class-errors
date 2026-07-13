@@ -35,6 +35,16 @@ You can emit the catalog per locale by adding `--language <…>` (e.g. a CI matr
 
 The public RFC 9457 examples carry a problem `type` of the shape `urn:problem:{service}:{code}`. Provide the service segment with `--service-name <name>` (or `serviceName` in `fce.json`); it is required for the `markdown` and `html` formats — `fce generate` fails with a clear message when it is missing — while `json` (which carries no such example) does not need it.
 
+## 🛡️ Guarding the error contract
+
+Error codes and context keys are a public contract: clients branch on them, dashboards alert on them, support procedures reference them. A CI step can guard that contract by comparing the current catalog against a committed baseline and failing the build when a code disappears by accident:
+
+```bash
+fce catalog diff --solution MyApp.sln
+```
+
+See [Catalog Versioning](CatalogVersioning.en.md) for the baseline workflow, the change classification and the exit-code semantics.
+
 ## 🌍 Publishing documentation
 
 The generated documentation can be:
@@ -114,7 +124,7 @@ Errors become:
 ---
 
 <div align="center">
-<a href="Testing.en.md">← Testing Guide</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="ArchitectureOfTheDocumentationPipeline.en.md">Architecture of the Documentation Pipeline →</a>
+<a href="Testing.en.md">← Testing Guide</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="CatalogVersioning.en.md">Catalog Versioning →</a>
 </div>
 
 ---
