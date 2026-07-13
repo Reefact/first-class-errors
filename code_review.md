@@ -21,6 +21,10 @@ Every inline review comment must use this format:
 [discussion]
 ```
 
+In this notation, `< >` marks a placeholder to replace and `[ ]` marks an optional
+part — write neither the angle brackets nor the square brackets literally.
+Decorations, when present, go in parentheses (for example `(security)`).
+
 The subject must summarize the finding in one sentence.
 The optional discussion must explain:
 
