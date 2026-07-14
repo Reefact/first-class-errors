@@ -48,7 +48,7 @@ C'est la partie que vous utiliserez tous les jours. Tester du code qui renvoie u
 Outcome<Receipt> outcome = checkout.Pay(order);
 
 Assert.True(outcome.IsFailure);
-Assert.Equal("PAYMENT.DECLINED", outcome.Error!.Code.ToString());
+Assert.Equal("PAYMENT_DECLINED", outcome.Error!.Code.ToString());
 ```
 
 Avec le package de test, l'intention passe en premier et le boilerplate disparaît :
@@ -57,7 +57,7 @@ Avec le package de test, l'intention passe en premier et le boilerplate dispara�
 // 🙂 Après
 checkout.Pay(order)
         .ShouldFail()
-        .WithCode("PAYMENT.DECLINED");
+        .WithCode("PAYMENT_DECLINED");
 ```
 
 ### Les succès renvoient leur valeur
@@ -95,7 +95,7 @@ public void Un_paiement_refuse_remonte_une_erreur_diagnosable()
     Outcome<Receipt> outcome = checkout.Pay(declinedCard);
 
     outcome.ShouldFail()
-           .WithCode("PAYMENT.DECLINED")
+           .WithCode("PAYMENT_DECLINED")
            .WithShortMessage("Votre paiement a été refusé.")
            .WithDiagnosticMessage("L'émetteur a refusé l'autorisation (code 51).")
            .WithContextEntry("CardNetwork", "VISA");
@@ -116,7 +116,7 @@ Besoin de quelque chose que la surface fluente ne couvre pas ? `Subject` vous
 rend l'`Error` brute :
 
 ```csharp
-Error error = outcome.ShouldFail().WithCode("ORDER.NOT_FOUND").Subject;
+Error error = outcome.ShouldFail().WithCode("ORDER_NOT_FOUND").Subject;
 
 Assert.Empty(error.InnerErrors);
 ```
@@ -128,11 +128,11 @@ Quand une attente n'est pas satisfaite, les assertions lèvent une
 et non l'exception propre au domaine :
 
 ```text
-Expected the outcome to succeed, but it failed with [PAYMENT.DECLINED]: L'émetteur a refusé l'autorisation (code 51).
+Expected the outcome to succeed, but it failed with [PAYMENT_DECLINED]: L'émetteur a refusé l'autorisation (code 51).
 ```
 
 ```text
-Expected the error to have code "ORDER.NOT_FOUND", but it was "ORDER.LOCKED".
+Expected the error to have code "ORDER_NOT_FOUND", but it was "ORDER_LOCKED".
 ```
 
 ---
@@ -164,7 +164,7 @@ public void Une_erreur_enregistre_quand_elle_survient()
     using (Clock.UseFixed(instant))
     {
         DomainError error = DomainError
-            .Create(ErrorCode.Create("ORDER.NOT_FOUND"), "La commande 42 est introuvable.")
+            .Create(ErrorCode.Create("ORDER_NOT_FOUND"), "La commande 42 est introuvable.")
             .WithPublicMessage("Cette commande n'existe pas.");
 
         Assert.Equal(instant, error.OccurredAt);
@@ -274,7 +274,7 @@ public void Chercher_une_commande_absente_echoue_de_facon_deterministe()
         Outcome<Order> outcome = orders.Find(missingId);
 
         ErrorAssertion failure = outcome.ShouldFail()
-                                        .WithCode("ORDER.NOT_FOUND")
+                                        .WithCode("ORDER_NOT_FOUND")
                                         .WithContextEntry("OrderId", missingId);
 
         Assert.Equal(instant, failure.Subject.OccurredAt);
