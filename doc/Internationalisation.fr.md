@@ -1,120 +1,243 @@
 # Internationalisation
 
-🌍 **Langues:**  
+🌍 **Langues :**  
 🇬🇧 [English](./Internationalization.en.md) | 🇫🇷 Français (ce fichier)
 
-FirstClassErrors peut produire le catalogue d’erreurs en plusieurs langues. L’internationalisation est **optionnelle et granulaire** : sans aucune configuration, la documentation est en anglais, et vous ne localisez que ce que vous choisissez.
+FirstClassErrors peut générer le même catalogue d’erreurs dans plusieurs langues. L’internationalisation est optionnelle et granulaire : un projet peut tout localiser, ne localiser que certaines sources, ou ne rien localiser.
 
-Deux choses peuvent être localisées, à deux étapes différentes du pipeline :
+La règle essentielle est que la localisation intervient à **deux étapes distinctes du pipeline**.
 
-| Quoi | Localisé quand | Comment |
+## Le modèle en un coup d’œil
+
+```mermaid
+flowchart LR
+    A[Langue demandée]
+    B[Culture d'extraction]
+    C[Contenu d'erreur localisé]
+    D[Culture de rendu]
+    E[Gabarit de renderer localisé]
+    F[Catalogue généré]
+
+    A --> B --> C
+    A --> D --> E
+    C --> F
+    E --> F
+```
+
+| Étape | Responsable de |
+| --- | --- |
+| extraction | titres, descriptions, règles, hypothèses de diagnostic, exemples, messages publics, descriptions de source et de clés de contexte |
+| rendu | titres, libellés, en-têtes, navigation et autres textes fixes du renderer |
+
+Les identités stables restent indépendantes de la culture.
+
+## Ce qui reste invariant
+
+Ne localisez pas les valeurs utilisées comme contrats ou identifiants opérationnels :
+
+- codes d’erreur ;
+- noms de source créés avec `nameof(...)` ;
+- valeurs d’`ErrorOrigin` ;
+- noms de clés de contexte ;
+- noms de fichiers et ancres générés ;
+- noms de champs JSON et autres schémas machine ;
+- `DiagnosticMessage`, le message runtime interne.
+
+Ces valeurs stables garantissent que les liens, branches clientes, dashboards et requêtes de logs fonctionnent dans toutes les langues du catalogue.
+
+## Les trois messages runtime
+
+| Message | Localisé ? | Pourquoi |
 | --- | --- | --- |
-| **Contenu des erreurs** — titres, explications, règles, diagnostics, les messages publics (court et détaillé), descriptions de source et de contexte | à l’**extraction** | vos fabriques lisent des ressources localisées sous la culture UI courante |
-| **Gabarits des renderers** — titres, libellés, en-têtes de tableau | au **rendu** | le renderer lit son propre texte fixe pour `RenderRequest.Culture` |
+| `ShortMessage` | oui | message public pour utilisateurs ou clients d’API |
+| `DetailedMessage` | oui | détail public maîtrisé |
+| `DiagnosticMessage` | non | une langue interne cohérente pour les logs, le support et les développeurs |
 
-Tout le reste demeure **indépendant de la culture**, pour que les liens ne cassent jamais d’une langue à l’autre — et pour que les diagnostics restent dans une langue unique et cohérente pour les logs et le support : codes d’erreur, noms de source (`nameof(...)`), valeurs d’`ErrorOrigin`, le **message de diagnostic interne** de chaque erreur, ainsi que les noms de fichiers et les ancres générés.
+Un catalogue français peut donc afficher des messages publics français tout en conservant un message de diagnostic anglais. C’est volontaire : le diagnostic explique une occurrence runtime à un public interne commun.
 
-### Les messages publics sont localisés, le message de diagnostic ne l’est pas
-
-Une erreur porte trois messages, qui se localisent différemment :
-
-* **`ShortMessage`** et **`DetailedMessage`** sont du contenu public : ils sont localisés à l’extraction comme n’importe quelle autre prose — lisez-les depuis des ressources sous la culture UI courante.
-* **`DiagnosticMessage`** est délibérément **conservé dans la langue de l’auteur (indépendant de la culture)**. Il est destiné aux logs, au support et aux développeurs, et un texte de diagnostic est le plus utile lorsqu’il se lit toujours dans une langue unique et cohérente, quelle que soit la locale de l’appelant — c’est une bonne pratique assumée.
-
-Ainsi, dans la documentation générée, les messages publics sont rendus localisés tandis que le message de diagnostic est rendu dans la langue invariante (celle de l’auteur).
-
-L’exemple `.Usage` fournit cinq langues — anglais, français, espagnol, allemand et suédois (`en`, `fr`, `es`, `de`, `sv`).
+Pour les règles d’écriture, voir [Écrire les messages d’erreur](WritingErrorMessages.fr.md).
 
 ## Choisir la langue
 
-Passez `--language` (alias `-l`) à `fce generate`, ou définissez une valeur `language` par défaut dans `fce.json` ; une valeur en ligne de commande écrase la configuration, exactement comme les autres options. Le défaut est l’anglais.
+Passez `--language` ou `-l` :
 
 ```bash
-fce generate --solution ./MyApp.sln --format markdown --language sv --output ./docs/errors
+fce generate \
+  --solution ./MyApp.sln \
+  --format markdown \
+  --language fr \
+  --service-name my-api \
+  --output ./docs/errors-fr
 ```
+
+Ou configurez une valeur par défaut dans `fce.json` :
 
 ```json
 {
   "solution": "./MyApp.sln",
-  "language": "sv"
+  "language": "fr"
 }
 ```
 
-## Niveau 1 — localiser le contenu des erreurs
+Une valeur en ligne de commande écrase la configuration. Sans option de langue, la langue par défaut du catalogue est l’anglais.
 
-Le contenu des erreurs est localisé à l’**extraction**. Le générateur lance le worker de chaque assembly avec `CultureInfo.CurrentUICulture` réglé sur la langue demandée, de sorte que toute fabrique qui lit des ressources localisées produit cette langue. Dans l’exemple, la prose est lue depuis un petit wrapper de `ResourceManager` (`UsageErrorMessages`) adossé à un `.resx` par langue :
+## Localiser le contenu documentaire
+
+Pendant l’extraction, le worker utilise `CultureInfo.CurrentUICulture` avec la langue demandée. Les méthodes de documentation et factories peuvent donc lire normalement des ressources `.resx`.
 
 ```csharp
 private static ErrorDocumentation BelowAbsoluteZeroDocumentation() {
-    return DescribeError.WithTitle(UsageErrorMessages.Get("Temperature_BelowAbsoluteZero_Title"))
-                        .WithDescription(UsageErrorMessages.Get("Temperature_BelowAbsoluteZero_Description"))
-                        // …règles, diagnostics, exemples lus de la même façon
-                        ;
+    return DescribeError
+        .WithTitle(Messages.Get("Temperature_BelowAbsoluteZero_Title"))
+        .WithDescription(Messages.Get("Temperature_BelowAbsoluteZero_Description"))
+        .WithRule(Messages.Get("Temperature_BelowAbsoluteZero_Rule"))
+        .WithExamples(() => BelowAbsoluteZero(-1m));
 }
 ```
 
-Vous êtes libre d’écrire des chaînes littérales à la place — l’erreur est alors simplement toujours dans cette langue (voir [Opt-in et localisation partielle](#opt-in-et-localisation-partielle)).
-
-### La description du groupe de source
-
-`[ProvidesErrorsFor]` accepte un `DescriptionResourceType`. Lorsqu’il est renseigné, l’extracteur traite `Description` comme une **clé de ressource** résolue via ce type — le même patron que `[Display(ResourceType = …)]` de DataAnnotations. En son absence, `Description` est un texte littéral.
+La factory runtime peut localiser ses messages publics depuis la même source :
 
 ```csharp
-[ProvidesErrorsFor(nameof(Amount),
-                   Description = "Amount_Source",                        // une clé de ressource…
-                   DescriptionResourceType = typeof(UsageErrorMessages))] // …résolue via ces ressources
+return DomainError.Create(
+        Code.BelowAbsoluteZero,
+        diagnosticMessage: $"Temperature {value} is below absolute zero.")
+    .WithPublicMessage(
+        shortMessage: Messages.Get("Temperature_BelowAbsoluteZero_ShortMessage"),
+        detailedMessage: Messages.Get("Temperature_BelowAbsoluteZero_DetailedMessage"));
 ```
 
-### Les descriptions de clés de contexte
+Le message de diagnostic reste rédigé directement dans la langue interne choisie par le projet.
 
-Une `ErrorContextKey` est enregistrée une seule fois par son nom, mais sa description peut être résolue paresseusement pour suivre la culture courante. Utilisez la surcharge `Func<string?>` de `Create` :
+## Localiser les descriptions de source
+
+`[ProvidesErrorsFor]` peut traiter `Description` comme une clé de ressource lorsque `DescriptionResourceType` est renseigné :
+
+```csharp
+[ProvidesErrorsFor(
+    nameof(Amount),
+    Description = "Amount_Source_Description",
+    DescriptionResourceType = typeof(Messages))]
+public static class InvalidAmountError {
+}
+```
+
+Sans `DescriptionResourceType`, la description est littérale et reste dans sa langue d’écriture.
+
+## Localiser les descriptions de clés de contexte
+
+Le nom de clé reste stable, mais sa description documentaire peut être résolue paresseusement :
 
 ```csharp
 public static readonly ErrorContextKey<DateOnly> TransactionDate =
-    ErrorContextKey.Create<DateOnly>("TRANSACTION_DATE", () => UsageErrorMessages.Get("Bank_TransactionDate_Context"));
+    ErrorContextKey.Create<DateOnly>(
+        "TRANSACTION_DATE",
+        () => Messages.Get("TransactionDate_Context_Description"));
 ```
 
-L’identité de la clé (son nom) reste figée ; seul le texte de la description est différé et lu sous la culture en vigueur au moment de l’extraction.
+On obtient ainsi une prose localisée dans le catalogue sans modifier la clé opérationnelle utilisée dans les logs.
 
-## Niveau 2 — localiser les gabarits des renderers
+## Localiser les gabarits des renderers
 
-Le texte fixe propre à un renderer (titres, libellés, en-têtes de tableau) est localisé au **rendu**, depuis `RenderRequest.Culture`. Le renderer Markdown intégré lit ses chaînes depuis un jeu de `.resx` pour cette culture ; le renderer JSON n’a aucun texte fixe à traduire — ses noms de champs sont un schéma machine, pas de la prose.
-
-Un renderer personnalisé localise son gabarit de la même façon — voir [Écrire son propre renderer](WritingACustomRenderer.fr.md). Le *contenu* des erreurs qu’il reçoit est déjà localisé en amont : un renderer ne localise donc jamais que son propre texte.
-
-## Opt-in et localisation partielle
-
-L’internationalisation n’est jamais imposée :
-
-* Une erreur dont le `[ProvidesErrorsFor]` n’a pas de `DescriptionResourceType` conserve sa `Description` littérale.
-* Une fabrique qui écrit des chaînes en dur (plutôt que de lire des ressources) reste toujours dans cette langue.
-* Sans `--language`, tout est rendu en anglais (la culture invariante), à l’octet près comme avant l’existence de l’i18n.
-
-Un projet ne s’internationalise donc que là où il le souhaite. L’exemple `.Usage` montre les deux extrêmes : `Temperature` est un exemple simple, non localisé, tandis qu’`Amount` et `BankTransactionFileValidator` sont entièrement localisés dans les cinq langues.
-
-## L’utiliser sans la CLI
-
-Lorsque vous pilotez le pipeline vous-même, réglez la **même** culture sur les deux étapes pour que le contenu et les gabarits concordent :
+Un renderer reçoit la culture cible via `RenderRequest.Culture`. Il doit l’utiliser uniquement pour le texte qui lui appartient :
 
 ```csharp
-CultureInfo culture = CultureInfo.GetCultureInfo("sv");
+string heading = RendererResources.GetString(
+    "ErrorCatalogHeading",
+    request.Culture) ?? "Error catalog";
+```
+
+Le catalogue reçu contient déjà le contenu d’erreur localisé. Le traduire une seconde fois mélangerait les responsabilités et pourrait produire une sortie incohérente.
+
+Le renderer JSON garde ses noms de champs invariants : il s’agit d’un contrat machine, pas de prose utilisateur.
+
+Voir [Écrire son propre renderer](WritingACustomRenderer.fr.md).
+
+## La localisation partielle est valide
+
+L’internationalisation n’est pas tout ou rien.
+
+Un projet peut contenir :
+
+- des sources entièrement localisées ;
+- de la documentation rédigée comme littéraux anglais ;
+- des descriptions de source issues de ressources avec des diagnostics fixes ;
+- des renderers traduits dans moins de langues que le contenu applicatif.
+
+Lorsqu’une ressource manque, le fallback appartient à la stratégie de ressources de l’application. Vérifiez qu’une ressource absente ne produit pas silencieusement des titres, règles ou messages publics vides.
+
+## Générer plusieurs langues en CI
+
+Exécutez une génération par langue et publiez des dossiers distincts :
+
+```bash
+fce generate --solution MyApp.sln --no-build \
+  --format markdown --language en --service-name my-api \
+  --output artifacts/errors/en
+
+fce generate --solution MyApp.sln --no-build \
+  --format markdown --language fr --service-name my-api \
+  --output artifacts/errors/fr
+```
+
+Publiez ensemble les langues d’une même version afin que le support puisse changer de langue sans ouvrir la documentation d’un autre déploiement.
+
+Les noms de fichiers et ancres restent invariants, ce qui rend les liens inter-langues prévisibles.
+
+## Utiliser le pipeline programmatiquement
+
+Utilisez la même culture pour l’extraction et le rendu :
+
+```csharp
+CultureInfo culture = CultureInfo.GetCultureInfo("fr");
 
 IEnumerable<ErrorDocumentation> catalog =
     SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(
-        "MyApp.sln", new SolutionGenerationOptions { Culture = culture });
+        "MyApp.sln",
+        new SolutionGenerationOptions { Culture = culture });
 
 RenderRequest request = new(RenderLayouts.Single, culture);
-IReadOnlyList<RenderedDocument> documents = new MarkdownErrorDocumentationRenderer().Render(catalog, request);
+
+IReadOnlyList<RenderedDocument> documents =
+    new MarkdownErrorDocumentationRenderer().Render(catalog, request);
 ```
 
-## Comment la culture traverse le pipeline
+Employer volontairement deux cultures différentes produit une sortie multilingue mélangée et devrait rester exceptionnel.
 
-| Étape | Source de la culture | Ce qu’elle localise |
-| --- | --- | --- |
-| Worker / extraction | `CultureInfo.CurrentUICulture` (réglée depuis `--language`) | le contenu des erreurs (titres, explications, règles, diagnostics, les messages publics court et détaillé, descriptions de source et de contexte) |
-| Renderer | `RenderRequest.Culture` | le texte fixe propre au renderer (titres, libellés, en-têtes de tableau) |
+## Erreurs fréquentes
 
-Le contenu est localisé à l’extraction ; le texte fixe au rendu. Les noms de fichiers, les ancres et le message de diagnostic interne de chaque erreur restent indépendants de la culture.
+### Localiser les codes ou noms de clés
+
+Cela casse clients, dashboards et liens. Localisez les descriptions, jamais les identités.
+
+### Localiser `DiagnosticMessage` selon l’appelant
+
+Les logs d’un même type d’erreur deviennent dépendants de la langue et plus difficiles à rechercher. Gardez une langue interne unique.
+
+### Traduire le contenu applicatif dans un renderer
+
+Le renderer reçoit déjà le contenu localisé. Il possède uniquement son gabarit.
+
+### Croire qu’un littéral est traduit automatiquement
+
+Un littéral reste littéral. Utilisez des ressources lorsque la localisation est nécessaire.
+
+### Publier des langues provenant de builds différents
+
+Les catalogues peuvent décrire des codes différents. Générez toutes les langues depuis les mêmes binaires et la même version.
+
+## Checklist de revue
+
+Avant de publier des catalogues localisés, vérifiez que :
+
+- la prose publique utilise les ressources prévues ;
+- codes, clés, chemins, ancres et schémas restent invariants ;
+- `DiagnosticMessage` reste dans la langue interne choisie ;
+- les descriptions de source et de contexte suivent la culture demandée ;
+- les libellés de renderer utilisent `RenderRequest.Culture` ;
+- le fallback de ressources est explicite et testé ;
+- toutes les langues proviennent des mêmes binaires ;
+- les dossiers de langue sont versionnés et publiés ensemble ;
+- les parcours CLI et programmatiques utilisent la même culture aux deux étapes.
 
 ---
 
