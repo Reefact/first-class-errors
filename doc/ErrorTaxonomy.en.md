@@ -53,17 +53,17 @@ The adapter can wrap the domain cause in a primary-port error:
 
 ```csharp
 DomainError invalidAmount = InvalidAmountError.NegativeValue(request.Amount);
+var innerErrors = new PrimaryPortInnerErrors().Add(invalidAmount);
 
 return PrimaryPortError.Create(
         Code.RequestRejected,
         diagnosticMessage: $"Request {request.Id} contains an invalid amount.",
-        transience: Transience.NonTransient,
-        configureInnerErrors: inner => inner.Add(invalidAmount))
+        innerErrors: innerErrors)
     .WithPublicMessage(
         shortMessage: "The request contains invalid data.");
 ```
 
-The domain error still describes the violated business rule. The primary-port error describes the boundary condition: this incoming interaction is rejected.
+The domain error still describes the violated business rule. The primary-port error describes the boundary condition: this incoming interaction is rejected. When inner errors are supplied, the port error computes its overall transience from them.
 
 ## `SecondaryPortError`: an outgoing interaction failed
 
