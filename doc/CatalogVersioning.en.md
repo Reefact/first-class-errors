@@ -129,15 +129,15 @@ A breaking change is therefore not forbidden; it simply cannot be introduced sil
 
 ## 🧪 Example: renaming a code
 
-A developer renames `PAYMENT.DECLINED` to `PAYMENT.REFUSED` during a refactoring.
+A developer renames `PAYMENT_DECLINED` to `PAYMENT_REFUSED` during a refactoring.
 
 For a consumer, this is not a harmless rename: the old code disappears and a new one appears. The report therefore looks like this:
 
 ```text
 Breaking changes (1):
-  - [removed] PAYMENT.DECLINED — error removed (possibly renamed to 'PAYMENT.REFUSED', which has the same title)
+  - [removed] PAYMENT_DECLINED — error removed (possibly renamed to 'PAYMENT_REFUSED', which has the same title)
 Compatible changes (1):
-  - [added] PAYMENT.REFUSED — new error 'Payment declined' (source: Payment)
+  - [added] PAYMENT_REFUSED — new error 'Payment declined' (source: Payment)
 ```
 
 If the rename was accidental, the developer fixes it. If it was intentional, updating the baseline makes the removal visible in the pull request so reviewers can approve it knowingly.
