@@ -1,130 +1,215 @@
-# CI/CD et intégration opérationnelle
+# Générer et publier le catalogue d’erreurs
 
-🌍 **Langues:**  
+🌍 **Langues :**  
 🇬🇧 [English](./OperationalIntegration.en.md) | 🇫🇷 Français (ce fichier)
 
-FirstClassErrors révèle toute sa valeur lorsqu’il est intégré dans la chaîne de livraison et les outils opérationnels. L’objectif n’est pas seulement de définir la connaissance liée aux erreurs, mais de la rendre automatiquement accessible aux personnes qui en ont besoin : développeurs, équipes de support et opérateurs.
+FirstClassErrors devient réellement utile pour l’exploitation lorsque le catalogue est généré depuis le code exact en cours de build et publié à un endroit accessible aux développeurs, au support et aux opérateurs.
 
-## 📦 La documentation comme artefact de build
+Ce guide couvre la chaîne de livraison. Pour le logging structuré et les diagnostics de production, voir [Logging et intégration opérationnelle](LoggingIntegration.fr.md).
 
-La documentation des erreurs doit être générée automatiquement pendant la CI.
+## Le flux de livraison
 
-Le générateur `fce` est distribué comme outil .NET
-([`FirstClassErrors.Cli`](https://www.nuget.org/packages/FirstClassErrors.Cli)) : un
-pipeline l’installe puis l’exécute comme étapes de build :
+```mermaid
+flowchart LR
+    A[Compiler l’application] --> B[Extraire la connaissance d’erreur]
+    B --> C[Rendre le catalogue]
+    C --> D[Publier l’artefact ou le site]
+    B --> E[Comparer la baseline de contrat]
+```
 
-1. Installer le générateur : `dotnet tool install --global FirstClassErrors.Cli`  
-2. Compiler la solution  
-3. Exécuter le générateur (`fce generate`) pour produire le catalogue d’erreurs (Markdown, HTML ou JSON)  
-4. Le publier comme artefact du pipeline ou le déployer sur un portail documentaire  
+Un pipeline fiable doit :
 
-Concrètement :
+1. compiler l’application ;
+2. générer le catalogue depuis le code compilé ;
+3. publier les fichiers générés ;
+4. éventuellement comparer le contrat courant à une baseline commitée.
+
+## Activer les projets
+
+La génération au niveau solution est opt-in. Ajoutez le marqueur directement dans chaque `.csproj` qui définit des erreurs applicatives documentées :
+
+```xml
+<PropertyGroup>
+  <GenerateErrorDocumentation>true</GenerateErrorDocumentation>
+</PropertyGroup>
+```
+
+Le marqueur est lu dans le fichier projet lui-même. Une valeur héritée de `Directory.Build.props` n’est pas détectée.
+
+Lorsqu’aucun projet n’a opté, le générateur émet un avertissement plutôt que de présenter silencieusement un catalogue vide comme un résultat valide.
+
+Pour les déclarations ambiguës, la découverte de projets et le fonctionnement des workers, voir [Architecture du pipeline de documentation](ArchitectureOfTheDocumentationPipeline.fr.md).
+
+## Générer le catalogue en local
+
+Installez le CLI, compilez, puis générez depuis les binaires existants :
 
 ```bash
 dotnet tool install --global FirstClassErrors.Cli
 dotnet build MyApp.sln -c Release
-fce generate --solution MyApp.sln --no-build \
-             --output artifacts/errors.md --format markdown --service-name my-api
+fce generate \
+  --solution MyApp.sln \
+  --configuration Release \
+  --no-build \
+  --format markdown \
+  --output artifacts/errors.md \
+  --service-name my-api
 ```
 
-La génération est **opt-in par projet** : seuls les projets dont le fichier projet (`.csproj`) définit `<GenerateErrorDocumentation>true</GenerateErrorDocumentation>` sont analysés ; un projet sans cette propriété est silencieusement ignoré. Le marqueur doit figurer dans le `.csproj` lui-même — il est lu directement dans le XML du projet, donc une valeur héritée d’un `Directory.Build.props` partagé n’est pas prise en compte. Quand aucun projet n’a opté, le générateur journalise un avertissement nommant la propriété plutôt que de produire un catalogue vide en silence. Si un pipeline neuf produit un catalogue vide, vérifiez d’abord l’opt-in. Voir [Activer un projet (opt-in)](ArchitectureOfTheDocumentationPipeline.fr.md#activer-un-projet-opt-in).
+`--service-name` est requis pour Markdown et HTML car leurs exemples RFC 9457 utilisent des types de problème comme :
 
-Cela garantit que la documentation correspond toujours à la version du système déployée. Aucune mise à jour manuelle n’est nécessaire et aucune dérive ne peut apparaître.
+```text
+urn:problem:my-api:payment-declined
+```
 
-Vous pouvez produire le catalogue par langue en ajoutant `--language <…>` (par ex. une matrice CI sur `en`, `fr`, `sv`) ; les noms de fichiers et les ancres restent stables d’une langue à l’autre. Voir [Internationalisation](Internationalisation.fr.md).
+La sortie JSON ne nécessite pas de nom de service.
 
-Les exemples publics RFC 9457 portent un `type` de problème de la forme `urn:problem:{service}:{code}`. Fournissez le segment de service avec `--service-name <nom>` (ou `serviceName` dans `fce.json`) ; il est requis pour les formats `markdown` et `html` — `fce generate` échoue avec un message clair lorsqu’il est absent — tandis que `json` (qui ne contient pas cet exemple) n’en a pas besoin.
+## Workflow GitHub Actions recommandé
 
-## 🛡️ Protéger le contrat d'erreurs
+```yaml
+name: error-documentation
 
-Les codes d'erreur et les clés de contexte sont un contrat public : des clients branchent leur logique dessus, des tableaux de bord alertent dessus, des procédures de support y font référence. Une étape de CI peut protéger ce contrat en comparant le catalogue courant à une baseline commitée et en faisant échouer le build quand un code disparaît par accident :
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  generate-error-catalog:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install FirstClassErrors CLI
+        run: dotnet tool install --global FirstClassErrors.Cli
+
+      - name: Build
+        run: dotnet build MyApp.sln -c Release
+
+      - name: Generate catalog
+        run: |
+          fce generate \
+            --solution MyApp.sln \
+            --configuration Release \
+            --no-build \
+            --format html \
+            --layout split \
+            --output artifacts/error-catalog \
+            --service-name my-api
+
+      - name: Publish catalog artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: error-catalog
+          path: artifacts/error-catalog
+```
+
+Le build et la génération utilisent la même configuration. `--no-build` évite que le générateur reconstruise un autre ensemble de binaires.
+
+## Générer plusieurs langues
+
+Exécutez une génération par locale :
+
+```yaml
+strategy:
+  matrix:
+    language: [en, fr]
+
+steps:
+  # checkout, setup, installation et build omis
+
+  - name: Generate ${{ matrix.language }} catalog
+    run: |
+      fce generate \
+        --solution MyApp.sln \
+        --configuration Release \
+        --no-build \
+        --format html \
+        --layout split \
+        --language "${{ matrix.language }}" \
+        --output "artifacts/error-catalog-${{ matrix.language }}" \
+        --service-name my-api
+```
+
+Les noms de fichiers et les ancres restent stables d’une langue à l’autre. Voir [Internationalisation](Internationalisation.fr.md) pour la localisation du contenu et des templates de renderer.
+
+## Choisir une cible de publication
+
+Le catalogue généré peut être :
+
+- conservé comme artefact de pipeline ;
+- attaché à une release ;
+- déployé comme site statique ;
+- copié dans un portail documentaire interne ;
+- publié à côté de la documentation opérationnelle du service.
+
+La plateforme importe moins que l’accessibilité : le catalogue correspondant à une version déployée doit être atteignable par les personnes qui investiguent cette version.
+
+## Conserver des catalogues versionnés
+
+Un site « latest » est pratique au quotidien, mais n’explique plus correctement une ancienne release de production après l’évolution du contrat.
+
+Pour les systèmes durables ou critiques pour le support, publiez au moins une forme immuable par release :
+
+```text
+/errors/latest/
+/errors/releases/2.4.0/
+/errors/releases/2.3.1/
+```
+
+Un `InstanceId`, une version de déploiement ou un tag de release peut alors mener le support vers la documentation correspondante.
+
+## Protéger le contrat d’erreurs
+
+La génération répond à « que documente cette version ? ». Le versionnage répond à « cette version casse-t-elle un contrat déjà accepté ? ».
 
 ```bash
-fce catalog diff --solution MyApp.sln
+fce catalog diff --solution MyApp.sln --configuration Release --no-build
 ```
 
-Voir [Versionnage du catalogue](CatalogVersioning.fr.md) pour le workflow de baseline, la classification des changements et la sémantique des codes de sortie.
+Conservez la baseline acceptée dans le dépôt et exécutez la comparaison dans les pull requests.
 
-## 🌍 Publication de la documentation
+Voir :
 
-La documentation générée peut être :
+- [Versionnage du catalogue](CatalogVersioning.fr.md) pour le modèle mental et le workflow quotidien ;
+- [Intégration CI/CD du versionnage](CatalogVersioningCI.fr.md) pour les exemples complets GitHub Actions et GitLab.
 
-* publiée sur un portail documentaire interne  
-* exposée via un site statique  
-* attachée aux artefacts de release  
+## Politique d’échec
 
-Le principe clé est :
+Traitez séparément les situations suivantes :
 
-> La documentation doit être accessible aux personnes qui investiguent les incidents en production.
+| Situation | Signification dans le pipeline |
+| --- | --- |
+| le build applicatif échoue | le produit ne peut pas être construit |
+| l’extraction ou le rendu échoue | le catalogue n’est pas fiable |
+| aucun projet n’a opté | la configuration est incomplète ou la solution ne contient volontairement aucun projet documenté |
+| le contrat du catalogue casse | une revue humaine est nécessaire avant acceptation |
+| la publication échoue | la documentation reste indisponible malgré une génération réussie |
 
-## 📜 Intégration avec les logs
+Ne masquez pas les erreurs d’extraction ou de publication avec `continue-on-error` dans un pipeline qui promet une documentation opérationnelle.
 
-FirstClassErrors est conçu pour s’intégrer naturellement avec le logging structuré.
+## Checklist de revue
 
-Les logs peuvent inclure :
+Avant d’approuver un pipeline de livraison du catalogue, vérifiez que :
 
-* le code d'erreur
-* l'identifiant unique de l'erreur
-* l'horodatage de l'occurrence
-* le contexte d’erreur
-
-Cela rend les logs non seulement lisibles, mais aussi corrélables entre systèmes.
-
-## 🔍 Logging des inner errors
-
-Par défaut, la plupart des configurations de logging traitent les exceptions comme de simples messages ou des stack traces. Elles ne parcourent pas automatiquement l’information de diagnostic portée par une `DiagnosableException` de manière structurée et exploitable pour l’analyse.
-
-Une `DiagnosableException` ne renseigne pas `Exception.InnerException` ; la chaîne de diagnostic vit plutôt sur son `Error`. Via `exception.Error.InnerErrors` (une liste d’`Error`), un filtre de logging ou un middleware devrait explicitement parcourir et logger cette chaîne. Sans cela, une partie de l’information de diagnostic portée par le modèle peut rester inutilisée dans les logs.
-
-Ce filtre peut :
-
-* détecter les `DiagnosableException`  
-* lire son `.Error`  
-* parcourir `Error.InnerErrors` et logger toute la chaîne de manière structurée  
-
-Cela préserve la profondeur diagnostique et garantit que la richesse du modèle d’erreur est réellement visible dans les logs opérationnels.
-
-## 🔗 Lier les logs à la documentation
-
-Un pattern puissant consiste à enrichir l’exception levée (via son `Error`) avec une URL vers la documentation.
-
-Lors de la génération de la documentation, chaque erreur peut être associée à une page ou une ancre. Un filtre de logging peut alors renseigner :
-
-```
-exception.HelpLink = "https://docs.mycompany/errors/AMOUNT_CURRENCY_MISMATCH"
-```
-
-Les logs de production deviennent ainsi navigables : le support peut passer directement d’une entrée de log à la documentation correspondante de l’erreur.
-
-## 🧩 Complémentaire au logging structuré
-
-FirstClassErrors ne remplace ni le logging structuré, ni les scopes, ni les correlation IDs.
-
-Il les complète :
-
-* logging structuré → contexte technique  
-* scopes → contexte d’exécution  
-* FirstClassErrors → signification sémantique de l’erreur  
-
-Ensemble, ils donnent une vision complète de ce qui s’est passé.
-
-## 🎯 L’objectif
-
-L’intégration industrielle transforme les erreurs en langage opérationnel partagé.
-
-Les erreurs deviennent :
-
-* documentées  
-* traçables  
-* recherchables  
-* exploitables  
-
-**automatiquement**, dans le cadre du processus de build et de livraison — sans dépendre d’efforts manuels de documentation.
+- les projets activés déclarent le marqueur dans leur propre `.csproj` ;
+- la génération utilise les mêmes binaires et la même configuration que le build applicatif ;
+- `--service-name` est fourni pour Markdown ou HTML ;
+- les fichiers générés sont publiés à un endroit accessible ;
+- les sorties par langue ne s’écrasent pas ;
+- les releases peuvent conserver une documentation immuable ;
+- la comparaison de contrat reste distincte du rendu du catalogue ;
+- les échecs de génération et de publication sont visibles.
 
 ---
 
 <div align="center">
-<a href="Testing.fr.md">← Guide des tests</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="CatalogVersioning.fr.md">Versionnage du catalogue →</a>
+<a href="DeterministicTesting.fr.md">← Tests d’erreur déterministes</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="LoggingIntegration.fr.md">Logging et intégration opérationnelle →</a>
 </div>
 
 ---
