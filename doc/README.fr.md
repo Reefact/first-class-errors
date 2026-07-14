@@ -61,6 +61,10 @@ public static class InvalidAmountOperationError {
         return DescribeError.WithTitle("Incohérence de devise")
                             .WithDescription("Cette erreur survient lorsqu’une opération combine des montants exprimés dans des devises différentes.")
                             .WithRule("Une opération monétaire doit utiliser une devise commune.")
+                            .WithDiagnostic(
+                                "Les montants ont atteint l’opération sans avoir été convertis dans une devise commune.",
+                                ErrorOrigin.Internal,
+                                "Vérifiez à quel endroit les montants auraient dû être convertis avant cette opération.")
                             .WithExamples(() => CurrencyMismatch(
                                 new Amount(10, Currency.EUR),
                                 new Amount(12, Currency.USD)));
