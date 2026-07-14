@@ -80,7 +80,9 @@ jobs:
       # to exercise instead of leaving it to be inferred. It then guards: only a runtime newer than the .NET 10 build
       # SDK proves anything, so if the preview install did not yield one the run skips neutrally rather than
       # false-passing on .NET 10. fce runs with --verbose, so the worker additionally logs the exact runtime it bound
-      # to (its "Documenting '…' on .NET <version>." banner).
+      # to (its "Documenting '…' on .NET <version>." banner); that banner is ASSERTED against the highest major, so
+      # fce silently binding an older runtime it also had — e.g. if the roll-forward env were dropped — turns the run
+      # red rather than passing green.
       - name: Generate documentation on the preview runtime
         if: steps.preview.outcome == 'success'
         env:
@@ -96,13 +98,30 @@ jobs:
             echo "::notice::no runtime newer than the .NET 10 build SDK is installed; skipping this run"
             exit 0
           fi
+          # Capture fce's diagnostics (stderr) so the worker's runtime banner can be asserted, not just read. The
+          # set +e around the call keeps a genuine fce failure from aborting before those diagnostics are echoed.
+          set +e
           dotnet FirstClassErrors.Cli/bin/Release/net8.0/fce.dll generate \
             --assemblies FirstClassErrors.Usage/bin/Release/net8.0/FirstClassErrors.Usage.dll \
-            --format json --verbose > canary-catalog.json
-          # Positive proof, not just exit 0: the worker actually loaded the target and extracted documented errors.
+            --format json --verbose > canary-catalog.json 2> canary-diag.log
+          fce_rc=$?
+          set -e
+          cat canary-diag.log
+          if [ "$fce_rc" -ne 0 ]; then
+            echo "::error::fce failed on the .NET ${newest} preview runtime (exit ${fce_rc})"
+            exit 1
+          fi
+          # Proof 1: the worker loaded the target and extracted documented errors.
           if ! grep -q '"code"' canary-catalog.json; then
-            echo "::error::the net8 tooling failed to document a target on the .NET preview runtime"
+            echo "::error::the net8 tooling produced no documented errors on the .NET ${newest} preview runtime"
             cat canary-catalog.json
+            exit 1
+          fi
+          # Proof 2 (the whole point of the canary): the worker's own runtime banner confirms it bound to the NEWEST
+          # installed major, not a lower one it also had available. Without this, fce silently running on .NET 10
+          # would still document the target and pass green.
+          if ! grep -qE "Documenting .* on \.NET ${newest}\." canary-diag.log; then
+            echo "::error::fce did not report running on .NET ${newest} (see the banner above); the preview roll-forward may be broken"
             exit 1
           fi
           echo "ok: the net8 fce and worker documented a net8 target on the .NET ${newest} preview runtime"
