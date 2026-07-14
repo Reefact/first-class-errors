@@ -3,24 +3,97 @@
 🌍 **Languages:**  
 🇬🇧 English (this file) | 🇫🇷 [Français](./DesignPrinciples.fr.md)
 
-FirstClassErrors is built on the idea that errors are not accidental by-products of code, but meaningful parts of the system’s knowledge. In many applications, errors are treated as technical noise — something to log, catch, or hide. This library takes the opposite stance: when an error is expressed, it reveals something about the rules, assumptions, and boundaries of the system.
+FirstClassErrors is built around five principles. Each one has a direct consequence in the API and in the way errors are written.
 
-An **error** is not merely a failure of execution. It represents a situation the system recognizes and gives a name to. By turning error situations into explicit concepts — through factory methods, codes, diagnostics, and documentation — the system becomes more readable, more explainable, and more supportable.
+## 1. An error is a recognized situation
 
-Another core principle is that documentation must not drift away from behavior. Traditional documentation lives in external files and slowly becomes outdated. Here, documentation is defined next to the code that creates the error. This proximity ensures that knowledge evolves with the system itself. If behavior changes, the documentation changes with it, because they share the same source.
+An error is not merely a message emitted after something failed. It is a situation the system recognizes and gives a stable name.
 
-Diagnostics are not post-mortem analysis; they are structured hypotheses. The goal is not to assign blame or determine root causes in advance, but to provide meaningful starting points for investigation. Errors describe what is known, not what is assumed.
+```csharp
+InvalidAmountOperationError.CurrencyMismatch(left, right)
+```
 
-The library also separates semantics from mechanics. Throwing, catching, logging, or transporting errors are mechanical concerns. The meaning of an error — what rule was violated, what situation occurred, what might explain it — belongs to the domain of knowledge. FirstClassErrors focuses on preserving that meaning, regardless of how the error travels through the system.
+The factory name expresses the situation for humans. Its `ErrorCode` gives the same situation a stable identity for clients, logs, dashboards, and documentation.
 
-Finally, the design acknowledges that not every failure should be exceptional in the runtime sense. Some errors are expected parts of normal flow, such as validation failures or parsing issues. By allowing errors to be carried as structured data through `Outcome<T>` instead of thrown, the model supports both throwing and non-throwing flows without losing semantic richness.
+**Consequence:** one factory represents one precise error situation. Avoid generic factories such as `InvalidOperation(...)` that hide several unrelated failures behind one name.
 
-In essence, the library encourages teams to treat errors as first-class knowledge artifacts. When errors are explicit, documented, and structured, they improve communication between developers, support teams, and the system itself.
+## 2. The error is the model; the exception is a transport
+
+Throwing is one way to move an error through the system, not the definition of the error itself.
+
+```csharp
+Error error = InvalidAmountOperationError.CurrencyMismatch(left, right);
+
+throw error.ToException();
+```
+
+The same error can instead be carried as data:
+
+```csharp
+return Outcome<Amount>.Failure(error);
+```
+
+**Consequence:** model the meaning once, then choose the transport according to the flow. Use an exception when execution cannot continue normally; use `Outcome<T>` when failure is expected and should be handled explicitly.
+
+## 3. Public and internal information must remain separate
+
+A useful diagnostic message often contains identifiers, offending values, or internal state. That information must not accidentally become an API response.
+
+FirstClassErrors separates:
+
+- public messages intended for users or API clients;
+- an internal diagnostic message intended for logs, support, and developers.
+
+The staged builder enforces that distinction when the error is created.
+
+**Consequence:** public messages remain safe and controlled, while diagnostics can still contain the detail required for investigation.
+
+## 4. Documentation belongs beside behavior
+
+Documentation written far from the code eventually drifts. FirstClassErrors links each factory to structured documentation in the same class:
+
+```csharp
+[DocumentedBy(nameof(CurrencyMismatchDocumentation))]
+internal static DomainError CurrencyMismatch(...) { ... }
+```
+
+The documentation method describes the situation, rule, diagnostic hypotheses, and executable examples.
+
+**Consequence:** changing an error situation naturally brings its construction and documentation into the same review. The catalog is generated from the code rather than maintained as a second source of truth.
+
+## 5. Diagnostics are hypotheses, not verdicts
+
+At the moment an error is defined, its exact root cause is often unknown. Useful documentation should therefore propose plausible explanations and investigation leads without assigning blame.
+
+Prefer:
+
+> The amounts reached the operation without being converted to one currency.
+
+Over:
+
+> The developer forgot to convert the amounts.
+
+**Consequence:** diagnostics describe observable states and direct investigation. They do not encode support procedures, claim certainty, or accuse a person or system.
+
+## The resulting model
+
+These principles work together:
+
+```mermaid
+flowchart LR
+    A[Named factory] --> B[Structured Error]
+    B --> C[Exception]
+    B --> D[Outcome]
+    A --> E[Structured documentation]
+    E --> F[Generated catalog]
+```
+
+The factory defines one meaningful situation. The `Error` preserves that meaning whichever transport is chosen, and the linked documentation makes the same knowledge available outside the runtime flow.
 
 ---
 
 <div align="center">
-<a href="GettingStarted.en.md">← Getting Started</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="WhenNotToUseFirstClassErrors.en.md">When Not to Use FirstClassErrors →</a>
+<a href="GettingStarted.en.md">← Getting Started</a> · <a href="../README.md#-documentation">↑ Table of contents</a> · <a href="WhenNotToUseFirstClassErrors.en.md">When Not to Use FirstClassErrors →</a>
 </div>
 
 ---
