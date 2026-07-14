@@ -14,7 +14,7 @@ flowchart LR
     A[Operation] --> B{Success?}
     B -->|yes| C[Outcome or Outcome<T> success]
     B -->|no| D[Outcome or Outcome<T> failure carrying Error]
-    C --> E[Continue or read Value]
+    C --> E[Continue or retrieve the result]
     D --> F[Handle, recover, propagate, or throw]
 ```
 
@@ -67,12 +67,13 @@ if (result.IsFailure) {
     return;
 }
 
-Process(result.Value);
+Amount amount = result.GetResultOrThrow();
+Process(amount);
 ```
 
-On success, `Outcome<T>.Value` contains the result. On failure, `Error` contains the structured failure.
+On failure, `Error` contains the structured failure. After success has been established, `GetResultOrThrow()` returns the result without throwing.
 
-Do not read `Value` before establishing success. Prefer a pipeline or `GetResultOrThrow()` when that makes the control flow clearer.
+Prefer a pipeline when that makes the control flow clearer.
 
 ## `Then`: continue only after success
 
