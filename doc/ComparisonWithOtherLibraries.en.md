@@ -3,93 +3,177 @@
 🌍 **Languages:**  
 🇬🇧 English (this file) | 🇫🇷 [Français](./ComparisonWithOtherLibraries.fr.md)
 
-[ErrorOr](https://github.com/amantinband/error-or) and [FluentResults](https://github.com/altmann/FluentResults) are excellent, mature libraries. If your goal is a lightweight *Result* type — returning errors as values instead of throwing — they are focused, well-adopted choices for exactly that.
+> Comparison reviewed on **2026-07-14** against the public documentation of [ErrorOr](https://github.com/error-or/error-or) and [FluentResults](https://github.com/altmann/FluentResults). Their APIs and goals may evolve; verify their current documentation before making a long-term choice.
 
-FirstClassErrors answers a **different question**. It is not primarily a *Result* library: it is a way to make errors **first-class, documented and diagnosable knowledge** about your system — errors you can *carry* as values **or** *throw* as exceptions, using one and the same model.
+ErrorOr, FluentResults, and FirstClassErrors all help applications represent failure explicitly, but they optimize for different primary goals.
 
-This page highlights what FirstClassErrors does differently.
+This page does not rank them. It shows the same situation through three different centres of gravity so you can choose the model that best matches your system.
 
-## 🎯 A different centre of gravity
+## The scenario
 
-| Library | The question it answers |
-|---|---|
-| **ErrorOr** | *How do I return one or more errors as a value instead of throwing?* |
-| **FluentResults** | *How do I return a result carrying errors, successes and causal reasons?* |
-| **FirstClassErrors** | *How do I turn errors into documented, diagnosable knowledge — and move them through my system however each layer needs?* |
+A payment provider refuses an authorization request. The application needs to:
 
-For ErrorOr and FluentResults, the **error is a payload of the result type**. For FirstClassErrors, the **error is the model**, and the result type (`Outcome`) is just one of several ways to transport it.
+- return a failure without crashing the process;
+- expose a safe message to the caller;
+- preserve an internal diagnostic message;
+- keep a stable code for logs and support;
+- possibly document how the failure should be investigated.
 
-## 🧩 One error model, three transports
+## ErrorOr: a discriminated union of value or errors
 
-The `Error` model is decoupled from the way it travels. The *same* error can be:
+ErrorOr centres the API on `ErrorOr<T>`, which carries either a successful value or one or more errors.
 
-- kept as **data** — an `Error` value you inspect, log or enrich;
-- **thrown** — turned into a typed exception with `error.ToException()`, then caught and routed by type;
-- **carried** — wrapped in an `Outcome` / `Outcome<T>` and composed without throwing.
+```csharp
+private static readonly Error PaymentDeclined = Error.Failure(
+    code: "PAYMENT_DECLINED",
+    description: "The payment was declined.");
 
-Bridges connect all three, so you are never locked into one style. You can *carry* errors inside your domain and *throw* them at a boundary — with **the same error object**, no re-modeling in between.
+public ErrorOr<Receipt> Pay(Order order)
+{
+    if (provider.Declines(order))
+    {
+        return PaymentDeclined;
+    }
 
-ErrorOr and FluentResults are, by design, *errors-as-values only*: the error is coupled to the result type and the model deliberately avoids throwing. FirstClassErrors treats the exception path as a **first-class citizen** alongside the value path.
+    return new Receipt(order.Id);
+}
+```
 
-## 📖 Errors that carry meaning, not just an identifier
+A caller can inspect, match, switch on, or compose the result. Built-in error types and metadata support categorization and application-specific information.
 
-An ErrorOr `Error` is a code, a description, a `Type` and a metadata bag. A FluentResults error is a message with metadata and nested reasons. That is enough to *handle* an error at runtime.
+Choose this style when the central need is an ergonomic value-or-errors flow, especially when multiple validation errors or HTTP-oriented result handling are important.
 
-A FirstClassErrors error is described for **humans**: a title, a plain-language explanation, the **business rule** that was violated, and representative examples. The error stops being a technical token and becomes something a developer — or a support engineer — can actually *understand*.
+## FluentResults: a result with reasons and metadata
 
-## 🔎 Diagnostics built for investigation
+FluentResults centres the API on `Result` and `Result<T>`. Failures carry one or more reasons, and reasons can contain metadata and nested causes.
 
-Where the others *classify* an error (an `ErrorType` enum, a metadata entry), FirstClassErrors lets an error declare **how to investigate it**:
+```csharp
+public Result<Receipt> Pay(Order order)
+{
+    if (provider.Declines(order))
+    {
+        return Result.Fail<Receipt>(
+            new Error("The payment was declined.")
+                .WithMetadata("Code", "PAYMENT_DECLINED"));
+    }
 
-- one or more **possible causes**;
-- the likely **origin** of each one (`Internal`, `External`, `InternalOrExternal`);
-- an **analysis lead** — where to start looking.
+    return Result.Ok(new Receipt(order.Id));
+}
+```
 
-This turns the error from *"what failed"* into *"what probably went wrong, and where to begin"* — the difference between an error message and an on-call runbook.
+The reasons model is useful when an application needs rich success and failure chains, metadata, and configurable result handling.
 
-## 📚 Documentation generated from your code
+Choose this style when the result and its reason graph are the primary abstraction you want to compose.
 
-Because errors are described in code with the `DescribeError` DSL, their documentation is **generated automatically into an error catalog** — a living reference that stays in sync with the code and is ready for developers and support teams alike.
+## FirstClassErrors: an error model with several transports
 
-Neither ErrorOr nor FluentResults produces documentation from your error definitions; the description lives, at best, in scattered strings and metadata. Here, **documenting an error and defining it are the same act**.
+FirstClassErrors centres the API on the error itself. `Outcome<T>` is one transport, and `ToException()` is another.
 
-## 🎚️ Fluent where it helps, plain code where it doesn't
+```csharp
+internal static DomainError PaymentDeclined(
+    string providerCode,
+    Guid paymentId)
+{
+    return DomainError.Create(
+            Code.PaymentDeclined,
+            diagnosticMessage:
+                $"Provider refused payment {paymentId} with code {providerCode}.",
+            configureContext: context =>
+                context.Add(ContextKey.PaymentId, paymentId))
+        .WithPublicMessage(
+            shortMessage: "The payment was declined.",
+            detailedMessage:
+                "Use another payment method or contact your bank.");
+}
+```
 
-`Outcome` offers a fluent pipeline (`Then`, `To`, `Recover`, `Finally`) to compose steps without throwing — use it when it genuinely makes the flow clearer.
+```csharp
+public Outcome<Receipt> Pay(Order order)
+{
+    if (provider.Declines(order, out string providerCode))
+    {
+        return Outcome<Receipt>.Failure(
+            PaymentError.PaymentDeclined(providerCode, order.PaymentId));
+    }
 
-But that pipeline is an **optional transport, not the centre of gravity**. When a plain `if` returning a well-named domain error reads closer to the business, FirstClassErrors encourages you to *write that instead*. Your error handling stays at **business altitude**; you are never pushed into long fluent chains just to remain "idiomatic".
+    return Outcome<Receipt>.Success(new Receipt(order.Id));
+}
+```
 
-Railway-oriented result libraries tend to make the fluent pipeline the primary idiom. Here, the pipeline serves the error — not the other way around.
+The same factory can also feed exception flow:
 
-## 🏛️ Architecture- and operations-aware
+```csharp
+throw PaymentError
+    .PaymentDeclined(providerCode, paymentId)
+    .ToException();
+```
 
-The model speaks the language of layered / hexagonal design out of the box:
+The error can additionally be linked to structured documentation describing its title, rule, possible causes, analysis leads, and examples. The generated catalog and catalog-versioning workflow are part of the library's intended use.
 
-- a taxonomy of `DomainError`, `InfrastructureError`, and primary / secondary **port** errors;
-- infrastructure concerns such as `Transience` (transient / non-transient) and `InteractionDirection` (incoming / outgoing);
-- an **occurrence identity** on every error — a unique `InstanceId` and a UTC timestamp — to correlate logs and diagnostic events.
+Choose this style when the error definition itself must remain stable, documented, diagnosable, and independent from whether a caller returns or throws it.
 
-ErrorOr and FluentResults are deliberately architecture-agnostic and keep the error lightweight; these concepts are simply outside their scope.
+## What changes between the approaches?
 
-## 📊 At a glance
+| Concern | ErrorOr | FluentResults | FirstClassErrors |
+| --- | --- | --- | --- |
+| Primary abstraction | value or errors | result with reasons | structured error |
+| Value-based failure flow | central | central | available through `Outcome` |
+| Multiple errors or reasons | built in | built in | modeled through inner errors or application aggregation |
+| Metadata / occurrence facts | metadata | metadata | typed `ErrorContext` |
+| Dedicated public vs internal messages | application-defined | application-defined | explicit in the core model |
+| Typed exception transport from the same error | not the primary model | not the primary model | built in through `ToException()` |
+| Domain / infrastructure / port taxonomy | application-defined | application-defined | built in |
+| Transience and interaction direction | application-defined | application-defined | built in for infrastructure errors |
+| Generated human documentation | outside the library's main scope | outside the library's main scope | built in |
+| Catalog compatibility checks | outside the library's main scope | outside the library's main scope | built in |
 
-| | FirstClassErrors | ErrorOr | FluentResults |
-|---|:---:|:---:|:---:|
-| Return errors as values (railway style) | ✅ (optional) | ✅ | ✅ |
-| Throw the *same* error as a typed exception | ✅ | ➖ | ➖ |
-| Human-facing error model (title, business rule, explanation) | ✅ | ➖ | ➖ |
-| Diagnostics: cause + origin + analysis lead | ✅ | ➖ | ➖ |
-| Documentation generated from the code | ✅ | ➖ | ➖ |
-| Architecture taxonomy (domain / infrastructure / port) | ✅ | ➖ | ➖ |
-| Per-occurrence identity (id + timestamp) | ✅ | ➖ | ➖ |
-| Fluent pipeline | Optional, by design | Central | Central |
+“Application-defined” or “outside the main scope” does not mean impossible. It means the concern is not the library's central abstraction and may be implemented by application conventions or surrounding tooling.
 
-*➖ means "not a goal of that library", not "done badly": ErrorOr and FluentResults are focused on being lean result types.*
+## Decision guide
 
-## 🧭 Which one should you pick?
+Choose **ErrorOr** when:
 
-- Reach for **ErrorOr** when you want a tiny, ergonomic result type with clean, HTTP-friendly error categorization.
-- Reach for **FluentResults** when you want a result carrying rich reason chains and metadata.
-- Reach for **FirstClassErrors** when you want your errors to be **documented, diagnosable knowledge** — described once in code, carried as values or thrown as exceptions, and turned into a catalog your whole team can rely on.
+- you primarily want a concise `T`-or-errors union;
+- multiple validation errors are common;
+- matching and functional composition are the main interaction style;
+- a lightweight error representation is sufficient.
 
-They are not really competing for the same job: the first two make errors easy to *return*; FirstClassErrors makes them easy to *understand, support and document*.
+Choose **FluentResults** when:
+
+- you want both success and failure reasons;
+- nested reason chains and metadata are central;
+- the result graph itself is the model you want to enrich and compose.
+
+Choose **FirstClassErrors** when:
+
+- errors are durable concepts used by developers, support, operations, or clients;
+- public and diagnostic messages must have explicit audiences;
+- the same error must travel as data, an outcome, or an exception;
+- domain and infrastructure failures require different operational meaning;
+- generated documentation and compatibility checks are part of the requirement.
+
+## A combination may also be valid
+
+These choices are not always exclusive. An application may use a general-purpose result library at some boundaries while keeping a separate documented error catalog.
+
+Before combining models, decide which type owns the stable error identity. Duplicating codes, messages, metadata, and mappings across two competing error models usually creates more work than it saves.
+
+## Questions to ask before choosing
+
+1. Is the primary problem **control flow**, **reason composition**, or **shared error knowledge**?
+2. Must one error definition support both return and exception paths?
+3. Who consumes the error model: only code, or also support and operations?
+4. Are stable codes and context keys treated as a versioned contract?
+5. Is generated documentation a requirement or an external concern?
+6. Does the application need built-in domain and infrastructure semantics?
+7. How much convention are you prepared to build around a smaller result type?
+
+The best choice is the smallest model that covers the real requirements without forcing the application to recreate its missing semantics elsewhere.
+
+---
+
+<div align="center">
+<a href="Internationalization.en.md">← Internationalization</a> · <a href="DocumentationMap.en.md">Documentation map</a> · <a href="FAQ.en.md">FAQ →</a>
+</div>
+
+---
