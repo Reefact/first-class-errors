@@ -3,18 +3,30 @@
 🌍 **Languages:**  
 🇬🇧 English (this file) | 🇫🇷 [Français](./UsagePatterns.fr.md)
 
-FirstClassErrors is most useful when errors are not just technical failures, but **meaningful events in the life of the system**.
-Below are common patterns where the library brings clarity and structure.
+FirstClassErrors supports both exceptions and errors carried as data. The important decision is not which syntax you prefer, but **what the failure means in the current flow**.
 
-## 🧱 1️. Value Object invariants
+This guide helps you choose the appropriate pattern. For the complete `Outcome` API and pipeline composition, see [Composing with Outcome](OutcomeGuide.en.md).
 
-When creating a value object, invalid states must be rejected.
+## 🧭 Choose from the meaning of the failure
+
+| Situation | Recommended representation | Why |
+| --- | --- | --- |
+| A domain invariant is violated and the operation cannot continue | throw a `DomainError` through `.ToException()` | the failure interrupts the current operation and belongs to the domain |
+| Invalid input is an expected result of validation or parsing | return `Outcome<T>.Failure(...)` | callers can handle the failure without exception-based control flow |
+| One item fails inside a batch | return an `Outcome<T>` for each item | one failure does not need to abort the whole batch |
+| An incoming boundary rejects an interaction | use a `PrimaryPortError` | it preserves the incoming direction and any underlying domain cause |
+| An outgoing dependency fails | use a `SecondaryPortError` | it preserves outgoing direction and transience |
+| A failure must cross an application boundary as an exception | call `ThrowIfFailure()` or `GetResultOrThrow()` at that boundary | the error remains data until the chosen escalation point |
+
+The same documented error factory may be used in more than one transport. The error describes **what happened**; throwing or returning it describes **how this caller chooses to propagate it**.
+
+## 🧱 Domain invariants
+
+A value object or entity must not enter an invalid state. When construction or an operation cannot continue, throw the documented domain error.
 
 ```csharp
-public static Amount From(decimal value, Currency currency)
-{
-    if (value < 0)
-    {
+public static Amount From(decimal value, Currency currency) {
+    if (value < 0) {
         throw InvalidAmountOperationError.NegativeAmount(value).ToException();
     }
 
@@ -22,48 +34,15 @@ public static Amount From(decimal value, Currency currency)
 }
 ```
 
-Here:
+The happy path stays readable, while the factory centralizes the error code, messages, context, and documentation.
 
-* the domain rule is explicit
-* the exception represents a precise invariant violation
-* documentation describes the rule and diagnostics
+## 🧮 Domain operations
 
-This keeps domain code expressive and self-explanatory.
-
-## 📥 2. Input validation (API / UI)
-
-User or external inputs may be invalid, but not exceptional in the technical sense.
+Operations between valid domain objects may still violate a rule.
 
 ```csharp
-public Outcome<Amount> TryCreateAmount(decimal value, string currencyCode)
-{
-    if (!Currency.TryParse(currencyCode, out var currency))
-    {
-        return Outcome<Amount>.Failure(
-            InvalidAmountOperationError.UnknownCurrency(currencyCode));
-    }
-
-    return Outcome<Amount>.Success(new Amount(value, currency));
-}
-```
-
-Errors are:
-
-* captured
-* transportable
-* diagnosable
-
-without interrupting the flow.
-
-## 🧮 3️. Domain operations
-
-Operations between domain objects often have semantic constraints.
-
-```csharp
-public Amount Add(Amount other)
-{
-    if (Currency != other.Currency)
-    {
+public Amount Add(Amount other) {
+    if (Currency != other.Currency) {
         throw InvalidAmountOperationError.CurrencyMismatch(this, other).ToException();
     }
 
@@ -71,20 +50,40 @@ public Amount Add(Amount other)
 }
 ```
 
-The code reads like domain language, while the error remains structured and documented.
+Use a precise factory name rather than a generic exception such as `InvalidOperationException`. The code should say which domain situation occurred.
 
-## 📦 4️. Batch or file processing
+## 📥 Expected validation failures
 
-In batch processing, many items may fail independently.
+User input, parsing, and business validation often fail as part of normal application flow. Return the error as data when the caller is expected to decide what happens next.
 
 ```csharp
-foreach (var line in file)
-{
-    var result = TryParseAmount(line);
+public Outcome<Amount> TryCreateAmount(decimal value, string currencyCode) {
+    if (!Currency.TryParse(currencyCode, out Currency currency)) {
+        return Outcome<Amount>.Failure(
+            InvalidAmountOperationError.UnknownCurrency(currencyCode));
+    }
 
-    if (result.IsFailure)
-    {
-        Log(result.Error);
+    if (value < 0) {
+        return Outcome<Amount>.Failure(
+            InvalidAmountOperationError.NegativeAmount(value));
+    }
+
+    return Outcome<Amount>.Success(new Amount(value, currency));
+}
+```
+
+The failure still carries the same structured `Error`; it is simply not thrown at this stage.
+
+## 📦 Batch and file processing
+
+In a batch, each item can fail independently. Handle each `Outcome<T>` and continue when that matches the business requirement.
+
+```csharp
+foreach (string line in file) {
+    Outcome<Amount> result = TryParseAmount(line);
+
+    if (result.IsFailure) {
+        Log(result.Error!);
         continue;
     }
 
@@ -92,125 +91,87 @@ foreach (var line in file)
 }
 ```
 
-Errors are:
+This pattern is appropriate only when continuing is intentional. If one invalid item invalidates the entire file, return or throw a file-level error instead.
 
-* collected
-* logged with full diagnostics
-* not disruptive to the entire process
+## 🌐 Incoming boundaries
 
-## 🌐 5️. Integration boundaries
-
-When interacting with external systems:
-
-* data may be inconsistent
-* formats may change
-* assumptions may break
-
-Using first-class errors helps distinguish:
-
-* domain issues
-* input issues
-* system or transformation issues
-
-Diagnostics guide where investigation should start.
-
-## 🔁 6️. Validation pipelines
-
-Complex validations often involve multiple checks.
+An incoming adapter may reject an interaction because mapping, validation, or domain construction failed.
 
 ```csharp
-var result = ValidateAmount(amount)
-             .Then(CheckCurrency)
-             .Then(CheckLimits);
+DomainError invalidAmount = InvalidAmountOperationError.NegativeAmount(request.Amount);
+
+return PrimaryPortError.Create(
+        Code.RequestRejected,
+        diagnosticMessage: $"Request {request.Id} contains an invalid amount.",
+        new PrimaryPortInnerErrors().Add(invalidAmount),
+        configureContext: ctx => ctx.Add(ErrCtxKey.RequestId, request.Id))
+    .WithPublicMessage(
+        shortMessage: "The request contains invalid data.");
 ```
 
-Each failure carries an `Error`, keeping the model consistent while avoiding uncontrolled throwing.
+The domain error explains the violated rule. The primary-port error explains the boundary-level outcome. See [Error Taxonomy and Composition](ErrorTaxonomy.en.md) for the nesting rules.
 
-## 🧩 7️. Support-oriented logging
+## 🔌 Outgoing dependencies
 
-Because errors carry structured diagnostics, logs become more useful:
-
-* stable error codes
-* meaningful short messages
-* documented causes
-
-Support teams can relate runtime events to documented error cases.
-
-## 🛠️ 8. Composing with the `Outcome` pipeline
-
-`Outcome` and `Outcome<T>` let you compose success and failure paths without throwing.
-A failure carries an `Error` (never an `Exception`), so the whole chain stays diagnosable.
-
-* **`Then(...)`** — chain the next step only when the previous one succeeded (short-circuits on failure).
-* **`To(...)`** — map the carried value to another value (`Outcome<T>` only), preserving any failure.
-* **`Recover(...)`** — provide a fallback when the chain has failed.
-* **`Finally(...)`** — run terminal handling for both success and failure.
+A database, broker, filesystem, or remote API failure is an outgoing interaction.
 
 ```csharp
-Outcome<Receipt> outcome =
-    TryCreateAmount(value, currencyCode)         // Outcome<Amount>
-        .Then(amount => CheckLimits(amount))     // Outcome<Amount>, runs only on success
-        .To(amount => amount.WithVat())          // map the value, failures pass through
-        .Recover(error => Amount.Zero)           // fallback value if the chain failed
-        .Then(amount => Charge(amount))          // Outcome<Receipt>
-        .Finally(
-            onSuccess: receipt => Log($"Charged {receipt}"),
-            onFailure: error => Log(error));      // error is an Error, fully diagnosable
+return SecondaryPortError.Create(
+        Code.PaymentProviderUnavailable,
+        diagnosticMessage: "The payment provider timed out after 5 seconds.",
+        transience: Transience.Transient)
+    .WithPublicMessage(
+        shortMessage: "The payment service is temporarily unavailable.");
 ```
 
-### Escape hatches
+`Transience` indicates whether trying the same operation later may help. It does not itself implement a retry policy.
 
-When you need to leave the `Outcome` world (e.g. at an application boundary), two escape hatches turn a failure back into a throw:
+## 🔁 Multi-step application flows
 
-* **`ThrowIfFailure()`** — throws the failure's exception (via `error.ToException()`) when the outcome failed; otherwise does nothing.
-* **`GetResultOrThrow()`** — returns the carried value on success, or throws the failure's exception (`Outcome<T>` only).
+When several expected-failure operations must run in sequence, compose their outcomes rather than repeatedly checking and unpacking them.
 
 ```csharp
-Outcome<Amount> outcome = TryCreateAmount(value, currencyCode);
-
-outcome.ThrowIfFailure();            // throws error.ToException() on failure
-Amount amount = outcome.GetResultOrThrow(); // value on success, otherwise throws
+Outcome<Receipt> result =
+    TryCreateAmount(value, currencyCode)
+        .Then(CheckLimits)
+        .Then(Charge);
 ```
 
-### Async composition
+The first failure short-circuits the remaining steps and is propagated unchanged. Use a fluent chain only when it reads more clearly than ordinary branching.
 
-For asynchronous flows, `OutcomeTaskExtensions` provides `Then` / `To` / `Recover` / `Finally`
-overloads over `Task<Outcome>` and `Task<Outcome<T>>`. Each overload accepts an optional
-`CancellationToken`, so you can await the whole pipeline:
+The full behavior of `Then`, `To`, `Recover`, `Finally`, async overloads, and escape hatches is documented in [Composing with Outcome](OutcomeGuide.en.md).
 
-```csharp
-Outcome<Receipt> outcome =
-    await TryLoadAmountAsync(orderId, cancellationToken)   // Task<Outcome<Amount>>
-        .Then(amount => CheckLimitsAsync(amount), cancellationToken)
-        .To(amount => amount.WithVat())
-        .Recover(error => Amount.Zero)
-        .Then(amount => ChargeAsync(amount), cancellationToken)
-        .Finally(
-            onSuccess: receipt => LogAsync(receipt),
-            onFailure: error => LogAsync(error),
-            cancellationToken);
-```
+## 🧩 Logging and support
 
-## 🎯 Summary
+At the point where a failure is handled, log the structured error rather than only a public message.
 
-FirstClassErrors shines when:
+Useful fields include:
 
-| Situation         | Benefit                     |
-| ----------------- | --------------------------- |
-| Domain invariants | Clear semantic violations   |
-| Validation        | Errors as data              |
-| Operations        | Readable domain code        |
-| Batch processing  | Non-blocking error handling |
-| Integration       | Better troubleshooting      |
-| Support           | Structured knowledge        |
+- `Code` for grouping and dashboards;
+- `InstanceId` for correlating one occurrence;
+- `OccurredAt` for timing;
+- `DiagnosticMessage` for internal analysis;
+- `Context` for occurrence-specific facts;
+- `InnerErrors` for the causal chain.
 
-The library helps you express not just that something failed —
-but **what it means, why it might have happened, and where to look**.
+Public messages are for callers. Diagnostic information is for logs, support, and developers.
+
+## 📌 Decision checklist
+
+Before choosing a pattern, ask:
+
+1. Is this failure expected in the normal flow?
+2. Must the current operation stop immediately?
+3. Is the failure a domain rule, an incoming boundary condition, or an outgoing dependency failure?
+4. Who is expected to make the next decision: this method or its caller?
+5. Would a fluent `Outcome` chain be clearer than explicit branching?
+
+Choose the representation from those answers, not from a blanket rule that every error must be thrown or every error must be returned.
 
 ---
 
 <div align="center">
-<a href="WritingErrorsGuide.en.md">← Writing Errors Guide</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="BestPractices.en.md">Best Practices →</a>
+<a href="WritingErrorsGuide.en.md">← Writing Errors Guide</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="OutcomeGuide.en.md">Composing with Outcome →</a>
 </div>
 
 ---
