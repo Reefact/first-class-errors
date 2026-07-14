@@ -5,11 +5,11 @@
 
 |  |  |
 | :-- | :-- |
-| **Build**    | [![ci](https://github.com/Reefact/first-class-errors/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Reefact/first-class-errors/actions/workflows/ci.yml) |
-| **Quality**  | [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=reefact_first-class-errors&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=reefact_first-class-errors) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=reefact_first-class-errors&metric=coverage)](https://sonarcloud.io/summary/new_code?id=reefact_first-class-errors) |
+| **Build** | [![ci](https://github.com/Reefact/first-class-errors/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Reefact/first-class-errors/actions/workflows/ci.yml) |
+| **Quality** | [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=reefact_first-class-errors&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=reefact_first-class-errors) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=reefact_first-class-errors&metric=coverage)](https://sonarcloud.io/summary/new_code?id=reefact_first-class-errors) |
 | **Security** | [![codeql](https://github.com/Reefact/first-class-errors/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/Reefact/first-class-errors/actions/workflows/codeql.yml) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13567/badge)](https://www.bestpractices.dev/projects/13567) [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/Reefact/first-class-errors/badge)](https://securityscorecards.dev/viewer/?uri=github.com/Reefact/first-class-errors) |
-| **Package**  | [![NuGet](https://img.shields.io/nuget/vpre/FirstClassErrors?logo=nuget)](https://www.nuget.org/packages/FirstClassErrors) ![.NET Standard 2.0](https://img.shields.io/badge/.NET%20Standard-2.0-512BD4) |
-| **Project**  | [![License](https://img.shields.io/github/license/Reefact/first-class-errors)](LICENSE) [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-fe5196?logo=conventionalcommits&logoColor=white)](https://www.conventionalcommits.org) |
+| **Package** | [![NuGet](https://img.shields.io/nuget/vpre/FirstClassErrors?logo=nuget)](https://www.nuget.org/packages/FirstClassErrors) ![.NET Standard 2.0](https://img.shields.io/badge/.NET%20Standard-2.0-512BD4) |
+| **Project** | [![License](https://img.shields.io/github/license/Reefact/first-class-errors)](LICENSE) [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-fe5196?logo=conventionalcommits&logoColor=white)](https://www.conventionalcommits.org) |
 
 ---
 
@@ -17,135 +17,73 @@
 
 ![FirstClassErrors](./doc/images/first-class-errors.png "FirstClassErrors")
 
-FirstClassErrors is a .NET library that treats errors as first-class, documented, and diagnosable concepts — not just strings thrown at runtime.
+FirstClassErrors is a .NET library for application errors that need to be understood, diagnosed, documented, and preserved over time.
 
-It helps you:
-
-* express errors in a consistent and structured way
-* attach meaningful diagnostics to each error
-* keep error documentation close to the code
-* generate human-readable error documentation automatically
+Instead of scattering error codes and messages throughout the codebase, you define each meaningful error situation once, in a named factory. The same structured `Error` can then be thrown as an exception, carried in an `Outcome<T>`, logged, and included in a generated error catalog.
 
 ## 🚨 The problem
 
-In most systems, errors are:
+A production error is rarely useful as only a type and a string:
 
-* scattered across the codebase
-* described by ad-hoc messages
-* poorly documented
-* hard to troubleshoot
-* disconnected from support and operations
-
-Over time, this leads to:
-
-* duplicated investigations
-* tribal knowledge
-* support teams guessing
-* developers reinventing error explanations
-
-## 💡 The idea
-
-What if:
-
-> **Every error in your system was explicitly described, structured, and documented — directly in code — and that documentation could be generated automatically?**
-
-FirstClassErrors introduces:
-
-* a **rich error model**
-* a **structured diagnostic system**
-* a **DSL to document errors**
-* a **documentation extraction pipeline**
-
-Errors become:
-
-> not just failures,
-> but **documented knowledge units**.
-
-## 🧱 What this library provides
-
-### 1️⃣ A richer error model
-
-The `Error` carries:
-
-* a stable error code
-* a timestamp
-* three distinct messages — a mandatory public short summary, an optional public detail, and a mandatory internal diagnostic message
-* contextual data
-* structured diagnostics
-
-The exception itself only exposes its `.Error`, and is designed to be:
-
-* logged consistently
-* understood by humans
-* used by tooling
-
-#### Three messages, two audiences
-
-An `Error` carries three messages but deliberately splits them across just **two audiences** — a public one (end users / API clients) and an internal one (logs, support, developers). The separation is enforced by construction, so what reaches a caller can never leak what is meant for developers and support:
-
-| Message | Mandatory | Audience | Exposure |
-| --- | --- | --- | --- |
-| `ShortMessage` | Yes | End users / API clients | A short public summary, safe to surface as-is (e.g. the `title` of an RFC 9457 problem detail). |
-| `DetailedMessage` | No | End users / API clients | A controlled public detail (e.g. the `detail` of an RFC 9457 problem detail), exposed **only** when the application explicitly chooses to. Must not carry sensitive or internal information. |
-| `DiagnosticMessage` | Yes | Logs, support, developers | The internal diagnostic message. May contain technical/operational detail (identifiers, offending values, internal state); it is **never** exposed to external clients by default. |
-
-The core model is HTTP-agnostic: `DiagnosticMessage` is never used as a default HTTP response body, and `type` and `status` remain the application's concern. When an error is exposed over HTTP, its `Code` is the natural RFC 9457 `type`: surface it as a stable URI such as `urn:problem:{service}:{code}`, where `{code}` is the error code in lowercase kebab-case — for example `urn:problem:temperature-simulator:temperature-below-absolute-zero` or `urn:problem:banking-api:money-transfer-amount-not-positive` — so clients can branch on the problem type. When you turn an error into an exception with `.ToException()`, the resulting `Exception.Message` is the `DiagnosticMessage` — the developer- and log-facing text.
-
-### 2️⃣ Structured diagnostics
-
-Each error can declare **possible causes** and **analysis leads**:
-
-* What might have caused this error?
-* Is it likely input-related, system-related, or both?
-* Where should investigation start?
-
-Diagnostics guide troubleshooting without hardcoding operational processes.
-
-### 3️⃣ A DSL to describe errors
-
-Errors are documented directly in code using a fluent API:
-
-```csharp
-return DescribeError.WithTitle("Temperature below absolute zero")
-                    .WithDescription("This error occurs when trying to instantiate a temperature with a value that is below absolute zero.")
-                    .WithRule("Temperature cannot go below absolute zero because absolute zero is the point where particles have minimum possible energy.")
-                    .WithDiagnostics(ValueObjectDiagnostic.Diagnostic)
-                    .WithExamples(
-                        () => BelowAbsoluteZero(-1, TemperatureUnit.Kelvin),
-                        () => BelowAbsoluteZero(-280, TemperatureUnit.Celsius));
+```text
+Invalid operation.
 ```
 
-This is not just comments — it is **structured, executable documentation**.
+Developers and support still need to discover:
 
-### 4️⃣ Documentation extraction
+- which situation actually occurred;
+- which rule was violated;
+- which facts belong to this occurrence;
+- what might have caused it;
+- where to start investigating.
 
-The library includes a mechanism to scan assemblies and extract all declared error documentation:
+When that knowledge lives in logs, tickets, comments, and people's memories, it drifts away from the code.
 
-* linked to error factory classes
-* linked to factory methods
-* enriched with examples
-* ready to be rendered
+## 💡 The FirstClassErrors approach
 
-This enables:
+A factory gives the error situation a stable identity and keeps its construction in one place:
 
-* Markdown or JSON error catalogs (or any custom format via a renderer)
-* support-oriented documentation
-* living documentation generated from code
-* multi-language catalogs (opt-in) — see [Internationalization](doc/Internationalization.en.md)
+```csharp
+[ProvidesErrorsFor(nameof(Amount))]
+public static class InvalidAmountOperationError {
 
-## 🔁 Exception or not? You choose.
+    [DocumentedBy(nameof(CurrencyMismatchDocumentation))]
+    internal static DomainError CurrencyMismatch(Amount left, Amount right) {
+        return DomainError.Create(
+                ErrorCode.Create("AMOUNT_CURRENCY_MISMATCH"),
+                diagnosticMessage: $"Cannot add {left} and {right} because their currencies differ.")
+            .WithPublicMessage(
+                shortMessage: "The amounts use different currencies.",
+                detailedMessage: "Both amounts must use the same currency.");
+    }
 
-The library supports both:
+    private static ErrorDocumentation CurrencyMismatchDocumentation() {
+        return DescribeError.WithTitle("Amount currency mismatch")
+                            .WithDescription("This error occurs when an operation combines amounts expressed in different currencies.")
+                            .WithRule("A monetary operation must use one common currency.")
+                            .WithExamples(() => CurrencyMismatch(
+                                new Amount(10, Currency.EUR),
+                                new Amount(12, Currency.USD)));
+    }
+}
+```
 
-* **throwing errors** (traditional exception flow)
-* **transporting errors without throwing** via `Outcome` and `Outcome<T>`
+The domain code stays focused on intent:
 
-This lets you treat the same error either way:
+```csharp
+if (Currency != other.Currency) {
+    throw InvalidAmountOperationError.CurrencyMismatch(this, other).ToException();
+}
+```
 
-> as a runtime signal you throw
-> or as structured data you transport
+The factory returns an `Error`, so expected failures can use the same model without throwing:
 
-depending on the context (domain logic, validation, pipelines, etc.).
+```csharp
+return Outcome<Amount>.Failure(
+    InvalidAmountOperationError.CurrencyMismatch(left, right));
+```
+
+From these factories, FirstClassErrors can generate a human-readable catalog for developers, support teams, and operations.
 
 ## 📦 Installation
 
@@ -153,109 +91,73 @@ depending on the context (domain logic, validation, pipelines, etc.).
 dotnet add package FirstClassErrors
 ```
 
-Targets **.NET Standard 2.0**. The Roslyn analyzers are bundled in the package — no separate install.
+The package targets **.NET Standard 2.0**. Its Roslyn analyzers are bundled automatically; no separate analyzer package is required.
 
-## 🧩 Example
+To generate documentation, install the CLI:
 
-From the `FirstClassErrors.Usage` project:
-
-```csharp
-[ProvidesErrorsFor(nameof(Temperature))]
-public static class InvalidTemperatureError {
-
-    [DocumentedBy(nameof(BelowAbsoluteZeroDocumentation))]
-    internal static DomainError BelowAbsoluteZero(decimal invalidValue, TemperatureUnit invalidValueUnit) {
-        return DomainError.Create(
-                Code.TemperatureBelowAbsoluteZero,
-                diagnosticMessage: $"Failed to instantiate temperature: the value {invalidValue} {invalidValueUnit} is below absolute zero.")
-            .WithPublicMessage(
-                shortMessage: "Temperature is invalid.",
-                detailedMessage: $"The temperature {invalidValue} {invalidValueUnit} is below absolute zero.");
-    }
-
-    private static ErrorDocumentation BelowAbsoluteZeroDocumentation() {
-        return DescribeError.WithTitle("Temperature below absolute zero")
-                            .WithDescription("This error occurs when trying to instantiate a temperature with a value that is below absolute zero.")
-                            .WithRule("Temperature cannot go below absolute zero because absolute zero is the point where particles have minimum possible energy.")
-                            .WithDiagnostics(ValueObjectDiagnostic.Diagnostic)
-                            .WithExamples(
-                                () => BelowAbsoluteZero(-1, TemperatureUnit.Kelvin),
-                                () => BelowAbsoluteZero(-280, TemperatureUnit.Celsius));
-    }
-
-    private static class Code {
-        public static readonly ErrorCode TemperatureBelowAbsoluteZero = ErrorCode.Create("TEMPERATURE_BELOW_ABSOLUTE_ZERO");
-    }
-}
+```bash
+dotnet tool install --global FirstClassErrors.Cli
 ```
 
-The factory returns a structured `Error`. When you need to throw it, you turn it into an exception with `.ToException()`:
+Then follow the [Getting Started guide](doc/GettingStarted.en.md) to create and generate your first documented error.
 
-```csharp
-throw InvalidTemperatureError.BelowAbsoluteZero(-1, TemperatureUnit.Kelvin).ToException();
-```
+## 🎯 When it is a good fit
 
-Here, the error, its meaning, its rule, its diagnostics, and example messages are all defined together — in code.
+FirstClassErrors is especially useful for long-lived application or domain code where:
 
-## 🎯 Who is this for?
+- errors represent rules, constraints, or boundary failures;
+- several teams or systems depend on stable error codes;
+- support and operations investigate production failures;
+- documentation must remain aligned with behavior.
 
-FirstClassErrors is especially useful if:
+For prototypes, tiny utilities, or low-level technical code, standard exceptions may be enough. See [When Not to Use FirstClassErrors](doc/WhenNotToUseFirstClassErrors.en.md).
 
-* you build complex business systems
-* you care about supportability
-* you want consistent error handling
-* you want documentation that doesn’t drift from code
-* you design with domain-driven thinking
+## 🔍 Analyzers and supply-chain information
 
-## 🔍 Analyzers
+The package includes Roslyn rules with stable `FCExxx` identifiers. They detect duplicate or malformed error codes, invalid documentation wiring, missing examples, and common API misuse. See the [analyzer rules reference](doc/analyzers/README.md).
 
-FirstClassErrors ships with a set of Roslyn analyzers (rule ids `FCExxx`) **bundled in the NuGet package** — reference the package and they run at build time, no extra install. They catch, before you run anything, the mistakes the runtime or the documentation pipeline would otherwise surface late or silently: duplicate error codes, `[DocumentedBy]` references that don't resolve, documented errors that never reach the catalog, and more.
+Released packages include signed build provenance and an embedded SPDX SBOM. See the release and verification details in the [supply-chain documentation](SECURITY.md).
 
-> **Compiler requirement:** the bundled analyzers are compiled against Roslyn 4.8, so they load in any host from **.NET 8 SDK / Visual Studio 2022 17.8** onward. Older SDKs/IDEs cannot load them.
+## 🐛 Feedback and contributing
 
-See the [analyzer rules reference](doc/analyzers/README.md).
+Found a bug or want to request a feature? Open an issue on the [GitHub issue tracker](https://github.com/Reefact/first-class-errors/issues). Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## 🔐 Supply chain
+For security vulnerabilities, follow the private process in [SECURITY.md](SECURITY.md).
 
-Every released package is built and published by [`release.yml`](.github/workflows/release.yml) with two verifiable guarantees:
+## 📚 Documentation
 
-- **Signed build provenance** ([SLSA](https://slsa.dev)) — each package is attested at build time, binding its checksum to this repository, the exact commit and the workflow run. The attested bytes are attached to the matching [GitHub Release](https://github.com/Reefact/first-class-errors/releases); download the `.nupkg` from there and verify with:
-
-  ```bash
-  gh attestation verify FirstClassErrors.<version>.nupkg --repo Reefact/first-class-errors
-  ```
-
-  (nuget.org serves a repository-signed copy with a different checksum, so verify **that** one with `dotnet nuget verify` instead.)
-
-- **Embedded SBOM** — each package carries its SPDX software bill of materials at `_manifest/spdx_2.2/manifest.spdx.json`, inventorying the files it ships and the third-party components it was built from.
-
-## 🐛 Feedback & contributing
-
-Found a bug or want to request a feature? Open an issue on the [GitHub issue tracker](https://github.com/Reefact/first-class-errors/issues). Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
-
-For **security** vulnerabilities, please follow the private process in [SECURITY.md](SECURITY.md) instead of opening a public issue.
-
-## 📚 Next steps
-
-See the full documentation:
+### Discover
 
 - [Getting Started](doc/GettingStarted.en.md)
 - [Design Principles](doc/DesignPrinciples.en.md)
 - [When Not to Use FirstClassErrors](doc/WhenNotToUseFirstClassErrors.en.md)
+
+### Understand the model
+
 - [Core Concepts](doc/CoreConcepts.en.md)
+- [Error Taxonomy and Composition](doc/ErrorTaxonomy.en.md)
 - [Error Context Guide](doc/ErrorContext.en.md)
+
+### Write and use errors
+
 - [Writing Errors Guide](doc/WritingErrorsGuide.en.md)
 - [Usage Patterns](doc/UsagePatterns.en.md)
 - [Best Practices](doc/BestPractices.en.md)
 - [Testing Guide](doc/Testing.en.md)
+
+### Generate and operate the catalog
+
 - [CI/CD and Operational Integration](doc/OperationalIntegration.en.md)
 - Catalog versioning
-  - [Overview & workflow](doc/CatalogVersioning.en.md)
+  - [Overview and workflow](doc/CatalogVersioning.en.md)
   - [Command reference](doc/CatalogVersioningReference.en.md)
   - [CI/CD integration](doc/CatalogVersioningCI.en.md)
 - [Architecture of the Documentation Pipeline](doc/ArchitectureOfTheDocumentationPipeline.en.md)
 - [Writing a custom renderer](doc/WritingACustomRenderer.en.md)
 - [Internationalization](doc/Internationalization.en.md)
+
+### Evaluate and troubleshoot
+
 - [Comparison with error-handling libraries](doc/ComparisonWithOtherLibraries.en.md)
 - [Analyzer rules (FCExxx)](doc/analyzers/README.md)
 - [FAQ](doc/FAQ.en.md)
