@@ -29,6 +29,24 @@ fce catalog update --solution MyApp.sln
 
 This extracts the catalog, projects it into its snapshot, and writes `errors-baseline.json` (override with `--baseline`, or set `baseline` in `fce.json`). **Commit this file**: it is the accepted contract, and every change to it goes through code review like any other contract change.
 
+**In CI/CD**, seed it automatically the first time so no one has to remember to bootstrap it — create and commit the file only when it is missing. This belongs on a push to your default branch, and needs a token that can push:
+
+```yaml
+# Runs on push to main; needs: permissions: { contents: write }.
+- name: Seed the error-catalog baseline if missing
+  run: |
+    if [ ! -f errors-baseline.json ]; then
+      fce catalog update --solution MyApp.sln
+      git add errors-baseline.json
+      git -c user.name='github-actions[bot]' \
+          -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+          commit -m 'chore: seed the error-catalog baseline'
+      git push
+    fi
+```
+
+Prefer a one-time local bootstrap (run `fce catalog update` and commit) if you would rather keep CI read-only — only `catalog diff` truly needs to run on every pull request.
+
 ## 🔍 Detect drift in CI
 
 ```bash
@@ -68,6 +86,44 @@ fce catalog update --solution MyApp.sln
 ```
 
 The command summarizes what it absorbs (`1 breaking, 2 compatible and 0 documentation change(s) accepted`), and the pull request then shows the baseline diff — a removed code appears as a removed line. The accident becomes impossible; the deliberate change becomes visible and reviewable. This is the same discipline as a public-API baseline file, applied to the error catalog.
+
+**In CI/CD**, make accepting a change one action instead of a manual local step: on a pull request labelled `accept-contract-change`, regenerate the baseline and commit it back onto the PR branch, so the change lands as an explicit, reviewable diff (works for same-repository branches; from a fork, run `fce catalog update` locally and push):
+
+```yaml
+# .github/workflows/error-catalog-accept.yml
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  accept:
+    if: github.event.label.name == 'accept-contract-change'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      # Make fce available on the runner (see the full example below).
+      - name: Regenerate and commit the baseline
+        run: |
+          fce catalog update --solution MyApp.sln
+          git add errors-baseline.json
+          if git diff --cached --quiet; then
+            echo 'Baseline already up to date — nothing to accept.'
+          else
+            git -c user.name='github-actions[bot]' \
+                -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+                commit -m 'chore: accept error-catalog contract change'
+            git push
+          fi
+```
+
+For a purely local flow, the same two lines behind a `make accept-errors` target work just as well.
 
 ## 🛡️ Baseline resilience & schema versioning
 
