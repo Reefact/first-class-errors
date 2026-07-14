@@ -314,6 +314,24 @@ public sealed class CatalogUpdateCommandEndToEndTests {
         Check.That(File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "errors-baseline.json"))).IsFalse();
     }
 
+    [Fact(DisplayName = "A baseline written by a newer schema is refused (exit 1), never silently downgraded.")]
+    public void NewerSchemaBaselineIsRefused() {
+        using TempDir dir = new();
+        string baseline = dir.File("errors-baseline.json");
+        File.WriteAllText(baseline, """{ "schema": 999, "errors": [] }""");
+        string before = File.ReadAllText(baseline);
+
+        (int exit, string _, RecordingLogger logger) = RunUpdate(new RecordingSnapshotSource(Snapshot("A")), new CatalogUpdateSettings {
+            ConfigPath   = CliTestHelpers.NonExistentConfigPath(),
+            BaselinePath = baseline
+        });
+
+        // Refused, not healed: exit 1, the file is left untouched, and the user is told to upgrade the tool.
+        Check.That(exit).IsEqualTo(1);
+        Check.That(File.ReadAllText(baseline)).IsEqualTo(before);
+        Check.That(string.Join("\n", logger.Errors)).Contains("Update the tool");
+    }
+
     [Fact(DisplayName = "Cancellation during extraction exits 130.")]
     public void CancellationExitsOneThirty() {
         using TempDir dir = new();
