@@ -26,8 +26,8 @@ public sealed class CatalogDifferTests {
     [Fact(DisplayName = "Two identical snapshots produce an empty diff.")]
     public void TwoIdenticalSnapshotsProduceAnEmptyDiff() {
         // Setup
-        CatalogSnapshot baseline = Snapshot(Entry("PAYMENT.DECLINED", "Payment declined", "Payment", Key("DealId", "System.String")));
-        CatalogSnapshot current  = Snapshot(Entry("PAYMENT.DECLINED", "Payment declined", "Payment", Key("DealId", "System.String")));
+        CatalogSnapshot baseline = Snapshot(Entry("PAYMENT_DECLINED", "Payment declined", "Payment", Key("DealId", "System.String")));
+        CatalogSnapshot current  = Snapshot(Entry("PAYMENT_DECLINED", "Payment declined", "Payment", Key("DealId", "System.String")));
 
         // Exercise
         CatalogDiff diff = CatalogDiffer.Diff(baseline, current);
@@ -40,20 +40,20 @@ public sealed class CatalogDifferTests {
     [Fact(DisplayName = "A removed error code is a breaking change.")]
     public void ARemovedErrorCodeIsABreakingChange() {
         // Exercise
-        CatalogDiff diff = CatalogDiffer.Diff(Snapshot(Entry("PAYMENT.DECLINED")), Snapshot());
+        CatalogDiff diff = CatalogDiffer.Diff(Snapshot(Entry("PAYMENT_DECLINED")), Snapshot());
 
         // Verify
         Check.That(diff.BreakingChanges).HasSize(1);
         CatalogChange change = diff.BreakingChanges[0];
         Check.That(change.Kind).IsEqualTo(CatalogChangeKind.ErrorRemoved);
-        Check.That(change.Code).IsEqualTo("PAYMENT.DECLINED");
+        Check.That(change.Code).IsEqualTo("PAYMENT_DECLINED");
     }
 
     [Fact(DisplayName = "A removal whose title matches a single added error carries a 'possibly renamed' hint.")]
     public void ARemovalMatchingASingleAdditionCarriesARenameHint() {
         // Setup
-        CatalogSnapshot baseline = Snapshot(Entry("PAYMENT.DECLINED", "Payment declined"));
-        CatalogSnapshot current  = Snapshot(Entry("PAYMENT.REFUSED", "Payment declined"));
+        CatalogSnapshot baseline = Snapshot(Entry("PAYMENT_DECLINED", "Payment declined"));
+        CatalogSnapshot current  = Snapshot(Entry("PAYMENT_REFUSED", "Payment declined"));
 
         // Exercise
         CatalogDiff diff = CatalogDiffer.Diff(baseline, current);
@@ -61,7 +61,7 @@ public sealed class CatalogDifferTests {
         // Verify: the removal stays breaking — consumers know the old code — but the hint points at the new one.
         CatalogChange removal = diff.Changes.Single(change => change.Kind == CatalogChangeKind.ErrorRemoved);
         Check.That(removal.Impact).IsEqualTo(CatalogChangeImpact.Breaking);
-        Check.That(removal.Description).Contains("possibly renamed to 'PAYMENT.REFUSED'");
+        Check.That(removal.Description).Contains("possibly renamed to 'PAYMENT_REFUSED'");
     }
 
     [Fact(DisplayName = "No rename hint is emitted when several added errors share the removed error's title.")]
@@ -81,7 +81,7 @@ public sealed class CatalogDifferTests {
     [Fact(DisplayName = "A new error code is a compatible change.")]
     public void ANewErrorCodeIsACompatibleChange() {
         // Exercise
-        CatalogDiff diff = CatalogDiffer.Diff(Snapshot(), Snapshot(Entry("INVENTORY.OUT_OF_STOCK", "Out of stock", "Inventory")));
+        CatalogDiff diff = CatalogDiffer.Diff(Snapshot(), Snapshot(Entry("INVENTORY_OUT_OF_STOCK", "Out of stock", "Inventory")));
 
         // Verify
         Check.That(diff.CompatibleChanges).HasSize(1);
@@ -181,8 +181,8 @@ public sealed class CatalogDifferTests {
     [Fact(DisplayName = "Identities and titles are compared normalized: whitespace-only differences produce no change.")]
     public void WhitespaceOnlyDifferencesProduceNoChange() {
         // Setup: same contract, but every identity and the title differ only by surrounding whitespace.
-        CatalogSnapshot baseline = Snapshot(Entry("PAYMENT.DECLINED", "Payment declined", "Payment", Key("DealId", "System.String")));
-        CatalogSnapshot current  = Snapshot(Entry("  PAYMENT.DECLINED  ", "  Payment declined  ", "  Payment  ", Key("  DealId  ", "System.String")));
+        CatalogSnapshot baseline = Snapshot(Entry("PAYMENT_DECLINED", "Payment declined", "Payment", Key("DealId", "System.String")));
+        CatalogSnapshot current  = Snapshot(Entry("  PAYMENT_DECLINED  ", "  Payment declined  ", "  Payment  ", Key("  DealId  ", "System.String")));
 
         // Exercise
         CatalogDiff diff = CatalogDiffer.Diff(baseline, current);
@@ -194,15 +194,15 @@ public sealed class CatalogDifferTests {
     [Fact(DisplayName = "The rename hint matches titles that differ only by whitespace.")]
     public void TheRenameHintMatchesTitlesThatDifferOnlyByWhitespace() {
         // Setup
-        CatalogSnapshot baseline = Snapshot(Entry("PAYMENT.DECLINED", "Payment declined"));
-        CatalogSnapshot current  = Snapshot(Entry("PAYMENT.REFUSED", "  Payment declined  "));
+        CatalogSnapshot baseline = Snapshot(Entry("PAYMENT_DECLINED", "Payment declined"));
+        CatalogSnapshot current  = Snapshot(Entry("PAYMENT_REFUSED", "  Payment declined  "));
 
         // Exercise
         CatalogDiff diff = CatalogDiffer.Diff(baseline, current);
 
         // Verify
         CatalogChange removal = diff.Changes.Single(change => change.Kind == CatalogChangeKind.ErrorRemoved);
-        Check.That(removal.Description).Contains("possibly renamed to 'PAYMENT.REFUSED'");
+        Check.That(removal.Description).Contains("possibly renamed to 'PAYMENT_REFUSED'");
     }
 
     [Fact(DisplayName = "Null snapshots are rejected.")]

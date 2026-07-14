@@ -16,13 +16,13 @@ public sealed class CatalogDiffFormatterTests {
     private static CatalogDiff SampleDiff() {
         CatalogSnapshot baseline = new() {
             Errors = [
-                new CatalogSnapshotEntry { Code = "PAYMENT.DECLINED", Title = "Payment declined" },
+                new CatalogSnapshotEntry { Code = "PAYMENT_DECLINED", Title = "Payment declined" },
                 new CatalogSnapshotEntry { Code = "SOME_CODE", Title = "Old title" }
             ]
         };
         CatalogSnapshot current = new() {
             Errors = [
-                new CatalogSnapshotEntry { Code = "PAYMENT.REFUSED", Title = "Payment declined" },
+                new CatalogSnapshotEntry { Code = "PAYMENT_REFUSED", Title = "Payment declined" },
                 new CatalogSnapshotEntry { Code = "SOME_CODE", Title = "New title" }
             ]
         };
@@ -43,9 +43,9 @@ public sealed class CatalogDiffFormatterTests {
         Check.That(report).Contains("Breaking changes (1):");
         Check.That(report).Contains("Compatible changes (1):");
         Check.That(report).Contains("Documentation changes (1):");
-        Check.That(report).Contains("[removed] PAYMENT.DECLINED");
-        Check.That(report).Contains("possibly renamed to 'PAYMENT.REFUSED'");
-        Check.That(report).Contains("[added] PAYMENT.REFUSED");
+        Check.That(report).Contains("[removed] PAYMENT_DECLINED");
+        Check.That(report).Contains("possibly renamed to 'PAYMENT_REFUSED'");
+        Check.That(report).Contains("[added] PAYMENT_REFUSED");
         Check.That(report).Contains("[title] SOME_CODE");
     }
 
@@ -65,7 +65,7 @@ public sealed class CatalogDiffFormatterTests {
         Check.That(report).Contains("### 💥 Breaking (1)");
         Check.That(report).Contains("### ✅ Compatible (1)");
         Check.That(report).Contains("### ℹ️ Documentation (1)");
-        Check.That(report).Contains("- **`PAYMENT.DECLINED`**");
+        Check.That(report).Contains("- **`PAYMENT_DECLINED`**");
     }
 
     [Fact(DisplayName = "The Markdown report of an empty diff says so under the heading.")]
@@ -96,7 +96,7 @@ public sealed class CatalogDiffFormatterTests {
         Check.That(changes.GetArrayLength()).IsEqualTo(3);
         JsonElement removal = changes.EnumerateArray().Single(change => change.GetProperty("kind").GetString() == "errorRemoved");
         Check.That(removal.GetProperty("impact").GetString()).IsEqualTo("breaking");
-        Check.That(removal.GetProperty("code").GetString()).IsEqualTo("PAYMENT.DECLINED");
+        Check.That(removal.GetProperty("code").GetString()).IsEqualTo("PAYMENT_DECLINED");
     }
 
     [Fact(DisplayName = "The JSON report of an empty diff has zero counts and no changes.")]

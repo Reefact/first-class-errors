@@ -28,7 +28,7 @@ public sealed class OutcomeAssertionsTests : IDisposable {
 
     #region Statics members declarations
 
-    private static DomainError AnError(string code = "PAYMENT.DECLINED", string diagnostic = "diagnostic", string @short = "short") {
+    private static DomainError AnError(string code = "PAYMENT_DECLINED", string diagnostic = "diagnostic", string @short = "short") {
         return DomainError.Create(ErrorCode.Create(code), diagnostic).WithPublicMessage(@short);
     }
 
@@ -46,7 +46,7 @@ public sealed class OutcomeAssertionsTests : IDisposable {
         Outcome<int> outcome = Outcome<int>.Failure(AnError());
 
         OutcomeAssertionException exception = Assert.Throws<OutcomeAssertionException>(() => outcome.ShouldSucceed());
-        Check.That(exception.Message).Contains("PAYMENT.DECLINED");
+        Check.That(exception.Message).Contains("PAYMENT_DECLINED");
     }
 
     [Fact(DisplayName = "ShouldFail on a failed outcome returns a fluent handle that matches the code.")]
@@ -54,7 +54,7 @@ public sealed class OutcomeAssertionsTests : IDisposable {
         Outcome<int> outcome = Outcome<int>.Failure(AnError());
 
         outcome.ShouldFail()
-               .WithCode("PAYMENT.DECLINED")
+               .WithCode("PAYMENT_DECLINED")
                .WithDiagnosticMessage("diagnostic")
                .WithShortMessage("short");
     }
@@ -63,7 +63,7 @@ public sealed class OutcomeAssertionsTests : IDisposable {
     public void ShouldFailWithMismatchingCodeThrows() {
         Outcome<int> outcome = Outcome<int>.Failure(AnError());
 
-        Assert.Throws<OutcomeAssertionException>(() => outcome.ShouldFail().WithCode("SOMETHING.ELSE"));
+        Assert.Throws<OutcomeAssertionException>(() => outcome.ShouldFail().WithCode("SOMETHING_ELSE"));
     }
 
     [Fact(DisplayName = "ShouldFail on a successful outcome throws.")]
@@ -76,7 +76,7 @@ public sealed class OutcomeAssertionsTests : IDisposable {
     [Fact(DisplayName = "The non-generic Outcome assertions behave the same way.")]
     public void NonGenericOutcomeAssertions() {
         Outcome.Success.ShouldSucceed();
-        Outcome.Failure(AnError()).ShouldFail().WithCode("PAYMENT.DECLINED");
+        Outcome.Failure(AnError()).ShouldFail().WithCode("PAYMENT_DECLINED");
 
         Assert.Throws<OutcomeAssertionException>(() => Outcome.Success.ShouldFail());
         Assert.Throws<OutcomeAssertionException>(() => Outcome.Failure(AnError()).ShouldSucceed());
@@ -85,7 +85,7 @@ public sealed class OutcomeAssertionsTests : IDisposable {
     [Fact(DisplayName = "WithContextEntry checks the presence and value of a context entry.")]
     public void WithContextEntryChecksPresenceAndValue() {
         ErrorContextKey<string> cardNetwork = ErrorContextKey.Create<string>("CardNetwork", "The card network.");
-        DomainError error = DomainError.Create(ErrorCode.Create("PAYMENT.DECLINED"), "diagnostic", context => context.Add(cardNetwork, "VISA"))
+        DomainError error = DomainError.Create(ErrorCode.Create("PAYMENT_DECLINED"), "diagnostic", context => context.Add(cardNetwork, "VISA"))
                                        .WithPublicMessage("short");
         Outcome<int> outcome = Outcome<int>.Failure(error);
 
