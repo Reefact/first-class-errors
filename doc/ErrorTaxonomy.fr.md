@@ -53,17 +53,17 @@ L’adapter peut encapsuler la cause métier dans une erreur de port primaire :
 
 ```csharp
 DomainError invalidAmount = InvalidAmountError.NegativeValue(request.Amount);
+var innerErrors = new PrimaryPortInnerErrors().Add(invalidAmount);
 
 return PrimaryPortError.Create(
         Code.RequestRejected,
         diagnosticMessage: $"La requête {request.Id} contient un montant invalide.",
-        transience: Transience.NonTransient,
-        configureInnerErrors: inner => inner.Add(invalidAmount))
+        innerErrors: innerErrors)
     .WithPublicMessage(
         shortMessage: "La requête contient des données invalides.");
 ```
 
-L’erreur de domaine décrit toujours la règle violée. L’erreur de port primaire décrit la condition à la frontière : cette interaction entrante est rejetée.
+L’erreur de domaine décrit toujours la règle violée. L’erreur de port primaire décrit la condition à la frontière : cette interaction entrante est rejetée. Lorsque des erreurs internes sont fournies, l’erreur de port calcule sa transience globale à partir d’elles.
 
 ## `SecondaryPortError` : une interaction sortante a échoué
 
