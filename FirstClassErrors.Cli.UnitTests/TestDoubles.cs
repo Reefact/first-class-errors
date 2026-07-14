@@ -1,6 +1,7 @@
 #region Usings declarations
 
 using FirstClassErrors.GenDoc;
+using FirstClassErrors.GenDoc.Versioning;
 
 #endregion
 
@@ -98,6 +99,56 @@ internal sealed class CancellingGenerator : IErrorDocumentationGenerator {
     }
 
     public IEnumerable<ErrorDocumentation> GetErrorDocumentationFromAssemblies(IReadOnlyList<string> assemblyPaths, SolutionGenerationOptions options) {
+        throw new OperationCanceledException();
+    }
+
+}
+
+/// <summary>
+///     A catalog snapshot source that returns a fixed snapshot and records how it was called (the settings and the
+///     cancellation token), so catalog-command tests can assert wiring without spawning a real extraction.
+/// </summary>
+internal sealed class RecordingSnapshotSource : ICatalogSnapshotSource {
+
+    private readonly CatalogSnapshot _snapshot;
+
+    public RecordingSnapshotSource(CatalogSnapshot snapshot) {
+        _snapshot = snapshot;
+    }
+
+    public bool              WasInvoked        { get; private set; }
+    public CatalogSettings?  Settings          { get; private set; }
+    public CancellationToken CancellationToken { get; private set; }
+
+    public CatalogSnapshot Extract(CatalogSettings settings, CliConfiguration configuration, IGenerationLogger logger, CancellationToken cancellationToken) {
+        WasInvoked        = true;
+        Settings          = settings;
+        CancellationToken = cancellationToken;
+
+        return _snapshot;
+    }
+
+}
+
+/// <summary>A snapshot source that throws an arbitrary (non-cancellation) failure, to exercise the error path.</summary>
+internal sealed class FailingSnapshotSource : ICatalogSnapshotSource {
+
+    private readonly Exception _failure;
+
+    public FailingSnapshotSource(Exception failure) {
+        _failure = failure;
+    }
+
+    public CatalogSnapshot Extract(CatalogSettings settings, CliConfiguration configuration, IGenerationLogger logger, CancellationToken cancellationToken) {
+        throw _failure;
+    }
+
+}
+
+/// <summary>A snapshot source that always reports the run was cancelled, to exercise cancellation handling.</summary>
+internal sealed class CancellingSnapshotSource : ICatalogSnapshotSource {
+
+    public CatalogSnapshot Extract(CatalogSettings settings, CliConfiguration configuration, IGenerationLogger logger, CancellationToken cancellationToken) {
         throw new OperationCanceledException();
     }
 

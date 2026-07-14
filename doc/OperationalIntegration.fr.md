@@ -35,6 +35,16 @@ Vous pouvez produire le catalogue par langue en ajoutant `--language <…>` (par
 
 Les exemples publics RFC 9457 portent un `type` de problème de la forme `urn:problem:{service}:{code}`. Fournissez le segment de service avec `--service-name <nom>` (ou `serviceName` dans `fce.json`) ; il est requis pour les formats `markdown` et `html` — `fce generate` échoue avec un message clair lorsqu’il est absent — tandis que `json` (qui ne contient pas cet exemple) n’en a pas besoin.
 
+## 🛡️ Protéger le contrat d'erreurs
+
+Les codes d'erreur et les clés de contexte sont un contrat public : des clients branchent leur logique dessus, des tableaux de bord alertent dessus, des procédures de support y font référence. Une étape de CI peut protéger ce contrat en comparant le catalogue courant à une baseline commitée et en faisant échouer le build quand un code disparaît par accident :
+
+```bash
+fce catalog diff --solution MyApp.sln
+```
+
+Voir [Versionnage du catalogue](CatalogVersioning.fr.md) pour le workflow de baseline, la classification des changements et la sémantique des codes de sortie.
+
 ## 🌍 Publication de la documentation
 
 La documentation générée peut être :
@@ -114,7 +124,7 @@ Les erreurs deviennent :
 ---
 
 <div align="center">
-<a href="Testing.fr.md">← Guide des tests</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="ArchitectureOfTheDocumentationPipeline.fr.md">Architecture du pipeline de documentation →</a>
+<a href="Testing.fr.md">← Guide des tests</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="CatalogVersioning.fr.md">Versionnage du catalogue →</a>
 </div>
 
 ---

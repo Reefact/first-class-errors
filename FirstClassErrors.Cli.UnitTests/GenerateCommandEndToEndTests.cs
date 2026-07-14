@@ -195,6 +195,36 @@ public sealed class GenerateCommandEndToEndTests {
         Check.That(logger.Debugs).HasSize(1);
     }
 
+    [Fact(DisplayName = "A configured snapshot path is written relative to the configuration file, not the current directory.")]
+    public void AConfiguredSnapshotPathResolvesRelativeToTheConfigFile() {
+        // Setup: a nested fce.json declaring a RELATIVE snapshot path. The configured path must resolve against that
+        // file's directory (like renderer references and the catalog baseline), not the process working directory.
+        string directory = Path.Combine(Path.GetTempPath(), $"fce-snapshot-cfg-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try {
+            string configPath = Path.Combine(directory, "fce.json");
+            File.WriteAllText(configPath, """{ "snapshot": "errors-baseline.json" }""");
+
+            RecordingGenerator generator = new(Sample());
+            GenerateCommand    command   = new(generator, new RecordingOutputSink(), _ => new RecordingLogger());
+            GenerateSettings settings = new() {
+                ConfigPath    = configPath,
+                AssemblyPaths = ["a.dll"],
+                Format        = "json"
+            };
+
+            // Exercise
+            int exitCode = command.Run(settings, CancellationToken.None);
+
+            // Verify: the snapshot lands beside fce.json, never in the process working directory.
+            Check.That(exitCode).IsEqualTo(0);
+            Check.That(File.Exists(Path.Combine(directory, "errors-baseline.json"))).IsTrue();
+            Check.That(File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "errors-baseline.json"))).IsFalse();
+        } finally {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     #region Helpers
 
     private static ErrorDocumentation Sample() {

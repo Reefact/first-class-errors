@@ -14,6 +14,12 @@ app.Configure(config => {
     config.AddCommand<GenerateCommand>("generate")
           .WithDescription("Generate error documentation from a solution or from assemblies.");
 
+    config.AddBranch<CommandSettings>("catalog", catalog => {
+        catalog.SetDescription("Track the error catalog as a versioned contract (baseline + diff).");
+        catalog.AddCommand<CatalogUpdateCommand>("update").WithDescription("Create or refresh the catalog baseline (deliberately accept the current contract).");
+        catalog.AddCommand<CatalogDiffCommand>("diff").WithDescription("Compare the current catalog against the baseline and report the changes.");
+    });
+
     config.AddBranch<CommandSettings>("config", configuration => {
         configuration.SetDescription("Manage the configuration file (fce.json).");
         configuration.AddCommand<InitCommand>("init").WithDescription("Create the configuration file.");

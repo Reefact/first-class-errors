@@ -51,6 +51,12 @@ internal sealed class CliConfiguration {
     /// </summary>
     public string? ServiceName { get; set; }
 
+    /// <summary>Default path of the catalog baseline file used by the <c>catalog</c> commands.</summary>
+    public string? Baseline { get; set; }
+
+    /// <summary>Default path where <c>generate</c> also writes the canonical catalog snapshot.</summary>
+    public string? Snapshot { get; set; }
+
     /// <summary>Paths of the custom renderer assemblies to load.</summary>
     public List<string> Renderers { get; set; } = [];
 
