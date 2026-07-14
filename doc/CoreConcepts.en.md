@@ -3,151 +3,155 @@
 🌍 **Languages:**  
 🇬🇧 English (this file) | 🇫🇷 [Français](./CoreConcepts.fr.md)
 
-FirstClassErrors is not just a utility library.
-It introduces a different way to think about application errors.
+FirstClassErrors separates the **meaning of a failure** from the mechanism used to propagate it.
 
-Instead of reducing a failure to a mere technical incident, it turns the **error** behind it into **structured knowledge about what went wrong** — while the exception stays the mechanism that signals and propagates that failure.
+The central object is `Error`. An exception or an `Outcome<T>` only transports that error.
 
-## 🧠 An error is not just a message
+```mermaid
+flowchart LR
+    A[Error factory] --> B[Error]
+    B --> C[ToException]
+    B --> D[Outcome or Outcome of T]
+    A --> E[DocumentedBy]
+    E --> F[Generated documentation]
+```
 
-In many systems, exceptions are reduced to:
+## An error represents one situation
 
-> a type + a string message
+A useful error answers a precise question:
 
-In FirstClassErrors, an **error** represents:
+> What situation did the system recognize?
 
-* a **specific error situation**
-* identified by a **stable error code**
-* described with three purpose-built messages (a public summary, an optional public detail, and an internal diagnostic message)
-* optionally enriched with context
-* associated with structured diagnostics
+For example:
 
-An **error** becomes a semantic object, not just a runtime signal.
+```csharp
+InvalidAmountOperationError.CurrencyMismatch(left, right)
+```
 
-### Three messages, two audiences
+The factory gives the situation a readable name. Its stable code gives the same situation a machine-readable identity:
 
-An error carries three messages but deliberately splits them across just **two audiences** — a public one (end users / API clients) and an internal one (logs, support, developers). The separation is guaranteed by construction, so what reaches a caller can never leak what is meant for developers and support:
+```text
+AMOUNT_CURRENCY_MISMATCH
+```
 
-* **`ShortMessage`** (mandatory) — a short public summary, safe to expose to an end user or an API client (e.g. the `title` of an RFC 9457 problem detail).
-* **`DetailedMessage`** (optional) — a controlled public detail, exposable **only** when the application explicitly chooses to (e.g. the `detail` of an RFC 9457 problem detail). It must never carry sensitive or internal information.
-* **`DiagnosticMessage`** (mandatory) — the internal diagnostic message for logs, support and developers. It may contain technical/operational detail (identifiers, offending values, internal state) and is **never** exposed to external clients by default. `error.ToException()` uses it as the exception's `Message`.
+One factory should therefore correspond to one documented error case.
 
-The core model stays HTTP-agnostic: the diagnostic message is never a default HTTP response body, and `type` and `status` remain the application's concern. When an error is exposed over HTTP, its `Code` is the natural RFC 9457 `type`: surface it as a stable URI such as `urn:problem:{service}:{code}`, where `{code}` is the error code in lowercase kebab-case — for example `urn:problem:temperature-simulator:temperature-below-absolute-zero` or `urn:problem:banking-api:money-transfer-amount-not-positive` — so clients can branch on the problem type.
+## What an `Error` carries
 
-## 🧩 A factory represents an error situation
+An error occurrence contains:
 
-**Error** factories are central to the model.
+- a stable `Code`;
+- a unique `InstanceId`;
+- an `OccurredAt` timestamp;
+- public and internal messages;
+- optional typed context;
+- optional inner errors.
 
-A factory method:
+The factory centralizes how these values are created, so every occurrence of the same situation remains consistent.
 
-* represents one precise error scenario
-* gives it a **name** in the code
-* centralizes error creation
-* becomes the anchor for documentation
+## Three messages, two audiences
 
-This means:
+An error carries three messages, divided between a public audience and an internal audience.
 
-> Each factory = one documented error case.
+| Message | Mandatory | Audience | Purpose |
+| --- | --- | --- | --- |
+| `ShortMessage` | yes | users and API clients | safe public summary |
+| `DetailedMessage` | no | users and API clients | optional controlled detail |
+| `DiagnosticMessage` | yes | logs, support, developers | internal investigation detail |
 
-Factories improve readability and make error situations explicit, while keeping construction details out of the business logic.
+The separation is deliberate. A diagnostic message may contain identifiers, offending values, or internal state that must never be exposed to an external client by default.
 
-## 📘 Documentation lives with the code
+```csharp
+return DomainError.Create(
+        Code.CurrencyMismatch,
+        diagnosticMessage: $"Cannot add {left} and {right} because their currencies differ.")
+    .WithPublicMessage(
+        shortMessage: "The amounts use different currencies.",
+        detailedMessage: "Both amounts must use the same currency.");
+```
 
-Error documentation is written using the `DescribeError` DSL and linked directly to **error** factories.
+Calling `error.ToException()` uses the diagnostic message as the exception's `Message`. How public messages are mapped to HTTP, gRPC, a UI, or another transport remains the application's responsibility.
 
-This creates:
+## A factory is the source of truth
 
-* structured descriptions
-* violated rules
-* diagnostics
-* realistic examples
+Factories keep construction details out of business logic:
 
-Because documentation is code:
+```csharp
+if (Currency != other.Currency) {
+    throw InvalidAmountOperationError.CurrencyMismatch(this, other).ToException();
+}
+```
 
-* it evolves with the system
-* it does not drift
-* it can be extracted automatically
+The code states the recognized situation without repeating its code, messages, context, or construction rules.
 
-This is **living documentation**.
+Factories also anchor the documentation:
 
-## 🔎 Diagnostics describe hypotheses, not blame
+```csharp
+[DocumentedBy(nameof(CurrencyMismatchDocumentation))]
+internal static DomainError CurrencyMismatch(...) { ... }
+```
 
-Diagnostics answer:
+The linked method describes the stable meaning of the situation: its title, explanation, rule, diagnostics, and representative examples.
 
-* What might have caused this error?
-* Is it likely input-related, system-related, or both?
-* Where should investigation start?
+## Documentation and runtime data are different
 
-Diagnostics are:
+The documentation describes the error **category**:
 
-* structured
-* human-oriented
-* guidance for analysis
+- what the situation means;
+- which rule it represents;
+- what might cause it;
+- where investigation can start.
 
-They do not encode operational processes. They provide **direction**, not procedures.
+The runtime error describes one **occurrence**:
 
-## 🧭 Error taxonomy
+- when it happened;
+- its unique instance id;
+- the actual diagnostic message;
+- occurrence-specific context values.
 
-Errors are modeled as a hierarchy rooted in the abstract `Error` type:
+For example, `ORDER_NOT_FOUND` is the stable category. `OrderId = 42` belongs to one occurrence and therefore belongs in `ErrorContext`.
 
-* **`DomainError`** — a violation of a domain rule (the domain layer).
-* **`InfrastructureError`** — a failure at a technical boundary. It carries a `Transience` (`Unknown` / `NonTransient` / `Transient`) and an `InteractionDirection`.
-  * **`PrimaryPortError`** — incoming boundary (`Direction` fixed to `Incoming`).
-  * **`SecondaryPortError`** — outgoing boundary (`Direction` fixed to `Outgoing`).
+## Diagnostics guide investigation
 
-The Port errors replace the old Adapter exceptions. When a port failure wraps several causes, `PrimaryPortInnerErrors` / `SecondaryPortInnerErrors` aggregate the inner errors and compute the overall transience.
+A diagnostic is a structured hypothesis composed of:
 
-**Nesting rules.** Inner errors capture *causes*, and the model enforces what may nest in what — by construction, not by convention:
+- a possible cause;
+- its likely `ErrorOrigin` (`Internal`, `External`, or `InternalOrExternal`);
+- an analysis lead.
 
-* A **`DomainError`** nests **only** other `DomainError`s. A domain failure is only ever caused by — or aggregated from — other domain failures; it never carries an infrastructure cause (that would leak a technical concern into the domain vocabulary).
-* A **`PrimaryPortError`** / **`SecondaryPortError`** nests **infrastructure errors of its own direction** (a primary port nests primary-port errors, a secondary port nests secondary-port errors) **and/or** `DomainError`s — for example a boundary rejection whose cause is a domain-invariant violation surfaced while mapping an incoming request. The typed `PrimaryPortInnerErrors` / `SecondaryPortInnerErrors` builders make anything else unrepresentable: they only expose `Add(DomainError)` and `Add(`_same-direction port error_`)`.
-* The base **`InfrastructureError`** is the permissive general case and accepts any `Error` as inner. Prefer the Port types in real code: they pin the `InteractionDirection` and keep nesting consistent.
+Diagnostics should not claim a root cause that is not yet known. They should describe plausible states and suggest what to verify first.
 
-In short: **a domain error contains only domain errors; an infrastructure error contains same-direction infrastructure errors and/or domain errors.** The [FAQ](FAQ.en.md) explains *why* this asymmetry exists.
+## One model, two common transports
 
-Each error has a paired exception reached via `error.ToException()`: `DomainException`, `InfrastructureException`, `PrimaryPortException`, `SecondaryPortException`. You never `new` these directly; the exception exposes its `Error` (and through it the context and inner errors).
+When the system cannot continue normally, throw the paired exception:
 
-## 🔁 Error or data? Both are supported
+```csharp
+throw error.ToException();
+```
 
-Traditionally, exceptions are always thrown.
-FirstClassErrors supports two complementary models:
+When failure is expected and should remain explicit in the normal flow, return it as data:
 
-* **Exception as control flow** (classic throw)
-* **Error as data** (`Outcome<T>`, or non-generic `Outcome` when there is no value)
+```csharp
+return Outcome<Amount>.Failure(error);
+```
 
-This allows errors to be:
+The error does not change identity when its transport changes. This makes it possible to return an error from domain logic, log it, or escalate it later without recreating or translating the model.
 
-* raised immediately
-* transported through validation pipelines
-* escalated later
+## Error categories
 
-The same error situation can serve both roles.
+FirstClassErrors provides several categories for distinguishing domain rule violations from technical-boundary failures:
 
-The non-throwing model is `Outcome` / `Outcome<T>`: the `Error` is carried as data (`IsSuccess` / `IsFailure` / `Error`) and can be converted into an exception on demand via `error.ToException()`.
+- `DomainError`;
+- `InfrastructureError`;
+- `PrimaryPortError`;
+- `SecondaryPortError`.
 
-## 🎯 From failures to knowledge
-
-With this model, errors are no longer:
-
-> isolated technical failures
-
-They become:
-
-> shared, structured knowledge about how the system can fail.
-
-This bridges:
-
-* development
-* support
-* documentation
-* operations
-
-All based on the same source of truth: the code.
+Their interaction direction, transience, and composition rules are explained separately in [Error Taxonomy and Composition](ErrorTaxonomy.en.md).
 
 ---
 
 <div align="center">
-<a href="WhenNotToUseFirstClassErrors.en.md">← When Not to Use FirstClassErrors</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="ErrorContext.en.md">Error Context Guide →</a>
+<a href="WhenNotToUseFirstClassErrors.en.md">← When Not to Use FirstClassErrors</a> · <a href="../README.md#-documentation">↑ Table of contents</a> · <a href="ErrorTaxonomy.en.md">Error Taxonomy and Composition →</a>
 </div>
 
 ---
