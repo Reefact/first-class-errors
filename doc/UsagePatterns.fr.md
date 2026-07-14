@@ -87,11 +87,11 @@ foreach (string line in file) {
         continue;
     }
 
-    Process(result.Value);
+    Process(result.GetResultOrThrow());
 }
 ```
 
-Ce pattern n’est pertinent que si continuer est intentionnel. Si un élément invalide rend tout le fichier invalide, retournez ou levez plutôt une erreur au niveau du fichier.
+Après avoir écarté `IsFailure`, `GetResultOrThrow()` retourne la valeur sans lever. Ce pattern n’est pertinent que si continuer est intentionnel. Si un élément invalide rend tout le fichier invalide, retournez ou levez plutôt une erreur au niveau du fichier.
 
 ## 🌐 Frontières entrantes
 
