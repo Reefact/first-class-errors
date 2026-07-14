@@ -129,15 +129,15 @@ Ainsi, un changement cassant n'est pas interdit ; il ne peut simplement plus êt
 
 ## 🧪 Exemple : renommage d'un code
 
-Un développeur renomme `PAYMENT.DECLINED` en `PAYMENT.REFUSED` pendant un refactoring.
+Un développeur renomme `PAYMENT_DECLINED` en `PAYMENT_REFUSED` pendant un refactoring.
 
 Pour un consommateur, ce n'est pas un simple renommage : l'ancien code disparaît et un nouveau code apparaît. Le rapport ressemble donc à ceci :
 
 ```text
 Breaking changes (1):
-  - [removed] PAYMENT.DECLINED — error removed (possibly renamed to 'PAYMENT.REFUSED', which has the same title)
+  - [removed] PAYMENT_DECLINED — error removed (possibly renamed to 'PAYMENT_REFUSED', which has the same title)
 Compatible changes (1):
-  - [added] PAYMENT.REFUSED — new error 'Payment declined' (source: Payment)
+  - [added] PAYMENT_REFUSED — new error 'Payment declined' (source: Payment)
 ```
 
 Si le renommage était accidentel, le développeur le corrige. S'il était volontaire, la mise à jour de la baseline rend la suppression visible dans la pull request et permet au relecteur de l'approuver en connaissance de cause.
