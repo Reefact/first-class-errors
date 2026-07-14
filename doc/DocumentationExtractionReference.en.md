@@ -10,17 +10,19 @@ This page is the operational reference for selecting projects and assemblies, ru
 The common CLI path starts from a solution:
 
 ```bash
-fce generate --solution ./MyApp.sln --format markdown --output ./docs/errors
+fce generate --solution ./MyApp.sln --format markdown --service-name my-api --output ./docs/errors
 ```
 
 At a high level, solution mode:
 
-1. lists projects through `dotnet sln list`;
-2. selects projects according to the opt-in marker;
-3. builds selected projects unless `--no-build` is set;
+1. builds the whole solution unless `--no-build` is set;
+2. lists projects through `dotnet sln list`;
+3. selects projects according to the opt-in marker;
 4. locates their output assemblies;
 5. launches one extraction worker per assembly;
 6. aggregates documentation and failures.
+
+The build runs on the solution itself, before project selection: a compile error in a project that never opted in still fails the run.
 
 ## Project opt-in
 
@@ -66,10 +68,13 @@ Use pre-built assemblies when solution discovery or building should not be part 
 
 ```bash
 fce generate \
-  --assemblies ./artifacts/MyApp.Domain.dll ./artifacts/MyApp.Application.dll \
+  --assemblies ./artifacts/MyApp.Domain.dll \
+  --assemblies ./artifacts/MyApp.Application.dll \
   --format json \
   --output ./artifacts/errors.json
 ```
+
+`--assemblies` takes one path per occurrence; repeat the option for each assembly.
 
 Assembly mode documents exactly the binaries supplied. It does not apply the `.csproj` opt-in filter.
 
@@ -124,20 +129,20 @@ Per-assembly workers isolate those risks. A failure remains associated with the 
 
 ## Failures and continuation
 
-Extraction failures are data, not necessarily immediate process crashes. Typical failures include:
+Extraction failures are data, not necessarily immediate process crashes.
+
+Failures reported by a worker that completes normally are always recorded and logged, and generation continues with the remaining assemblies regardless of the configured failure behavior:
 
 - a `[DocumentedBy]` target cannot be found;
 - the target has an invalid signature;
 - a documentation method throws;
-- an example factory throws;
+- an example factory throws.
+
+Process-level failures honor the configured failure behavior, which determines whether the generator records the problem and continues with other assemblies, or treats the problem as fatal:
+
 - an assembly cannot be loaded;
 - the worker exits unexpectedly;
 - the worker exceeds its timeout.
-
-The configured failure behavior determines whether the generator:
-
-- records the problem and continues with other assemblies; or
-- treats the problem as fatal.
 
 A continued run can therefore produce a partial catalog plus explicit failures. Consumers must not mistake “a file was generated” for “every assembly was documented successfully.”
 
@@ -157,17 +162,17 @@ Documentation code should construct representative errors, not perform real appl
 
 ## Building and `--no-build`
 
-In solution mode, the generator builds selected projects by default. Use `--no-build` only when the expected outputs already exist and match the current source.
+In solution mode, the generator builds the solution by default. Use `--no-build` only when the expected outputs already exist and match the current source.
 
 ```bash
-fce generate --solution ./MyApp.sln --no-build --format markdown --output ./docs/errors
+fce generate --solution ./MyApp.sln --no-build --format markdown --service-name my-api --output ./docs/errors
 ```
 
 A safe CI sequence is:
 
 ```bash
 dotnet build MyApp.sln -c Release
-fce generate --solution MyApp.sln --configuration Release --no-build --format markdown --output artifacts/errors
+fce generate --solution MyApp.sln --configuration Release --no-build --format markdown --service-name my-api --output artifacts/errors
 ```
 
 If `--no-build` points to stale or missing outputs, extraction may document old code or fail to locate assemblies.
