@@ -61,6 +61,10 @@ public static class InvalidAmountOperationError {
         return DescribeError.WithTitle("Amount currency mismatch")
                             .WithDescription("This error occurs when an operation combines amounts expressed in different currencies.")
                             .WithRule("A monetary operation must use one common currency.")
+                            .WithDiagnostic(
+                                "The amounts reached the operation without being converted to one currency.",
+                                ErrorOrigin.Internal,
+                                "Verify where the amounts should have been converted before this operation.")
                             .WithExamples(() => CurrencyMismatch(
                                 new Amount(10, Currency.EUR),
                                 new Amount(12, Currency.USD)));
