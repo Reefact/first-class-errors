@@ -29,6 +29,24 @@ fce catalog update --solution MyApp.sln
 
 This extracts the catalog, projects it into its snapshot, and writes `errors-baseline.json` (override with `--baseline`, or set `baseline` in `fce.json`). **Commit this file**: it is the accepted contract, and every change to it goes through code review like any other contract change.
 
+**In CI/CD**, seed it automatically the first time so no one has to remember to bootstrap it — create and commit the file only when it is missing. This belongs on a push to your default branch, and needs a token that can push:
+
+```yaml
+# Runs on push to main; needs: permissions: { contents: write }.
+- name: Seed the error-catalog baseline if missing
+  run: |
+    if [ ! -f errors-baseline.json ]; then
+      fce catalog update --solution MyApp.sln
+      git add errors-baseline.json
+      git -c user.name='github-actions[bot]' \
+          -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+          commit -m 'chore: seed the error-catalog baseline'
+      git push
+    fi
+```
+
+Prefer a one-time local bootstrap (run `fce catalog update` and commit) if you would rather keep CI read-only — only `catalog diff` truly needs to run on every pull request.
+
 ## 🔍 Detect drift in CI
 
 ```bash
@@ -41,7 +59,8 @@ The command extracts the current catalog, compares it against the baseline, and 
 | --- | --- |
 | `0` | No change at or above the `--fail-on` threshold. |
 | `2` | The contract drifted: at least one change reaches the threshold. |
-| `1` | Execution error (missing baseline, failed extraction, …). |
+| `1` | Execution error — a missing baseline, a failed extraction, or a baseline written by a newer schema (see below). |
+| `130` | Cancelled before completing (Ctrl+C). |
 
 `--fail-on` selects the policy: `breaking` (default), `any` (any change at all fails, including additions), or `none` (report only). `--report` selects the output: `text` (default), `markdown` (ready to post as a pull-request comment) or `json` (for tooling).
 
@@ -67,6 +86,53 @@ fce catalog update --solution MyApp.sln
 ```
 
 The command summarizes what it absorbs (`1 breaking, 2 compatible and 0 documentation change(s) accepted`), and the pull request then shows the baseline diff — a removed code appears as a removed line. The accident becomes impossible; the deliberate change becomes visible and reviewable. This is the same discipline as a public-API baseline file, applied to the error catalog.
+
+**In CI/CD**, make accepting a change one action instead of a manual local step: on a pull request labelled `accept-contract-change`, regenerate the baseline and commit it back onto the PR branch, so the change lands as an explicit, reviewable diff (works for same-repository branches; from a fork, run `fce catalog update` locally and push):
+
+```yaml
+# .github/workflows/error-catalog-accept.yml
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  accept:
+    if: github.event.label.name == 'accept-contract-change'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      # Make fce available on the runner (see the full example below).
+      - name: Regenerate and commit the baseline
+        run: |
+          fce catalog update --solution MyApp.sln
+          git add errors-baseline.json
+          if git diff --cached --quiet; then
+            echo 'Baseline already up to date — nothing to accept.'
+          else
+            git -c user.name='github-actions[bot]' \
+                -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+                commit -m 'chore: accept error-catalog contract change'
+            git push
+          fi
+```
+
+For a purely local flow, the same two lines behind a `make accept-errors` target work just as well.
+
+## 🛡️ Baseline resilience & schema versioning
+
+The baseline is a checked-in file, so over a project's life it can be corrupted by a bad merge or produced by a different version of the tool. `fce catalog update` handles each case deliberately rather than silently:
+
+* **A corrupt or unreadable baseline is regenerated, never fatal.** Updating is exactly how a baseline is (re)built, so an existing file that cannot be parsed is rewritten from the current catalog with a warning — a broken baseline never blocks you.
+* **A baseline written by a _newer_ schema is refused, never downgraded.** Every snapshot carries a `schema` version. If a teammate committed a baseline with a newer tool, an older tool will not overwrite it with an older schema — that would silently drop information — so it stops with an error telling you to upgrade. `fce catalog diff` refuses it the same way. Upgrading the tool, or aligning versions across the team, resolves it.
+
+So `fce catalog update` exits `0` when the baseline is created, already up to date, or refreshed (including a self-healed one); `1` on an execution error or a newer-schema baseline; and `130` if cancelled.
 
 ## ⚙️ Snapshots without a baseline
 
