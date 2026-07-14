@@ -1,205 +1,224 @@
-# Writing Errors Guide
+# Writing Error Documentation
 
 🌍 **Languages:**  
 🇬🇧 English (this file) | 🇫🇷 [Français](./WritingErrorsGuide.fr.md)
 
-FirstClassErrors gives you tools.
-This guide helps you use them in a consistent and meaningful way.
+A documented error should help someone understand a failure without opening the source code first.
 
-The goal is not just to throw exceptions, but to **express errors clearly, precisely, and usefully** for humans.
+This guide explains how to describe the **stable meaning** of an error: its code, title, description, rule, diagnostics, and examples. Runtime messages are covered separately in [Writing Error Messages](WritingErrorMessages.en.md).
 
-> The prose you write below (title, description, rule, causes, …) can be authored as plain strings or sourced from localized resources so the catalog is generated in several languages — see [Internationalization](Internationalization.en.md).
+> Documentation text may be authored as literals or read from localized resources. See [Internationalization](Internationalization.en.md).
 
-## 🎯 1. Think in *error situations*, not just failures
+## The model in one minute
 
-Each documented error should represent:
+Each documented factory answers six questions:
 
-> **one specific situation in which the system cannot proceed as expected**
+| Element | Question it answers |
+| --- | --- |
+| Error code | How can software identify this situation? |
+| Title | What happened, in a few words? |
+| Description | What does this error mean? |
+| Rule | What should normally be true? |
+| Diagnostics | What may explain it, and where should investigation start? |
+| Examples | What does a real occurrence look like? |
 
-Avoid vague or generic errors such as:
+The goal is not to describe every technical detail. It is to capture the knowledge that remains useful across logs, support investigations, releases, and refactorings.
 
-* “Invalid operation”
-* “Processing error”
-* “Unexpected issue”
+## 1. Start with one precise error situation
 
-Prefer precise, contextual situations:
+A factory should represent one situation in which the system cannot continue as expected.
 
-* “Amount currency mismatch”
-* “Temperature below absolute zero”
-* “Transaction date outside statement period”
+Avoid broad categories such as:
 
-An error should describe *what went wrong in domain terms*, not how the system reacted.
+- `INVALID_OPERATION`
+- `PROCESSING_ERROR`
+- `UNEXPECTED_FAILURE`
 
-## 🏷️ 2. Writing a good **error code**
+Prefer situations that a developer or support engineer can recognize immediately:
 
-The error code is the stable, machine-readable identifier.
+- `AMOUNT_CURRENCY_MISMATCH`
+- `TEMPERATURE_BELOW_ABSOLUTE_ZERO`
+- `TRANSACTION_DATE_OUTSIDE_STATEMENT_PERIOD`
 
-Good practices:
+A useful test is:
 
-* Use a **clear domain scope**
-  `AMOUNT_CURRENCY_MISMATCH`
-* Keep it **stable over time**
-* Avoid technical details (no class names, no method names)
-* One code = one documented error situation
+> Could two occurrences with genuinely different meanings share this documentation without making it vague?
 
-Think of the error code as an API contract.
+If the answer is no, they probably need separate factories and codes.
 
-## 🧾 3. Writing the **Title**
+## 2. Choose a stable error code
 
-The title is a short human summary.
+The code is the machine-readable identity of the error.
 
-It should:
-
-* be concise
-* describe the situation, not the consequence
-* avoid technical wording
+Use `UPPER_SNAKE_CASE`, include enough domain scope to avoid ambiguity, and keep the code independent from class names or implementation details.
 
 Good:
 
-* “Amount currency mismatch”
-* “Temperature below absolute zero”
+```text
+AMOUNT_CURRENCY_MISMATCH
+```
 
 Avoid:
 
-* “InvalidAmountOperationError”
-* “Operation failed”
+```text
+INVALID_AMOUNT_OPERATION_ERROR
+ADD_METHOD_FAILED
+```
 
-## 📝 4. Writing the **Description**
+Treat the code as a contract. Clients, dashboards, alerts, and support procedures may depend on it. Renaming or removing it is therefore a breaking change; see [Catalog Versioning](CatalogVersioning.en.md).
 
-The description explains what the error means.
+## 3. Write a title that names the situation
 
-A good pattern is:
+The title is a short human-readable label.
 
-> “This error occurs trying to…”
+Good titles:
 
-or
+- “Amount currency mismatch”
+- “Temperature below absolute zero”
+- “Transaction date outside statement period”
+
+Avoid titles that merely announce failure:
+
+- “Operation failed”
+- “Invalid value”
+- “Unexpected error”
+
+A title should still make sense when displayed in a catalog index without its description.
+
+## 4. Explain the meaning in plain language
+
+The description explains when the error occurs and what the situation means.
+
+A reliable pattern is:
 
 > “This error occurs when…”
 
-You may choose the phrasing that fits best, but remain consistent within the project. Consistency in wording improves readability and makes the documentation feel cohesive.
-
-The description should:
-
-* describe the situation in plain language
-* be understandable by someone who does not know the code
-* explain *what* happened, not *how the system reacted*
-
-## 📏 5. Writing the **Rule**
-
-The rule expresses the invariant or business constraint.
-
-It should:
-
-* be stated as a general truth
-* describe what must always hold
-
-Examples:
-
-* “All monetary operations must involve amounts expressed in the same currency.”
-* “Temperature cannot go below absolute zero.”
-
-If no explicit rule exists, it is acceptable to omit it.
-
-## 🔍 6. Writing a good **Cause**
-
-A cause describes a plausible reason the error occurred.
-
-It should:
-
-* describe a **state or condition**, not an action
-* avoid blaming
-* be specific enough to guide investigation
+Write for someone who understands the business system but may not know the implementation. Describe the situation, not the stack trace, class, method, or exception-handling behavior.
 
 Good:
 
-* “Amounts were used in a monetary operation without having been converted to the same currency.”
+> “This error occurs when an operation combines monetary amounts expressed in different currencies.”
 
 Avoid:
 
-* “The developer forgot to convert the currency.”
-* “Fix the data.”
+> “This exception is thrown by `Amount.Add` when the currency fields are different.”
 
-## 🧭 7. Writing a good **AnalysisLead**
+## 5. State the violated rule
 
-An analysis lead suggests where to look first.
+The rule expresses the invariant or constraint that should normally hold.
 
-It should:
+Write it as a general truth:
 
-* start with a neutral verb such as *Verify*, *Check*, *Review*
-* guide investigation, not define procedures
-* avoid ticketing or support process details
+> “All monetary operations must involve amounts expressed in the same currency.”
 
-Good:
+A rule should not repeat the description. The description says what happened; the rule says what must be true.
 
-* “Verify whether all amounts involved in the operation were converted to a common currency before being used together.”
+Omit the rule when no meaningful invariant exists rather than inventing one.
+
+## 6. Write diagnostics as hypotheses
+
+A diagnostic contains three parts:
+
+| Part | Purpose |
+| --- | --- |
+| Cause | A plausible state or condition that may explain the error |
+| Origin | Whether that cause is internal, external, or either |
+| Analysis lead | Where investigation should start |
+
+Causes are hypotheses, not proven root causes. Describe conditions without assigning blame.
+
+Good cause:
+
+> “Amounts were used before they had been converted to a common currency.”
 
 Avoid:
 
-* “Open a ticket.”
-* “Contact team X.”
+> “The developer forgot to convert the amounts.”
 
-## 🧪 8. Writing good **Examples**
+A useful analysis lead starts with a neutral verb such as *Check*, *Verify*, or *Review*:
 
-Examples illustrate how the error appears in practice.
+> “Verify whether every amount was converted to the operation currency before calculation.”
 
-They should:
+Do not encode organizational procedures such as “open a ticket” or “contact team X”. Those processes change independently from the application.
 
-* use realistic values
-* be simple and clear
-* highlight the rule violation, not edge cases
+## 7. Use examples to make the rule visible
 
-Examples are not tests — they are educational.
+Examples should use simple, realistic values that make the violation obvious.
 
-## 🧠 9. Separate domain from technical noise
+```csharp
+.WithExamples(
+    () => CurrencyMismatch(
+        new Amount(127.33m, Currency.EUR),
+        new Amount(84.10m, Currency.USD)))
+```
 
-Error documentation should focus on:
+Examples are educational catalog content, not boundary-value tests. Prefer one or two representative occurrences over pathological values.
 
-* domain meaning
-* violated rules
-* plausible causes
+Because the example invokes the real factory, it also keeps the generated documentation connected to the actual runtime error.
 
-Avoid leaking:
+## Complete example
 
-* stack traces
-* framework details
-* internal class names
+```csharp
+[ProvidesErrorsFor(nameof(Amount))]
+public static class InvalidAmountOperationError {
 
-## 🗂️ 10. The three messages an error carries
+    [DocumentedBy(nameof(CurrencyMismatchDocumentation))]
+    internal static DomainError CurrencyMismatch(Amount left, Amount right) {
+        return DomainError.Create(
+                Code.CurrencyMismatch,
+                diagnosticMessage: $"Cannot combine {left.Currency} and {right.Currency} amounts: {left} and {right}.")
+            .WithPublicMessage(
+                shortMessage: "The amounts use different currencies.",
+                detailedMessage: "All amounts in this operation must use the same currency.");
+    }
 
-The elements above describe the **documentation** of an error. In addition, each factory sets the three messages the error carries at runtime, through the staged builder `Type.Create(code, diagnosticMessage, …).WithPublicMessage(shortMessage, detailedMessage)`:
+    private static ErrorDocumentation CurrencyMismatchDocumentation() {
+        return DescribeError
+            .WithTitle("Amount currency mismatch")
+            .WithDescription("This error occurs when an operation combines monetary amounts expressed in different currencies.")
+            .WithRule("All monetary operations must involve amounts expressed in the same currency.")
+            .WithDiagnostic(
+                "Amounts were used before they had been converted to a common currency.",
+                ErrorOrigin.Internal,
+                "Verify whether every amount was converted to the operation currency before calculation.")
+            .AndDiagnostic(
+                "An external request supplied amounts in incompatible currencies.",
+                ErrorOrigin.External,
+                "Check the currencies supplied by the caller and the currency expected by the operation.")
+            .WithExamples(() => CurrencyMismatch(
+                new Amount(127.33m, Currency.EUR),
+                new Amount(84.10m, Currency.USD)));
+    }
 
-| Message             | Mandatory | Audience                | Exposure                                                                                             |
-| ------------------- | --------- | ----------------------- | ---------------------------------------------------------------------------------------------------- |
-| `ShortMessage`      | Yes       | End users / API clients | Safe public summary (e.g. an RFC 9457 `title`).                                                       |
-| `DetailedMessage`   | No        | End users / API clients | Controlled public detail, exposed only when the application chooses to (e.g. an RFC 9457 `detail`); never sensitive or internal. |
-| `DiagnosticMessage` | Yes       | Logs, support, devs     | Internal diagnostic detail (identifiers, offending values, internal state); never exposed to external clients by default. |
+    private static class Code {
+        public static readonly ErrorCode CurrencyMismatch =
+            ErrorCode.Create("AMOUNT_CURRENCY_MISMATCH");
+    }
+}
+```
 
-Keep the diagnostic message rich and technical; keep the public messages safe and free of internal detail. `error.ToException()` uses the diagnostic message as the exception's `Message`. When the error is exposed over HTTP, its `Code` is the natural RFC 9457 `type`: surface it as a stable URI such as `urn:problem:{service}:{code}`, where `{code}` is the error code in lowercase kebab-case — for example `urn:problem:temperature-simulator:temperature-below-absolute-zero` or `urn:problem:banking-api:money-transfer-amount-not-positive` — so clients can branch on the problem type (`type` and `status` remain the application's concern).
+The documentation describes the stable error situation. The factory separately creates a concrete occurrence with runtime messages and values.
 
-## 🏁 Summary
+## Review checklist
 
-When writing errors:
+Before accepting new error documentation, verify that:
 
-| Element       | Purpose                  |
-| ------------- | ------------------------ |
-| Error code    | Stable identifier        |
-| Short message | Safe public summary      |
-| Detailed message | Controlled public detail (optional) |
-| Diagnostic message | Internal, for logs and support |
-| Title         | Short human summary      |
-| Description   | What the error means     |
-| Rule          | The violated invariant   |
-| Cause         | Why it may have happened |
-| Analysis lead | Where to investigate     |
-| Examples      | How it looks in reality  |
+- the factory represents one precise situation;
+- the code is specific, stable, and written in `UPPER_SNAKE_CASE`;
+- the title names the situation rather than announcing failure;
+- the description is understandable without reading the implementation;
+- the rule is a genuine invariant, or is omitted;
+- diagnostic causes are plausible conditions rather than accusations;
+- analysis leads guide investigation without prescribing support workflow;
+- examples are simple, realistic, and call the documented factory;
+- technical noise and sensitive data are absent.
 
-Well-written errors are not just thrown.
-They become part of the **shared understanding of how the system works — and fails.**
+For choosing public and internal runtime text, continue with [Writing Error Messages](WritingErrorMessages.en.md). For a compact project-wide review list, see [Best Practices](BestPractices.en.md).
 
 ---
 
 <div align="center">
-<a href="ErrorContext.en.md">← Error Context Guide</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="UsagePatterns.en.md">Usage Patterns →</a>
+<a href="ErrorContext.en.md">← Error Context Guide</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="WritingErrorMessages.en.md">Writing Error Messages →</a>
 </div>
 
 ---
