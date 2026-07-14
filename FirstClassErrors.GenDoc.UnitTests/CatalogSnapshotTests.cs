@@ -202,11 +202,21 @@ public sealed class CatalogSnapshotSerializerTests {
         Check.ThatCode(() => CatalogSnapshotSerializer.Deserialize(null!)).Throws<ArgumentNullException>();
     }
 
-    [Fact(DisplayName = "A snapshot declaring a newer schema is rejected rather than silently misread.")]
+    [Fact(DisplayName = "A snapshot declaring a newer schema is rejected as a distinct CatalogSchemaTooNewException.")]
     public void ASnapshotDeclaringANewerSchemaIsRejected() {
-        // Exercise & verify
-        Check.ThatCode(() => CatalogSnapshotSerializer.Deserialize("""{ "schema": 999, "errors": [] }"""))
-             .Throws<InvalidOperationException>();
+        // Exercise
+        CatalogSchemaTooNewException? caught = null;
+        try {
+            CatalogSnapshotSerializer.Deserialize("""{ "schema": 999, "errors": [] }""");
+        } catch (CatalogSchemaTooNewException exception) {
+            caught = exception;
+        }
+
+        // Verify: a distinct, catchable type carrying the versions — yet still an InvalidOperationException.
+        Check.That(caught).IsNotNull();
+        Check.That(caught!.DeclaredSchema).IsEqualTo(999);
+        Check.That(caught.SupportedSchema).IsEqualTo(CatalogSnapshot.CurrentSchema);
+        Check.That(caught is InvalidOperationException).IsTrue();
     }
 
     [Fact(DisplayName = "A snapshot without a valid schema version is rejected.")]

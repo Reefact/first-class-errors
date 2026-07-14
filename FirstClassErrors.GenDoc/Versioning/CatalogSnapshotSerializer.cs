@@ -60,7 +60,11 @@ public static class CatalogSnapshotSerializer {
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="json" /> is <c>null</c>.</exception>
     /// <exception cref="InvalidOperationException">
     ///     Thrown when the text is not valid JSON, when the document does not declare a valid <c>schema</c> version,
-    ///     when it declares one newer than <see cref="CatalogSnapshot.CurrentSchema" />, or when an entry has no code.
+    ///     or when an entry has no code.
+    /// </exception>
+    /// <exception cref="CatalogSchemaTooNewException">
+    ///     Thrown when the document declares a schema newer than <see cref="CatalogSnapshot.CurrentSchema" /> (a
+    ///     subtype of <see cref="InvalidOperationException" />).
     /// </exception>
     public static CatalogSnapshot Deserialize(string json) {
         if (json is null) { throw new ArgumentNullException(nameof(json)); }
@@ -83,8 +87,9 @@ public static class CatalogSnapshotSerializer {
         }
 
         if (document.Schema > CatalogSnapshot.CurrentSchema) {
-            throw new InvalidOperationException(
-                $"The snapshot declares schema {document.Schema}, but this tool only understands schema {CatalogSnapshot.CurrentSchema} or lower. Update the tool to read it.");
+            // A distinct type (not a plain InvalidOperationException) so a caller can refuse a too-new baseline
+            // instead of mistaking it for a corrupt one — see CatalogSchemaTooNewException.
+            throw new CatalogSchemaTooNewException(document.Schema.Value, CatalogSnapshot.CurrentSchema);
         }
 
         // A hand-edited "errors": null (or a missing property) deserializes to null; keep the never-null invariant.

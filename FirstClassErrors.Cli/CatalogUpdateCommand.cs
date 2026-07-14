@@ -76,13 +76,15 @@ internal sealed class CatalogUpdateCommand : Command<CatalogUpdateSettings> {
                 return 0;
             }
 
-            // Summarize what the refresh absorbs, so accepting a breaking change is a visible, reviewable act. An
-            // existing baseline that cannot be read (corrupt, or written by a newer schema) must not block the
-            // rewrite — updating is precisely how you regenerate it — so fall back to a plain rewrite with a warning.
+            // Summarize what the refresh absorbs, so accepting a breaking change is a visible, reviewable act. A
+            // corrupt existing baseline must not block the rewrite — updating is precisely how you regenerate it — so
+            // fall back to a plain rewrite with a warning. A baseline written by a NEWER schema is the exception: it is
+            // not corrupt, and overwriting it here would silently downgrade a teammate's contract, so let it propagate
+            // to a hard error (as `catalog diff` already does) telling the user to upgrade the tool.
             CatalogDiff? diff = null;
             try {
                 diff = CatalogDiffer.Diff(CatalogSnapshotSerializer.Deserialize(existingText), current);
-            } catch (InvalidOperationException exception) {
+            } catch (InvalidOperationException exception) when (exception is not CatalogSchemaTooNewException) {
                 logger.Warning($"The existing baseline at '{baselinePath}' could not be read ({exception.Message}); rewriting it.");
             }
 
