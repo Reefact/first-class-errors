@@ -64,6 +64,11 @@ internal static class ErrCtxKey {
             "ORDER_ID",
             "Identifier of the order being processed.");
 
+    public static readonly ErrorContextKey<Guid> StatementId =
+        ErrorContextKey.Create<Guid>(
+            "STATEMENT_ID",
+            "Identifier of the statement being processed.");
+
     public static readonly ErrorContextKey<DateOnly> TransactionDate =
         ErrorContextKey.Create<DateOnly>(
             "TRANSACTION_DATE",
