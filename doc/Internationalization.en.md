@@ -3,118 +3,241 @@
 🌍 **Languages:**  
 🇬🇧 English (this file) | 🇫🇷 [Français](./Internationalisation.fr.md)
 
-FirstClassErrors can produce the error catalog in several languages. Internationalization is **opt-in and granular**: with no setup the documentation is English, and you localize only what you choose.
+FirstClassErrors can generate the same error catalog in several languages. Internationalization is optional and granular: a project may localize every documented error, only selected sources, or nothing at all.
 
-Two things can be localized, at two different stages of the pipeline:
+The most important rule is that localization happens at **two different pipeline stages**.
 
-| What | Localized when | How |
+## The model at a glance
+
+```mermaid
+flowchart LR
+    A[Requested language]
+    B[Extraction culture]
+    C[Localized error content]
+    D[Render culture]
+    E[Localized renderer template]
+    F[Generated catalog]
+
+    A --> B --> C
+    A --> D --> E
+    C --> F
+    E --> F
+```
+
+| Stage | Owns |
+| --- | --- |
+| extraction | titles, descriptions, rules, diagnostic hypotheses, examples, public messages, source descriptions, context-key descriptions |
+| rendering | headings, labels, table headers, navigation, and other renderer-owned boilerplate |
+
+Stable identities remain culture-invariant.
+
+## What remains invariant
+
+Do not localize values used as contracts or operational identifiers:
+
+- error codes;
+- source names created with `nameof(...)`;
+- `ErrorOrigin` values;
+- context-key names;
+- generated file names and anchors;
+- JSON field names and other machine schemas;
+- `DiagnosticMessage`, the internal runtime message.
+
+Keeping these values stable ensures that links, client branches, dashboards, and log queries work across every catalog language.
+
+## The three runtime messages
+
+| Message | Localized? | Reason |
 | --- | --- | --- |
-| **Error content** — titles, explanations, rules, diagnostics, the public messages (short and detailed), source and context descriptions | at **extraction** | your factories read localized resources under the current UI culture |
-| **Renderer templates** — headings, labels, table headers | at **rendering** | the renderer reads its own boilerplate for `RenderRequest.Culture` |
+| `ShortMessage` | yes | public message for users or API clients |
+| `DetailedMessage` | yes | controlled public detail |
+| `DiagnosticMessage` | no | one consistent internal language for logs, support, and development |
 
-Everything else stays **culture-invariant**, so links never break across languages — and so diagnostics stay in one consistent language for logs and support: error codes, source names (`nameof(...)`), `ErrorOrigin` values, the **internal diagnostic message** of each error, and the generated file names and anchors.
+A French catalog may therefore show French public messages while preserving an English diagnostic message. This is intentional: the diagnostic message identifies and explains one runtime occurrence for the internal audience.
 
-### Public messages are localized, the diagnostic message is not
+For message-writing rules, see [Writing Error Messages](WritingErrorMessages.en.md).
 
-An error carries three messages, and they localize differently:
+## Choose the language
 
-* **`ShortMessage`** and **`DetailedMessage`** are public content, so they are localized at extraction like any other prose — read them from resources under the current UI culture.
-* **`DiagnosticMessage`** is deliberately **kept in the author language (culture-invariant)**. It is meant for logs, support and developers, and diagnostic text is most useful when it always reads in one consistent language, regardless of the caller's locale — a deliberate best practice.
-
-As a result, in the generated documentation the public messages render localized while the diagnostic message renders in the invariant (author) language.
-
-The `.Usage` sample ships five languages — English, French, Spanish, German and Swedish (`en`, `fr`, `es`, `de`, `sv`).
-
-## Choosing the language
-
-Pass `--language` (alias `-l`) to `fce generate`, or set a `language` default in `fce.json`; a command-line value overrides the configuration, exactly like the other options. The default is English.
+Pass `--language` or `-l`:
 
 ```bash
-fce generate --solution ./MyApp.sln --format markdown --language sv --output ./docs/errors
+fce generate \
+  --solution ./MyApp.sln \
+  --format markdown \
+  --language fr \
+  --service-name my-api \
+  --output ./docs/errors-fr
 ```
+
+Or configure a default in `fce.json`:
 
 ```json
 {
   "solution": "./MyApp.sln",
-  "language": "sv"
+  "language": "fr"
 }
 ```
 
-## Level 1 — localizing the error content
+A command-line value overrides the configuration. Without a language option, the default catalog language is English.
 
-Error content is localized at **extraction time**. The generator runs each assembly's worker with `CultureInfo.CurrentUICulture` set to the requested language, so any factory that reads localized resources produces that language. In the sample, the prose is read from a small `ResourceManager` wrapper (`UsageErrorMessages`) backed by a `.resx` per language:
+## Localize documentation content
+
+During extraction, the worker runs with `CultureInfo.CurrentUICulture` set from the requested language. Documentation methods and error factories can therefore read `.resx` resources normally.
 
 ```csharp
 private static ErrorDocumentation BelowAbsoluteZeroDocumentation() {
-    return DescribeError.WithTitle(UsageErrorMessages.Get("Temperature_BelowAbsoluteZero_Title"))
-                        .WithDescription(UsageErrorMessages.Get("Temperature_BelowAbsoluteZero_Description"))
-                        // …rules, diagnostics, examples read the same way
-                        ;
+    return DescribeError
+        .WithTitle(Messages.Get("Temperature_BelowAbsoluteZero_Title"))
+        .WithDescription(Messages.Get("Temperature_BelowAbsoluteZero_Description"))
+        .WithRule(Messages.Get("Temperature_BelowAbsoluteZero_Rule"))
+        .WithExamples(() => BelowAbsoluteZero(-1m));
 }
 ```
 
-You are free to author plain string literals instead — that error is then simply always in that one language (see [Opt-in and partial localization](#opt-in-and-partial-localization)).
-
-### The source-group description
-
-`[ProvidesErrorsFor]` accepts a `DescriptionResourceType`. When it is set, the extractor treats `Description` as a **resource key** resolved against that type — the same pattern as `[Display(ResourceType = …)]` in DataAnnotations. When it is absent, `Description` is literal text.
+The runtime factory can localize its public messages through the same resource source:
 
 ```csharp
-[ProvidesErrorsFor(nameof(Amount),
-                   Description = "Amount_Source",                        // a resource key…
-                   DescriptionResourceType = typeof(UsageErrorMessages))] // …resolved against these resources
+return DomainError.Create(
+        Code.BelowAbsoluteZero,
+        diagnosticMessage: $"Temperature {value} is below absolute zero.")
+    .WithPublicMessage(
+        shortMessage: Messages.Get("Temperature_BelowAbsoluteZero_ShortMessage"),
+        detailedMessage: Messages.Get("Temperature_BelowAbsoluteZero_DetailedMessage"));
 ```
 
-### Context-key descriptions
+The diagnostic message remains authored directly in the project’s chosen internal language.
 
-An `ErrorContextKey` is registered once by its name, but its description can be resolved lazily so it follows the current culture. Use the `Func<string?>` overload of `Create`:
+## Localize source descriptions
+
+`[ProvidesErrorsFor]` can treat `Description` as a resource key when `DescriptionResourceType` is set:
+
+```csharp
+[ProvidesErrorsFor(
+    nameof(Amount),
+    Description = "Amount_Source_Description",
+    DescriptionResourceType = typeof(Messages))]
+public static class InvalidAmountError {
+}
+```
+
+Without `DescriptionResourceType`, the description is literal and remains in its authored language.
+
+## Localize context-key descriptions
+
+The key name remains stable, but its documentation description can be resolved lazily:
 
 ```csharp
 public static readonly ErrorContextKey<DateOnly> TransactionDate =
-    ErrorContextKey.Create<DateOnly>("TRANSACTION_DATE", () => UsageErrorMessages.Get("Bank_TransactionDate_Context"));
+    ErrorContextKey.Create<DateOnly>(
+        "TRANSACTION_DATE",
+        () => Messages.Get("TransactionDate_Context_Description"));
 ```
 
-The key's identity (its name) stays fixed; only the description text is deferred and read under the culture in effect when the documentation is extracted.
+This produces localized catalog prose without changing the operational key used in logs.
 
-## Level 2 — localizing the renderer templates
+## Localize renderer templates
 
-A renderer's own boilerplate (headings, labels, table headers) is localized at **rendering time**, from `RenderRequest.Culture`. The built-in Markdown renderer reads its strings from a `.resx` set for that culture; the JSON renderer has no boilerplate to translate — its field names are a machine schema, not prose.
-
-A custom renderer localizes its template the same way — see [Writing a custom renderer](WritingACustomRenderer.en.md). The error *content* it receives is already localized upstream, so a renderer only ever localizes its own text.
-
-## Opt-in and partial localization
-
-Internationalization is never forced:
-
-* An error whose `[ProvidesErrorsFor]` has no `DescriptionResourceType` keeps its literal `Description`.
-* A factory that authors plain strings (rather than reading resources) is always in that one language.
-* Without `--language`, everything renders in English (the invariant culture), byte-for-byte as before i18n existed.
-
-So a project internationalizes only where it wants to. The `.Usage` sample shows both ends: `Temperature` is a plain, non-localized example, while `Amount` and `BankTransactionFileValidator` are fully localized across the five languages.
-
-## Using it without the CLI
-
-When you drive the pipeline yourself, set the **same** culture on both stages so the content and the templates match:
+A renderer receives the target culture through `RenderRequest.Culture`. It should use that culture only for text that belongs to the renderer:
 
 ```csharp
-CultureInfo culture = CultureInfo.GetCultureInfo("sv");
+string heading = RendererResources.GetString(
+    "ErrorCatalogHeading",
+    request.Culture) ?? "Error catalog";
+```
+
+The catalog passed to the renderer already contains localized error content. Translating it again would mix responsibilities and can produce inconsistent output.
+
+The JSON renderer keeps its schema field names invariant because they are a machine contract, not user-facing prose.
+
+See [Writing a custom renderer](WritingACustomRenderer.en.md).
+
+## Partial localization is valid
+
+Internationalization is not all-or-nothing.
+
+A project may contain:
+
+- fully localized sources;
+- documentation written as English literals;
+- source descriptions backed by resources but fixed diagnostic messages;
+- custom renderers localized in fewer languages than the application content.
+
+When a resource is unavailable, the fallback behavior belongs to the application’s resource strategy. Ensure that missing resources do not silently produce empty titles, rules, or public messages.
+
+## Generate several languages in CI
+
+Run one generation per language and publish separate directories:
+
+```bash
+fce generate --solution MyApp.sln --no-build \
+  --format markdown --language en --service-name my-api \
+  --output artifacts/errors/en
+
+fce generate --solution MyApp.sln --no-build \
+  --format markdown --language fr --service-name my-api \
+  --output artifacts/errors/fr
+```
+
+Keep identical catalog versions together so support can switch language without opening documentation from another deployment.
+
+File names and anchors remain invariant, which makes language switching and cross-language links predictable.
+
+## Use the pipeline programmatically
+
+Set the same culture for extraction and rendering:
+
+```csharp
+CultureInfo culture = CultureInfo.GetCultureInfo("fr");
 
 IEnumerable<ErrorDocumentation> catalog =
     SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(
-        "MyApp.sln", new SolutionGenerationOptions { Culture = culture });
+        "MyApp.sln",
+        new SolutionGenerationOptions { Culture = culture });
 
 RenderRequest request = new(RenderLayouts.Single, culture);
-IReadOnlyList<RenderedDocument> documents = new MarkdownErrorDocumentationRenderer().Render(catalog, request);
+
+IReadOnlyList<RenderedDocument> documents =
+    new MarkdownErrorDocumentationRenderer().Render(catalog, request);
 ```
 
-## How the culture flows through the pipeline
+Using different cultures intentionally produces mixed-language output and should be rare.
 
-| Stage | Culture source | What it localizes |
-| --- | --- | --- |
-| Worker / extraction | `CultureInfo.CurrentUICulture` (set from `--language`) | error content (titles, explanations, rules, diagnostics, the public short and detailed messages, source and context descriptions) |
-| Renderer | `RenderRequest.Culture` | the renderer's own templates (headings, labels, table headers) |
+## Common mistakes
 
-Content is localized at extraction; boilerplate at rendering. File names, anchors, and each error's internal diagnostic message stay culture-invariant.
+### Localizing codes or key names
+
+This breaks clients, dashboards, and links. Localize descriptions, never identities.
+
+### Localizing `DiagnosticMessage` per caller
+
+Logs for the same error type become language-dependent and harder to search. Keep one internal author language.
+
+### Translating application content inside a renderer
+
+The renderer receives already localized content. It owns only its template.
+
+### Treating literal text as automatically translated
+
+A literal remains literal. Use resource-backed values where localization is required.
+
+### Publishing languages from different builds
+
+The catalogs may describe different code. Generate every language from the same build and version.
+
+## Review checklist
+
+Before publishing localized catalogs, verify that:
+
+- public prose is backed by the intended resources;
+- codes, keys, paths, anchors, and schemas stay invariant;
+- `DiagnosticMessage` stays in the chosen internal language;
+- source and context descriptions resolve in the requested culture;
+- renderer labels use `RenderRequest.Culture`;
+- missing-resource fallback is explicit and tested;
+- every language is generated from the same binaries;
+- language directories are versioned and published together;
+- the CLI and programmatic paths use the same culture for extraction and rendering.
 
 ---
 
