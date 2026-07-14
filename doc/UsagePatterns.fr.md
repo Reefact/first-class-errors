@@ -1,77 +1,89 @@
 # Patterns d’utilisation
 
-🌍 **Langues:**  
+🌍 **Langues :**  
 🇬🇧 [English](./UsagePatterns.en.md) | 🇫🇷 Français (ce fichier)
 
-FirstClassErrors est particulièrement utile lorsque les erreurs ne sont pas de simples défaillances techniques, mais des **événements porteurs de sens dans la vie du système**.  
-Voici des patterns courants où la bibliothèque apporte clarté et structure.
+FirstClassErrors permet aussi bien de lever une exception que de transporter une erreur comme une donnée. La décision importante ne dépend pas de la syntaxe préférée, mais de **ce que signifie l’échec dans le flux courant**.
 
-## 🧱 1. Invariants de Value Object
+Ce guide aide à choisir le bon pattern. Pour l’API complète d’`Outcome` et la composition des pipelines, consultez [Composer avec Outcome](OutcomeGuide.fr.md).
 
-Lors de la création d’un value object, les états invalides doivent être rejetés.
+## 🧭 Choisir selon le sens de l’échec
+
+| Situation | Représentation conseillée | Pourquoi |
+| --- | --- | --- |
+| Un invariant métier est violé et l’opération ne peut pas continuer | lever une `DomainError` via `.ToException()` | l’échec interrompt l’opération et appartient au domaine |
+| Une entrée invalide est un résultat attendu de validation ou de parsing | retourner `Outcome<T>.Failure(...)` | l’appelant peut traiter l’échec sans utiliser les exceptions comme contrôle de flux |
+| Un élément échoue dans un batch | retourner un `Outcome<T>` par élément | un échec ne doit pas forcément interrompre tout le lot |
+| Une frontière entrante rejette une interaction | utiliser une `PrimaryPortError` | elle conserve la direction entrante et l’éventuelle cause métier |
+| Une dépendance sortante échoue | utiliser une `SecondaryPortError` | elle conserve la direction sortante et la transience |
+| Un échec doit franchir une frontière applicative sous forme d’exception | appeler `ThrowIfFailure()` ou `GetResultOrThrow()` à cette frontière | l’erreur reste une donnée jusqu’au point d’escalade choisi |
+
+La même factory documentée peut servir à plusieurs transports. L’erreur décrit **ce qui s’est produit** ; la lever ou la retourner décrit **comment cet appelant choisit de la propager**.
+
+## 🧱 Invariants métier
+
+Un value object ou une entité ne doit jamais entrer dans un état invalide. Lorsque la construction ou l’opération ne peut pas continuer, levez l’erreur métier documentée.
 
 ```csharp
 public static Amount From(decimal value, Currency currency) {
-    if (value < 0) { throw InvalidAmountOperationError.NegativeAmount(value).ToException(); }
+    if (value < 0) {
+        throw InvalidAmountOperationError.NegativeAmount(value).ToException();
+    }
 
     return new Amount(value, currency);
 }
 ```
 
-Ici :
+Le happy path reste lisible tandis que la factory centralise le code, les messages, le contexte et la documentation.
 
-* la règle métier est explicite
-* l’exception représente une violation précise d’invariant
-* la documentation décrit la règle et les diagnostics
+## 🧮 Opérations métier
 
-Le code métier reste expressif et auto-explicatif.
-
-## 📥 2. Validation d’entrée (API / UI)
-
-Les entrées utilisateur ou externes peuvent être invalides, sans être exceptionnelles au sens technique.
-
-```csharp
-public Outcome<Amount> TryCreateAmount(decimal value, string currencyCode){
-    if (!Currency.TryParse(currencyCode, out var currency))    {
-        return Outcome<Amount>.Failure(InvalidAmountOperationError.UnknownCurrency(currencyCode)); }
-
-    return Outcome<Amount>.Success(new Amount(value, currency));
-}
-```
-
-Les erreurs sont :
-
-* capturées
-* transportables
-* diagnostiquables
-
-sans interrompre le flux.
-
-## 🧮 3. Opérations métier
-
-Les opérations entre objets métier comportent souvent des contraintes sémantiques.
+Des objets métier valides peuvent néanmoins participer à une opération qui viole une règle.
 
 ```csharp
 public Amount Add(Amount other) {
-    if (Currency != other.Currency) { throw InvalidAmountOperationError.CurrencyMismatch(this, other).ToException(); }
+    if (Currency != other.Currency) {
+        throw InvalidAmountOperationError.CurrencyMismatch(this, other).ToException();
+    }
 
     return new Amount(Value + other.Value, Currency);
 }
 ```
 
-Le code se lit comme un langage métier, tandis que l’erreur reste structurée et documentée.
+Préférez une factory précise à une exception générique comme `InvalidOperationException`. Le code doit indiquer quelle situation métier s’est produite.
 
-## 📦 4. Traitement par lots ou fichiers
+## 📥 Échecs de validation attendus
 
-En traitement batch, de nombreux éléments peuvent échouer indépendamment.
+Les entrées utilisateur, le parsing et la validation métier échouent souvent dans le cadre du flux normal. Retournez l’erreur comme donnée lorsque l’appelant est censé décider de la suite.
 
 ```csharp
-foreach (var line in file) {
-    var result = TryParseAmount(line);
+public Outcome<Amount> TryCreateAmount(decimal value, string currencyCode) {
+    if (!Currency.TryParse(currencyCode, out Currency currency)) {
+        return Outcome<Amount>.Failure(
+            InvalidAmountOperationError.UnknownCurrency(currencyCode));
+    }
+
+    if (value < 0) {
+        return Outcome<Amount>.Failure(
+            InvalidAmountOperationError.NegativeAmount(value));
+    }
+
+    return Outcome<Amount>.Success(new Amount(value, currency));
+}
+```
+
+L’échec transporte toujours la même `Error` structurée ; elle n’est simplement pas levée à ce stade.
+
+## 📦 Traitement par lots et fichiers
+
+Dans un batch, chaque élément peut échouer indépendamment. Traitez chaque `Outcome<T>` et poursuivez lorsque cela correspond à la règle métier.
+
+```csharp
+foreach (string line in file) {
+    Outcome<Amount> result = TryParseAmount(line);
 
     if (result.IsFailure) {
-        Log(result.Error);
-        
+        Log(result.Error!);
         continue;
     }
 
@@ -79,124 +91,87 @@ foreach (var line in file) {
 }
 ```
 
-Les erreurs sont :
+Ce pattern n’est pertinent que si continuer est intentionnel. Si un élément invalide rend tout le fichier invalide, retournez ou levez plutôt une erreur au niveau du fichier.
 
-* collectées
-* loguées avec diagnostics complets
-* non bloquantes pour l’ensemble du traitement
+## 🌐 Frontières entrantes
 
-## 🌐 5. Frontières d’intégration
-
-Lors d’interactions avec des systèmes externes :
-
-* les données peuvent être incohérentes
-* les formats peuvent évoluer
-* les hypothèses peuvent être invalides
-
-Les erreurs de première classe aident à distinguer :
-
-* les problèmes métier
-* les problèmes d’entrée
-* les problèmes système ou de transformation
-
-Les diagnostics orientent l’investigation.
-
-## 🔁 6. Pipelines de validation
-
-Les validations complexes impliquent souvent plusieurs contrôles.
+Un adapter entrant peut rejeter une interaction parce que le mapping, la validation ou la construction métier a échoué.
 
 ```csharp
-var result = ValidateAmount(amount)
-             .Then(CheckCurrency)
-             .Then(CheckLimits);
+DomainError invalidAmount = InvalidAmountOperationError.NegativeAmount(request.Amount);
+
+return PrimaryPortError.Create(
+        Code.RequestRejected,
+        diagnosticMessage: $"La requête {request.Id} contient un montant invalide.",
+        new PrimaryPortInnerErrors().Add(invalidAmount),
+        configureContext: ctx => ctx.Add(ErrCtxKey.RequestId, request.Id))
+    .WithPublicMessage(
+        shortMessage: "La requête contient des données invalides.");
 ```
 
-Chaque échec porte une `Error`, ce qui garde un modèle cohérent tout en évitant des levées d’exception incontrôlées.
+L’erreur de domaine explique la règle violée. L’erreur de port primaire explique le résultat à la frontière. Consultez [Taxonomie et composition des erreurs](ErrorTaxonomy.fr.md) pour les règles d’imbrication.
 
-## 🧩 7. Logging orienté support
+## 🔌 Dépendances sortantes
 
-Comme les erreurs portent des diagnostics structurés, les logs deviennent plus exploitables :
-
-* codes d’erreur stables
-* messages courts porteurs de sens
-* causes documentées
-
-Les équipes support peuvent relier les événements runtime à des cas d’erreur documentés.
-
-## 🛠️ 8. Composer avec le pipeline `Outcome`
-
-`Outcome` et `Outcome<T>` permettent de composer les chemins de succès et d’échec sans lever d’exception.
-Un échec porte une `Error` (jamais une `Exception`), si bien que toute la chaîne reste diagnostiquable.
-
-* **`Then(...)`** — enchaîne l’étape suivante uniquement si la précédente a réussi (court-circuite en cas d’échec).
-* **`To(...)`** — transforme la valeur portée en une autre valeur (`Outcome<T>` uniquement), en préservant un éventuel échec.
-* **`Recover(...)`** — fournit une valeur de repli lorsque la chaîne a échoué.
-* **`Finally(...)`** — exécute un traitement terminal pour le succès comme pour l’échec.
+Une panne de base de données, broker, système de fichiers ou API distante est une interaction sortante.
 
 ```csharp
-Outcome<Receipt> outcome =
-    TryCreateAmount(value, currencyCode)         // Outcome<Amount>
-        .Then(amount => CheckLimits(amount))     // Outcome<Amount>, exécuté seulement en cas de succès
-        .To(amount => amount.WithVat())          // transforme la valeur, les échecs passent au travers
-        .Recover(error => Amount.Zero)           // valeur de repli si la chaîne a échoué
-        .Then(amount => Charge(amount))          // Outcome<Receipt>
-        .Finally(
-            onSuccess: receipt => Log($"Charged {receipt}"),
-            onFailure: error => Log(error));      // error est une Error, pleinement diagnostiquable
+return SecondaryPortError.Create(
+        Code.PaymentProviderUnavailable,
+        diagnosticMessage: "Le fournisseur de paiement a dépassé le délai de 5 secondes.",
+        transience: Transience.Transient)
+    .WithPublicMessage(
+        shortMessage: "Le service de paiement est temporairement indisponible.");
 ```
 
-### Échappatoires
+`Transience` indique si retenter plus tard peut être utile. Elle n’implémente pas elle-même une politique de retry.
 
-Lorsqu’il faut sortir du monde `Outcome` (par exemple à une frontière applicative), deux échappatoires retransforment un échec en levée d’exception :
+## 🔁 Flux applicatifs en plusieurs étapes
 
-* **`ThrowIfFailure()`** — lève l’exception de l’échec (via `error.ToException()`) lorsque l’outcome a échoué ; sinon ne fait rien.
-* **`GetResultOrThrow()`** — retourne la valeur portée en cas de succès, ou lève l’exception de l’échec (`Outcome<T>` uniquement).
+Lorsque plusieurs opérations susceptibles d’échouer doivent s’enchaîner, composez leurs outcomes au lieu de vérifier et déballer chaque résultat manuellement.
 
 ```csharp
-Outcome<Amount> outcome = TryCreateAmount(value, currencyCode);
-
-outcome.ThrowIfFailure();            // lève error.ToException() en cas d’échec
-Amount amount = outcome.GetResultOrThrow(); // valeur en cas de succès, sinon lève
+Outcome<Receipt> result =
+    TryCreateAmount(value, currencyCode)
+        .Then(CheckLimits)
+        .Then(Charge);
 ```
 
-### Composition asynchrone
+Le premier échec court-circuite les étapes suivantes et est propagé sans modification. Utilisez une chaîne fluide uniquement lorsqu’elle est plus lisible qu’un branchement explicite.
 
-Pour les flux asynchrones, `OutcomeTaskExtensions` fournit des surcharges `Then` / `To` / `Recover` / `Finally`
-sur `Task<Outcome>` et `Task<Outcome<T>>`. Chaque surcharge accepte un `CancellationToken` optionnel,
-ce qui permet d’attendre l’ensemble du pipeline :
+Le comportement complet de `Then`, `To`, `Recover`, `Finally`, des surcharges async et des échappatoires est documenté dans [Composer avec Outcome](OutcomeGuide.fr.md).
 
-```csharp
-Outcome<Receipt> outcome =
-    await TryLoadAmountAsync(orderId, cancellationToken)   // Task<Outcome<Amount>>
-        .Then(amount => CheckLimitsAsync(amount), cancellationToken)
-        .To(amount => amount.WithVat())
-        .Recover(error => Amount.Zero)
-        .Then(amount => ChargeAsync(amount), cancellationToken)
-        .Finally(
-            onSuccess: receipt => LogAsync(receipt),
-            onFailure: error => LogAsync(error),
-            cancellationToken);
-```
+## 🧩 Logging et support
 
-## 🎯 Résumé
+Au point où l’échec est traité, loguez l’erreur structurée plutôt que seulement un message public.
 
-FirstClassErrors brille lorsque :
+Les champs utiles comprennent :
 
-| Situation         | Bénéfice                        |
-| ----------------- | ------------------------------- |
-| Invariants métier | Violations sémantiques claires  |
-| Validation        | Erreurs comme données           |
-| Opérations        | Code métier lisible             |
-| Traitement batch  | Gestion d’erreurs non bloquante |
-| Intégration       | Meilleur dépannage              |
-| Support           | Connaissance structurée         |
+- `Code` pour les regroupements et dashboards ;
+- `InstanceId` pour corréler une occurrence ;
+- `OccurredAt` pour l’horodatage ;
+- `DiagnosticMessage` pour l’analyse interne ;
+- `Context` pour les faits propres à l’occurrence ;
+- `InnerErrors` pour la chaîne causale.
 
-La bibliothèque vous aide à exprimer non seulement qu’un échec s’est produit — mais **ce que cela signifie, pourquoi cela a pu arriver et où chercher**.
+Les messages publics sont destinés aux appelants. Les informations de diagnostic sont destinées aux logs, au support et aux développeurs.
+
+## 📌 Checklist de décision
+
+Avant de choisir un pattern, demandez-vous :
+
+1. Cet échec est-il attendu dans le flux normal ?
+2. L’opération courante doit-elle s’arrêter immédiatement ?
+3. S’agit-il d’une règle métier, d’une condition de frontière entrante ou d’une défaillance de dépendance sortante ?
+4. Qui doit prendre la prochaine décision : cette méthode ou son appelant ?
+5. Une chaîne `Outcome` serait-elle plus lisible qu’un branchement explicite ?
+
+Choisissez la représentation à partir de ces réponses, et non d’une règle absolue imposant de toujours lever ou toujours retourner les erreurs.
 
 ---
 
 <div align="center">
-<a href="WritingErrorsGuide.fr.md">← Guide d’écriture des erreurs</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="BestPractices.fr.md">Bonnes pratiques →</a>
+<a href="WritingErrorsGuide.fr.md">← Guide d’écriture des erreurs</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="OutcomeGuide.fr.md">Composer avec Outcome →</a>
 </div>
 
 ---
