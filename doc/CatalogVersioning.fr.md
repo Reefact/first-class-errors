@@ -41,7 +41,8 @@ La commande extrait le catalogue courant, le compare à la baseline et écrit un
 | --- | --- |
 | `0` | Aucun changement au niveau du seuil `--fail-on` ou au-dessus. |
 | `2` | Le contrat a dérivé : au moins un changement atteint le seuil. |
-| `1` | Erreur d'exécution (baseline manquante, extraction en échec, …). |
+| `1` | Erreur d'exécution — baseline manquante, extraction en échec, ou baseline écrite par un schéma plus récent (voir plus bas). |
+| `130` | Interrompu avant la fin (Ctrl+C). |
 
 `--fail-on` choisit la politique : `breaking` (défaut), `any` (tout changement fait échouer, y compris les ajouts) ou `none` (rapport seul). `--report` choisit la sortie : `text` (défaut), `markdown` (prêt à poster en commentaire de pull request) ou `json` (pour l'outillage).
 
@@ -67,6 +68,15 @@ fce catalog update --solution MyApp.sln
 ```
 
 La commande résume ce qu'elle absorbe (`1 breaking, 2 compatible and 0 documentation change(s) accepted`), et la pull request montre alors le diff de la baseline — un code supprimé apparaît comme une ligne supprimée. L'accident devient impossible ; le changement délibéré devient visible et relisible. C'est la même discipline qu'un fichier de baseline d'API publique, appliquée au catalogue d'erreurs.
+
+## 🛡️ Résilience de la baseline & versionnage du schéma
+
+La baseline est un fichier versionné : au fil de la vie d'un projet, elle peut être corrompue par un merge malheureux ou produite par une version différente de l'outil. `fce catalog update` traite chaque cas de façon délibérée plutôt que silencieuse :
+
+* **Une baseline corrompue ou illisible est régénérée, jamais fatale.** Mettre à jour, c'est précisément la façon de (re)construire une baseline : un fichier existant impossible à parser est réécrit à partir du catalogue courant, avec un avertissement — une baseline cassée ne vous bloque jamais.
+* **Une baseline écrite par un schéma _plus récent_ est refusée, jamais rétrogradée.** Chaque snapshot porte une version de `schema`. Si un collègue a commité une baseline avec un outil plus récent, un outil plus ancien ne l'écrasera pas avec un schéma plus ancien — cela supprimerait silencieusement de l'information — : il s'arrête avec une erreur vous invitant à mettre à jour. `fce catalog diff` la refuse de la même manière. Mettre à jour l'outil, ou aligner les versions dans l'équipe, résout le problème.
+
+Ainsi `fce catalog update` sort `0` quand la baseline est créée, déjà à jour ou rafraîchie (y compris auto-réparée) ; `1` sur une erreur d'exécution ou une baseline de schéma trop récent ; et `130` en cas d'interruption.
 
 ## ⚙️ Des snapshots sans baseline
 

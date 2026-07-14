@@ -41,7 +41,8 @@ The command extracts the current catalog, compares it against the baseline, and 
 | --- | --- |
 | `0` | No change at or above the `--fail-on` threshold. |
 | `2` | The contract drifted: at least one change reaches the threshold. |
-| `1` | Execution error (missing baseline, failed extraction, …). |
+| `1` | Execution error — a missing baseline, a failed extraction, or a baseline written by a newer schema (see below). |
+| `130` | Cancelled before completing (Ctrl+C). |
 
 `--fail-on` selects the policy: `breaking` (default), `any` (any change at all fails, including additions), or `none` (report only). `--report` selects the output: `text` (default), `markdown` (ready to post as a pull-request comment) or `json` (for tooling).
 
@@ -67,6 +68,15 @@ fce catalog update --solution MyApp.sln
 ```
 
 The command summarizes what it absorbs (`1 breaking, 2 compatible and 0 documentation change(s) accepted`), and the pull request then shows the baseline diff — a removed code appears as a removed line. The accident becomes impossible; the deliberate change becomes visible and reviewable. This is the same discipline as a public-API baseline file, applied to the error catalog.
+
+## 🛡️ Baseline resilience & schema versioning
+
+The baseline is a checked-in file, so over a project's life it can be corrupted by a bad merge or produced by a different version of the tool. `fce catalog update` handles each case deliberately rather than silently:
+
+* **A corrupt or unreadable baseline is regenerated, never fatal.** Updating is exactly how a baseline is (re)built, so an existing file that cannot be parsed is rewritten from the current catalog with a warning — a broken baseline never blocks you.
+* **A baseline written by a _newer_ schema is refused, never downgraded.** Every snapshot carries a `schema` version. If a teammate committed a baseline with a newer tool, an older tool will not overwrite it with an older schema — that would silently drop information — so it stops with an error telling you to upgrade. `fce catalog diff` refuses it the same way. Upgrading the tool, or aligning versions across the team, resolves it.
+
+So `fce catalog update` exits `0` when the baseline is created, already up to date, or refreshed (including a self-healed one); `1` on an execution error or a newer-schema baseline; and `130` if cancelled.
 
 ## ⚙️ Snapshots without a baseline
 
