@@ -40,7 +40,7 @@ public interface IErrorDocumentationRenderer {
 }
 ```
 
-Le contrat et le modèle documentaire sont dans le namespace `FirstClassErrors.GenDoc.Rendering` du package `FirstClassErrors`.
+Les types du contrat de rendu sont dans le namespace `FirstClassErrors.GenDoc.Rendering` du package `FirstClassErrors` ; le modèle documentaire lui-même (`ErrorDocumentation` et les types associés) est dans le namespace `FirstClassErrors`.
 
 ### `Format`
 
@@ -87,7 +87,8 @@ Gardez les chemins relatifs, déterministes et sûrs. N’écrivez pas directeme
 `RenderRequest` porte :
 
 - `Layout`, sélectionné avec `--layout` ;
-- `Culture`, utilisée pour les titres, libellés et textes fixes appartenant au renderer.
+- `Culture`, utilisée pour les titres, libellés et textes fixes appartenant au renderer ;
+- `ServiceName`, issu de `--service-name` ou de la configuration, utilisé par les renderers qui émettent des types de problème RFC 9457 (`urn:problem:{service}:{code}`) ; `null` si non configuré.
 
 Le contenu du catalogue a déjà été localisé pendant l’extraction. Un renderer ne doit pas retraduire les titres, règles, messages ou diagnostics des erreurs.
 
@@ -144,6 +145,8 @@ fce config renderer add ./plugins/MyCompany.Renderers.dll
 fce config renderer list
 ```
 
+La configuration contient le chemin enregistré :
+
 ```json
 {
   "renderers": ["./plugins/MyCompany.Renderers.dll"]
@@ -151,6 +154,8 @@ fce config renderer list
 ```
 
 Les chemins peuvent être absolus ou relatifs à `fce.json`. Les chemins relatifs rendent la configuration du dépôt portable.
+
+Générez avec le nouveau format :
 
 ```bash
 fce generate \
@@ -170,7 +175,7 @@ La CLI découvre les types de renderer publics dans les assemblies configurés. 
 - utiliser l’assembly de contrat résolu par le processus CLI ;
 - cibler un framework chargeable par ce runtime.
 
-Évitez de déployer une copie privée incompatible de `FirstClassErrors` à côté du plugin. Une référence peut utiliser `<Private>false</Private>` lorsque ce choix correspond au packaging.
+Référencez `FirstClassErrors` sans déployer à côté du plugin de copie privée conflictuelle qui créerait une identité de type distincte pour le contrat. Une référence projet peut utiliser `<Private>false</Private>` lorsque ce choix correspond au packaging.
 
 Un plugin impossible à charger est signalé puis ignoré. Examinez ces avertissements : un format inconnu peut simplement indiquer que son plugin n’a pas été chargé.
 
@@ -183,6 +188,8 @@ string heading = RendererResources.GetString("ErrorCatalog", request.Culture)
                  ?? "Error catalog";
 ```
 
+Gardez ces responsabilités séparées :
+
 | Contenu | Responsable |
 | --- | --- |
 | titre, description, règle, diagnostics, messages publics | extraction et ressources applicatives |
@@ -192,6 +199,8 @@ string heading = RendererResources.GetString("ErrorCatalog", request.Culture)
 Voir [Internationalisation](Internationalisation.fr.md).
 
 ## L’utiliser sans la CLI
+
+Un renderer est une classe ordinaire. Un appelant programmatique peut extraire puis rendre directement :
 
 ```csharp
 CultureInfo culture = CultureInfo.GetCultureInfo("fr");
@@ -218,7 +227,8 @@ Avant de publier un renderer, vérifiez que :
 - `Format` est stable et ne collisionne pas avec un format intégré ;
 - chaque layout déclaré est implémenté ;
 - les layouts non supportés lèvent `LayoutNotSupportedException` ;
-- les chemins et l’ordre de sortie sont déterministes ;
+- les chemins de sortie sont relatifs et déterministes ;
+- l’ordre de sortie est déterministe ;
 - les schémas machine ne changent pas accidentellement ;
 - l’échappement correspond au format cible ;
 - les textes du renderer utilisent `request.Culture` ;

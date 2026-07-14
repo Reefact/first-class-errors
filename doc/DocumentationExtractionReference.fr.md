@@ -10,17 +10,19 @@ Cette page est la référence opérationnelle pour sélectionner les projets et 
 Le parcours CLI courant part d’une solution :
 
 ```bash
-fce generate --solution ./MyApp.sln --format markdown --output ./docs/errors
+fce generate --solution ./MyApp.sln --format markdown --service-name my-api --output ./docs/errors
 ```
 
 Le mode solution :
 
-1. liste les projets via `dotnet sln list` ;
-2. les sélectionne selon le marqueur d’opt-in ;
-3. les compile, sauf avec `--no-build` ;
+1. compile toute la solution, sauf avec `--no-build` ;
+2. liste les projets via `dotnet sln list` ;
+3. les sélectionne selon le marqueur d’opt-in ;
 4. localise leurs assemblies de sortie ;
 5. lance un worker d’extraction par assembly ;
 6. agrège la documentation et les échecs.
+
+Le build porte sur la solution elle-même, avant la sélection des projets : une erreur de compilation dans un projet qui n’a jamais opté fait quand même échouer l’exécution.
 
 ## Opt-in des projets
 
@@ -51,7 +53,7 @@ Conséquences importantes :
 
 Avec une politique de poursuite, les projets ambigus sont signalés puis ignorés. Avec une politique stricte, ils font échouer la génération.
 
-## Options programmatiques
+## Options d’opt-in programmatiques
 
 `SolutionGenerationOptions` permet de modifier les valeurs par défaut :
 
@@ -66,10 +68,13 @@ Utilisez des assemblies déjà compilés lorsque la découverte de solution ou l
 
 ```bash
 fce generate \
-  --assemblies ./artifacts/MyApp.Domain.dll ./artifacts/MyApp.Application.dll \
+  --assemblies ./artifacts/MyApp.Domain.dll \
+  --assemblies ./artifacts/MyApp.Application.dll \
   --format json \
   --output ./artifacts/errors.json
 ```
+
+`--assemblies` accepte un chemin par occurrence ; répétez l’option pour chaque assembly.
 
 Le mode assemblies documente exactement les binaires fournis. Il n’applique pas le filtre d’opt-in du `.csproj`.
 
@@ -124,20 +129,20 @@ Les workers par assembly isolent ces risques et rattachent l’échec à l’ass
 
 ## Échecs et poursuite
 
-Les échecs d’extraction sont des données et ne provoquent pas nécessairement l’arrêt immédiat. Exemples :
+Les échecs d’extraction sont des données et ne provoquent pas nécessairement l’arrêt immédiat.
+
+Les échecs rapportés par un worker qui se termine normalement sont toujours enregistrés et journalisés, et la génération poursuit avec les assemblies restants quelle que soit la politique d’échec configurée :
 
 - cible `[DocumentedBy]` introuvable ;
 - signature invalide ;
 - méthode de documentation qui lève ;
-- factory d’exemple qui lève ;
+- factory d’exemple qui lève.
+
+Les échecs de processus honorent la politique d’échec configurée, qui décide si le générateur enregistre le problème et poursuit avec les autres assemblies, ou le considère comme fatal :
+
 - assembly impossible à charger ;
 - arrêt inattendu du worker ;
 - timeout du worker.
-
-La politique configurée décide si le générateur :
-
-- enregistre le problème et poursuit avec les autres assemblies ;
-- considère le problème comme fatal.
 
 Une exécution poursuivie peut donc produire un catalogue partiel avec des échecs explicites. La présence d’un fichier généré ne prouve pas que tous les assemblies ont été documentés correctement.
 
@@ -150,16 +155,24 @@ Pour analyser un timeout :
 1. exécutez directement la factory documentée ou l’exemple dans un test ;
 2. cherchez les I/O bloquantes, deadlocks ou initialisations dépendantes de l’environnement ;
 3. vérifiez la présence des fichiers runtime et de dépendances ;
-4. évitez tout accès réseau ou service de production ;
+4. évitez tout accès réseau ou service de production dans les factories de documentation ;
 5. gardez les factories d’exemples petites et déterministes.
+
+Le code de documentation doit construire des erreurs représentatives, pas exécuter de véritables workflows applicatifs.
 
 ## Build et `--no-build`
 
-En mode solution, le générateur compile les projets sélectionnés par défaut. Utilisez `--no-build` uniquement lorsque les sorties attendues existent déjà et correspondent au code courant.
+En mode solution, le générateur compile la solution par défaut. Utilisez `--no-build` uniquement lorsque les sorties attendues existent déjà et correspondent au code courant.
+
+```bash
+fce generate --solution ./MyApp.sln --no-build --format markdown --service-name my-api --output ./docs/errors
+```
+
+Une séquence CI sûre est :
 
 ```bash
 dotnet build MyApp.sln -c Release
-fce generate --solution MyApp.sln --configuration Release --no-build --format markdown --output artifacts/errors
+fce generate --solution MyApp.sln --configuration Release --no-build --format markdown --service-name my-api --output artifacts/errors
 ```
 
 Des sorties obsolètes ou absentes peuvent documenter un ancien code ou provoquer un échec de localisation.
@@ -167,6 +180,8 @@ Des sorties obsolètes ou absentes peuvent documenter un ancien code ou provoque
 ## Configuration et framework
 
 La configuration et le framework sélectionnés doivent identifier une sortie réelle pour chaque projet participant. Les projets multi-cibles peuvent nécessiter un framework explicite.
+
+Gardez la configuration de la CLI alignée sur le build qui a produit les assemblies :
 
 ```bash
 fce generate \
@@ -188,13 +203,20 @@ Une méthode de documentation doit être :
 - sûre à exécuter plusieurs fois ;
 - limitée à la construction de documentation et d’erreurs représentatives.
 
-Évitez les appels de base de données, HTTP, la configuration de production mutable, les tâches de fond et les modifications d’état global.
+Évitez :
+
+- les appels de base de données ;
+- les appels HTTP ;
+- la lecture de configuration de production mutable ;
+- la dépendance à l’heure courante ou à l’aléatoire lorsqu’elle affecte la sortie ;
+- le démarrage de tâches de fond ;
+- la modification d’état global de l’application.
 
 ## Checklist de dépannage
 
 Lorsque des erreurs attendues manquent, vérifiez :
 
-- le marqueur littéral dans le `.csproj` ;
+- la présence du marqueur littéral `<GenerateErrorDocumentation>true</GenerateErrorDocumentation>` dans le `.csproj` du projet ;
 - `[ProvidesErrorsFor]` sur la classe factory ;
 - `[DocumentedBy]` sur la factory ;
 - l’existence et la signature de la méthode référencée ;

@@ -53,6 +53,10 @@ private static ErrorDocumentation BelowAbsoluteZeroDocumentation() {
         .WithTitle("Température sous le zéro absolu")
         .WithDescription("Cette erreur survient lorsqu'une température est inférieure à la limite physique.")
         .WithRule("Une température ne peut pas être inférieure au zéro absolu.")
+        .WithDiagnostic(
+            "Une température convertie ou calculée est passée sous la limite physique.",
+            ErrorOrigin.Internal,
+            "Vérifiez le calcul ou la conversion qui a produit la valeur.")
         .WithExamples(() => BelowAbsoluteZero(-1m));
 }
 ```
@@ -87,8 +91,8 @@ Pour les règles exactes de découverte, d’opt-in, de timeout et de politique 
 
 Au niveau de la solution, le générateur :
 
-1. découvre les projets qui participent à la génération documentaire ;
-2. les compile, sauf avec `--no-build` ;
+1. compile la solution, sauf avec `--no-build` ;
+2. découvre les projets qui participent à la génération documentaire ;
 3. démarre un worker par assembly de sortie sélectionné ;
 4. collecte la documentation et les échecs d’extraction ;
 5. déduplique et ordonne les erreurs par code.
