@@ -1,167 +1,95 @@
 # FAQ
 
-🌍 **Langues:**  
+🌍 **Langues :**  
 🇬🇧 [English](./FAQ.en.md) | 🇫🇷 Français (ce fichier)
 
-## ❓ Pourquoi ne pas simplement utiliser des exceptions normales ?
+## Pourquoi ne pas simplement utiliser des exceptions normales ?
 
-C’est possible — et FirstClassErrors repose toujours sur les exceptions standard .NET.
+C’est possible. FirstClassErrors utilise toujours les exceptions standard .NET comme mécanisme de signalement et de propagation des défaillances.
 
-La différence est que cette bibliothèque ajoute :
+La bibliothèque enrichit l’`Error` portée par l’exception avec un code stable, du contexte structuré, des diagnostics et une documentation liée. Voir [Concepts fondamentaux](CoreConcepts.fr.md).
 
-* des codes d’erreur stables  
-* des diagnostics structurés  
-* une documentation liée  
-* un modèle cohérent  
+## Pourquoi ne pas utiliser `Result<T, string>` ?
 
-L’exception reste le mécanisme qui signale et propage une défaillance — la bibliothèque ne la remplace pas. Ce qu’elle transforme, c’est l’**erreur** portée par l’exception : d’un simple *signal technique*, celle-ci devient une *unité de connaissance documentée*.
+Une chaîne perd la structure. `Outcome<T>` transporte le même modèle riche d’`Error` que le chemin par exception : code, messages, contexte, diagnostics et identité documentaire.
 
-## ❓ Pourquoi ne pas utiliser `Result<T, string>` à la place ?
+Voir [Cas d’usage](UsagePatterns.fr.md) et [Comparaison avec les librairies de gestion d’erreurs](ComparisonWithOtherLibraries.fr.md).
 
-Une string perd la structure.
+## Est-ce trop lourd pour une application simple ?
 
-FirstClassErrors conserve :
+Cela peut l’être. Les petits scripts, prototypes et systèmes sans besoin durable de support peuvent être mieux servis par des exceptions standard.
 
-* les codes d’erreur  
-* des messages riches  
-* des diagnostics  
-* du contexte  
+Voir [Quand ne pas utiliser FirstClassErrors](WhenNotToUseFirstClassErrors.fr.md) pour les critères de décision.
 
-tout en permettant de transporter les erreurs sans lever d’exception via `Outcome<T>`.
+## Pourquoi utiliser des factories plutôt que `new` ?
 
-Vous obtenez les avantages d’un flux basé sur les résultats sans perdre la puissance des exceptions.
+Une factory donne un nom à une situation d’erreur, centralise son code et ses messages, garde la construction hors du happy path et sert de point d’ancrage à la documentation vivante.
 
-## ❓ N’est-ce pas trop lourd pour des applications simples ?
+Voir [Premiers pas](GettingStarted.fr.md).
 
-Pour de petits scripts ou des prototypes, oui, cela peut être superflu.
+## Quelle différence entre la documentation d’erreur et les messages runtime ?
 
-Cette bibliothèque prend tout son sens dans des systèmes qui sont :
+La documentation décrit la catégorie d’erreur stable : titre, sens, règle, hypothèses de diagnostic et exemples représentatifs.
 
-* riches en domaine  
-* conçus pour durer  
-* critiques pour le support  
-* utilisés par plusieurs équipes  
+Les messages runtime décrivent ou exposent une occurrence concrète :
 
-C’est un investissement dans la clarté et la supportabilité.
+- `ShortMessage` est le résumé public sûr ;
+- `DetailedMessage` est un détail public optionnel et maîtrisé ;
+- `DiagnosticMessage` est le détail interne destiné aux logs et au support.
 
-## ❓ Pourquoi utiliser des factories d’erreur plutôt que `new` ?
+Voir [Écrire la documentation d’une erreur](WritingErrorsGuide.fr.md) et [Écrire les messages d’une erreur](WritingErrorMessages.fr.md).
 
-Les factories d’erreur retournent des objets `Error` (levés via `.ToException()` lorsqu’une exception est nécessaire). Elles :
+## Les diagnostics sont-ils des causes racines ?
 
-* rendent explicites les situations d’erreur  
-* gardent la construction en dehors du happy path  
-* centralisent messages et codes  
-* servent de points d’ancrage pour la documentation  
+Non. Ce sont des hypothèses plausibles et des points de départ pour l’investigation. Ils décrivent ce qui peut expliquer l’erreur sans prétendre à la certitude ni attribuer une faute.
 
-Elles améliorent la lisibilité et rendent possible la documentation vivante.
+## Les diagnostics doivent-ils contenir les procédures du support ?
 
-## ❓ Les diagnostics sont-ils équivalents aux causes racines ?
+Non. Gardez le ticketing, l’escalade et les consignes de contact d’équipe hors de la documentation applicative. Une piste d’analyse indique où chercher ; elle ne prescrit pas un workflow organisationnel.
 
-Non.
+Voir [Écrire la documentation d’une erreur](WritingErrorsGuide.fr.md#6-écrire-les-diagnostics-comme-des-hypothèses).
 
-Les diagnostics décrivent des **explications plausibles** et guident l’investigation.  
-Ce sont des hypothèses, pas des certitudes.
+## Pourquoi écrire la documentation dans le code ?
 
-## ❓ Les diagnostics accusent-ils les développeurs ou les utilisateurs ?
+Parce qu’elle est liée aux mêmes factories qui créent les erreurs. Elle peut être extraite automatiquement et évolue à côté du comportement qu’elle décrit, ce qui réduit la dérive.
 
-Non.
+Voir [Architecture du pipeline de documentation](ArchitectureOfTheDocumentationPipeline.fr.md).
 
-Les diagnostics doivent décrire des états ou des conditions, pas attribuer de responsabilité.
+## Quand ajouter un `ErrorContext` ?
 
-L’objectif est d’aider l’analyse, pas de désigner des fautifs.
+Utilisez-le pour des faits sûrs, propres à une occurrence, qui améliorent réellement le diagnostic ou l’observabilité : identifiant métier, valeur mesurée ou borne pertinente.
 
-## ❓ Pourquoi la documentation est-elle écrite dans le code ?
+N’y placez ni secret, ni payload volumineux, ni documentation générique, ni procédure opérationnelle. Voir [Contexte d’erreur](ErrorContext.fr.md).
 
-Parce que la documentation dans le code :
+## Quand utiliser `Outcome<T>` ?
 
-* évolue avec le système  
-* reste proche du comportement  
-* peut être extraite automatiquement  
+Utilisez-le lorsque l’échec est une branche attendue du flux normal : validation, parsing, traitement par lots ou succès partiel.
 
-Cela évite la dérive entre le code et la documentation.
+Utilisez une exception lorsque l’échec doit interrompre l’opération à ce niveau. Les deux chemins peuvent porter la même `Error`, créée par la même factory.
 
-## ❓ Quand dois-je ajouter un `ErrorContext` à une erreur ?
+Voir [Cas d’usage](UsagePatterns.fr.md).
 
-Utilisez `ErrorContext` pour des **faits spécifiques à l’occurrence** qui améliorent le diagnostic et l’observabilité. Le contexte vit sur l’`Error`, si bien qu’il voyage avec l’erreur, qu’elle soit transportée via `Outcome<T>` ou levée en exception.
+## `Outcome<T>` conserve-t-il une stack trace ?
 
-Bons candidats :
+Aucune exception n’est créée ou levée tant que l’erreur est transportée comme donnée. Si l’échec est ensuite escaladé avec `GetResultOrThrow()` ou `error.ToException()`, l’exception et sa stack trace commencent à ce point d’escalade.
 
-* identifiants métier utiles à l’investigation
-* valeurs ayant violé une règle
-* dates ou bornes pertinentes pour l’échec
+## Puis-je documenter toutes les exceptions ?
 
-Évitez d’y mettre :
+Non. Documentez les erreurs applicatives porteuses de sens : situations reconnues, règles, contraintes ou échecs de frontière qui bénéficient d’une identité stable et d’une explication partagée.
 
-* des données sensibles
-* des payloads volumineux
-* des informations déjà présentes dans la documentation stable de l’erreur
+Les exceptions du framework, crashes accidentels et fautes d’implémentation bas niveau restent généralement des exceptions techniques. Voir [Quand ne pas utiliser FirstClassErrors](WhenNotToUseFirstClassErrors.fr.md).
 
-Règle simple : si la donnée aide à expliquer cette occurrence dans les logs, et qu’elle est sûre à exposer, ajoutez-la.
+## FirstClassErrors est-il lié au Domain-Driven Design ?
 
-## ❓ Quand dois-je utiliser `Outcome<T>` ?
+Non. Son vocabulaire s’accorde bien avec le DDD et l’architecture hexagonale, mais tout système durable qui a besoin d’une sémantique d’erreur explicite, de supportabilité et de documentation vivante peut l’utiliser.
 
-Utilisez-le lorsque l’échec est attendu et fait partie du flux normal :
+## Pourquoi une erreur de domaine ne contient-elle que des erreurs de domaine ?
 
-* validation d’entrées  
-* parsing  
-* traitement par lots  
+Une `DomainError` affirme qu’une règle métier a été violée. Imbriquer une défaillance d’infrastructure à l’intérieur décrirait une panne technique comme une partie du vocabulaire métier.
 
-Utilisez directement des exceptions lorsque :
+Une erreur de port ou d’infrastructure peut contenir une `DomainError` lorsqu’un échec à la frontière est causé par un rejet métier, par exemple une requête entrante impossible à convertir en value object valide. Les deux faits sont ainsi conservés sans rendre le domaine dépendant de HTTP, de la messagerie ou d’une technologie d’adapter.
 
-* des invariants sont violés  
-* le système ne peut pas continuer  
-
-## ❓ `Outcome<T>` fait-il perdre la stack trace ?
-
-Oui — volontairement.
-
-Avec `Outcome<T>`, l’exception est traitée comme une information d’erreur structurée, pas comme un crash runtime.  
-Si vous appelez ensuite `GetResultOrThrow()`, l’exception est levée à ce moment-là.
-
-## ❓ Puis-je documenter toutes les exceptions ?
-
-Non.
-
-Concentrez-vous sur les erreurs porteuses de sens au niveau métier.  
-Ne documentez pas :
-
-* les exceptions du framework  
-* les crashes accidentels  
-* les fautes techniques bas niveau  
-
-Le DSL est destiné aux erreurs qui ont une signification sémantique dans votre système.
-
-## ❓ Est-ce lié au Domain-Driven Design ?
-
-Cela s’aligne très bien avec le DDD, mais ce n’est pas limité à ce cadre.
-
-Tout système qui bénéficie de :
-
-* règles claires  
-* sémantique d’erreur explicite  
-* supportabilité  
-
-peut utiliser cette bibliothèque.
-
-## ❓ Pourquoi une erreur de domaine ne peut-elle imbriquer que des erreurs de domaine, alors qu’une erreur d’infrastructure peut aussi imbriquer une erreur de domaine ?
-
-Parce que le type d’une erreur **suit la nature de la défaillance — quelle règle a été violée — et non l’endroit où la défaillance est détectée.**
-
-Une `DomainError` signifie qu’une règle métier a été enfreinte ; sa cause n’est jamais qu’une autre défaillance métier, donc elle n’imbrique que des `DomainError`. Lui donner une cause d’infrastructure ferait fuiter une préoccupation technique dans le vocabulaire du domaine — et étiquetterait une panne technique comme une faute métier.
-
-Une erreur d’infrastructure / de port *peut*, elle, imbriquer une `DomainError`, parce qu’une frontière signale légitimement une défaillance *au niveau de la requête* dont la *cause* est une règle métier. Le cas d’école : un adapter entrant (port primaire) mappe un DTO en value objects, et un value object refuse d’être construit parce qu’un invariant est violé. Deux faits distincts coexistent :
-
-* la **cause** — « cette valeur est invalide » — appartient au domaine (le value object a produit une `DomainError`) ;
-* la **condition de frontière** — « cette requête est rejetée au bord » — appartient à l’adapter (une `PrimaryPortError`).
-
-Imbriquer l’erreur de domaine dans l’erreur de port conserve les deux. C’est une *erreur d’infrastructure **causée par** une erreur de domaine* — pas l’une ou l’autre.
-
-Attention au sens : le value object reste du code de domaine et émet la `DomainError` ; c’est l’adapter qui classe la condition de frontière comme infrastructure. Un value object ne doit jamais émettre lui-même une erreur d’infrastructure — cela ferait dépendre le domaine de l’infrastructure.
-
-Pourquoi cette distinction en vaut-elle la peine ?
-
-* **Indépendance au transport** — la même `DomainError` se rend en HTTP 400/422, en gRPC `INVALID_ARGUMENT`, ou en code de sortie CLI. Le statut HTTP est un *rendu* de l’erreur, pas son identité.
-* **Exploitation** — on alerte et on rejoue sur `InteractionDirection` et `Transience`, pas sur le seul type. Un utilisateur qui saisit un mauvais email produit une erreur de port *entrante* non-transitoire qui ne doit jamais réveiller personne ; un timeout de base de données produit une erreur *sortante* transitoire qui, elle, le peut. Mettre une saisie invalide dans le même panier que de vraies pannes empoisonnerait ce signal.
+Voir la taxonomie et les règles d’imbrication dans [Concepts fondamentaux](CoreConcepts.fr.md#-taxonomie-des-erreurs).
 
 ---
 
