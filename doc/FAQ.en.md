@@ -3,165 +3,93 @@
 🌍 **Languages:**  
 🇬🇧 English (this file) | 🇫🇷 [Français](./FAQ.fr.md)
 
-## ❓ Why not just use normal exceptions?
+## Why not just use normal exceptions?
 
-You can — and FirstClassErrors still uses standard .NET exceptions.
+You can. FirstClassErrors still uses standard .NET exceptions as the mechanism that signals and propagates failures.
 
-The difference is that this library adds:
+The library enriches the `Error` carried by that exception with a stable code, structured context, diagnostics, and linked documentation. See [Core Concepts](CoreConcepts.en.md).
 
-* stable error codes
-* structured diagnostics
-* linked documentation
-* a consistent model
+## Why not use `Result<T, string>`?
 
-The exception stays what it has always been: the mechanism that signals and propagates a failure — the library doesn’t replace it. What it transforms is the **error** the exception carries: from a mere *technical signal*, it becomes a *documented knowledge unit*.
+A string loses structure. `Outcome<T>` carries the same rich `Error` model used by the exception path: code, messages, context, diagnostics, and documentation identity.
 
-## ❓ Why not use `Result<T, string>` instead?
+See [Usage Patterns](UsagePatterns.en.md) and [Comparison with error-handling libraries](ComparisonWithOtherLibraries.en.md).
 
-A string loses structure.
+## Is this too heavy for a simple application?
 
-FirstClassErrors keeps:
+It can be. Small scripts, prototypes, and systems without long-term support needs may be better served by standard exceptions.
 
-* error codes
-* rich messages
-* diagnostics
-* context
+See [When Not to Use FirstClassErrors](WhenNotToUseFirstClassErrors.en.md) for the decision criteria.
 
-while still allowing errors to be transported without throwing via `Outcome<T>`.
+## Why use error factories instead of `new`?
 
-You get the advantages of result-based flow without losing the power of exceptions.
+A factory gives one error situation a name, centralizes its code and messages, keeps construction out of the happy path, and acts as the anchor for living documentation.
 
-## ❓ Isn’t this too heavy for simple applications?
+See [Getting Started](GettingStarted.en.md).
 
-For small scripts or prototypes, yes, it may be unnecessary.
+## What is the difference between error documentation and runtime messages?
 
-This library shines in systems that are:
+Documentation describes the stable error category: title, meaning, rule, diagnostic hypotheses, and representative examples.
 
-* domain-heavy
-* long-lived
-* support-critical
-* used by multiple teams
+Runtime messages describe or expose a concrete occurrence:
 
-It is an investment in clarity and supportability.
+- `ShortMessage` is the safe public summary;
+- `DetailedMessage` is optional controlled public detail;
+- `DiagnosticMessage` is internal detail for logs and support.
 
-## ❓ Why use error factories instead of `new`?
+See [Writing Error Documentation](WritingErrorsGuide.en.md) and [Writing Error Messages](WritingErrorMessages.en.md).
 
-Error factories return `Error` objects (thrown via `.ToException()` when you need an exception). They:
+## Are diagnostics the same as root causes?
 
-* make error situations explicit
-* keep construction out of the happy path
-* centralize messages and codes
-* act as anchors for documentation
+No. Diagnostics are plausible hypotheses and investigation starting points. They describe what may explain the error without claiming certainty or assigning blame.
 
-They improve readability and enable living documentation.
+## Should diagnostics contain support procedures?
 
-## ❓ Are diagnostics the same as root causes?
+No. Keep ticketing, escalation, and team-contact instructions outside application error documentation. Analysis leads should say where to investigate, not prescribe an organizational workflow.
 
-No.
+See [Writing Error Documentation](WritingErrorsGuide.en.md#6-write-diagnostics-as-hypotheses).
 
-Diagnostics describe **plausible explanations** and guide investigation.
-They are hypotheses, not guarantees.
+## Why is documentation written in code?
 
-## ❓ Do diagnostics blame developers or users?
+Because the documentation is linked to the same factories that create the errors. It can be extracted automatically and evolves beside the behavior it describes, reducing drift.
 
-No.
+See [Architecture of the Documentation Pipeline](ArchitectureOfTheDocumentationPipeline.en.md).
 
-Diagnostics should describe states or conditions, not assign blame.
+## When should I add `ErrorContext`?
 
-The goal is to support analysis, not responsibility attribution.
+Use it for safe, occurrence-specific facts that materially improve diagnosis or observability, such as a business identifier, measured value, or relevant boundary.
 
-## ❓ Why is documentation written in code?
+Do not use it for secrets, large payloads, generic documentation, or operational procedures. See [Error Context](ErrorContext.en.md).
 
-Because documentation in code:
+## When should I use `Outcome<T>`?
 
-* evolves with the system
-* stays close to behavior
-* can be extracted automatically
+Use it when failure is an expected branch of normal flow, such as validation, parsing, batch processing, or partial success.
 
-This prevents drift between code and documentation.
+Use an exception when the failure should interrupt the operation at that level. Both paths can carry the same `Error` created by the same factory.
 
-## ❓ When should I add `ErrorContext` to an error?
+See [Usage Patterns](UsagePatterns.en.md).
 
-Use `ErrorContext` for **instance-specific facts** that help diagnosis and observability. Context lives on the `Error`, so it travels with the error whether it is transported via `Outcome<T>` or thrown as an exception.
+## Does `Outcome<T>` preserve a stack trace?
 
-Good candidates:
+It does not create or throw an exception while the error is carried as data. If the failure is later escalated with `GetResultOrThrow()` or `error.ToException()`, the exception and its stack trace start at that escalation point.
 
-* business identifiers used during investigation
-* values that violated a rule
-* timestamps or boundaries relevant to the failure
+## Can I document every exception?
 
-Avoid adding:
+No. Document meaningful application errors: recognized situations, rules, constraints, or boundary failures that benefit from a stable identity and shared explanation.
 
-* sensitive data
-* large payloads
-* information already present in the stable error documentation
+Framework exceptions, accidental crashes, and low-level implementation faults usually remain technical exceptions. See [When Not to Use FirstClassErrors](WhenNotToUseFirstClassErrors.en.md).
 
-A good rule: if the data helps explain this occurrence in logs, and is safe to expose, add it.
+## Is FirstClassErrors tied to Domain-Driven Design?
 
-## ❓ When should I use `Outcome<T>`?
+No. Its vocabulary aligns well with DDD and hexagonal architecture, but any long-lived system that needs explicit error semantics, supportability, and living documentation can use it.
 
-Use it when failure is expected and part of normal flow:
+## Why can a domain error contain only domain errors?
 
-* input validation
-* parsing
-* batch processing
+A `DomainError` states that a business rule was violated. Nesting an infrastructure failure inside it would describe a technical outage as part of the domain vocabulary.
 
-Use exceptions directly when:
+A port or infrastructure error may contain a `DomainError` when a boundary-level failure is caused by a domain rejection—for example, an incoming request that cannot be mapped into a valid value object. This preserves both facts without making domain code depend on HTTP, messaging, or another adapter technology.
 
-* invariants are violated
-* the system cannot proceed
-
-## ❓ Does `Outcome<T>` lose the stack trace?
-
-Yes — intentionally.
-
-When using `Outcome<T>`, the exception is treated as structured error information, not a runtime crash.
-If you later call `GetResultOrThrow()`, the exception is thrown at that point.
-
-## ❓ Can I document every exception?
-
-No.
-
-Focus on meaningful, domain-relevant errors.
-Do not document:
-
-* framework exceptions
-* accidental crashes
-* low-level technical faults
-
-The DSL is for errors that carry semantic meaning in your system.
-
-## ❓ Is this tied to Domain-Driven Design?
-
-It aligns very well with DDD, but it is not limited to it.
-
-Any system that benefits from:
-
-* clear rules
-* explicit error semantics
-* supportability
-
-can use this library.
-
-## ❓ Why can a domain error only nest domain errors, while an infrastructure error can also nest a domain error?
-
-Because an error's **type follows the nature of the failure — which rule was violated — not the place where the failure is detected.**
-
-A `DomainError` means a business rule was broken; its cause is only ever another business-rule failure, so it nests only `DomainError`s. Giving it an infrastructure cause would leak a technical concern into the domain vocabulary — and mislabel a technical failure as a business one.
-
-An infrastructure / port error *can* nest a `DomainError`, because a boundary legitimately reports a *request-level* failure whose *cause* is a domain rule. The textbook case: an incoming (primary-port) adapter maps a DTO into value objects, and a value object refuses to build because an invariant is violated. Two distinct facts coexist:
-
-* the **cause** — “this value is invalid” — belongs to the domain (the value object produced a `DomainError`);
-* the **boundary condition** — “this request is rejected at the edge” — belongs to the adapter (a `PrimaryPortError`).
-
-Nesting the domain error inside the port error keeps both. It is an *infrastructure error **caused by** a domain error* — not one or the other.
-
-Mind the direction: the value object stays domain code and emits the `DomainError`; the adapter is what classifies the boundary condition as infrastructure. A value object must never emit an infrastructure error itself — that would make the domain depend on infrastructure.
-
-Why does the distinction earn its keep?
-
-* **Transport independence** — the same `DomainError` renders as an HTTP 400/422, a gRPC `INVALID_ARGUMENT`, or a CLI exit code. The HTTP status is a *rendering* of the error, not its identity.
-* **Operations** — you alert and retry on `InteractionDirection` and `Transience`, not on the error type alone. A user who typed a bad email produces a non-transient *inbound* port error that must never page anyone; a database timeout produces a *transient* *outbound* one that might. Collapsing invalid input into the same bucket as real outages would poison that signal.
+See the taxonomy and nesting rules in [Core Concepts](CoreConcepts.en.md#error-taxonomy).
 
 ---
 
