@@ -3,229 +3,167 @@
 🌍 **Languages:**  
 🇬🇧 English (this file) | 🇫🇷 [Français](./CatalogVersioning.fr.md)
 
-An error code does not stay inside the system that emits it. Client applications branch on it, dashboards alert on it, support procedures reference it. Removing or renaming a code is therefore a **breaking change** — of the same nature as removing a public API member — and it deserves the same guardrail: a committed reference, and a CI step that fails when the contract drifts by accident.
+An error code does not stay inside the system that emits it. Client applications branch on it, dashboards alert on it, and support procedures reference it.
 
-FirstClassErrors provides that guardrail through two commands: `fce catalog update` and `fce catalog diff`.
+Removing or renaming a code is therefore a **breaking change**, just like removing a public API member. FirstClassErrors makes that change visible in the pull request before it reaches production.
 
-## 🧾 The contract snapshot
+## 🧭 How it works in one minute
 
-The unit of comparison is the **canonical snapshot**: a small, deterministic JSON projection of the catalog containing only what constitutes the contract.
+```mermaid
+flowchart LR
+    A[Catalog extracted from code] --> B[Current snapshot]
+    C[errors-baseline.json\naccepted contract] --> D[fce catalog diff]
+    B --> D
+    D --> E[Change report]
+    E --> F[Fix the change]
+    E --> G[Or accept it explicitly]
+    G --> C
+```
 
-| Tracked | Role |
+Three concepts are enough:
+
+- a **snapshot** is the canonical representation of the catalog contract at a given point in time;
+- the **baseline** is the accepted snapshot committed to the repository as `errors-baseline.json`;
+- `fce catalog diff` compares the current snapshot with that baseline.
+
+In other words, the baseline answers this question:
+
+> “Which error codes and context data have we explicitly promised to preserve?”
+
+## 🧾 What belongs to the contract
+
+The snapshot contains only the information required to detect a contract break.
+
+| Tracked element | Why it is tracked |
 | --- | --- |
-| `code` | The identity of the error. Its removal is breaking. |
-| `context` (key name + value type) | The structured data attached to occurrences. Log pipelines and dashboards read these by name; a removal or a type change is breaking. |
-| `title`, `source` | Documentation identity — changes are reported as informational, and matching titles are used to hint at probable renames. |
+| `code` | The stable identity of the error. Removing it is breaking. |
+| `context`: key name and value type | Log pipelines, dashboards, and support tooling may read these values by name and type. |
+| `title`, `source` | They help explain changes and detect probable renames. Changing them is informational only. |
 
-Messages, explanations, business rules and diagnostics are deliberately **not** tracked: they are documentation, extracted from live examples, and free to evolve without touching the contract.
+Messages, explanations, business rules, and diagnostics are deliberately **not** versioned as contract data. They are documentation and may evolve without breaking a consumer.
 
-The snapshot is independent of the renderer: whether you publish the human-facing catalog as HTML, Markdown, JSON or a custom format, the same contract file drives versioning. It is deterministic — errors ordered by code, context keys by name, pinned line endings — so the committed file never depends on the machine that produced it. The `fce catalog` commands always extract it under the `en` culture, so the baseline stays culture-independent even when your catalog is localized (see [Internationalization](Internationalization.en.md)).
+## 📌 Initial setup
 
-## 📌 Create the baseline
+### 1. Create the baseline
 
 ```bash
 fce catalog update --solution MyApp.sln
 ```
 
-This extracts the catalog, projects it into its snapshot, and writes `errors-baseline.json` (override with `--baseline`, or set `baseline` in `fce.json`). **Commit this file**: it is the accepted contract, and every change to it goes through code review like any other contract change.
+The command extracts the catalog and creates `errors-baseline.json`.
 
-**In CI/CD**, seed it automatically the first time so no one has to remember to bootstrap it — create and commit the file only when it is missing. This belongs on a push to your default branch, and needs a token that can push:
+> `catalog update` means **accept the current contract**. It does not fix an incompatibility: it replaces the reference with the current catalog state.
 
-```yaml
-# Runs on push to main; needs: permissions: { contents: write }.
-- name: Seed the error-catalog baseline if missing
-  run: |
-    if [ ! -f errors-baseline.json ]; then
-      fce catalog update --solution MyApp.sln
-      git add errors-baseline.json
-      git -c user.name='github-actions[bot]' \
-          -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
-          commit -m 'chore: seed the error-catalog baseline'
-      git push
-    fi
+### 2. Inspect the generated file
+
+A baseline looks like this:
+
+```json
+{
+  "schema": 1,
+  "errors": [
+    {
+      "code": "PAYMENT_DECLINED",
+      "source": "Payment",
+      "title": "Payment declined",
+      "context": [
+        {
+          "key": "PaymentId",
+          "valueType": "System.Guid"
+        }
+      ]
+    }
+  ]
+}
 ```
 
-Prefer a one-time local bootstrap (run `fce catalog update` and commit) if you would rather keep CI read-only — only `catalog diff` truly needs to run on every pull request.
+The file is deterministic: errors are ordered by code and context keys by name. The same catalog therefore produces the same file on every machine.
 
-## 🔍 Detect drift in CI
+### 3. Commit the baseline
+
+```bash
+git add errors-baseline.json
+git commit -m "chore: add error catalog baseline"
+```
+
+The baseline is now the contract accepted by the team. Every later modification appears in the pull-request Git diff.
+
+### 4. Verify the contract
 
 ```bash
 fce catalog diff --solution MyApp.sln
 ```
 
-The command extracts the current catalog, compares it against the baseline, and writes a report to standard output. Its exit code is designed for pipelines:
+This command extracts the current catalog, compares it with the baseline, and reports the detected changes.
 
-| Exit code | Meaning |
-| --- | --- |
-| `0` | No change at or above the `--fail-on` threshold. |
-| `2` | The contract drifted: at least one change reaches the threshold. |
-| `1` | Execution error — a missing baseline, a failed extraction, or a baseline written by a newer schema (see below). |
-| `130` | Cancelled before completing (Ctrl+C). |
+For complete GitHub Actions or GitLab CI integration, see [Integrating catalog versioning into CI/CD](CatalogVersioningCI.en.md).
 
-`--fail-on` selects the policy: `breaking` (default), `any` (any change at all fails, including additions), or `none` (report only). `--report` selects the output: `text` (default), `markdown` (ready to post as a pull-request comment) or `json` (for tooling).
+## 🔁 The daily workflow
 
-## 🧮 How changes are classified
+### No change
 
-| Change | Impact |
+The command exits with `0` and reports that the catalog has not changed.
+
+### Compatible change
+
+Adding an error code or context key is reported, but does not fail with the default policy.
+
+The developer can then update the baseline so the new contract is committed:
+
+```bash
+fce catalog update --solution MyApp.sln
+git add errors-baseline.json
+git commit -m "chore: update error catalog baseline"
+```
+
+### Breaking change
+
+Removing a code, removing a context key, or changing its type makes the command exit with `2`. CI can use that code to block the pull request.
+
+The developer must then choose explicitly between two actions:
+
+1. **The change is accidental:** fix the code and restore the contract.
+2. **The change is intentional:** run `fce catalog update`, inspect the `errors-baseline.json` diff, then commit it.
+
+A breaking change is therefore not forbidden; it simply cannot be introduced silently.
+
+## 🧪 Example: renaming a code
+
+A developer renames `PAYMENT_DECLINED` to `PAYMENT_REFUSED` during a refactoring.
+
+For a consumer, this is not a harmless rename: the old code disappears and a new one appears. The report therefore looks like this:
+
+```text
+Breaking changes (1):
+  - [removed] PAYMENT_DECLINED — error removed (possibly renamed to 'PAYMENT_REFUSED', which has the same title)
+Compatible changes (1):
+  - [added] PAYMENT_REFUSED — new error 'Payment declined' (source: Payment)
+```
+
+If the rename was accidental, the developer fixes it. If it was intentional, updating the baseline makes the removal visible in the pull request so reviewers can approve it knowingly.
+
+## 🧮 Change classification
+
+| Change | Default impact |
 | --- | --- |
 | Error code removed | 💥 Breaking |
 | Context key removed | 💥 Breaking |
-| Context key value type changed | 💥 Breaking |
+| Context key type changed | 💥 Breaking |
 | Error code added | ✅ Compatible |
 | Context key added | ✅ Compatible |
 | Title or source changed | ℹ️ Informational |
 
-A **rename** is a removal plus an addition — and stays breaking, because consumers know the old code. When exactly one added error shares the removed error's title, the report adds a hint: *"possibly renamed to 'NEW_CODE', which has the same title"*.
+A rename remains breaking because consumers know the old code. When the title suggests a probable rename, the report adds a hint for the developer; it does not make the operation compatible.
 
-## ✍️ Accepting a change deliberately
+## 📚 Further reading
 
-When a contract change is intentional, refresh the baseline and commit it:
-
-```bash
-fce catalog update --solution MyApp.sln
-```
-
-The command summarizes what it absorbs (`1 breaking, 2 compatible and 0 documentation change(s) accepted`), and the pull request then shows the baseline diff — a removed code appears as a removed line. The accident becomes impossible; the deliberate change becomes visible and reviewable. This is the same discipline as a public-API baseline file, applied to the error catalog.
-
-**In CI/CD**, make accepting a change one action instead of a manual local step: on a pull request labelled `accept-contract-change`, regenerate the baseline and commit it back onto the PR branch, so the change lands as an explicit, reviewable diff (works for same-repository branches; from a fork, run `fce catalog update` locally and push):
-
-```yaml
-# .github/workflows/error-catalog-accept.yml
-on:
-  pull_request:
-    types: [labeled]
-
-jobs:
-  accept:
-    if: github.event.label.name == 'accept-contract-change'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-      # Make fce available on the runner (see the full example below).
-      - name: Regenerate and commit the baseline
-        run: |
-          fce catalog update --solution MyApp.sln
-          git add errors-baseline.json
-          if git diff --cached --quiet; then
-            echo 'Baseline already up to date — nothing to accept.'
-          else
-            git -c user.name='github-actions[bot]' \
-                -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
-                commit -m 'chore: accept error-catalog contract change'
-            git push
-          fi
-```
-
-For a purely local flow, the same two lines behind a `make accept-errors` target work just as well.
-
-## 🛡️ Baseline resilience & schema versioning
-
-The baseline is a checked-in file, so over a project's life it can be corrupted by a bad merge or produced by a different version of the tool. `fce catalog update` handles each case deliberately rather than silently:
-
-* **A corrupt or unreadable baseline is regenerated, never fatal.** Updating is exactly how a baseline is (re)built, so an existing file that cannot be parsed is rewritten from the current catalog with a warning — a broken baseline never blocks you.
-* **A baseline written by a _newer_ schema is refused, never downgraded.** Every snapshot carries a `schema` version. If a teammate committed a baseline with a newer tool, an older tool will not overwrite it with an older schema — that would silently drop information — so it stops with an error telling you to upgrade. `fce catalog diff` refuses it the same way. Upgrading the tool, or aligning versions across the team, resolves it.
-
-So `fce catalog update` exits `0` when the baseline is created, already up to date, or refreshed (including a self-healed one); `1` on an execution error or a newer-schema baseline; and `130` if cancelled.
-
-## ⚙️ Snapshots without a baseline
-
-Two more ways to produce and compare snapshots:
-
-* `fce generate --snapshot <path>` also writes the canonical snapshot next to whatever format you render — one generation, both the human catalog and the contract file. It reflects the render `--language`; when that is not English the command warns, because a committed baseline should stay culture-independent — use `fce catalog update` (or `--language en`) for that.
-* `fce catalog diff --against <path>` compares the baseline against a snapshot **file** instead of extracting from the source — useful for comparing two release artifacts.
-
-Both `baseline` and `snapshot` can be set in `fce.json` so the paths need not be repeated on every run.
-
-## 🚦 Wiring it into CI/CD: a complete example
-
-The goal of the CI integration is simple: **contract drift must be visible where the change is reviewed** — in the pull request itself, not in a log nobody reads. The loop looks like this:
-
-1. Every pull request runs `fce catalog diff` against the committed baseline.
-2. **No change** → the job passes silently.
-3. **Compatible or documentation changes** → the job still passes (with the default `--fail-on breaking`); the report can be posted for awareness.
-4. **Breaking change** → exit code `2` fails the job, and the Markdown report lands as a pull-request comment. The author then has exactly two honest ways out: fix the accidental removal, or accept it deliberately with `fce catalog update` — in which case the reviewer sees the baseline diff (the removed code appears as a removed line) and approves a breaking change *knowingly*.
-
-Walked through on a concrete scenario: a developer renames `PAYMENT.DECLINED` to `PAYMENT.REFUSED` while refactoring. Without the guardrail, the rename ships silently and every dashboard and client branching on the old code breaks in production. With it, the pull request fails with:
-
-```
-Breaking changes (1):
-  - [removed] PAYMENT.DECLINED — error removed (possibly renamed to 'PAYMENT.REFUSED', which has the same title)
-Compatible changes (1):
-  - [added] PAYMENT.REFUSED — new error 'Payment declined' (source: Payment)
-```
-
-If the rename was accidental, the developer reverts it. If it was deliberate, they run `fce catalog update`, commit `errors-baseline.json`, and the contract change becomes an explicit, reviewable part of the pull request.
-
-### GitHub Actions
-
-```yaml
-name: error-catalog
-
-on:
-  pull_request:
-    branches: [main]
-
-jobs:
-  catalog-diff:
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write # needed to post the report as a comment
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      # Make fce available on the runner (dotnet tool install, a cached
-      # build from source, or your internal distribution).
-
-      - name: Compare the catalog against the baseline
-        run: fce catalog diff --solution MyApp.sln --report markdown > catalog-diff.md
-        # Exit code 2 (breaking change) fails this step, and therefore the job.
-
-      - name: Post the report on the pull request
-        if: failure() # comment only when the contract drifted
-        run: gh pr comment ${{ github.event.pull_request.number }} --body-file catalog-diff.md
-        env:
-          GH_TOKEN: ${{ github.token }}
-```
-
-Two behaviors worth noting: the report is generated *before* the step fails (the redirection captures standard output, the exit code fails the step afterwards), and the comment step runs only `if: failure()` — a quiet pipeline stays quiet.
-
-### GitLab CI
-
-```yaml
-error-catalog:
-  stage: test
-  image: mcr.microsoft.com/dotnet/sdk:10.0
-  script:
-    # Make fce available on the runner (dotnet tool install, a cached
-    # build from source, or your internal distribution).
-    - fce catalog diff --solution MyApp.sln --report markdown > catalog-diff.md
-  artifacts:
-    when: always # keep the report even when the job fails on a breaking change
-    paths:
-      - catalog-diff.md
-```
-
-The exit code drives the job result exactly as on GitHub; `artifacts: when: always` keeps the report downloadable from the failed pipeline, and it can be posted on the merge request with a call to the [notes API](https://docs.gitlab.com/ee/api/notes.html) if you want the comment automation too.
-
-### Beyond pull requests
-
-Running the same `fce catalog diff` on the main branch (on push or on a schedule) catches drift that bypassed the pull-request flow, and `fce catalog diff --against` lets a release pipeline compare two published snapshots — for example, the snapshot shipped with the previous release against the candidate one — to generate release notes for the error contract.
+- [Command, baseline format, and exit-code reference](CatalogVersioningReference.en.md)
+- [CI/CD integration: GitHub Actions, GitLab CI, and advanced workflows](CatalogVersioningCI.en.md)
 
 ---
 
 <div align="center">
-<a href="OperationalIntegration.en.md">← CI/CD and Operational Integration</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="ArchitectureOfTheDocumentationPipeline.en.md">Architecture of the Documentation Pipeline →</a>
+<a href="OperationalIntegration.en.md">← CI/CD and Operational Integration</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="CatalogVersioningReference.en.md">Command reference →</a>
 </div>
 
 ---
