@@ -262,8 +262,8 @@ public abstract class Error {
     /// </summary>
     /// <remarks>
     ///     Unlike <see cref="InstanceId" />, this value is shared across all occurrences
-    ///     of the same logical error and is intended for grouping, monitoring, and alerting. Examples: <c>PAYMENT.DECLINED</c>
-    ///     or <c>INVENTORY.OUT_OF_STOCK</c>.
+    ///     of the same logical error and is intended for grouping, monitoring, and alerting. Examples: <c>PAYMENT_DECLINED</c>
+    ///     or <c>INVENTORY_OUT_OF_STOCK</c>.
     /// </remarks>
     public ErrorCode Code { get; }
 

@@ -9,7 +9,7 @@ namespace FirstClassErrors.Testing;
 ///     <example>
 ///         <code>
 ///         outcome.ShouldFail()
-///                .WithCode("PAYMENT.DECLINED")
+///                .WithCode("PAYMENT_DECLINED")
 ///                .WithContextEntry("CardNetwork", "VISA");
 ///         </code>
 ///     </example>

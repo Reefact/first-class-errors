@@ -45,7 +45,7 @@ usually means unwrapping it by hand and reaching for the null-forgiving
 Outcome<Receipt> outcome = checkout.Pay(order);
 
 Assert.True(outcome.IsFailure);
-Assert.Equal("PAYMENT.DECLINED", outcome.Error!.Code.ToString());
+Assert.Equal("PAYMENT_DECLINED", outcome.Error!.Code.ToString());
 ```
 
 With the testing package, the intent comes first and the boilerplate disappears:
@@ -54,7 +54,7 @@ With the testing package, the intent comes first and the boilerplate disappears:
 // 🙂 After
 checkout.Pay(order)
         .ShouldFail()
-        .WithCode("PAYMENT.DECLINED");
+        .WithCode("PAYMENT_DECLINED");
 ```
 
 ### Successes return their value
@@ -92,7 +92,7 @@ public void Declining_a_payment_reports_a_diagnosable_error()
     Outcome<Receipt> outcome = checkout.Pay(declinedCard);
 
     outcome.ShouldFail()
-           .WithCode("PAYMENT.DECLINED")
+           .WithCode("PAYMENT_DECLINED")
            .WithShortMessage("Your payment was declined.")
            .WithDiagnosticMessage("Issuer refused authorization (code 51).")
            .WithContextEntry("CardNetwork", "VISA");
@@ -113,7 +113,7 @@ Need something the fluent surface doesn't cover? `Subject` gives you the raw
 `Error` back:
 
 ```csharp
-Error error = outcome.ShouldFail().WithCode("ORDER.NOT_FOUND").Subject;
+Error error = outcome.ShouldFail().WithCode("ORDER_NOT_FOUND").Subject;
 
 Assert.Empty(error.InnerErrors);
 ```
@@ -125,11 +125,11 @@ with a message that tells you what actually happened — not the domain's own
 exception:
 
 ```text
-Expected the outcome to succeed, but it failed with [PAYMENT.DECLINED]: Issuer refused authorization (code 51).
+Expected the outcome to succeed, but it failed with [PAYMENT_DECLINED]: Issuer refused authorization (code 51).
 ```
 
 ```text
-Expected the error to have code "ORDER.NOT_FOUND", but it was "ORDER.LOCKED".
+Expected the error to have code "ORDER_NOT_FOUND", but it was "ORDER_LOCKED".
 ```
 
 ---
@@ -161,7 +161,7 @@ public void An_error_records_when_it_occurred()
     using (Clock.UseFixed(instant))
     {
         DomainError error = DomainError
-            .Create(ErrorCode.Create("ORDER.NOT_FOUND"), "Order 42 was not found.")
+            .Create(ErrorCode.Create("ORDER_NOT_FOUND"), "Order 42 was not found.")
             .WithPublicMessage("This order does not exist.");
 
         Assert.Equal(instant, error.OccurredAt);
@@ -268,7 +268,7 @@ public void Looking_up_a_missing_order_fails_deterministically()
         Outcome<Order> outcome = orders.Find(missingId);
 
         ErrorAssertion failure = outcome.ShouldFail()
-                                        .WithCode("ORDER.NOT_FOUND")
+                                        .WithCode("ORDER_NOT_FOUND")
                                         .WithContextEntry("OrderId", missingId);
 
         Assert.Equal(instant, failure.Subject.OccurredAt);
