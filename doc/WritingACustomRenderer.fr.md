@@ -1,39 +1,101 @@
 # Écrire son propre renderer
 
-🌍 **Langues:**  
+🌍 **Langues :**  
 🇬🇧 [English](./WritingACustomRenderer.en.md) | 🇫🇷 Français (ce fichier)
 
-Les formats intégrés `json` et `markdown` couvrent les cas courants, mais n’importe quel format de sortie — HTML, CSV, un gabarit de documentation maison — peut être ajouté sous forme de **renderer personnalisé**. Un renderer ne dépend que du modèle de documentation, pas de la façon dont le catalogue a été produit : en écrire un est donc court et autonome.
+Un renderer personnalisé transforme le catalogue `ErrorDocumentation` déjà extrait dans un format appartenant à votre organisation : CSV, payload pour un portail documentaire, site statique maison ou autre représentation lisible par machine.
+
+Un renderer ne découvre pas les projets et n’exécute pas les factories d’erreur. Il reçoit un catalogue déjà extrait et décide uniquement de sa présentation.
+
+## Le workflow
+
+```mermaid
+flowchart LR
+    A[Catalogue ErrorDocumentation extrait]
+    B[Renderer personnalisé]
+    C[Un ou plusieurs RenderedDocument]
+    D[Fichiers écrits par la CLI ou l'application]
+
+    A --> B --> C --> D
+```
+
+Pour ajouter un format :
+
+1. référencez `FirstClassErrors` ;
+2. implémentez `IErrorDocumentationRenderer` ;
+3. déclarez un `Format` unique et les layouts pris en charge ;
+4. renvoyez un ou plusieurs `RenderedDocument` ;
+5. packagez le renderer dans un assembly chargeable ;
+6. enregistrez cet assembly dans `fce.json` ou avec la CLI.
 
 ## Le contrat
 
-Un renderer implémente `IErrorDocumentationRenderer` (fourni dans le package `FirstClassErrors`, namespace `FirstClassErrors.GenDoc.Rendering`) :
-
 ```csharp
 public interface IErrorDocumentationRenderer {
-    // La valeur choisie avec `fce generate --format <…>`.
     string Format { get; }
-
-    // Les layouts que ce renderer sait produire, ex. "single", "split" (voir RenderLayouts).
     IReadOnlyCollection<string> SupportedLayouts { get; }
-
-    // Transforme le catalogue en un ou plusieurs fichiers de sortie pour le layout et la culture demandés.
-    IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog, RenderRequest request);
+    IReadOnlyList<RenderedDocument> Render(
+        IEnumerable<ErrorDocumentation> catalog,
+        RenderRequest request);
 }
 ```
 
-`RenderedDocument` est un couple `(RelativePath, Content)`. Renvoyez un seul document pour un format mono-fichier, ou plusieurs (un index plus un fichier par erreur) pour un format multi-fichiers — le `RelativePath` sert de nom de fichier lorsque la sortie est un dossier.
+Le contrat et le modèle documentaire sont dans le namespace `FirstClassErrors.GenDoc.Rendering` du package `FirstClassErrors`.
 
-`RenderRequest` porte les deux choix propres à chaque appel :
+### `Format`
 
-* **`Layout`** — la valeur de `fce generate --layout <…>`. Déclarez les layouts pris en charge dans `SupportedLayouts` et rejetez tout autre avec `LayoutNotSupportedException` (le renderer intégré `json` ne gère que `single` ; `markdown` gère `single` et `split`). Un layout est une simple chaîne : un renderer peut donc définir les siens.
-* **`Culture`** — la langue cible. Localisez le texte fixe que vous produisez pour `request.Culture` (le *contenu* des erreurs est déjà localisé en amont par l’extracteur : un renderer ne localise donc que son propre gabarit). Voir [Internationalisation](Internationalisation.fr.md).
-
-Le contrat et le modèle (`ErrorDocumentation`, `ErrorDiagnostic`, …) sont livrés dans le package `FirstClassErrors`, qui cible **.NET Standard 2.0** — un renderer n’a donc besoin que de cette seule référence, que la plupart des projets possèdent déjà.
-
-## Un exemple minimal
+`Format` est la valeur sélectionnée par `--format` :
 
 ```csharp
+public string Format => "csv";
+```
+
+Choisissez un nom stable en minuscules. Les formats intégrés restent prioritaires si un renderer personnalisé réutilise `json`, `markdown` ou `html`.
+
+### `SupportedLayouts`
+
+Un layout décrit la forme de la sortie, pas son format :
+
+```csharp
+public IReadOnlyCollection<string> SupportedLayouts { get; } =
+    new[] { RenderLayouts.Single };
+```
+
+Les noms intégrés sont `single` et `split`, mais un renderer peut définir une autre chaîne si son modèle de sortie l’exige.
+
+Rejetez explicitement un layout non supporté :
+
+```csharp
+if (!SupportedLayouts.Contains(request.Layout, StringComparer.OrdinalIgnoreCase)) {
+    throw new LayoutNotSupportedException(Format, request.Layout, SupportedLayouts);
+}
+```
+
+### `RenderedDocument`
+
+Chaque document renvoyé contient :
+
+- `RelativePath`, le chemin sous l’emplacement de sortie choisi ;
+- `Content`, le contenu complet du fichier.
+
+Renvoyez un document pour un format mono-fichier et plusieurs documents pour un site ou un layout splitté.
+
+Gardez les chemins relatifs, déterministes et sûrs. N’écrivez pas directement les fichiers dans `Render(...)` : l’appelant possède la destination.
+
+### `RenderRequest`
+
+`RenderRequest` porte :
+
+- `Layout`, sélectionné avec `--layout` ;
+- `Culture`, utilisée pour les titres, libellés et textes fixes appartenant au renderer.
+
+Le contenu du catalogue a déjà été localisé pendant l’extraction. Un renderer ne doit pas retraduire les titres, règles, messages ou diagnostics des erreurs.
+
+## Renderer CSV minimal complet
+
+```csharp
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using FirstClassErrors;
@@ -43,36 +105,44 @@ public sealed class CsvErrorDocumentationRenderer : IErrorDocumentationRenderer 
 
     public string Format => "csv";
 
-    // Un seul fichier CSV — ce renderer ne gère que le layout « single ».
-    public IReadOnlyCollection<string> SupportedLayouts { get; } = new[] { RenderLayouts.Single };
+    public IReadOnlyCollection<string> SupportedLayouts { get; } =
+        new[] { RenderLayouts.Single };
 
-    public IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog, RenderRequest request) {
+    public IReadOnlyList<RenderedDocument> Render(
+        IEnumerable<ErrorDocumentation> catalog,
+        RenderRequest request) {
+
         if (!SupportedLayouts.Contains(request.Layout, StringComparer.OrdinalIgnoreCase)) {
             throw new LayoutNotSupportedException(Format, request.Layout, SupportedLayouts);
         }
 
-        var rows    = catalog.Select(error => $"{error.Code},{Quote(error.Title)}");
-        var content = "code,title\n" + string.Join("\n", rows);
+        IEnumerable<string> rows = catalog.Select(error =>
+            $"{Quote(error.Code.ToString())},{Quote(error.Title)}");
 
-        return new[] { new RenderedDocument("errors.csv", content) };
+        string content = "code,title\n" + string.Join("\n", rows);
+
+        return new[] {
+            new RenderedDocument("errors.csv", content)
+        };
     }
 
-    private static string Quote(string? value) => $"\"{(value ?? string.Empty).Replace("\"", "\"\"")}\"";
+    private static string Quote(string? value) {
+        string escaped = (value ?? string.Empty).Replace("\"", "\"\"");
+        return $"\"{escaped}\"";
+    }
 }
 ```
 
-C’est un renderer complet. (Ce CSV n’a aucun texte fixe à traduire ; un renderer qui émet des titres ou des libellés les lirait depuis des ressources indexées par `request.Culture`.)
+Ce renderer est déterministe, prend en charge un seul layout et renvoie un fichier complet.
 
-## Le brancher sur la CLI
+## L’enregistrer dans la CLI
 
-Compilez votre renderer dans une bibliothèque, puis enregistrez-le :
+Compilez le renderer dans une bibliothèque, puis enregistrez l’assembly :
 
 ```bash
 fce config renderer add ./plugins/MyCompany.Renderers.dll
-fce generate --solution MyApp.sln --format csv --output errors.csv
+fce config renderer list
 ```
-
-`fce config renderer add` inscrit le chemin de la bibliothèque dans `fce.json` (vous pouvez aussi éditer le fichier à la main). Au moment de la génération, la CLI charge les assemblies référencées, y découvre chaque renderer public doté d’un constructeur sans paramètre, et sélectionne celui dont le `Format` correspond à `--format`. `fce config renderer list` affiche les formats intégrés et configurés, et un `--format` inconnu liste ce qui est disponible.
 
 ```json
 {
@@ -80,38 +150,86 @@ fce generate --solution MyApp.sln --format csv --output errors.csv
 }
 ```
 
-Les chemins sont absolus ou relatifs à `fce.json`, de sorte qu’une configuration est portable avec ses plugins.
+Les chemins peuvent être absolus ou relatifs à `fce.json`. Les chemins relatifs rendent la configuration du dépôt portable.
 
-### À savoir
+```bash
+fce generate \
+  --solution ./MyApp.sln \
+  --format csv \
+  --layout single \
+  --output ./artifacts/errors.csv
+```
 
-* **Constructeur sans paramètre** — la CLI instancie les renderers par réflexion.
-* **Contrat partagé** — référencez `FirstClassErrors`, mais ne livrez pas votre propre copie de cet assembly à côté de la CLI : le type du renderer doit se résoudre vers l’assembly de contrat de la CLI. Référencez-le sans le copier (par ex. `<Private>false</Private>` sur la référence), ou appuyez-vous sur la version identique déjà présente à côté de la CLI.
-* **Framework cible** — la CLI charge le plugin dans son propre processus ; compilez-le pour un framework qu’elle peut charger.
-* **Les intégrés gagnent les égalités** — si un renderer personnalisé déclare `json` ou `markdown`, c’est l’intégré qui est utilisé.
-* **Les échecs sont tolérés** — un plugin impossible à charger est signalé par un avertissement et ignoré ; il n’interrompt pas la génération.
+## Règles de découverte et de chargement
 
-## Utiliser un renderer sans la CLI
+La CLI découvre les types de renderer publics dans les assemblies configurés. Un renderer doit :
 
-La CLI est optionnelle — un renderer n’est qu’une classe. Si vous obtenez un catalogue vous-même (par exemple via `SolutionErrorDocumentationGenerator`, dans `FirstClassErrors.GenDoc`), le rendre se résume à :
+- implémenter `IErrorDocumentationRenderer` ;
+- être public ;
+- posséder un constructeur sans paramètre ;
+- utiliser l’assembly de contrat résolu par le processus CLI ;
+- cibler un framework chargeable par ce runtime.
+
+Évitez de déployer une copie privée incompatible de `FirstClassErrors` à côté du plugin. Une référence peut utiliser `<Private>false</Private>` lorsque ce choix correspond au packaging.
+
+Un plugin impossible à charger est signalé puis ignoré. Examinez ces avertissements : un format inconnu peut simplement indiquer que son plugin n’a pas été chargé.
+
+## Localiser le texte du renderer
+
+Un schéma CSV peut ne contenir aucun texte à traduire. Un renderer avec des titres doit résoudre uniquement ses propres libellés depuis `request.Culture` :
 
 ```csharp
-// Une seule culture pour les deux niveaux : elle localise le contenu extrait et le texte fixe rendu.
+string heading = RendererResources.GetString("ErrorCatalog", request.Culture)
+                 ?? "Error catalog";
+```
+
+| Contenu | Responsable |
+| --- | --- |
+| titre, description, règle, diagnostics, messages publics | extraction et ressources applicatives |
+| titres, libellés, navigation, en-têtes | ressources du renderer |
+| codes, chemins, ancres, champs de schéma | contrat indépendant de la culture |
+
+Voir [Internationalisation](Internationalisation.fr.md).
+
+## L’utiliser sans la CLI
+
+```csharp
 CultureInfo culture = CultureInfo.GetCultureInfo("fr");
 
 IEnumerable<ErrorDocumentation> catalog =
     SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(
-        "MyApp.sln", new SolutionGenerationOptions { Culture = culture });
+        "MyApp.sln",
+        new SolutionGenerationOptions { Culture = culture });
 
 RenderRequest request = new(RenderLayouts.Single, culture);
-foreach (RenderedDocument document in new CsvErrorDocumentationRenderer().Render(catalog, request)) {
+
+foreach (RenderedDocument document in
+         new CsvErrorDocumentationRenderer().Render(catalog, request)) {
     File.WriteAllText(document.RelativePath, document.Content);
 }
 ```
 
+Utilisez la même culture pour l’extraction et le rendu, sauf si une sortie multilingue mélangée est volontaire.
+
+## Checklist de conception
+
+Avant de publier un renderer, vérifiez que :
+
+- `Format` est stable et ne collisionne pas avec un format intégré ;
+- chaque layout déclaré est implémenté ;
+- les layouts non supportés lèvent `LayoutNotSupportedException` ;
+- les chemins et l’ordre de sortie sont déterministes ;
+- les schémas machine ne changent pas accidentellement ;
+- l’échappement correspond au format cible ;
+- les textes du renderer utilisent `request.Culture` ;
+- le contenu applicatif n’est pas traduit une seconde fois ;
+- `Render(...)` n’effectue pas d’I/O externe ;
+- le plugin se charge sans avertissement dans l’environnement CLI.
+
 ---
 
 <div align="center">
-<a href="ArchitectureOfTheDocumentationPipeline.fr.md">← Architecture du pipeline de documentation</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="Internationalisation.fr.md">Internationalisation →</a>
+<a href="DocumentationExtractionReference.fr.md">← Référence de l’extraction et de la découverte des projets</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="Internationalisation.fr.md">Internationalisation →</a>
 </div>
 
 ---
