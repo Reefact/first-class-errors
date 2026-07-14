@@ -140,11 +140,14 @@ dotnet build MyApp.sln -c Release
 
 fce generate \
   --solution MyApp.sln \
+  --configuration Release \
   --no-build \
   --format markdown \
   --service-name my-api \
   --output artifacts/errors.md
 ```
+
+`--configuration Release` correspond au build ci-dessus : avec `--no-build`, le générateur lit les assemblies produits par cette configuration précise (à défaut, il utilise `Debug`).
 
 Le document généré contient une entrée pour `AMOUNT_CURRENCY_MISMATCH`, avec sa description, sa règle, ses hypothèses de diagnostic et les messages produits par l’exemple.
 
