@@ -40,7 +40,7 @@ public interface IErrorDocumentationRenderer {
 }
 ```
 
-The contract and documentation model are in the `FirstClassErrors.GenDoc.Rendering` namespace of the `FirstClassErrors` package.
+The renderer contract types live in the `FirstClassErrors.GenDoc.Rendering` namespace of the `FirstClassErrors` package; the documentation model itself (`ErrorDocumentation` and related types) lives in the `FirstClassErrors` namespace.
 
 ### `Format`
 
@@ -87,7 +87,8 @@ Keep paths relative, deterministic, and safe. Do not write files directly inside
 `RenderRequest` carries:
 
 - `Layout`, selected by `--layout`;
-- `Culture`, used for renderer-owned headings, labels, and template text.
+- `Culture`, used for renderer-owned headings, labels, and template text;
+- `ServiceName`, set from `--service-name` or the configuration, used by renderers that emit RFC 9457 problem types (`urn:problem:{service}:{code}`); `null` when none is configured.
 
 The catalog content has already been localized during extraction. A renderer must not reinterpret or retranslate error titles, rules, messages, or diagnostics.
 

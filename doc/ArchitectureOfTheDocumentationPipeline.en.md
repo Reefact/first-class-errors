@@ -53,6 +53,10 @@ private static ErrorDocumentation BelowAbsoluteZeroDocumentation() {
         .WithTitle("Temperature below absolute zero")
         .WithDescription("This error occurs when a temperature is below the physical minimum.")
         .WithRule("A temperature cannot be lower than absolute zero.")
+        .WithDiagnostic(
+            "A converted or computed temperature fell below the physical minimum.",
+            ErrorOrigin.Internal,
+            "Check the computation or conversion that produced the value.")
         .WithExamples(() => BelowAbsoluteZero(-1m));
 }
 ```
@@ -87,8 +91,8 @@ For exact discovery, opt-in, timeout, and failure-policy rules, see [Extraction 
 
 At solution level, the generator:
 
-1. discovers the projects that participate in documentation generation;
-2. builds them unless `--no-build` is used;
+1. builds the solution unless `--no-build` is used;
+2. discovers the projects that participate in documentation generation;
 3. starts one worker per selected output assembly;
 4. collects documentation and extraction failures;
 5. deduplicates and orders errors by code.

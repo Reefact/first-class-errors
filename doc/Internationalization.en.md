@@ -91,6 +91,10 @@ private static ErrorDocumentation BelowAbsoluteZeroDocumentation() {
         .WithTitle(Messages.Get("Temperature_BelowAbsoluteZero_Title"))
         .WithDescription(Messages.Get("Temperature_BelowAbsoluteZero_Description"))
         .WithRule(Messages.Get("Temperature_BelowAbsoluteZero_Rule"))
+        .WithDiagnostic(
+            Messages.Get("Temperature_BelowAbsoluteZero_Cause"),
+            ErrorOrigin.Internal,
+            Messages.Get("Temperature_BelowAbsoluteZero_Hint"))
         .WithExamples(() => BelowAbsoluteZero(-1m));
 }
 ```
@@ -195,11 +199,13 @@ IEnumerable<ErrorDocumentation> catalog =
         "MyApp.sln",
         new SolutionGenerationOptions { Culture = culture });
 
-RenderRequest request = new(RenderLayouts.Single, culture);
+RenderRequest request = new(RenderLayouts.Single, culture, "my-api");
 
 IReadOnlyList<RenderedDocument> documents =
     new MarkdownErrorDocumentationRenderer().Render(catalog, request);
 ```
+
+The service name is required by the markdown and html renderers, which embed RFC 9457 examples typed `urn:problem:{service}:{code}`; the json format accepts `null`.
 
 Using different cultures intentionally produces mixed-language output and should be rare.
 
