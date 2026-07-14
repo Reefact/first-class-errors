@@ -1,26 +1,99 @@
 # Principes de conception
 
-🌍 **Langues:**  
+🌍 **Langues :**  
 🇬🇧 [English](./DesignPrinciples.en.md) | 🇫🇷 Français (ce fichier)
 
-FirstClassErrors repose sur l’idée que les erreurs ne sont pas des sous-produits accidentels du code, mais des éléments porteurs de sens dans la connaissance du système. Dans de nombreuses applications, les erreurs sont traitées comme du bruit technique — quelque chose à logger, attraper ou masquer. Cette bibliothèque adopte la position inverse : lorsqu’une erreur est exprimée, elle révèle quelque chose sur les règles, les hypothèses et les frontières du système.
+FirstClassErrors repose sur cinq principes. Chacun possède une conséquence directe dans l’API et dans la manière d’écrire les erreurs.
 
-Une **erreur** n’est pas simplement un échec d’exécution. Elle représente une situation que le système reconnaît et à laquelle il donne un nom. En transformant les situations d’erreur en concepts explicites — via des méthodes factory, des codes, des diagnostics et de la documentation — le système devient plus lisible, plus explicable et plus facile à maintenir.
+## 1. Une erreur est une situation reconnue
 
-Un autre principe fondamental est que la documentation ne doit pas dériver du comportement. La documentation traditionnelle vit dans des fichiers externes et devient progressivement obsolète. Ici, la documentation est définie à côté du code qui crée l’erreur. Cette proximité garantit que la connaissance évolue avec le système lui-même. Si le comportement change, la documentation change avec lui, car ils partagent la même source.
+Une erreur n’est pas seulement un message émis après un échec. C’est une situation que le système reconnaît et à laquelle il donne un nom stable.
 
-Les diagnostics ne sont pas une analyse post-mortem ; ce sont des hypothèses structurées. L’objectif n’est pas d’attribuer une faute ni de déterminer à l’avance une cause racine, mais de fournir des points de départ pertinents pour l’investigation. Les erreurs décrivent ce qui est connu, pas ce qui est supposé.
+```csharp
+InvalidAmountOperationError.CurrencyMismatch(left, right)
+```
 
-La bibliothèque sépare également la sémantique de la mécanique. Lever, intercepter, logger ou transporter des erreurs sont des préoccupations mécaniques. Le sens d’une erreur — quelle règle a été violée, quelle situation s’est produite, ce qui pourrait l’expliquer — appartient au domaine de la connaissance. FirstClassErrors se concentre sur la préservation de ce sens, indépendamment de la manière dont l’erreur circule dans le système.
+Le nom de la factory exprime la situation pour les humains. Son `ErrorCode` donne à cette même situation une identité stable pour les clients, les logs, les dashboards et la documentation.
 
-Enfin, la conception reconnaît que tous les échecs ne doivent pas être exceptionnels au sens runtime. Certaines erreurs font partie du flux normal, comme les échecs de validation ou les problèmes de parsing. En permettant de transporter les erreurs comme données structurées via `Outcome<T>` plutôt que de les lever, le modèle supporte à la fois les flux avec et sans levée d’exception, sans perdre la richesse sémantique.
+**Conséquence :** une factory représente une situation d’erreur précise. Évitez les factories génériques comme `InvalidOperation(...)`, qui masquent plusieurs échecs sans rapport derrière un même nom.
 
-En essence, la bibliothèque encourage les équipes à considérer les erreurs comme des artefacts de connaissance de premier plan. Lorsque les erreurs sont explicites, documentées et structurées, elles améliorent la communication entre les développeurs, les équipes de support et le système lui-même.
+## 2. L’erreur est le modèle ; l’exception est un transport
+
+Lever une exception est une manière de faire circuler une erreur dans le système, pas la définition de l’erreur elle-même.
+
+```csharp
+Error error = InvalidAmountOperationError.CurrencyMismatch(left, right);
+
+throw error.ToException();
+```
+
+La même erreur peut être transportée comme une donnée :
+
+```csharp
+return Outcome<Amount>.Failure(error);
+```
+
+**Conséquence :** modélisez le sens une seule fois, puis choisissez le transport selon le flux. Utilisez une exception lorsque l’exécution ne peut pas continuer normalement ; utilisez `Outcome<T>` lorsque l’échec est attendu et doit être traité explicitement.
+
+## 3. Les informations publiques et internes doivent rester séparées
+
+Un message de diagnostic utile contient souvent des identifiants, des valeurs fautives ou un état interne. Ces informations ne doivent pas devenir accidentellement une réponse d’API.
+
+FirstClassErrors sépare :
+
+- les messages publics destinés aux utilisateurs ou clients d’API ;
+- le message de diagnostic interne destiné aux logs, au support et aux développeurs.
+
+Le builder étagé impose cette distinction lors de la création de l’erreur.
+
+**Conséquence :** les messages publics restent sûrs et maîtrisés, tandis que les diagnostics peuvent conserver les détails nécessaires à l’investigation.
+
+## 4. La documentation doit vivre à côté du comportement
+
+Une documentation écrite loin du code finit par dériver. FirstClassErrors relie chaque factory à une documentation structurée située dans la même classe :
+
+```csharp
+[DocumentedBy(nameof(CurrencyMismatchDocumentation))]
+internal static DomainError CurrencyMismatch(...) { ... }
+```
+
+La méthode de documentation décrit la situation, la règle, les hypothèses de diagnostic et des exemples exécutables.
+
+**Conséquence :** modifier une situation d’erreur amène naturellement sa construction et sa documentation dans la même revue. Le catalogue est généré depuis le code au lieu d’être maintenu comme une seconde source de vérité.
+
+## 5. Les diagnostics sont des hypothèses, pas des verdicts
+
+Au moment où une erreur est définie, sa cause racine exacte est souvent inconnue. Une documentation utile doit donc proposer des explications plausibles et des pistes d’investigation sans attribuer de faute.
+
+Préférez :
+
+> Les montants ont atteint l’opération sans avoir été convertis dans une devise commune.
+
+À :
+
+> Le développeur a oublié de convertir les montants.
+
+**Conséquence :** les diagnostics décrivent des états observables et orientent l’investigation. Ils n’encodent pas de procédures de support, n’affirment pas une certitude et n’accusent ni une personne ni un système.
+
+## Le modèle qui en découle
+
+Ces principes fonctionnent ensemble :
+
+```mermaid
+flowchart LR
+    A[Factory nommée] --> B[Error structurée]
+    B --> C[Exception]
+    B --> D[Outcome]
+    A --> E[Documentation structurée]
+    E --> F[Catalogue généré]
+```
+
+La factory définit une situation significative. L’`Error` en préserve le sens quel que soit le transport choisi, et la documentation liée rend cette même connaissance disponible en dehors du flux d’exécution.
 
 ---
 
 <div align="center">
-<a href="GettingStarted.fr.md">← Premiers pas</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="WhenNotToUseFirstClassErrors.fr.md">Quand ne pas utiliser FirstClassErrors →</a>
+<a href="GettingStarted.fr.md">← Premiers pas</a> · <a href="README.fr.md#-documentation">↑ Table des matières</a> · <a href="WhenNotToUseFirstClassErrors.fr.md">Quand ne pas utiliser FirstClassErrors →</a>
 </div>
 
 ---
