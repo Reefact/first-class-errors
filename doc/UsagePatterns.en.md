@@ -87,11 +87,11 @@ foreach (string line in file) {
         continue;
     }
 
-    Process(result.Value);
+    Process(result.GetResultOrThrow());
 }
 ```
 
-This pattern is appropriate only when continuing is intentional. If one invalid item invalidates the entire file, return or throw a file-level error instead.
+After `IsFailure` has been ruled out, `GetResultOrThrow()` returns the value without throwing. This pattern is appropriate only when continuing is intentional. If one invalid item invalidates the entire file, return or throw a file-level error instead.
 
 ## 🌐 Incoming boundaries
 
