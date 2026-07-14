@@ -1,202 +1,224 @@
-# Guide d’écriture des erreurs
+# Écrire la documentation d’une erreur
 
-🌍 **Langues:**  
+🌍 **Langues :**  
 🇬🇧 [English](./WritingErrorsGuide.en.md) | 🇫🇷 Français (ce fichier)
 
-FirstClassErrors vous fournit des outils. Ce guide vous aide à les utiliser de manière cohérente et porteuse de sens.
+Une erreur documentée doit permettre de comprendre une défaillance sans commencer par ouvrir le code source.
 
-L’objectif n’est pas seulement de lever des exceptions, mais d’**exprimer les erreurs de façon claire, précise et utile** pour des humains.
+Ce guide explique comment décrire le **sens stable** d’une erreur : son code, son titre, sa description, sa règle, ses diagnostics et ses exemples. Les messages portés à l’exécution sont traités séparément dans [Écrire les messages d’une erreur](WritingErrorMessages.fr.md).
 
-> La prose que vous rédigez ci-dessous (titre, description, règle, causes, …) peut être écrite en dur ou lue depuis des ressources localisées, afin de générer le catalogue en plusieurs langues — voir [Internationalisation](Internationalisation.fr.md).
+> Le texte de documentation peut être écrit en dur ou lu depuis des ressources localisées. Voir [Internationalisation](Internationalisation.fr.md).
 
-## 🎯 1. Pensez en *situations d’erreur*, pas seulement en échecs
+## Le modèle en une minute
 
-Chaque erreur documentée doit représenter :
+Chaque factory documentée répond à six questions :
 
-> **une situation précise dans laquelle le système ne peut pas continuer comme prévu**
+| Élément | Question à laquelle il répond |
+| --- | --- |
+| Code d’erreur | Comment le logiciel identifie-t-il cette situation ? |
+| Titre | Que s’est-il passé, en quelques mots ? |
+| Description | Que signifie cette erreur ? |
+| Règle | Qu’est-ce qui devrait normalement être vrai ? |
+| Diagnostics | Qu’est-ce qui peut l’expliquer et où commencer l’analyse ? |
+| Exemples | À quoi ressemble une occurrence réelle ? |
 
-Évitez les erreurs vagues ou génériques comme :
+L’objectif n’est pas de décrire tous les détails techniques. Il est de capturer une connaissance qui reste utile dans les logs, les investigations du support, les releases et les refactorings.
 
-* « Opération invalide »  
-* « Erreur de traitement »  
-* « Problème inattendu »  
+## 1. Partir d’une situation d’erreur précise
 
-Préférez des situations précises et contextualisées :
+Une factory doit représenter une situation unique dans laquelle le système ne peut pas continuer comme prévu.
 
-* « Incohérence de devise des montants »  
-* « Température sous le zéro absolu »  
-* « Date de transaction hors période du relevé »  
+Évitez les catégories trop larges :
 
-Une erreur doit décrire *ce qui s’est mal passé en termes métier*, pas la réaction du système.
+- `INVALID_OPERATION`
+- `PROCESSING_ERROR`
+- `UNEXPECTED_FAILURE`
 
-## 🏷️ 2. Écrire un bon **code d’erreur**
+Préférez des situations qu’un développeur ou le support peut reconnaître immédiatement :
 
-Le code d’erreur est l’identifiant stable, lisible par machine.
+- `AMOUNT_CURRENCY_MISMATCH`
+- `TEMPERATURE_BELOW_ABSOLUTE_ZERO`
+- `TRANSACTION_DATE_OUTSIDE_STATEMENT_PERIOD`
 
-Bonnes pratiques :
+Un bon test consiste à demander :
 
-* Utiliser un **périmètre métier clair** `AMOUNT_CURRENCY_MISMATCH`  
-* Le garder **stable dans le temps**  
-* Éviter les détails techniques (pas de noms de classes, pas de noms de méthodes)  
-* Un code = une situation d’erreur documentée  
+> Deux occurrences de sens réellement différent pourraient-elles partager cette documentation sans la rendre vague ?
 
-Considérez le code d’erreur comme un contrat d’API.
+Si la réponse est non, elles nécessitent probablement des factories et des codes distincts.
 
-## 🧾 3. Écrire le **Title**
+## 2. Choisir un code d’erreur stable
 
-Le titre est un résumé humain court.
+Le code est l’identité de l’erreur, lisible par machine.
 
-Il doit :
-
-* être concis  
-* décrire la situation, pas la conséquence  
-* éviter le vocabulaire technique  
+Utilisez `UPPER_SNAKE_CASE`, incluez suffisamment de contexte métier pour éviter l’ambiguïté et rendez le code indépendant des noms de classes ou des détails d’implémentation.
 
 Bon :
 
-* « Incohérence de devise des montants »  
-* « Température sous le zéro absolu »  
+```text
+AMOUNT_CURRENCY_MISMATCH
+```
 
 À éviter :
 
-* « InvalidAmountOperationError »  
-* « L’opération a échoué »  
+```text
+INVALID_AMOUNT_OPERATION_ERROR
+ADD_METHOD_FAILED
+```
 
-## 📝 4. Écrire la **Description**
+Considérez le code comme un contrat. Des clients, dashboards, alertes ou procédures de support peuvent en dépendre. Le renommer ou le supprimer constitue donc un changement cassant ; voir [Versionnage du catalogue](CatalogVersioning.fr.md).
 
-La description explique la signification de l’erreur.
+## 3. Écrire un titre qui nomme la situation
 
-Un bon schéma est :
+Le titre est un libellé humain court.
 
-> « Cette erreur survient en essayant de… »
+Bons titres :
 
-ou
+- « Incohérence de devise des montants »
+- « Température sous le zéro absolu »
+- « Date de transaction hors période du relevé »
+
+Évitez les titres qui annoncent seulement un échec :
+
+- « L’opération a échoué »
+- « Valeur invalide »
+- « Erreur inattendue »
+
+Le titre doit rester compréhensible lorsqu’il apparaît seul dans l’index d’un catalogue.
+
+## 4. Expliquer le sens en langage simple
+
+La description explique quand l’erreur survient et ce que la situation signifie.
+
+Un schéma fiable est :
 
 > « Cette erreur survient lorsque… »
 
-Vous pouvez choisir la formulation qui convient le mieux, mais restez cohérent au sein du projet. La cohérence dans la formulation améliore la lisibilité et rend la documentation plus homogène.
-
-La description doit :
-
-* décrire la situation en langage simple  
-* être compréhensible par quelqu’un qui ne connaît pas le code  
-* expliquer *ce qui s’est passé*, pas *comment le système a réagi*  
-
-## 📏 5. Écrire la **règle**
-
-La règle exprime l’invariant ou la contrainte métier.
-
-Elle doit :
-
-* être formulée comme une vérité générale  
-* décrire ce qui doit toujours être respecté  
-
-Exemples :
-
-* « Toutes les opérations monétaires doivent impliquer des montants exprimés dans la même devise. »  
-* « La température ne peut pas descendre sous le zéro absolu. »  
-
-S’il n’y a pas de règle explicite, il est acceptable d’omettre cette section.
-
-## 🔍 6. Écrire une bonne **Cause**
-
-Une cause décrit une raison plausible de l’erreur.
-
-Elle doit :
-
-* décrire un **état ou une condition**, pas une action  
-* éviter toute accusation  
-* être suffisamment précise pour guider l’investigation  
+Écrivez pour une personne qui comprend le système métier sans nécessairement connaître son implémentation. Décrivez la situation, pas la stack trace, la classe, la méthode ou le mécanisme d’exception.
 
 Bon :
 
-* « Des montants ont été utilisés dans une opération monétaire sans avoir été convertis dans la même devise. »  
+> « Cette erreur survient lorsqu’une opération combine des montants exprimés dans des devises différentes. »
 
 À éviter :
 
-* « Le développeur a oublié de convertir la devise. »  
-* « Corriger les données. »  
+> « Cette exception est levée par `Amount.Add` lorsque les champs de devise sont différents. »
 
-## 🧭 7. Écrire une bonne **piste d’analyse** (AnalysisLead)
+## 5. Énoncer la règle violée
 
-Une piste d’analyse suggère où regarder en premier.
+La règle exprime l’invariant ou la contrainte qui devrait normalement être respecté.
 
-Elle doit :
+Formulez-la comme une vérité générale :
 
-* commencer par un verbe neutre comme *Vérifier*, *Contrôler*, *Examiner*  
-* guider l’investigation, pas définir des procédures  
-* éviter les détails de processus de support  
+> « Toutes les opérations monétaires doivent impliquer des montants exprimés dans la même devise. »
 
-Bon :
+La règle ne doit pas répéter la description. La description dit ce qui s’est passé ; la règle dit ce qui doit être vrai.
 
-* « Vérifier si tous les montants impliqués ont été convertis dans une devise commune avant d’être utilisés ensemble. »  
+Lorsqu’aucun invariant pertinent n’existe, omettez la règle plutôt que d’en inventer une.
+
+## 6. Écrire les diagnostics comme des hypothèses
+
+Un diagnostic contient trois éléments :
+
+| Élément | Rôle |
+| --- | --- |
+| Cause | Un état ou une condition plausible pouvant expliquer l’erreur |
+| Origine | Une cause interne, externe ou potentiellement les deux |
+| Piste d’analyse | L’endroit où commencer l’investigation |
+
+Les causes sont des hypothèses, pas des causes racines prouvées. Décrivez des conditions sans attribuer de faute.
+
+Bonne cause :
+
+> « Des montants ont été utilisés avant d’avoir été convertis dans une devise commune. »
 
 À éviter :
 
-* « Ouvrir un ticket. »  
-* « Contacter l’équipe X. »  
+> « Le développeur a oublié de convertir les montants. »
 
-## 🧪 8. Écrire de bons **Exemples**
+Une bonne piste d’analyse commence par un verbe neutre comme *Vérifier*, *Contrôler* ou *Examiner* :
 
-Les exemples illustrent l’apparence de l’erreur en pratique.
+> « Vérifier que chaque montant a été converti dans la devise de l’opération avant le calcul. »
 
-Ils doivent :
+N’encodez pas de procédures organisationnelles comme « ouvrir un ticket » ou « contacter l’équipe X ». Ces processus évoluent indépendamment de l’application.
 
-* utiliser des valeurs réalistes  
-* être simples et clairs  
-* mettre en évidence la violation de la règle, pas des cas extrêmes  
+## 7. Utiliser les exemples pour rendre la règle visible
 
-Les exemples ne sont pas des tests — ils ont un rôle pédagogique.
+Les exemples doivent utiliser des valeurs simples et réalistes qui rendent la violation évidente.
 
-## 🧠 9. Séparer le domaine du bruit technique
+```csharp
+.WithExamples(
+    () => CurrencyMismatch(
+        new Amount(127.33m, Currency.EUR),
+        new Amount(84.10m, Currency.USD)))
+```
 
-La documentation des erreurs doit se concentrer sur :
+Les exemples sont du contenu pédagogique destiné au catalogue, pas des tests de valeurs limites. Préférez une ou deux occurrences représentatives à des valeurs pathologiques.
 
-* le sens métier  
-* les règles violées  
-* les causes plausibles  
+Comme l’exemple appelle la vraie factory, la documentation générée reste également reliée à l’erreur réellement produite à l’exécution.
 
-Évitez d’y faire apparaître :
+## Exemple complet
 
-* des stack traces  
-* des détails du framework  
-* des noms de classes internes  
+```csharp
+[ProvidesErrorsFor(nameof(Amount))]
+public static class InvalidAmountOperationError {
 
-## 🗂️ 10. Les trois messages que porte une erreur
+    [DocumentedBy(nameof(CurrencyMismatchDocumentation))]
+    internal static DomainError CurrencyMismatch(Amount left, Amount right) {
+        return DomainError.Create(
+                Code.CurrencyMismatch,
+                diagnosticMessage: $"Impossible de combiner des montants en {left.Currency} et {right.Currency} : {left} et {right}.")
+            .WithPublicMessage(
+                shortMessage: "Les montants utilisent des devises différentes.",
+                detailedMessage: "Tous les montants de cette opération doivent utiliser la même devise.");
+    }
 
-Les éléments ci-dessus décrivent la **documentation** d’une erreur. En complément, chaque factory définit les trois messages que l’erreur porte à l’exécution, via le builder étagé `Type.Create(code, diagnosticMessage, …).WithPublicMessage(shortMessage, detailedMessage)` :
+    private static ErrorDocumentation CurrencyMismatchDocumentation() {
+        return DescribeError
+            .WithTitle("Incohérence de devise des montants")
+            .WithDescription("Cette erreur survient lorsqu’une opération combine des montants exprimés dans des devises différentes.")
+            .WithRule("Toutes les opérations monétaires doivent impliquer des montants exprimés dans la même devise.")
+            .WithDiagnostic(
+                "Des montants ont été utilisés avant d’avoir été convertis dans une devise commune.",
+                ErrorOrigin.Internal,
+                "Vérifier que chaque montant a été converti dans la devise de l’opération avant le calcul.")
+            .AndDiagnostic(
+                "Une requête externe a fourni des montants dans des devises incompatibles.",
+                ErrorOrigin.External,
+                "Contrôler les devises fournies par l’appelant et celle attendue par l’opération.")
+            .WithExamples(() => CurrencyMismatch(
+                new Amount(127.33m, Currency.EUR),
+                new Amount(84.10m, Currency.USD)));
+    }
 
-| Message             | Obligatoire | Public                       | Exposition                                                                                                    |
-| ------------------- | ----------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `ShortMessage`      | Oui         | Utilisateurs finaux / API    | Résumé public sûr (par ex. un `title` RFC 9457).                                                               |
-| `DetailedMessage`   | Non         | Utilisateurs finaux / API    | Détail public maîtrisé, exposé uniquement si l’application le décide (par ex. un `detail` RFC 9457) ; jamais sensible ni interne. |
-| `DiagnosticMessage` | Oui         | Logs, support, développeurs  | Détail de diagnostic interne (identifiants, valeurs fautives, état interne) ; jamais exposé aux clients externes par défaut. |
+    private static class Code {
+        public static readonly ErrorCode CurrencyMismatch =
+            ErrorCode.Create("AMOUNT_CURRENCY_MISMATCH");
+    }
+}
+```
 
-Gardez le message de diagnostic riche et technique ; gardez les messages publics sûrs et exempts de détail interne. `error.ToException()` utilise le message de diagnostic comme `Message` de l’exception. Lorsque l’erreur est exposée en HTTP, son `Code` est le `type` RFC 9457 naturel : exposez-le comme un URI stable tel que `urn:problem:{service}:{code}`, où `{code}` est le code d’erreur en minuscules et en kebab-case — par exemple `urn:problem:temperature-simulator:temperature-below-absolute-zero` ou `urn:problem:banking-api:money-transfer-amount-not-positive` — afin que les clients puissent aiguiller sur le type de problème (`type` et `status` restent l’affaire de l’application).
+La documentation décrit la situation d’erreur stable. La factory crée séparément une occurrence concrète avec ses messages et ses valeurs d’exécution.
 
-## 🏁 Résumé
+## Checklist de revue
 
-Quand vous écrivez une erreur :
+Avant d’accepter une nouvelle documentation d’erreur, vérifiez que :
 
-| Élément         | Rôle                          |
-| --------------- | ----------------------------- |
-| Code d’erreur   | Identifiant stable            |
-| Message court   | Résumé public sûr             |
-| Message détaillé | Détail public maîtrisé (optionnel) |
-| Message de diagnostic | Interne, pour logs et support |
-| Titre           | Résumé humain court           |
-| Description     | Signification de l’erreur     |
-| Règle           | Invariant violé               |
-| Cause           | Pourquoi cela a pu arriver    |
-| Piste d'analyse | Où commencer l’investigation  |
-| Exemples        | À quoi cela ressemble         |
+- la factory représente une situation précise ;
+- le code est spécifique, stable et écrit en `UPPER_SNAKE_CASE` ;
+- le titre nomme la situation au lieu d’annoncer un échec ;
+- la description est compréhensible sans lire l’implémentation ;
+- la règle est un véritable invariant, ou est omise ;
+- les causes de diagnostic sont des conditions plausibles et non des accusations ;
+- les pistes d’analyse orientent l’investigation sans prescrire le workflow du support ;
+- les exemples sont simples, réalistes et appellent la factory documentée ;
+- aucun bruit technique ni donnée sensible n’apparaît.
 
-Des erreurs bien écrites ne sont pas simplement levées. Elles deviennent une partie de la **compréhension partagée du fonctionnement — et des échecs — du système.**
+Pour choisir les textes publics et internes portés à l’exécution, continuez avec [Écrire les messages d’une erreur](WritingErrorMessages.fr.md). Pour une liste de revue compacte à l’échelle du projet, consultez [Bonnes pratiques](BestPractices.fr.md).
 
 ---
 
 <div align="center">
-<a href="ErrorContext.fr.md">← Guide du contexte d’erreur</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="UsagePatterns.fr.md">Cas d’usage →</a>
+<a href="ErrorContext.fr.md">← Guide du contexte d’erreur</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="WritingErrorMessages.fr.md">Écrire les messages d’une erreur →</a>
 </div>
 
 ---
