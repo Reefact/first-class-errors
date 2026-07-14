@@ -214,7 +214,7 @@ Cette forme peut servir à produire des notes de version du contrat d'erreurs ou
 ---
 
 <div align="center">
-<a href="CatalogVersioning.fr.md">← Guide du versionnage</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="CatalogVersioningReference.fr.md">Référence des commandes →</a>
+<a href="CatalogVersioningReference.fr.md">← Référence des commandes</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="ArchitectureOfTheDocumentationPipeline.fr.md">Architecture du pipeline de documentation →</a>
 </div>
 
 ---

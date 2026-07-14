@@ -214,7 +214,7 @@ This form can produce release notes for the error contract or compare the previo
 ---
 
 <div align="center">
-<a href="CatalogVersioning.en.md">← Catalog versioning guide</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="CatalogVersioningReference.en.md">Command reference →</a>
+<a href="CatalogVersioningReference.en.md">← Command reference</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="ArchitectureOfTheDocumentationPipeline.en.md">Architecture of the Documentation Pipeline →</a>
 </div>
 
 ---

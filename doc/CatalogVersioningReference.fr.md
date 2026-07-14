@@ -147,7 +147,7 @@ Les commandes `catalog update` et `catalog diff` acceptent notamment :
 ---
 
 <div align="center">
-<a href="CatalogVersioning.fr.md">← Guide du versionnage</a> · <a href="CatalogVersioningCI.fr.md">Intégration CI/CD →</a>
+<a href="CatalogVersioning.fr.md">← Guide du versionnage</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="CatalogVersioningCI.fr.md">Intégration CI/CD →</a>
 </div>
 
 ---
