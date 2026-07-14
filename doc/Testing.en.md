@@ -1,26 +1,15 @@
-# Testing Guide
+# Testing Outcomes and Errors
 
 🌍 **Languages:**  
 🇬🇧 English (this file) | 🇫🇷 [Français](./Testing.fr.md)
 
-Errors and outcomes are values, so your tests should read like tests about
-values — not like plumbing. The companion package **`FirstClassErrors.Testing`**
-gives you three small things that make that easy:
+Errors and outcomes are values. Their tests should therefore describe success, failure, and error semantics directly—not the plumbing used to inspect them.
 
-* **Fluent assertions** on `Outcome`, `Outcome<T>` and `Error`.
-* **A freezable clock**, so `OccurredAt` is deterministic.
-* **Freezable instance ids**, so `InstanceId` is deterministic.
+The companion package **`FirstClassErrors.Testing`** provides framework-agnostic fluent assertions for `Outcome`, `Outcome<T>`, and `Error`.
 
-Two promises the package keeps:
-
-* **It imposes no test or assertion framework.** The assertions throw a plain
-  exception that xUnit, NUnit, MSTest — anything — reports as a failure.
-* **It adds nothing to your production dependencies.** Everything lives in a
-  separate test-only package, and the overrides only ever affect code running
-  inside their `using` scope.
+## Install the testing package
 
 ```xml
-<!-- in your test project -->
 <PackageReference Include="FirstClassErrors.Testing" Version="..." />
 ```
 
@@ -29,100 +18,90 @@ using FirstClassErrors;
 using FirstClassErrors.Testing;
 ```
 
-> The examples below use xUnit for the scaffolding (`[Fact]`, `Assert`), but the
-> FirstClassErrors assertions work the same in any framework.
+The examples use xUnit for test scaffolding, but the FirstClassErrors assertions do not depend on xUnit, NUnit, MSTest, or another assertion library.
 
----
+The package belongs only in test projects and adds nothing to production dependencies.
 
-## ✅ Asserting on outcomes
+## Assert a successful `Outcome<T>`
 
-This is the part you'll use every day. Testing code that returns an `Outcome`
-usually means unwrapping it by hand and reaching for the null-forgiving
-`!` operator:
+Without the testing package, a test usually checks the state and unwraps the result separately:
 
 ```csharp
-// 😐 Before
 Outcome<Receipt> outcome = checkout.Pay(order);
 
-Assert.True(outcome.IsFailure);
-Assert.Equal("PAYMENT_DECLINED", outcome.Error!.Code.ToString());
+Assert.True(outcome.IsSuccess);
+Receipt receipt = outcome.GetResultOrThrow();
+Assert.Equal(order.Total, receipt.AmountCharged);
 ```
 
-With the testing package, the intent comes first and the boilerplate disappears:
-
-```csharp
-// 🙂 After
-checkout.Pay(order)
-        .ShouldFail()
-        .WithCode("PAYMENT_DECLINED");
-```
-
-### Successes return their value
-
-`ShouldSucceed()` asserts the outcome succeeded and hands you the carried value,
-ready to assert on:
+`ShouldSucceed()` performs the state assertion and returns the carried value:
 
 ```csharp
 [Fact]
 public void Paying_a_valid_order_produces_a_receipt()
 {
-    Outcome<Receipt> outcome = checkout.Pay(order);
-
-    Receipt receipt = outcome.ShouldSucceed();
+    Receipt receipt = checkout.Pay(order).ShouldSucceed();
 
     Assert.Equal(order.Total, receipt.AmountCharged);
 }
 ```
 
-For the non-generic `Outcome`, `ShouldSucceed()` simply asserts success:
+For non-generic `Outcome`, it simply asserts success:
 
 ```csharp
 inventory.Reserve(sku).ShouldSucceed();
 ```
 
-### Failures return a fluent handle
+## Assert a failure
 
-`ShouldFail()` asserts the outcome failed and returns an `ErrorAssertion` you can
-chain expectations on. Each step checks one facet of the error:
+`ShouldFail()` asserts failure and returns an `ErrorAssertion`:
 
 ```csharp
 [Fact]
 public void Declining_a_payment_reports_a_diagnosable_error()
 {
-    Outcome<Receipt> outcome = checkout.Pay(declinedCard);
-
-    outcome.ShouldFail()
-           .WithCode("PAYMENT_DECLINED")
-           .WithShortMessage("Your payment was declined.")
-           .WithDiagnosticMessage("Issuer refused authorization (code 51).")
-           .WithContextEntry("CardNetwork", "VISA");
+    checkout.Pay(declinedCard)
+            .ShouldFail()
+            .WithCode("PAYMENT_DECLINED")
+            .WithShortMessage("Your payment was declined.")
+            .WithDiagnosticMessage("Issuer refused authorization (code 51).")
+            .WithContextEntry("CardNetwork", "VISA");
 }
 ```
 
-Available checks on `ErrorAssertion`:
+This keeps the expected contract visible in one place: stable code, public message, internal diagnostic, and occurrence context.
+
+## Available error checks
 
 | Method | Asserts |
 | --- | --- |
-| `WithCode("...")` / `WithCode(errorCode)` | the error's `Code` |
-| `WithShortMessage("...")` | the public `ShortMessage` |
-| `WithDiagnosticMessage("...")` | the internal `DiagnosticMessage` |
-| `WithContextEntry("key")` | a context entry is present |
-| `WithContextEntry("key", value)` | a context entry is present **and** equals `value` |
+| `WithCode("...")` | the error code as text |
+| `WithCode(errorCode)` | the strongly typed `ErrorCode` |
+| `WithShortMessage("...")` | the public short message |
+| `WithDiagnosticMessage("...")` | the internal diagnostic message |
+| `WithContextEntry("key")` | that a context entry exists |
+| `WithContextEntry("key", value)` | that the entry exists and equals the expected value |
 
-Need something the fluent surface doesn't cover? `Subject` gives you the raw
-`Error` back:
+Use only the assertions that express the behavior owned by the test. Avoid asserting every field mechanically when only the code and one context value matter.
+
+## Access the underlying error
+
+`Subject` returns the asserted `Error` when the fluent surface does not cover a property:
 
 ```csharp
-Error error = outcome.ShouldFail().WithCode("ORDER_NOT_FOUND").Subject;
+Error error = outcome.ShouldFail()
+                     .WithCode("ORDER_NOT_FOUND")
+                     .Subject;
 
 Assert.Empty(error.InnerErrors);
+Assert.Equal(Transience.NonTransient, ((InfrastructureError)error).Transience);
 ```
 
-### Failure messages read well
+Use `Subject` for targeted assertions, not to immediately rebuild all the manual plumbing that the fluent API removed.
 
-When an expectation is not met, the assertions throw `OutcomeAssertionException`
-with a message that tells you what actually happened — not the domain's own
-exception:
+## Failure messages
+
+When an expectation fails, the package throws `OutcomeAssertionException` with a message describing the mismatch:
 
 ```text
 Expected the outcome to succeed, but it failed with [PAYMENT_DECLINED]: Issuer refused authorization (code 51).
@@ -132,165 +111,64 @@ Expected the outcome to succeed, but it failed with [PAYMENT_DECLINED]: Issuer r
 Expected the error to have code "ORDER_NOT_FOUND", but it was "ORDER_LOCKED".
 ```
 
----
+The assertion failure is distinct from the domain exception. A failed test therefore reports what the test expected and what the outcome actually contained.
 
-## 🕒 Freezing the clock
+## What should a test assert?
 
-Every `Error` records the moment it occurred in `OccurredAt`. In a test, the real
-clock forces you into a time window:
+Prefer assertions on the stable behavior of the error:
 
-```csharp
-// 😐 Before
-DateTimeOffset before = DateTimeOffset.UtcNow;
-DomainError    error  = MakeError();
-DateTimeOffset after  = DateTimeOffset.UtcNow;
+- the error code;
+- the error category when relevant;
+- public wording only when it is part of the intended contract;
+- diagnostic wording when the exact diagnostic is deliberately specified;
+- context keys and values used by consumers or operations;
+- inner errors when composition is itself the behavior under test.
 
-Assert.True(error.OccurredAt >= before && error.OccurredAt <= after);
-```
+Avoid coupling every test to incidental prose or timestamps unless those values are the subject of the test.
 
-`Clock.UseFixed(...)` pins the time to an exact instant for the duration of a
-`using` scope, so you can assert equality:
-
-```csharp
-// 🙂 After
-[Fact]
-public void An_error_records_when_it_occurred()
-{
-    var instant = new DateTimeOffset(2026, 7, 8, 10, 30, 0, TimeSpan.Zero);
-
-    using (Clock.UseFixed(instant))
-    {
-        DomainError error = DomainError
-            .Create(ErrorCode.Create("ORDER_NOT_FOUND"), "Order 42 was not found.")
-            .WithPublicMessage("This order does not exist.");
-
-        Assert.Equal(instant, error.OccurredAt);
-    }
-}
-```
-
-Need a clock you control across several reads (for example a clock that
-advances)? Implement `IClock` and pass it to `Clock.Use(...)`:
-
-```csharp
-sealed class StepClock : IClock
-{
-    private DateTimeOffset _now;
-    public StepClock(DateTimeOffset start) => _now = start;
-
-    public DateTimeOffset UtcNow
-    {
-        get
-        {
-            DateTimeOffset current = _now;
-            _now = _now.AddSeconds(1); // each read advances by one second
-            return current;
-        }
-    }
-}
-
-using (Clock.Use(new StepClock(start)))
-{
-    // errors created here get start, start + 1s, start + 2s, ...
-}
-```
-
-**How the scope behaves**
-
-* Outside a scope — i.e. in production — the clock is always the real system
-  clock. This type only affects code running inside a `using` block.
-* Disposing the scope restores the previous clock. Always use `using`.
-* The override flows with the current execution context, so it never leaks into
-  tests running in parallel.
-
----
-
-## 🔢 Freezing instance ids
-
-Each error occurrence gets a unique `InstanceId` (a random `Guid`). That is
-exactly what you want in production and exactly what breaks a snapshot or an
-equality assertion over a whole error. `InstanceIds` lets you pin it.
-
-Pin a single id:
+## Complete example
 
 ```csharp
 [Fact]
-public void A_not_found_error_snapshots_cleanly()
+public void Looking_up_a_missing_order_returns_the_expected_error()
 {
-    var id = new Guid("11111111-1111-1111-1111-111111111111");
+    Outcome<Order> outcome = orders.Find(missingOrderId);
 
-    using (InstanceIds.UseFixed(id))
-    {
-        DomainError error = orders.Find(missingId).ShouldFail().Subject as DomainError;
+    Error error = outcome.ShouldFail()
+                         .WithCode("ORDER_NOT_FOUND")
+                         .WithShortMessage("The order does not exist.")
+                         .WithContextEntry("OrderId", missingOrderId)
+                         .Subject;
 
-        Assert.Equal(id, error!.InstanceId);
-    }
+    Assert.IsType<DomainError>(error);
+    Assert.Empty(error.InnerErrors);
 }
 ```
 
-Or provide your own source — a counter, for instance, when a test creates
-several errors and you want stable, distinct ids:
+The test reads as a description of the failure contract rather than a sequence of nullable checks and casts.
 
-```csharp
-static Func<Guid> Sequential()
-{
-    int n = 0;
-    return () => new Guid(++n, 0, 0, new byte[8]); // 00000001-..., 00000002-...
-}
+## Deterministic timestamps and instance ids
 
-using (InstanceIds.Use(Sequential()))
-{
-    // first error  -> 00000001-0000-0000-0000-000000000000
-    // second error -> 00000002-0000-0000-0000-000000000000
-}
-```
+Every error occurrence contains an `OccurredAt` timestamp and a unique `InstanceId`. When a test or snapshot must assert those values, use the scoped overrides provided by the testing package.
 
-`InstanceIds` follows the same scope rules as `Clock`: disposable, context-local,
-and inert outside a `using` block.
+See [Deterministic Error Tests](DeterministicTesting.en.md) for `Clock.UseFixed(...)`, `InstanceIds.UseFixed(...)`, custom sources, parallel-test behavior, and full-error snapshots.
 
----
+## Review checklist
 
-## 🧪 Putting it together
+Before approving an error test, verify that:
 
-Fixing the clock and the id turns a whole error into a completely deterministic
-value — ideal for a single, readable assertion or a snapshot:
-
-```csharp
-[Fact]
-public void Looking_up_a_missing_order_fails_deterministically()
-{
-    var instant = new DateTimeOffset(2026, 7, 8, 10, 30, 0, TimeSpan.Zero);
-    var id      = new Guid("11111111-1111-1111-1111-111111111111");
-
-    using (Clock.UseFixed(instant))
-    using (InstanceIds.UseFixed(id))
-    {
-        Outcome<Order> outcome = orders.Find(missingId);
-
-        ErrorAssertion failure = outcome.ShouldFail()
-                                        .WithCode("ORDER_NOT_FOUND")
-                                        .WithContextEntry("OrderId", missingId);
-
-        Assert.Equal(instant, failure.Subject.OccurredAt);
-        Assert.Equal(id,      failure.Subject.InstanceId);
-    }
-}
-```
-
----
-
-## 📎 Good to know
-
-* Everything is **scoped and disposable** — always reach for `using`.
-* Overrides are **context-local**: they apply to the current async flow only, so
-  parallel tests don't interfere with each other.
-* Nothing here changes production behavior, and the package pulls **no test or
-  assertion framework** into your project.
+- it asserts behavior rather than implementation plumbing;
+- success values are obtained through `ShouldSucceed()`;
+- failures are asserted through `ShouldFail()`;
+- the error code is checked when it identifies the scenario;
+- exact prose is asserted only when intentionally contractual;
+- `Subject` is used only for properties outside the fluent surface;
+- time and identifiers are frozen only when the test needs them.
 
 ---
 
 <div align="center">
-<a href="BestPractices.en.md">← Best Practices</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="OperationalIntegration.en.md">CI/CD and Operational Integration →</a>
+<a href="BestPractices.en.md">← Best Practices</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="DeterministicTesting.en.md">Deterministic Error Tests →</a>
 </div>
 
 ---
