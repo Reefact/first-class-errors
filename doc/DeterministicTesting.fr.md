@@ -21,7 +21,7 @@ DateTimeOffset before = DateTimeOffset.UtcNow;
 DomainError error = MakeError();
 DateTimeOffset after = DateTimeOffset.UtcNow;
 
-Assert.True(error.OccurredAt >= before && error.OccurredAt <= after);
+Check.That(error.OccurredAt >= before && error.OccurredAt <= after).IsTrue();
 ```
 
 `Clock.UseFixed(...)` rend l’instant attendu explicite :
@@ -38,7 +38,7 @@ public void Une_erreur_enregistre_l_instant_fixe()
             .Create(ErrorCode.Create("ORDER_NOT_FOUND"), "La commande 42 est introuvable.")
             .WithPublicMessage("La commande n’existe pas.");
 
-        Assert.Equal(instant, error.OccurredAt);
+        Check.That(error.OccurredAt).IsEqualTo(instant);
     }
 }
 ```
@@ -74,8 +74,8 @@ using (Clock.Use(new StepClock(start)))
     DomainError first = MakeError();
     DomainError second = MakeError();
 
-    Assert.Equal(start, first.OccurredAt);
-    Assert.Equal(start.AddSeconds(1), second.OccurredAt);
+    Check.That(first.OccurredAt).IsEqualTo(start);
+    Check.That(second.OccurredAt).IsEqualTo(start.AddSeconds(1));
 }
 ```
 
@@ -95,7 +95,7 @@ public void Une_erreur_de_commande_absente_a_un_identifiant_stable()
     {
         Error error = orders.Find(missingOrderId).ShouldFail().Subject;
 
-        Assert.Equal(id, error.InstanceId);
+        Check.That(error.InstanceId).IsEqualTo(id);
     }
 }
 ```
@@ -120,8 +120,8 @@ using (InstanceIds.Use(SequentialIds()))
     Error first = MakeError();
     Error second = MakeError();
 
-    Assert.Equal("00000001-0000-0000-0000-000000000000", first.InstanceId.ToString());
-    Assert.Equal("00000002-0000-0000-0000-000000000000", second.InstanceId.ToString());
+    Check.That(first.InstanceId.ToString()).IsEqualTo("00000001-0000-0000-0000-000000000000");
+    Check.That(second.InstanceId.ToString()).IsEqualTo("00000002-0000-0000-0000-000000000000");
 }
 ```
 
@@ -145,8 +145,8 @@ public void Une_erreur_de_commande_absente_est_totalement_deterministe()
                             .WithContextEntry("OrderId", missingOrderId)
                             .Subject;
 
-        Assert.Equal(instant, error.OccurredAt);
-        Assert.Equal(id, error.InstanceId);
+        Check.That(error.OccurredAt).IsEqualTo(instant);
+        Check.That(error.InstanceId).IsEqualTo(id);
     }
 }
 ```
