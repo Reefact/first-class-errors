@@ -577,8 +577,8 @@ public sealed class Outcome<T>
     /// </typeparam>
     /// <param name="convert">
     ///     A function that converts the successful value of type <typeparamref name="T" /> into a new value of type
-    ///     <typeparamref name="TResult" />. Unlike <see cref="Then{TResult}(Func{T, Outcome{TResult}})" />, this
-    ///     function cannot itself produce a failure.
+    ///     <typeparamref name="TResult" />. Unlike the outcome-returning <see cref="Then{TResult}(Func{T, Outcome{TResult}})" />
+    ///     overload, this function cannot itself produce a failure.
     /// </param>
     /// <returns>
     ///     A new <see cref="Outcome{TResult}" /> containing the converted value if the current instance represents
@@ -588,7 +588,7 @@ public sealed class Outcome<T>
     ///     Thrown if the <paramref name="convert" /> function is <c>null</c>, or if <paramref name="convert" /> returns
     ///     <c>null</c> (the returned value flows through <see cref="Success" />, which rejects <c>null</c>).
     /// </exception>
-    public Outcome<TResult> To<TResult>(Func<T, TResult> convert)
+    public Outcome<TResult> Then<TResult>(Func<T, TResult> convert)
         where TResult : notnull {
         if (convert is null) { throw new ArgumentNullException(nameof(convert)); }
 
@@ -616,7 +616,7 @@ public sealed class Outcome<T>
     ///     Thrown if the <paramref name="convert" /> function is <c>null</c>, or if the awaited <paramref name="convert" />
     ///     result is <c>null</c> (it flows through <see cref="Success" />, which rejects <c>null</c>).
     /// </exception>
-    public async Task<Outcome<TResult>> To<TResult>(Func<T, CancellationToken, Task<TResult>> convert, CancellationToken cancellationToken = default)
+    public async Task<Outcome<TResult>> Then<TResult>(Func<T, CancellationToken, Task<TResult>> convert, CancellationToken cancellationToken = default)
         where TResult : notnull {
         if (convert is null) { throw new ArgumentNullException(nameof(convert)); }
 

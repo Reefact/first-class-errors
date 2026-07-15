@@ -168,26 +168,26 @@ public sealed class OutcomeTests {
         Check.That(result.Error).IsSameReferenceAs(error);
     }
 
-    [Fact(DisplayName = "To maps the value when the outcome is a success.")]
+    [Fact(DisplayName = "Then maps the value when the outcome is a success.")]
     public void ToMapsTheValueWhenTheOutcomeIsASuccess() {
         // Setup
         Outcome<int> outcome = Outcome<int>.Success(3);
 
         // Exercise
-        Outcome<string> result = outcome.To(value => $"v={value}");
+        Outcome<string> result = outcome.Then(value => $"v={value}");
 
         // Verify
         Check.That(result.GetResultOrThrow()).IsEqualTo("v=3");
     }
 
-    [Fact(DisplayName = "To propagates the error without invoking the converter on a failure.")]
+    [Fact(DisplayName = "Then (value mapping) propagates the error without invoking the converter on a failure.")]
     public void ToPropagatesTheErrorWithoutInvokingTheConverterOnAFailure() {
         // Setup
         DomainError  error   = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
         Outcome<int> outcome = Outcome<int>.Failure(error);
 
         // Exercise
-        Outcome<string> result = outcome.To(value => value.ToString());
+        Outcome<string> result = outcome.Then(value => value.ToString());
 
         // Verify
         Check.That(result.IsFailure).IsTrue();
@@ -272,13 +272,13 @@ public sealed class OutcomeTests {
         Check.That(result.GetResultOrThrow()).IsEqualTo(5);
     }
 
-    [Fact(DisplayName = "Awaiting To over a Task<Outcome<T>> maps the value.")]
+    [Fact(DisplayName = "Awaiting Then (value mapping) over a Task<Outcome<T>> maps the value.")]
     public async Task AwaitingToOverATaskOutcomeMapsTheValue() {
         // Setup
         Task<Outcome<int>> task = Task.FromResult(Outcome<int>.Success(6));
 
         // Exercise
-        Outcome<string> result = await task.To(value => $"n={value}");
+        Outcome<string> result = await task.Then(value => $"n={value}");
 
         // Verify
         Check.That(result.GetResultOrThrow()).IsEqualTo("n=6");

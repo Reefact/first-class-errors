@@ -399,20 +399,20 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     // Task<Outcome<T>> -> To
     // -------------------------------------------------------------------------
 
-    [Fact(DisplayName = "To over a failed Task<Outcome<T>> propagates the error.")]
+    [Fact(DisplayName = "Then (value mapping) over a failed Task<Outcome<T>> propagates the error.")]
     public async Task ToOverAFailedTaskOutcomePropagatesTheError() {
         // Setup
         DomainError        error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
         Task<Outcome<int>> task  = Task.FromResult(Outcome<int>.Failure(error));
 
         // Exercise
-        Outcome<string> result = await task.To(value => $"n={value}");
+        Outcome<string> result = await task.Then(value => $"n={value}");
 
         // Verify
         Check.That(result.Error).IsSameReferenceAs(error);
     }
 
-    [Fact(DisplayName = "The async To over a Task<Outcome<T>> maps on success and propagates on failure.")]
+    [Fact(DisplayName = "The async Then (value mapping) over a Task<Outcome<T>> maps on success and propagates on failure.")]
     public async Task TheAsyncToOverATaskOutcomeMapsOnSuccessAndPropagatesOnFailure() {
         // Setup
         CancellationToken token = TestContext.Current.CancellationToken;
@@ -420,20 +420,20 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
 
         // Exercise
         Outcome<string> onSuccess = await Task.FromResult(Outcome<int>.Success(6))
-                                              .To((value, _) => Task.FromResult($"n={value}"), token);
+                                              .Then((value, _) => Task.FromResult($"n={value}"), token);
         Outcome<string> onFailure = await Task.FromResult(Outcome<int>.Failure(error))
-                                              .To((value, _) => Task.FromResult($"n={value}"), token);
+                                              .Then((value, _) => Task.FromResult($"n={value}"), token);
 
         // Verify
         Check.That(onSuccess.GetResultOrThrow()).IsEqualTo("n=6");
         Check.That(onFailure.Error).IsSameReferenceAs(error);
     }
 
-    [Fact(DisplayName = "The async To over a null Task<Outcome<T>> throws an ArgumentNullException.")]
+    [Fact(DisplayName = "The async Then (value mapping) over a null Task<Outcome<T>> throws an ArgumentNullException.")]
     public void TheAsyncToOverANullTaskOutcomeThrows() {
         // Exercise & verify
         Check.ThatCode(() => ((Task<Outcome<int>>)null!)
-                             .To((value, _) => Task.FromResult(value.ToString()), TestContext.Current.CancellationToken)
+                             .Then((value, _) => Task.FromResult(value.ToString()), TestContext.Current.CancellationToken)
                              .GetAwaiter()
                              .GetResult())
              .Throws<ArgumentNullException>();
@@ -672,10 +672,10 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
              .Throws<ArgumentNullException>();
     }
 
-    [Fact(DisplayName = "To over a null Task<Outcome<T>> throws an ArgumentNullException.")]
+    [Fact(DisplayName = "Then (value mapping) over a null Task<Outcome<T>> throws an ArgumentNullException.")]
     public void ToOverANullTaskOutcomeThrows() {
         // Exercise & verify
-        Check.ThatCode(() => ((Task<Outcome<int>>)null!).To(value => value.ToString()).GetAwaiter().GetResult())
+        Check.ThatCode(() => ((Task<Outcome<int>>)null!).Then(value => value.ToString()).GetAwaiter().GetResult())
              .Throws<ArgumentNullException>();
     }
 

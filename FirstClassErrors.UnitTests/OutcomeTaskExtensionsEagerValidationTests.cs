@@ -58,10 +58,10 @@ public sealed class OutcomeTaskExtensionsEagerValidationTests {
              .Throws<ArgumentNullException>();
     }
 
-    [Fact(DisplayName = "To over a null Task<Outcome<T>> throws synchronously, before the task is awaited.")]
+    [Fact(DisplayName = "Then (value mapping) over a null Task<Outcome<T>> throws synchronously, before the task is awaited.")]
     public void ToOverANullGenericTaskOutcomeThrowsSynchronously() {
         // Exercise & verify
-        Check.ThatCode(() => { _ = ((Task<Outcome<int>>)null!).To(value => value.ToString()); })
+        Check.ThatCode(() => { _ = ((Task<Outcome<int>>)null!).Then(value => value.ToString()); })
              .Throws<ArgumentNullException>();
     }
 
@@ -134,13 +134,13 @@ public sealed class OutcomeTaskExtensionsEagerValidationTests {
              .Throws<ArgumentNullException>();
     }
 
-    [Fact(DisplayName = "To over a Task<Outcome<T>> with a null conversion throws synchronously.")]
+    [Fact(DisplayName = "Then (value mapping) over a Task<Outcome<T>> with a null conversion throws synchronously.")]
     public void ToWithANullConversionThrowsSynchronously() {
         // Setup
         Task<Outcome<int>> task = Task.FromResult(Outcome<int>.Success(1));
 
         // Exercise & verify
-        Check.ThatCode(() => { _ = task.To((Func<int, string>)null!); })
+        Check.ThatCode(() => { _ = task.Then((Func<int, string>)null!); })
              .Throws<ArgumentNullException>();
     }
 
