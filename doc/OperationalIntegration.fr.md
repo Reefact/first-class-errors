@@ -5,7 +5,7 @@
 
 FirstClassErrors devient réellement utile pour l’exploitation lorsque le catalogue est généré depuis le code exact en cours de build, puis publié à un endroit accessible aux développeurs, au support et aux opérateurs.
 
-Ce guide couvre la chaîne de livraison. Pour le logging structuré et les diagnostics de production, voir [Logging et intégration opérationnelle](LoggingIntegration.fr.md).
+Ce guide couvre la chaîne de livraison. Pour le logging structuré et les diagnostics de production, voir le [guide du logging structuré](LoggingIntegration.fr.md).
 
 ## Le flux de livraison
 
@@ -213,7 +213,7 @@ Avant d’approuver un pipeline de livraison du catalogue, vérifiez que :
 ---
 
 <div align="center">
-<a href="DeterministicTesting.fr.md">← Tests d’erreur déterministes</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="LoggingIntegration.fr.md">Logging et intégration opérationnelle →</a>
+<a href="DeterministicTesting.fr.md">← Tests d’erreur déterministes</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="LoggingIntegration.fr.md">Intégrer FirstClassErrors au logging structuré →</a>
 </div>
 
 ---
