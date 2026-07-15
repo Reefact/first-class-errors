@@ -1,185 +1,190 @@
 # Architecture du pipeline de documentation
 
-🌍 **Langues:**  
+🌍 **Langues :**  
 🇬🇧 [English](./ArchitectureOfTheDocumentationPipeline.en.md) | 🇫🇷 Français (ce fichier)
 
-FirstClassErrors ne considère pas la documentation comme un artefact externe.  
-La documentation est dérivée directement du code et circule à travers un pipeline structuré.
+FirstClassErrors dérive la documentation des erreurs du code qui les définit et les crée. Le pipeline sépare cinq responsabilités : définir la connaissance, l’extraire, isoler son exécution, agréger un catalogue et produire les fichiers.
 
-Le pipeline sépare la **définition de la connaissance**, l’**extraction** et le **rendu**.
+## Le pipeline en un coup d’œil
 
-## 🧱 1. La connaissance vit dans le code
+```mermaid
+flowchart LR
+    CLI[CLI ou appelant programmatique]
+    G[Générateur de solution]
 
-La connaissance liée aux erreurs est écrite à l’endroit où les erreurs sont définies :
+    subgraph W[Worker : processus isolé par assembly]
+        A[Factories d'erreur et DSL DescribeError]
+        X[Extracteur]
+        A --> X
+    end
 
-* Une classe statique annotée avec `[ProvidesErrorsFor(...)]` regroupe les erreurs liées à un modèle donné  
-* Les sous-types d’`Error` (`DomainError`, `PrimaryPortError`, `SecondaryPortError`, ...) représentent des catégories d’erreurs  
-* Les méthodes factory représentent des situations d’erreur spécifiques  
-* Le DSL `DescribeError` décrit le sens, les règles, les diagnostics et les exemples  
+    D[Catalogue ErrorDocumentation agrégé]
+    E[Renderer]
+    F[Markdown, HTML, JSON ou sortie personnalisée]
 
-À ce stade, la documentation est une **donnée structurée**, pas des fichiers texte.
+    CLI --> G
+    G -->|démarre| W
+    X -->|résultat JSON| G
+    G --> D
+    D --> E
+    E --> F
+```
 
-## 🔗 2. Les erreurs sont ancrées et liées à la documentation
+Le worker est le processus isolé **à l’intérieur duquel** l’extraction s’exécute : le générateur démarre un worker par assembly, le worker exécute les factories et renvoie un résultat sérialisé, et ce n’est qu’ensuite que le générateur agrège et rend. Le contrôle va du générateur vers chaque worker ; les données reviennent sous forme de JSON.
 
-Une classe statique déclare qu’elle possède les erreurs d’un modèle donné :
+La frontière essentielle est la suivante :
+
+> le code applicatif définit une connaissance structurée sur les erreurs ; les renderers décident uniquement de sa présentation.
+
+## 1. La connaissance est définie à côté de l’erreur
+
+Une classe statique regroupe les erreurs associées à une source applicative — par exemple un type métier ou un composant :
 
 ```csharp
 [ProvidesErrorsFor(nameof(Temperature))]
-public static class InvalidTemperatureError { ... }
+public static class InvalidTemperatureError {
+    // factories, méthodes de documentation et codes
+}
 ```
 
-Cet attribut est le point d’ancrage principal du modèle de documentation : il marque la classe comme source d’erreurs et fournit `ErrorDocumentation.Source` (le nom du modèle passé via `nameof(...)`). Il peut aussi porter une `Description` optionnelle, rendue comme introduction au groupe de cette source dans la documentation générée :
-
-```csharp
-[ProvidesErrorsFor(nameof(Temperature),
-                   Description = "Errors raised when constructing a Temperature value from an out-of-range input.")]
-```
-
-La `Description` est un texte littéral par défaut ; renseignez `DescriptionResourceType` pour qu’elle soit résolue comme une clé de ressource à la place, en vue de la localisation (voir [Internationalisation](Internationalisation.fr.md)).
-
-À l’intérieur de cette classe, chaque méthode factory est liée à sa méthode de documentation via :
+Chaque factory représente une situation d’erreur reconnue. `[DocumentedBy]` lie cette factory à une méthode de documentation :
 
 ```csharp
 [DocumentedBy(nameof(BelowAbsoluteZeroDocumentation))]
+internal static DomainError BelowAbsoluteZero(decimal value) {
+    // création de l'Error
+}
 ```
 
-Cela crée une connexion explicite entre :
-
-* la manière dont une erreur est créée
-* la manière dont elle est décrite
-
-## 🔎 3. Extraction
-
-`AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(assembly)` analyse un assembly et :
-
-* trouve toute classe annotée avec `[ProvidesErrorsFor(...)]` (ce sont de simples classes statiques, pas des types d’exception)
-* trouve les méthodes factory marquées avec `[DocumentedBy]`
-* **invoque** les méthodes de documentation liées — ainsi que les factories d’exemples qu’elles référencent. La documentation est *exécutable* : les exemples reflètent le vrai code, et non une copie qui pourrait dériver. Une factory qui lève une exception, ou une référence `[DocumentedBy]` non résolvable, est enregistrée comme une *failure* au lieu d’interrompre toute l’analyse.
-* renvoie un `ErrorDocumentationExtractionResult` : la collection d’`ErrorDocumentation` (dédupliquée par `Code`, ordonnée par `Code`) avec la liste des *failures* d’extraction
-
-À ce stade, la documentation devient un modèle structuré en mémoire.
-
-## 🧪 4. L’extraction s’exécute hors-processus
-
-Parce que l’extraction **exécute** le code de la cible, chaque assembly est documenté par un **processus worker** éphémère, lancé par le générateur (`dotnet exec`, en s’appuyant sur le fichier de dépendances de la cible). On y gagne :
-
-* des **exemples vivants** — les factories d’exemples s’exécutent contre le vrai code, pas une description figée
-* un **registre statique neuf** par assembly — aucun état ne fuit d’un assembly à l’autre
-* l’**isolation des versions** — chaque cible lie sa propre version de FirstClassErrors
-* l’**isolation des pannes** — un assembly qui plante ou se bloque est tué sur *timeout* et enregistré comme une *failure*, sans faire tomber toute la génération
-
-Le worker écrit son `ErrorDocumentationExtractionResult` en JSON ; le générateur le relit et passe à l’assembly suivant.
-
-## 🧩 5. Agrégation au niveau de la solution
-
-`SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(solutionPath[, options])` — ou `GetErrorDocumentationFromAssemblies(paths, options)` pour des binaires déjà compilés — travaille à un niveau plus élevé et :
-
-* découvre les projets (via `dotnet sln list`), ne garde que ceux qui ont opté (voir plus bas) et, sauf indication contraire, les compile
-* lance un worker pour chaque assembly de sortie
-* agrège tous les `ErrorDocumentation` extraits (dédupliqués par `Code`, ordonnés par `Code`)
-
-Cela produit un **catalogue global des erreurs** pour l’application ou le système.
-
-### Activer un projet (opt-in)
-
-La génération au niveau de la solution est **opt-in par projet** : un projet n’est documenté que si son fichier projet (`.csproj`) définit la propriété MSBuild
-
-```xml
-<PropertyGroup>
-  <GenerateErrorDocumentation>true</GenerateErrorDocumentation>
-</PropertyGroup>
+```csharp
+private static ErrorDocumentation BelowAbsoluteZeroDocumentation() {
+    return DescribeError
+        .WithTitle("Température sous le zéro absolu")
+        .WithDescription("Cette erreur survient lorsqu'une température est inférieure à la limite physique.")
+        .WithRule("Une température ne peut pas être inférieure au zéro absolu.")
+        .WithDiagnostic(
+            "Une température convertie ou calculée est passée sous la limite physique.",
+            ErrorOrigin.Internal,
+            "Vérifiez le calcul ou la conversion qui a produit la valeur.")
+        .WithExamples(() => BelowAbsoluteZero(-1m));
+}
 ```
 
-Chaque projet découvert dans la solution est alors traité ainsi :
+À ce stade, il n’existe encore ni Markdown, ni HTML, ni JSON. Il existe une connaissance structurée exprimée dans le code.
 
-| `GenerateErrorDocumentation` | Résultat |
-| ---------------------------- | -------- |
-| `true`                       | documenté |
-| absente                      | ignoré — le défaut est l’opt-in |
-| `false`                      | toujours ignoré, même quand la politique « tout inclure » est active |
-| déclarée deux fois, ou sous `Condition` | signalé, jamais deviné — un avertissement qui ignore le projet (`Continue`), ou une erreur bloquante |
+## 2. L’extraction transforme la documentation exécutable en données
 
-Cela limite le catalogue — et les workers lancés pour le produire — aux projets qui définissent réellement des erreurs applicatives, plutôt qu’à tous les projets de la solution.
+L’extracteur trouve les classes `[ProvidesErrorsFor]`, résout les liens `[DocumentedBy]`, puis invoque les méthodes de documentation et leurs factories d’exemples.
 
-La propriété est un **marqueur lu directement dans le fichier projet**, pas un interrupteur de build MSBuild : rien ne la consomme lors d’un simple `dotnet build`, et passer `-p:GenerateErrorDocumentation=…` sur une ligne de commande de build n’a aucun effet. Parce qu’elle est lue dans le XML du projet plutôt qu’évaluée par MSBuild, elle doit être déclarée littéralement dans le `.csproj` : une valeur héritée d’un `Directory.Build.props` partagé ou apportée par un import n’est pas vue, et le projet est alors traité comme si le marqueur était absent. Si le marqueur *est* dans le `.csproj` mais que sa valeur effective ne peut pas être connue depuis le seul XML — déclaré plusieurs fois, ou conditionné par un `Condition` — GenDoc ne devine pas : il signale le projet via le comportement d’échec configuré (un avertissement qui l’ignore en mode `Continue`, une erreur bloquante sinon). Le mode `--assemblies` n’est pas soumis à ce filtre : il documente exactement les binaires que vous nommez.
+C’est important parce que les exemples invoquent les véritables factories d’erreur : leur structure et leurs données proviennent de ce code, et non de chaînes recopiées dans la documentation qui pourraient en dériver silencieusement.
 
-> Pour les appels programmatiques, `SolutionGenerationOptions` expose `OptInPropertyName` (renommer le marqueur) et `IncludeProjectsWithoutOptIn` (documenter tous les projets sans distinction). La CLI `fce` utilise les valeurs par défaut ci-dessus.
+Le résultat est un catalogue en mémoire d’objets `ErrorDocumentation`, accompagné des éventuels échecs d’extraction.
 
-## 🖨️ 6. Rendu vers des formats de sortie
+## 3. Les workers isolent l’exécution des cibles
 
-Un *renderer* transforme le catalogue en mémoire en documentation publiée. Le modèle étant une simple donnée, le rendu est découplé derrière un contrat unique :
+L’extraction exécute du code applicatif. Pour cette raison, la génération au niveau solution ne charge pas tous les assemblies cibles dans un unique processus longue durée. Elle démarre un worker éphémère pour chaque assembly.
+
+Cette isolation apporte :
+
+- un état statique neuf pour chaque assembly ;
+- l’isolation des dépendances et de la version de FirstClassErrors ;
+- le confinement des crashs et blocages ;
+- une frontière de timeout explicite ;
+- le signalement des échecs sans nécessairement perdre toute l’exécution.
+
+Le worker sérialise le résultat d’extraction en JSON, puis le générateur passe à l’assembly suivant.
+
+Pour les règles exactes de découverte, d’opt-in, de timeout et de politique d’échec, voir la [Référence de l’extraction et de la découverte des projets](DocumentationExtractionReference.fr.md).
+
+## 4. Le générateur construit un catalogue unique
+
+Au niveau de la solution, le générateur :
+
+1. compile la solution, sauf avec `--no-build` ;
+2. découvre les projets qui participent à la génération documentaire ;
+3. démarre un worker par assembly de sortie sélectionné ;
+4. collecte la documentation et les échecs d’extraction ;
+5. déduplique et ordonne les erreurs par code.
+
+La sortie de cette étape est un catalogue global pour l’application ou l’ensemble d’assemblies sélectionné. Ce catalogue — un ensemble d’objets `ErrorDocumentation` — est la représentation intermédiaire indépendante du format : chaque renderer consomme le même catalogue, si bien qu’aucun format de sortie n’est privilégié par rapport à un autre.
+
+La CLI expose le parcours courant :
+
+```bash
+fce generate \
+  --solution ./MyApp.sln \
+  --format markdown \
+  --layout split \
+  --service-name my-api \
+  --output ./docs/errors
+```
+
+## 5. Les renderers transforment le catalogue en fichiers
+
+Un renderer reçoit le catalogue structuré et un `RenderRequest`. Il renvoie un ou plusieurs `RenderedDocument`.
 
 ```csharp
 public interface IErrorDocumentationRenderer {
     string Format { get; }
     IReadOnlyCollection<string> SupportedLayouts { get; }
-    IReadOnlyList<RenderedDocument> Render(IEnumerable<ErrorDocumentation> catalog, RenderRequest request);
+    IReadOnlyList<RenderedDocument> Render(
+        IEnumerable<ErrorDocumentation> catalog,
+        RenderRequest request);
 }
 ```
 
-Chaque renderer déclare les layouts qu’il sait produire et on lui en demande un à chaque appel via le `RenderRequest` (qui porte aussi la culture cible) ; un layout non pris en charge est rejeté par une `LayoutNotSupportedException`. Trois renderers sont fournis d’origine :
+Les renderers intégrés fournissent actuellement :
 
-* **json** — un schéma JSON curé et stable (layout `single` uniquement)
-* **markdown** — un fichier unique, ou (avec `--layout split`) un index README plus un fichier par groupe de source et un fichier par erreur (`single`/`split`)
-* **html** — un site statique autonome : une table des matières consultable et groupée par source et, en `split`, une page par erreur (`single`/`split`). Voir [Le renderer HTML](TheHtmlRenderer.fr.md).
+| Format | Usage | Layouts |
+| --- | --- | --- |
+| `json` | catalogue stable lisible par machine | `single` |
+| `markdown` | documentation de dépôt ou de portail | `single`, `split` |
+| `html` | documentation statique autonome et consultable | `single`, `split` |
 
-Tout autre format (CSV, un gabarit maison, …) est un **renderer personnalisé** : implémentez l’interface et enregistrez-le. Voir [Écrire son propre renderer](WritingACustomRenderer.fr.md).
+`single` produit un document unique ; `split` produit une page par erreur.
 
-## 🧰 7. Orchestration via CLI
+Les renderers personnalisés utilisent le même contrat. Voir [Écrire son propre renderer](WritingACustomRenderer.fr.md).
 
-La CLI `fce` orchestre l’ensemble du processus :
+## 6. La culture traverse deux frontières distinctes
 
-```bash
-fce generate --solution ./MyApp.sln --format markdown --layout split --output ./docs/errors
-```
+L’internationalisation est volontairement séparée :
 
-Elle gère la compilation de la solution, l’extraction (via les workers), l’agrégation et le rendu. Les options courantes peuvent être stockées dans un fichier de configuration (`fce.json`) pour ne pas les répéter, et les renderers personnalisés y sont aussi référencés :
+- la **culture d’extraction** localise le contenu des erreurs produit par les factories et méthodes de documentation ;
+- la **culture de rendu** localise les titres, libellés et autres textes fixes appartenant au renderer.
 
-```bash
-fce config init
-fce config renderer add ./plugins/MyCompany.Renderers.dll
-fce generate            # utilise la solution, le format, l’output, les renderers configurés…
-```
+Les identifiants stables restent indépendants de la culture : codes, identités de source, noms de clés de contexte, chemins générés, ancres et messages de diagnostic internes.
 
-Une valeur passée en ligne de commande écrase la configuration.
+Voir [Internationalisation](Internationalisation.fr.md) pour le workflow complet.
 
-## 🌍 8. Internationalisation
+## Pourquoi cette séparation est importante
 
-Le pipeline est sensible à la culture à deux niveaux : l’extracteur localise le *contenu* des erreurs (sous la culture UI demandée) et chaque renderer localise ses propres *gabarits* (depuis `RenderRequest.Culture`), tandis que les noms de fichiers et les ancres restent indépendants de la culture, pour que les liens ne cassent jamais. C’est optionnel et piloté par `fce generate --language`.
+| Composant | Responsabilité |
+| --- | --- |
+| code applicatif | sens des erreurs, règles, diagnostics, exemples, messages publics |
+| extracteur | découverte et exécution des factories documentées |
+| worker | isolation du processus et des dépendances |
+| générateur | compilation, sélection, agrégation, ordre, collecte des échecs |
+| renderer | format de fichier, layout, texte du gabarit |
+| CLI | orchestration et configuration |
 
-Voir **[Internationalisation](Internationalisation.fr.md)** pour le détail — choisir la langue, le hook `DescriptionResourceType`, la localisation des gabarits de renderer, et le pilotage sans la CLI.
+Cette séparation évite plusieurs couplages :
 
-## 🔁 Pourquoi cette architecture est importante
+- les factories ignorent si la sortie sera du Markdown ou du HTML ;
+- les renderers n’exécutent pas les factories applicatives ;
+- un assembly défaillant ne doit pas corrompre toutes les autres extractions ;
+- le contenu localisé et la présentation localisée restent indépendants ;
+- les appels programmatiques peuvent utiliser les étapes du pipeline sans passer par la CLI.
 
-Cette séparation garantit :
+## L’idée clé
 
-| Couche      | Responsabilité                          |
-| ----------- | --------------------------------------- |
-| Code        | Définir la connaissance des erreurs     |
-| Reader      | Extraire la documentation structurée    |
-| Worker      | Exécuter le code de façon isolée        |
-| Générateur  | Compiler et agréger à travers les assemblies |
-| Renderer    | Transformer le catalogue en un format cible |
-| CLI         | Orchestrer le processus                 |
+> La documentation des erreurs n’est pas réécrite manuellement à partir du système. Elle est dérivée des mêmes factories et descriptions structurées qui définissent les échecs reconnus par le système.
 
-La documentation reste :
-
-* proche du code
-* toujours à jour
-* structurée
-* exploitable par des outils
-
-## 🎯 L’idée clé
-
-> La documentation des erreurs n’est pas écrite *à propos* du système.
-> Elle est dérivée *à partir* du système.
-
-Le code est la source de vérité.
+Le code reste la source de vérité ; le pipeline rend cette connaissance transportable.
 
 ---
 
 <div align="center">
-<a href="CatalogVersioning.fr.md">← Versionnage du catalogue</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="WritingACustomRenderer.fr.md">Écrire son propre renderer →</a>
+<a href="CatalogVersioning.fr.md">← Versionnage du catalogue</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="DocumentationExtractionReference.fr.md">Référence de l’extraction et de la découverte des projets →</a>
 </div>
 
 ---
