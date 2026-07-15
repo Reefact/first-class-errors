@@ -38,7 +38,16 @@ fi
 # Lower bound of the range: the previous same-train tag (explicit FROM_REF, or the
 # train's latest tag). Sorted by version so lib-v1.10.0 outranks lib-v1.9.0.
 from="${FROM_REF:-}"
-if [ -z "$from" ]; then
+if [ -n "$from" ]; then
+  # FROM_REF is free text from the workflow input. Validate it resolves to a real
+  # commit before handing it to git: --end-of-options stops a leading-dash value
+  # (e.g. "--all", "--output=x") from being parsed as an option — which would
+  # silently produce a wrong range or write files instead of failing.
+  if ! git rev-parse --verify --quiet --end-of-options "${from}^{commit}" >/dev/null; then
+    echo "error: from_ref '$from' does not resolve to a commit" >&2
+    exit 2
+  fi
+else
   from="$(git tag --list "${prefix}*" --sort=-version:refname | head -n1 || true)"
 fi
 
