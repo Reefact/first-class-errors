@@ -7,7 +7,7 @@ FirstClassErrors documentation is organized by **reader intent**, not by impleme
 
 The project README introduces the library and lists every document by area. This page is different: it helps you choose *what to read next* based on what you are trying to accomplish.
 
-Start with the question you are trying to answer. Each primary page then links to the focused guides and references you need for advanced details.
+Start with the question you are trying to answer. The primary pages then point you toward the focused guides and references for advanced details.
 
 ## I am discovering the library
 
@@ -20,7 +20,7 @@ Follow this path when you are deciding whether FirstClassErrors fits your applic
 
 ## I need to understand the model
 
-Use these pages before defining project-wide conventions.
+Read these pages to understand the model before defining your own usage or a project's conventions.
 
 - [Core Concepts](CoreConcepts.en.md) — `Error`, factories, documentation, exceptions, and `Outcome`.
 - [Error Taxonomy and Composition](ErrorTaxonomy.en.md) — domain, infrastructure, and port errors, and how errors nest as structured causes.

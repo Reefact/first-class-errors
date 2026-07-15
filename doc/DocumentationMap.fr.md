@@ -7,7 +7,7 @@ La documentation de FirstClassErrors est organisée selon **l’intention du lec
 
 Le README du projet présente la bibliothèque et recense les documents par domaine. Cette page est différente : elle vous aide à choisir *quoi lire ensuite* selon ce que vous cherchez à accomplir.
 
-Partez de la question à laquelle vous cherchez à répondre. Chaque page principale renvoie ensuite vers les guides et références spécialisés utiles.
+Partez de la question à laquelle vous cherchez à répondre. Les pages principales vous orientent ensuite vers les guides et références spécialisés utiles.
 
 ## Je découvre la bibliothèque
 
@@ -20,7 +20,7 @@ Suivez ce parcours pour déterminer si FirstClassErrors correspond à votre appl
 
 ## Je dois comprendre le modèle
 
-Lisez ces pages avant de définir des conventions à l’échelle d’un projet.
+Lisez ces pages pour comprendre le modèle avant de définir vos usages ou les conventions d’un projet.
 
 - [Concepts fondamentaux](CoreConcepts.fr.md) — `Error`, factories, documentation, exceptions et `Outcome`.
 - [Taxonomie et composition des erreurs](ErrorTaxonomy.fr.md) — erreurs de domaine, d’infrastructure et de ports, et comment les erreurs s’imbriquent en causes structurées.
