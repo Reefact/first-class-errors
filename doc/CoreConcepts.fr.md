@@ -1,152 +1,157 @@
-# Concepts clés
+# Concepts fondamentaux
 
-🌍 **Langues:**  
+🌍 **Langues :**  
 🇬🇧 [English](./CoreConcepts.en.md) | 🇫🇷 Français (ce fichier)
 
-FirstClassErrors n’est pas simplement une bibliothèque utilitaire.  Il introduit une autre manière de penser les erreurs applicatives.
+FirstClassErrors sépare le **sens d’un échec** du mécanisme utilisé pour le propager.
 
-Au lieu de réduire une défaillance à un simple incident technique, elle fait de l’**erreur** qui la sous-tend **une connaissance structurée sur ce qui s’est mal passé** — l’exception restant le mécanisme qui la signale et la propage.
+L’objet central est `Error`. Une exception ou un `Outcome<T>` ne fait que transporter cette erreur.
 
-## 🧠 Une erreur n’est pas juste un message
+```mermaid
+flowchart LR
+    A[Factory d’erreur] --> B[Error]
+    B --> C[ToException]
+    B --> D[Outcome ou Outcome de T]
+    A --> E[DocumentedBy]
+    E --> F[Documentation générée]
+```
 
-Dans de nombreux systèmes, les exceptions se résument à :
+## Une erreur représente une situation
 
-> un type + un message texte
+Une erreur utile répond à une question précise :
 
-Avec FirstClassErrors, une **erreur** représente :
+> Quelle situation le système a-t-il reconnue ?
 
-* une **situation d’erreur spécifique**  
-* identifiée par un **code d’erreur stable**  
-* décrite avec trois messages dédiés (un résumé public, un détail public optionnel et un message de diagnostic interne)  
-* éventuellement enrichie de contexte  
-* associée à des diagnostics structurés  
+Par exemple :
 
-Une **erreur** devient un objet sémantique, pas seulement un signal d’exécution.
+```csharp
+InvalidAmountOperationError.CurrencyMismatch(left, right)
+```
 
-### Trois messages, deux publics
+La factory donne à la situation un nom lisible. Son code stable lui donne une identité lisible par machine :
 
-Une erreur porte trois messages mais les répartit délibérément entre seulement **deux publics** — un public externe (utilisateurs finaux / clients d’API) et un public interne (logs, support, développeurs). La séparation est garantie par construction : ce qui atteint un appelant ne peut jamais laisser fuiter ce qui est destiné aux développeurs et au support :
+```text
+AMOUNT_CURRENCY_MISMATCH
+```
 
-* **`ShortMessage`** (obligatoire) — un résumé public court, exposable sans risque à un utilisateur final ou à un client d’API (par ex. le `title` d’un problem detail RFC 9457).
-* **`DetailedMessage`** (optionnel) — un détail public maîtrisé, exposable **uniquement** si l’application le décide explicitement (par ex. le `detail` d’un problem detail RFC 9457). Il ne doit jamais contenir d’information sensible ou interne.
-* **`DiagnosticMessage`** (obligatoire) — le message de diagnostic interne destiné aux logs, au support et aux développeurs. Il peut contenir des détails techniques/opérationnels (identifiants, valeurs fautives, état interne) et n’est **jamais** exposé aux clients externes par défaut. `error.ToException()` l’utilise comme `Message` de l’exception.
+Une factory doit donc correspondre à un cas d’erreur documenté.
 
-Le cœur du modèle reste agnostique vis-à-vis d’HTTP : le message de diagnostic n’est jamais un corps de réponse HTTP par défaut, et `type` et `status` restent l’affaire de l’application. Lorsqu’une erreur est exposée en HTTP, son `Code` est le `type` RFC 9457 naturel : exposez-le comme un URI stable tel que `urn:problem:{service}:{code}`, où `{code}` est le code d’erreur en minuscules et en kebab-case — par exemple `urn:problem:temperature-simulator:temperature-below-absolute-zero` ou `urn:problem:banking-api:money-transfer-amount-not-positive` — afin que les clients puissent aiguiller sur le type de problème.
+## Ce que porte une `Error`
 
-## 🧩 Une factory représente une situation d’erreur
+Une occurrence d’erreur — une instance de la situation à l’exécution — contient :
 
-Les factories d’**erreur** sont au cœur du modèle.
+- un `Code` stable ;
+- un `InstanceId` unique ;
+- un horodatage `OccurredAt` ;
+- des messages publics et internes ;
+- un contexte typé optionnel ;
+- des erreurs internes optionnelles (erreurs imbriquées qui enregistrent la cause).
 
-Une méthode factory :
+La factory centralise la création de ces valeurs, afin que chaque occurrence d’une même situation reste cohérente.
 
-* représente un scénario d’erreur précis  
-* lui donne un **nom** dans le code  
-* centralise la création de l’erreur  
-* devient le point d’ancrage de la documentation  
+## Trois messages, deux publics
 
-Cela signifie :
+Une erreur porte trois messages répartis entre un public externe et un public interne.
 
-> Chaque factory = un cas d’erreur documenté.
+| Message | Obligatoire | Public | Rôle |
+| --- | --- | --- | --- |
+| `ShortMessage` | oui | utilisateurs et clients d’API | résumé public sûr |
+| `DetailedMessage` | non | utilisateurs et clients d’API | détail public optionnel et maîtrisé |
+| `DiagnosticMessage` | oui | logs, support et développeurs | détail interne pour l’investigation |
 
-Les factories améliorent la lisibilité et rendent explicites les situations d’erreur, tout en gardant les détails de construction en dehors de la logique métier.
+Cette séparation est volontaire. Un message de diagnostic peut contenir des identifiants, des valeurs fautives ou un état interne qui ne doivent jamais être exposés par défaut à un client externe.
 
-## 📘 La documentation vit avec le code
+```csharp
+return DomainError.Create(
+        Code.CurrencyMismatch,
+        diagnosticMessage: $"Impossible d’additionner {left} et {right} car leurs devises diffèrent.")
+    .WithPublicMessage(
+        shortMessage: "Les montants utilisent des devises différentes.",
+        detailedMessage: "Les deux montants doivent utiliser la même devise.");
+```
 
-La documentation des erreurs est écrite avec le DSL `DescribeError` et liée directement aux factories d’**erreur**.
+`error.ToException()` utilise le message de diagnostic comme `Message` de l’exception. Le mapping des messages publics vers HTTP, gRPC, une interface utilisateur ou un autre transport reste la responsabilité de l’application.
 
-Cela permet de définir :
+## La factory est la source de vérité
 
-* des descriptions structurées  
-* les règles violées  
-* des diagnostics  
-* des exemples réalistes  
+Les factories gardent les détails de construction hors de la logique métier :
 
-Comme la documentation est du code :
+```csharp
+if (Currency != other.Currency) {
+    throw InvalidAmountOperationError.CurrencyMismatch(this, other).ToException();
+}
+```
 
-* elle évolue avec le système  
-* elle ne dérive pas  
-* elle peut être extraite automatiquement  
+Le code nomme la situation reconnue sans répéter son code, ses messages, son contexte ni ses règles de construction.
 
-C’est de la **documentation vivante**.
+Les factories servent également de point d’ancrage à la documentation :
 
-## 🔎 Les diagnostics décrivent des hypothèses, pas des fautes
+```csharp
+[DocumentedBy(nameof(CurrencyMismatchDocumentation))]
+internal static DomainError CurrencyMismatch(...) { ... }
+```
 
-Les diagnostics répondent à :
+La méthode liée décrit le sens stable de la situation : son titre, son explication, sa règle, ses diagnostics et des exemples représentatifs.
 
-* Qu’est-ce qui pourrait avoir causé cette erreur ?  
-* Est-ce probablement lié aux données d’entrée, au système, ou aux deux ?  
-* Par où commencer l’investigation ?  
+## Documentation et données d’exécution sont différentes
 
-Les diagnostics sont :
+La documentation décrit la **catégorie** d’erreur :
 
-* structurés  
-* orientés humains  
-* des guides pour l’analyse  
+- ce que signifie la situation ;
+- quelle règle elle représente ;
+- ce qui pourrait la provoquer ;
+- par où commencer l’investigation.
 
-Ils n’encodent pas de processus opérationnels. Ils donnent une **direction**, pas des procédures.
+L’erreur d’exécution décrit une **occurrence** :
 
-## 🧭 Taxonomie des erreurs
+- quand elle s’est produite ;
+- son identifiant unique ;
+- son message de diagnostic réel ;
+- les valeurs de contexte propres à cette occurrence.
 
-Les erreurs sont modélisées sous forme de hiérarchie ayant pour racine le type abstrait `Error` :
+Par exemple, `ORDER_NOT_FOUND` est la catégorie stable. `OrderId = 42` appartient à une occurrence précise et doit donc être placé dans [`ErrorContext`](ErrorContext.fr.md).
 
-* **`DomainError`** — une violation d’une règle métier (la couche domaine).
-* **`InfrastructureError`** — une défaillance à une frontière technique. Elle porte une `Transience` (`Unknown` / `NonTransient` / `Transient`) et une `InteractionDirection`.
-  * **`PrimaryPortError`** — frontière entrante (`Direction` fixée à `Incoming`).
-  * **`SecondaryPortError`** — frontière sortante (`Direction` fixée à `Outgoing`).
+## Les diagnostics orientent l’investigation
 
-Les erreurs de Port remplacent les anciennes exceptions d’Adapter. Lorsqu’une défaillance de port enveloppe plusieurs causes, `PrimaryPortInnerErrors` / `SecondaryPortInnerErrors` agrègent les erreurs internes et calculent la transience globale.
+Un diagnostic est une hypothèse structurée composée de :
 
-**Règles d’imbrication.** Les erreurs internes capturent des *causes*, et le modèle contraint ce qui peut s’imbriquer dans quoi — par construction, pas par convention :
+- une cause possible ;
+- son `ErrorOrigin` probable (`Internal`, `External` ou `InternalOrExternal`) ;
+- une piste d’analyse.
 
-* Une **`DomainError`** n’imbrique **que** d’autres `DomainError`. Une défaillance métier n’a jamais pour cause — ou pour agrégat — que d’autres défaillances métier ; elle ne porte jamais une cause d’infrastructure (ce serait faire fuiter une préoccupation technique dans le vocabulaire du domaine).
-* Une **`PrimaryPortError`** / **`SecondaryPortError`** imbrique des **erreurs d’infrastructure de sa propre direction** (un port primaire imbrique des erreurs de port primaire, un port secondaire des erreurs de port secondaire) **et/ou** des `DomainError` — par exemple un rejet à la frontière dont la cause est une violation d’invariant métier détectée lors du mapping d’une requête entrante. Les collections typées `PrimaryPortInnerErrors` / `SecondaryPortInnerErrors` rendent tout le reste non représentable : elles n’exposent que `Add(DomainError)` et `Add(`_erreur de port de même direction_`)`.
-* La base **`InfrastructureError`** est le cas général permissif et accepte n’importe quelle `Error` comme cause interne. Dans du vrai code, préfère les types de Port : ils fixent l’`InteractionDirection` et gardent l’imbrication cohérente.
+Les diagnostics ne doivent pas affirmer une cause racine qui n’est pas encore connue. Ils décrivent des états plausibles et suggèrent ce qu’il faut vérifier en premier.
 
-En résumé : **une erreur de domaine ne contient que des erreurs de domaine ; une erreur d’infrastructure contient des erreurs d’infrastructure de même direction et/ou des erreurs de domaine.** La [FAQ](FAQ.fr.md) explique *pourquoi* cette asymétrie existe.
+## Un modèle, deux transports courants
 
-Chaque erreur possède une exception associée, obtenue via `error.ToException()` : `DomainException`, `InfrastructureException`, `PrimaryPortException`, `SecondaryPortException`. On ne les instancie jamais directement avec `new` ; l’exception expose son `Error` (et, à travers lui, le contexte et les erreurs internes).
+Lorsque le système ne peut pas continuer normalement, levez l’exception associée :
 
-## 🔁 Erreur ou donnée ? Les deux sont possibles
+```csharp
+throw error.ToException();
+```
 
-Traditionnellement, les exceptions sont toujours levées.  
-FirstClassErrors supporte deux modèles complémentaires :
+Lorsque l’échec est attendu et doit rester explicite dans le flux normal, retournez-le comme une donnée :
 
-* **L’exception comme flux de contrôle** (throw classique)  
-* **L’erreur comme donnée** (`Outcome<T>`, ou `Outcome` non générique lorsqu’il n’y a pas de valeur)  
+```csharp
+return Outcome<Amount>.Failure(error);
+```
 
-Cela permet aux erreurs d’être :
+L’erreur ne change pas d’identité lorsque son transport change. Elle peut donc être retournée depuis la logique métier, journalisée ou transformée en exception plus tard sans recréer ni traduire le modèle.
 
-* levées immédiatement  
-* transportées dans des pipelines de validation  
-* escaladées plus tard  
+## Catégories d’erreur
 
-La même situation d’erreur peut servir ces deux rôles.
+FirstClassErrors fournit plusieurs catégories pour distinguer les violations de règles métier des défaillances aux frontières techniques :
 
-Le modèle sans levée d’exception est `Outcome` / `Outcome<T>` : l’`Error` est portée comme donnée (`IsSuccess` / `IsFailure` / `Error`) et peut être convertie en exception à la demande via `error.ToException()`.
+- `DomainError` ;
+- `InfrastructureError` ;
+- `PrimaryPortError` ;
+- `SecondaryPortError`.
 
-## 🎯 De l’échec à la connaissance
-
-Avec ce modèle, les erreurs ne sont plus :
-
-> des défaillances techniques isolées
-
-Elles deviennent :
-
-> une connaissance partagée et structurée sur la manière dont le système peut échouer.
-
-Cela crée un pont entre :
-
-* le développement  
-* le support  
-* la documentation  
-* l’exploitation  
-
-Le tout basé sur une même source de vérité : le code.
+Leur direction d’interaction, leur transience et leurs règles de composition sont expliquées séparément dans [Taxonomie et composition des erreurs](ErrorTaxonomy.fr.md).
 
 ---
 
 <div align="center">
-<a href="WhenNotToUseFirstClassErrors.fr.md">← Quand ne pas utiliser FirstClassErrors</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="ErrorContext.fr.md">Guide du contexte d’erreur →</a>
+<a href="WhenNotToUseFirstClassErrors.fr.md">← Quand ne pas utiliser FirstClassErrors</a> · <a href="README.fr.md#-documentation">↑ Table des matières</a> · <a href="ErrorTaxonomy.fr.md">Taxonomie et composition des erreurs →</a>
 </div>
 
 ---

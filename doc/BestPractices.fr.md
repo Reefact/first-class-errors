@@ -1,209 +1,112 @@
 # Bonnes pratiques
 
-🌍 **Langues:**  
+🌍 **Langues :**  
 🇬🇧 [English](./BestPractices.en.md) | 🇫🇷 Français (ce fichier)
 
-FirstClassErrors est le plus efficace lorsqu’il est utilisé de manière cohérente et intentionnelle.  
-Ces pratiques aident à garder des erreurs significatives, lisibles et réellement utiles.
+Utilisez cette page comme une checklist de revue compacte. Les explications détaillées se trouvent dans les guides spécialisés liés depuis chaque section.
 
-## 🧠 1. Une situation d’erreur par factory
+## Modéliser la bonne situation
 
-Chaque méthode factory doit représenter **une situation d’erreur précise**.
+- Une factory représente une situation d’erreur précise.
+- Évitez les erreurs génériques comme `INVALID_OPERATION` ou `PROCESSING_FAILED`.
+- Choisissez le type d’erreur selon le sens de l’échec, pas selon la classe ou le dossier courant.
+- Ne documentez pas les exceptions du framework, les crashes accidentels ou le bruit technique bas niveau comme de la connaissance applicative.
 
-Évitez :
+Voir [Écrire la documentation d’une erreur](WritingErrorsGuide.fr.md) et [Quand ne pas utiliser FirstClassErrors](WhenNotToUseFirstClassErrors.fr.md).
 
-* les factories qui couvrent plusieurs causes différentes  
-* les factories génériques de type “InvalidOperation”  
+## Garder les identifiants stables
 
-Une factory doit répondre à :
+- Utilisez un code spécifique en `UPPER_SNAKE_CASE`.
+- Ne réutilisez jamais un code pour une autre situation.
+- Ne renommez ou ne supprimez pas un code à la légère.
+- Gardez stables les noms et types des clés de contexte lorsque des dashboards ou consommateurs en dépendent.
 
-> « Qu’est-ce qui s’est exactement mal passé ? »
+Les codes et la forme du contexte constituent un contrat opérationnel. Utilisez le [Versionnage du catalogue](CatalogVersioning.fr.md) pour rendre ses modifications visibles.
 
-**Pourquoi :**  
-Des frontières claires entre les situations d’erreur rendent les diagnostics précis et la documentation fiable.
-
-## 🏷️ 2. Garder les codes d’erreur stables
-
-Les codes d’erreur font partie du contrat.
-
-* Ne changez pas les codes à la légère  
-* Ne réutilisez pas un code pour une autre situation  
-* Traitez-les comme des identifiants durables  
-
-**Pourquoi :**  
-Les codes d’erreur sont utilisés dans les logs, la documentation et les processus de support. Leur stabilité préserve la traçabilité dans le temps.
-
-## ✂️ 3. Garder le happy path propre
-
-Les factories d’erreur doivent éviter d’introduire la construction d’erreur directement dans la logique métier.
+## Centraliser la construction dans des factories
 
 Préférez :
 
 ```csharp
-throw InvalidAmountOperationError.CurrencyMismatch(a1, a2).ToException();
-````
-
-Plutôt que :
-
-```csharp
-throw new DomainException(/* Error assemblée manuellement */);
+throw InvalidAmountOperationError.CurrencyMismatch(left, right).ToException();
 ```
 
-**Pourquoi :**
-Cela garde la logique métier lisible et sépare l’intention métier des détails de construction de l’erreur.
+N’assemblez pas les erreurs ou exceptions directement dans la logique métier.
 
-## 📘 4. Écrire la documentation pour des humains
+Une classe factory statique annotée avec `[ProvidesErrorsFor(...)]` doit regrouper les situations liées, avec une méthode par situation et sa documentation à proximité.
 
-La documentation des erreurs n’est pas destinée au compilateur — elle est destinée :
+Cela garde le happy path lisible et garantit à chaque occurrence les mêmes code, messages, contexte et point d’ancrage documentaire.
 
-* aux développeurs
-* au support
-* aux opérateurs
+## Séparer documentation stable et messages runtime
 
-Évitez le bruit technique. Concentrez-vous sur :
+La documentation stable explique la catégorie d’erreur :
 
-* le sens
-* la règle
-* les causes plausibles
+- titre ;
+- description ;
+- règle violée ;
+- hypothèses de diagnostic ;
+- exemples représentatifs.
 
-## 🔎 5. Les diagnostics sont des hypothèses, pas des accusations
+Les messages runtime expliquent une occurrence :
 
-Les diagnostics doivent décrire des états possibles, pas accuser des acteurs.
+- `ShortMessage` : résumé public sûr ;
+- `DetailedMessage` : détail public optionnel et maîtrisé ;
+- `DiagnosticMessage` : détail de diagnostic interne.
 
-Préférez :
+Ne placez pas d’identifiants propres à une occurrence dans la documentation stable et n’exposez pas de détail interne dans les messages publics.
 
-> « Des montants ont été utilisés sans conversion. »
+Voir [Écrire la documentation d’une erreur](WritingErrorsGuide.fr.md) et [Écrire les messages d’une erreur](WritingErrorMessages.fr.md).
 
-Évitez :
+## Écrire pour l’investigation, pas pour accuser
 
-> « Le développeur a oublié de convertir. »
+- Les causes décrivent des états ou conditions plausibles.
+- `ErrorOrigin` classe l’endroit où une cause peut se situer ; il n’attribue pas une responsabilité.
+- Les pistes d’analyse commencent par des verbes neutres comme *Vérifier*, *Contrôler* ou *Examiner*.
+- N’encodez pas les procédures de ticketing, d’escalade ou de contact d’équipe dans la documentation.
 
-**Pourquoi :**
-Les diagnostics guident l’investigation. Un langage accusateur nuit à la collaboration et n’aide pas au dépannage.
+Les processus opérationnels évoluent indépendamment du comportement applicatif.
 
-## 🧭 6. Les pistes d’analyse guident, elles ne prescrivent pas
+## Garder le contexte utile et sûr
 
-N’incluez pas de processus opérationnels ou de procédures de support.
+- Ajoutez le contexte au niveau de la factory afin que chaque occurrence soit cohérente.
+- Utilisez des clés nommées, typées et réutilisables.
+- Incluez les faits propres à l’occurrence qui améliorent réellement le diagnostic.
+- Évitez les secrets, les payloads volumineux et les données qui ne peuvent pas être loguées sans risque.
+- Préférez un contexte structuré à l’insertion de toutes les valeurs dans un message.
 
-Évitez :
+Voir [Contexte d’erreur](ErrorContext.fr.md).
 
-* « Ouvrir un ticket »
-* « Contacter l’équipe X »
+## Choisir intentionnellement exception ou `Outcome`
 
-Concentrez-vous sur la direction de l’investigation, pas sur le workflow.
+Utilisez une exception lorsque l’échec doit interrompre l’opération courante, par exemple pour une violation d’invariant ou un état irrécupérable à ce niveau.
 
-**Pourquoi :**
-Les processus opérationnels dépendent du contexte organisationnel, pas de l’application elle-même. Les encoder dans la documentation des erreurs couple votre code à des procédures externes et rend la documentation fragile lorsque ces processus changent.
+Utilisez `Outcome` / `Outcome<T>` lorsque l’échec est une branche attendue du flux, par exemple pour la validation, le parsing, les traitements par lots ou les succès partiels.
 
-## 🔁 7. Utiliser Outcome quand l’échec est attendu
+Les deux chemins doivent porter la même `Error`, créée par la même factory. Ne créez pas un second modèle d’erreur appauvri pour les flux sans exception.
 
-Utilisez des exceptions pour :
+Voir [Cas d’usage](UsagePatterns.fr.md).
 
-* les violations d’invariants
-* les états inattendus
+## Rendre les exemples pédagogiques
 
-Utilisez `Outcome<T>` lorsque :
+- Utilisez des valeurs simples et réalistes.
+- Rendez la règle violée immédiatement visible.
+- Appelez la factory documentée au lieu de recopier un message.
+- Gardez les cas limites et de stress dans les tests, pas dans les exemples du catalogue.
 
-* vous validez des entrées
-* vous traitez des lots
-* les échecs partiels sont normaux
+## Checklist de pull request
 
-**Pourquoi :**
-Cela maintient le flux d’exceptions significatif tout en permettant de transmettre des informations d’erreur riches dans des scénarios non exceptionnels.
+Avant de merger une modification liée aux erreurs, vérifiez que :
 
-## 🧩 8. Ne pas documenter les accidents techniques
-
-Évitez de documenter :
-
-* les NullReferenceExceptions
-* les exceptions du framework
-* les défaillances techniques bas niveau
-
-Le DSL est destiné aux **erreurs applicatives porteuses de sens**, pas aux crashes accidentels.
-
-**Pourquoi :**
-L’objectif est de documenter le comportement et les règles du système, pas des incidents techniques imprévisibles.
-
-## 🧪 9. Les exemples doivent éduquer, pas tester les limites
-
-Les exemples ne sont pas des tests unitaires.
-
-Utilisez des valeurs :
-
-* simples
-* réalistes
-* claires
-
-Évitez les cas extrêmes ou les données pathologiques.
-
-## 🧱 10. Garder la documentation proche de la factory
-
-Les méthodes de documentation doivent vivre dans la même classe factory d’erreur que la factory.
-
-Cela garde :
-
-* l’intention
-* la création de l’erreur
-* la documentation
-
-au même endroit conceptuel.
-
-**Pourquoi :**
-Garder la documentation à côté de la factory garantit qu’elle évolue avec le code. Cela évite les dérives et préserve l’idée centrale de documentation vivante : la connaissance reste là où le comportement est défini.
-
-## 🧩 11. Regrouper les erreurs dans une classe factory dédiée
-
-Les erreurs spécifiques à l’application devraient être regroupées dans une classe `static` annotée avec `[ProvidesErrorsFor(...)]`, avec une méthode factory `internal static` par situation d’erreur.
-
-```csharp
-[ProvidesErrorsFor(nameof(Amount))]
-public static class InvalidAmountOperationError {
-
-    [DocumentedBy(nameof(CurrencyMismatchDocumentation))]
-    internal static DomainError CurrencyMismatch(Amount left, Amount right) {
-        return DomainError.Create(
-                Code.CurrencyMismatch,
-                diagnosticMessage: $"Impossible d’opérer sur des montants de devises différentes : {left.Currency} et {right.Currency}.")
-            .WithPublicMessage(
-                shortMessage: "Les montants utilisent des devises différentes.",
-                detailedMessage: "Les montants impliqués utilisent des devises différentes.");
-    }
-
-    // ... méthode de documentation et codes d’erreur ...
-}
-```
-
-**Pourquoi :**
-Chaque méthode factory représente une catégorie d’erreur bien définie. Les regrouper dans une classe dédiée garde au même endroit les situations d’erreur liées, leurs codes et leur documentation. Notez que les types du cœur (`DomainError`, `DomainException`, …) ne sont **pas** `sealed` — l’héritage est intentionnellement autorisé afin de pouvoir modéliser vos propres hiérarchies d’erreur — mais en pratique vous décrivez les situations d’erreur via ces classes factory plutôt qu’en dérivant des sous-classes.
-
-## 🏭 12. Construire les erreurs via des factories, lever avec `ToException()`
-
-Vous ne faites jamais `new` sur une `DiagnosableException` dans votre code : le seul constructeur d’une exception prend une `Error`. Les erreurs elles-mêmes ne se construisent plus non plus via des constructeurs publics — ceux-ci sont désormais internes. Une erreur s’assemble via le builder étagé — `Type.Create(code, diagnosticMessage, …)` capture l’information interne obligatoire et retourne une étape intermédiaire, et `.WithPublicMessage(shortMessage, detailedMessage)` finalise l’erreur réelle (il n’y a pas de `.Build()`). Les méthodes factory encapsulent cet appel : vous invoquez simplement la factory et transformez son résultat en exception avec `ToException()`.
-
-```csharp
-// Construit une Error via la factory, puis la lève en tant qu’exception :
-throw InvalidAmountOperationError.CurrencyMismatch(a1, a2).ToException();
-```
-
-Lorsque l’échec est attendu plutôt qu’exceptionnel, retournez l’`Error` de la même factory dans un `Outcome<T>` :
-
-```csharp
-return Outcome<Amount>.Failure(InvalidAmountOperationError.NegativeAmount(value));
-```
-
-**Pourquoi :**
-Faire passer chaque erreur par une factory garantit que toutes les erreurs d’une catégorie donnée sont créées de manière contrôlée, documentée et sémantiquement cohérente, qu’elles soient levées en tant qu’exceptions ou portées comme échecs d’`Outcome`.
-
-## 🎯 Pensée finale
-
-FirstClassErrors vise à **exprimer de la connaissance**, pas seulement à gérer des erreurs.
-
-Des erreurs bien écrites améliorent :
-
-* la lisibilité du code
-* le dépannage
-* la documentation
-* la compréhension partagée du système
+- [ ] chaque nouvelle factory représente une situation précise ;
+- [ ] chaque code est spécifique, stable et unique ;
+- [ ] la documentation est liée avec `[DocumentedBy]` ;
+- [ ] les messages publics ne contiennent aucune information interne ou sensible ;
+- [ ] les messages de diagnostic expliquent les occurrences concrètes ;
+- [ ] les données interrogeables utilisent un contexte typé lorsque pertinent ;
+- [ ] les diagnostics sont des hypothèses et les pistes d’analyse sont actionnables ;
+- [ ] les exemples sont réalistes et appellent la vraie factory ;
+- [ ] les documentations anglaise et française restent alignées lorsqu’elles sont modifiées ;
+- [ ] les modifications de baseline du catalogue (le snapshot de catalogue commité — voir [Versionnage du catalogue](CatalogVersioning.fr.md)) sont délibérées et relues lorsque le contrat évolue.
 
 ---
 
