@@ -38,7 +38,7 @@ Ne localisez pas les valeurs utilisées comme contrats ou identifiants opératio
 - noms de fichiers et ancres générés ;
 - noms de champs JSON et autres schémas machine.
 
-Ces valeurs stables garantissent que les liens, branches clientes, dashboards et requêtes de logs fonctionnent dans toutes les langues du catalogue.
+Ces valeurs stables garantissent que les liens, branchements du code client, dashboards et requêtes de logs fonctionnent dans toutes les langues du catalogue.
 
 `DiagnosticMessage` relève de la même habitude « garder stable », mais pour une raison différente. C’est une simple chaîne — rien dans la bibliothèque n’empêche de la localiser — donc la garder dans une seule langue interne est une convention, pas une contrainte technique. La section suivante explique pourquoi cette convention mérite d’être suivie.
 

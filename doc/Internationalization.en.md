@@ -38,7 +38,7 @@ Do not localize values used as contracts or operational identifiers:
 - generated file names and anchors;
 - JSON field names and other machine schemas.
 
-Keeping these values stable ensures that links, client branches, dashboards, and log queries work across every catalog language.
+Keeping these values stable ensures that links, client-side branching, dashboards, and log queries work across every catalog language.
 
 `DiagnosticMessage` belongs to the same "keep it stable" habit, but for a different reason. It is a plain string — nothing in the library prevents a localized one — so keeping it in one internal language is a convention, not a technical constraint. The next section explains why that convention is worth following.
 
