@@ -13,10 +13,10 @@
 # Usage: tools/packaging/pack.sh <version> <scope:lib|cli>
 #   <version> is any valid SemVer (a real release passes the tag version; the
 #             dry run passes a throwaway like 0.0.0-dryrun).
-#   <scope>   selects which release train to pack, since lib and the fce CLI are
-#             versioned and released independently:
-#               lib -> FirstClassErrors + FirstClassErrors.Testing (lockstep)
-#               cli -> FirstClassErrors.Cli (the `fce` .NET tool)
+#   <scope>   selects which release train to pack, since the trains are versioned
+#             and released independently:
+#               lib  -> FirstClassErrors + FirstClassErrors.Testing + FirstClassErrors.RequestBinder (lockstep)
+#               cli  -> FirstClassErrors.Cli (the `fce` .NET tool)
 
 set -eu
 
@@ -32,9 +32,13 @@ scope="$2"
 # csproj, so local and floor-check packs stay SBOM-free.
 case "$scope" in
   lib)
-    # FirstClassErrors + its testing helpers: intrinsically coupled (Testing has a ProjectReference on
-    # the library and sees its internals), so they always ship together at the same version.
-    projects='FirstClassErrors/FirstClassErrors.csproj FirstClassErrors.Testing/FirstClassErrors.Testing.csproj'
+    # FirstClassErrors, its testing helpers, and the request binder. All three carry a ProjectReference on the
+    # library, so all three are intrinsically coupled to it and ship together at the same version. Packing the
+    # binder HERE -- on the library's train rather than one of its own -- is what keeps its `FirstClassErrors`
+    # package dependency pointing at a version that is co-published in this very release (the lockstep guard
+    # below proves it): a separate train would stamp the binder's dependency at a version never published for
+    # FirstClassErrors, making the package unresolvable (NU1102) and, once pushed, irreversibly so.
+    projects='FirstClassErrors/FirstClassErrors.csproj FirstClassErrors.Testing/FirstClassErrors.Testing.csproj FirstClassErrors.RequestBinder/FirstClassErrors.RequestBinder.csproj'
     ;;
   cli)
     # The `fce` .NET tool (PackAsTool; the GenDoc worker it spawns travels bundled inside the tool
@@ -63,6 +67,27 @@ for package in artifacts/*.nupkg; do
     exit 1
   fi
 done
+
+# Lockstep guard for the lib train. FirstClassErrors, its testing helpers and the request binder are
+# co-published here at the SAME $version, so every intra-train dependency on FirstClassErrors MUST reference
+# exactly $version -- the version this release is about to publish. `dotnet pack` turns each ProjectReference
+# into <dependency id="FirstClassErrors" version="$version" />; a package pinning any other version would
+# demand a FirstClassErrors that was never published on this train -> NU1102 for the consumer, on an immutable
+# artifact. This is the check whose absence made an independent binder train unshippable; assert it every pack.
+if [ "$scope" = "lib" ]; then
+  for package in artifacts/*.nupkg; do
+    while IFS= read -r dependency; do
+      if [ -z "$dependency" ]; then continue; fi
+      case "$dependency" in
+        *"version=\"${version}\""*) : ;;  # pinned to the co-published version -- good
+        *) echo "error: $package pins an off-train FirstClassErrors dependency (expected version=\"$version\"): $dependency" >&2; exit 1 ;;
+      esac
+    done <<EOF
+$(unzip -p "$package" '*.nuspec' | grep -o '<dependency [^>]*id="FirstClassErrors[^"]*"[^>]*>' || true)
+EOF
+  done
+  echo "ok: every lib-train package pins its FirstClassErrors dependency to the co-published $version"
+fi
 
 # Positive proof that the fce tool ships its GenDoc worker. `fce generate` does not do the whole job
 # in-process: it spawns FirstClassErrors.GenDoc.Worker in a child process (dotnet exec) and resolves it

@@ -22,7 +22,7 @@
 # tools/commit-lint/lint-commit-message.sh.
 trains_rows() {
   cat <<'ROWS'
-lib|lib-v|core,analyzers,testing|CHANGELOG.md|FirstClassErrors and FirstClassErrors.Testing
+lib|lib-v|core,analyzers,testing,binder|CHANGELOG.md|FirstClassErrors, FirstClassErrors.Testing and FirstClassErrors.RequestBinder
 cli|cli-v|cli,gendoc|FirstClassErrors.Cli/CHANGELOG.md|FirstClassErrors.Cli (the fce .NET tool)
 ROWS
 }
