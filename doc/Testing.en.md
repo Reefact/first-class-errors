@@ -16,9 +16,10 @@ The companion package **`FirstClassErrors.Testing`** provides framework-agnostic
 ```csharp
 using FirstClassErrors;
 using FirstClassErrors.Testing;
+using NFluent;
 ```
 
-The examples use xUnit for test scaffolding, but the FirstClassErrors assertions do not depend on xUnit, NUnit, MSTest, or another assertion library.
+The examples use xUnit for test scaffolding and NFluent for plain-value assertions — the convention this repository's own test suite follows — but the FirstClassErrors assertions do not depend on xUnit, NUnit, MSTest, NFluent, or another assertion library.
 
 The package belongs only in test projects and adds nothing to production dependencies.
 
@@ -29,9 +30,9 @@ Without the testing package, a test usually checks the state and unwraps the res
 ```csharp
 Outcome<Receipt> outcome = checkout.Pay(order);
 
-Assert.True(outcome.IsSuccess);
+Check.That(outcome.IsSuccess).IsTrue();
 Receipt receipt = outcome.GetResultOrThrow();
-Assert.Equal(order.Total, receipt.AmountCharged);
+Check.That(receipt.AmountCharged).IsEqualTo(order.Total);
 ```
 
 `ShouldSucceed()` performs the state assertion and returns the carried value:
@@ -42,7 +43,7 @@ public void Paying_a_valid_order_produces_a_receipt()
 {
     Receipt receipt = checkout.Pay(order).ShouldSucceed();
 
-    Assert.Equal(order.Total, receipt.AmountCharged);
+    Check.That(receipt.AmountCharged).IsEqualTo(order.Total);
 }
 ```
 
@@ -93,8 +94,8 @@ Error error = outcome.ShouldFail()
                      .WithCode("ORDER_NOT_FOUND")
                      .Subject;
 
-Assert.Empty(error.InnerErrors);
-Assert.Equal(Transience.NonTransient, ((InfrastructureError)error).Transience);
+Check.That(error.InnerErrors).IsEmpty();
+Check.That(((InfrastructureError)error).Transience).IsEqualTo(Transience.NonTransient);
 ```
 
 Use `Subject` for targeted assertions, not to immediately rebuild all the manual plumbing that the fluent API removed.
@@ -140,8 +141,8 @@ public void Looking_up_a_missing_order_returns_the_expected_error()
                          .WithContextEntry("OrderId", missingOrderId)
                          .Subject;
 
-    Assert.IsType<DomainError>(error);
-    Assert.Empty(error.InnerErrors);
+    Check.That(error).IsInstanceOf<DomainError>();
+    Check.That(error.InnerErrors).IsEmpty();
 }
 ```
 

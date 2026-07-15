@@ -16,9 +16,10 @@ Le package compagnon **`FirstClassErrors.Testing`** fournit des assertions fluen
 ```csharp
 using FirstClassErrors;
 using FirstClassErrors.Testing;
+using NFluent;
 ```
 
-Les exemples utilisent xUnit pour la structure des tests, mais les assertions FirstClassErrors ne dépendent ni de xUnit, ni de NUnit, ni de MSTest, ni d’une autre bibliothèque d’assertions.
+Les exemples utilisent xUnit pour la structure des tests et NFluent pour les assertions sur les valeurs simples — la convention suivie par la suite de tests de ce dépôt — mais les assertions FirstClassErrors ne dépendent ni de xUnit, ni de NUnit, ni de MSTest, ni de NFluent, ni d’une autre bibliothèque d’assertions.
 
 Le package doit rester réservé aux projets de test et n’ajoute aucune dépendance en production.
 
@@ -29,9 +30,9 @@ Sans le package de test, un test vérifie généralement l’état puis récupè
 ```csharp
 Outcome<Receipt> outcome = checkout.Pay(order);
 
-Assert.True(outcome.IsSuccess);
+Check.That(outcome.IsSuccess).IsTrue();
 Receipt receipt = outcome.GetResultOrThrow();
-Assert.Equal(order.Total, receipt.AmountCharged);
+Check.That(receipt.AmountCharged).IsEqualTo(order.Total);
 ```
 
 `ShouldSucceed()` effectue l’assertion d’état et retourne la valeur portée :
@@ -42,7 +43,7 @@ public void Payer_une_commande_valide_produit_un_recu()
 {
     Receipt receipt = checkout.Pay(order).ShouldSucceed();
 
-    Assert.Equal(order.Total, receipt.AmountCharged);
+    Check.That(receipt.AmountCharged).IsEqualTo(order.Total);
 }
 ```
 
@@ -93,8 +94,8 @@ Error error = outcome.ShouldFail()
                      .WithCode("ORDER_NOT_FOUND")
                      .Subject;
 
-Assert.Empty(error.InnerErrors);
-Assert.Equal(Transience.NonTransient, ((InfrastructureError)error).Transience);
+Check.That(error.InnerErrors).IsEmpty();
+Check.That(((InfrastructureError)error).Transience).IsEqualTo(Transience.NonTransient);
 ```
 
 Utilisez `Subject` pour des assertions ciblées, pas pour reconstruire immédiatement toute la tuyauterie manuelle que l’API fluente vient de supprimer.
@@ -140,8 +141,8 @@ public void Chercher_une_commande_absente_retourne_l_erreur_attendue()
                          .WithContextEntry("OrderId", missingOrderId)
                          .Subject;
 
-    Assert.IsType<DomainError>(error);
-    Assert.Empty(error.InnerErrors);
+    Check.That(error).IsInstanceOf<DomainError>();
+    Check.That(error.InnerErrors).IsEmpty();
 }
 ```
 
