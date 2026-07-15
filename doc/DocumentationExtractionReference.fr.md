@@ -51,7 +51,7 @@ Conséquences importantes :
 - `-p:GenerateErrorDocumentation=true` passé à `dotnet build` n’active pas le projet ;
 - le marqueur doit être littéral et non ambigu dans le `.csproj` lui-même.
 
-Avec une politique de poursuite, les projets ambigus sont signalés puis ignorés. Avec une politique stricte, ils font échouer la génération.
+Avec une politique de poursuite (le comportement par défaut), les projets ambigus sont signalés puis ignorés. Avec une politique stricte (`--strict`), ils font échouer la génération.
 
 ## Options d’opt-in programmatiques
 
@@ -85,7 +85,7 @@ Il est adapté lorsque :
 - l’appelant veut sélectionner exactement les binaires ;
 - la découverte de projets n’est pas pertinente.
 
-L’appelant reste responsable de fournir les fichiers de dépendances et assets runtime compatibles à côté de l’assembly cible.
+L’appelant reste responsable de fournir les fichiers de dépendances et assets runtime compatibles à côté de l’assembly cible (les `.deps.json` et `runtimeconfig.json` du build, plus les assemblies dépendants).
 
 ## Extraction d’un assembly unique
 

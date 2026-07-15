@@ -51,7 +51,7 @@ Important consequences:
 - passing `-p:GenerateErrorDocumentation=true` to `dotnet build` does not opt the project in;
 - the marker must be literal and unambiguous in the `.csproj` itself.
 
-Under a continue-on-failure policy, ambiguous projects are reported and skipped. Under a strict policy, they fail generation.
+Under a continue-on-failure policy (the default), ambiguous projects are reported and skipped. Under a strict policy (`--strict`), they fail generation.
 
 ## Programmatic opt-in options
 
@@ -85,7 +85,7 @@ Use it when:
 - the caller needs exact binary selection;
 - project discovery would be inappropriate.
 
-The caller remains responsible for providing compatible dependency files and runtime assets beside the target assembly.
+The caller remains responsible for providing compatible dependency files and runtime assets beside the target assembly (the build’s `.deps.json` and `runtimeconfig.json` plus the dependent assemblies).
 
 ## Single-assembly extraction
 

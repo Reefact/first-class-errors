@@ -132,6 +132,8 @@ Built-in renderers currently provide:
 | `markdown` | repository or portal documentation | `single`, `split` |
 | `html` | self-contained searchable static documentation | `single`, `split` |
 
+`single` produces one document; `split` produces one page per error.
+
 Custom renderers use the same contract. See [Writing a custom renderer](WritingACustomRenderer.en.md).
 
 ## 6. Culture crosses two distinct boundaries

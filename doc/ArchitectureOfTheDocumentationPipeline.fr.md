@@ -132,6 +132,8 @@ Les renderers intégrés fournissent actuellement :
 | `markdown` | documentation de dépôt ou de portail | `single`, `split` |
 | `html` | documentation statique autonome et consultable | `single`, `split` |
 
+`single` produit un document unique ; `split` produit une page par erreur.
+
 Les renderers personnalisés utilisent le même contrat. Voir [Écrire son propre renderer](WritingACustomRenderer.fr.md).
 
 ## 6. La culture traverse deux frontières distinctes

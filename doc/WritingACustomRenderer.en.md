@@ -88,7 +88,7 @@ Keep paths relative, deterministic, and safe. Do not write files directly inside
 
 - `Layout`, selected by `--layout`;
 - `Culture`, used for renderer-owned headings, labels, and template text;
-- `ServiceName`, set from `--service-name` or the configuration, used by renderers that emit RFC 9457 problem types (`urn:problem:{service}:{code}`); `null` when none is configured.
+- `ServiceName`, set from `--service-name` or the configuration, used by renderers that emit RFC 9457 (Problem Details for HTTP APIs) problem types (`urn:problem:{service}:{code}`); `null` when none is configured.
 
 The catalog content has already been localized during extraction. A renderer must not reinterpret or retranslate error titles, rules, messages, or diagnostics.
 
@@ -175,7 +175,7 @@ The CLI discovers public renderer types in configured assemblies. A renderer mus
 - use the contract assembly resolved by the CLI process;
 - target a framework loadable by that CLI runtime.
 
-Reference `FirstClassErrors` without deploying a conflicting private copy next to the plugin when that would create a separate contract type identity. A project reference may use `<Private>false</Private>` when appropriate for the packaging layout.
+Do not deploy a private copy of `FirstClassErrors` beside the plugin: if the CLI and the plugin each load their own copy, `IErrorDocumentationRenderer` becomes two distinct types and the renderer is silently not recognized. A project reference may use `<Private>false</Private>` when appropriate for the packaging layout.
 
 A plugin that cannot be loaded is reported and skipped. Review those warnings: an unknown format later in the command may simply mean its plugin failed to load.
 
@@ -184,6 +184,7 @@ A plugin that cannot be loaded is reported and skipped. Review those warnings: a
 A CSV schema may have no translated template text. A renderer producing headings should resolve only those headings from `request.Culture`:
 
 ```csharp
+// RendererResources is your own .resx-backed resource class, not a library type.
 string heading = RendererResources.GetString("ErrorCatalog", request.Culture)
                  ?? "Error catalog";
 ```
