@@ -6,6 +6,17 @@ place; a decision is revisited by writing a **new** ADR that supersedes the old
 one, and the old one's status changes to *Superseded* with a link to its
 successor.
 
+## When is an ADR written?
+
+Every pull request is checked against this base — the moment new decisions enter
+the codebase. Most pull requests embark no architectural decision and add no ADR;
+the check is what is mandatory, not the artifact. The test for "significant": *if
+the implementation changed but the decision stood, the ADR should not need
+editing.* A new decision is **recorded** here, a decision that replaces another is
+written as a **superseding** ADR, and a change that **conflicts** with an accepted
+ADR is raised for the maintainer. The agent procedure — draft as *Proposed*, never
+flip a status unilaterally — is in [`AGENTS.md`](../../AGENTS.md).
+
 ## An ADR is a decision record, not a specification
 
 An ADR captures a **decision and the reasoning behind it** — not how that
@@ -161,3 +172,4 @@ Optional supporting material:
 | [ADR-0001](0001-lock-the-analyzer-roslyn-floor.md) | Lock the analyzer's Roslyn floor | Accepted |
 | [ADR-0002](0002-floor-the-tooling-runtime.md) | Floor the tooling runtime at the oldest supported LTS | Accepted |
 | [ADR-0003](0003-unify-outcome-value-mapping-under-then.md) | Unify Outcome value mapping under Then | Accepted |
+| [ADR-0004](0004-check-every-pull-request-against-the-adr-base.md) | Check every pull request against the ADR base | Accepted |
