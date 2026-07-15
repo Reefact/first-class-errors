@@ -12,8 +12,8 @@ This page is the focused guide to creating, inspecting, composing, recovering, a
 ```mermaid
 flowchart LR
     A[Operation] --> B{Success?}
-    B -->|yes| C[Outcome or Outcome<T> success]
-    B -->|no| D[Outcome or Outcome<T> failure carrying Error]
+    B -->|yes| C[Outcome or Outcome of T success]
+    B -->|no| D[Outcome or Outcome of T failure carrying Error]
     C --> E[Continue or retrieve the result]
     D --> F[Handle, recover, propagate, or throw]
 ```
