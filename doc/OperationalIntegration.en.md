@@ -36,7 +36,7 @@ Solution-level generation is opt-in. Add the marker directly to every `.csproj` 
 
 The marker is read from the project file itself. A value inherited from `Directory.Build.props` is not detected.
 
-When no project opts in, the generator warns instead of silently presenting an empty catalog as a valid result.
+When no project opts in, the generator warns instead of silently presenting an empty catalog as a valid result. The command still exits successfully — the empty catalog is a warning, not a failure. If a solution must always produce a catalog, enforce that on the CI side, for example by failing the job when the generated output is empty; the CLI does not treat a missing opt-in as an error on its own (`--strict` aborts on extraction failures, which is a different situation).
 
 For ambiguous declarations, project discovery, and worker behavior, see [Architecture of the Documentation Pipeline](ArchitectureOfTheDocumentationPipeline.en.md).
 
@@ -64,7 +64,7 @@ urn:problem:my-api:payment-declined
 
 JSON output does not require a service name.
 
-## Recommended GitHub Actions workflow
+## Minimal GitHub Actions workflow
 
 The workflow renders the catalog as HTML with `--layout split` (one page per error; see [The HTML Renderer](TheHtmlRenderer.en.md)):
 
@@ -113,6 +113,20 @@ jobs:
 
 The build and generation steps use the same configuration. `--no-build` prevents the generator from rebuilding a different set of binaries.
 
+With `--layout split`, the output directory holds one page per error plus a shared index and assets:
+
+```text
+artifacts/error-catalog/
+├── index.html
+├── errors/
+│   ├── PAYMENT_DECLINED.html
+│   └── CUSTOMER_NOT_FOUND.html
+└── assets/
+    └── search-index.json
+```
+
+This is a first, verifiable integration — it publishes a temporary workflow artifact, nothing more. On a pull request the job checks that generation still succeeds; on `main` it publishes the accepted catalog as that artifact. Durable, versioned publication (see [Choose a publication target](#choose-a-publication-target) and [Keep versioned catalogs](#keep-versioned-catalogs)) belongs on a tag or release trigger, where the version name is stable.
+
 ## Generate several languages
 
 Run one generation per locale:
@@ -138,7 +152,7 @@ steps:
         --service-name my-api
 ```
 
-File names and anchors remain stable across languages. See [Internationalization](Internationalization.en.md) for how content and renderer templates are localized.
+File names and anchors remain stable across languages, so the same error code resolves to the same file name in every language. Publish each language in its own directory, as the matrix above does, so they never overwrite one another. See [Internationalization](Internationalization.en.md) for how content and renderer templates are localized.
 
 ## Choose a publication target
 
@@ -154,6 +168,8 @@ The important requirement is not the platform. It is that the catalog for a depl
 
 ## Keep versioned catalogs
 
+Two complementary forms of versioning matter, and they are easy to confuse: keeping the published **documentation** of each release, and controlling how the error **contract** itself evolves against a baseline. This section is about the first; [Guard the error contract](#guard-the-error-contract) below is about the second.
+
 A single “latest” site is useful for daily work, but it does not explain an older production release after the contract has evolved.
 
 For long-lived or support-critical systems, publish at least one immutable form per release:
@@ -163,6 +179,14 @@ For long-lived or support-critical systems, publish at least one immutable form 
 /errors/releases/2.4.0/
 /errors/releases/2.3.1/
 ```
+
+In a tag- or release-triggered workflow, derive the output directory from the version so each release lands in its own immutable path:
+
+```yaml
+--output "artifacts/error-catalog/${{ github.ref_name }}"
+```
+
+`github.ref_name` is only meaningful as a version on a tag or release trigger; on a branch push it is the branch name.
 
 Log events that record the deployed version alongside the error then let support start from a logged occurrence — its `InstanceId` plus that version — and open the matching catalog.
 
@@ -206,7 +230,7 @@ Before approving a catalog-delivery pipeline, verify that:
 - `--service-name` is supplied for Markdown or HTML;
 - generated files are published somewhere reachable;
 - locale-specific outputs do not overwrite one another;
-- released versions can retain immutable documentation;
+- each supported release has an immutable documentation URL or artifact;
 - contract comparison is separate from catalog rendering;
 - generation and publication failures are visible.
 

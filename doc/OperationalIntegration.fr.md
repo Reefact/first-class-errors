@@ -36,7 +36,7 @@ La génération au niveau solution est opt-in. Ajoutez le marqueur directement d
 
 Le marqueur est lu dans le fichier projet lui-même. Une valeur héritée de `Directory.Build.props` n’est pas détectée.
 
-Lorsqu’aucun projet n’a opté, le générateur émet un avertissement plutôt que de présenter silencieusement un catalogue vide comme un résultat valide.
+Lorsqu’aucun projet n’a opté, le générateur émet un avertissement plutôt que de présenter silencieusement un catalogue vide comme un résultat valide. La commande se termine tout de même avec succès — le catalogue vide est un avertissement, pas un échec. Si une solution doit toujours produire un catalogue, imposez-le côté CI, par exemple en faisant échouer le job lorsque la sortie générée est vide ; le CLI ne transforme pas de lui-même l’absence d’opt-in en erreur (`--strict` interrompt sur les échecs d’extraction, ce qui est une situation différente).
 
 Pour les déclarations ambiguës, la découverte de projets et le fonctionnement des workers, voir [Architecture du pipeline de documentation](ArchitectureOfTheDocumentationPipeline.fr.md).
 
@@ -64,7 +64,7 @@ urn:problem:my-api:payment-declined
 
 La sortie JSON ne nécessite pas de nom de service.
 
-## Workflow GitHub Actions recommandé
+## Workflow GitHub Actions minimal
 
 Le workflow rend le catalogue en HTML avec `--layout split` (une page par erreur ; voir [Le renderer HTML](TheHtmlRenderer.fr.md)) :
 
@@ -113,6 +113,20 @@ jobs:
 
 Le build et la génération utilisent la même configuration. `--no-build` évite que le générateur reconstruise un autre ensemble de binaires.
 
+Avec `--layout split`, le répertoire de sortie contient une page par erreur, plus un index partagé et des assets :
+
+```text
+artifacts/error-catalog/
+├── index.html
+├── errors/
+│   ├── PAYMENT_DECLINED.html
+│   └── CUSTOMER_NOT_FOUND.html
+└── assets/
+    └── search-index.json
+```
+
+C’est une première intégration vérifiable — elle publie un artefact de workflow temporaire, rien de plus. Sur une pull request, le job vérifie que la génération réussit toujours ; sur `main`, il publie le catalogue accepté comme cet artefact. La publication durable et versionnée (voir [Choisir une cible de publication](#choisir-une-cible-de-publication) et [Conserver des catalogues versionnés](#conserver-des-catalogues-versionnés)) relève d’un déclencheur de tag ou de release, où le nom de version est stable.
+
 ## Générer plusieurs langues
 
 Exécutez une génération par locale :
@@ -138,7 +152,7 @@ steps:
         --service-name my-api
 ```
 
-Les noms de fichiers et les ancres restent stables d’une langue à l’autre. Voir [Internationalisation](Internationalisation.fr.md) pour la localisation du contenu et des templates de renderer.
+Les noms de fichiers et les ancres restent stables d’une langue à l’autre, si bien que le même code d’erreur correspond au même nom de fichier dans chaque langue. Publiez chaque langue dans son propre répertoire, comme le fait la matrice ci-dessus, pour qu’elles ne s’écrasent jamais. Voir [Internationalisation](Internationalisation.fr.md) pour la localisation du contenu et des templates de renderer.
 
 ## Choisir une cible de publication
 
@@ -154,6 +168,8 @@ La plateforme importe moins que l’accessibilité : le catalogue correspondant 
 
 ## Conserver des catalogues versionnés
 
+Deux formes de versionnage complémentaires comptent ici, et il est facile de les confondre : conserver la **documentation** publiée de chaque release, et contrôler l’évolution du **contrat** d’erreurs lui-même face à une baseline. Cette section traite de la première ; [Protéger le contrat d’erreurs](#protéger-le-contrat-derreurs) plus bas traite de la seconde.
+
 Un site « latest » est pratique au quotidien, mais n’explique plus correctement une ancienne release de production après l’évolution du contrat.
 
 Pour les systèmes durables ou critiques pour le support, publiez au moins une forme immuable par release :
@@ -164,13 +180,21 @@ Pour les systèmes durables ou critiques pour le support, publiez au moins une f
 /errors/releases/2.3.1/
 ```
 
+Dans un workflow déclenché par tag ou release, dérivez le répertoire de sortie de la version pour que chaque release se retrouve dans son propre chemin immuable :
+
+```yaml
+--output "artifacts/error-catalog/${{ github.ref_name }}"
+```
+
+`github.ref_name` n’a de sens comme version que sur un déclencheur de tag ou de release ; sur un push de branche, c’est le nom de la branche.
+
 Des événements de log qui enregistrent la version déployée à côté de l’erreur permettent alors au support de partir d’une occurrence loggée — son `InstanceId` plus cette version — et d’ouvrir le catalogue correspondant.
 
 ## Protéger le contrat d’erreurs
 
 La génération répond à « que documente cette version ? ». Le versionnage répond à « cette version casse-t-elle un contrat déjà accepté ? ».
 
-`fce catalog diff` compare le catalogue extrait du build courant à un fichier de baseline commité dans le dépôt et signale les changements de contrat :
+`fce catalog diff` compare le catalogue extrait du build courant à un fichier de baseline versionné dans le dépôt et signale les changements de contrat :
 
 ```bash
 fce catalog diff --solution MyApp.sln --configuration Release --no-build
@@ -206,7 +230,7 @@ Avant d’approuver un pipeline de livraison du catalogue, vérifiez que :
 - `--service-name` est fourni pour Markdown ou HTML ;
 - les fichiers générés sont publiés à un endroit accessible ;
 - les sorties par langue ne s’écrasent pas ;
-- les releases peuvent conserver une documentation immuable ;
+- chaque release supportée possède une URL ou un artefact documentaire immuable ;
 - la comparaison de contrat reste distincte du rendu du catalogue ;
 - les échecs de génération et de publication sont visibles.
 
