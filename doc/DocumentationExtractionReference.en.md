@@ -32,6 +32,23 @@ The two modes are detailed below.
 
 ## Solution mode
 
+Solution mode runs this flow end to end. Assembly mode enters lower down — at the workers — and skips build, discovery, and opt-in:
+
+```mermaid
+flowchart TB
+    S[Solution] --> B[Build, unless --no-build]
+    B --> D[Project discovery]
+    D --> O[Opt-in filtering]
+    O --> A[Output assemblies]
+    A --> W1[Worker 1]
+    A --> W2[Worker 2]
+    A --> W3[Worker 3]
+    W1 --> G[Aggregation]
+    W2 --> G
+    W3 --> G
+    G --> R[Markdown, HTML, or JSON]
+```
+
 The common CLI path starts from a solution:
 
 ```bash
