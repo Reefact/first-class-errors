@@ -67,7 +67,7 @@ public static class InstanceIds {
     /// </remarks>
     /// <returns>A scope that restores the default (random) identifier when disposed.</returns>
     public static IDisposable UseAny() {
-        return Use(() => Any.Guid());
+        return Use(() => ArbitrarySource.Guid());
     }
 
     /// <summary>
@@ -79,7 +79,7 @@ public static class InstanceIds {
     public static IDisposable UseAny(int seed) {
         Random random = new(seed);
 
-        return Use(() => Any.NewGuid(random));
+        return Use(() => ArbitrarySource.NewGuid(random));
     }
 
 }

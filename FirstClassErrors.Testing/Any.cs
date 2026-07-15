@@ -10,13 +10,17 @@ namespace FirstClassErrors.Testing;
 ///     <para>
 ///         Every value is drawn from a pseudo-random source. By default that source is unseeded, so each run produces
 ///         fresh values; wrap the code in <see cref="UseSeed" /> to make the sequence deterministic and reproducible.
-///         The source is stored in an <see cref="AsyncLocal{T}" />, so it flows with the current execution context and
-///         never leaks across tests running in parallel — the same contract the rest of this package keeps.
+///         The source flows with the current execution context, so it never leaks across tests running in parallel —
+///         the same contract the rest of this package keeps.
 ///     </para>
 ///     <para>
 ///         The values are <b>valid</b> (an <see cref="Any.ErrorCode" /> is never blank, an <see cref="Any.Instant" />
 ///         is a real UTC instant) but deliberately <b>recognizable</b> as arbitrary (codes look like
 ///         <c>ANY_CODE_7F3A9C</c>), so an arbitrary value that surfaces in a failure message is easy to spot.
+///     </para>
+///     <para>
+///         <see cref="Any" /> is the error-aware surface; the generic value engine it delegates to is internal, so a
+///         test never depends on it directly.
 ///     </para>
 ///     <example>
 ///         <code>
@@ -39,9 +43,6 @@ public static class Any {
     private const string CodeAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private const string TextAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
 
-    private static readonly DateTimeOffset      Origin = new(2000, 1, 1, 0, 0, 0, TimeSpan.Zero);
-    private static readonly AsyncLocal<Random?> Seeded = new();
-
     #endregion
 
     /// <summary>
@@ -56,10 +57,7 @@ public static class Any {
     /// <param name="seed">The seed that makes the sequence of arbitrary values reproducible.</param>
     /// <returns>A scope that restores the previous source when disposed.</returns>
     public static IDisposable UseSeed(int seed) {
-        Random? previous = Seeded.Value;
-        Seeded.Value = new Random(seed);
-
-        return new SeedScope(previous);
+        return ArbitrarySource.UseSeed(seed);
     }
 
     /// <summary>
@@ -67,7 +65,7 @@ public static class Any {
     /// </summary>
     /// <returns>An arbitrary integer, possibly negative.</returns>
     public static int Int() {
-        return CurrentRandom.Next(int.MinValue, int.MaxValue);
+        return ArbitrarySource.Int();
     }
 
     /// <summary>
@@ -75,7 +73,7 @@ public static class Any {
     /// </summary>
     /// <returns><c>true</c> or <c>false</c>, with even probability.</returns>
     public static bool Bool() {
-        return CurrentRandom.Next(2) == 0;
+        return ArbitrarySource.Bool();
     }
 
     /// <summary>
@@ -84,7 +82,7 @@ public static class Any {
     /// </summary>
     /// <returns>An arbitrary identifier.</returns>
     public static Guid Guid() {
-        return NewGuid(CurrentRandom);
+        return ArbitrarySource.Guid();
     }
 
     /// <summary>
@@ -96,7 +94,7 @@ public static class Any {
     /// </remarks>
     /// <returns>An arbitrary instant, in UTC.</returns>
     public static DateTimeOffset Instant() {
-        return NewInstant(CurrentRandom);
+        return ArbitrarySource.Instant();
     }
 
     /// <summary>
@@ -104,7 +102,7 @@ public static class Any {
     /// </summary>
     /// <returns>An arbitrary string such as <c>any-4f2a9c1b</c>.</returns>
     public static string String() {
-        return "any-" + NextToken(TextAlphabet, 8);
+        return "any-" + ArbitrarySource.Token(TextAlphabet, 8);
     }
 
     /// <summary>
@@ -113,7 +111,7 @@ public static class Any {
     /// </summary>
     /// <returns>An arbitrary error code.</returns>
     public static ErrorCode ErrorCode() {
-        return FirstClassErrors.ErrorCode.Create("ANY_CODE_" + NextToken(CodeAlphabet, 6));
+        return FirstClassErrors.ErrorCode.Create("ANY_CODE_" + ArbitrarySource.Token(CodeAlphabet, 6));
     }
 
     /// <summary>
@@ -122,7 +120,7 @@ public static class Any {
     /// </summary>
     /// <returns>An arbitrary diagnostic message.</returns>
     public static string DiagnosticMessage() {
-        return "Any diagnostic message " + NextToken(CodeAlphabet, 6) + ".";
+        return "Any diagnostic message " + ArbitrarySource.Token(CodeAlphabet, 6) + ".";
     }
 
     /// <summary>
@@ -131,7 +129,7 @@ public static class Any {
     /// </summary>
     /// <returns>An arbitrary short message.</returns>
     public static string ShortMessage() {
-        return "Any short message " + NextToken(CodeAlphabet, 6) + ".";
+        return "Any short message " + ArbitrarySource.Token(CodeAlphabet, 6) + ".";
     }
 
     /// <summary>
@@ -140,7 +138,7 @@ public static class Any {
     /// </summary>
     /// <returns>An arbitrary detailed message.</returns>
     public static string DetailedMessage() {
-        return "Any detailed message " + NextToken(CodeAlphabet, 6) + ".";
+        return "Any detailed message " + ArbitrarySource.Token(CodeAlphabet, 6) + ".";
     }
 
     /// <summary>
@@ -156,9 +154,7 @@ public static class Any {
     /// <returns>An arbitrary member of <typeparamref name="TEnum" />.</returns>
     public static TEnum Enum<TEnum>()
         where TEnum : struct, System.Enum {
-        TEnum[] values = (TEnum[])System.Enum.GetValues(typeof(TEnum));
-
-        return values[CurrentRandom.Next(values.Length)];
+        return ArbitrarySource.Enum<TEnum>();
     }
 
     /// <summary>
@@ -169,7 +165,7 @@ public static class Any {
     /// </summary>
     /// <returns>An arbitrary transience classification other than <c>Unknown</c>.</returns>
     public static Transience Transience() {
-        return NextEnumExcluding(FirstClassErrors.Transience.Unknown);
+        return ArbitrarySource.EnumExcluding(FirstClassErrors.Transience.Unknown);
     }
 
     /// <summary>
@@ -177,7 +173,7 @@ public static class Any {
     /// </summary>
     /// <returns>An arbitrary error origin.</returns>
     public static ErrorOrigin ErrorOrigin() {
-        return Enum<ErrorOrigin>();
+        return ArbitrarySource.Enum<ErrorOrigin>();
     }
 
     /// <summary>
@@ -188,72 +184,7 @@ public static class Any {
     /// </summary>
     /// <returns>An arbitrary interaction direction other than <c>Unknown</c>.</returns>
     public static InteractionDirection InteractionDirection() {
-        return NextEnumExcluding(FirstClassErrors.InteractionDirection.Unknown);
+        return ArbitrarySource.EnumExcluding(FirstClassErrors.InteractionDirection.Unknown);
     }
-
-    internal static Guid NewGuid(Random random) {
-        byte[] bytes = new byte[16];
-        random.NextBytes(bytes);
-
-        return new Guid(bytes);
-    }
-
-    internal static DateTimeOffset NewInstant(Random random) {
-        return Origin.AddSeconds(random.Next());
-    }
-
-    private static Random CurrentRandom {
-        get {
-            Random? random = Seeded.Value;
-            if (random is null) {
-                random       = new Random(System.Guid.NewGuid().GetHashCode());
-                Seeded.Value = random;
-            }
-
-            return random;
-        }
-    }
-
-    private static string NextToken(string alphabet, int length) {
-        Random random = CurrentRandom;
-        char[] chars  = new char[length];
-        for (int i = 0; i < length; i++) {
-            chars[i] = alphabet[random.Next(alphabet.Length)];
-        }
-
-        return new string(chars);
-    }
-
-    private static TEnum NextEnumExcluding<TEnum>(params TEnum[] excluded)
-        where TEnum : struct, System.Enum {
-        List<TEnum> pool = new();
-        foreach (TEnum value in (TEnum[])System.Enum.GetValues(typeof(TEnum))) {
-            if (Array.IndexOf(excluded, value) < 0) { pool.Add(value); }
-        }
-
-        return pool[CurrentRandom.Next(pool.Count)];
-    }
-
-    #region Nested types
-
-    private sealed class SeedScope : IDisposable {
-
-        private readonly Random? _previous;
-        private          bool    _disposed;
-
-        internal SeedScope(Random? previous) {
-            _previous = previous;
-        }
-
-        public void Dispose() {
-            if (_disposed) { return; }
-
-            _disposed    = true;
-            Seeded.Value = _previous;
-        }
-
-    }
-
-    #endregion
 
 }

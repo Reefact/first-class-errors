@@ -61,7 +61,7 @@ public static class Clock {
     /// </remarks>
     /// <returns>A scope that restores the real system clock when disposed.</returns>
     public static IDisposable UseAny() {
-        return UseFixed(Any.Instant());
+        return UseFixed(ArbitrarySource.Instant());
     }
 
     /// <summary>
@@ -71,7 +71,7 @@ public static class Clock {
     /// <param name="seed">The seed that makes the chosen instant reproducible across runs.</param>
     /// <returns>A scope that restores the real system clock when disposed.</returns>
     public static IDisposable UseAny(int seed) {
-        return UseFixed(Any.NewInstant(new Random(seed)));
+        return UseFixed(ArbitrarySource.NewInstant(new Random(seed)));
     }
 
 }
