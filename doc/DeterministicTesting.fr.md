@@ -8,9 +8,29 @@ Chaque occurrence d’erreur enregistre deux valeurs qui doivent varier en produ
 - `OccurredAt`, l’instant UTC de création de l’erreur ;
 - `InstanceId`, un identifiant unique de cette occurrence.
 
-Ces valeurs améliorent l’observabilité, mais rendent instables les assertions sur l’objet complet et les snapshots (tests qui comparent un objet sérialisé à un fichier de référence approuvé). `FirstClassErrors.Testing` fournit des overrides bornés pour les tests qui ont réellement besoin de valeurs déterministes.
+Ces valeurs améliorent l’observabilité, mais rendent instables les assertions sur l’objet complet et les snapshots (tests qui comparent un objet sérialisé à un fichier de référence approuvé). `FirstClassErrors.Testing` permet de remplacer temporairement les deux générateurs qui les produisent — l’horloge et la source d’identifiants — uniquement dans la portée d’un test qui a délibérément besoin de valeurs déterministes.
 
 Pour les assertions fluentes sur les outcomes et les erreurs, commencez par [Tester les outcomes et les erreurs](Testing.fr.md).
+
+## Setup commun aux exemples
+
+Chaque exemple ci-dessous raconte la même petite histoire — la recherche d’une commande absente — via une factory et deux stubs, afin que chaque extrait reste court :
+
+```csharp
+// L’erreur documentée que chaque exemple rapporte.
+private static DomainError MakeError() =>
+    DomainError
+        .Create(ErrorCode.Create("ORDER_NOT_FOUND"), "La commande 42 est introuvable.")
+        .WithPublicMessage("La commande n’existe pas.");
+
+private static readonly DateTimeOffset start = new(2026, 7, 8, 10, 30, 0, TimeSpan.Zero);
+
+// Un repository dont la recherche échoue pour missingOrderId, retournant un Outcome<Order> en échec.
+private readonly IOrderRepository orders = /* test double */;
+private readonly OrderId missingOrderId  = /* un id sans correspondance */;
+```
+
+`MakeError()` retourne le `DomainError` concret. Lorsqu’un exemple récupère plutôt l’erreur depuis un outcome en échec via `ShouldFail().Subject`, elle revient typée comme l’`Error` de base — c’est pourquoi certains extraits ci-dessous montrent `DomainError` et d’autres `Error`. C’est le même objet vu à deux niveaux de sa hiérarchie de types, pas deux types interchangeables.
 
 ## Figer `OccurredAt`
 
@@ -34,9 +54,7 @@ public void Une_erreur_enregistre_l_instant_fixe()
 
     using (Clock.UseFixed(instant))
     {
-        DomainError error = DomainError
-            .Create(ErrorCode.Create("ORDER_NOT_FOUND"), "La commande 42 est introuvable.")
-            .WithPublicMessage("La commande n’existe pas.");
+        DomainError error = MakeError();
 
         Check.That(error.OccurredAt).IsEqualTo(instant);
     }
@@ -117,8 +135,8 @@ static Func<Guid> SequentialIds()
 ```csharp
 using (InstanceIds.Use(SequentialIds()))
 {
-    Error first = MakeError();
-    Error second = MakeError();
+    DomainError first = MakeError();
+    DomainError second = MakeError();
 
     Check.That(first.InstanceId.ToString()).IsEqualTo("00000001-0000-0000-0000-000000000000");
     Check.That(second.InstanceId.ToString()).IsEqualTo("00000002-0000-0000-0000-000000000000");
@@ -127,7 +145,7 @@ using (InstanceIds.Use(SequentialIds()))
 
 Préférez des identifiants visiblement synthétiques afin qu’ils ne puissent pas être confondus avec des valeurs de production.
 
-## Figer les deux valeurs pour un snapshot
+## Figer simultanément `OccurredAt` et `InstanceId`
 
 ```csharp
 [Fact]
@@ -151,7 +169,7 @@ public void Une_erreur_de_commande_absente_est_totalement_deterministe()
 }
 ```
 
-Cette approche est utile pour sérialiser ou snapshotter l’erreur complète. Si le test ne porte que sur le code ou le contexte, ne figez pas des champs sans rapport simplement parce que les helpers existent.
+Figez les deux lorsqu’un même test vérifie les deux valeurs d’occurrence, ou lorsqu’il transmet l’erreur complète à un snapshot fait main comparé à une chaîne de référence fixe. Une bibliothèque de snapshot comme [Verify](https://github.com/VerifyTests/Verify) est un cas différent : elle scrubbe déjà d’elle-même les `Guid` et `DateTime` volatils en placeholders stables (`Guid_1`, `DateTimeOffset_1`), donc vous les laissez généralement tels quels et ne figez que lorsque le snapshot doit montrer la valeur exacte. Dans tous les cas, si un test ne porte que sur le code d’erreur ou le contexte, ne figez pas des champs sans rapport simplement parce que les helpers existent.
 
 ## Portée et tests parallèles
 
