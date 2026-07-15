@@ -12,7 +12,7 @@ public sealed class ListBindingTests {
         RequiredField<string>                firstName = guest.SimpleProperty(g => g.FirstName).AsRequired();
         OptionalReferenceField<EmailAddress> email     = guest.SimpleProperty(g => g.Email).AsOptionalReference(EmailAddress.Parse);
 
-        return guest.Build(s => new Guest(s.Get(firstName), s.Get(email)));
+        return guest.New(s => new Guest(s.Get(firstName), s.Get(email)));
     }
 
     private static BookingRequest RequestWith(IReadOnlyList<string?>? tags = null, IReadOnlyList<GuestDto?>? guests = null) {
@@ -25,7 +25,7 @@ public sealed class ListBindingTests {
 
         RequiredField<IReadOnlyList<Tag>> tags = bind.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
 
-        Outcome<IReadOnlyList<Tag>> outcome = bind.Build(s => s.Get(tags));
+        Outcome<IReadOnlyList<Tag>> outcome = bind.New(s => s.Get(tags));
         Check.That(outcome.GetResultOrThrow().Select(t => t.Value)).ContainsExactly("vip", "late-checkout");
     }
 
@@ -35,7 +35,7 @@ public sealed class ListBindingTests {
 
         bind.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
 
-        Outcome<string> outcome = bind.Build(_ => "never");
+        Outcome<string> outcome = bind.New(_ => "never");
         Error required = outcome.Error!.InnerErrors.Single();
         Check.That(required.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_REQUIRED");
         Check.That(BindingAssertions.ArgumentPathOf(required)).IsEqualTo("Tags");
@@ -47,7 +47,7 @@ public sealed class ListBindingTests {
 
         bind.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
 
-        Outcome<string> outcome = bind.Build(_ => "never");
+        Outcome<string> outcome = bind.New(_ => "never");
         Check.That(outcome.Error!.InnerErrors).HasSize(2);
         Check.That(outcome.Error!.InnerErrors.Select(BindingAssertions.ArgumentPathOf))
              .ContainsExactly("Tags[1]", "Tags[2]");
@@ -61,7 +61,7 @@ public sealed class ListBindingTests {
 
         RequiredField<IReadOnlyList<Tag>> tags = bind.ListOfSimpleProperties(r => r.Tags).AsOptional(Tag.Parse);
 
-        Outcome<IReadOnlyList<Tag>> outcome = bind.Build(s => s.Get(tags));
+        Outcome<IReadOnlyList<Tag>> outcome = bind.New(s => s.Get(tags));
         Check.That(outcome.IsSuccess).IsTrue();
         Check.That(outcome.GetResultOrThrow()).IsEmpty();
     }
@@ -74,7 +74,7 @@ public sealed class ListBindingTests {
         RequiredField<IReadOnlyList<Guest>> guests =
             bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
 
-        Outcome<IReadOnlyList<Guest>> outcome = bind.Build(s => s.Get(guests));
+        Outcome<IReadOnlyList<Guest>> outcome = bind.New(s => s.Get(guests));
         Check.That(outcome.GetResultOrThrow().Select(g => g.FirstName)).ContainsExactly("Alice", "Bob");
         Check.That(outcome.GetResultOrThrow()[1].Email).IsNull();
     }
@@ -86,7 +86,7 @@ public sealed class ListBindingTests {
 
         bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
 
-        Outcome<string> outcome = bind.Build(_ => "never");
+        Outcome<string> outcome = bind.New(_ => "never");
         Check.That(outcome.Error!.InnerErrors).HasSize(2);
 
         Error second = outcome.Error!.InnerErrors[0];
@@ -105,7 +105,7 @@ public sealed class ListBindingTests {
 
         bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
 
-        Outcome<string> outcome = bind.Build(_ => "never");
+        Outcome<string> outcome = bind.New(_ => "never");
         Error required = outcome.Error!.InnerErrors.Single();
         Check.That(required.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_REQUIRED");
         Check.That(BindingAssertions.ArgumentPathOf(required)).IsEqualTo("Guests[1]");
@@ -118,7 +118,7 @@ public sealed class ListBindingTests {
 
         bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
 
-        Outcome<string> outcome = bind.Build(_ => "never");
+        Outcome<string> outcome = bind.New(_ => "never");
 
         // Both the null element AND the invalid element after it must be collected — the null must not short-circuit.
         Check.That(outcome.Error!.InnerErrors).HasSize(2);
@@ -140,7 +140,7 @@ public sealed class ListBindingTests {
         RequiredField<IReadOnlyList<Guest>> guests =
             bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsOptional(BindGuest);
 
-        Outcome<IReadOnlyList<Guest>> outcome = bind.Build(s => s.Get(guests));
+        Outcome<IReadOnlyList<Guest>> outcome = bind.New(s => s.Get(guests));
         Check.That(outcome.IsSuccess).IsTrue();
         Check.That(outcome.GetResultOrThrow()).IsEmpty();
     }
@@ -153,7 +153,7 @@ public sealed class ListBindingTests {
 
         bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
 
-        Outcome<string> outcome = bind.Build(_ => "never");
+        Outcome<string> outcome = bind.New(_ => "never");
         Error guestEnvelope = outcome.Error!.InnerErrors.Single(e => e.Code.ToString() == "TEST_GUEST_INVALID");
         // FirstName (required, absent) and Email ("nope", invalid) are both collected; their names must be
         // snake_cased by the INHERITED provider, not the default PascalCase — proving the element binder inherits options.

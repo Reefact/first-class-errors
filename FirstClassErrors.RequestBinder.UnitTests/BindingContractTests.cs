@@ -33,7 +33,7 @@ public sealed class BindingContractTests {
             PrimaryPortError.Create(ErrorCode.Create("TEST_PORT_LEVEL_REJECTION"), "Rejected at the port.", Transience.NonTransient)
                             .WithPublicMessage("Rejected.")));
 
-        Outcome<string> outcome = bind.Build(_ => "never");
+        Outcome<string> outcome = bind.New(_ => "never");
         Error invalid = outcome.Error!.InnerErrors.Single();
         Check.That(invalid.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
         Check.That(invalid.InnerErrors.Single().Code.ToString()).IsEqualTo("TEST_PORT_LEVEL_REJECTION");
@@ -66,7 +66,7 @@ public sealed class BindingContractTests {
         bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid)
             .AsRequired(_ => Outcome<Stay>.Failure(BookingDomainError.DateInvalid("raw")));
 
-        Outcome<string> outcome = bind.Build(_ => "never");
+        Outcome<string> outcome = bind.New(_ => "never");
         Error wrapped = outcome.Error!.InnerErrors.Single();
         Check.That(wrapped.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
         Check.That(BindingAssertions.ArgumentPathOf(wrapped)).IsEqualTo("Stay");
@@ -80,28 +80,28 @@ public sealed class BindingContractTests {
         bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid)
             .AsRequired(_ => Outcome<Guest>.Failure(BookingDomainError.EmailInvalid("raw")));
 
-        Outcome<string> outcome = bind.Build(_ => "never");
+        Outcome<string> outcome = bind.New(_ => "never");
         Error wrapped = outcome.Error!.InnerErrors.Single();
         Check.That(wrapped.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
         Check.That(BindingAssertions.ArgumentPathOf(wrapped)).IsEqualTo("Guests[0]");
     }
 
     private static PrimaryPortError LeafPortError() {
-        return PrimaryPortError.Create(ErrorCode.Create("TEST_NESTED_PORT_LEAF"), "A bare port-level leaf, not a Build envelope.",
+        return PrimaryPortError.Create(ErrorCode.Create("TEST_NESTED_PORT_LEAF"), "A bare port-level leaf, not a build-terminal envelope.",
                                        Transience.NonTransient)
                                .WithPublicMessage("Rejected.");
     }
 
-    [Fact(DisplayName = "A required nested binding that fails with a bare PrimaryPortError leaf (not its Build envelope) is wrapped, so the path survives.")]
+    [Fact(DisplayName = "A required nested binding that fails with a bare PrimaryPortError leaf (not its build-terminal envelope) is wrapped, so the path survives.")]
     public void BareNestedPrimaryPortErrorLeafIsWrapped() {
         var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
 
         bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid)
             .AsRequired(_ => Outcome<Stay>.Failure(LeafPortError()));
 
-        Outcome<string> outcome = bind.Build(_ => "never");
+        Outcome<string> outcome = bind.New(_ => "never");
         Error wrapped = outcome.Error!.InnerErrors.Single();
-        // A leaf PrimaryPortError is NOT the nested Build envelope, so it is wrapped under the path — exactly like a
+        // A leaf PrimaryPortError is NOT the nested build-terminal envelope, so it is wrapped under the path — exactly like a
         // DomainError, and unlike the old by-type check that recorded it as-is and dropped the "Stay" context.
         Check.That(wrapped.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
         Check.That(BindingAssertions.ArgumentPathOf(wrapped)).IsEqualTo("Stay");
@@ -115,7 +115,7 @@ public sealed class BindingContractTests {
         bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid)
             .AsOptional(_ => Outcome<Stay>.Failure(LeafPortError()));
 
-        Outcome<string> outcome = bind.Build(_ => "never");
+        Outcome<string> outcome = bind.New(_ => "never");
         Error wrapped = outcome.Error!.InnerErrors.Single();
         Check.That(wrapped.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
         Check.That(BindingAssertions.ArgumentPathOf(wrapped)).IsEqualTo("Stay");
@@ -129,7 +129,7 @@ public sealed class BindingContractTests {
         bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid)
             .AsRequired(_ => Outcome<Guest>.Failure(LeafPortError()));
 
-        Outcome<string> outcome = bind.Build(_ => "never");
+        Outcome<string> outcome = bind.New(_ => "never");
         Error wrapped = outcome.Error!.InnerErrors.Single();
         Check.That(wrapped.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
         Check.That(BindingAssertions.ArgumentPathOf(wrapped)).IsEqualTo("Guests[0]");
@@ -146,9 +146,9 @@ public sealed class BindingContractTests {
                        .FailWith(BookingEnvelopeError.CommandInvalid);
 
         bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid)
-            .AsRequired(g => g.Build(_ => new Guest("never", null)));
+            .AsRequired(g => g.New(_ => new Guest("never", null)));
 
-        Outcome<string> outcome = bind.Build(_ => "never");
+        Outcome<string> outcome = bind.New(_ => "never");
         Error required = outcome.Error!.InnerErrors.Single();
         Check.That(required.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_REQUIRED");
         Check.That(BindingAssertions.ArgumentPathOf(required)).IsEqualTo("Guests");
@@ -161,7 +161,7 @@ public sealed class BindingContractTests {
 
         bind.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
 
-        Outcome<string> outcome = bind.Build(_ => "never");
+        Outcome<string> outcome = bind.New(_ => "never");
         Check.That(outcome.Error!.InnerErrors.Select(e => e.Code.ToString()))
              .ContainsExactly("REQUEST_ARGUMENT_REQUIRED", "REQUEST_ARGUMENT_INVALID");
         Check.That(outcome.Error!.InnerErrors.Select(BindingAssertions.ArgumentPathOf))
@@ -177,10 +177,10 @@ public sealed class BindingContractTests {
             .AsOptional(g => {
                 RequiredField<string> firstName = g.SimpleProperty(x => x.FirstName).AsRequired();
 
-                return g.Build(s => new Guest(s.Get(firstName), null));
+                return g.New(s => new Guest(s.Get(firstName), null));
             });
 
-        Outcome<string> outcome = bind.Build(_ => "never");
+        Outcome<string> outcome = bind.New(_ => "never");
         Check.That(outcome.Error!.InnerErrors.Single().Code.ToString()).IsEqualTo("TEST_GUEST_INVALID");
     }
 
@@ -259,7 +259,8 @@ public sealed class BindingContractTests {
         Check.ThatCode(() => Bind.PropertiesOf<BookingRequest>(null!)).Throws<ArgumentNullException>();
         Check.ThatCode(() => Bind.PropertiesOf(Request()).FailWith(null!)).Throws<ArgumentNullException>();
         Check.ThatCode(() => bind.WithOptions(null!)).Throws<ArgumentNullException>();
-        Check.ThatCode(() => bind.Build<string>(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => bind.New<string>(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => bind.Create<string>(null!)).Throws<ArgumentNullException>();
 
         Check.ThatCode(() => bind.SimpleProperty(r => r.GuestEmail).AsRequired<EmailAddress>(null!)).Throws<ArgumentNullException>();
         Check.ThatCode(() => bind.SimpleProperty(r => r.GuestEmail).AsOptional<EmailAddress>(null!, "x")).Throws<ArgumentNullException>();
@@ -294,14 +295,14 @@ public sealed class BindingContractTests {
         var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
 
         // A null field, on each of the three Get overloads (the assembler runs because `bind` recorded no failure):
-        Check.ThatCode(() => bind.Build(s => s.Get((RequiredField<EmailAddress>)null!).Value)).Throws<ArgumentNullException>();
-        Check.ThatCode(() => bind.Build(s => s.Get((OptionalReferenceField<EmailAddress>)null!) is null)).Throws<ArgumentNullException>();
-        Check.ThatCode(() => bind.Build(s => s.Get((OptionalValueField<int>)null!).HasValue)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => bind.New(s => s.Get((RequiredField<EmailAddress>)null!).Value)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => bind.New(s => s.Get((OptionalReferenceField<EmailAddress>)null!) is null)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => bind.New(s => s.Get((OptionalValueField<int>)null!).HasValue)).Throws<ArgumentNullException>();
 
         // A field owned by a different binder is a cross-binder mix-up — rejected loudly on every overload, not read silently.
-        Check.ThatCode(() => bind.Build(s => s.Get(requiredOfA).Value)).Throws<InvalidOperationException>();
-        Check.ThatCode(() => bind.Build(s => s.Get(optRefOfA) is null)).Throws<InvalidOperationException>();
-        Check.ThatCode(() => bind.Build(s => s.Get(optValOfA).HasValue)).Throws<InvalidOperationException>();
+        Check.ThatCode(() => bind.New(s => s.Get(requiredOfA).Value)).Throws<InvalidOperationException>();
+        Check.ThatCode(() => bind.New(s => s.Get(optRefOfA) is null)).Throws<InvalidOperationException>();
+        Check.ThatCode(() => bind.New(s => s.Get(optValOfA).HasValue)).Throws<InvalidOperationException>();
     }
 
     [Fact(DisplayName = "A cross-binder field read is rejected with a message naming the different-binder cause, not a blank exception.")]
@@ -312,7 +313,7 @@ public sealed class BindingContractTests {
         var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
 
         InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
-            () => { bind.Build(s => s.Get(requiredOfA).Value); });
+            () => { bind.New(s => s.Get(requiredOfA).Value); });
         Check.That(exception.Message).Contains("different binder");
     }
 

@@ -7,9 +7,10 @@ namespace FirstClassErrors.RequestBinder;
 ///     count is <c>null</c>, not <c>0</c>).
 /// </summary>
 /// <remarks>
-///     Returned by the <c>AsOptionalValue</c> family. Inside <see cref="RequestBinder{TRequest}.Build{TCommand}" /> a
-///     <c>null</c> read means exactly "the argument was absent": a present-but-invalid argument recorded a failure on
-///     the binder, so <c>Build</c> never runs the assembler and that state is never observed.
+///     Returned by the <c>AsOptionalValue</c> family. Inside a build terminal
+///     (<see cref="RequestBinder{TRequest}.New{TCommand}" /> / <see cref="RequestBinder{TRequest}.Create{TCommand}" />)
+///     a <c>null</c> read means exactly "the argument was absent": a present-but-invalid argument recorded a failure on
+///     the binder, so the assembler never runs and that state is never observed.
 /// </remarks>
 /// <typeparam name="TProperty">The value type of the bound property.</typeparam>
 public sealed class OptionalValueField<TProperty> where TProperty : struct {
