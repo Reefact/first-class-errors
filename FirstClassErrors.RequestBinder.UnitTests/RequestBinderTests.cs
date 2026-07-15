@@ -106,9 +106,10 @@ public sealed class RequestBinderTests {
         var bind = Bind.PropertiesOf(new BookingRequest("a@b.c", null, null, null, null, null, null))
                        .FailWith(BookingEnvelopeError.CommandInvalid);
 
-        // A method call on the property — not a direct member access.
-        Check.ThatCode(() => bind.SimpleProperty(r => r.GuestEmail!.ToUpperInvariant()))
-             .Throws<ArgumentException>();
+        // A method call on the property — not a direct member access; the exception echoes the offending selector.
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => { bind.SimpleProperty(r => r.GuestEmail!.ToUpperInvariant()); });
+        Check.That(exception.Message).Contains("ToUpperInvariant");
         // A nested property access — the member's base is not the request parameter.
         Check.ThatCode(() => bind.SimpleProperty(r => r.Stay!.CheckIn))
              .Throws<ArgumentException>();

@@ -97,6 +97,9 @@ public sealed class SimplePropertyBindingTests {
         InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
             () => { bind.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "NOT-A-CURRENCY"); });
         Check.That(exception.Message).Contains("Currency");
+        // The exception must carry the converter's DIAGNOSTIC detail (the raw offending value), not the sanitized
+        // public summary — so a developer can see WHY the configured fallback is rejected.
+        Check.That(exception.Message).Contains("NOT-A-CURRENCY");
     }
 
     [Fact(DisplayName = "An optional reference property yields null when absent — recording nothing — and the value when present.")]
