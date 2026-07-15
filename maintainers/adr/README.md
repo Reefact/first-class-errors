@@ -6,6 +6,19 @@ place; a decision is revisited by writing a **new** ADR that supersedes the old
 one, and the old one's status changes to *Superseded* with a link to its
 successor.
 
+## An ADR is a decision record, not a specification
+
+An ADR captures a **decision and the reasoning behind it** — not how that
+decision is implemented. Implementation mechanics (code, configuration, YAML,
+exact flags, XML or command snippets, guard-by-guard or step-by-step
+walkthroughs) live in the code and in the reference documentation the ADR links
+to — for example the [workflow reference](../workflows/README.md) — never in the
+ADR itself. In particular, **Rationale is argument, not a design document**: if
+a paragraph explains *how something is built* rather than *why the decision is
+right*, it belongs in the reference docs, and the ADR links to it. A useful
+test: if the implementation changed but the decision stood, the ADR should not
+need editing.
+
 ## File conventions
 
 * One file per decision, under `maintainers/adr/`, named
@@ -85,6 +98,14 @@ This section explains:
 * which constraints it addresses;
 * which trade-offs were accepted;
 * why the expected benefits outweigh the drawbacks.
+
+It is **argument only**. It does **not** contain implementation detail — no
+code, configuration, YAML, exact flags, or XML/command snippets, and no
+guard-by-guard or step-by-step "how it is built". That is specification: link
+to where it actually lives (the code, or the [workflow
+reference](../workflows/README.md)) instead of pasting it here. Naming a
+guard's *role* and *why it exists* is argument and belongs here; documenting
+*how the guard is wired* is specification and does not.
 
 ### Alternatives Considered
 

@@ -1,5 +1,13 @@
 # ADR-{number} | {Short Title}
 
+<!-- An ADR records a DECISION and its REASONING, not how it is implemented.
+     Keep code, configuration, YAML, exact flags, XML/command snippets and
+     step-by-step "how it is built" OUT of every section — that is
+     specification: it lives in the code and the reference docs (e.g. the
+     workflow reference), which this ADR links to. Test: if the implementation
+     changed but the decision stood, this ADR should not need editing.
+     See maintainers/adr/README.md. -->
+
 **Status:** Proposed
 **Date:** YYYY-MM-DD
 **Decision Makers:** {Names or team}
@@ -21,11 +29,16 @@
 
 ## Rationale
 
-<!-- Why this decision is the best choice given the context. Every argument
-     must trace back to a fact in Context — if one is missing, add it there
-     first. Cover: why the decision satisfies the requirements, which
-     constraints it addresses, which trade-offs were accepted, why the
-     benefits outweigh the drawbacks. -->
+<!-- Argument ONLY — why this decision is the best choice given the Context.
+     Every argument must trace back to a fact in Context; if one is missing,
+     add it to Context first. Cover: why the decision satisfies the
+     requirements, which constraints it addresses, which trade-offs were
+     accepted, why the benefits outweigh the drawbacks.
+     Do NOT put implementation detail here — no code, config, YAML, exact
+     flags, XML/command snippets, no guard-by-guard or step-by-step "how it is
+     built". That is specification: link to the code or the reference docs
+     instead. Naming a mechanism's role and why it exists is argument (keep it);
+     documenting how it is wired is specification (link out). -->
 
 ## Alternatives Considered
 
