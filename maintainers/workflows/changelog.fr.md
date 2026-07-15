@@ -68,7 +68,9 @@ Un seul job, `draft-changelog` :
    [`tools/changelog/merge-unreleased.sh`](../../tools/changelog/merge-unreleased.sh),
    qui **remplace** la section `[Unreleased]` sur place.
 5. **Ouvrir** (ou rafraîchir) une pull request depuis
-   `chore/changelog-<component>-draft` via `gh`, pour relecture.
+   `github-actions/changelog-<component>-draft` via `gh`, pour relecture. Le
+   rafraîchissement refuse de force-pusher par-dessus des commits faits par un
+   humain sur cette branche.
 
 Si aucune PR du train n'est trouvée, le job s'arrête après l'étape 2 sans rien
 ouvrir.
@@ -111,6 +113,20 @@ exposée aux PR de forks.
   de committer sur `main` : relisez l'entrée face aux PR réelles avant de merger,
   et supprimez tout ce qui a été déduit plutôt que trouvé. Ne branchez pas ceci
   sur l'auto-merge.
+- **Les checks CI de la PR brouillon ne démarrent pas seuls — fermez-la puis
+  rouvrez-la.** La PR est poussée et ouverte avec le `GITHUB_TOKEN` du workflow,
+  et GitHub ne déclenche délibérément aucun workflow pour les événements créés par
+  ce token (sa règle anti-récursion). Les checks *required* restent donc sur
+  « Expected » jusqu'à ce qu'un humain ferme et rouvre la PR (tout événement
+  d'origine humaine convient). Le corps de PR généré le rappelle aussi. Si cet
+  aller-retour devient pénible, le correctif est de pousser et ouvrir la PR avec
+  un PAT fine-grained dédié ou un token de GitHub App au lieu de `github.token`.
+- **Un rafraîchissement n'écrase jamais des commits humains sur la branche
+  brouillon.** Curer le brouillon sur sa PR est le flux de relecture prévu : avant
+  le force-push, l'étape fetch la branche distante et échoue si elle porte un
+  commit qui n'est pas signé `github-actions[bot]` — mergez ou fermez la PR
+  brouillon ouverte (ou supprimez la branche) avant de re-dispatcher. Seules les
+  branches 100 % bot sont rafraîchies sur place.
 - **Un brouillon tronqué ou refusé fait échouer le run — il n'ouvre pas de PR
   partielle.** L'étape de rédaction inspecte la réponse de l'API et sort en
   non-zéro sur une erreur API, un `refusal` ou une troncature `max_tokens`, plutôt
