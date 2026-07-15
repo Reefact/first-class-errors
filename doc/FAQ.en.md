@@ -13,7 +13,7 @@ The library enriches the `Error` carried by that exception with a stable code, s
 
 You could. Carrying the library’s `Error` in a general-purpose result type — for example [CSharpFunctionalExtensions](https://github.com/vkhorikov/CSharpFunctionalExtensions)’ `Result<T, E>` — keeps the structure a bare `Result<T, string>` would lose.
 
-`Outcome` is that idea specialized for this error model. Its failure side is always an `Error` — not a second type parameter to thread through every signature — and its small API (`Then`, `To`, `Recover`, `Finally`) is named for intent rather than for functional-programming mechanics (`Map`, `Bind`, `Match`). The goal is domain code and use cases that read as a business flow, not as generic result plumbing.
+`Outcome` is that idea specialized for this error model. Its failure side is always an `Error` — not a second type parameter to thread through every signature — and its small API (`Then`, `Recover`, `Finally`) is named for intent rather than for functional-programming mechanics (`Map`, `Bind`, `Match`). The goal is domain code and use cases that read as a business flow, not as generic result plumbing.
 
 See [Usage Patterns](UsagePatterns.en.md) and [Comparison with error-handling libraries](ComparisonWithOtherLibraries.en.md).
 
