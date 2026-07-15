@@ -3,207 +3,110 @@
 🌍 **Languages:**  
 🇬🇧 English (this file) | 🇫🇷 [Français](./BestPractices.fr.md)
 
-FirstClassErrors is most effective when used consistently and with intention.
-These practices help keep errors meaningful, readable, and useful.
+Use this page as a compact review checklist. Detailed explanations belong in the focused guides linked from each section.
 
-## 🧠 1. One error situation per factory
+## Model the right situation
 
-Each factory method should represent **one precise error situation**.
+- One factory represents one precise error situation.
+- Avoid generic catch-all errors such as `INVALID_OPERATION` or `PROCESSING_FAILED`.
+- Choose the error type from the meaning of the failure, not from the current class or folder.
+- Do not document framework exceptions, accidental crashes, or low-level technical noise as application knowledge.
 
-Avoid:
+See [Writing Error Documentation](WritingErrorsGuide.en.md) and [When Not to Use FirstClassErrors](WhenNotToUseFirstClassErrors.en.md).
 
-* factories that cover multiple different causes
-* generic “InvalidOperation” factories
+## Keep identifiers stable
 
-A factory should answer:
+- Use a specific `UPPER_SNAKE_CASE` error code.
+- Never reuse a code for a different situation.
+- Do not rename or remove a code casually.
+- Keep context-key names and value types stable when dashboards or consumers depend on them.
 
-> “What exactly went wrong?”
+Codes and context shape form an operational contract. Use [Catalog Versioning](CatalogVersioning.en.md) to make contract changes visible.
 
-**Why:**
-Clear boundaries between error situations make diagnostics precise and documentation reliable.
-
-## 🏷️ 2. Keep error codes stable
-
-Error codes are part of the contract.
-
-* Do not change codes casually
-* Do not reuse a code for another situation
-* Treat them as long-lived identifiers
-
-**Why:**
-Error codes are used in logs, documentation, and support workflows. Stability preserves traceability over time.
-
-## ✂️ 3. Keep the happy path clean
-
-Error factories should keep error construction out of domain logic.
+## Centralize construction in factories
 
 Prefer:
 
 ```csharp
-throw InvalidAmountOperationError.CurrencyMismatch(a1, a2).ToException();
+throw InvalidAmountOperationError.CurrencyMismatch(left, right).ToException();
 ```
 
-Over:
+Do not assemble errors or exceptions inline in business logic.
 
-```csharp
-throw new DomainException(/* manually assembled Error */);
-```
+A dedicated static factory class annotated with `[ProvidesErrorsFor(...)]` should group related situations, with one factory method per situation and its documentation nearby.
 
-**Why:**
-This keeps business logic readable and separates domain intent from error construction details.
+This keeps the happy path readable and gives every occurrence the same code, messages, context, and documentation anchor.
 
-## 📘 4. Write documentation for humans
+## Separate stable documentation from runtime messages
 
-Error documentation is not for the compiler — it is for:
+Stable documentation explains the error category:
 
-* developers
-* support
-* operators
+- title;
+- description;
+- violated rule;
+- diagnostic hypotheses;
+- representative examples.
 
-Avoid technical noise. Focus on:
+Runtime messages explain one occurrence:
 
-* meaning
-* rule
-* plausible causes
+- `ShortMessage`: safe public summary;
+- `DetailedMessage`: optional controlled public detail;
+- `DiagnosticMessage`: internal diagnostic detail.
 
-## 🔎 5. Diagnostics are hypotheses, not blame
+Do not put occurrence-specific identifiers into stable documentation, and do not expose internal diagnostic detail through public messages.
 
-Diagnostics should describe possible states, not accuse actors.
+See [Writing Error Documentation](WritingErrorsGuide.en.md) and [Writing Error Messages](WritingErrorMessages.en.md).
 
-Prefer:
+## Write for investigation, not blame
 
-> “Amounts were used without conversion.”
+- Causes describe plausible states or conditions.
+- `ErrorOrigin` classifies where a cause may lie; it does not assign responsibility.
+- Analysis leads start with neutral guidance such as *Check*, *Verify*, or *Review*.
+- Do not encode ticketing, escalation, or team-contact procedures in error documentation.
 
-Avoid:
+Operational processes change independently from application behavior.
 
-> “The developer forgot to convert.”
+## Keep context useful and safe
 
-**Why:**
-Diagnostics guide investigation. Blame-oriented wording harms collaboration and does not help troubleshooting.
+- Add context at factory level so every occurrence is consistent.
+- Use named, typed, reusable keys.
+- Include instance-level facts that materially improve diagnosis.
+- Avoid secrets, oversized payloads, and data that cannot be logged safely.
+- Prefer structured context to embedding every value inside a message.
 
-## 🧭 6. Analysis leads guide, they don’t prescribe
+See [Error Context](ErrorContext.en.md).
 
-Do not include operational processes or support procedures.
+## Choose exceptions or `Outcome` intentionally
 
-Avoid:
+Use an exception when the failure should interrupt the current operation, such as an invariant violation or an unrecoverable state at that level.
 
-* “Open a ticket”
-* “Contact team X”
+Use `Outcome` / `Outcome<T>` when failure is an expected branch of the flow, such as validation, parsing, batch processing, or partial success.
 
-Focus on investigation direction, not workflow.
+Both paths should carry the same `Error` created by the same factory. Do not create a second, weaker error model for non-throwing flows.
 
-**Why:**
-Operational processes depend on organizational context, not on the application itself. Encoding them in error documentation couples your code to external procedures and makes documentation brittle when processes change.
+See [Usage Patterns](UsagePatterns.en.md).
 
-## 🔁 7. Use Outcome where failure is expected
+## Make examples educational
 
-Use exceptions for:
+- Use simple, realistic values.
+- Make the violated rule immediately visible.
+- Call the documented factory rather than copying a message.
+- Keep boundary and stress cases in tests, not in catalog examples.
 
-* invariant violations
-* unexpected states
+## Pull-request checklist
 
-Use `Outcome<T>` when:
+Before merging an error-related change, verify that:
 
-* validating input
-* processing batches
-* partial failure is normal
-
-**Why:**
-This keeps exception flow meaningful while still allowing rich error information in non-exceptional scenarios.
-
-## 🧩 8. Don’t document technical accidents
-
-Avoid documenting:
-
-* NullReferenceExceptions
-* framework exceptions
-* low-level technical failures
-
-The DSL is for **meaningful application errors**, not incidental crashes.
-
-**Why:**
-The goal is to document system behavior and rules, not unpredictable technical incidents.
-
-## 🧪 9. Examples should educate, not stress test
-
-Examples are not unit tests.
-
-Use:
-
-* simple
-* realistic
-* clear values
-
-Avoid edge cases or pathological data.
-
-## 🧱 10. Keep documentation close to the factory
-
-Documentation methods should live in the same error factory class as the factory.
-
-This keeps:
-
-* intent
-* error creation
-* documentation
-
-in the same conceptual place.
-
-**Why:**
-Keeping documentation next to the factory ensures it evolves with the code. This prevents drift and preserves the core idea of living documentation: knowledge stays where the behavior is defined.
-
-## 🧩 11. Group errors in a dedicated factory class
-
-Application-specific errors should be grouped in a `static` factory class annotated with `[ProvidesErrorsFor(...)]`, with one `internal static` factory method per error situation.
-
-```csharp
-[ProvidesErrorsFor(nameof(Amount))]
-public static class InvalidAmountOperationError {
-
-    [DocumentedBy(nameof(CurrencyMismatchDocumentation))]
-    internal static DomainError CurrencyMismatch(Amount left, Amount right) {
-        return DomainError.Create(
-                Code.CurrencyMismatch,
-                diagnosticMessage: $"Cannot operate on amounts with different currencies: {left.Currency} and {right.Currency}.")
-            .WithPublicMessage(
-                shortMessage: "Amounts use different currencies.",
-                detailedMessage: "The amounts involved use different currencies.");
-    }
-
-    // ... documentation method and error codes ...
-}
-```
-
-**Why:**
-Each factory method represents a well-defined error category. Grouping them in a dedicated class keeps related error situations, their codes, and their documentation in one place. Note that the core types (`DomainError`, `DomainException`, …) are **not** sealed — inheritance is intentionally allowed so you can model your own error hierarchies — but in practice you author error situations through these factory classes rather than by subclassing.
-
-## 🏭 12. Build errors through factories, throw via `ToException()`
-
-You never `new` a `DiagnosableException` in user code: an exception's only constructor takes an `Error`. Errors themselves are no longer built through public constructors either — those are now internal. An error is assembled through the staged builder — `Type.Create(code, diagnosticMessage, …)` captures the mandatory internal information and returns an intermediate stage, and `.WithPublicMessage(shortMessage, detailedMessage)` finalizes the real error (there is no `.Build()`). Factory methods encapsulate that call, so you simply invoke the factory and turn its result into an exception with `ToException()`.
-
-```csharp
-// Build an Error through the factory, then throw it as an exception:
-throw InvalidAmountOperationError.CurrencyMismatch(a1, a2).ToException();
-```
-
-When failure is expected rather than exceptional, return the same factory's `Error` inside an `Outcome<T>`:
-
-```csharp
-return Outcome<Amount>.Failure(InvalidAmountOperationError.NegativeAmount(value));
-```
-
-**Why:**
-Routing every error through a factory ensures that all errors of a given category are created in a controlled, documented, and semantically consistent way, whether they are thrown as exceptions or carried as `Outcome` failures.
-
-## 🎯 Final thought
-
-FirstClassErrors is about **expressing knowledge**, not just handling errors.
-
-Well-written errors improve:
-
-* code readability
-* troubleshooting
-* documentation
-* shared understanding of the system
+- [ ] each new factory represents one precise situation;
+- [ ] every code is specific, stable, and unique;
+- [ ] documentation is linked with `[DocumentedBy]`;
+- [ ] public messages contain no internal or sensitive information;
+- [ ] diagnostic messages explain concrete occurrences;
+- [ ] queryable occurrence data uses typed context where appropriate;
+- [ ] diagnostics are hypotheses and analysis leads are actionable;
+- [ ] examples are realistic and call the real factory;
+- [ ] English and French documentation remain aligned when both are changed;
+- [ ] catalog baseline changes (the committed catalog snapshot — see [Catalog Versioning](CatalogVersioning.en.md)) are deliberate and reviewed when the contract changes.
 
 ---
 
