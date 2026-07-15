@@ -90,12 +90,13 @@ public sealed class SimplePropertyBindingTests {
         Check.That(outcome.Error!.InnerErrors.Single().Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
     }
 
-    [Fact(DisplayName = "An optional fallback that does not convert is a developer bug and throws.")]
+    [Fact(DisplayName = "An optional fallback that does not convert is a developer bug and throws, naming the misconfigured argument.")]
     public void InvalidFallbackIsABug() {
         var bind = Bind.PropertiesOf(Request(currency: null)).FailWith(BookingEnvelopeError.CommandInvalid);
 
-        Check.ThatCode(() => bind.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "NOT-A-CURRENCY"))
-             .Throws<InvalidOperationException>();
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+            () => { bind.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "NOT-A-CURRENCY"); });
+        Check.That(exception.Message).Contains("Currency");
     }
 
     [Fact(DisplayName = "An optional reference property yields null when absent — recording nothing — and the value when present.")]

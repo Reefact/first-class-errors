@@ -283,6 +283,18 @@ public sealed class BindingContractTests {
         Check.ThatCode(() => bind.Build(s => s.Get(optValOfA).HasValue)).Throws<InvalidOperationException>();
     }
 
+    [Fact(DisplayName = "A cross-binder field read is rejected with a message naming the different-binder cause, not a blank exception.")]
+    public void CrossBinderReadMessageNamesTheCause() {
+        var binderA = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
+        RequiredField<EmailAddress> requiredOfA = binderA.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+
+        var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
+
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+            () => { bind.Build(s => s.Get(requiredOfA).Value); });
+        Check.That(exception.Message).Contains("different binder");
+    }
+
     #endregion
 
     #region The binder-owned errors carry their coded messages
@@ -306,6 +318,7 @@ public sealed class BindingContractTests {
         Check.That(error.ShortMessage).IsEqualTo("An argument is invalid.");
         Check.That(error.DetailedMessage).Contains("GuestEmail");
         Check.That(error.DiagnosticMessage).Contains("GuestEmail");
+        Check.That(error.DiagnosticMessage).Contains("invalid");
         Check.That(error.InnerErrors.Single().Code.ToString()).IsEqualTo("TEST_EMAIL_INVALID");
     }
 
@@ -332,6 +345,18 @@ public sealed class BindingContractTests {
             Check.That(documentation.Title).IsNotEmpty();
             Check.That(documentation.Examples).Not.IsEmpty();
         }
+    }
+
+    [Fact(DisplayName = "The REQUEST_ARGUMENT_REQUIRED documentation lists both diagnoses, classified external then internal.")]
+    public void RequiredArgumentDocumentationClassifiesItsDiagnoses() {
+        MethodInfo documentationMethod = typeof(RequestBindingError)
+            .GetMethod("ArgumentRequiredDocumentation", BindingFlags.Static | BindingFlags.NonPublic)!;
+        var documentation = (ErrorDocumentation)documentationMethod.Invoke(null, null)!;
+
+        // Both causes are documented, and a client omitting an argument is an EXTERNAL fault while the name-provider
+        // mismatch is INTERNAL. A dropped diagnosis or a flipped origin would mislead whoever triages the error.
+        Check.That(documentation.Diagnostics.Select(d => d.Origin))
+             .ContainsExactly(ErrorOrigin.External, ErrorOrigin.Internal);
     }
 
     #endregion

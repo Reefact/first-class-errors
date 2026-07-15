@@ -145,4 +145,28 @@ public sealed class ListBindingTests {
         Check.That(outcome.GetResultOrThrow()).IsEmpty();
     }
 
+    [Fact(DisplayName = "A custom argument-name provider renames the inner paths of complex-list elements: the element binder inherits the parent options.")]
+    public void CustomNameProviderRenamesComplexListElementPaths() {
+        var bind = Bind.PropertiesOf(new BookingRequest("a@b.c", "REF-1", null, null, null, null, Guests: [new GuestDto(null, "nope")]))
+                       .FailWith(BookingEnvelopeError.CommandInvalid)
+                       .WithOptions(new RequestBinderOptions(new SnakeCaseNameProvider()));
+
+        bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
+
+        Outcome<string> outcome = bind.Build(_ => "never");
+        Error guestEnvelope = outcome.Error!.InnerErrors.Single(e => e.Code.ToString() == "TEST_GUEST_INVALID");
+        // FirstName (required, absent) and Email ("nope", invalid) are both collected; their names must be
+        // snake_cased by the INHERITED provider, not the default PascalCase — proving the element binder inherits options.
+        Check.That(guestEnvelope.InnerErrors.Select(BindingAssertions.ArgumentPathOf))
+             .ContainsExactly("guests[0].first_name", "guests[0].email");
+    }
+
+    private sealed class SnakeCaseNameProvider : IArgumentNameProvider {
+
+        public string GetArgumentNameFrom(System.Reflection.PropertyInfo property) {
+            return string.Concat(property.Name.Select((c, i) => i > 0 && char.IsUpper(c) ? "_" + char.ToLowerInvariant(c) : char.ToLowerInvariant(c).ToString()));
+        }
+
+    }
+
 }
