@@ -7,7 +7,11 @@
 
 ErrorOr, FluentResults, and FirstClassErrors all help applications represent failure explicitly, but they optimize for different primary goals.
 
-This page does not try to rank them in general. The scenario below deliberately emphasizes error stability, diagnosis, and documentation — the primary focus of FirstClassErrors — so it plays to its strengths; other scenarios, such as heavy multi-error validation or intensive functional composition, can naturally favor ErrorOr or FluentResults. Within this scenario, it shows the same situation through three different centres of gravity so you can choose the model that best matches your system.
+This page does not try to rank them in general.
+
+The scenario below deliberately emphasizes error stability, diagnosis, and documentation: that is the primary focus of FirstClassErrors, so it naturally plays to its strengths. Other scenarios, such as heavy multi-error validation or intensive functional composition, can favor ErrorOr or FluentResults.
+
+The goal is to show the same situation through three different centres of gravity, so you can choose the model that best matches your system.
 
 ## The scenario
 
@@ -67,7 +71,7 @@ Choose this style when the result and its reason graph are the primary abstracti
 
 ## FirstClassErrors: an error model with several transports
 
-FirstClassErrors centres the API on the error itself. A named factory creates the error; `Outcome<T>` (the library's success-or-failure result type) is one way it travels:
+FirstClassErrors centres the API on the error itself. In the recommended usage, a named factory defines and creates the error; an `Outcome<T>` (the library's success-or-failure result type) is one way to carry — or transport — that error as a value:
 
 ```csharp
 public Outcome<Receipt> Pay(Order order)
@@ -120,7 +124,7 @@ throw PaymentError
 
 The error can additionally be linked to structured documentation describing its title, rule, possible causes, analysis leads, and examples. The generated catalog (a human-readable reference of every documented error) and the versioning workflow that guards it against breaking changes are part of the library's intended use.
 
-None of this changes the `Pay` method above: the transport stays small, and the durable error knowledge lives beside the error, not in each call site.
+None of this changes the `Pay` method above: the transport stays small, and the durable knowledge lives with the error's definition, not in each call site.
 
 ## What changes between the approaches?
 
