@@ -67,13 +67,15 @@ Choose this style when the result and its reason graph are the primary abstracti
 
 ## FirstClassErrors: an error model with several transports
 
-FirstClassErrors centres the API on the error itself. `Outcome<T>` is one transport, and `ToException()` is another.
+FirstClassErrors centres the API on the error itself. `Outcome<T>` (the library's success-or-failure result type) is one way the error travels; `ToException()` is another.
 
 ```csharp
 internal static DomainError PaymentDeclined(
     string providerCode,
     Guid paymentId)
 {
+    // Code.PaymentDeclined and ContextKey.PaymentId are application-defined
+    // constants: ErrorCode.Create("PAYMENT_DECLINED") and a typed context key.
     return DomainError.Create(
             Code.PaymentDeclined,
             diagnosticMessage:
@@ -108,7 +110,7 @@ throw PaymentError
     .ToException();
 ```
 
-The error can additionally be linked to structured documentation describing its title, rule, possible causes, analysis leads, and examples. The generated catalog and catalog-versioning workflow are part of the library's intended use.
+The error can additionally be linked to structured documentation describing its title, rule, possible causes, analysis leads, and examples. The generated catalog (a human-readable reference of every documented error) and the versioning workflow that guards it against breaking changes are part of the library's intended use.
 
 Choose this style when the error definition itself must remain stable, documented, diagnosable, and independent from whether a caller returns or throws it.
 
@@ -122,8 +124,8 @@ Choose this style when the error definition itself must remain stable, documente
 | Metadata / occurrence facts | metadata | metadata | typed `ErrorContext` |
 | Dedicated public vs internal messages | application-defined | application-defined | explicit in the core model |
 | Typed exception transport from the same error | not the primary model | not the primary model | built in through `ToException()` |
-| Domain / infrastructure / port taxonomy | application-defined | application-defined | built in |
-| Transience and interaction direction | application-defined | application-defined | built in for infrastructure errors |
+| Domain / infrastructure / port (incoming/outgoing boundary) taxonomy | application-defined | application-defined | built in |
+| Transience (is retrying meaningful?) and interaction direction (incoming vs outgoing) | application-defined | application-defined | built in for infrastructure errors |
 | Generated human documentation | outside the library's main scope | outside the library's main scope | built in |
 | Catalog compatibility checks | outside the library's main scope | outside the library's main scope | built in |
 

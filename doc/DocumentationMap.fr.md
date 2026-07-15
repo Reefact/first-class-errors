@@ -11,8 +11,8 @@ Partez de la question à laquelle vous cherchez à répondre. Chaque page princi
 
 Suivez ce parcours pour déterminer si FirstClassErrors correspond à votre application.
 
-1. [Premiers pas](GettingStarted.fr.md) — installer la librairie, créer une erreur et générer un premier catalogue.
-2. [Principes de conception](DesignPrinciples.fr.md) — comprendre pourquoi l’erreur est le modèle et pourquoi le transport est un choix séparé.
+1. [Premiers pas](GettingStarted.fr.md) — installer la librairie, créer une erreur et générer un premier catalogue d’erreurs lisible par des humains.
+2. [Principes de conception](DesignPrinciples.fr.md) — comprendre pourquoi l’erreur est le modèle et pourquoi sa façon de voyager (exception ou valeur de retour) est un choix séparé.
 3. [Quand ne pas utiliser FirstClassErrors](WhenNotToUseFirstClassErrors.fr.md) — reconnaître les situations où la librairie apporterait plus de formalisme que de valeur.
 4. [Comparaison avec les librairies de gestion d’erreurs](ComparisonWithOtherLibraries.fr.md) — comparer FirstClassErrors, ErrorOr et FluentResults à partir d’un même scénario concret.
 
@@ -66,8 +66,6 @@ Utilisez ces pages lorsque vous connaissez déjà le modèle et recherchez un co
 - [Référence des commandes de versionnage](CatalogVersioningReference.fr.md)
 - [Règles d’analyse](analyzers/README.fr.md)
 - [FAQ](FAQ.fr.md)
-
-Les pages d’architecture, de renderer, de tests et d’exploitation peuvent également renvoyer vers des références spécialisées introduites dans les versions plus récentes de la documentation.
 
 ## Ordre de lecture conseillé pour une équipe
 

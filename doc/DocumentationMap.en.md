@@ -11,8 +11,8 @@ Start with the question you are trying to answer. Each primary page may link to 
 
 Follow this path when you are deciding whether FirstClassErrors fits your application.
 
-1. [Getting Started](GettingStarted.en.md) — install the library, create an error, and generate a first catalog.
-2. [Design Principles](DesignPrinciples.en.md) — understand why the error is the model and transport is a separate choice.
+1. [Getting Started](GettingStarted.en.md) — install the library, create an error, and generate a first human-readable error catalog.
+2. [Design Principles](DesignPrinciples.en.md) — understand why the error is the model and how it travels (exception or return value) is a separate choice.
 3. [When Not to Use FirstClassErrors](WhenNotToUseFirstClassErrors.en.md) — identify cases where the library would add more ceremony than value.
 4. [Comparison with error-handling libraries](ComparisonWithOtherLibraries.en.md) — compare FirstClassErrors with ErrorOr and FluentResults through one concrete scenario.
 
@@ -66,8 +66,6 @@ Use these pages when you already understand the model and need exact behavior.
 - [Catalog Versioning command reference](CatalogVersioningReference.en.md)
 - [Analyzer rules](analyzers/README.md)
 - [FAQ](FAQ.en.md)
-
-Architecture, renderer, testing, and operational pages may also link to focused reference pages introduced by newer documentation versions.
 
 ## Suggested team reading order
 
