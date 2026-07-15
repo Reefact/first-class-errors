@@ -17,9 +17,9 @@
 
 ![FirstClassErrors](./doc/images/first-class-errors.png "FirstClassErrors")
 
-An application error too often boils down to a bare code or string, with nothing that explains what it actually means. FirstClassErrors turns it into a first-class concept of your domain. You describe each error situation once, with its rules, in one place in the code; the whole library then builds on that model.
+## 🧩 One model for the whole chain
 
-From there, it covers the full chain:
+An application error too often boils down to a bare code or string, with nothing that explains what it actually means. FirstClassErrors turns it into a first-class concept of your domain. You describe each error situation once, with its rules, in one place in the code; the whole library then builds on that model.
 
 **Model the error**
 An error becomes an object that carries its own meaning — a violated business rule, a rejected incoming request, or a failing external service, transient or not.
