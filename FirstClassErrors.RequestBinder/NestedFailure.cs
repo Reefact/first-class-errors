@@ -10,7 +10,7 @@ internal static class NestedFailure {
     #region Statics members declarations
 
     /// <summary>
-    ///     Decides how a nested binding's failure joins the parent envelope. The nested binder's <b>own</b> Build
+    ///     Decides how a nested binding's failure joins the parent envelope. The nested binder's <b>own</b> failure
     ///     envelope — <paramref name="nestedEnvelope" />, self-describing because its inner errors already carry the
     ///     prefixed paths — is recorded as-is. Anything else, <b>including a bare <see cref="PrimaryPortError" /> leaf a
     ///     converter returned directly</b>, is wrapped in <c>REQUEST_ARGUMENT_INVALID</c> so the argument path survives
@@ -19,7 +19,7 @@ internal static class NestedFailure {
     ///     path.
     /// </summary>
     /// <param name="error">The failure the nested binding returned.</param>
-    /// <param name="nestedEnvelope">The envelope the nested binder's Build produced, or <c>null</c> when it built none.</param>
+    /// <param name="nestedEnvelope">The envelope the nested binder's build terminal produced, or <c>null</c> when it built none.</param>
     /// <param name="argumentPath">The argument path to attach when wrapping.</param>
     /// <returns>The error to record on the parent binder.</returns>
     internal static PrimaryPortError Group(Error error, PrimaryPortError? nestedEnvelope, string argumentPath) {

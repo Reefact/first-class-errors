@@ -14,17 +14,28 @@ public sealed class RequestBinderTests {
         RequiredField<BookingDate> checkIn  = stay.SimpleProperty(s => s.CheckIn).AsRequired(BookingDate.Parse);
         RequiredField<BookingDate> checkOut = stay.SimpleProperty(s => s.CheckOut).AsRequired(BookingDate.Parse);
 
-        return stay.Build(s => new Stay(s.Get(checkIn), s.Get(checkOut)));
+        return stay.New(s => new Stay(s.Get(checkIn), s.Get(checkOut)));
     }
 
-    [Fact(DisplayName = "Build assembles the command exactly once when every property bound.")]
-    public void BuildAssemblesOnceOnSuccess() {
+    private static readonly ErrorCode CheckOutNotAfterCheckIn = ErrorCode.Create("TEST_CHECKOUT_NOT_AFTER_CHECKIN");
+
+    // A validating factory: every field is already bound, yet a cross-field rule — check-out strictly after check-in —
+    // can still reject an all-valid combination. That is exactly what Create (unlike New) can express.
+    private static Outcome<Stay> AssembleStay(BookingDate checkIn, BookingDate checkOut) {
+        return checkOut.Value > checkIn.Value
+                   ? Outcome<Stay>.Success(new Stay(checkIn, checkOut))
+                   : Outcome<Stay>.Failure(DomainError.Create(CheckOutNotAfterCheckIn, "Check-out must be after check-in.")
+                                                      .WithPublicMessage("The stay dates are inconsistent."));
+    }
+
+    [Fact(DisplayName = "New assembles the command exactly once when every property bound.")]
+    public void NewAssemblesOnceOnSuccess() {
         var bind = Bind.PropertiesOf(new BookingRequest("a@b.c", "REF-1", "EUR", null, null, null, null))
                        .FailWith(BookingEnvelopeError.CommandInvalid);
         RequiredField<EmailAddress> email = bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
         int assembled = 0;
-        Outcome<string> outcome = bind.Build(s => {
+        Outcome<string> outcome = bind.New(s => {
             assembled++;
 
             return s.Get(email).Value;
@@ -34,14 +45,14 @@ public sealed class RequestBinderTests {
         Check.That(assembled).IsEqualTo(1);
     }
 
-    [Fact(DisplayName = "Build never runs the assembler when a failure was recorded — field reads are safe by construction.")]
-    public void BuildNeverAssemblesOnFailure() {
+    [Fact(DisplayName = "New never runs the assembler when a failure was recorded — field reads are safe by construction.")]
+    public void NewNeverAssemblesOnFailure() {
         var bind = Bind.PropertiesOf(new BookingRequest(null, null, null, null, null, null, null))
                        .FailWith(BookingEnvelopeError.CommandInvalid);
         bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
         bool assembled = false;
-        Outcome<string> outcome = bind.Build(_ => {
+        Outcome<string> outcome = bind.New(_ => {
             assembled = true;
 
             return "never";
@@ -49,6 +60,54 @@ public sealed class RequestBinderTests {
 
         Check.That(outcome.IsFailure).IsTrue();
         Check.That(assembled).IsFalse();
+    }
+
+    [Fact(DisplayName = "Create flattens the validating factory's success into Outcome<TCommand> — the command itself, not a nested Outcome.")]
+    public void CreateFlattensFactorySuccess() {
+        var bind = Bind.PropertiesOf(new StayDto("2026-08-10", "2026-08-14"))
+                       .FailWith(BookingEnvelopeError.StayInvalid);
+        RequiredField<BookingDate> checkIn  = bind.SimpleProperty(s => s.CheckIn).AsRequired(BookingDate.Parse);
+        RequiredField<BookingDate> checkOut = bind.SimpleProperty(s => s.CheckOut).AsRequired(BookingDate.Parse);
+
+        Outcome<Stay> outcome = bind.Create(s => AssembleStay(s.Get(checkIn), s.Get(checkOut)));
+
+        Check.That(outcome.IsSuccess).IsTrue();
+        Check.That(outcome.GetResultOrThrow().CheckOut.Value).IsEqualTo(new DateOnly(2026, 8, 14));
+    }
+
+    [Fact(DisplayName = "Create returns the validating factory's own failure as-is — a cross-field rule surfaces undisguised, not wrapped in the binder envelope.")]
+    public void CreateReturnsFactoryFailureAsIs() {
+        var bind = Bind.PropertiesOf(new StayDto("2026-08-14", "2026-08-10"))
+                       .FailWith(BookingEnvelopeError.StayInvalid);
+        RequiredField<BookingDate> checkIn  = bind.SimpleProperty(s => s.CheckIn).AsRequired(BookingDate.Parse);
+        RequiredField<BookingDate> checkOut = bind.SimpleProperty(s => s.CheckOut).AsRequired(BookingDate.Parse);
+
+        Outcome<Stay> outcome = bind.Create(s => AssembleStay(s.Get(checkIn), s.Get(checkOut)));
+
+        Check.That(outcome.IsFailure).IsTrue();
+        // The factory's error is returned directly: its own code, and NOT wrapped under the binder's TEST_STAY_INVALID envelope.
+        Check.That(outcome.Error!.Code.ToString()).IsEqualTo("TEST_CHECKOUT_NOT_AFTER_CHECKIN");
+        Check.That(outcome.Error).IsInstanceOf<DomainError>();
+    }
+
+    [Fact(DisplayName = "Create never calls the validating factory when a binding failed — it returns the envelope, factory untouched.")]
+    public void CreateNeverCallsFactoryOnBindingFailure() {
+        var bind = Bind.PropertiesOf(new StayDto(null, "2026-08-14"))
+                       .FailWith(BookingEnvelopeError.StayInvalid);
+        RequiredField<BookingDate> checkIn  = bind.SimpleProperty(s => s.CheckIn).AsRequired(BookingDate.Parse);
+        RequiredField<BookingDate> checkOut = bind.SimpleProperty(s => s.CheckOut).AsRequired(BookingDate.Parse);
+
+        bool factoryCalled = false;
+        Outcome<Stay> outcome = bind.Create(s => {
+            factoryCalled = true;
+
+            return AssembleStay(s.Get(checkIn), s.Get(checkOut));
+        });
+
+        Check.That(outcome.IsFailure).IsTrue();
+        Check.That(factoryCalled).IsFalse();
+        Check.That(outcome.Error!.Code.ToString()).IsEqualTo("TEST_STAY_INVALID");
+        Check.That(outcome.Error!.InnerErrors.Select(e => e.Code.ToString())).ContainsExactly("REQUEST_ARGUMENT_REQUIRED");
     }
 
     [Fact(DisplayName = "Every failing property is collected into the envelope, in declaration order — collect-all, not first-failure.")]
@@ -60,7 +119,7 @@ public sealed class RequestBinderTests {
         bind.SimpleProperty(r => r.Reference).AsRequired();
         bind.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
 
-        Outcome<string> outcome = bind.Build(_ => "never");
+        Outcome<string> outcome = bind.New(_ => "never");
         Check.That(outcome.Error!.Code.ToString()).IsEqualTo("TEST_BOOKING_COMMAND_INVALID");
         Check.That(outcome.Error!.InnerErrors.Select(e => e.Code.ToString()))
              .ContainsExactly("REQUEST_ARGUMENT_INVALID", "REQUEST_ARGUMENT_REQUIRED", "REQUEST_ARGUMENT_INVALID");
@@ -83,10 +142,10 @@ public sealed class RequestBinderTests {
                  bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(g => {
                      RequiredField<string> firstName = g.SimpleProperty(x => x.FirstName).AsRequired();
 
-                     return g.Build(s => new Guest(s.Get(firstName), null));
+                     return g.New(s => new Guest(s.Get(firstName), null));
                  });
 
-                 return bind.Build(_ => "never");
+                 return bind.New(_ => "never");
              })
              .DoesNotThrow();
     }
@@ -124,7 +183,7 @@ public sealed class RequestBinderTests {
         bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
         bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsRequired(BindStay);
 
-        Outcome<string> outcome = bind.Build(_ => "never");
+        Outcome<string> outcome = bind.New(_ => "never");
         Error stayEnvelope = outcome.Error!.InnerErrors.Single(e => e.Code.ToString() == "TEST_STAY_INVALID");
         Check.That(stayEnvelope.InnerErrors.Select(BindingAssertions.ArgumentPathOf))
              .ContainsExactly("stay.check_in", "stay.check_out");
@@ -137,7 +196,7 @@ public sealed class RequestBinderTests {
 
         bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
-        Outcome<string> outcome = bind.Build(_ => "never");
+        Outcome<string> outcome = bind.New(_ => "never");
         var required = (InfrastructureError)outcome.Error!.InnerErrors.Single();
         Check.That(required.Transience).IsEqualTo(Transience.NonTransient);
     }

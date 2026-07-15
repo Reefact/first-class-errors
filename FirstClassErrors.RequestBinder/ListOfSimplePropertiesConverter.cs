@@ -93,7 +93,7 @@ public sealed class ListOfSimplePropertiesConverter<TRequest, TArgument> {
             converted.Add(outcome.GetResultOrThrow());
         }
 
-        // The value is read only through a BindingScope, which Build creates solely when no failure was recorded —
+        // The value is read only through a BindingScope, which a build terminal creates solely when no failure was recorded —
         // i.e. only when every element converted — so `converted` is the complete list exactly when it is observed.
         return new RequiredField<IReadOnlyList<TProperty>>(_binder, converted);
     }

@@ -1,18 +1,19 @@
 namespace FirstClassErrors.RequestBinder;
 
 /// <summary>
-///     The reader handed to <see cref="RequestBinder{TRequest}.Build{TCommand}" />'s assembler: the <b>only</b> channel
-///     through which a bound value can be obtained from a field token (<see cref="RequiredField{TProperty}" /> and its
-///     optional siblings).
+///     The reader handed to a build terminal's assembler (<see cref="RequestBinder{TRequest}.New{TCommand}" /> /
+///     <see cref="RequestBinder{TRequest}.Create{TCommand}" />): the <b>only</b> channel through which a bound value can
+///     be obtained from a field token (<see cref="RequiredField{TProperty}" /> and its optional siblings).
 /// </summary>
 /// <remarks>
 ///     <para>
 ///         <b>Safety by construction.</b> <see cref="BindingScope" /> is a <c>readonly ref struct</c>: it cannot be
 ///         captured, boxed, stored in a field, or returned, so it lives only for the duration of the assembler it is
-///         passed to. And <see cref="RequestBinder{TRequest}.Build{TCommand}" /> creates one <b>only</b> on its success
-///         branch — after it has verified that not a single binding failure was recorded. A field token exposes no
-///         public value member, so the one way to read a bound value is <c>Get</c> through this scope, and this scope
-///         only ever exists where every binding is known to have succeeded. Reading a value before <c>Build</c>, or
+///         passed to. And a build terminal (<see cref="RequestBinder{TRequest}.New{TCommand}" /> /
+///         <see cref="RequestBinder{TRequest}.Create{TCommand}" />) creates one <b>only</b> on its success branch —
+///         after it has verified that not a single binding failure was recorded. A field token exposes no public value
+///         member, so the one way to read a bound value is <c>Get</c> through this scope, and this scope only ever
+///         exists where every binding is known to have succeeded. Reading a value before a build terminal runs, or
 ///         outside its assembler, is therefore not merely discouraged: it does not compile.
 ///     </para>
 ///     <para>
@@ -79,7 +80,7 @@ public readonly ref struct BindingScope {
     private void EnsureOwned(object owner) {
         if (!ReferenceEquals(owner, _owner)) {
             throw new InvalidOperationException(
-                "This bound field was produced by a different binder. A field can only be read inside the Build of the binder that bound it.");
+                "This bound field was produced by a different binder. A field can only be read inside the New/Create terminal of the binder that bound it.");
         }
     }
 

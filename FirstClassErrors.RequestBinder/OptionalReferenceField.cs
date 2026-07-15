@@ -6,9 +6,10 @@ namespace FirstClassErrors.RequestBinder;
 ///     <c>null</c> when the argument was absent from the request.
 /// </summary>
 /// <remarks>
-///     Returned by the <c>AsOptionalReference</c> family. Inside <see cref="RequestBinder{TRequest}.Build{TCommand}" />
+///     Returned by the <c>AsOptionalReference</c> family. Inside a build terminal
+///     (<see cref="RequestBinder{TRequest}.New{TCommand}" /> / <see cref="RequestBinder{TRequest}.Create{TCommand}" />)
 ///     a <c>null</c> read means exactly "the argument was absent": a present-but-invalid argument recorded a failure on
-///     the binder, so <c>Build</c> never runs the assembler and that state is never observed.
+///     the binder, so the assembler never runs and that state is never observed.
 /// </remarks>
 /// <typeparam name="TProperty">The reference type of the bound property.</typeparam>
 public sealed class OptionalReferenceField<TProperty> where TProperty : class {

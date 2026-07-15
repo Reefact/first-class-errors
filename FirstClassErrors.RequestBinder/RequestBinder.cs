@@ -15,7 +15,8 @@ namespace FirstClassErrors.RequestBinder;
 /// <remarks>
 ///     <para>
 ///         <b>No throw on the invalid-input path.</b> Converters return <see cref="Outcome{T}" />; every failure is
-///         recorded as a coded error and surfaces once, as the failure of <see cref="Build{TCommand}" />. A request
+///         recorded as a coded error and surfaces once, as the failure of the build terminal
+///         (<see cref="New{TCommand}" /> / <see cref="Create{TCommand}" />). A request
 ///         whose every field is invalid raises zero exceptions. Exceptions are reserved for programming errors
 ///         (a converter that throws, an invalid selector, a mis-declared fallback): the binder catches nothing, so a
 ///         genuine bug propagates to the host's exception boundary instead of being disguised as a client error.
@@ -52,7 +53,8 @@ public sealed class RequestBinder<TRequest> {
     internal RequestBinderOptions Options { get; private set; }
 
     /// <summary>
-    ///     The envelope instance the most recent failing <see cref="Build{TCommand}" /> produced, or <c>null</c> when
+    ///     The envelope instance the most recent failing build terminal
+    ///     (<see cref="New{TCommand}" /> / <see cref="Create{TCommand}" />) produced, or <c>null</c> when
     ///     no build has failed. A parent binder compares a nested failure against this <b>by reference</b> to tell this
     ///     binder's own self-describing envelope (recorded as-is) from a leaf error a nested binding returned directly
     ///     (wrapped under the argument path).
@@ -133,20 +135,59 @@ public sealed class RequestBinder<TRequest> {
     }
 
     /// <summary>
-    ///     Terminal: assembles the command when — and only when — no binding failure was recorded; otherwise returns
-    ///     the failure of the envelope grouping every recorded error. The assembler receives a
-    ///     <see cref="BindingScope" /> and reads each bound value through it; because that scope is created only on this
-    ///     success branch, every read is valid by construction.
+    ///     Terminal (total assembler): builds the command with a <c>new</c> — when, and only when, no binding failure
+    ///     was recorded; otherwise returns the failure of the envelope grouping every recorded error. The assembler
+    ///     receives a <see cref="BindingScope" /> and reads each bound value through it; because that scope is created
+    ///     only on this success branch, every read is valid by construction, and the assembler itself cannot fail.
     /// </summary>
+    /// <remarks>
+    ///     Mirror the shape of the assembler at the call site: <see cref="New{TCommand}" /> takes a <c>new</c> — a total
+    ///     constructor, because all validation already happened field by field. When the command is produced by a
+    ///     validating factory returning <see cref="Outcome{T}" /> — one that may still reject an all-valid combination
+    ///     through a cross-field rule (<c>CheckOut &gt; CheckIn</c>) — call <see cref="Create{TCommand}" /> instead.
+    /// </remarks>
     /// <typeparam name="TCommand">The type of the bound command or query.</typeparam>
     /// <param name="assemble">The assembler, reading the bound values from the supplied <see cref="BindingScope" />.</param>
     /// <returns>The bound command, or the envelope failure.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="assemble" /> is <c>null</c>.</exception>
-    public Outcome<TCommand> Build<TCommand>(BindingAssembler<TCommand> assemble) where TCommand : notnull {
+    public Outcome<TCommand> New<TCommand>(BindingAssembler<TCommand> assemble) where TCommand : notnull {
         if (assemble is null) { throw new ArgumentNullException(nameof(assemble)); }
 
         if (_errors.Count == 0) { return Outcome<TCommand>.Success(assemble(new BindingScope(this))); }
 
+        return Outcome<TCommand>.Failure(BuildFailureEnvelope());
+    }
+
+    /// <summary>
+    ///     Terminal (validating assembler): builds the command through a factory returning <see cref="Outcome{T}" /> —
+    ///     when, and only when, no binding failure was recorded — and <b>flattens</b> the result, so a cross-field rule
+    ///     the factory enforces (<c>CheckOut &gt; CheckIn</c>) surfaces directly instead of nesting a second
+    ///     <see cref="Outcome{T}" />. When a binding failure was recorded, the factory is never called and the envelope
+    ///     grouping every recorded error is returned.
+    /// </summary>
+    /// <remarks>
+    ///     The factory runs only on the zero-error branch — every field is already bound and readable through the
+    ///     supplied <see cref="BindingScope" /> — so a cross-field rule can assume all its inputs are present and valid.
+    ///     Its failure is returned <b>as-is</b>: the factory owns that error, and only field-binding failures are grouped
+    ///     under the envelope declared with <see cref="RequestBinderEnvelopeStage{TRequest}.FailWith" />. For a total
+    ///     constructor that cannot fail, call <see cref="New{TCommand}" />.
+    /// </remarks>
+    /// <typeparam name="TCommand">The type of the bound command or query.</typeparam>
+    /// <param name="assemble">
+    ///     The validating assembler, reading the bound values from the supplied <see cref="BindingScope" /> and returning
+    ///     an <see cref="Outcome{T}" />.
+    /// </param>
+    /// <returns>The bound command, the factory's own failure, or the envelope failure.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="assemble" /> is <c>null</c>.</exception>
+    public Outcome<TCommand> Create<TCommand>(ValidatingAssembler<TCommand> assemble) where TCommand : notnull {
+        if (assemble is null) { throw new ArgumentNullException(nameof(assemble)); }
+
+        if (_errors.Count == 0) { return assemble(new BindingScope(this)); }
+
+        return Outcome<TCommand>.Failure(BuildFailureEnvelope());
+    }
+
+    private PrimaryPortError BuildFailureEnvelope() {
         PrimaryPortInnerErrors innerErrors = new();
         foreach (PrimaryPortError error in _errors) {
             innerErrors.Add(error);
@@ -156,10 +197,10 @@ public sealed class RequestBinder<TRequest> {
         // envelope (recorded as-is) from any other failure a nested binding returned (wrapped under the path).
         BuiltEnvelope = _envelope(innerErrors);
 
-        return Outcome<TCommand>.Failure(BuiltEnvelope);
+        return BuiltEnvelope;
     }
 
-    /// <summary>Records a binding failure; it will surface in the envelope built by <see cref="Build{TCommand}" />.</summary>
+    /// <summary>Records a binding failure; it will surface in the envelope built by <see cref="New{TCommand}" /> / <see cref="Create{TCommand}" />.</summary>
     internal void Record(PrimaryPortError error) {
         _errors.Add(error);
     }
