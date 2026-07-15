@@ -141,6 +141,9 @@ ship test-only surface in the main package.
   process-wide registry.
 * Consider surfacing the auto-chosen seed so an unseeded failure can be replayed.
 * Consider an instance-based generator if callers ask for an explicit object.
+* Consider extracting the generic value engine into a standalone, error-agnostic
+  utility if a second consumer appears; it is kept internally separable from the
+  error-specific surface to that end.
 
 ## References
 
