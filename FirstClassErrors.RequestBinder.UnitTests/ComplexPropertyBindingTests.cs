@@ -12,7 +12,7 @@ public sealed class ComplexPropertyBindingTests {
         RequiredField<BookingDate> checkIn  = stay.SimpleProperty(s => s.CheckIn).AsRequired(BookingDate.Parse);
         RequiredField<BookingDate> checkOut = stay.SimpleProperty(s => s.CheckOut).AsRequired(BookingDate.Parse);
 
-        return stay.Build(read => new Stay(read.Get(checkIn), read.Get(checkOut)));
+        return stay.Build(s => new Stay(s.Get(checkIn), s.Get(checkOut)));
     }
 
     private static BookingRequest RequestWith(StayDto? stay) {
@@ -25,7 +25,7 @@ public sealed class ComplexPropertyBindingTests {
 
         RequiredField<Stay> stay = bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsRequired(BindStay);
 
-        Outcome<Stay> outcome = bind.Build(read => read.Get(stay));
+        Outcome<Stay> outcome = bind.Build(s => s.Get(stay));
         Check.That(outcome.IsSuccess).IsTrue();
         Check.That(outcome.GetResultOrThrow().CheckIn.Value).IsEqualTo(new DateOnly(2026, 8, 10));
     }
@@ -66,11 +66,11 @@ public sealed class ComplexPropertyBindingTests {
     public void OptionalComplex() {
         var absent = Bind.PropertiesOf(RequestWith(stay: null)).FailWith(BookingEnvelopeError.CommandInvalid);
         OptionalReferenceField<Stay> none = absent.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptional(BindStay);
-        Check.That(absent.Build(read => read.Get(none) is null).GetResultOrThrow()).IsTrue();
+        Check.That(absent.Build(s => s.Get(none) is null).GetResultOrThrow()).IsTrue();
 
         var present = Bind.PropertiesOf(RequestWith(new StayDto("2026-08-10", "2026-08-14"))).FailWith(BookingEnvelopeError.CommandInvalid);
         OptionalReferenceField<Stay> some = present.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptional(BindStay);
-        Check.That(present.Build(read => read.Get(some)!.CheckOut.Value).GetResultOrThrow()).IsEqualTo(new DateOnly(2026, 8, 14));
+        Check.That(present.Build(s => s.Get(some)!.CheckOut.Value).GetResultOrThrow()).IsEqualTo(new DateOnly(2026, 8, 14));
     }
 
     [Fact(DisplayName = "An optional complex property that is present but invalid records its envelope.")]

@@ -16,14 +16,14 @@ public sealed class BookingEndToEndTests {
         RequiredField<BookingDate> checkIn  = stay.SimpleProperty(s => s.CheckIn).AsRequired(BookingDate.Parse);
         RequiredField<BookingDate> checkOut = stay.SimpleProperty(s => s.CheckOut).AsRequired(BookingDate.Parse);
 
-        return stay.Build(read => new Stay(read.Get(checkIn), read.Get(checkOut)));
+        return stay.Build(s => new Stay(s.Get(checkIn), s.Get(checkOut)));
     }
 
     private static Outcome<Guest> BindGuest(RequestBinder<GuestDto> guest) {
         RequiredField<string>                firstName = guest.SimpleProperty(g => g.FirstName).AsRequired();
         OptionalReferenceField<EmailAddress> email     = guest.SimpleProperty(g => g.Email).AsOptionalReference(EmailAddress.Parse);
 
-        return guest.Build(read => new Guest(read.Get(firstName), read.Get(email)));
+        return guest.Build(s => new Guest(s.Get(firstName), s.Get(email)));
     }
 
     private static Outcome<BookingCommand> BindCommand(BookingRequest request) {
@@ -37,9 +37,9 @@ public sealed class BookingEndToEndTests {
         RequiredField<IReadOnlyList<Tag>>   tags      = bind.ListOfSimpleProperties(r => r.Tags).AsOptional(Tag.Parse);
         RequiredField<IReadOnlyList<Guest>> guests    = bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
 
-        return bind.Build(read => new BookingCommand(
-                              read.Get(email), read.Get(reference), read.Get(currency), read.Get(maxNights),
-                              read.Get(stay), read.Get(tags), read.Get(guests)));
+        return bind.Build(s => new BookingCommand(
+                              s.Get(email), s.Get(reference), s.Get(currency), s.Get(maxNights),
+                              s.Get(stay), s.Get(tags), s.Get(guests)));
     }
 
     [Fact(DisplayName = "A fully valid request binds into the complete command and flows through Then/Finally.")]
