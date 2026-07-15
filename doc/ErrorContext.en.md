@@ -42,13 +42,9 @@ Do not put in context:
 
 If data is noisy, sensitive, unstable, oversized, or not actionable, keep it out.
 
-<<<<<<< fbe7f6cbbdb43ae65a49c4b20c3d750492c8db92
-> Two opt-in analyzers help enforce the last two rules at build time: [FCE017](analyzers/FCE017.en.md) flags a context key whose **name** looks sensitive (password, token, secret, ...), and [FCE018](analyzers/FCE018.en.md) flags a context key whose **value type** is a large payload (byte array, `Stream`, `FileInfo`). They are heuristics — enable them in `.editorconfig` and treat them as a safety net, not a guarantee.
+> Two opt-in analyzers help enforce the payload and sensitive-data rules at build time: [FCE017](analyzers/FCE017.en.md) flags a context key whose **name** looks sensitive (password, token, secret, ...), and [FCE018](analyzers/FCE018.en.md) flags a context key whose **value type** is a large payload (byte array, `Stream`, `FileInfo`). They are heuristics — enable them in `.editorconfig` and treat them as a safety net, not a guarantee.
 
-## 🎯 Why it improves observability
-=======
 ## 🎯 Code, messages, and context have different roles
->>>>>>> 49f2b7117cde6c36c3f79724f02b9ba86bb6c2db
 
 | Element | Question it answers |
 | --- | --- |

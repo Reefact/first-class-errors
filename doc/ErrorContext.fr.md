@@ -42,13 +42,9 @@ N’ajoutez pas dans le contexte :
 
 Si une donnée est bruyante, sensible, instable, volumineuse ou non actionnable, laissez-la de côté.
 
-<<<<<<< f7e55d6f631b591c5d2a98bc8561c308b39148ea
-> Deux analyseurs opt-in aident à faire respecter les deux dernières règles dès la compilation : [FCE017](analyzers/FCE017.fr.md) signale une clé de contexte dont le **nom** paraît sensible (mot de passe, token, secret, …), et [FCE018](analyzers/FCE018.fr.md) signale une clé dont le **type de valeur** est un gros payload (tableau d’octets, `Stream`, `FileInfo`). Ce sont des heuristiques : activez-les dans `.editorconfig` et voyez-les comme un filet de sécurité, pas une garantie.
+> Deux analyseurs opt-in aident à faire respecter les règles sur les payloads et les données sensibles dès la compilation : [FCE017](analyzers/FCE017.fr.md) signale une clé de contexte dont le **nom** paraît sensible (mot de passe, token, secret, …), et [FCE018](analyzers/FCE018.fr.md) signale une clé dont le **type de valeur** est un gros payload (tableau d’octets, `Stream`, `FileInfo`). Ce sont des heuristiques : activez-les dans `.editorconfig` et voyez-les comme un filet de sécurité, pas une garantie.
 
-## 🎯 Pourquoi cela améliore l’observabilité
-=======
 ## 🎯 Le code, les messages et le contexte ont des rôles différents
->>>>>>> 9d493efb976f4f7205bbee4d51de5659b0417735
 
 | Élément | Question à laquelle il répond |
 | --- | --- |

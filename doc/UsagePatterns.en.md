@@ -3,34 +3,36 @@
 🌍 **Languages:**  
 🇬🇧 English (this file) | 🇫🇷 [Français](./UsagePatterns.fr.md)
 
-FirstClassErrors supports both exceptions and errors carried as data. The important decision is not which syntax you prefer, but **who is expected to decide what happens next: this method, or its caller**.
+FirstClassErrors supports both exceptions and errors carried as data. The important decision is not which syntax you prefer, but **whether the failure belongs to the operation's normal contract**.
 
 This guide helps you choose the appropriate pattern. For the complete `Outcome` API and pipeline composition, see [Composing with Outcome](OutcomeGuide.en.md).
 
-## 🧭 Who decides: this method, or its caller?
+## 🧭 Is failure part of the operation's contract?
 
-The same kind of failure — an invalid value, a violated business rule, an unreachable dependency — honestly supports both a thrown exception and a returned `Outcome`. What decides is not the category of situation, but who is expected to act on it next:
+A given failure can legitimately be represented by a thrown exception or by a returned `Outcome`; the error's category alone does not determine which:
 
-- **This method decides, right here.** An invalid state must simply not exist, and the caller has nothing useful to add. Throw the documented error through `.ToException()`; the exception interrupts the current operation immediately.
-- **The caller decides.** The failure is a normal branch the caller should inspect, log, retry, aggregate, or recover from. Return the documented error as `Outcome<T>.Failure(...)` (or `Outcome.Failure(...)`); nothing is thrown, and the failure travels back as data.
+- **Use `Outcome`** when the failure is part of the operation's normal contract and the caller must explicitly handle or propagate it.
+- **Throw an exception** when the operation cannot fulfill its contract and no local failure branch is normally expected at this point.
+
+Throwing does not remove the caller's agency — a thrown exception can still be caught, translated, retried, or logged. It only removes the failure from the operation's return type. So once the contract question above is settled, a second, useful question remains: who holds the next useful decision, this method or its caller? That question refines the choice; it should not replace the contract question.
 
 Both paths can start from the very same documented error factory. The factory describes **what happened**; throwing or returning it describes **how this particular caller chooses to propagate it**.
 
-The sections below walk through common contexts. Where both intents are genuinely useful in a context, both are shown side by side; where one clearly dominates, only that one is.
+The sections below walk through common contexts. Where both contracts are genuinely useful in a context, both are shown side by side; where one clearly dominates, only that one is.
 
 ## 🧱 Constructing a valid value object
 
-A value object must not enter an invalid state. Whether that stops the current method immediately or becomes a decision for the caller is a propagation choice, not a property of the invariant itself — the same check in `Temperature` supports both:
+A value object must not enter an invalid state. Whether failure belongs to the constructing method's contract, or is excluded from it entirely, is a propagation choice, not a property of the invariant itself — the same check in `Temperature` supports both:
 
 ```csharp
-// Intent: the caller has nothing to decide — a temperature below absolute zero must not exist.
+// Contract: returns a valid Temperature or fails — failure has no place in this method's return type.
 public static Temperature FromKelvin(decimal kelvin) {
     return TryFromKelvin(kelvin).GetResultOrThrow();
 }
 ```
 
 ```csharp
-// Intent: the caller — a sensor reading, a parsed file, a form field — must react itself.
+// Contract: an out-of-range value is part of the normal contract — the caller must handle it explicitly.
 public static Outcome<Temperature> TryFromKelvin(decimal kelvin) {
     if (kelvin < 0) { return Outcome<Temperature>.Failure(InvalidTemperatureError.BelowAbsoluteZero(kelvin, TemperatureUnit.Kelvin)); }
 
@@ -38,14 +40,14 @@ public static Outcome<Temperature> TryFromKelvin(decimal kelvin) {
 }
 ```
 
-Both report the exact same documented error, `InvalidTemperatureError.BelowAbsoluteZero`. `FromKelvin` does not repeat the check; it escalates `TryFromKelvin`'s failure with `GetResultOrThrow()`. Write the `Outcome`-returning version first, and derive the throwing one from it, not the other way around.
+Both report the exact same documented error, `InvalidTemperatureError.BelowAbsoluteZero`. `FromKelvin` does not repeat the check; it escalates `TryFromKelvin`'s failure with `GetResultOrThrow()`. When both contracts are genuinely useful, centralize validation in the `Outcome`-returning version and derive the throwing one from it — not the reverse.
 
 ## 🧮 Domain operations
 
-Operations between valid domain objects may still violate a rule — and again, throwing or returning is a choice about who should react, not about the rule itself.
+Operations between valid domain objects may still violate a rule. The choice here is a matter of API contract, not of who is theoretically allowed to react — a caller of `Add` could still catch and handle a thrown mismatch, just as a caller of `TryAdd` could still ignore a returned one. What differs is what each method promises to its caller:
 
 ```csharp
-// Intent: the caller has nothing to decide — mixing currencies inside one Amount must not happen.
+// Contract: the amounts passed in must already share the same currency.
 public Amount Add(Amount other) {
     if (Currency != other.Currency) { throw InvalidAmountOperationError.CurrencyMismatch(this, other).ToException(); }
 
@@ -54,7 +56,7 @@ public Amount Add(Amount other) {
 ```
 
 ```csharp
-// Intent: the caller — e.g. a statement reconciliation job summing many lines — decides what a mismatch means.
+// Contract: a currency mismatch is an expected outcome the caller must handle.
 public Outcome<Amount> TryAdd(Amount other) {
     if (Currency != other.Currency) { return Outcome<Amount>.Failure(InvalidAmountOperationError.CurrencyMismatch(this, other)); }
 
@@ -66,36 +68,35 @@ Both report the same `InvalidAmountOperationError.CurrencyMismatch`. Use a preci
 
 ## 📦 Batch and file processing
 
-Each item in a batch can fail independently — but whether one failure should stop the whole batch is, once again, an intent, not a property of batch processing as a category.
+Each item in a batch can fail independently — but whether that failure is part of the loop's own contract, or invalidates the whole file, is a policy decision, not a property of batch processing as a category.
 
 ```csharp
-// Intent: the caller (the batch job) decides per item — log and keep going.
+// Contract: a per-line failure is expected and handled locally — log it and move on.
 foreach (string line in file) {
-    Outcome<Amount> result = TryParseAmount(line);
-    if (result.IsFailure) { Log(result.Error!); continue; }
-
-    Process(result.GetResultOrThrow());
+    TryParseAmount(line).Finally(
+        onSuccess: Process,
+        onFailure: Log);
 }
 ```
 
 ```csharp
-// Intent: one invalid line makes the whole file untrustworthy — stop immediately.
+// Contract: any invalid line invalidates the whole file — stop immediately.
 foreach (string line in file) {
     Amount amount = TryParseAmount(line).GetResultOrThrow();
     Process(amount);
 }
 ```
 
-Both reuse the same `GetResultOrThrow()`: the first version calls it only after `IsFailure` has been ruled out for that one item, so it never throws there; the second calls it directly, so the first invalid line throws and stops the loop. Choose per-item recovery when a bad line is only ever about that line; choose the immediate throw when file-level integrity is what is actually being protected.
+The first version never touches the exception channel: `Finally` dispatches directly to `Process` or `Log` from the `Outcome`, with no intermediate `IsFailure` check and no null-forgiving `Error!`. The second calls `GetResultOrThrow()` directly, so the first invalid line throws and stops the loop. Choose per-item recovery when a bad line is only ever about that line; choose the immediate throw when file-level integrity is what is actually being protected.
 
 ## 🌐 Incoming boundaries
 
-An incoming adapter may reject an interaction because mapping, validation, or domain construction failed. Here the situation itself — an incoming interaction — decides the port type; `PrimaryPortError` applies either way.
+An incoming adapter may reject an interaction because mapping, validation, or domain construction failed. The domain error explains the violated rule; the primary-port error explains the boundary-level outcome — see [Error Taxonomy and Composition](ErrorTaxonomy.en.md) for the nesting rules. The direction of the interaction decides the port type: `PrimaryPortError` applies whether the failure is thrown or returned.
 
 ```csharp
 DomainError invalidAmount = InvalidMoneyTransferError.AmountNotPositive(request.Amount);
 
-return PrimaryPortError.Create(
+PrimaryPortError rejection = PrimaryPortError.Create(
         Code.RequestRejected,
         diagnosticMessage: $"Request {request.Id} contains an invalid amount.",
         new PrimaryPortInnerErrors().Add(invalidAmount),
@@ -104,14 +105,24 @@ return PrimaryPortError.Create(
         shortMessage: "The request contains invalid data.");
 ```
 
-The domain error explains the violated rule. The primary-port error explains the boundary-level outcome. See [Error Taxonomy and Composition](ErrorTaxonomy.en.md) for the nesting rules. Whether this `PrimaryPortError` then crosses the boundary as a thrown exception or a returned `Outcome` still follows the same question as above — who is expected to decide next, this adapter or its caller.
+```csharp
+// Contract: failure is part of this handler's return type — an Outcome-aware pipeline maps it to a response.
+return Outcome<Receipt>.Failure(rejection);
+```
+
+```csharp
+// Contract: failure crosses this boundary as an exception — a filter or middleware catches it.
+throw rejection.ToException();
+```
+
+Either propagation carries the same `rejection`; only how it leaves this method differs.
 
 ## 🔌 Outgoing dependencies
 
-A database, broker, filesystem, or remote API failure is an outgoing interaction; the direction is what makes it a `SecondaryPortError`, not an intent.
+A database, broker, filesystem, or remote API failure is an outgoing interaction; the direction is what makes it a `SecondaryPortError`, regardless of how the failure is propagated.
 
 ```csharp
-return SecondaryPortError.Create(
+SecondaryPortError unavailable = SecondaryPortError.Create(
         Code.PaymentProviderUnavailable,
         diagnosticMessage: "The payment provider timed out after 5 seconds.",
         transience: Transience.Transient)
@@ -119,7 +130,17 @@ return SecondaryPortError.Create(
         shortMessage: "The payment service is temporarily unavailable.");
 ```
 
-`Transience` indicates whether trying the same operation later may help; it does not itself implement a retry policy. As elsewhere, throwing this error or returning it as a failed `Outcome` is a separate propagation choice, independent of what `Transience` says about the dependency.
+```csharp
+// Contract: failure is part of this call's return type — the caller inspects Transience to decide whether to retry.
+return Outcome<Receipt>.Failure(unavailable);
+```
+
+```csharp
+// Contract: failure crosses this boundary as an exception — a resilience policy (e.g. a retry filter) catches it.
+throw unavailable.ToException();
+```
+
+`Transience` indicates whether trying the same operation later may help; it does not itself implement a retry policy, and it says nothing about which propagation to use — both examples above carry the same `Transience.Transient`.
 
 ## 🔁 Multi-step application flows
 
@@ -153,15 +174,27 @@ Public messages are for callers. Diagnostic information is for logs, support, an
 
 ## 📌 Decision checklist
 
-Before choosing a pattern, ask:
+### Choosing the contract
 
-1. Is this failure expected in the normal flow?
-2. Must the current operation stop immediately?
-3. Is the failure a domain rule, an incoming boundary condition, or an outgoing dependency failure?
-4. Who is expected to make the next decision: this method or its caller?
-5. Would a fluent `Outcome` chain be clearer than explicit branching?
+- Is the failure part of this operation's expected outcomes?
+- Must the caller explicitly handle or propagate it?
+- Can the caller reasonably act on this failure, or only observe it?
+- Does it need to be composed with other operations, aggregated, or recovered locally?
+- Would it be acceptable for the caller to ignore it by accident?
+- Is this operation a `Try...`-style API, a use case, a boundary, or an internal primitive?
 
-Choose the representation from those answers, not from a blanket rule that every error must be thrown or every error must be returned.
+### Classifying the error
+
+- A domain rule?
+- An incoming interaction?
+- An outgoing dependency?
+
+### Consuming an `Outcome`
+
+- Explicit branching for a local decision?
+- A fluent chain for a linear succession of steps?
+
+Choose the contract from the first list, the error type from the second, and the consumption style from the third — not from a single blanket rule that every error must be thrown or every error must be returned.
 
 ---
 
