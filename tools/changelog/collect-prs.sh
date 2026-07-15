@@ -25,11 +25,15 @@
 set -eu
 
 component="${1:-}"
-case "$component" in
-  lib) prefix='lib-v'; train_scopes='core,analyzers,testing' ;;
-  cli) prefix='cli-v'; train_scopes='cli,gendoc' ;;
-  *)   echo "usage: collect-prs.sh <lib|cli>" >&2; exit 2 ;;
-esac
+# Tag prefix and train scopes come from tools/trains.sh (the single source of truth
+# shared with release-notes.sh), so the changelog and the release notes never diverge.
+. "$(dirname "$0")/../trains.sh"
+prefix="$(prefix_of "$component")"
+train_scopes="$(scopes_of "$component")"
+if [ -z "$prefix" ]; then
+  echo "usage: collect-prs.sh <$(train_ids | tr '\n' '|' | sed 's/|$//')>" >&2
+  exit 2
+fi
 
 # Lower bound of the range: the previous same-train tag (explicit FROM_REF, or the
 # train's latest tag). Sorted by version so lib-v1.10.0 outranks lib-v1.9.0.
