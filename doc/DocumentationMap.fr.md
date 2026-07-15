@@ -7,14 +7,14 @@ La documentation de FirstClassErrors est organisée selon **l’intention du lec
 
 Partez de la question à laquelle vous cherchez à répondre. Chaque page principale peut ensuite renvoyer vers des guides ou des références plus spécialisés.
 
-## Je découvre la librairie
+## Je découvre la bibliothèque
 
 Suivez ce parcours pour déterminer si FirstClassErrors correspond à votre application.
 
-1. [Premiers pas](GettingStarted.fr.md) — installer la librairie, créer une erreur et générer un premier catalogue d’erreurs lisible par des humains.
+1. [Premiers pas](GettingStarted.fr.md) — installer la bibliothèque, créer une erreur et générer un premier catalogue d’erreurs lisible par des humains.
 2. [Principes de conception](DesignPrinciples.fr.md) — comprendre pourquoi l’erreur est le modèle et pourquoi sa façon de voyager (exception ou valeur de retour) est un choix séparé.
-3. [Quand ne pas utiliser FirstClassErrors](WhenNotToUseFirstClassErrors.fr.md) — reconnaître les situations où la librairie apporterait plus de formalisme que de valeur.
-4. [Comparaison avec les librairies de gestion d’erreurs](ComparisonWithOtherLibraries.fr.md) — comparer FirstClassErrors, ErrorOr et FluentResults à partir d’un même scénario concret.
+3. [Quand ne pas utiliser FirstClassErrors](WhenNotToUseFirstClassErrors.fr.md) — reconnaître les situations où la bibliothèque apporterait plus de formalisme que de valeur.
+4. [Comparaison avec les bibliothèques de gestion d’erreurs](ComparisonWithOtherLibraries.fr.md) — comparer FirstClassErrors, ErrorOr et FluentResults à partir d’un même scénario concret.
 
 ## Je dois comprendre le modèle
 
@@ -93,7 +93,7 @@ Les erreurs applicatives doivent être créées via des factories nommées.
 Voir le Guide d’écriture des erreurs et les Bonnes pratiques.
 ```
 
-Les conventions locales restent ainsi courtes, tandis que la documentation de la librairie peut évoluer sans créer plusieurs explications contradictoires.
+Les conventions locales restent ainsi courtes, tandis que la documentation de la bibliothèque peut évoluer sans créer plusieurs explications contradictoires.
 
 ---
 
