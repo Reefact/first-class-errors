@@ -111,6 +111,28 @@ public sealed class ListBindingTests {
         Check.That(BindingAssertions.ArgumentPathOf(required)).IsEqualTo("Guests[1]");
     }
 
+    [Fact(DisplayName = "A null element does not hide the failing elements that follow it — each is still collected under its own indexed path.")]
+    public void NullComplexElementDoesNotHideLaterFailures() {
+        var bind = Bind.PropertiesOf(RequestWith(guests: [null, new GuestDto(null, "nope")]))
+                       .FailWith(BookingEnvelopeError.CommandInvalid);
+
+        bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
+
+        Outcome<string> outcome = bind.Build(_ => "never");
+
+        // Both the null element AND the invalid element after it must be collected — the null must not short-circuit.
+        Check.That(outcome.Error!.InnerErrors).HasSize(2);
+
+        Error nullElement = outcome.Error!.InnerErrors[0];
+        Check.That(nullElement.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_REQUIRED");
+        Check.That(BindingAssertions.ArgumentPathOf(nullElement)).IsEqualTo("Guests[0]");
+
+        Error secondEnvelope = outcome.Error!.InnerErrors[1];
+        Check.That(secondEnvelope.Code.ToString()).IsEqualTo("TEST_GUEST_INVALID");
+        Check.That(secondEnvelope.InnerErrors.Select(BindingAssertions.ArgumentPathOf))
+             .ContainsExactly("Guests[1].FirstName", "Guests[1].Email");
+    }
+
     [Fact(DisplayName = "An optional complex list that is absent binds an empty list and records nothing.")]
     public void OptionalComplexListAbsentBindsEmpty() {
         var bind = Bind.PropertiesOf(RequestWith(guests: null)).FailWith(BookingEnvelopeError.CommandInvalid);

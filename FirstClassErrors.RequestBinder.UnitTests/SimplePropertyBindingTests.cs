@@ -109,13 +109,16 @@ public sealed class SimplePropertyBindingTests {
         Check.That(present.Build(s => s.Get(some)!.Value).GetResultOrThrow()).IsEqualTo("alice@example.org");
     }
 
-    [Fact(DisplayName = "An optional reference property that is present but invalid records an error.")]
+    [Fact(DisplayName = "An optional reference property that is present but invalid records REQUEST_ARGUMENT_INVALID wrapping the converter's error.")]
     public void OptionalReferencePresentButInvalidRecords() {
         var bind = Bind.PropertiesOf(Request(email: "nope")).FailWith(BookingEnvelopeError.CommandInvalid);
 
         bind.SimpleProperty(r => r.GuestEmail).AsOptionalReference(EmailAddress.Parse);
 
-        Check.That(bind.Build(_ => "never").IsFailure).IsTrue();
+        Error invalid = bind.Build(_ => "never").Error!.InnerErrors.Single();
+        Check.That(invalid.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
+        Check.That(BindingAssertions.ArgumentPathOf(invalid)).IsEqualTo("GuestEmail");
+        Check.That(invalid.InnerErrors.Single().Code.ToString()).IsEqualTo("TEST_EMAIL_INVALID");
     }
 
     [Fact(DisplayName = "An optional value property yields a real null when absent — never default(T): an absent count is null, not 0.")]
@@ -133,13 +136,16 @@ public sealed class SimplePropertyBindingTests {
         Check.That(present.Build(s => s.Get(some) ?? 0).GetResultOrThrow()).IsEqualTo(5);
     }
 
-    [Fact(DisplayName = "An optional value property that is present but invalid records an error.")]
+    [Fact(DisplayName = "An optional value property that is present but invalid records REQUEST_ARGUMENT_INVALID wrapping the converter's error.")]
     public void OptionalValuePresentButInvalidRecords() {
         var bind = Bind.PropertiesOf(Request(nights: "-2")).FailWith(BookingEnvelopeError.CommandInvalid);
 
         bind.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
 
-        Check.That(bind.Build(_ => "never").IsFailure).IsTrue();
+        Error invalid = bind.Build(_ => "never").Error!.InnerErrors.Single();
+        Check.That(invalid.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
+        Check.That(BindingAssertions.ArgumentPathOf(invalid)).IsEqualTo("MaxNights");
+        Check.That(invalid.InnerErrors.Single().Code.ToString()).IsEqualTo("TEST_NOT_A_POSITIVE_NUMBER");
     }
 
 }
