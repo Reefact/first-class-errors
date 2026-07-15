@@ -32,7 +32,10 @@ if [ ! -f "$file" ]; then
     echo "The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)"
     echo "and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html)."
     if [ -n "$train" ]; then
-      echo "Releases are cut from the \`${train}\` train (see [CONTRIBUTING.md](CONTRIBUTING.md))."
+      # Root-relative link: the changelog may live in a subdirectory (a future
+      # train's file is created wherever trains.sh points), and GitHub resolves
+      # a leading-slash Markdown link from the repository root either way.
+      echo "Releases are cut from the \`${train}\` train (see [CONTRIBUTING.md](/CONTRIBUTING.md))."
     fi
     echo
   } > "$file"
