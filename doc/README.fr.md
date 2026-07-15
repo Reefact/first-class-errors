@@ -163,6 +163,8 @@ Pour les vulnérabilités de sécurité, suivez le processus privé décrit dans
 - [Cas d’usage](UsagePatterns.fr.md)
 - [Bonnes pratiques](BestPractices.fr.md)
 - [Guide des tests](Testing.fr.md)
+  - [Tests d’erreur déterministes](DeterministicTesting.fr.md)
+  - [Valeurs de test arbitraires](ArbitraryTestValues.fr.md)
 
 ### Générer et exploiter le catalogue
 

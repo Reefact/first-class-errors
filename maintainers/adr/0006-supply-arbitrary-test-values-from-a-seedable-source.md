@@ -147,6 +147,6 @@ ship test-only surface in the main package.
 
 ## References
 
-* `doc/DeterministicTesting.en.md` — the guide where the new surface is documented.
+* `doc/ArbitraryTestValues.en.md` — the guide where the new surface is documented.
 * ADR-0005 — prior naming decision in the same spirit (a name should announce
   what a call does); context only, not a precedent for this choice.

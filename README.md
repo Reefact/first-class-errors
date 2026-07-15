@@ -163,6 +163,8 @@ For security vulnerabilities, follow the private process in [SECURITY.md](SECURI
 - [Usage Patterns](doc/UsagePatterns.en.md)
 - [Best Practices](doc/BestPractices.en.md)
 - [Testing Guide](doc/Testing.en.md)
+  - [Deterministic Error Tests](doc/DeterministicTesting.en.md)
+  - [Arbitrary Test Values](doc/ArbitraryTestValues.en.md)
 
 ### Generate and operate the catalog
 
