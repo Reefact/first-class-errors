@@ -39,8 +39,7 @@ Check.That(receipt.AmountCharged).IsEqualTo(order.Total);
 
 ```csharp
 [Fact]
-public void Payer_une_commande_valide_produit_un_recu()
-{
+public void Payer_une_commande_valide_produit_un_recu() {
     Receipt receipt = checkout.Pay(order).ShouldSucceed();
 
     Check.That(receipt.AmountCharged).IsEqualTo(order.Total);
@@ -59,8 +58,7 @@ inventory.Reserve(sku).ShouldSucceed();
 
 ```csharp
 [Fact]
-public void Un_paiement_refuse_remonte_une_erreur_diagnosable()
-{
+public void Un_paiement_refuse_remonte_une_erreur_diagnosable() {
     checkout.Pay(declinedCard)
             .ShouldFail()
             .WithCode("PAYMENT_DECLINED")
@@ -131,8 +129,7 @@ Privilégiez les assertions sur le comportement stable de l’erreur :
 
 ```csharp
 [Fact]
-public void Chercher_une_commande_absente_retourne_l_erreur_attendue()
-{
+public void Chercher_une_commande_absente_retourne_l_erreur_attendue() {
     Outcome<Order> outcome = orders.Find(missingOrderId);
 
     Error error = outcome.ShouldFail()

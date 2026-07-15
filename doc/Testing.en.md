@@ -39,8 +39,7 @@ Check.That(receipt.AmountCharged).IsEqualTo(order.Total);
 
 ```csharp
 [Fact]
-public void Paying_a_valid_order_produces_a_receipt()
-{
+public void Paying_a_valid_order_produces_a_receipt() {
     Receipt receipt = checkout.Pay(order).ShouldSucceed();
 
     Check.That(receipt.AmountCharged).IsEqualTo(order.Total);
@@ -59,8 +58,7 @@ inventory.Reserve(sku).ShouldSucceed();
 
 ```csharp
 [Fact]
-public void Declining_a_payment_reports_a_diagnosable_error()
-{
+public void Declining_a_payment_reports_a_diagnosable_error() {
     checkout.Pay(declinedCard)
             .ShouldFail()
             .WithCode("PAYMENT_DECLINED")
@@ -131,8 +129,7 @@ Avoid coupling every test to incidental prose or timestamps unless those values 
 
 ```csharp
 [Fact]
-public void Looking_up_a_missing_order_returns_the_expected_error()
-{
+public void Looking_up_a_missing_order_returns_the_expected_error() {
     Outcome<Order> outcome = orders.Find(missingOrderId);
 
     Error error = outcome.ShouldFail()

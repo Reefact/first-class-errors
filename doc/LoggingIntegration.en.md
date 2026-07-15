@@ -75,8 +75,7 @@ The exact JSON schema belongs to the application or logging adapter. The importa
 A `DiagnosableException` — the exception type that `error.ToException()` produces — exposes its semantic model through `.Error`:
 
 ```csharp
-catch (DiagnosableException exception)
-{
+catch (DiagnosableException exception) {
     Error error = exception.Error;
 
     logger.LogError(
@@ -123,10 +122,8 @@ exception.Error.InnerErrors
 A logging adapter must traverse that collection explicitly:
 
 ```csharp
-static object ToLogModel(Error error)
-{
-    return new
-    {
+static object ToLogModel(Error error) {
+    return new {
         Code = error.Code.ToString(),
         error.InstanceId,
         error.OccurredAt,
@@ -197,8 +194,7 @@ An `Outcome` failure may never become an exception. Log its `Error` directly whe
 ```csharp
 Outcome<Receipt> outcome = checkout.Pay(order);
 
-if (outcome.IsFailure)
-{
+if (outcome.IsFailure) {
     logger.LogWarning(
         "Checkout failed with {ErrorCode} ({ErrorInstanceId})",
         outcome.Error!.Code,
