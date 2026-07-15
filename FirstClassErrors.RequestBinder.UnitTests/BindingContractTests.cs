@@ -48,9 +48,11 @@ public sealed class BindingContractTests {
                                        InteractionDirection.Outgoing, Transience.Unknown)
                                .WithPublicMessage("Foreign.");
 
-        Check.ThatCode(() => bind.SimpleProperty(r => r.GuestEmail)
-                                 .AsRequired(_ => Outcome<EmailAddress>.Failure(foreignFamily)))
-             .Throws<InvalidOperationException>();
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+            () => { bind.SimpleProperty(r => r.GuestEmail).AsRequired(_ => Outcome<EmailAddress>.Failure(foreignFamily)); });
+        // The bug-channel exception must locate the bug: which argument, and which unsupported family.
+        Check.That(exception.Message).Contains("GuestEmail");
+        Check.That(exception.Message).Contains("InfrastructureError");
     }
 
     #endregion
@@ -355,6 +357,16 @@ public sealed class BindingContractTests {
 
         // Both causes are documented, and a client omitting an argument is an EXTERNAL fault while the name-provider
         // mismatch is INTERNAL. A dropped diagnosis or a flipped origin would mislead whoever triages the error.
+        Check.That(documentation.Diagnostics.Select(d => d.Origin))
+             .ContainsExactly(ErrorOrigin.External, ErrorOrigin.Internal);
+    }
+
+    [Fact(DisplayName = "The REQUEST_ARGUMENT_INVALID documentation lists both diagnoses, classified external then internal.")]
+    public void InvalidArgumentDocumentationClassifiesItsDiagnoses() {
+        MethodInfo documentationMethod = typeof(RequestBindingError)
+            .GetMethod("ArgumentInvalidDocumentation", BindingFlags.Static | BindingFlags.NonPublic)!;
+        var documentation = (ErrorDocumentation)documentationMethod.Invoke(null, null)!;
+
         Check.That(documentation.Diagnostics.Select(d => d.Origin))
              .ContainsExactly(ErrorOrigin.External, ErrorOrigin.Internal);
     }
