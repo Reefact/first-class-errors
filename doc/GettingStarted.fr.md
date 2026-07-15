@@ -1,194 +1,184 @@
-# Premier pas
+# Premiers pas
 
-🌍 **Langues:**  
+🌍 **Langues :**  
 🇬🇧 [English](./GettingStarted.en.md) | 🇫🇷 Français (ce fichier)
 
-FirstClassErrors vous aide à considérer les erreurs comme une **connaissance structurée et diagnostiquable**, plutôt que comme de simples messages d’exception.
+Ce guide vous mène d’un projet vide à votre premier catalogue d’erreurs généré.
 
-En quelques minutes, vous allez voir comment :
+Vous allez :
 
-* définir une erreur (avec une factory)  
-* utiliser des factories d’erreur (indispensables pour la documentation vivante)  
-* documenter l’erreur de manière structurée  
-* attacher des diagnostics  
-* utiliser éventuellement l’erreur sans la lever  
+1. installer la bibliothèque et le CLI ;
+2. activer la génération pour un projet ;
+3. définir une erreur documentée ;
+4. l’utiliser dans le code ;
+5. générer le catalogue.
 
-## 1️⃣ Définir une erreur (avec une factory)
+## 1. Installer le package et le CLI
 
-Pour bénéficier de la **documentation vivante**, les erreurs ne sont pas créées directement avec `new`. Elles sont créées via des **méthodes factory statiques** dans la classe d’erreur.
+Dans le projet applicatif :
 
-Ce pattern est essentiel car :
+```bash
+dotnet add package FirstClassErrors
+```
 
-* chaque méthode factory représente une **situation d’erreur spécifique**  
-* c’est le point d’ancrage du DSL de documentation  
-* le générateur de documentation relie les factories à la documentation  
+Installez une fois le CLI de documentation sur votre machine :
 
-Remarque :
+```bash
+dotnet tool install --global FirstClassErrors.Cli
+```
 
-*L’utilisation de méthodes factory pour créer des erreurs est un pattern .NET bien établi pour centraliser et standardiser la création d’erreurs. FirstClassErrors s’appuie sur cette idée et fait des factories le point d’ancrage de la documentation d’erreurs structurée et vivante. Au-delà de la documentation, les factories améliorent fortement la lisibilité du code : elles sortent la construction de l’erreur (codes, messages, formatage, formulation) du “happy path”, ce qui permet à la logique métier de rester centrée sur les règles métier plutôt que sur des détails techniques. Un appel comme `throw InvalidAmountOperationError.CurrencyMismatch(a1, a2).ToException();` exprime l’intention bien plus clairement qu’une construction d’erreur inline. Cette approche s’aligne avec les principes du clean code en séparant les responsabilités, en réduisant la duplication et en donnant à chaque situation d’erreur une représentation explicite et nommée dans le code — tout en fournissant un point unique et cohérent pour attacher diagnostics et documentation.*  
+## 2. Activer la génération pour le projet
 
-Exemple :
+Ajoutez cette propriété directement dans le fichier du projet qui contient vos erreurs :
+
+```xml
+<PropertyGroup>
+  <GenerateErrorDocumentation>true</GenerateErrorDocumentation>
+</PropertyGroup>
+```
+
+Le marqueur doit être présent dans le `.csproj` lui-même. Les projets qui ne le déclarent pas sont ignorés lorsque le CLI analyse une solution.
+
+## 3. Définir une situation d’erreur
+
+Créez une classe factory statique. Chaque méthode factory représente une situation précise reconnue par le système. Les exemples utilisent un petit type valeur `Amount` doté d’une `Currency` ; remplacez-le par n’importe quel type de votre propre domaine.
 
 ```csharp
+using FirstClassErrors;
+
 [ProvidesErrorsFor(nameof(Amount))]
 public static class InvalidAmountOperationError {
 
     [DocumentedBy(nameof(CurrencyMismatchDocumentation))]
-    internal static DomainError CurrencyMismatch(Amount amount1, Amount amount2) {
+    internal static DomainError CurrencyMismatch(Amount left, Amount right) {
         return DomainError.Create(
                 Code.CurrencyMismatch,
-                diagnosticMessage: $"Impossible d’effectuer l’opération monétaire car les montants impliqués sont exprimés dans des devises différentes : {amount1} et {amount2}.")
+                diagnosticMessage: $"Impossible d’additionner {left} et {right} car leurs devises diffèrent.")
             .WithPublicMessage(
-                shortMessage: "Devise différente",
-                detailedMessage: "Les montants impliqués dans l’opération sont exprimés dans des devises différentes.");
+                shortMessage: "Les montants utilisent des devises différentes.",
+                detailedMessage: "Les deux montants doivent utiliser la même devise.");
     }
 
     private static class Code {
-        public static readonly ErrorCode CurrencyMismatch = ErrorCode.Create("AMOUNT_CURRENCY_MISMATCH");
+        public static readonly ErrorCode CurrencyMismatch =
+            ErrorCode.Create("AMOUNT_CURRENCY_MISMATCH");
     }
-
 }
-````
+```
 
-Ici :
+Quatre éléments sont essentiels :
 
-* Le **type d’erreur** représente une catégorie d’erreurs métier.
-* La **méthode factory** représente un cas d’erreur précis.
-* Le **code d’erreur** est stable et lisible par machine.
-* C’est la méthode factory qui sera documentée.
+- `[ProvidesErrorsFor]` relie la classe factory au concept dont elle déclare les erreurs ; le générateur s’en sert pour les découvrir et les regrouper ;
+- le nom de la factory exprime la situation dans le code ;
+- le code d’erreur constitue son identité stable et lisible par machine ;
+- le message de diagnostic est interne, tandis que les messages publics sont sûrs pour les appelants.
 
-L’erreur est construite en deux étapes : `DomainError.Create(...)` capture l’information interne obligatoire (le `code` d’erreur et le `diagnosticMessage` interne), et `.WithPublicMessage(shortMessage, detailedMessage)` fournit les messages publics et produit l’erreur finale. Le `shortMessage` obligatoire est un résumé public sûr, le `detailedMessage` optionnel est un détail public maîtrisé, et le `diagnosticMessage` est destiné aux logs, au support et aux développeurs — jamais exposé aux clients par défaut. Il n’y a pas de `.Build()`, et les constructeurs publics sont internes, de sorte qu’une erreur ne peut jamais rester sans son message public.
+## 4. Ajouter la documentation structurée
 
-Vous ne faites jamais `new` sur l’erreur ni sur l’exception vous-même : l’erreur est créée via le builder étagé dans la factory, et pour lever, vous appelez `error.ToException()` (voir section 4).
-
-## 2️⃣ Lier la factory à une documentation structurée
-
-Chaque méthode factory est liée à sa documentation via `[DocumentedBy]`.
+L’attribut `[DocumentedBy]` relie la factory à une méthode de documentation située dans la même classe :
 
 ```csharp
 private static ErrorDocumentation CurrencyMismatchDocumentation() {
-    return DescribeError.WithTitle("Incohérence de devise des montants")
-                        .WithDescription("Cette erreur survient lorsqu’on tente d’utiliser plusieurs montants dans une opération alors qu’ils sont exprimés dans des devises différentes.")
-                        .WithRule("Toutes les opérations monétaires doivent impliquer des montants exprimés dans la même devise.")
+    return DescribeError.WithTitle("Incohérence de devise")
+                        .WithDescription(
+                            "Cette erreur survient lorsqu’une opération combine des montants exprimés dans des devises différentes.")
+                        .WithRule(
+                            "Une opération monétaire doit utiliser une devise commune.")
                         .WithDiagnostic(
-                            "Des montants ont été utilisés dans une opération monétaire sans avoir été convertis dans une devise commune.",
+                            "Les montants ont atteint l’opération sans avoir été convertis dans une devise commune.",
                             ErrorOrigin.Internal,
-                            "Vérifiez si tous les montants impliqués ont été convertis dans une devise commune avant d’être utilisés ensemble."
-                        )
+                            "Vérifiez à quel endroit les montants auraient dû être convertis avant cette opération.")
                         .AndDiagnostic(
-                            "Des montants censés être exprimés dans la même devise ont été fournis avec des devises différentes.",
-                            ErrorOrigin.InternalOrExternal,
-                            "Vérifiez les devises associées à chaque montant et confirmez si une devise commune était attendue pour cette opération."
-                        )
-                        .WithExamples(() => CurrencyMismatch(new Amount(127.33m, Currency.EUR), new Amount(57689.00m, Currency.USD)));
+                            "L’appelant a fourni des montants dans des devises qui ne peuvent pas être combinées directement.",
+                            ErrorOrigin.External,
+                            "Vérifiez les devises fournies par l’appelant.")
+                        .WithExamples(() => CurrencyMismatch(
+                            new Amount(10m, Currency.EUR),
+                            new Amount(12m, Currency.USD)));
 }
 ```
 
-Chaque diagnostic déclare une **origine** via `ErrorOrigin`, dont les valeurs sont `Internal`, `External` et `InternalOrExternal` — indiquant si la cause se situe à l’intérieur du système, à l’extérieur (entrée) ou peut être l’une ou l’autre.
+Il s’agit de connaissance structurée, pas d’un commentaire : le générateur peut extraire le titre, l’explication, la règle, les hypothèses de diagnostic et l’exemple réellement produit par la factory.
 
-Cette documentation :
+Chaque diagnostic est une hypothèse : une cause plausible, une origine (le soupçon porte-t-il sur l’intérieur du système ou sur un appelant externe ?) et une piste d’investigation.
 
-* explique la signification de l’erreur
-* énonce la règle violée
-* fournit des hypothèses de diagnostic
-* donne des exemples réalistes de messages
+## 5. Utiliser l’erreur
 
-Il s’agit de connaissance structurée, pas d’un commentaire.
-
-## 3️⃣ Ajouter un contexte d’erreur structuré (`ErrorContext`)
-
-Quand une information est utile pour diagnostiquer **une occurrence précise**, ajoutez-la dans le contexte.
-
-```csharp
-return PrimaryPortError.Create(
-        Code.DateOutOfStatementPeriod,
-        diagnosticMessage: $"Transaction datée du {transactionDate} hors période [{periodStart};{periodEnd}].",
-        transience: Transience.NonTransient,
-        configureContext: ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate))
-    .WithPublicMessage(
-        shortMessage: "Date de transaction hors période.",
-        detailedMessage: "La date de transaction se situe hors de la période du relevé autorisée.");
-```
-
-Le contexte est porté par l’`Error` ; lorsqu’une exception est ensuite produite avec `error.ToException()`, on y accède via `exception.Error.Context`.
-
-Bonnes pratiques :
-
-* utilisez des clés nommées et stables (`ErrorContextKey<T>`)
-* ajoutez le contexte au niveau des factories
-* évitez les données sensibles ou trop volumineuses
-
-## 4️⃣ Utiliser l’exception dans le code métier
+Lorsque l’échec est exceptionnel, transformez l’erreur en son exception associée :
 
 ```csharp
 public Amount Add(Amount other) {
-    if (Currency != other.Currency) { throw InvalidAmountOperationError.CurrencyMismatch(this, other).ToException(); }
+    if (Currency != other.Currency) {
+        throw InvalidAmountOperationError.CurrencyMismatch(this, other).ToException();
+    }
 
     return new Amount(Value + other.Value, Currency);
 }
 ```
 
-La logique métier reste propre et expressive.
+Le code métier nomme la situation sans répéter les codes ni les messages.
 
-## 5️⃣ Ou l’utiliser sans lever d’exception (`Outcome<T>`)
-
-Pour les scénarios de validation ou de traitement par lots :
+Lorsque l’échec fait normalement partie du flux, transportez la même `Error` sans la lever :
 
 ```csharp
-public static Outcome<Amount> TryAdd(Amount a1, Amount a2) {
-    if (a1.Currency != a2.Currency) { 
-        return Outcome<Amount>.Failure(InvalidAmountOperationError.CurrencyMismatch(a1, a2)); 
+public static Outcome<Amount> TryAdd(Amount left, Amount right) {
+    if (left.Currency != right.Currency) {
+        return Outcome<Amount>.Failure(
+            InvalidAmountOperationError.CurrencyMismatch(left, right));
     }
 
-    return Outcome<Amount>.Success(new Amount(a1.Value + a2.Value, a1.Currency));
+    return Outcome<Amount>.Success(
+        new Amount(left.Value + right.Value, left.Currency));
 }
 ```
 
-Remarque : `Failure(...)` prend une **`Error`** — la factory en renvoie une directement, donc aucune exception n’est impliquée.
+Ces deux usages ne définissent pas deux erreurs différentes. Ils transportent la même situation d’erreur de deux manières différentes.
 
-Vous pouvez inspecter :
+## 6. Générer le catalogue
 
-```csharp
-if (result.IsFailure) {
-    Log(result.Error);
-}
+Construisez la solution, puis générez un catalogue Markdown :
+
+```bash
+dotnet build MyApp.sln -c Release
+
+fce generate \
+  --solution MyApp.sln \
+  --configuration Release \
+  --no-build \
+  --format markdown \
+  --service-name my-api \
+  --output artifacts/errors.md
 ```
 
-Ou escalader :
+`--configuration Release` correspond au build ci-dessus : avec `--no-build`, le générateur lit les assemblies produits par cette configuration précise (à défaut, il utilise `Debug`).
 
-```csharp
-var amount = result.GetResultOrThrow();
+Le document généré contient une entrée pour `AMOUNT_CURRENCY_MISMATCH`, avec sa description, sa règle, ses hypothèses de diagnostic et les messages produits par l’exemple.
+
+Un résultat abrégé ressemble à ceci :
+
+```markdown
+## Incohérence de devise
+
+**Code :** `AMOUNT_CURRENCY_MISMATCH`
+
+Cette erreur survient lorsqu’une opération combine des montants exprimés dans des devises différentes.
+
+**Règle :** Une opération monétaire doit utiliser une devise commune.
 ```
 
-## 6️⃣ Générer la documentation
+Commitez ou publiez ce catalogue selon votre workflow de livraison. Pour automatiser sa génération en CI, consultez [Intégration CI/CD et exploitation](OperationalIntegration.fr.md).
 
-Comme les factories sont liées à une documentation structurée :
+## Étapes suivantes facultatives
 
-* les erreurs peuvent être extraites des assemblies
-* la documentation peut être générée automatiquement
-* le support et les développeurs partagent la même source de vérité
-
-## ✅ Ce que vous y gagnez
-
-Avec FirstClassErrors :
-
-* les erreurs sont cohérentes
-* la documentation est proche du code
-* les diagnostics guident le dépannage
-* la connaissance ne dérive pas
-
-Vous passez de :
-
-> « Une exception s’est produite »
-
-à
-
-> « Cette erreur précise et documentée s’est produite, voici ce qu’elle signifie et où chercher. »
+- Ajoutez des faits propres à chaque occurrence avec le [contexte d’erreur](ErrorContext.fr.md).
+- Découvrez les catégories disponibles dans [Taxonomie et composition des erreurs](ErrorTaxonomy.fr.md).
+- Apprenez quand lever ou retourner un `Outcome<T>` dans les [cas d’usage](UsagePatterns.fr.md).
+- Protégez les codes et clés de contexte stables avec le [versionnage du catalogue](CatalogVersioning.fr.md).
 
 ---
 
 <div align="center">
-<a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="DesignPrinciples.fr.md">Principes de conception →</a>
+<a href="README.fr.md#-documentation">↑ Table des matières</a> · <a href="DesignPrinciples.fr.md">Principes de conception →</a>
 </div>
 
 ---
