@@ -9,9 +9,11 @@ C’est possible. FirstClassErrors utilise toujours les exceptions standard .NET
 
 La bibliothèque enrichit l’`Error` portée par l’exception avec un code stable, du contexte structuré, des diagnostics et une documentation liée. Voir [Concepts fondamentaux](CoreConcepts.fr.md).
 
-## Pourquoi ne pas utiliser `Result<T, string>` ?
+## Pourquoi ne pas utiliser un `Result<T, Error>` générique ?
 
-Une chaîne perd la structure. `Outcome<T>`, le type résultat de la bibliothèque, transporte le même modèle riche d’`Error` que le chemin par exception : code, messages, contexte, diagnostics et lien vers sa définition documentée.
+Vous pourriez. Transporter l’`Error` de la bibliothèque dans un type résultat générique — par exemple le `Result<T, E>` de [CSharpFunctionalExtensions](https://github.com/vkhorikov/CSharpFunctionalExtensions) — conserve la structure qu’un simple `Result<T, string>` perdrait.
+
+`Outcome` est cette idée, spécialisée pour ce modèle d’erreur. Son côté échec est toujours une `Error` — et non un second paramètre de type à propager dans chaque signature — et sa petite API (`Then`, `To`, `Recover`, `Finally`) est nommée par intention plutôt qu’avec la mécanique de la programmation fonctionnelle (`Map`, `Bind`, `Match`). L’objectif : du code de domaine et des use cases qui se lisent comme un flux métier, pas comme de la tuyauterie de résultat générique.
 
 Voir [Cas d’usage](UsagePatterns.fr.md) et [Comparaison avec les librairies de gestion d’erreurs](ComparisonWithOtherLibraries.fr.md).
 
@@ -29,9 +31,9 @@ Voir [Premiers pas](GettingStarted.fr.md).
 
 ## Quelle différence entre la documentation d’erreur et les messages runtime ?
 
-La documentation décrit la catégorie d’erreur stable : titre, sens, règle, hypothèses de diagnostic et exemples représentatifs.
+La documentation est la partie d’une erreur qui ne dépend d’aucune occurrence particulière : elle est identique pour chaque instance et ne change jamais à l’exécution. Elle sert à *comprendre* l’erreur — titre, sens, règle, hypothèses de diagnostic et exemples représentatifs.
 
-Les messages runtime décrivent ou exposent une occurrence concrète :
+Les messages runtime sont portés par l’instance d’erreur elle-même et servent à *investiguer* cette occurrence :
 
 - `ShortMessage` est le résumé public sûr ;
 - `DetailedMessage` est un détail public optionnel et maîtrisé ;
@@ -73,11 +75,17 @@ Voir [Cas d’usage](UsagePatterns.fr.md).
 
 Aucune exception n’est créée ou levée tant que l’erreur est transportée comme donnée. Si l’échec est ensuite escaladé avec `GetResultOrThrow()` ou `error.ToException()`, l’exception et sa stack trace commencent à ce point d’escalade.
 
-## Puis-je documenter toutes les exceptions ?
+## Dois-je documenter toutes les erreurs ?
 
-Non. Documentez les erreurs applicatives porteuses de sens : situations reconnues, règles, contraintes ou échecs de frontière qui bénéficient d’une identité stable et d’une explication partagée.
+Oui. Toute erreur que vous modélisez est destinée à être documentée : une erreur non documentée n’apparaît jamais dans le catalogue généré, et l’analyseur [FCE009](analyzers/FCE009.fr.md) signale toute factory d’erreur laissée sans documentation.
 
-Les exceptions du framework, crashes accidentels et fautes d’implémentation bas niveau restent généralement des exceptions techniques. Voir [Quand ne pas utiliser FirstClassErrors](WhenNotToUseFirstClassErrors.fr.md).
+Voir [Écrire la documentation d’une erreur](WritingErrorsGuide.fr.md).
+
+## Toute exception doit-elle devenir une erreur de première classe ?
+
+Non. Modélisez les erreurs applicatives porteuses de sens : situations reconnues, règles, contraintes ou échecs de frontière qui bénéficient d’une identité stable et d’une explication partagée. Les exceptions du framework, crashes accidentels et fautes d’implémentation bas niveau restent généralement de simples exceptions techniques.
+
+Voir [Quand ne pas utiliser FirstClassErrors](WhenNotToUseFirstClassErrors.fr.md).
 
 ## FirstClassErrors est-il lié au Domain-Driven Design ?
 
