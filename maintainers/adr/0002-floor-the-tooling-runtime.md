@@ -77,38 +77,27 @@ reaching EOL requires nothing, because we do not target it. Only the floor LTS
 itself reaching EOL calls for a bump, one line per project, on a roughly
 biennial cadence (see Follow-up Actions).
 
-### Two guards: the TFM at build time, a CI job at run time
+The decision is safe to hold because the floor is enforceable on both axes it
+can regress on, and each axis has a guard:
 
-The floor is guarded on both axes it can regress on:
+* **API surface drifts at build time.** Because the projects *target* `net8.0`,
+  every CI build (on the .NET 10 SDK) compiles them against the net8 reference
+  pack, so a `net10`-only API cannot slip in silently — it breaks the ordinary
+  build, with no dedicated job needed. This is why the tooling floor is cheaper
+  to guard than the analyzer's Roslyn floor, which is invisible on a modern CI
+  and needs `tools/floor-check` (ADR-0001).
+* **Runtime execution regresses at run time.** The `floor` job in `ci.yml`
+  runs the shipped net8 tooling on the .NET 8 runtime itself, proving that both
+  the CLI and the worker actually start and document a real net8 target there —
+  the guarantee the build cannot give. The one surface it cannot cover,
+  roll-forward onto a **not-yet-released** major, is watched ahead of time by
+  the weekly `canary.yml`, which runs the same tooling on the next .NET preview
+  and warns the maintainer before that major ships.
 
-* **API surface, at build time — the TFM itself.** Because the projects
-  *target* `net8.0`, every CI build (on the .NET 10 SDK) compiles them against
-  the **net8 reference pack**, so a `net10`-only API cannot slip in silently —
-  it breaks the ordinary build. No dedicated job is needed for this, unlike the
-  analyzer's Roslyn floor, which is invisible on a modern CI and needs
-  `tools/floor-check` (ADR-0001).
-* **Runtime execution, at run time — the `floor` job in `ci.yml`.**
-  *Documentation tooling on the .NET 8 floor* builds the net8 tooling and a
-  net8 build of the `Usage` sample, then runs `fce generate` against it with
-  `DOTNET_ROLL_FORWARD=LatestPatch` in the environment. That override wins over
-  each runtimeconfig's baked-in policy (`Major` / `LatestMajor`) and stays
-  within the requested major, so both the CLI and the worker bind the highest
-  **.NET 8** patch present and can never roll onto the newer runtime the
-  runner also carries. A green step therefore means the shipped net8 tooling
-  genuinely executed on the .NET 8 runtime; were .NET 8 absent, the host would
-  fail to start. This is the runtime counterpart of the analyzer floor-check,
-  and it is why `Usage` is multi-targeted `net8.0;net10.0` — the net8 build
-  gives the job a real target to document.
-
-The one surface neither guard covers is roll-forward onto a
-**not-yet-released** major. That is the **`canary.yml`** workflow: on a weekly
-schedule (and on demand) it installs the next .NET **preview**, then runs the
-net8 tooling on it with `DOTNET_ROLL_FORWARD=LatestMajor` and
-`DOTNET_ROLL_FORWARD_TO_PRERELEASE=1` so both processes bind that prerelease
-major. It is deliberately **not** a pull-request gate — a preview is often
-unpublished or unstable, and that is not this repo's bug — so a missing
-preview ends the run neutral, while a genuine roll-forward regression turns
-the scheduled run red and notifies the maintainer before that major ships.
+Both jobs' mechanics — the roll-forward overrides that pin execution to the
+intended runtime, and why `Usage` is multi-targeted to give them a target — are
+documented in the [`ci` workflow reference](../workflows/ci.en.md); the
+per-project `RollForward` settings live in the three tooling csprojs.
 
 ## Alternatives Considered
 
@@ -153,8 +142,8 @@ the same reach.
   net10 target.
 * Guarded in CI across the whole range: `build-test` runs the suite on the
   latest released .NET (10); the `floor` job runs the shipped tooling on the
-  .NET 8 runtime; and `canary.yml` runs it on the next .NET preview (see the
-  two-guards section).
+  .NET 8 runtime; and `canary.yml` runs it on the next .NET preview (see
+  Rationale, and the [`ci` workflow reference](../workflows/ci.en.md)).
 * No code churn from .NET version movement; at most a one-line TFM bump about
   once every two years.
 

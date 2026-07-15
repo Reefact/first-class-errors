@@ -54,136 +54,39 @@ ships with the oldest host we claim to support (.NET 8.0.100 SDK / VS 2022
 17.8). A lower floor buys nothing; a higher one silently drops supported
 hosts.
 
-Because the load contract regresses without any red signal on modern
-toolchains, a single guard is not enough: the contract needs **defense in
-depth** — guards that fail **loudly**, on the **oldest** host we claim to
-support, against the **exact artifact we ship**. The floor is declared **once**
-so the pin, the test and the CI job can never disagree:
+The contract needs more than a version pin because it regresses without any
+red signal on modern toolchains. A pin alone still *looks* like routine
+maintenance, and a too-new reference can slip in three distinct ways that no
+single check catches: the *reference version* can drift, the shipped analyzer
+can fail to *load* on an old host, and it can fail to be *packaged* where
+consumers look. The decision therefore layers **defense in depth** — one
+source of truth and four guards, each closing a gap the others cannot:
 
-```xml
-<RoslynFloorVersion>4.8.0</RoslynFloorVersion>
-```
+* the floor is declared **once**, as `RoslynFloorVersion` in
+  `Directory.Build.props`, so the pin, the test and the CI job track a single
+  value and can never disagree;
+* **the pin** compiles the analyzer against exactly that Roslyn, setting the
+  floor at its source;
+* **the unit test** (`RoslynFloorTests`) reads the floor back from assembly
+  metadata and fails, fast and in-process, if any referenced
+  `Microsoft.CodeAnalysis*` assembly exceeds it — catching *reference* drift;
+* **the floor-check CI job** packs the library and rebuilds the sample against
+  the packed analyzer under the floor SDK, proving the **shipped artifact**
+  both **loads** and is **packaged** correctly on the **oldest supported
+  compiler** — the two gaps the unit test cannot reach;
+* **the Dependabot ignore** keeps an automated PR from ever proposing the bump,
+  so raising the floor stays a conscious act rather than a rubber-stamped
+  update.
 
-### Guard 1 — the pin (`FirstClassErrors.Analyzers.csproj`)
-
-`Microsoft.CodeAnalysis.CSharp` is pinned to `$(RoslynFloorVersion)` with
-`PrivateAssets="all"`, and the floor is surfaced through assembly metadata so
-the test can read it back:
-
-```xml
-<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(RoslynFloorVersion)" PrivateAssets="all" />
-<AssemblyMetadata Include="RoslynFloorVersion" Value="$(RoslynFloorVersion)" />
-```
-
-`Microsoft.CodeAnalysis.Analyzers` is deliberately **not** part of the floor:
-as stated in the context, it does not affect load.
-
-### Guard 2 — the unit test (`RoslynFloorTests`, fails loudly)
-
-`Analyzer_stays_on_the_supported_Roslyn_floor` reads the floor from the
-analyzer assembly's `RoslynFloorVersion` metadata and asserts that **no**
-referenced `Microsoft.CodeAnalysis*` assembly exceeds it. Key design points:
-
-* it bounds the **whole `Microsoft.CodeAnalysis*` family** (via `StartsWith`),
-  not a single assembly name, because the analyzers use only the
-  language-agnostic `IOperation` API and the compiler records a reference to
-  `Microsoft.CodeAnalysis` but not necessarily to
-  `Microsoft.CodeAnalysis.CSharp`;
-* it **fails if the family disappears** from the metadata
-  (`Check.That(...).Not.IsEmpty()`), rather than passing vacuously;
-* it compares on **major.minor.build** only, so a 4-part reference version
-  (`4.8.0.0`) does not read as newer than the `4.8.0` floor.
-
-This guard is fast, in-process, and runs in the normal `dotnet test`. It
-catches the *reference* version drift — but not whether the analyzer actually
-**loads** on an old host, nor whether it is actually **shipped** in the
-package.
-
-### Guard 3 — the floor-check CI job (`analyzers.yml`, fails loudly)
-
-The `Dogfood analyzers on the Roslyn floor` job proves, end to end, that the
-**artifact as shipped** loads and runs on the **oldest supported compiler**.
-This is the guard that closes the gap the unit test cannot. See the dedicated
-section below.
-
-### Guard 4 — Dependabot ignore (`.github/dependabot.yml`, silent by design)
-
-`Microsoft.CodeAnalysis.CSharp` and `Microsoft.CodeAnalysis.Common` are on
-Dependabot's `ignore` list, so an automated PR never proposes raising the
-floor. Bumping it is a conscious act (edit `RoslynFloorVersion`, accept the
-new minimum SDK/IDE, update this ADR and the README's compiler-requirement
-note).
-
-### The floor-check job design
-
-The job is deliberately **not** part of `FirstClassErrors.sln`; `ci.yml` would
-build it under the .NET 10 SDK, which proves nothing. It lives at
-`tools/floor-check/` and is built solely by this job. Several subtleties took
-four PRs to get right; each is recorded here so it is not "simplified" back
-into a bug.
-
-#### Two SDKs, split on purpose
-
-The job installs **both** `10.0.x` and `8.0.100`:
-
-1. **Pack under the release SDK.** `dotnet pack FirstClassErrors/…` is run
-   **from the repo root**, so the root `global.json` selects .NET 10 — the same
-   SDK `release.yml` packs with. This produces the **exact bytes a consumer
-   receives**, with the analyzer bundled at `analyzers/dotnet/cs/`. Packing
-   under the floor SDK instead would test an analyzer nobody ships, and would
-   pin the whole library to C# 12 (`LangVersion=latest` under SDK 8).
-2. **Consume under the floor SDK.** `dotnet build` is run **from
-   `tools/floor-check/`**, whose nested `global.json` pins `8.0.100` with
-   `rollForward: disable`. SDK resolution is **CWD-based**, so running from
-   this directory is what selects the floor SDK. This is the real test: *the
-   shipped analyzer, loaded by the oldest supported host (Roslyn 4.8).*
-
-`FloorCheck.csproj` recompiles the real `FirstClassErrors.Usage` sources with
-the analyzer wired in, and escalates `CS8032`/`AD0001` to errors — so a load
-failure turns the build red.
-
-#### Proving the analyzer actually loaded
-
-A never-loaded analyzer would leave the build green (CS8032 is emitted only
-when a load is *attempted*). The job builds with `-p:ReportAnalyzer=true
--v detailed` (the per-analyzer table is silent at default verbosity) and
-`--no-incremental` (to force a real compilation), then greps for a
-fully-qualified analyzer **type** (`FirstClassErrors.Analyzers.<Name>Analyzer`)
-— which appears **only** in the ReportAnalyzer table, i.e. only if the
-analyzer really ran. Matching the assembly name alone would be a false
-positive (it appears in ordinary build lines).
-
-#### Consuming the package, not a ProjectReference
-
-`FloorCheck` references the **packed `.nupkg`** from a local feed, not the
-analyzer project. This makes one job validate two guarantees at once: the
-analyzer loads on the floor **and** it actually ships where consumers expect
-it — a broken `analyzers/dotnet/cs` path would leave the analyzer silently
-absent, and the grep would fail. Getting this right required closing several
-NuGet traps:
-
-* **Exact version pin, not a float.** The version is `$(FloorCheckVersion)`,
-  passed identically to the pack (`-p:Version`) and the consume
-  (`-p:FloorCheckVersion`). A floating `1.0.0-floorcheck-*` would, once a
-  stable `FirstClassErrors 1.0.0` is published, resolve to that stable release
-  (NuGet ranks a stable version above any prerelease sharing its root) and
-  dogfood a published package instead of the one under test.
-* **`packageSourceMapping`** routes the `FirstClassErrors` id **exclusively**
-  to the local feed, so nuget.org can never substitute a published package for
-  the one just packed. (nuget.org stays enabled for the net8.0 targeting
-  packs, which otherwise fail restore with `NU1101`.)
-* **Fresh per-run version.** `1.0.0-floorcheck.<run_number>.<run_attempt>` — a
-  version NuGet has never cached, so restore always reads the freshly packed
-  `.nupkg`. `run_attempt` covers re-runs; dot separators keep the numeric
-  identifiers ordered numerically per SemVer.
-* **`RestorePackagesPath=./packages`** keeps the throwaway package out of the
-  machine-global `~/.nuget/packages` (which is keyed by `(id, version)` and
-  never re-reads a feed for a version it already extracted — a stale-copy trap
-  on the fixed local-dev version). The pack step wipes `local-feed/` and
-  `packages/` so a reused workspace stays idempotent.
-* **`DefaultItemExcludes;packages/**`** stops the SDK's default globs from
-  compiling any `.cs` a restored package might carry (contentFiles, polyfills,
-  source generators) now that `packages/` lives under the project directory.
+Two of the guards fail **loudly** (the unit test and the CI job); the pin and
+the Dependabot ignore work silently by construction. Together they satisfy the
+requirement the context sets out: a guard that fails on the **oldest** host, on
+the **exact artifact we ship**, before a consumer ever sees `CS8032`. The
+trade-off accepted is the upkeep of a deliberately intricate CI job and a
+non-solution `tools/floor-check/` project; the mechanics of that job — the
+two-SDK split, the load proof, and the NuGet traps it closes — are documented
+in the [`analyzers` workflow reference](../workflows/analyzers.en.md), and the
+pin and metadata live in `FirstClassErrors.Analyzers.csproj`.
 
 ## Alternatives Considered
 
@@ -229,8 +132,8 @@ which can break while every reference version stays at the floor.
 ### Negative
 
 * Two extra guards to keep green, and a non-solution `tools/floor-check/`
-  project with intentionally intricate NuGet configuration (documented inline
-  and here).
+  project with intentionally intricate NuGet configuration (documented in the
+  [`analyzers` workflow reference](../workflows/analyzers.en.md)).
 * The floor-check job downloads the 8.0.100 SDK on every run (~a few seconds).
 * Raising the floor is a deliberate, multi-step act (by design).
 
@@ -239,7 +142,8 @@ which can break while every reference version stays at the floor.
 * The floor-check's NuGet configuration looks over-engineered to a reader who
   does not know the traps it closes; a future "simplification" would
   reintroduce one of them as a silent bug. Mitigation: every subtlety is
-  recorded inline and in this ADR.
+  recorded in the [`analyzers` workflow reference](../workflows/analyzers.en.md)
+  and in the workflow's own YAML comments.
 * When the floor is raised, the floor SDK pinned in `analyzers.yml` and in
   `tools/floor-check/global.json` must be moved by hand; forgetting them
   leaves the job validating the old floor. Mitigation: the raise procedure
