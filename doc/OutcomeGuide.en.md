@@ -50,7 +50,7 @@ return Outcome<Amount>.Success(amount);
 
 ```csharp
 return Outcome<Amount>.Failure(
-    InvalidAmountOperationError.UnknownCurrency(currencyCode));
+    InvalidMoneyTransferError.AmountNotPositive(amount));
 ```
 
 `Failure(...)` requires an `Error`. Keep error creation in a named factory so the same situation remains consistent whether it is returned or thrown.
