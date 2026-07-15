@@ -17,4 +17,4 @@ Outcome<PlaceBookingCommand> command =
     bind.New(s => new PlaceBookingCommand(s.Get(email), s.Get(stay)));
 ```
 
-See the [repository documentation](https://github.com/Reefact/first-class-errors) for the full guide.
+See the [request-binder guide](https://github.com/Reefact/first-class-errors/blob/main/doc/RequestBinder.en.md) for the full walkthrough, and the [repository documentation](https://github.com/Reefact/first-class-errors) for the rest of FirstClassErrors.
