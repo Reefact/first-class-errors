@@ -83,7 +83,7 @@ Une valeur en ligne de commande écrase la configuration. Sans option de langue,
 
 ## Localiser le contenu documentaire
 
-Pendant l’extraction, le worker utilise `CultureInfo.CurrentUICulture` avec la langue demandée. Les méthodes de documentation et factories peuvent donc lire normalement des ressources `.resx`.
+Pendant l’extraction, le processus worker d’extraction (voir [Architecture](ArchitectureOfTheDocumentationPipeline.fr.md)) utilise `CultureInfo.CurrentUICulture` avec la langue demandée. Les méthodes de documentation et factories peuvent donc lire normalement des ressources `.resx`.
 
 ```csharp
 private static ErrorDocumentation BelowAbsoluteZeroDocumentation() {
@@ -145,6 +145,7 @@ On obtient ainsi une prose localisée dans le catalogue sans modifier la clé op
 Un renderer reçoit la culture cible via `RenderRequest.Culture`. Il doit l’utiliser uniquement pour le texte qui lui appartient :
 
 ```csharp
+// RendererResources est votre propre classe de ressources .resx, pas un type de la bibliothèque.
 string heading = RendererResources.GetString(
     "ErrorCatalogHeading",
     request.Culture) ?? "Error catalog";
@@ -205,7 +206,7 @@ IReadOnlyList<RenderedDocument> documents =
     new MarkdownErrorDocumentationRenderer().Render(catalog, request);
 ```
 
-Le nom de service est exigé par les renderers markdown et html, qui intègrent des exemples RFC 9457 typés `urn:problem:{service}:{code}` ; le format json accepte `null`.
+Le nom de service est exigé par les renderers markdown et html, qui intègrent des exemples RFC 9457 (« Problem Details » pour les API HTTP) typés `urn:problem:{service}:{code}` ; le format json accepte `null`.
 
 Employer volontairement deux cultures différentes produit une sortie multilingue mélangée et devrait rester exceptionnel.
 

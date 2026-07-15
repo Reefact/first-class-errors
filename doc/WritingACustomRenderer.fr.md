@@ -88,7 +88,7 @@ Gardez les chemins relatifs, déterministes et sûrs. N’écrivez pas directeme
 
 - `Layout`, sélectionné avec `--layout` ;
 - `Culture`, utilisée pour les titres, libellés et textes fixes appartenant au renderer ;
-- `ServiceName`, issu de `--service-name` ou de la configuration, utilisé par les renderers qui émettent des types de problème RFC 9457 (`urn:problem:{service}:{code}`) ; `null` si non configuré.
+- `ServiceName`, issu de `--service-name` ou de la configuration, utilisé par les renderers qui émettent des types de problème RFC 9457 (« Problem Details » pour les API HTTP) de la forme `urn:problem:{service}:{code}` ; `null` si non configuré.
 
 Le contenu du catalogue a déjà été localisé pendant l’extraction. Un renderer ne doit pas retraduire les titres, règles, messages ou diagnostics des erreurs.
 
@@ -175,7 +175,7 @@ La CLI découvre les types de renderer publics dans les assemblies configurés. 
 - utiliser l’assembly de contrat résolu par le processus CLI ;
 - cibler un framework chargeable par ce runtime.
 
-Référencez `FirstClassErrors` sans déployer à côté du plugin de copie privée conflictuelle qui créerait une identité de type distincte pour le contrat. Une référence projet peut utiliser `<Private>false</Private>` lorsque ce choix correspond au packaging.
+Ne déployez pas de copie privée de `FirstClassErrors` à côté du plugin : si la CLI et le plugin chargent chacun leur propre copie, `IErrorDocumentationRenderer` devient deux types distincts et le renderer n’est silencieusement pas reconnu. Une référence projet peut utiliser `<Private>false</Private>` lorsque ce choix correspond au packaging.
 
 Un plugin impossible à charger est signalé puis ignoré. Examinez ces avertissements : un format inconnu peut simplement indiquer que son plugin n’a pas été chargé.
 
@@ -184,6 +184,7 @@ Un plugin impossible à charger est signalé puis ignoré. Examinez ces avertiss
 Un schéma CSV peut ne contenir aucun texte à traduire. Un renderer avec des titres doit résoudre uniquement ses propres libellés depuis `request.Culture` :
 
 ```csharp
+// RendererResources est votre propre classe de ressources .resx, pas un type de la bibliothèque.
 string heading = RendererResources.GetString("ErrorCatalog", request.Culture)
                  ?? "Error catalog";
 ```
