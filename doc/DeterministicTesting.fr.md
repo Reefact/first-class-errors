@@ -8,7 +8,7 @@ Chaque occurrence d’erreur enregistre deux valeurs qui doivent varier en produ
 - `OccurredAt`, l’instant UTC de création de l’erreur ;
 - `InstanceId`, un identifiant unique de cette occurrence.
 
-Ces valeurs améliorent l’observabilité, mais rendent instables les assertions sur l’objet complet et les snapshots. `FirstClassErrors.Testing` fournit des overrides bornés pour les tests qui ont réellement besoin de valeurs déterministes.
+Ces valeurs améliorent l’observabilité, mais rendent instables les assertions sur l’objet complet et les snapshots (tests qui comparent un objet sérialisé à un fichier de référence approuvé). `FirstClassErrors.Testing` fournit des overrides bornés pour les tests qui ont réellement besoin de valeurs déterministes.
 
 Pour les assertions fluentes sur les outcomes et les erreurs, commencez par [Tester les outcomes et les erreurs](Testing.fr.md).
 

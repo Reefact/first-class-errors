@@ -14,7 +14,7 @@ For catalog generation and publication, see [Generating and Publishing the Error
 | Layer | Answers |
 | --- | --- |
 | structured log properties | what happened technically? |
-| scopes and correlation identifiers | in which request, message, or workflow did it happen? |
+| scopes (ambient logging scopes such as `ILogger.BeginScope`) and correlation identifiers | in which request, message, or workflow did it happen? |
 | FirstClassErrors | what does this recognized failure mean? |
 
 A useful production event combines all three rather than flattening everything into one message.
@@ -72,7 +72,7 @@ The exact JSON schema belongs to the application or logging adapter. The importa
 
 ## Log the `Error`, not only `Exception.Message`
 
-A `DiagnosableException` exposes its semantic model through `.Error`:
+A `DiagnosableException` — the exception type that `error.ToException()` produces — exposes its semantic model through `.Error`:
 
 ```csharp
 catch (DiagnosableException exception)

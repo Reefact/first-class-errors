@@ -111,7 +111,7 @@ Expected the outcome to succeed, but it failed with [PAYMENT_DECLINED]: Issuer r
 Expected the error to have code "ORDER_NOT_FOUND", but it was "ORDER_LOCKED".
 ```
 
-The assertion failure is distinct from the domain exception. A failed test therefore reports what the test expected and what the outcome actually contained.
+`OutcomeAssertionException` is a test-framework failure, not the exception `error.ToException()` would produce. A failed test therefore reports what the test expected and what the outcome actually contained.
 
 ## What should a test assert?
 
@@ -149,7 +149,7 @@ The test reads as a description of the failure contract rather than a sequence o
 
 ## Deterministic timestamps and instance ids
 
-Every error occurrence contains an `OccurredAt` timestamp and a unique `InstanceId`. When a test or snapshot must assert those values, use the scoped overrides provided by the testing package.
+Every error occurrence contains an `OccurredAt` timestamp and a unique `InstanceId`. When a test or snapshot (a test comparing a serialized object against an approved reference file) must assert those values, use the scoped overrides provided by the testing package.
 
 See [Deterministic Error Tests](DeterministicTesting.en.md) for `Clock.UseFixed(...)`, `InstanceIds.UseFixed(...)`, custom sources, parallel-test behavior, and full-error snapshots.
 

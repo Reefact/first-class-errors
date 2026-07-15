@@ -14,7 +14,7 @@ Pour la génération et la publication du catalogue, voir [Générer et publier 
 | Couche | Répond à |
 | --- | --- |
 | propriétés structurées du log | que s’est-il passé techniquement ? |
-| scopes et identifiants de corrélation | dans quelle requête, quel message ou quel workflow ? |
+| scopes (portées de logging ambiantes, comme `ILogger.BeginScope`) et identifiants de corrélation | dans quelle requête, quel message ou quel workflow ? |
 | FirstClassErrors | que signifie cette défaillance reconnue ? |
 
 Un événement de production utile combine les trois au lieu de tout aplatir dans un seul message.
@@ -72,7 +72,7 @@ Le schéma JSON exact appartient à l’application ou à l’adapter de logging
 
 ## Logger l’`Error`, pas seulement `Exception.Message`
 
-Une `DiagnosableException` expose son modèle sémantique via `.Error` :
+Une `DiagnosableException` — le type d’exception produit par `error.ToException()` — expose son modèle sémantique via `.Error` :
 
 ```csharp
 catch (DiagnosableException exception)

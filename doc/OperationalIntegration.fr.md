@@ -3,7 +3,7 @@
 🌍 **Langues :**  
 🇬🇧 [English](./OperationalIntegration.en.md) | 🇫🇷 Français (ce fichier)
 
-FirstClassErrors devient réellement utile pour l’exploitation lorsque le catalogue est généré depuis le code exact en cours de build et publié à un endroit accessible aux développeurs, au support et aux opérateurs.
+FirstClassErrors devient réellement utile pour l’exploitation lorsque le catalogue est généré depuis le code exact en cours de build, puis publié à un endroit accessible aux développeurs, au support et aux opérateurs.
 
 Ce guide couvre la chaîne de livraison. Pour le logging structuré et les diagnostics de production, voir [Logging et intégration opérationnelle](LoggingIntegration.fr.md).
 
@@ -22,7 +22,7 @@ Un pipeline fiable doit :
 1. compiler l’application ;
 2. générer le catalogue depuis le code compilé ;
 3. publier les fichiers générés ;
-4. éventuellement comparer le contrat courant à une baseline commitée.
+4. éventuellement comparer le contrat courant à une baseline commitée — le dernier snapshot accepté de vos codes d’erreur et clés de contexte (voir [Versionnage du catalogue](CatalogVersioning.fr.md)).
 
 ## Activer les projets
 
@@ -65,6 +65,8 @@ urn:problem:my-api:payment-declined
 La sortie JSON ne nécessite pas de nom de service.
 
 ## Workflow GitHub Actions recommandé
+
+Le workflow rend le catalogue en HTML avec `--layout split` (une page par erreur ; voir [Le renderer HTML](TheHtmlRenderer.fr.md)) :
 
 ```yaml
 name: error-documentation
@@ -162,11 +164,13 @@ Pour les systèmes durables ou critiques pour le support, publiez au moins une f
 /errors/releases/2.3.1/
 ```
 
-Un `InstanceId`, une version de déploiement ou un tag de release peut alors mener le support vers la documentation correspondante.
+Des événements de log qui enregistrent la version déployée à côté de l’erreur permettent alors au support de partir d’une occurrence loggée — son `InstanceId` plus cette version — et d’ouvrir le catalogue correspondant.
 
 ## Protéger le contrat d’erreurs
 
 La génération répond à « que documente cette version ? ». Le versionnage répond à « cette version casse-t-elle un contrat déjà accepté ? ».
+
+`fce catalog diff` compare le catalogue extrait du build courant à un fichier de baseline commité dans le dépôt et signale les changements de contrat :
 
 ```bash
 fce catalog diff --solution MyApp.sln --configuration Release --no-build

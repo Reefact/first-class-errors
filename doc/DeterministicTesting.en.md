@@ -8,7 +8,7 @@ Every error occurrence records two values that should vary in production:
 - `OccurredAt`, the UTC instant at which the error was created;
 - `InstanceId`, a unique identifier for that occurrence.
 
-Those values improve observability, but they make whole-object assertions and snapshots unstable. `FirstClassErrors.Testing` provides scoped overrides for tests that deliberately need deterministic values.
+Those values improve observability, but they make whole-object assertions and snapshots (tests comparing a serialized object against an approved reference file) unstable. `FirstClassErrors.Testing` provides scoped overrides for tests that deliberately need deterministic values.
 
 For fluent assertions on outcomes and errors, start with [Testing Outcomes and Errors](Testing.en.md).
 
