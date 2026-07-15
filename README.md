@@ -112,6 +112,12 @@ dotnet add package FirstClassErrors
 
 The package targets **.NET Standard 2.0**. Its Roslyn analyzers are bundled automatically; no separate analyzer package is required.
 
+To bind incoming requests into typed commands or queries at the primary-adapter boundary, add the optional request binder:
+
+```bash
+dotnet add package FirstClassErrors.RequestBinder
+```
+
 To generate documentation, install the CLI:
 
 ```bash
@@ -161,6 +167,7 @@ For security vulnerabilities, follow the private process in [SECURITY.md](SECURI
 
 - [Writing Errors Guide](doc/WritingErrorsGuide.en.md)
 - [Usage Patterns](doc/UsagePatterns.en.md)
+- [Binding requests at the boundary (RequestBinder)](doc/RequestBinder.en.md)
 - [Best Practices](doc/BestPractices.en.md)
 - [Testing Guide](doc/Testing.en.md)
   - [Deterministic Error Tests](doc/DeterministicTesting.en.md)

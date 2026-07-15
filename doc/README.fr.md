@@ -112,6 +112,12 @@ dotnet add package FirstClassErrors
 
 Le package cible **.NET Standard 2.0**. Les analyseurs Roslyn sont inclus automatiquement ; aucun package d’analyse supplémentaire n’est nécessaire.
 
+Pour lier les requêtes entrantes en commandes ou requêtes typées à la frontière de l’adaptateur primaire, ajoutez le binder de requêtes optionnel :
+
+```bash
+dotnet add package FirstClassErrors.RequestBinder
+```
+
 Pour générer la documentation, installez le CLI :
 
 ```bash
@@ -161,6 +167,7 @@ Pour les vulnérabilités de sécurité, suivez le processus privé décrit dans
 
 - [Guide d’écriture des erreurs](WritingErrorsGuide.fr.md)
 - [Cas d’usage](UsagePatterns.fr.md)
+- [Lier les requêtes à la frontière (RequestBinder)](RequestBinder.fr.md)
 - [Bonnes pratiques](BestPractices.fr.md)
 - [Guide des tests](Testing.fr.md)
   - [Tests d’erreur déterministes](DeterministicTesting.fr.md)
