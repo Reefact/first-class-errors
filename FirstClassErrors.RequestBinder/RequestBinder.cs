@@ -82,6 +82,11 @@ public sealed class RequestBinder<TRequest> {
     /// <typeparam name="TArgument">The type of the DTO property.</typeparam>
     /// <param name="selector">A direct property access on the request parameter (e.g. <c>r =&gt; r.GuestEmail</c>).</param>
     /// <returns>The converter stage offering <c>AsRequired</c> / <c>AsOptional</c> and their variants.</returns>
+    /// <exception cref="ArgumentException">
+    ///     Thrown when <paramref name="selector" /> points at a <b>non-nullable value-type</b> property: a missing value
+    ///     would be indistinguishable from its default (<c>0</c>, <c>false</c>, ...), so such a property must be declared
+    ///     nullable (e.g. <c>int?</c>) for the binder to detect an absent argument.
+    /// </exception>
     public SimplePropertyConverter<TRequest, TArgument> SimpleProperty<TArgument>(Expression<Func<TRequest, TArgument?>> selector) {
         (string path, object? value) = ResolveArgument(selector);
 
@@ -166,7 +171,18 @@ public sealed class RequestBinder<TRequest> {
 
     private (string Path, object? Value) ResolveArgument<TArgument>(Expression<Func<TRequest, TArgument>> selector) {
         PropertyInfo property = PropertySelectors.GetProperty(selector);
-        string       path     = PathOf(Options.ArgumentNameProvider.GetArgumentNameFrom(property));
+
+        // A non-nullable value-type property can never be null, so a missing argument (deserialized to default(T) —
+        // 0, false, ...) is indistinguishable from a legitimately-sent default: absence would be silently lost. The
+        // information does not exist at runtime, so reject the mis-declaration loudly (the binder's programming-error
+        // channel) — the DTO property must be declared nullable so that an absent argument arrives as null.
+        if (property.PropertyType.IsValueType && Nullable.GetUnderlyingType(property.PropertyType) is null) {
+            throw new ArgumentException(
+                $"The request property '{property.Name}' is a non-nullable value type ({property.PropertyType.Name}); a missing value would be indistinguishable from its default. Declare it as {property.PropertyType.Name}? so the binder can detect an absent argument.",
+                nameof(selector));
+        }
+
+        string path = PathOf(Options.ArgumentNameProvider.GetArgumentNameFrom(property));
 
         return (path, property.GetValue(_request));
     }

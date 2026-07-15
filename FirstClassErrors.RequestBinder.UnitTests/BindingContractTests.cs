@@ -231,6 +231,25 @@ public sealed class BindingContractTests {
 
     #endregion
 
+    #region Non-nullable value-type DTO properties are rejected
+
+    private sealed record ValueTypeRequest(int Count, int? OptionalCount);
+
+    [Fact(DisplayName = "Selecting a non-nullable value-type property is rejected: a missing value would be indistinguishable from its default.")]
+    public void NonNullableValueTypePropertyIsRejected() {
+        var bind = Bind.PropertiesOf(new ValueTypeRequest(0, null)).FailWith(BookingEnvelopeError.CommandInvalid);
+
+        // A non-nullable int cannot be null, so "missing" (deserialized to 0) is undetectable -> loud programming error.
+        ArgumentException exception = Assert.Throws<ArgumentException>(() => { bind.SimpleProperty(r => r.Count); });
+        Check.That(exception.Message).Contains("Count");
+        Check.That(exception.Message).Contains("nullable");
+
+        // A nullable value type is fine: an absent argument arrives as null and is detectable.
+        Check.ThatCode(() => bind.SimpleProperty(r => r.OptionalCount)).DoesNotThrow();
+    }
+
+    #endregion
+
     #region Guard clauses: every entry point rejects null collaborators
 
     [Fact(DisplayName = "Every entry point rejects a null collaborator with ArgumentNullException.")]
