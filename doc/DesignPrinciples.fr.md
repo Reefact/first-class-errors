@@ -63,7 +63,7 @@ La méthode de documentation décrit la situation, la règle, les hypothèses de
 
 ## 5. Les diagnostics sont des hypothèses, pas des verdicts
 
-Au moment où une erreur est définie, sa cause racine exacte est souvent inconnue. Une documentation utile doit donc proposer des explications plausibles et des pistes d’investigation sans attribuer de faute.
+Personne ne peut être certain de l’origine exacte d’une erreur — même une cause probable peut n’être que le symptôme d’une cause plus profonde. Ce qui peut généralement être identifié, ce sont plusieurs causes plausibles, et les nommer donne à l’investigation un point de départ.
 
 Préférez :
 

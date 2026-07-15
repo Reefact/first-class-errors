@@ -63,7 +63,7 @@ The documentation method describes the situation, rule, diagnostic hypotheses, a
 
 ## 5. Diagnostics are hypotheses, not verdicts
 
-At the moment an error is defined, its exact root cause is often unknown. Useful documentation should therefore propose plausible explanations and investigation leads without assigning blame.
+No one can be certain of an error's exact origin — even a likely cause may itself just be a symptom of something deeper. What can usually be named are several plausible causes, and naming them gives investigation somewhere to start.
 
 Prefer:
 
