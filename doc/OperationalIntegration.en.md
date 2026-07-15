@@ -5,7 +5,7 @@
 
 FirstClassErrors becomes operationally useful when the catalog is generated from the exact code being built, and published where developers, support teams, and operators can reach it.
 
-This guide covers the delivery workflow. For structured logging and production diagnostics, see [Logging and Operational Integration](LoggingIntegration.en.md).
+This guide covers the delivery workflow. For structured logging and production diagnostics, see the [structured logging guide](LoggingIntegration.en.md).
 
 ## The delivery flow
 
@@ -213,7 +213,7 @@ Before approving a catalog-delivery pipeline, verify that:
 ---
 
 <div align="center">
-<a href="DeterministicTesting.en.md">← Deterministic Error Tests</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="LoggingIntegration.en.md">Logging and Operational Integration →</a>
+<a href="DeterministicTesting.en.md">← Deterministic Error Tests</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="LoggingIntegration.en.md">Integrate FirstClassErrors with Structured Logging →</a>
 </div>
 
 ---

@@ -1,4 +1,4 @@
-# Logging and Operational Integration
+# Integrate FirstClassErrors with Structured Logging
 
 🌍 **Languages:**  
 🇬🇧 English (this file) | 🇫🇷 [Français](./LoggingIntegration.fr.md)
@@ -88,7 +88,7 @@ catch (DiagnosableException exception) {
 
 Passing the exception preserves the stack trace. Logging named properties preserves the stable semantic keys.
 
-A formatter, enricher, filter, or middleware can then serialize the remaining `Error` properties consistently.
+This logs the two most important keys inline, but it is not the whole error. The remaining properties — type, context, inner errors, and infrastructure fields — should be serialized through one shared projection rather than re-listed in every `catch`; see [Centralize the projection to a log model](#centralize-the-projection-to-a-log-model) below.
 
 ## Preserve context as structured data
 
@@ -107,35 +107,52 @@ Prefer separate fields that can be filtered and aggregated:
 }
 ```
 
-Context keys are operational vocabulary. Keep their names stable and ensure the values are safe for the intended log destination.
+Context keys are operational vocabulary. Keep their names stable and ensure the values are safe for the intended log destination. A payment identifier logged as `PaymentId` must stay `PaymentId` in every error and every service — not drift to `Id` in one place, `PaymentIdentifier` in another, and `payment_id` in a third. A stable key is what lets a single query correlate the same fact across the whole system.
 
 See [Error Context](ErrorContext.en.md) for key design and data-safety rules.
 
-## Traverse `InnerErrors`
+## Centralize the projection to a log model
 
-`DiagnosableException` does not use `Exception.InnerException` for the FirstClassErrors diagnostic tree. Causes and aggregated failures live in:
+Do not re-list error properties in every `catch`. Project an `Error` to a log model once, in one place, and reuse it everywhere a failure is logged.
 
-```csharp
-exception.Error.InnerErrors
-```
-
-A logging adapter must traverse that collection explicitly:
+The projection must be recursive: `DiagnosableException` does not use `Exception.InnerException` for the FirstClassErrors diagnostic tree — causes and aggregated failures live in `error.InnerErrors`. It must also add the infrastructure-specific fields when the error is an `InfrastructureError`:
 
 ```csharp
-static object ToLogModel(Error error) {
-    return new {
-        Code = error.Code.ToString(),
-        error.InstanceId,
-        error.OccurredAt,
-        Type = error.GetType().Name,
-        error.DiagnosticMessage,
-        Context = error.Context,
-        InnerErrors = error.InnerErrors.Select(ToLogModel).ToArray()
-    };
+public static class ErrorLogModel {
+    public static object From(Error error) {
+        var model = new Dictionary<string, object?> {
+            ["code"]              = error.Code.ToString(),
+            ["instanceId"]        = error.InstanceId,
+            ["occurredAt"]        = error.OccurredAt,
+            ["type"]              = error.GetType().Name,
+            ["diagnosticMessage"] = error.DiagnosticMessage,
+            ["context"]           = error.Context.ToNameDictionary(),
+            ["innerErrors"]       = error.InnerErrors.Select(From).ToArray()
+        };
+
+        if (error is InfrastructureError infrastructure) {
+            model["direction"]  = infrastructure.Direction.ToString();
+            model["transience"] = infrastructure.Transience.ToString();
+        }
+
+        return model;
+    }
 }
 ```
 
-This example shows the recursive shape; adapt context serialization and infrastructure-specific fields to the application.
+Every `catch` or outcome handler then logs the whole error in one call:
+
+```csharp
+catch (DiagnosableException exception) {
+    logger.LogError(
+        exception,
+        "Operation failed with {ErrorCode} {@FirstClassError}",
+        exception.Error.Code,
+        ErrorLogModel.From(exception.Error));
+}
+```
+
+`{@FirstClassError}` is [Serilog](https://github.com/serilog/serilog)'s destructuring syntax: it serializes the log model as structured data instead of calling `ToString()`. With `Microsoft.Extensions.Logging` alone, the object is captured but rendered by the active provider, so use a provider that serializes state (or `BeginScope`) to keep the fields queryable. The projection itself does not change with the logging framework — that is the point of centralizing it.
 
 If only the outer error is logged, the most useful cause may disappear from operational analysis.
 
@@ -177,9 +194,9 @@ A log event may include a documentation URL derived from the code and deployed c
 https://docs.mycompany/errors/releases/2.4.0/payment-provider-unavailable
 ```
 
-The URL may be emitted as a structured property such as `error.documentationUrl`.
+The primary mechanism is a structured log property such as `error.documentationUrl`, which any log query or dashboard can surface directly.
 
-When an exception object is used by tooling that recognizes `Exception.HelpLink`, the application may also set it before logging or rethrowing:
+`Exception.HelpLink` is a secondary, tool-dependent option: only some tooling reads it, so set it as a convenience for those tools rather than as the main navigation path.
 
 ```csharp
 exception.HelpLink = documentationUrl;
