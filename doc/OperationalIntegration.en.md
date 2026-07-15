@@ -237,7 +237,7 @@ Before approving a catalog-delivery pipeline, verify that:
 ---
 
 <div align="center">
-<a href="DeterministicTesting.en.md">← Deterministic Error Tests</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="LoggingIntegration.en.md">Integrate FirstClassErrors with Structured Logging →</a>
+<a href="ArbitraryTestValues.en.md">← Arbitrary Test Values</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="LoggingIntegration.en.md">Integrate FirstClassErrors with Structured Logging →</a>
 </div>
 
 ---

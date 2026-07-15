@@ -158,60 +158,9 @@ public void Une_erreur_de_commande_absente_est_totalement_deterministe() {
 }
 ```
 
-## Fournir des valeurs arbitraires non assertées
+## Données d’occurrence arbitraires
 
-Figer épingle une valeur qui compte pour le test. Le besoin symétrique est tout aussi fréquent : une entrée que le test doit fournir mais ne vérifie jamais — un code d’erreur, un message, un instant de survenue. Écrite en dur, elle se lit comme si elle comptait, et une constante réutilisée dans toute une suite peut faire passer un test pour une mauvaise raison.
-
-`Any` fournit à la place une valeur valide mais arbitraire : la seule entrée qui compte ressort, et les autres s’annoncent comme accessoires :
-
-```csharp
-// Seul le code identifie le scénario ; les messages sont accessoires.
-DomainError error = DomainError
-    .Create(ErrorCode.Create("ORDER_NOT_FOUND"), Any.DiagnosticMessage())
-    .WithPublicMessage(Any.ShortMessage());
-
-Outcome<Order>.Failure(error).ShouldFail().WithCode("ORDER_NOT_FOUND");
-```
-
-Ce que `Any` propose :
-
-| Helper | Renvoie |
-| --- | --- |
-| `Any.ErrorCode()` | un code non vide, de la forme `ANY_CODE_7F3A9C` |
-| `Any.DiagnosticMessage()` / `Any.ShortMessage()` / `Any.DetailedMessage()` | un message non vide |
-| `Any.Guid()` / `Any.Instant()` / `Any.String()` / `Any.Int()` / `Any.Bool()` | une primitive arbitraire (`Instant` est en UTC) |
-| `Any.Enum<TEnum>()` | un membre quelconque de l’enum (éventuellement un sentinelle comme `Unknown`) |
-| `Any.Transience()` / `Any.InteractionDirection()` | une valeur *significative* — jamais le sentinelle `Unknown` |
-| `Any.ErrorOrigin()` | un `ErrorOrigin` quelconque |
-
-Les valeurs sont reconnaissables comme arbitraires (les codes ressemblent à `ANY_CODE_…`), si bien qu’une valeur accessoire apparaissant dans un message d’échec se repère facilement.
-
-### Reproduire une exécution avec une graine
-
-Par défaut, les valeurs changent à chaque exécution — ce qui révèle justement un test qui en dépend secrètement. Pour reproduire une exécution précise, épinglez la graine sur une portée ; chaque appel à `Any` à l’intérieur devient déterministe :
-
-```csharp
-using (Any.UseSeed(1234)) {
-    ErrorCode code = Any.ErrorCode(); // la même valeur à chaque exécution
-}
-```
-
-`Any.UseSeed(...)` suit les mêmes règles de portée que les overrides ci-dessus : jetable, local au contexte, et imbriquable.
-
-### `OccurredAt` et `InstanceId` arbitraires
-
-Lorsqu’un test a besoin de données d’occurrence stables sans asserter leurs valeurs exactes, les seams de l’horloge et des identifiants proposent un `UseAny` en pendant de leur `UseFixed` :
-
-```csharp
-using (Clock.UseAny()) {           // OccurredAt est figé sur un instant arbitraire
-    using (InstanceIds.UseAny()) { // chaque erreur reçoit son propre identifiant arbitraire
-        DomainError error = MakeError();
-        // ... assertez le code ou le contexte, pas l’instant ni l’identifiant
-    }
-}
-```
-
-Les deux acceptent une graine optionnelle (`Clock.UseAny(1234)`, `InstanceIds.UseAny(1234)`) pour rendre les valeurs choisies reproductibles.
+Lorsqu’un test a besoin que `OccurredAt` et `InstanceId` soient stables sans asserter leurs valeurs exactes, figez-les sur une valeur *arbitraire* avec `Clock.UseAny()` et `InstanceIds.UseAny()` plutôt que `UseFixed` ; les deux acceptent une graine optionnelle pour la reproductibilité. Ils appartiennent à la factory `Any`, plus large, dédiée aux valeurs qu’un test n’assertit pas — voir [Valeurs de test arbitraires](ArbitraryTestValues.fr.md).
 
 ## Portée et tests parallèles
 
@@ -254,7 +203,7 @@ Avant d’approuver un test déterministe, vérifiez que :
 ---
 
 <div align="center">
-<a href="Testing.fr.md">← Tester les outcomes et les erreurs</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="OperationalIntegration.fr.md">Générer et publier le catalogue →</a>
+<a href="Testing.fr.md">← Tester les outcomes et les erreurs</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="ArbitraryTestValues.fr.md">Valeurs de test arbitraires →</a>
 </div>
 
 ---
