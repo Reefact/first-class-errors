@@ -52,6 +52,14 @@ public sealed class RequestBinder<TRequest> {
     internal RequestBinderOptions Options { get; private set; }
 
     /// <summary>
+    ///     The envelope instance the most recent failing <see cref="Build{TCommand}" /> produced, or <c>null</c> when
+    ///     no build has failed. A parent binder compares a nested failure against this <b>by reference</b> to tell this
+    ///     binder's own self-describing envelope (recorded as-is) from a leaf error a nested binding returned directly
+    ///     (wrapped under the argument path).
+    /// </summary>
+    internal PrimaryPortError? BuiltEnvelope { get; private set; }
+
+    /// <summary>
     ///     Replaces the binder options (for example to plug a serializer-aware
     ///     <see cref="IArgumentNameProvider" />). Call it before binding any property; nested binders inherit the
     ///     options in effect when they are created.
@@ -139,7 +147,11 @@ public sealed class RequestBinder<TRequest> {
             innerErrors.Add(error);
         }
 
-        return Outcome<TCommand>.Failure(_envelope(innerErrors));
+        // Remember the exact envelope instance produced here, so a parent binder can tell this self-describing
+        // envelope (recorded as-is) from any other failure a nested binding returned (wrapped under the path).
+        BuiltEnvelope = _envelope(innerErrors);
+
+        return Outcome<TCommand>.Failure(BuiltEnvelope);
     }
 
     /// <summary>Records a binding failure; it will surface in the envelope built by <see cref="Build{TCommand}" />.</summary>

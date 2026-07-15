@@ -84,6 +84,56 @@ public sealed class BindingContractTests {
         Check.That(BindingAssertions.ArgumentPathOf(wrapped)).IsEqualTo("Guests[0]");
     }
 
+    private static PrimaryPortError LeafPortError() {
+        return PrimaryPortError.Create(ErrorCode.Create("TEST_NESTED_PORT_LEAF"), "A bare port-level leaf, not a Build envelope.",
+                                       Transience.NonTransient)
+                               .WithPublicMessage("Rejected.");
+    }
+
+    [Fact(DisplayName = "A required nested binding that fails with a bare PrimaryPortError leaf (not its Build envelope) is wrapped, so the path survives.")]
+    public void BareNestedPrimaryPortErrorLeafIsWrapped() {
+        var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
+
+        bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid)
+            .AsRequired(_ => Outcome<Stay>.Failure(LeafPortError()));
+
+        Outcome<string> outcome = bind.Build(_ => "never");
+        Error wrapped = outcome.Error!.InnerErrors.Single();
+        // A leaf PrimaryPortError is NOT the nested Build envelope, so it is wrapped under the path — exactly like a
+        // DomainError, and unlike the old by-type check that recorded it as-is and dropped the "Stay" context.
+        Check.That(wrapped.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
+        Check.That(BindingAssertions.ArgumentPathOf(wrapped)).IsEqualTo("Stay");
+        Check.That(wrapped.InnerErrors.Single().Code.ToString()).IsEqualTo("TEST_NESTED_PORT_LEAF");
+    }
+
+    [Fact(DisplayName = "An optional nested binding that fails with a bare PrimaryPortError leaf is wrapped under the path too.")]
+    public void BareOptionalNestedPrimaryPortErrorLeafIsWrapped() {
+        var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
+
+        bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid)
+            .AsOptional(_ => Outcome<Stay>.Failure(LeafPortError()));
+
+        Outcome<string> outcome = bind.Build(_ => "never");
+        Error wrapped = outcome.Error!.InnerErrors.Single();
+        Check.That(wrapped.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
+        Check.That(BindingAssertions.ArgumentPathOf(wrapped)).IsEqualTo("Stay");
+        Check.That(wrapped.InnerErrors.Single().Code.ToString()).IsEqualTo("TEST_NESTED_PORT_LEAF");
+    }
+
+    [Fact(DisplayName = "A list element whose nested binding fails with a bare PrimaryPortError leaf is wrapped under its indexed path.")]
+    public void BareNestedElementPrimaryPortErrorLeafIsWrapped() {
+        var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
+
+        bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid)
+            .AsRequired(_ => Outcome<Guest>.Failure(LeafPortError()));
+
+        Outcome<string> outcome = bind.Build(_ => "never");
+        Error wrapped = outcome.Error!.InnerErrors.Single();
+        Check.That(wrapped.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
+        Check.That(BindingAssertions.ArgumentPathOf(wrapped)).IsEqualTo("Guests[0]");
+        Check.That(wrapped.InnerErrors.Single().Code.ToString()).IsEqualTo("TEST_NESTED_PORT_LEAF");
+    }
+
     #endregion
 
     #region Remaining list shapes

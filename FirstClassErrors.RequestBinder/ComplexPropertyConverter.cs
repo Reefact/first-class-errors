@@ -53,9 +53,10 @@ public sealed class ComplexPropertyConverter<TRequest, TArgument> {
             return new RequiredField<TProperty>(_binder, default!);
         }
 
-        Outcome<TProperty> outcome = BindNested(bindNested);
+        RequestBinder<TArgument> nested  = NestedBinder();
+        Outcome<TProperty>       outcome = bindNested(nested);
         if (outcome.IsFailure) {
-            _binder.Record(Grouped(outcome.Error!));
+            _binder.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, _argumentPath));
 
             return new RequiredField<TProperty>(_binder, default!);
         }
@@ -77,9 +78,10 @@ public sealed class ComplexPropertyConverter<TRequest, TArgument> {
 
         if (_isMissing) { return new OptionalReferenceField<TProperty>(_binder, value: null); }
 
-        Outcome<TProperty> outcome = BindNested(bindNested);
+        RequestBinder<TArgument> nested  = NestedBinder();
+        Outcome<TProperty>       outcome = bindNested(nested);
         if (outcome.IsFailure) {
-            _binder.Record(Grouped(outcome.Error!));
+            _binder.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, _argumentPath));
 
             return new OptionalReferenceField<TProperty>(_binder, value: null);
         }
@@ -87,19 +89,8 @@ public sealed class ComplexPropertyConverter<TRequest, TArgument> {
         return new OptionalReferenceField<TProperty>(_binder, outcome.GetResultOrThrow());
     }
 
-    private Outcome<TProperty> BindNested<TProperty>(Func<RequestBinder<TArgument>, Outcome<TProperty>> bindNested) where TProperty : notnull {
-        RequestBinder<TArgument> nested = new(_value!, _envelope, _binder.Options, _argumentPath);
-
-        return bindNested(nested);
-    }
-
-    /// <summary>
-    ///     A nested binding built with <c>Build</c> fails with its own envelope, already a
-    ///     <see cref="PrimaryPortError" /> that self-describes the group — record it as-is. Any other failure (a
-    ///     nested function returning a bare conversion failure) is wrapped so the argument path is preserved.
-    /// </summary>
-    private PrimaryPortError Grouped(Error error) {
-        return error as PrimaryPortError ?? RequestBindingError.ArgumentInvalid(_argumentPath, error);
+    private RequestBinder<TArgument> NestedBinder() {
+        return new RequestBinder<TArgument>(_value!, _envelope, _binder.Options, _argumentPath);
     }
 
 }

@@ -92,8 +92,7 @@ public sealed class ListOfComplexPropertiesConverter<TRequest, TArgument> {
             RequestBinder<TArgument> nested  = new(element!, _envelope, _binder.Options, elementPath);
             Outcome<TProperty>       outcome = bindElement(nested);
             if (outcome.IsFailure) {
-                Error error = outcome.Error!;
-                _binder.Record(error as PrimaryPortError ?? RequestBindingError.ArgumentInvalid(elementPath, error));
+                _binder.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, elementPath));
 
                 continue;
             }
