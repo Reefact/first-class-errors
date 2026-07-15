@@ -32,6 +32,23 @@ Les deux modes sont détaillés ci-dessous.
 
 ## Mode solution
 
+Le mode solution déroule ce flux de bout en bout. Le mode assemblies entre plus bas — au niveau des workers — et saute le build, la découverte et l’opt-in :
+
+```mermaid
+flowchart TB
+    S[Solution] --> B[Build, sauf --no-build]
+    B --> D[Découverte des projets]
+    D --> O[Filtrage opt-in]
+    O --> A[Assemblies de sortie]
+    A --> W1[Worker 1]
+    A --> W2[Worker 2]
+    A --> W3[Worker 3]
+    W1 --> G[Agrégation]
+    W2 --> G
+    W3 --> G
+    G --> R[Markdown, HTML ou JSON]
+```
+
 Le parcours CLI courant part d’une solution :
 
 ```bash
