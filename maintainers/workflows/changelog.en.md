@@ -84,11 +84,13 @@ to a pull request from a fork — the key is never exposed to fork PRs.
 
 ## Handle with care
 
-- **The train partition is defined once, in the scopes — keep it in sync with
-  `release-notes.sh`.** `collect-prs.sh` and `release-notes.sh` must agree on
-  which scopes belong to which train (`lib` → core/analyzers/testing, `cli` →
-  cli/gendoc). If you add a scope or move one between trains, change **both**, or
-  the changelog and the GitHub Release notes will describe different sets.
+- **The train partition lives in one place: [`tools/trains.sh`](../../tools/trains.sh).**
+  `collect-prs.sh`, `release-notes.sh` and this workflow all *source* it, so the
+  changelog and the GitHub Release notes can never disagree on which scopes belong
+  to which train (`lib` → core/analyzers/testing, `cli` → cli/gendoc). Add a train,
+  or move a scope between trains, **there** — not in the scripts. A whole new train
+  also needs the static edits GitHub forces (tag trigger, choice options,
+  commit-lint scopes): follow [Adding a release train](../AddingAReleaseTrain.en.md).
 - **The `[Unreleased]` block is *replaced*, never prepended.** `merge-unreleased.sh`
   owns the block: on every run it swaps the whole `## [Unreleased]` section for the
   freshly drafted one and leaves released `## [x.y.z]` sections untouched. This is
