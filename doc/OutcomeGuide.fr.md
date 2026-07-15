@@ -75,9 +75,19 @@ En cas d’échec, `Error` contient l’erreur structurée. Après avoir établi
 
 Préférez un pipeline lorsque cela rend le contrôle de flux plus clair.
 
-## `Then` : continuer seulement après un succès
+## `Then` : continuer après un succès
 
-`Then(...)` exécute l’opération suivante uniquement lorsque l’outcome courant a réussi. Un échec court-circuite la chaîne et est propagé sans modification.
+`Then(...)` exécute l’étape suivante uniquement lorsque l’outcome courant a réussi ; un échec court-circuite la chaîne et est propagé sans modification. Ce que fait l’étape dépend de la fonction que vous passez — c’est son type de retour qui décide.
+
+Une fonction qui **renvoie une valeur** transforme la valeur portée (une étape qui ne peut pas échouer) :
+
+```csharp
+Outcome<Money> total =
+    TryCreateAmount(value, currencyCode)
+        .Then(amount => amount.WithVat());
+```
+
+Une fonction qui **renvoie un `Outcome`** exécute une autre étape susceptible d’échouer :
 
 ```csharp
 Outcome<Receipt> result =
@@ -86,26 +96,7 @@ Outcome<Receipt> result =
         .Then(Charge);
 ```
 
-L’exemple comporte trois points d’échec possibles, mais l’appelant reçoit un seul `Outcome<Receipt>`. La première erreur reste le résultat.
-
-`Then` convient lorsque l’étape suivante peut elle-même échouer et retourne donc un autre `Outcome` ou `Outcome<T>`.
-
-## `To` : transformer une valeur réussie
-
-`To(...)` transforme la valeur portée par un `Outcome<T>` réussi. Il ne s’exécute pas après un échec.
-
-```csharp
-Outcome<Money> total =
-    TryCreateAmount(value, currencyCode)
-        .To(amount => amount.WithVat());
-```
-
-Utilisez `To` pour une transformation qui ne peut pas échouer. Utilisez `Then` lorsque la transformation retourne un outcome parce qu’elle peut échouer.
-
-```csharp
-Outcome<Money> mapped = amountOutcome.To(AddVat);
-Outcome<Money> validated = amountOutcome.Then(CheckLimits);
-```
+La seconde chaîne comporte trois points d’échec possibles, pourtant l’appelant reçoit un seul `Outcome<Receipt>` et la première erreur reste le résultat. Dans les deux cas l’outcome reste plat : une étape qui renvoie un `Outcome` n’est jamais enveloppée dans un autre.
 
 ## `Recover` : remplacer volontairement un échec
 
@@ -191,7 +182,7 @@ Outcome<Receipt> result =
             cancellationToken);
 ```
 
-`OutcomeTaskExtensions` permet également à un `Task<Outcome>` ou `Task<Outcome<T>>` de continuer directement avec `Then`, `To`, `Recover` et `Finally`.
+`OutcomeTaskExtensions` permet également à un `Task<Outcome>` ou `Task<Outcome<T>>` de continuer directement avec `Then`, `Recover` et `Finally`.
 
 Préférez un token d’annulation visible pour tout le flux applicatif. Une annulation reste une annulation ; ne la traduisez pas en erreur métier sauf si l’application modélise explicitement cette situation.
 
@@ -241,7 +232,7 @@ Avant de valider un flux `Outcome`, vérifiez que :
 - l’échec est attendu et appartient au contrôle de flux normal ;
 - les échecs portent une `Error`, jamais une exception ou une chaîne ;
 - les factories restent la source unique de construction des erreurs ;
-- `Then` est utilisé pour les étapes susceptibles d’échouer et `To` pour les transformations infaillibles ;
+- chaque étape de composition utilise `Then`, en renvoyant une valeur pour transformer ou un `Outcome` pour chaîner une étape susceptible d’échouer ;
 - la récupération est intentionnelle et ne supprime pas silencieusement des erreurs utiles ;
 - la conversion en exception n’a lieu qu’à une frontière claire ;
 - une chaîne fluide est réellement plus lisible qu’un branchement explicite ;

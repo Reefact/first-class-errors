@@ -139,7 +139,7 @@ Outcome<Receipt> result =
 
 The first failure short-circuits the remaining steps and is propagated unchanged. Use a fluent chain only when it reads more clearly than ordinary branching.
 
-The full behavior of `Then`, `To`, `Recover`, `Finally`, async overloads, and the escape hatches back to exceptions (`ThrowIfFailure()`, `GetResultOrThrow()`) is documented in [Composing with Outcome](OutcomeGuide.en.md).
+The full behavior of `Then`, `Recover`, `Finally`, async overloads, and the escape hatches back to exceptions (`ThrowIfFailure()`, `GetResultOrThrow()`) is documented in [Composing with Outcome](OutcomeGuide.en.md).
 
 ## 🧩 Logging and support
 

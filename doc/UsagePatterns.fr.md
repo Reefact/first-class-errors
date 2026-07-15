@@ -139,7 +139,7 @@ Outcome<Receipt> result =
 
 Le premier échec court-circuite les étapes suivantes et est propagé sans modification. Utilisez une chaîne fluide uniquement lorsqu’elle est plus lisible qu’un branchement explicite.
 
-Le comportement complet de `Then`, `To`, `Recover`, `Finally`, des surcharges async et des échappatoires vers les exceptions (`ThrowIfFailure()`, `GetResultOrThrow()`) est documenté dans [Composer avec Outcome](OutcomeGuide.fr.md).
+Le comportement complet de `Then`, `Recover`, `Finally`, des surcharges async et des échappatoires vers les exceptions (`ThrowIfFailure()`, `GetResultOrThrow()`) est documenté dans [Composer avec Outcome](OutcomeGuide.fr.md).
 
 ## 🧩 Logging et support
 

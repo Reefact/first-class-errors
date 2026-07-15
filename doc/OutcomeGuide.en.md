@@ -75,9 +75,19 @@ On failure, `Error` contains the structured failure. After success has been esta
 
 Prefer a pipeline when that makes the control flow clearer.
 
-## `Then`: continue only after success
+## `Then`: continue after a success
 
-`Then(...)` runs the next operation only when the current outcome succeeded. A failure short-circuits the chain and is propagated unchanged.
+`Then(...)` runs the next step only when the current outcome succeeded; a failure short-circuits the chain and is propagated unchanged. What the step does depends on the function you pass — its return type decides.
+
+A function that **returns a value** transforms the carried value (a step that cannot fail):
+
+```csharp
+Outcome<Money> total =
+    TryCreateAmount(value, currencyCode)
+        .Then(amount => amount.WithVat());
+```
+
+A function that **returns an `Outcome`** runs another step that may itself fail:
 
 ```csharp
 Outcome<Receipt> result =
@@ -86,26 +96,7 @@ Outcome<Receipt> result =
         .Then(Charge);
 ```
 
-The example has three possible failure points, but the caller receives one `Outcome<Receipt>`. The first error remains the result.
-
-`Then` is appropriate when the next step may itself fail and therefore returns another `Outcome` or `Outcome<T>`.
-
-## `To`: transform a successful value
-
-`To(...)` maps the value carried by a successful `Outcome<T>`. It does not run after a failure.
-
-```csharp
-Outcome<Money> total =
-    TryCreateAmount(value, currencyCode)
-        .To(amount => amount.WithVat());
-```
-
-Use `To` for a transformation that cannot fail. Use `Then` when the transformation returns an outcome because it may fail.
-
-```csharp
-Outcome<Money> mapped = amountOutcome.To(AddVat);
-Outcome<Money> validated = amountOutcome.Then(CheckLimits);
-```
+The second chain has three possible failure points, yet the caller receives a single `Outcome<Receipt>` and the first error remains the result. Either way the outcome stays flat: a step that returns an `Outcome` is never wrapped in another one.
 
 ## `Recover`: replace a failure deliberately
 
@@ -191,7 +182,7 @@ Outcome<Receipt> result =
             cancellationToken);
 ```
 
-`OutcomeTaskExtensions` also lets a `Task<Outcome>` or `Task<Outcome<T>>` continue directly with `Then`, `To`, `Recover`, and `Finally`.
+`OutcomeTaskExtensions` also lets a `Task<Outcome>` or `Task<Outcome<T>>` continue directly with `Then`, `Recover`, and `Finally`.
 
 Prefer one visible cancellation token for the whole application flow. Cancellation remains cancellation; do not translate it into a domain error unless the application explicitly models that situation as one.
 
@@ -241,7 +232,7 @@ Before approving an `Outcome` flow, verify that:
 - failure is expected and belongs in normal control flow;
 - failures carry an `Error`, never an exception or string;
 - factories remain the single source of error construction;
-- `Then` is used for fallible steps and `To` for infallible mapping;
+- each composition step uses `Then`, returning a value to map or an `Outcome` to chain a step that may fail;
 - recovery is intentional and does not silently discard useful failures;
 - exception conversion occurs only at a clear boundary;
 - a fluent chain is genuinely clearer than explicit branching;
