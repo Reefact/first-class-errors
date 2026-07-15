@@ -158,19 +158,13 @@ public void Une_erreur_de_commande_absente_est_totalement_deterministe() {
 }
 ```
 
-Figez les deux lorsqu’un même test vérifie les deux valeurs d’occurrence, ou lorsqu’il transmet l’erreur complète à un snapshot fait main comparé à une chaîne de référence fixe. Une bibliothèque de snapshot comme [Verify](https://github.com/VerifyTests/Verify) est un cas différent : elle scrubbe déjà d’elle-même les `Guid` et `DateTime` volatils en placeholders stables (`Guid_1`, `DateTimeOffset_1`), donc vous les laissez généralement tels quels et ne figez que lorsque le snapshot doit montrer la valeur exacte. Dans tous les cas, si un test ne porte que sur le code d’erreur ou le contexte, ne figez pas des champs sans rapport simplement parce que les helpers existent.
-
 ## Portée et tests parallèles
 
-Les overrides sont :
+Un override prend effet à l’ouverture de son `using` et est défait à sa libération. En dehors de ce bloc, l’horloge et les identifiants retrouvent leur comportement réel.
 
-- jetables et prévus pour des portées `using` ;
-- locaux au contexte d’exécution courant ;
-- restaurés à la fin de la portée ;
-- inactifs en dehors de cette portée ;
-- conçus pour ne pas fuiter vers des tests parallèles sans rapport.
+L’override n’est pas un état global partagé : il suit le flux d’exécution du test lui-même (en interne, il est stocké dans un `AsyncLocal`). Une valeur figée dans un test est donc invisible pour tout code s’exécutant en dehors de ce test — y compris les autres tests s’exécutant en même temps. Deux tests peuvent chacun figer l’horloge à un instant différent et s’exécuter en parallèle sans se gêner.
 
-Gardez la portée aussi étroite que possible autour du code qui crée les erreurs.
+Pour cette raison, gardez le `using` aussi serré que possible autour du code qui crée les erreurs : les valeurs figées couvrent alors exactement ce que le test vérifie, et rien d’autre.
 
 ## Erreurs fréquentes
 
