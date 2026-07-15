@@ -12,7 +12,7 @@ public sealed class ListBindingTests {
         RequiredField<string>                firstName = guest.SimpleProperty(g => g.FirstName).AsRequired();
         OptionalReferenceField<EmailAddress> email     = guest.SimpleProperty(g => g.Email).AsOptionalReference(EmailAddress.Parse);
 
-        return guest.Build(read => new Guest(read.Get(firstName), read.Get(email)));
+        return guest.Build(s => new Guest(s.Get(firstName), s.Get(email)));
     }
 
     private static BookingRequest RequestWith(IReadOnlyList<string?>? tags = null, IReadOnlyList<GuestDto?>? guests = null) {
@@ -25,7 +25,7 @@ public sealed class ListBindingTests {
 
         RequiredField<IReadOnlyList<Tag>> tags = bind.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
 
-        Outcome<IReadOnlyList<Tag>> outcome = bind.Build(read => read.Get(tags));
+        Outcome<IReadOnlyList<Tag>> outcome = bind.Build(s => s.Get(tags));
         Check.That(outcome.GetResultOrThrow().Select(t => t.Value)).ContainsExactly("vip", "late-checkout");
     }
 
@@ -61,7 +61,7 @@ public sealed class ListBindingTests {
 
         RequiredField<IReadOnlyList<Tag>> tags = bind.ListOfSimpleProperties(r => r.Tags).AsOptional(Tag.Parse);
 
-        Outcome<IReadOnlyList<Tag>> outcome = bind.Build(read => read.Get(tags));
+        Outcome<IReadOnlyList<Tag>> outcome = bind.Build(s => s.Get(tags));
         Check.That(outcome.IsSuccess).IsTrue();
         Check.That(outcome.GetResultOrThrow()).IsEmpty();
     }
@@ -74,7 +74,7 @@ public sealed class ListBindingTests {
         RequiredField<IReadOnlyList<Guest>> guests =
             bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
 
-        Outcome<IReadOnlyList<Guest>> outcome = bind.Build(read => read.Get(guests));
+        Outcome<IReadOnlyList<Guest>> outcome = bind.Build(s => s.Get(guests));
         Check.That(outcome.GetResultOrThrow().Select(g => g.FirstName)).ContainsExactly("Alice", "Bob");
         Check.That(outcome.GetResultOrThrow()[1].Email).IsNull();
     }
@@ -118,7 +118,7 @@ public sealed class ListBindingTests {
         RequiredField<IReadOnlyList<Guest>> guests =
             bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsOptional(BindGuest);
 
-        Outcome<IReadOnlyList<Guest>> outcome = bind.Build(read => read.Get(guests));
+        Outcome<IReadOnlyList<Guest>> outcome = bind.Build(s => s.Get(guests));
         Check.That(outcome.IsSuccess).IsTrue();
         Check.That(outcome.GetResultOrThrow()).IsEmpty();
     }

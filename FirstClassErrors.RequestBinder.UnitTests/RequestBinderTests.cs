@@ -14,7 +14,7 @@ public sealed class RequestBinderTests {
         RequiredField<BookingDate> checkIn  = stay.SimpleProperty(s => s.CheckIn).AsRequired(BookingDate.Parse);
         RequiredField<BookingDate> checkOut = stay.SimpleProperty(s => s.CheckOut).AsRequired(BookingDate.Parse);
 
-        return stay.Build(read => new Stay(read.Get(checkIn), read.Get(checkOut)));
+        return stay.Build(s => new Stay(s.Get(checkIn), s.Get(checkOut)));
     }
 
     [Fact(DisplayName = "Build assembles the command exactly once when every property bound.")]
@@ -24,10 +24,10 @@ public sealed class RequestBinderTests {
         RequiredField<EmailAddress> email = bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
         int assembled = 0;
-        Outcome<string> outcome = bind.Build(read => {
+        Outcome<string> outcome = bind.Build(s => {
             assembled++;
 
-            return read.Get(email).Value;
+            return s.Get(email).Value;
         });
 
         Check.That(outcome.IsSuccess).IsTrue();
@@ -83,7 +83,7 @@ public sealed class RequestBinderTests {
                  bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(g => {
                      RequiredField<string> firstName = g.SimpleProperty(x => x.FirstName).AsRequired();
 
-                     return g.Build(read => new Guest(read.Get(firstName), null));
+                     return g.Build(s => new Guest(s.Get(firstName), null));
                  });
 
                  return bind.Build(_ => "never");

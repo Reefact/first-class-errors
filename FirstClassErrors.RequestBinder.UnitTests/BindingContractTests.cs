@@ -125,7 +125,7 @@ public sealed class BindingContractTests {
             .AsOptional(g => {
                 RequiredField<string> firstName = g.SimpleProperty(x => x.FirstName).AsRequired();
 
-                return g.Build(read => new Guest(read.Get(firstName), null));
+                return g.Build(s => new Guest(s.Get(firstName), null));
             });
 
         Outcome<string> outcome = bind.Build(_ => "never");
@@ -211,12 +211,12 @@ public sealed class BindingContractTests {
         var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
 
         // A null field, on each of the three Get overloads (the assembler runs because `bind` recorded no failure):
-        Check.ThatCode(() => bind.Build(read => read.Get((RequiredField<EmailAddress>)null!).Value)).Throws<ArgumentNullException>();
-        Check.ThatCode(() => bind.Build(read => read.Get((OptionalReferenceField<EmailAddress>)null!) is null)).Throws<ArgumentNullException>();
-        Check.ThatCode(() => bind.Build(read => read.Get((OptionalValueField<int>)null!).HasValue)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => bind.Build(s => s.Get((RequiredField<EmailAddress>)null!).Value)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => bind.Build(s => s.Get((OptionalReferenceField<EmailAddress>)null!) is null)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => bind.Build(s => s.Get((OptionalValueField<int>)null!).HasValue)).Throws<ArgumentNullException>();
 
         // A field owned by a different binder is a cross-binder mix-up — rejected loudly, not read silently.
-        Check.ThatCode(() => bind.Build(read => read.Get(tokenOfA).Value)).Throws<InvalidOperationException>();
+        Check.ThatCode(() => bind.Build(s => s.Get(tokenOfA).Value)).Throws<InvalidOperationException>();
     }
 
     #endregion

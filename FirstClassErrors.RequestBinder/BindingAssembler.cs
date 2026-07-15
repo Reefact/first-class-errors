@@ -9,6 +9,6 @@ namespace FirstClassErrors.RequestBinder;
 ///     <see cref="BindingScope" /> is a <c>ref struct</c> and cannot be used as a generic type argument.
 /// </remarks>
 /// <typeparam name="TCommand">The type of the assembled command or query.</typeparam>
-/// <param name="read">The scope through which bound values are read.</param>
+/// <param name="scope">The scope through which bound values are read.</param>
 /// <returns>The assembled command.</returns>
-public delegate TCommand BindingAssembler<TCommand>(BindingScope read);
+public delegate TCommand BindingAssembler<TCommand>(BindingScope scope);
