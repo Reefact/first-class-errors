@@ -13,7 +13,7 @@ La bibliothèque enrichit l’`Error` portée par l’exception avec un code sta
 
 Vous pourriez. Transporter l’`Error` de la bibliothèque dans un type résultat générique — par exemple le `Result<T, E>` de [CSharpFunctionalExtensions](https://github.com/vkhorikov/CSharpFunctionalExtensions) — conserve la structure qu’un simple `Result<T, string>` perdrait.
 
-`Outcome` est cette idée, spécialisée pour ce modèle d’erreur. Son côté échec est toujours une `Error` — et non un second paramètre de type à propager dans chaque signature — et sa petite API (`Then`, `To`, `Recover`, `Finally`) est nommée par intention plutôt qu’avec la mécanique de la programmation fonctionnelle (`Map`, `Bind`, `Match`). L’objectif : du code de domaine et des use cases qui se lisent comme un flux métier, pas comme de la tuyauterie de résultat générique.
+`Outcome` est cette idée, spécialisée pour ce modèle d’erreur. Son côté échec est toujours une `Error` — et non un second paramètre de type à propager dans chaque signature — et sa petite API (`Then`, `Recover`, `Finally`) est nommée par intention plutôt qu’avec la mécanique de la programmation fonctionnelle (`Map`, `Bind`, `Match`). L’objectif : du code de domaine et des use cases qui se lisent comme un flux métier, pas comme de la tuyauterie de résultat générique.
 
 Voir [Cas d’usage](UsagePatterns.fr.md) et [Comparaison avec les librairies de gestion d’erreurs](ComparisonWithOtherLibraries.fr.md).
 

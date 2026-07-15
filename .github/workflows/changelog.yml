@@ -18,7 +18,7 @@ on:
           - cli
         required: true
       from_ref:
-        description: "Previous tag to diff from (blank = the train's latest tag; none = whole history)"
+        description: "Previous tag to diff from. Leave blank to auto-detect the train's latest tag; if the train has no tag yet, the whole history is used."
         required: false
         default: ''
 
@@ -41,6 +41,9 @@ jobs:
   draft-changelog:
     name: Draft ${{ inputs.component }} changelog
     runs-on: ubuntu-latest
+    # Collect (one gh call per candidate PR) + one Anthropic API call + a branch
+    # push and PR open is ~1-2 min on a normal release; cap a hung run well below
+    # the 6-hour default.
     timeout-minutes: 15
     permissions:
       contents: write        # push the draft branch
@@ -49,6 +52,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
+          # Always draft from main, whatever branch the dispatch UI had selected:
+          # collect-prs.sh gathers PRs merged into main, so drafting on any other
+          # ref would edit a stale copy of the changelog and drag that branch's
+          # commits into the draft pull request.
+          ref: main
           # Full history + tags so the train's previous tag (and its merge time,
           # the lower bound of the pull-request range) resolves.
           fetch-depth: 0
@@ -58,15 +66,18 @@ jobs:
         env:
           COMPONENT: ${{ inputs.component }}
         run: |
-          case "$COMPONENT" in
-            lib) FILE="CHANGELOG.md"; PACKAGE="FirstClassErrors and FirstClassErrors.Testing"; TRAIN="lib" ;;
-            cli) FILE="FirstClassErrors.Cli/CHANGELOG.md"; PACKAGE="FirstClassErrors.Cli (the fce .NET tool)"; TRAIN="cli" ;;
-            *) echo "::error::unknown component '$COMPONENT' (expected lib or cli)"; exit 1 ;;
-          esac
+          # Changelog file and package label come from tools/trains.sh, the single
+          # source of truth shared with release-notes.sh / collect-prs.sh.
+          . tools/trains.sh
+          PACKAGE="$(package_of "$COMPONENT")"
+          if [ -z "$PACKAGE" ]; then
+            echo "::error::unknown component '$COMPONENT' (expected one of: $(train_ids | tr '\n' ' ' | sed 's/ *$//'))"
+            exit 1
+          fi
           {
-            echo "file=$FILE"
+            echo "file=$(changelog_of "$COMPONENT")"
             echo "package=$PACKAGE"
-            echo "train=$TRAIN"
+            echo "train=$COMPONENT"
           } >> "$GITHUB_OUTPUT"
 
       - name: Collect merged pull requests for the train
@@ -95,18 +106,19 @@ jobs:
             exit 1
           fi
 
-          PROMPT="$(cat .github/changelog-prompt.md)"
-          PRS="$(cat prs.json)"
           CONTEXT="$(printf 'Release train: %s\nPackage(s) this changelog documents: %s\nAudience: developers who consume this package from NuGet.\nOnly describe changes to this package; ignore unrelated components.' "$COMPONENT" "$PACKAGE")"
 
           # claude-sonnet-5 is the current Sonnet 5 alias; thinking is disabled so the
           # whole token budget goes to the changelog. Build the body with jq so all
-          # JSON escaping (of untrusted PR text) is handled for us.
+          # JSON escaping (of untrusted PR text) is handled for us. The prompt and
+          # the PR payload go in via --rawfile, NOT --arg: a single command-line
+          # argument over ~128 KiB fails with E2BIG, and 200 long-bodied PRs can
+          # exceed that.
           jq -n \
             --arg model "claude-sonnet-5" \
-            --arg prompt "$PROMPT" \
+            --rawfile prompt .github/changelog-prompt.md \
             --arg context "$CONTEXT" \
-            --arg prs "$PRS" \
+            --rawfile prs prs.json \
             '{
                model: $model,
                max_tokens: 4000,
@@ -165,13 +177,30 @@ jobs:
           COMPONENT: ${{ inputs.component }}
           FILE: ${{ steps.setup.outputs.file }}
         run: |
-          BRANCH="chore/changelog-${COMPONENT}-draft"
+          # No Conventional Commit type in the branch name: CONTRIBUTING.md reserves
+          # the first segment for the owner, and this branch is owned by the bot.
+          BRANCH="github-actions/changelog-${COMPONENT}-draft"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          if git diff --quiet -- "$FILE"; then
+          # status --porcelain, NOT git diff: a brand-new train's changelog file is
+          # created UNTRACKED by merge-unreleased.sh, and git diff is blind to
+          # untracked paths — the first draft for a new train would silently
+          # propose nothing.
+          if [ -z "$(git status --porcelain -- "$FILE")" ]; then
             echo "No changes to $FILE — nothing to propose."
             exit 0
+          fi
+
+          # Never force-push over a human's commits: curating the draft on this
+          # branch is the feature's intended review flow, so refuse to refresh a
+          # draft that already carries manual work — merge or close that PR (or
+          # delete the branch) first.
+          if git fetch origin "$BRANCH" 2>/dev/null; then
+            if git log origin/main..FETCH_HEAD --format='%an' | grep -qv '^github-actions\[bot\]$'; then
+              echo "::error::origin/$BRANCH has commits not made by this workflow; merge or close the open draft PR (or delete the branch) before re-dispatching."
+              exit 1
+            fi
           fi
 
           git checkout -B "$BRANCH"
@@ -182,9 +211,14 @@ jobs:
           cat > pr-body.md <<'BODY'
           Auto-drafted from the merged pull requests of this release train.
 
-          **Before merging**, read the entry against the actual pull requests and
-          delete any benefit the model inferred rather than found. The generator is
-          told to invent nothing, but the human check is the whole point of this PR.
+          **Before merging:**
+
+          * Read the entry against the actual pull requests and delete any benefit
+            the model inferred rather than found. The generator is told to invent
+            nothing, but the human check is the whole point of this PR.
+          * CI checks will not start on their own: this PR was opened with the
+            workflow's own token, and GitHub does not trigger workflows for events
+            created by it. **Close and reopen this PR** to run the required checks.
           BODY
 
           # Attach the `documentation` label only if the repo already defines it, so a
