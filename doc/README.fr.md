@@ -17,9 +17,9 @@
 
 ![FirstClassErrors](./images/first-class-errors.png "FirstClassErrors")
 
-Une erreur applicative se réduit trop souvent à un code ou une chaîne de caractères, sans rien qui en explique le sens. FirstClassErrors en fait un concept de première classe de votre domaine. Vous décrivez chaque situation d’erreur une seule fois, avec ses règles, à un seul endroit du code ; toute la bibliothèque s’appuie ensuite sur ce modèle.
+## 🧩 Un seul modèle pour toute la chaîne
 
-À partir de là, elle couvre toute la chaîne :
+Une erreur applicative se réduit trop souvent à un code ou une chaîne de caractères, sans rien qui en explique le sens. FirstClassErrors en fait un concept de première classe de votre domaine. Vous décrivez chaque situation d’erreur une seule fois, avec ses règles, à un seul endroit du code ; toute la bibliothèque s’appuie ensuite sur ce modèle.
 
 **Modéliser l’erreur**
 Une erreur devient un objet qui porte son propre sens — qu’il s’agisse d’une règle métier violée, d’un appel entrant rejeté ou d’une panne d’un service externe, passagère ou définitive.
