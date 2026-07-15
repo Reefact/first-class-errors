@@ -3,7 +3,22 @@
 🌍 **Languages:**  
 🇬🇧 English (this file) | 🇫🇷 [Français](./DocumentationExtractionReference.fr.md)
 
-This page is the operational reference for selecting projects and assemblies, running extraction workers, and handling failures. For the mental model first, read [Architecture of the Documentation Pipeline](ArchitectureOfTheDocumentationPipeline.en.md).
+This page is the operational reference for selecting projects and assemblies, configuring isolated extraction, and handling its failures. For the mental model first, read [Architecture of the Documentation Pipeline](ArchitectureOfTheDocumentationPipeline.en.md).
+
+## Choosing a mode
+
+Two entry points select what gets documented. Pick from the need, not the command:
+
+| Need | Mode |
+| --- | --- |
+| start directly from a `.sln` | `--solution` |
+| apply the `.csproj` opt-in filter | `--solution` |
+| reuse the output of a previous build | `--solution --no-build` |
+| select exact `.dll` files | `--assemblies` |
+| aggregate assemblies from several solutions | `--assemblies` |
+| avoid MSBuild project discovery entirely | `--assemblies` |
+
+The two modes are detailed below.
 
 ## Solution mode
 
@@ -112,43 +127,46 @@ The worker:
 3. serializes the complete extraction result as JSON;
 4. exits.
 
-The generator reads that result and continues with the next assembly.
+The generator then collects each worker's result into the aggregated catalog.
 
-## Why workers are required
-
-Documentation methods and example factories are executable code. They may:
-
-- initialize static state;
-- load application dependencies;
-- use a different FirstClassErrors version;
-- throw during execution;
-- crash the process;
-- hang indefinitely.
-
-Per-assembly workers isolate those risks. A failure remains associated with the assembly that produced it.
+Each assembly runs in its own worker to isolate its load context, its FirstClassErrors version, and any crash or hang, so a failure stays associated with the assembly that produced it. For the architectural reasons behind that isolation, see [Architecture of the Documentation Pipeline](ArchitectureOfTheDocumentationPipeline.en.md#3-workers-isolate-target-execution).
 
 ## Failures and continuation
 
-Extraction failures are data, not necessarily immediate process crashes.
+Two categories of failure behave differently, and the difference is exactly what `--strict` controls.
 
-Failures reported by a worker that completes normally are always recorded and logged, and generation continues with the remaining assemblies regardless of the configured failure behavior:
+**Per-error extraction failures** happen while a worker runs the factories and are captured in its result. The run always records them and continues — `--strict` does not change this — so they never fail the command on their own:
 
-- a `[DocumentedBy]` target cannot be found;
-- the target has an invalid signature;
+- a `[DocumentedBy]` target cannot be found or has an invalid signature;
 - a documentation method throws;
 - an example factory throws.
 
-Process-level failures honor the configured failure behavior, which determines whether the generator records the problem and continues with other assemblies, or treats the problem as fatal:
+**Process-level failures** happen around a worker rather than inside its extraction. By default the generator records them and continues with the other assemblies; under `--strict` (which sets `FailureBehavior.Stop`) it treats the first one as fatal:
 
-- an assembly cannot be loaded;
-- the worker exits unexpectedly;
-- the worker exceeds its timeout.
+- a project's output assembly cannot be found;
+- the opt-in marker is ambiguous (declared twice, or under a `Condition`);
+- the worker crashes, times out, or produces no readable output.
 
-A continued run can therefore produce a partial catalog plus explicit failures. Consumers must not mistake “a file was generated” for “every assembly was documented successfully.”
+| Failure | Default | `--strict` | Exit code | Surfaced in |
+| --- | --- | --- | --- | --- |
+| `[DocumentedBy]` missing or bad signature | recorded, run continues | recorded, run continues | `0` | result `Failures` and error log |
+| documentation method throws | recorded, run continues | recorded, run continues | `0` | result `Failures` and error log |
+| example factory throws | recorded, run continues | recorded, run continues | `0` | result `Failures` and error log |
+| ambiguous opt-in | project skipped, run continues | fatal | `0` / `1` | log |
+| output assembly not found | skipped, run continues | fatal | `0` / `1` | log |
+| worker crash, timeout, or no output | recorded, run continues | fatal | `0` / `1` | log |
+
+The command exits `0` even when the catalog is partial, so a generated file does not prove that every assembly was documented. It exits `1` only on a fatal process-level failure (under `--strict`) or an invalid invocation, and `130` on cancellation. Programmatic callers set the same behavior through `SolutionGenerationOptions.FailureBehavior`.
+
+A recorded extraction failure is logged as an error and also appears in the extraction result:
+
+```text
+Documentation extraction issue in 'artifacts/MyApp.Application.dll': MyApp.Errors.OrderErrors.OutOfStockDocumentation: The documentation factory threw while being executed. (System.InvalidOperationException: Inventory service was called during documentation extraction.)
+```
 
 ## Timeouts and process failures
 
-A worker that does not complete within its configured timeout is terminated and recorded as failed. A worker crash is also recorded with the available process information.
+A worker that does not complete within its configured timeout is terminated; the timeout and the resulting process failure are then handled as in the table above.
 
 When investigating a timeout:
 
@@ -214,17 +232,15 @@ Avoid:
 
 ## Troubleshooting checklist
 
-When expected errors are missing, verify:
+When expected errors are missing, walk the pipeline in order — each step depends on the previous one:
 
-- the project has a literal `<GenerateErrorDocumentation>true</GenerateErrorDocumentation>` in its `.csproj`;
-- the factory class has `[ProvidesErrorsFor]`;
-- the factory has `[DocumentedBy]`;
-- the referenced method exists and has a valid documentation-factory signature;
-- the documentation method and example factories complete successfully;
-- the intended configuration and framework were built;
-- `--no-build` is not reusing stale outputs;
-- worker failures and warnings were reviewed;
-- assembly-mode paths point to the intended binaries.
+1. was the project selected? (literal `<GenerateErrorDocumentation>true</GenerateErrorDocumentation>` in its own `.csproj`, or the right `--assemblies` paths);
+2. was the expected assembly found? (correct configuration and framework built; `--no-build` not reusing stale outputs);
+3. was the assembly loaded? (worker failures and warnings reviewed);
+4. were the `[ProvidesErrorsFor]` classes found? (the factory class carries the attribute);
+5. are the `[DocumentedBy]` references valid? (the referenced method exists with a valid documentation-factory signature);
+6. did the methods run? (the documentation method and example factories complete without throwing);
+7. is the output partial? (recorded extraction failures in the log or result).
 
 ---
 
