@@ -1,0 +1,70 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Build -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+
+    <!-- XML documentation -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- Version. This is only a local/dev fallback: release.yml overrides it with -p:Version from the Git tag. -->
+    <Version>0.1.0-dev</Version>
+
+    <!-- NuGet identity -->
+    <PackageId>FirstClassErrors.RequestBinder</PackageId>
+    <Authors>Sylvain AURAT</Authors>
+    <Company>Reefact</Company>
+
+    <!-- Description -->
+    <Description>
+      Fluent, framework-agnostic request binding for FirstClassErrors: converts an incoming request DTO into a typed command or query of value objects at the primary-adapter boundary, collecting every failure into a coded, documented PrimaryPortError tree — with no exception thrown on the invalid-input path.
+    </Description>
+
+    <!-- Metadata -->
+    <PackageTags>error-handling;errors;request-binding;validation;value-objects;command;cqrs;hexagonal;primary-adapter;outcome;firstclasserrors</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+
+    <!-- Links -->
+    <PackageProjectUrl>https://github.com/Reefact/first-class-errors</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Reefact/first-class-errors.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <Copyright>© Reefact 2026</Copyright>
+
+    <!-- Package assets -->
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
+    <PackageReleaseNotes>Initial preview release of the FirstClassErrors request binder.</PackageReleaseNotes>
+
+    <!-- No GeneratePackageOnBuild: packages are produced by `dotnet pack` in the release workflow
+         (.github/workflows/release.yml), so no local or CI build ever emits a stray .nupkg. -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>FirstClassErrors.RequestBinder.UnitTests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\icon.png" Pack="true" PackagePath="/" />
+    <None Include="README.nuget.md" Pack="true" PackagePath="readme.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Embed an SPDX SBOM (software bill of materials) inside the package at pack time
+         (_manifest/spdx_2.2/manifest.spdx.json), so the inventory of files and dependencies travels with
+         the artifact and is covered by the release's provenance attestation. Build-time only
+         (PrivateAssets=all): consumers never see this as a dependency. -->
+    <PackageReference Include="Microsoft.Sbom.Targets" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

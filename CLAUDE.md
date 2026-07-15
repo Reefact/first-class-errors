@@ -32,6 +32,7 @@ errors should stay structured, documented, and close to the code.
 * `FirstClassErrors.GenDoc`        — error-documentation generator (+ `.UnitTests`)
 * `FirstClassErrors.GenDoc.Worker` — background worker for doc generation
 * `FirstClassErrors.Cli`           — command-line tool
+* `FirstClassErrors.RequestBinder` — request binder for the primary-adapter boundary (+ `.UnitTests`)
 * `FirstClassErrors.Usage`         — usage examples
 * `doc/`                           — documentation, including the French translation
 
