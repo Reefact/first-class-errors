@@ -44,13 +44,13 @@ public sealed class OutcomeTaskExtensionsTests {
         Check.That(result.Error).IsSameReferenceAs(error);
     }
 
-    [Fact(DisplayName = "Awaiting To over a Task<Outcome<T>> maps the value on success.")]
+    [Fact(DisplayName = "Awaiting Then (value mapping) over a Task<Outcome<T>> maps the value on success.")]
     public async Task AwaitingToOverATaskOutcomeMapsTheValueOnSuccess() {
         // Setup
         System.Threading.Tasks.Task<Outcome<int>> task = System.Threading.Tasks.Task.FromResult(Outcome<int>.Success(6));
 
         // Exercise
-        Outcome<string> result = await task.To(value => $"n={value}");
+        Outcome<string> result = await task.Then(value => $"n={value}");
 
         // Verify
         Check.That(result.GetResultOrThrow()).IsEqualTo("n=6");

@@ -516,7 +516,7 @@ public static class OutcomeTaskExtensions {
     }
 
     // -------------------------------------------------------------------------
-    // Task<Outcome<T>> → To
+    // Task<Outcome<T>> → Then (value transform)
     // -------------------------------------------------------------------------
 
     /// <summary>
@@ -535,8 +535,8 @@ public static class OutcomeTaskExtensions {
     ///     containing the converted <see cref="Outcome{TResult}" />.
     /// </returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="task" /> is <c>null</c>.</exception>
-    public static Task<Outcome<TResult>> To<T, TResult>(this Task<Outcome<T>> task,
-                                                        Func<T, TResult>      convert)
+    public static Task<Outcome<TResult>> Then<T, TResult>(this Task<Outcome<T>> task,
+                                                          Func<T, TResult>      convert)
         where T : notnull
         where TResult : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
@@ -547,7 +547,7 @@ public static class OutcomeTaskExtensions {
         async Task<Outcome<TResult>> Core() {
             Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
-            return outcome.To(convert);
+            return outcome.Then(convert);
         }
     }
 
@@ -573,9 +573,9 @@ public static class OutcomeTaskExtensions {
     /// <exception cref="ArgumentNullException">
     ///     Thrown if the <paramref name="task" /> is <c>null</c>.
     /// </exception>
-    public static Task<Outcome<TResult>> To<T, TResult>(this Task<Outcome<T>>                     task,
-                                                        Func<T, CancellationToken, Task<TResult>> convert,
-                                                        CancellationToken                         cancellationToken = default)
+    public static Task<Outcome<TResult>> Then<T, TResult>(this Task<Outcome<T>>                     task,
+                                                          Func<T, CancellationToken, Task<TResult>> convert,
+                                                          CancellationToken                         cancellationToken = default)
         where T : notnull
         where TResult : notnull {
         if (task is null) { throw new ArgumentNullException(nameof(task)); }
@@ -586,7 +586,7 @@ public static class OutcomeTaskExtensions {
         async Task<Outcome<TResult>> Core() {
             Outcome<T> outcome = EnsureNotNull(await task.ConfigureAwait(false));
 
-            return await outcome.To(convert, cancellationToken).ConfigureAwait(false);
+            return await outcome.Then(convert, cancellationToken).ConfigureAwait(false);
         }
     }
 
