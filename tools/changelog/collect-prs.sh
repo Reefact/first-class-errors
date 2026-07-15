@@ -25,16 +25,29 @@
 set -eu
 
 component="${1:-}"
-case "$component" in
-  lib) prefix='lib-v'; train_scopes='core,analyzers,testing' ;;
-  cli) prefix='cli-v'; train_scopes='cli,gendoc' ;;
-  *)   echo "usage: collect-prs.sh <lib|cli>" >&2; exit 2 ;;
-esac
+# Tag prefix and train scopes come from tools/trains.sh (the single source of truth
+# shared with release-notes.sh), so the changelog and the release notes never diverge.
+. "$(dirname "$0")/../trains.sh"
+prefix="$(prefix_of "$component")"
+train_scopes="$(scopes_of "$component")"
+if [ -z "$prefix" ]; then
+  echo "usage: collect-prs.sh <$(train_ids | tr '\n' '|' | sed 's/|$//')>" >&2
+  exit 2
+fi
 
 # Lower bound of the range: the previous same-train tag (explicit FROM_REF, or the
 # train's latest tag). Sorted by version so lib-v1.10.0 outranks lib-v1.9.0.
 from="${FROM_REF:-}"
-if [ -z "$from" ]; then
+if [ -n "$from" ]; then
+  # FROM_REF is free text from the workflow input. Validate it resolves to a real
+  # commit before handing it to git: --end-of-options stops a leading-dash value
+  # (e.g. "--all", "--output=x") from being parsed as an option — which would
+  # silently produce a wrong range or write files instead of failing.
+  if ! git rev-parse --verify --quiet --end-of-options "${from}^{commit}" >/dev/null; then
+    echo "error: from_ref '$from' does not resolve to a commit" >&2
+    exit 2
+  fi
+else
   from="$(git tag --list "${prefix}*" --sort=-version:refname | head -n1 || true)"
 fi
 
@@ -51,6 +64,16 @@ fi
 
 candidates="$(gh pr list --search "$search" --limit 200 \
   --json number,title,body,labels,author)"
+
+# gh truncates at --limit SILENTLY, and with a search query the ordering (hence
+# WHICH 200 survive) is the search API's. A changelog that quietly omits merged
+# work is worse than a failed run: stop at saturation and ask for a narrower
+# range instead. (Exactly-200 is indistinguishable from more-than-200; the rare
+# false positive costs one re-run with from_ref set.)
+if [ "$(printf '%s\n' "$candidates" | jq 'length')" -eq 200 ]; then
+  echo "error: the candidate list saturated gh's --limit 200 and may be truncated; narrow the range with from_ref" >&2
+  exit 2
+fi
 
 # Classify each candidate by the scopes of its own commits. One `gh pr view` per
 # candidate is fine for a manually dispatched job (a release spans a handful of

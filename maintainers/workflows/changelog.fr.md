@@ -49,8 +49,10 @@ Deux entrées :
 
 Un seul job, `draft-changelog` :
 
-1. Checkout avec **`fetch-depth: 0`** — le tag précédent du train (et l'horodatage
-   de son commit, la borne basse de la plage de pull requests) doit se résoudre.
+1. Checkout de **`main`** (épinglé — quelle que soit la branche choisie dans
+   l'interface de dispatch) avec **`fetch-depth: 0`** — le tag précédent du train
+   (et l'horodatage de son commit, la borne basse de la plage de pull requests)
+   doit se résoudre.
 2. **Collecter** les pull requests du train avec
    [`tools/changelog/collect-prs.sh`](../../tools/changelog/collect-prs.sh) :
    `gh pr list` rassemble les candidates mergées dans `main` après l'heure du
@@ -68,7 +70,9 @@ Un seul job, `draft-changelog` :
    [`tools/changelog/merge-unreleased.sh`](../../tools/changelog/merge-unreleased.sh),
    qui **remplace** la section `[Unreleased]` sur place.
 5. **Ouvrir** (ou rafraîchir) une pull request depuis
-   `chore/changelog-<component>-draft` via `gh`, pour relecture.
+   `github-actions/changelog-<component>-draft` via `gh`, pour relecture. Le
+   rafraîchissement refuse de force-pusher par-dessus des commits faits par un
+   humain sur cette branche.
 
 Si aucune PR du train n'est trouvée, le job s'arrête après l'étape 2 sans rien
 ouvrir.
@@ -89,12 +93,14 @@ exposée aux PR de forks.
 
 ## À manipuler avec précaution
 
-- **La partition par train est définie une seule fois, par les scopes — gardez-la
-  synchronisée avec `release-notes.sh`.** `collect-prs.sh` et `release-notes.sh`
-  doivent s'accorder sur quels scopes appartiennent à quel train (`lib` →
-  core/analyzers/testing, `cli` → cli/gendoc). Si vous ajoutez un scope ou en
-  déplacez un entre trains, changez **les deux**, sinon le changelog et les notes
-  de release GitHub décriront des ensembles différents.
+- **La partition par train vit à un seul endroit : [`tools/trains.sh`](../../tools/trains.sh).**
+  `collect-prs.sh`, `release-notes.sh` et ce workflow le *sourcent* tous, donc le
+  changelog et les notes de release GitHub ne peuvent jamais diverger sur quels
+  scopes appartiennent à quel train (`lib` → core/analyzers/testing, `cli` →
+  cli/gendoc). Ajoutez un train, ou déplacez un scope entre trains, **là** — pas
+  dans les scripts. Un train entièrement nouveau demande aussi les édits statiques
+  que GitHub impose (trigger de tag, options du choix, scopes du commit-lint) :
+  suivez [Ajouter un train de release](../AddingAReleaseTrain.fr.md).
 - **Le bloc `[Unreleased]` est *remplacé*, jamais préfixé.** `merge-unreleased.sh`
   est propriétaire du bloc : à chaque run il échange toute la section
   `## [Unreleased]` contre celle fraîchement rédigée et laisse intactes les
@@ -109,6 +115,20 @@ exposée aux PR de forks.
   de committer sur `main` : relisez l'entrée face aux PR réelles avant de merger,
   et supprimez tout ce qui a été déduit plutôt que trouvé. Ne branchez pas ceci
   sur l'auto-merge.
+- **Les checks CI de la PR brouillon ne démarrent pas seuls — fermez-la puis
+  rouvrez-la.** La PR est poussée et ouverte avec le `GITHUB_TOKEN` du workflow,
+  et GitHub ne déclenche délibérément aucun workflow pour les événements créés par
+  ce token (sa règle anti-récursion). Les checks *required* restent donc sur
+  « Expected » jusqu'à ce qu'un humain ferme et rouvre la PR (tout événement
+  d'origine humaine convient). Le corps de PR généré le rappelle aussi. Si cet
+  aller-retour devient pénible, le correctif est de pousser et ouvrir la PR avec
+  un PAT fine-grained dédié ou un token de GitHub App au lieu de `github.token`.
+- **Un rafraîchissement n'écrase jamais des commits humains sur la branche
+  brouillon.** Curer le brouillon sur sa PR est le flux de relecture prévu : avant
+  le force-push, l'étape fetch la branche distante et échoue si elle porte un
+  commit qui n'est pas signé `github-actions[bot]` — mergez ou fermez la PR
+  brouillon ouverte (ou supprimez la branche) avant de re-dispatcher. Seules les
+  branches 100 % bot sont rafraîchies sur place.
 - **Un brouillon tronqué ou refusé fait échouer le run — il n'ouvre pas de PR
   partielle.** L'étape de rédaction inspecte la réponse de l'API et sort en
   non-zéro sur une erreur API, un `refusal` ou une troncature `max_tokens`, plutôt
