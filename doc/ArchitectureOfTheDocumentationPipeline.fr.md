@@ -9,19 +9,28 @@ FirstClassErrors dérive la documentation des erreurs du code qui les définit e
 
 ```mermaid
 flowchart LR
-    A[Factories d'erreur et DSL DescribeError]
-    B[Extraction de l'assembly]
-    C[Processus worker isolé]
-    D[Agrégation de la solution]
-    E[Renderer]
-    F[Sortie Markdown, HTML, JSON ou personnalisée]
+    CLI[CLI ou appelant programmatique]
+    G[Générateur de solution]
 
-    A --> B
-    B --> C
-    C --> D
+    subgraph W[Worker : processus isolé par assembly]
+        A[Factories d'erreur et DSL DescribeError]
+        X[Extracteur]
+        A --> X
+    end
+
+    D[Catalogue ErrorDocumentation agrégé]
+    E[Renderer]
+    F[Markdown, HTML, JSON ou sortie personnalisée]
+
+    CLI --> G
+    G -->|démarre| W
+    X -->|résultat JSON| G
+    G --> D
     D --> E
     E --> F
 ```
+
+Le worker est le processus isolé **à l’intérieur duquel** l’extraction s’exécute : le générateur démarre un worker par assembly, le worker exécute les factories et renvoie un résultat sérialisé, et ce n’est qu’ensuite que le générateur agrège et rend. Le contrôle va du générateur vers chaque worker ; les données reviennent sous forme de JSON.
 
 La frontière essentielle est la suivante :
 
@@ -29,7 +38,7 @@ La frontière essentielle est la suivante :
 
 ## 1. La connaissance est définie à côté de l’erreur
 
-Une classe statique regroupe les erreurs associées à une source :
+Une classe statique regroupe les erreurs associées à une source applicative — par exemple un type métier ou un composant :
 
 ```csharp
 [ProvidesErrorsFor(nameof(Temperature))]
@@ -67,7 +76,7 @@ private static ErrorDocumentation BelowAbsoluteZeroDocumentation() {
 
 L’extracteur trouve les classes `[ProvidesErrorsFor]`, résout les liens `[DocumentedBy]`, puis invoque les méthodes de documentation et leurs factories d’exemples.
 
-C’est important parce que les exemples sont produits par le vrai code des factories. Ce ne sont pas des chaînes copiées qui pourraient dériver silencieusement du comportement runtime.
+C’est important parce que les exemples invoquent les véritables factories d’erreur : leur structure et leurs données proviennent de ce code, et non de chaînes recopiées dans la documentation qui pourraient en dériver silencieusement.
 
 Le résultat est un catalogue en mémoire d’objets `ErrorDocumentation`, accompagné des éventuels échecs d’extraction.
 
@@ -97,7 +106,7 @@ Au niveau de la solution, le générateur :
 4. collecte la documentation et les échecs d’extraction ;
 5. déduplique et ordonne les erreurs par code.
 
-La sortie de cette étape est un catalogue global pour l’application ou l’ensemble d’assemblies sélectionné.
+La sortie de cette étape est un catalogue global pour l’application ou l’ensemble d’assemblies sélectionné. Ce catalogue — un ensemble d’objets `ErrorDocumentation` — est la représentation intermédiaire indépendante du format : chaque renderer consomme le même catalogue, si bien qu’aucun format de sortie n’est privilégié par rapport à un autre.
 
 La CLI expose le parcours courant :
 
