@@ -7,7 +7,7 @@
 
 ErrorOr, FluentResults et FirstClassErrors permettent toutes de représenter explicitement un échec, mais elles optimisent des besoins principaux différents.
 
-Cette page ne les classe pas. Elle montre une même situation à travers trois centres de gravité afin de choisir le modèle qui correspond réellement au système.
+Cette page ne cherche pas à établir un classement général. Le scénario ci-dessous met volontairement l’accent sur la stabilité, le diagnostic et la documentation des erreurs — le périmètre principal de FirstClassErrors — et joue donc en sa faveur ; d’autres scénarios, comme la validation multiple intensive ou la composition fonctionnelle poussée, peuvent naturellement favoriser ErrorOr ou FluentResults. Dans ce scénario, elle montre une même situation à travers trois centres de gravité afin de choisir le modèle qui correspond réellement au système.
 
 ## Le scénario
 
@@ -41,7 +41,7 @@ public ErrorOr<Receipt> Pay(Order order)
 
 L’appelant peut inspecter, faire un `Match`, un `Switch` ou composer le résultat. Les types d’erreurs intégrés et les métadonnées permettent de catégoriser l’échec et d’ajouter des informations propres à l’application.
 
-Choisissez cette approche lorsque le besoin central est un flux ergonomique « valeur ou erreurs », notamment lorsque plusieurs erreurs de validation ou une intégration HTTP orientée résultat sont importantes.
+Choisissez cette approche lorsque le besoin central est un flux ergonomique « valeur ou erreurs », notamment lorsque plusieurs erreurs de validation sont courantes, ou lorsque les types d’erreurs sont mappés vers des réponses HTTP.
 
 ## FluentResults : un résultat portant des raisons et des métadonnées
 
@@ -61,13 +61,34 @@ public Result<Receipt> Pay(Order order)
 }
 ```
 
-Le modèle de raisons est utile lorsqu’une application a besoin de chaînes riches de succès et d’échecs, de métadonnées et d’une gestion configurable des résultats.
+Le modèle de raisons est utile lorsqu’une application souhaite enrichir aussi bien les succès que les échecs, conserver des causes hiérarchiques et composer plusieurs résultats.
 
 Choisissez cette approche lorsque le résultat et son graphe de raisons sont l’abstraction principale que vous souhaitez enrichir et composer.
 
 ## FirstClassErrors : un modèle d’erreur avec plusieurs transports
 
-FirstClassErrors place l’erreur elle-même au centre. `Outcome<T>` (le type résultat succès-ou-échec de la bibliothèque) est une façon de faire voyager l’erreur ; `ToException()` en est une autre.
+FirstClassErrors place l’erreur elle-même au centre. Une factory nommée crée l’erreur ; `Outcome<T>` (le type résultat succès-ou-échec de la bibliothèque) est une façon de la faire voyager :
+
+```csharp
+public Outcome<Receipt> Pay(Order order)
+{
+    if (provider.Declines(order, out string providerCode))
+    {
+        return Outcome<Receipt>.Failure(
+            PaymentError.PaymentDeclined(providerCode, order.PaymentId));
+    }
+
+    return Outcome<Receipt>.Success(new Receipt(order.Id));
+}
+```
+
+À ce niveau, les trois bibliothèques se ressemblent : une méthode retourne un succès ou un échec que l’appelant inspecte. La différence tient à l’endroit où vit le sens de l’échec — [ce que FirstClassErrors ajoute](#ce-que-firstclasserrors-ajoute-au-modèle-de-résultat) est montré plus bas.
+
+Choisissez cette approche lorsque la définition de l’erreur doit rester stable, documentée, diagnosticable et indépendante du fait qu’un appelant la retourne ou la lève.
+
+## Ce que FirstClassErrors ajoute au modèle de résultat
+
+Le transport ci-dessus ressemble aux deux autres. La différence, c’est que l’erreur est définie une seule fois, dans une factory nommée qui porte son code, ses messages, son contexte d’occurrence et un lien vers sa documentation :
 
 ```csharp
 internal static DomainError PaymentDeclined(
@@ -89,20 +110,7 @@ internal static DomainError PaymentDeclined(
 }
 ```
 
-```csharp
-public Outcome<Receipt> Pay(Order order)
-{
-    if (provider.Declines(order, out string providerCode))
-    {
-        return Outcome<Receipt>.Failure(
-            PaymentError.PaymentDeclined(providerCode, order.PaymentId));
-    }
-
-    return Outcome<Receipt>.Success(new Receipt(order.Id));
-}
-```
-
-La même factory peut aussi alimenter un flux par exception :
+La même factory alimente le flux par exception. L’erreur voyage alors comme une exception structurée et typée par catégorie (`DomainException` ici) portant la même `Error` :
 
 ```csharp
 throw PaymentError
@@ -112,7 +120,7 @@ throw PaymentError
 
 L’erreur peut en outre être liée à une documentation structurée décrivant son titre, sa règle, ses causes possibles, ses pistes d’analyse et ses exemples. Le catalogue généré (une référence lisible de toutes les erreurs documentées) et le workflow de versionnage qui le protège des changements cassants font partie de l’usage prévu de la librairie.
 
-Choisissez cette approche lorsque la définition de l’erreur doit rester stable, documentée, diagnosticable et indépendante du fait qu’un appelant la retourne ou la lève.
+Rien de tout cela ne change la méthode `Pay` ci-dessus : le transport reste léger, et la connaissance durable de l’erreur vit à côté de l’erreur, pas dans chaque site d’appel.
 
 ## Qu’est-ce qui change entre les approches ?
 
@@ -120,10 +128,10 @@ Choisissez cette approche lorsque la définition de l’erreur doit rester stabl
 | --- | --- | --- | --- |
 | Abstraction principale | valeur ou erreurs | résultat avec raisons | erreur structurée |
 | Flux d’échec sous forme de valeur | central | central | disponible via `Outcome` |
-| Erreurs ou raisons multiples | intégré | intégré | modélisé via les erreurs internes ou une agrégation applicative |
+| Erreurs ou raisons multiples | intégré | intégré | causes structurées ; l’agrégation d’erreurs indépendantes est à la charge de l’application |
 | Métadonnées / faits propres à l’occurrence | métadonnées | métadonnées | `ErrorContext` typé |
 | Séparation dédiée entre messages publics et internes | définie par l’application | définie par l’application | explicite dans le modèle central |
-| Transport de la même erreur sous forme d’exception typée | pas le modèle principal | pas le modèle principal | intégré via `ToException()` |
+| Transport par exception depuis la même définition d’erreur | pas le modèle principal | pas le modèle principal | intégré via `ToException()` — une exception structurée et typée par catégorie |
 | Taxonomie domaine / infrastructure / ports (frontières entrantes/sortantes) | définie par l’application | définie par l’application | intégrée |
 | Transience (retenter peut-il réussir ?) et direction de l’interaction (entrante ou sortante) | définies par l’application | définies par l’application | intégrées pour les erreurs d’infrastructure |
 | Documentation humaine générée | hors du périmètre principal de la librairie | hors du périmètre principal de la librairie | intégrée |

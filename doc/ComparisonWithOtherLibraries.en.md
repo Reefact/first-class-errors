@@ -7,7 +7,7 @@
 
 ErrorOr, FluentResults, and FirstClassErrors all help applications represent failure explicitly, but they optimize for different primary goals.
 
-This page does not rank them. It shows the same situation through three different centres of gravity so you can choose the model that best matches your system.
+This page does not try to rank them in general. The scenario below deliberately emphasizes error stability, diagnosis, and documentation — the primary focus of FirstClassErrors — so it plays to its strengths; other scenarios, such as heavy multi-error validation or intensive functional composition, can naturally favor ErrorOr or FluentResults. Within this scenario, it shows the same situation through three different centres of gravity so you can choose the model that best matches your system.
 
 ## The scenario
 
@@ -41,7 +41,7 @@ public ErrorOr<Receipt> Pay(Order order)
 
 A caller can inspect, match, switch on, or compose the result. Built-in error types and metadata support categorization and application-specific information.
 
-Choose this style when the central need is an ergonomic value-or-errors flow, especially when multiple validation errors or HTTP-oriented result handling are important.
+Choose this style when the central need is an ergonomic value-or-errors flow, especially when multiple validation errors are common, or when error types are mapped to HTTP responses.
 
 ## FluentResults: a result with reasons and metadata
 
@@ -61,13 +61,34 @@ public Result<Receipt> Pay(Order order)
 }
 ```
 
-The reasons model is useful when an application needs rich success and failure chains, metadata, and configurable result handling.
+The reasons model is useful when an application wants to enrich both successes and failures, keep hierarchical causes, and compose several results.
 
 Choose this style when the result and its reason graph are the primary abstraction you want to compose.
 
 ## FirstClassErrors: an error model with several transports
 
-FirstClassErrors centres the API on the error itself. `Outcome<T>` (the library's success-or-failure result type) is one way the error travels; `ToException()` is another.
+FirstClassErrors centres the API on the error itself. A named factory creates the error; `Outcome<T>` (the library's success-or-failure result type) is one way it travels:
+
+```csharp
+public Outcome<Receipt> Pay(Order order)
+{
+    if (provider.Declines(order, out string providerCode))
+    {
+        return Outcome<Receipt>.Failure(
+            PaymentError.PaymentDeclined(providerCode, order.PaymentId));
+    }
+
+    return Outcome<Receipt>.Success(new Receipt(order.Id));
+}
+```
+
+At this level the three libraries look alike: a method returns a success or a failure the caller inspects. The difference is where the failure's meaning lives — [what FirstClassErrors adds](#what-firstclasserrors-adds-to-the-result-model) is shown below.
+
+Choose this style when the error definition itself must remain stable, documented, diagnosable, and independent from whether a caller returns or throws it.
+
+## What FirstClassErrors adds to the result model
+
+The transport above looks like the other two. The difference is that the error is defined once, in a named factory that carries its code, messages, occurrence context, and a link to documentation:
 
 ```csharp
 internal static DomainError PaymentDeclined(
@@ -89,20 +110,7 @@ internal static DomainError PaymentDeclined(
 }
 ```
 
-```csharp
-public Outcome<Receipt> Pay(Order order)
-{
-    if (provider.Declines(order, out string providerCode))
-    {
-        return Outcome<Receipt>.Failure(
-            PaymentError.PaymentDeclined(providerCode, order.PaymentId));
-    }
-
-    return Outcome<Receipt>.Success(new Receipt(order.Id));
-}
-```
-
-The same factory can also feed exception flow:
+The same factory feeds exception flow. The error travels as a structured, category-typed exception (`DomainException` here) carrying the same `Error`:
 
 ```csharp
 throw PaymentError
@@ -112,7 +120,7 @@ throw PaymentError
 
 The error can additionally be linked to structured documentation describing its title, rule, possible causes, analysis leads, and examples. The generated catalog (a human-readable reference of every documented error) and the versioning workflow that guards it against breaking changes are part of the library's intended use.
 
-Choose this style when the error definition itself must remain stable, documented, diagnosable, and independent from whether a caller returns or throws it.
+None of this changes the `Pay` method above: the transport stays small, and the durable error knowledge lives beside the error, not in each call site.
 
 ## What changes between the approaches?
 
@@ -120,10 +128,10 @@ Choose this style when the error definition itself must remain stable, documente
 | --- | --- | --- | --- |
 | Primary abstraction | value or errors | result with reasons | structured error |
 | Value-based failure flow | central | central | available through `Outcome` |
-| Multiple errors or reasons | built in | built in | modeled through inner errors or application aggregation |
+| Multiple errors or reasons | built in | built in | structured causes; aggregating independent errors is left to the application |
 | Metadata / occurrence facts | metadata | metadata | typed `ErrorContext` |
 | Dedicated public vs internal messages | application-defined | application-defined | explicit in the core model |
-| Typed exception transport from the same error | not the primary model | not the primary model | built in through `ToException()` |
+| Exception transport from the same error definition | not the primary model | not the primary model | built in via `ToException()` — a structured, category-typed exception |
 | Domain / infrastructure / port (incoming/outgoing boundary) taxonomy | application-defined | application-defined | built in |
 | Transience (is retrying meaningful?) and interaction direction (incoming vs outgoing) | application-defined | application-defined | built in for infrastructure errors |
 | Generated human documentation | outside the library's main scope | outside the library's main scope | built in |
