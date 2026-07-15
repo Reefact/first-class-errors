@@ -343,7 +343,7 @@ public sealed class OutcomeGenericAsyncInstanceCoverageTests {
              .Throws<ArgumentNullException>();
     }
 
-    [Fact(DisplayName = "The async To propagates the error on failure.")]
+    [Fact(DisplayName = "The async Then (value mapping) propagates the error on failure.")]
     public async Task TheAsyncToPropagatesTheErrorOnFailure() {
         // Setup
         CancellationToken token   = TestContext.Current.CancellationToken;
@@ -351,7 +351,7 @@ public sealed class OutcomeGenericAsyncInstanceCoverageTests {
         Outcome<int>      outcome = Outcome<int>.Failure(error);
 
         // Exercise
-        Outcome<string> result = await outcome.To(async (value, _) => {
+        Outcome<string> result = await outcome.Then(async (value, _) => {
             await Task.CompletedTask;
 
             return value.ToString();
@@ -361,14 +361,14 @@ public sealed class OutcomeGenericAsyncInstanceCoverageTests {
         Check.That(result.Error).IsSameReferenceAs(error);
     }
 
-    [Fact(DisplayName = "The async To guards against a null converter.")]
+    [Fact(DisplayName = "The async Then (value mapping) guards against a null converter.")]
     public void TheAsyncToGuardsAgainstANullConverter() {
         // Setup
         CancellationToken token   = TestContext.Current.CancellationToken;
         Outcome<int>      outcome = Outcome<int>.Success(1);
 
         // Exercise & verify
-        Check.ThatCode(() => outcome.To((Func<int, CancellationToken, Task<string>>)null!, token)
+        Check.ThatCode(() => outcome.Then((Func<int, CancellationToken, Task<string>>)null!, token)
                                     .GetAwaiter()
                                     .GetResult())
              .Throws<ArgumentNullException>();
