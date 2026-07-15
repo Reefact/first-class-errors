@@ -46,7 +46,8 @@ Two inputs:
 
 One job, `draft-changelog`:
 
-1. Checkout with **`fetch-depth: 0`** — the train's previous tag (and its commit
+1. Checkout **`main`** (pinned — whatever branch the dispatch UI had selected)
+   with **`fetch-depth: 0`** — the train's previous tag (and its commit
    timestamp, the lower bound of the pull-request range) must resolve.
 2. **Collect** the train's pull requests with
    [`tools/changelog/collect-prs.sh`](../../tools/changelog/collect-prs.sh):
@@ -64,7 +65,8 @@ One job, `draft-changelog`:
    [`tools/changelog/merge-unreleased.sh`](../../tools/changelog/merge-unreleased.sh),
    which **replaces** the `[Unreleased]` section in place.
 5. **Open** (or refresh) a pull request from
-   `chore/changelog-<component>-draft` via `gh`, for review.
+   `github-actions/changelog-<component>-draft` via `gh`, for review. The refresh
+   refuses to force-push over commits a human made on that branch.
 
 If no train-scoped PR is found, the job stops after step 2 without opening
 anything.
@@ -84,11 +86,13 @@ to a pull request from a fork — the key is never exposed to fork PRs.
 
 ## Handle with care
 
-- **The train partition is defined once, in the scopes — keep it in sync with
-  `release-notes.sh`.** `collect-prs.sh` and `release-notes.sh` must agree on
-  which scopes belong to which train (`lib` → core/analyzers/testing, `cli` →
-  cli/gendoc). If you add a scope or move one between trains, change **both**, or
-  the changelog and the GitHub Release notes will describe different sets.
+- **The train partition lives in one place: [`tools/trains.sh`](../../tools/trains.sh).**
+  `collect-prs.sh`, `release-notes.sh` and this workflow all *source* it, so the
+  changelog and the GitHub Release notes can never disagree on which scopes belong
+  to which train (`lib` → core/analyzers/testing, `cli` → cli/gendoc). Add a train,
+  or move a scope between trains, **there** — not in the scripts. A whole new train
+  also needs the static edits GitHub forces (tag trigger, choice options,
+  commit-lint scopes): follow [Adding a release train](../AddingAReleaseTrain.en.md).
 - **The `[Unreleased]` block is *replaced*, never prepended.** `merge-unreleased.sh`
   owns the block: on every run it swaps the whole `## [Unreleased]` section for the
   freshly drafted one and leaves released `## [x.y.z]` sections untouched. This is
@@ -101,6 +105,19 @@ to a pull request from a fork — the key is never exposed to fork PRs.
   the workflow opens a PR instead of committing to `main`: read the entry against
   the actual PRs before merging, and delete anything that was inferred rather than
   found. Do not wire this to auto-merge.
+- **The draft PR's CI checks do not start on their own — close and reopen it.**
+  The PR is pushed and opened with the workflow's own `GITHUB_TOKEN`, and GitHub
+  deliberately does not trigger workflows for events created by that token (its
+  anti-recursion rule). Required checks therefore sit on "Expected" until a human
+  closes and reopens the PR (any human-authored event works). The generated PR
+  body says so too. If that round-trip ever becomes annoying, the fix is to push
+  and open the PR with a dedicated fine-grained PAT or GitHub App token instead of
+  `github.token`.
+- **A refresh never overwrites human commits on the draft branch.** Curating the
+  draft on its PR is the intended review flow, so before force-pushing the step
+  fetches the remote branch and fails if it carries any commit not authored by
+  `github-actions[bot]` — merge or close the open draft PR (or delete the branch)
+  before re-dispatching. Only bot-only branches are refreshed in place.
 - **A truncated or refused draft fails the run — it does not open a partial PR.**
   The drafting step checks the API response and exits non-zero on an API error, a
   `refusal`, or a `max_tokens` truncation, rather than merging half a changelog.
