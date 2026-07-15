@@ -39,9 +39,9 @@ public sealed class SimplePropertyConverter<TRequest, TArgument> {
     /// </summary>
     /// <typeparam name="TProperty">The type of the value object.</typeparam>
     /// <param name="convert">The value-object converter.</param>
-    /// <returns>The bound property handle.</returns>
+    /// <returns>The bound field token.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="convert" /> is <c>null</c>.</exception>
-    public RequiredProperty<TProperty> AsRequired<TProperty>(Func<TArgument, Outcome<TProperty>> convert) where TProperty : notnull {
+    public RequiredField<TProperty> AsRequired<TProperty>(Func<TArgument, Outcome<TProperty>> convert) where TProperty : notnull {
         if (convert is null) { throw new ArgumentNullException(nameof(convert)); }
 
         if (_isMissing) { return RequiredMissing<TProperty>(); }
@@ -53,16 +53,15 @@ public sealed class SimplePropertyConverter<TRequest, TArgument> {
     ///     Binds a required argument without conversion: only the presence is checked, and the raw value is the bound
     ///     value.
     /// </summary>
-    /// <returns>The bound property handle.</returns>
-    public RequiredProperty<TArgument> AsRequired() {
+    /// <returns>The bound field token.</returns>
+    public RequiredField<TArgument> AsRequired() {
         if (_isMissing) {
-            PrimaryPortError error = RequestBindingError.ArgumentRequired(_argumentPath);
-            _binder.Record(error);
+            _binder.Record(RequestBindingError.ArgumentRequired(_argumentPath));
 
-            return new RequiredProperty<TArgument>(default!, error);
+            return new RequiredField<TArgument>(_binder, default!);
         }
 
-        return new RequiredProperty<TArgument>(_value!, failure: null);
+        return new RequiredField<TArgument>(_binder, _value!);
     }
 
     /// <summary>
@@ -73,13 +72,13 @@ public sealed class SimplePropertyConverter<TRequest, TArgument> {
     /// <typeparam name="TProperty">The type of the value object.</typeparam>
     /// <param name="convert">The value-object converter.</param>
     /// <param name="rawFallback">The raw value converted when the argument is absent.</param>
-    /// <returns>The bound property handle.</returns>
+    /// <returns>The bound field token.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="convert" /> is <c>null</c>.</exception>
     /// <exception cref="InvalidOperationException">
     ///     Thrown when <paramref name="rawFallback" /> itself fails to convert: a fallback is developer-supplied
     ///     configuration, so an invalid one is a bug, not a client error.
     /// </exception>
-    public RequiredProperty<TProperty> AsOptional<TProperty>(Func<TArgument, Outcome<TProperty>> convert, TArgument rawFallback) where TProperty : notnull {
+    public RequiredField<TProperty> AsOptional<TProperty>(Func<TArgument, Outcome<TProperty>> convert, TArgument rawFallback) where TProperty : notnull {
         if (convert is null) { throw new ArgumentNullException(nameof(convert)); }
 
         if (!_isMissing) { return RecordIfInvalid(convert(_value!)); }
@@ -90,80 +89,76 @@ public sealed class SimplePropertyConverter<TRequest, TArgument> {
                 $"The configured fallback of optional argument '{_argumentPath}' does not convert: {fallback.Error!.DiagnosticMessage}");
         }
 
-        return new RequiredProperty<TProperty>(fallback.GetResultOrThrow(), failure: null);
+        return new RequiredField<TProperty>(_binder, fallback.GetResultOrThrow());
     }
 
     /// <summary>
     ///     Binds an optional reference-type argument without a fallback: absent yields a <c>null</c>
-    ///     <see cref="OptionalReferenceProperty{TProperty}.Value" /> and records nothing; a present-but-invalid
+    ///     <see cref="OptionalReferenceField{TProperty}" /> value and records nothing; a present-but-invalid
     ///     argument records <c>REQUEST_ARGUMENT_INVALID</c>.
     /// </summary>
     /// <typeparam name="TProperty">The reference type of the value object.</typeparam>
     /// <param name="convert">The value-object converter.</param>
-    /// <returns>The bound property handle.</returns>
+    /// <returns>The bound field token.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="convert" /> is <c>null</c>.</exception>
-    public OptionalReferenceProperty<TProperty> AsOptionalReference<TProperty>(Func<TArgument, Outcome<TProperty>> convert) where TProperty : class {
+    public OptionalReferenceField<TProperty> AsOptionalReference<TProperty>(Func<TArgument, Outcome<TProperty>> convert) where TProperty : class {
         if (convert is null) { throw new ArgumentNullException(nameof(convert)); }
 
-        if (_isMissing) { return new OptionalReferenceProperty<TProperty>(value: null, failure: null); }
+        if (_isMissing) { return new OptionalReferenceField<TProperty>(_binder, value: null); }
 
         Outcome<TProperty> outcome = convert(_value!);
         if (outcome.IsFailure) {
-            PrimaryPortError wrapped = RecordInvalid(outcome.Error!);
+            RecordInvalid(outcome.Error!);
 
-            return new OptionalReferenceProperty<TProperty>(value: null, wrapped);
+            return new OptionalReferenceField<TProperty>(_binder, value: null);
         }
 
-        return new OptionalReferenceProperty<TProperty>(outcome.GetResultOrThrow(), failure: null);
+        return new OptionalReferenceField<TProperty>(_binder, outcome.GetResultOrThrow());
     }
 
     /// <summary>
     ///     Binds an optional value-type argument without a fallback: absent yields a <c>null</c>
-    ///     <see cref="OptionalValueProperty{TProperty}.Value" /> — a real <see cref="Nullable{T}" /> <c>null</c>,
-    ///     never <c>default(TProperty)</c> — and records nothing; a present-but-invalid argument records
+    ///     <see cref="OptionalValueField{TProperty}" /> value — a real <see cref="Nullable{T}" /> <c>null</c>, never
+    ///     <c>default(TProperty)</c> — and records nothing; a present-but-invalid argument records
     ///     <c>REQUEST_ARGUMENT_INVALID</c>.
     /// </summary>
     /// <typeparam name="TProperty">The value type of the value object.</typeparam>
     /// <param name="convert">The value-object converter.</param>
-    /// <returns>The bound property handle.</returns>
+    /// <returns>The bound field token.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="convert" /> is <c>null</c>.</exception>
-    public OptionalValueProperty<TProperty> AsOptionalValue<TProperty>(Func<TArgument, Outcome<TProperty>> convert) where TProperty : struct {
+    public OptionalValueField<TProperty> AsOptionalValue<TProperty>(Func<TArgument, Outcome<TProperty>> convert) where TProperty : struct {
         if (convert is null) { throw new ArgumentNullException(nameof(convert)); }
 
-        if (_isMissing) { return new OptionalValueProperty<TProperty>(value: null, failure: null); }
+        if (_isMissing) { return new OptionalValueField<TProperty>(_binder, value: null); }
 
         Outcome<TProperty> outcome = convert(_value!);
         if (outcome.IsFailure) {
-            PrimaryPortError wrapped = RecordInvalid(outcome.Error!);
+            RecordInvalid(outcome.Error!);
 
-            return new OptionalValueProperty<TProperty>(value: null, wrapped);
+            return new OptionalValueField<TProperty>(_binder, value: null);
         }
 
-        return new OptionalValueProperty<TProperty>(outcome.GetResultOrThrow(), failure: null);
+        return new OptionalValueField<TProperty>(_binder, outcome.GetResultOrThrow());
     }
 
-    private RequiredProperty<TProperty> RequiredMissing<TProperty>() where TProperty : notnull {
-        PrimaryPortError error = RequestBindingError.ArgumentRequired(_argumentPath);
-        _binder.Record(error);
+    private RequiredField<TProperty> RequiredMissing<TProperty>() {
+        _binder.Record(RequestBindingError.ArgumentRequired(_argumentPath));
 
-        return new RequiredProperty<TProperty>(default!, error);
+        return new RequiredField<TProperty>(_binder, default!);
     }
 
-    private RequiredProperty<TProperty> RecordIfInvalid<TProperty>(Outcome<TProperty> outcome) where TProperty : notnull {
+    private RequiredField<TProperty> RecordIfInvalid<TProperty>(Outcome<TProperty> outcome) where TProperty : notnull {
         if (outcome.IsFailure) {
-            PrimaryPortError wrapped = RecordInvalid(outcome.Error!);
+            RecordInvalid(outcome.Error!);
 
-            return new RequiredProperty<TProperty>(default!, wrapped);
+            return new RequiredField<TProperty>(_binder, default!);
         }
 
-        return new RequiredProperty<TProperty>(outcome.GetResultOrThrow(), failure: null);
+        return new RequiredField<TProperty>(_binder, outcome.GetResultOrThrow());
     }
 
-    private PrimaryPortError RecordInvalid(Error cause) {
-        PrimaryPortError wrapped = RequestBindingError.ArgumentInvalid(_argumentPath, cause);
-        _binder.Record(wrapped);
-
-        return wrapped;
+    private void RecordInvalid(Error cause) {
+        _binder.Record(RequestBindingError.ArgumentInvalid(_argumentPath, cause));
     }
 
 }

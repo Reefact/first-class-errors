@@ -14,7 +14,7 @@ var email = bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse
 var stay  = bind.ComplexProperty(r => r.Stay).FailWith(InvalidStayError.Invalid).AsRequired(BindStay);
 
 Outcome<PlaceBookingCommand> command =
-    bind.Build(() => new PlaceBookingCommand(email.Value, stay.Value));
+    bind.Build(read => new PlaceBookingCommand(read.Get(email), read.Get(stay)));
 ```
 
 See the [repository documentation](https://github.com/Reefact/first-class-errors) for the full guide.

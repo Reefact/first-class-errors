@@ -41,16 +41,15 @@ public sealed class ListOfComplexPropertiesConverter<TRequest, TArgument> {
     /// </summary>
     /// <typeparam name="TProperty">The type each element's nested binding produces.</typeparam>
     /// <param name="bindElement">The nested binding function applied to each element (typically a method group).</param>
-    /// <returns>The bound property handle.</returns>
+    /// <returns>The bound field token.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="bindElement" /> is <c>null</c>.</exception>
-    public RequiredProperty<IReadOnlyList<TProperty>> AsRequired<TProperty>(Func<RequestBinder<TArgument>, Outcome<TProperty>> bindElement) where TProperty : notnull {
+    public RequiredField<IReadOnlyList<TProperty>> AsRequired<TProperty>(Func<RequestBinder<TArgument>, Outcome<TProperty>> bindElement) where TProperty : notnull {
         if (bindElement is null) { throw new ArgumentNullException(nameof(bindElement)); }
 
         if (_isMissing) {
-            PrimaryPortError error = RequestBindingError.ArgumentRequired(_argumentPath);
-            _binder.Record(error);
+            _binder.Record(RequestBindingError.ArgumentRequired(_argumentPath));
 
-            return new RequiredProperty<IReadOnlyList<TProperty>>(default!, error);
+            return new RequiredField<IReadOnlyList<TProperty>>(_binder, default!);
         }
 
         return BindElements(bindElement);
@@ -62,34 +61,30 @@ public sealed class ListOfComplexPropertiesConverter<TRequest, TArgument> {
     /// </summary>
     /// <typeparam name="TProperty">The type each element's nested binding produces.</typeparam>
     /// <param name="bindElement">The nested binding function applied to each element (typically a method group).</param>
-    /// <returns>The bound property handle.</returns>
+    /// <returns>The bound field token.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="bindElement" /> is <c>null</c>.</exception>
-    public RequiredProperty<IReadOnlyList<TProperty>> AsOptional<TProperty>(Func<RequestBinder<TArgument>, Outcome<TProperty>> bindElement) where TProperty : notnull {
+    public RequiredField<IReadOnlyList<TProperty>> AsOptional<TProperty>(Func<RequestBinder<TArgument>, Outcome<TProperty>> bindElement) where TProperty : notnull {
         if (bindElement is null) { throw new ArgumentNullException(nameof(bindElement)); }
 
         if (_isMissing) {
             IReadOnlyList<TProperty> empty = new List<TProperty>();
 
-            return new RequiredProperty<IReadOnlyList<TProperty>>(empty, failure: null);
+            return new RequiredField<IReadOnlyList<TProperty>>(_binder, empty);
         }
 
         return BindElements(bindElement);
     }
 
-    private RequiredProperty<IReadOnlyList<TProperty>> BindElements<TProperty>(Func<RequestBinder<TArgument>, Outcome<TProperty>> bindElement) where TProperty : notnull {
-        List<TProperty>   bound        = new();
-        PrimaryPortError? firstFailure = null;
-        int               index        = 0;
+    private RequiredField<IReadOnlyList<TProperty>> BindElements<TProperty>(Func<RequestBinder<TArgument>, Outcome<TProperty>> bindElement) where TProperty : notnull {
+        List<TProperty> bound = new();
+        int             index = 0;
 
         foreach (TArgument? element in _values!) {
             string elementPath = $"{_argumentPath}[{index}]";
             index++;
 
             if (element is null) {
-                // Every failing element is recorded (collect-all); the FIRST one also seeds the handle's outcome.
-                PrimaryPortError missing = RequestBindingError.ArgumentRequired(elementPath);
-                _binder.Record(missing);
-                firstFailure ??= missing;
+                _binder.Record(RequestBindingError.ArgumentRequired(elementPath));
 
                 continue;
             }
@@ -97,10 +92,8 @@ public sealed class ListOfComplexPropertiesConverter<TRequest, TArgument> {
             RequestBinder<TArgument> nested  = new(element!, _envelope, _binder.Options, elementPath);
             Outcome<TProperty>       outcome = bindElement(nested);
             if (outcome.IsFailure) {
-                Error            error   = outcome.Error!;
-                PrimaryPortError grouped = error as PrimaryPortError ?? RequestBindingError.ArgumentInvalid(elementPath, error);
-                _binder.Record(grouped);
-                firstFailure ??= grouped;
+                Error error = outcome.Error!;
+                _binder.Record(error as PrimaryPortError ?? RequestBindingError.ArgumentInvalid(elementPath, error));
 
                 continue;
             }
@@ -108,11 +101,9 @@ public sealed class ListOfComplexPropertiesConverter<TRequest, TArgument> {
             bound.Add(outcome.GetResultOrThrow());
         }
 
-        if (firstFailure is not null) {
-            return new RequiredProperty<IReadOnlyList<TProperty>>(default!, firstFailure);
-        }
-
-        return new RequiredProperty<IReadOnlyList<TProperty>>(bound, failure: null);
+        // The value is read only through a BindingScope, which Build creates solely when no failure was recorded —
+        // i.e. only when every element bound — so `bound` is the complete list exactly when it is observed.
+        return new RequiredField<IReadOnlyList<TProperty>>(_binder, bound);
     }
 
 }

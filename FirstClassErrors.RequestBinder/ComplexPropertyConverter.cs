@@ -42,52 +42,49 @@ public sealed class ComplexPropertyConverter<TRequest, TArgument> {
     /// </summary>
     /// <typeparam name="TProperty">The type the nested binding produces.</typeparam>
     /// <param name="bindNested">The nested binding function (typically a method group such as <c>BindStay</c>).</param>
-    /// <returns>The bound property handle.</returns>
+    /// <returns>The bound field token.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="bindNested" /> is <c>null</c>.</exception>
-    public RequiredProperty<TProperty> AsRequired<TProperty>(Func<RequestBinder<TArgument>, Outcome<TProperty>> bindNested) where TProperty : notnull {
+    public RequiredField<TProperty> AsRequired<TProperty>(Func<RequestBinder<TArgument>, Outcome<TProperty>> bindNested) where TProperty : notnull {
         if (bindNested is null) { throw new ArgumentNullException(nameof(bindNested)); }
 
         if (_isMissing) {
-            PrimaryPortError error = RequestBindingError.ArgumentRequired(_argumentPath);
-            _binder.Record(error);
+            _binder.Record(RequestBindingError.ArgumentRequired(_argumentPath));
 
-            return new RequiredProperty<TProperty>(default!, error);
+            return new RequiredField<TProperty>(_binder, default!);
         }
 
         Outcome<TProperty> outcome = BindNested(bindNested);
         if (outcome.IsFailure) {
-            PrimaryPortError grouped = Grouped(outcome.Error!);
-            _binder.Record(grouped);
+            _binder.Record(Grouped(outcome.Error!));
 
-            return new RequiredProperty<TProperty>(default!, grouped);
+            return new RequiredField<TProperty>(_binder, default!);
         }
 
-        return new RequiredProperty<TProperty>(outcome.GetResultOrThrow(), failure: null);
+        return new RequiredField<TProperty>(_binder, outcome.GetResultOrThrow());
     }
 
     /// <summary>
     ///     Binds an optional complex argument: absent yields a <c>null</c>
-    ///     <see cref="OptionalReferenceProperty{TProperty}.Value" /> and records nothing; a present-but-invalid
-    ///     nested binding records its envelope.
+    ///     <see cref="OptionalReferenceField{TProperty}" /> value and records nothing; a present-but-invalid nested
+    ///     binding records its envelope.
     /// </summary>
     /// <typeparam name="TProperty">The reference type the nested binding produces.</typeparam>
     /// <param name="bindNested">The nested binding function (typically a method group such as <c>BindAddress</c>).</param>
-    /// <returns>The bound property handle.</returns>
+    /// <returns>The bound field token.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="bindNested" /> is <c>null</c>.</exception>
-    public OptionalReferenceProperty<TProperty> AsOptional<TProperty>(Func<RequestBinder<TArgument>, Outcome<TProperty>> bindNested) where TProperty : class {
+    public OptionalReferenceField<TProperty> AsOptional<TProperty>(Func<RequestBinder<TArgument>, Outcome<TProperty>> bindNested) where TProperty : class {
         if (bindNested is null) { throw new ArgumentNullException(nameof(bindNested)); }
 
-        if (_isMissing) { return new OptionalReferenceProperty<TProperty>(value: null, failure: null); }
+        if (_isMissing) { return new OptionalReferenceField<TProperty>(_binder, value: null); }
 
         Outcome<TProperty> outcome = BindNested(bindNested);
         if (outcome.IsFailure) {
-            PrimaryPortError grouped = Grouped(outcome.Error!);
-            _binder.Record(grouped);
+            _binder.Record(Grouped(outcome.Error!));
 
-            return new OptionalReferenceProperty<TProperty>(value: null, grouped);
+            return new OptionalReferenceField<TProperty>(_binder, value: null);
         }
 
-        return new OptionalReferenceProperty<TProperty>(outcome.GetResultOrThrow(), failure: null);
+        return new OptionalReferenceField<TProperty>(_binder, outcome.GetResultOrThrow());
     }
 
     private Outcome<TProperty> BindNested<TProperty>(Func<RequestBinder<TArgument>, Outcome<TProperty>> bindNested) where TProperty : notnull {

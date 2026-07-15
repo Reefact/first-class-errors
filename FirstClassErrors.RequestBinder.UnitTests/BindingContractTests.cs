@@ -11,8 +11,8 @@ namespace FirstClassErrors.RequestBinder.UnitTests;
 
 /// <summary>
 ///     Pins the edges of the binding contract: the error families a converter may fail with, the wrapping of bare
-///     nested failures, the selector plumbing, the guard clauses, the handles' inspection seam, and the binder's own
-///     error documentation.
+///     nested failures, the selector plumbing, the guard clauses, the binding scope's read guards, and the binder's
+///     own error documentation.
 /// </summary>
 public sealed class BindingContractTests {
 
@@ -33,7 +33,7 @@ public sealed class BindingContractTests {
             PrimaryPortError.Create(ErrorCode.Create("TEST_PORT_LEVEL_REJECTION"), "Rejected at the port.", Transience.NonTransient)
                             .WithPublicMessage("Rejected.")));
 
-        Outcome<string> outcome = bind.Build(() => "never");
+        Outcome<string> outcome = bind.Build(_ => "never");
         Error invalid = outcome.Error!.InnerErrors.Single();
         Check.That(invalid.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
         Check.That(invalid.InnerErrors.Single().Code.ToString()).IsEqualTo("TEST_PORT_LEVEL_REJECTION");
@@ -64,7 +64,7 @@ public sealed class BindingContractTests {
         bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid)
             .AsRequired(_ => Outcome<Stay>.Failure(BookingDomainError.DateInvalid("raw")));
 
-        Outcome<string> outcome = bind.Build(() => "never");
+        Outcome<string> outcome = bind.Build(_ => "never");
         Error wrapped = outcome.Error!.InnerErrors.Single();
         Check.That(wrapped.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
         Check.That(BindingAssertions.ArgumentPathOf(wrapped)).IsEqualTo("Stay");
@@ -78,7 +78,7 @@ public sealed class BindingContractTests {
         bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid)
             .AsRequired(_ => Outcome<Guest>.Failure(BookingDomainError.EmailInvalid("raw")));
 
-        Outcome<string> outcome = bind.Build(() => "never");
+        Outcome<string> outcome = bind.Build(_ => "never");
         Error wrapped = outcome.Error!.InnerErrors.Single();
         Check.That(wrapped.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
         Check.That(BindingAssertions.ArgumentPathOf(wrapped)).IsEqualTo("Guests[0]");
@@ -94,22 +94,22 @@ public sealed class BindingContractTests {
                        .FailWith(BookingEnvelopeError.CommandInvalid);
 
         bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid)
-            .AsRequired(g => g.Build(() => new Guest("never", null)));
+            .AsRequired(g => g.Build(_ => new Guest("never", null)));
 
-        Outcome<string> outcome = bind.Build(() => "never");
+        Outcome<string> outcome = bind.Build(_ => "never");
         Error required = outcome.Error!.InnerErrors.Single();
         Check.That(required.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_REQUIRED");
         Check.That(BindingAssertions.ArgumentPathOf(required)).IsEqualTo("Guests");
     }
 
-    [Fact(DisplayName = "A null element that is the FIRST failure of a simple list seeds the handle's failure like any other.")]
+    [Fact(DisplayName = "A null element that is the first failing element of a simple list is collected in order, like any other.")]
     public void NullElementAsFirstFailureOfASimpleList() {
         var bind = Bind.PropertiesOf(new BookingRequest("a@b.c", null, null, null, null, Tags: ["ok", null, "not ok"], null))
                        .FailWith(BookingEnvelopeError.CommandInvalid);
 
         bind.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
 
-        Outcome<string> outcome = bind.Build(() => "never");
+        Outcome<string> outcome = bind.Build(_ => "never");
         Check.That(outcome.Error!.InnerErrors.Select(e => e.Code.ToString()))
              .ContainsExactly("REQUEST_ARGUMENT_REQUIRED", "REQUEST_ARGUMENT_INVALID");
         Check.That(outcome.Error!.InnerErrors.Select(BindingAssertions.ArgumentPathOf))
@@ -123,12 +123,12 @@ public sealed class BindingContractTests {
 
         bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid)
             .AsOptional(g => {
-                RequiredProperty<string> firstName = g.SimpleProperty(x => x.FirstName).AsRequired();
+                RequiredField<string> firstName = g.SimpleProperty(x => x.FirstName).AsRequired();
 
-                return g.Build(() => new Guest(firstName.Value, null));
+                return g.Build(read => new Guest(read.Get(firstName), null));
             });
 
-        Outcome<string> outcome = bind.Build(() => "never");
+        Outcome<string> outcome = bind.Build(_ => "never");
         Check.That(outcome.Error!.InnerErrors.Single().Code.ToString()).IsEqualTo("TEST_GUEST_INVALID");
     }
 
@@ -152,6 +152,19 @@ public sealed class BindingContractTests {
     public void NullSelectorThrows() {
         Check.ThatCode(() => PropertySelectors.GetProperty<BookingRequest, string?>(null!))
              .Throws<ArgumentNullException>();
+    }
+
+    private sealed class WithField {
+
+        internal int Field = 42;
+
+    }
+
+    [Fact(DisplayName = "A selector pointing at a field rather than a property is rejected: an argument path needs a property name.")]
+    public void FieldSelectorIsRejected() {
+        Expression<Func<WithField, int>> fieldSelector = w => w.Field;
+
+        Check.ThatCode(() => PropertySelectors.GetProperty(fieldSelector)).Throws<ArgumentException>();
     }
 
     #endregion
@@ -188,22 +201,22 @@ public sealed class BindingContractTests {
 
     #endregion
 
-    #region Handle inspection seam
+    #region The binding scope guards its reads
 
-    [Fact(DisplayName = "A handle exposes its recorded failure for inspection — and null when the binding succeeded or the argument was absent.")]
-    public void HandlesExposeTheirFailure() {
-        var bind = Bind.PropertiesOf(new BookingRequest(null, "REF-1", null, null, null, null, null))
-                       .FailWith(BookingEnvelopeError.CommandInvalid);
+    [Fact(DisplayName = "The binding scope rejects a null field (every overload) and a field owned by a different binder — programming errors both.")]
+    public void BindingScopeGuardsItsReads() {
+        var binderA = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
+        RequiredField<EmailAddress> tokenOfA = binderA.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
-        RequiredProperty<EmailAddress>          failed  = bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
-        RequiredProperty<string>                bound   = bind.SimpleProperty(r => r.Reference).AsRequired();
-        OptionalReferenceProperty<EmailAddress> absent  = bind.SimpleProperty(r => r.GuestEmail).AsOptionalReference(EmailAddress.Parse);
-        OptionalValueProperty<int>              nothing = bind.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
+        var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
 
-        Check.That(failed.Failure!.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_REQUIRED");
-        Check.That(bound.Failure).IsNull();
-        Check.That(absent.Failure).IsNull();
-        Check.That(nothing.Failure).IsNull();
+        // A null field, on each of the three Get overloads (the assembler runs because `bind` recorded no failure):
+        Check.ThatCode(() => bind.Build(read => read.Get((RequiredField<EmailAddress>)null!).Value)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => bind.Build(read => read.Get((OptionalReferenceField<EmailAddress>)null!) is null)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => bind.Build(read => read.Get((OptionalValueField<int>)null!).HasValue)).Throws<ArgumentNullException>();
+
+        // A field owned by a different binder is a cross-binder mix-up — rejected loudly, not read silently.
+        Check.ThatCode(() => bind.Build(read => read.Get(tokenOfA).Value)).Throws<InvalidOperationException>();
     }
 
     #endregion

@@ -11,37 +11,37 @@ namespace FirstClassErrors.RequestBinder.UnitTests;
 public sealed class RequestBinderTests {
 
     private static Outcome<Stay> BindStay(RequestBinder<StayDto> stay) {
-        RequiredProperty<BookingDate> checkIn  = stay.SimpleProperty(s => s.CheckIn).AsRequired(BookingDate.Parse);
-        RequiredProperty<BookingDate> checkOut = stay.SimpleProperty(s => s.CheckOut).AsRequired(BookingDate.Parse);
+        RequiredField<BookingDate> checkIn  = stay.SimpleProperty(s => s.CheckIn).AsRequired(BookingDate.Parse);
+        RequiredField<BookingDate> checkOut = stay.SimpleProperty(s => s.CheckOut).AsRequired(BookingDate.Parse);
 
-        return stay.Build(() => new Stay(checkIn.Value, checkOut.Value));
+        return stay.Build(read => new Stay(read.Get(checkIn), read.Get(checkOut)));
     }
 
     [Fact(DisplayName = "Build assembles the command exactly once when every property bound.")]
     public void BuildAssemblesOnceOnSuccess() {
         var bind = Bind.PropertiesOf(new BookingRequest("a@b.c", "REF-1", "EUR", null, null, null, null))
                        .FailWith(BookingEnvelopeError.CommandInvalid);
-        RequiredProperty<EmailAddress> email = bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+        RequiredField<EmailAddress> email = bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
         int assembled = 0;
-        Outcome<string> outcome = bind.Build(() => {
+        Outcome<string> outcome = bind.Build(read => {
             assembled++;
 
-            return email.Value.Value;
+            return read.Get(email).Value;
         });
 
         Check.That(outcome.IsSuccess).IsTrue();
         Check.That(assembled).IsEqualTo(1);
     }
 
-    [Fact(DisplayName = "Build never runs the assembly function when a failure was recorded — handle values are safe by construction.")]
+    [Fact(DisplayName = "Build never runs the assembler when a failure was recorded — field reads are safe by construction.")]
     public void BuildNeverAssemblesOnFailure() {
         var bind = Bind.PropertiesOf(new BookingRequest(null, null, null, null, null, null, null))
                        .FailWith(BookingEnvelopeError.CommandInvalid);
         bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
         bool assembled = false;
-        Outcome<string> outcome = bind.Build(() => {
+        Outcome<string> outcome = bind.Build(_ => {
             assembled = true;
 
             return "never";
@@ -60,7 +60,7 @@ public sealed class RequestBinderTests {
         bind.SimpleProperty(r => r.Reference).AsRequired();
         bind.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
 
-        Outcome<string> outcome = bind.Build(() => "never");
+        Outcome<string> outcome = bind.Build(_ => "never");
         Check.That(outcome.Error!.Code.ToString()).IsEqualTo("TEST_BOOKING_COMMAND_INVALID");
         Check.That(outcome.Error!.InnerErrors.Select(e => e.Code.ToString()))
              .ContainsExactly("REQUEST_ARGUMENT_INVALID", "REQUEST_ARGUMENT_REQUIRED", "REQUEST_ARGUMENT_INVALID");
@@ -81,12 +81,12 @@ public sealed class RequestBinderTests {
                  bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsRequired(BindStay);
                  bind.ListOfSimpleProperties(r => r.Tags).AsOptional(Tag.Parse);
                  bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(g => {
-                     RequiredProperty<string> firstName = g.SimpleProperty(x => x.FirstName).AsRequired();
+                     RequiredField<string> firstName = g.SimpleProperty(x => x.FirstName).AsRequired();
 
-                     return g.Build(() => new Guest(firstName.Value, null));
+                     return g.Build(read => new Guest(read.Get(firstName), null));
                  });
 
-                 return bind.Build(() => "never");
+                 return bind.Build(_ => "never");
              })
              .DoesNotThrow();
     }
@@ -106,7 +106,11 @@ public sealed class RequestBinderTests {
         var bind = Bind.PropertiesOf(new BookingRequest("a@b.c", null, null, null, null, null, null))
                        .FailWith(BookingEnvelopeError.CommandInvalid);
 
+        // A method call on the property — not a direct member access.
         Check.ThatCode(() => bind.SimpleProperty(r => r.GuestEmail!.ToUpperInvariant()))
+             .Throws<ArgumentException>();
+        // A nested property access — the member's base is not the request parameter.
+        Check.ThatCode(() => bind.SimpleProperty(r => r.Stay!.CheckIn))
              .Throws<ArgumentException>();
     }
 
@@ -119,7 +123,7 @@ public sealed class RequestBinderTests {
         bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
         bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsRequired(BindStay);
 
-        Outcome<string> outcome = bind.Build(() => "never");
+        Outcome<string> outcome = bind.Build(_ => "never");
         Error stayEnvelope = outcome.Error!.InnerErrors.Single(e => e.Code.ToString() == "TEST_STAY_INVALID");
         Check.That(stayEnvelope.InnerErrors.Select(BindingAssertions.ArgumentPathOf))
              .ContainsExactly("stay.check_in", "stay.check_out");
@@ -132,7 +136,7 @@ public sealed class RequestBinderTests {
 
         bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
-        Outcome<string> outcome = bind.Build(() => "never");
+        Outcome<string> outcome = bind.Build(_ => "never");
         var required = (InfrastructureError)outcome.Error!.InnerErrors.Single();
         Check.That(required.Transience).IsEqualTo(Transience.NonTransient);
     }

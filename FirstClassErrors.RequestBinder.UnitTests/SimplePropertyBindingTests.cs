@@ -18,9 +18,9 @@ public sealed class SimplePropertyBindingTests {
     public void RequiredPresentAndValidBinds() {
         var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
 
-        RequiredProperty<EmailAddress> email = bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+        RequiredField<EmailAddress> email = bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
-        Outcome<string> outcome = bind.Build(() => email.Value.Value);
+        Outcome<string> outcome = bind.Build(read => read.Get(email).Value);
         Check.That(outcome.IsSuccess).IsTrue();
         Check.That(outcome.GetResultOrThrow()).IsEqualTo("alice@example.org");
     }
@@ -31,7 +31,7 @@ public sealed class SimplePropertyBindingTests {
 
         bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
-        Outcome<string> outcome = bind.Build(() => "never");
+        Outcome<string> outcome = bind.Build(_ => "never");
         Check.That(outcome.IsFailure).IsTrue();
         Check.That(outcome.Error!.Code.ToString()).IsEqualTo("TEST_BOOKING_COMMAND_INVALID");
 
@@ -46,7 +46,7 @@ public sealed class SimplePropertyBindingTests {
 
         bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
-        Outcome<string> outcome = bind.Build(() => "never");
+        Outcome<string> outcome = bind.Build(_ => "never");
         Check.That(outcome.IsFailure).IsTrue();
 
         Error invalid = outcome.Error!.InnerErrors.Single();
@@ -58,12 +58,12 @@ public sealed class SimplePropertyBindingTests {
     [Fact(DisplayName = "A required property without conversion binds the raw value when present, and fails when missing.")]
     public void RequiredWithoutConversion() {
         var present = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
-        RequiredProperty<string> reference = present.SimpleProperty(r => r.Reference).AsRequired();
-        Check.That(present.Build(() => reference.Value).GetResultOrThrow()).IsEqualTo("REF-1");
+        RequiredField<string> reference = present.SimpleProperty(r => r.Reference).AsRequired();
+        Check.That(present.Build(read => read.Get(reference)).GetResultOrThrow()).IsEqualTo("REF-1");
 
         var missing = Bind.PropertiesOf(new BookingRequest(null, null, null, null, null, null, null)).FailWith(BookingEnvelopeError.CommandInvalid);
         missing.SimpleProperty(r => r.Reference).AsRequired();
-        Outcome<string> outcome = missing.Build(() => "never");
+        Outcome<string> outcome = missing.Build(_ => "never");
         Check.That(outcome.IsFailure).IsTrue();
         Check.That(outcome.Error!.InnerErrors.Single().Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_REQUIRED");
     }
@@ -71,12 +71,12 @@ public sealed class SimplePropertyBindingTests {
     [Fact(DisplayName = "An optional property with a fallback converts the provided value when present, and the fallback when absent.")]
     public void OptionalWithFallback() {
         var provided = Bind.PropertiesOf(Request(currency: "USD")).FailWith(BookingEnvelopeError.CommandInvalid);
-        RequiredProperty<Currency> providedCurrency = provided.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
-        Check.That(provided.Build(() => providedCurrency.Value.Code).GetResultOrThrow()).IsEqualTo("USD");
+        RequiredField<Currency> providedCurrency = provided.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
+        Check.That(provided.Build(read => read.Get(providedCurrency).Code).GetResultOrThrow()).IsEqualTo("USD");
 
         var absent = Bind.PropertiesOf(Request(currency: null)).FailWith(BookingEnvelopeError.CommandInvalid);
-        RequiredProperty<Currency> defaulted = absent.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
-        Check.That(absent.Build(() => defaulted.Value.Code).GetResultOrThrow()).IsEqualTo("EUR");
+        RequiredField<Currency> defaulted = absent.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
+        Check.That(absent.Build(read => read.Get(defaulted).Code).GetResultOrThrow()).IsEqualTo("EUR");
     }
 
     [Fact(DisplayName = "An optional property that is present but invalid still records an error: optional never means malformed.")]
@@ -85,7 +85,7 @@ public sealed class SimplePropertyBindingTests {
 
         bind.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
 
-        Outcome<string> outcome = bind.Build(() => "never");
+        Outcome<string> outcome = bind.Build(_ => "never");
         Check.That(outcome.IsFailure).IsTrue();
         Check.That(outcome.Error!.InnerErrors.Single().Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
     }
@@ -101,46 +101,45 @@ public sealed class SimplePropertyBindingTests {
     [Fact(DisplayName = "An optional reference property yields null when absent — recording nothing — and the value when present.")]
     public void OptionalReference() {
         var absent = Bind.PropertiesOf(Request(email: null)).FailWith(BookingEnvelopeError.CommandInvalid);
-        OptionalReferenceProperty<EmailAddress> none = absent.SimpleProperty(r => r.GuestEmail).AsOptionalReference(EmailAddress.Parse);
-        Check.That(none.Value).IsNull();
-        Check.That(absent.Build(() => "built").IsSuccess).IsTrue();
+        OptionalReferenceField<EmailAddress> none = absent.SimpleProperty(r => r.GuestEmail).AsOptionalReference(EmailAddress.Parse);
+        Check.That(absent.Build(read => read.Get(none) is null).GetResultOrThrow()).IsTrue();
 
         var present = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
-        OptionalReferenceProperty<EmailAddress> some = present.SimpleProperty(r => r.GuestEmail).AsOptionalReference(EmailAddress.Parse);
-        Check.That(some.Value!.Value).IsEqualTo("alice@example.org");
+        OptionalReferenceField<EmailAddress> some = present.SimpleProperty(r => r.GuestEmail).AsOptionalReference(EmailAddress.Parse);
+        Check.That(present.Build(read => read.Get(some)!.Value).GetResultOrThrow()).IsEqualTo("alice@example.org");
     }
 
     [Fact(DisplayName = "An optional reference property that is present but invalid records an error.")]
     public void OptionalReferencePresentButInvalidRecords() {
         var bind = Bind.PropertiesOf(Request(email: "nope")).FailWith(BookingEnvelopeError.CommandInvalid);
 
-        OptionalReferenceProperty<EmailAddress> email = bind.SimpleProperty(r => r.GuestEmail).AsOptionalReference(EmailAddress.Parse);
+        bind.SimpleProperty(r => r.GuestEmail).AsOptionalReference(EmailAddress.Parse);
 
-        Check.That(email.Value).IsNull();
-        Check.That(bind.Build(() => "never").IsFailure).IsTrue();
+        Check.That(bind.Build(_ => "never").IsFailure).IsTrue();
     }
 
     [Fact(DisplayName = "An optional value property yields a real null when absent — never default(T): an absent count is null, not 0.")]
     public void OptionalValueYieldsNullWhenAbsent() {
         var absent = Bind.PropertiesOf(Request(nights: null)).FailWith(BookingEnvelopeError.CommandInvalid);
-        OptionalValueProperty<int> none = absent.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
-        Check.That(none.Value).IsNull();
-        Check.That(none.Value.HasValue).IsFalse();
-        Check.That(absent.Build(() => "built").IsSuccess).IsTrue();
+        OptionalValueField<int> none = absent.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
+        // Project to a non-null bool: Build's TCommand cannot itself be int? (Nullable<T> is not `notnull`);
+        // a real consumer flows read.Get(none) straight into a command constructor argument instead.
+        Outcome<bool> absentOutcome = absent.Build(read => read.Get(none).HasValue);
+        Check.That(absentOutcome.IsSuccess).IsTrue();
+        Check.That(absentOutcome.GetResultOrThrow()).IsFalse();
 
         var present = Bind.PropertiesOf(Request(nights: "5")).FailWith(BookingEnvelopeError.CommandInvalid);
-        OptionalValueProperty<int> some = present.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
-        Check.That(some.Value).IsEqualTo(5);
+        OptionalValueField<int> some = present.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
+        Check.That(present.Build(read => read.Get(some) ?? 0).GetResultOrThrow()).IsEqualTo(5);
     }
 
     [Fact(DisplayName = "An optional value property that is present but invalid records an error.")]
     public void OptionalValuePresentButInvalidRecords() {
         var bind = Bind.PropertiesOf(Request(nights: "-2")).FailWith(BookingEnvelopeError.CommandInvalid);
 
-        OptionalValueProperty<int> nights = bind.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
+        bind.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
 
-        Check.That(nights.Value).IsNull();
-        Check.That(bind.Build(() => "never").IsFailure).IsTrue();
+        Check.That(bind.Build(_ => "never").IsFailure).IsTrue();
     }
 
 }

@@ -13,7 +13,7 @@ namespace FirstClassErrors.RequestBinder;
 ///     var stay  = bind.ComplexProperty(r =&gt; r.Stay).FailWith(InvalidStayError.Invalid).AsRequired(BindStay);
 ///
 ///     Outcome&lt;PlaceBookingCommand&gt; command =
-///         bind.Build(() =&gt; new PlaceBookingCommand(email.Value, stay.Value));
+///         bind.Build(read =&gt; new PlaceBookingCommand(read.Get(email), read.Get(stay)));
 ///     </code>
 /// </example>
 public static class Bind {
