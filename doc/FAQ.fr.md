@@ -15,7 +15,7 @@ Vous pourriez. Transporter l’`Error` de la bibliothèque dans un type résulta
 
 `Outcome` est cette idée, spécialisée pour ce modèle d’erreur. Son côté échec est toujours une `Error` — et non un second paramètre de type à propager dans chaque signature — et sa petite API (`Then`, `Recover`, `Finally`) est nommée par intention plutôt qu’avec la mécanique de la programmation fonctionnelle (`Map`, `Bind`, `Match`). L’objectif : du code de domaine et des use cases qui se lisent comme un flux métier, pas comme de la tuyauterie de résultat générique.
 
-Voir [Cas d’usage](UsagePatterns.fr.md) et [Comparaison avec les librairies de gestion d’erreurs](ComparisonWithOtherLibraries.fr.md).
+Voir [Cas d’usage](UsagePatterns.fr.md) et [Comparaison avec les bibliothèques de gestion d’erreurs](ComparisonWithOtherLibraries.fr.md).
 
 ## Est-ce trop lourd pour une application simple ?
 

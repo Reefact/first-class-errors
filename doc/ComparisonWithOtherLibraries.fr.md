@@ -1,95 +1,193 @@
-# Comparaison avec les librairies de gestion d’erreurs
+# Comparaison avec les bibliothèques de gestion d’erreurs
 
-🌍 **Langues:**  
+🌍 **Langues :**  
 🇬🇧 [English](./ComparisonWithOtherLibraries.en.md) | 🇫🇷 Français (ce fichier)
 
-[ErrorOr](https://github.com/amantinband/error-or) et [FluentResults](https://github.com/altmann/FluentResults) sont d’excellentes librairies, matures. Si votre objectif est un type *Result* léger — retourner les erreurs comme des valeurs plutôt que de les lever — ce sont des choix ciblés et largement adoptés, faits exactement pour ça.
+> Comparaison revue le **14 juillet 2026** à partir des documentations publiques d’[ErrorOr](https://github.com/error-or/error-or) et de [FluentResults](https://github.com/altmann/FluentResults). Leurs API et leurs objectifs peuvent évoluer : vérifiez leur documentation actuelle avant un choix à long terme.
 
-FirstClassErrors répond à une **question différente**. Ce n’est pas d’abord une librairie *Result* : c’est une manière de faire des erreurs une **connaissance de première classe, documentée et diagnosticable** sur votre système — des erreurs que vous pouvez *transporter* comme valeurs **ou** *lever* comme exceptions, avec un seul et même modèle.
+ErrorOr, FluentResults et FirstClassErrors permettent toutes de représenter explicitement un échec, mais elles optimisent des besoins principaux différents.
 
-Cette page met en avant ce que FirstClassErrors fait différemment.
+Cette page ne cherche pas à établir un classement général.
 
-## 🎯 Un centre de gravité différent
+Le scénario ci-dessous met volontairement l’accent sur la stabilité, le diagnostic et la documentation des erreurs : il correspond donc au périmètre principal de FirstClassErrors et joue naturellement en sa faveur. D’autres scénarios, comme la validation multiple intensive ou la composition fonctionnelle poussée, peuvent favoriser ErrorOr ou FluentResults.
 
-| Librairie | La question à laquelle elle répond |
-|---|---|
-| **ErrorOr** | *Comment retourner une ou plusieurs erreurs comme valeur au lieu de les lever ?* |
-| **FluentResults** | *Comment retourner un résultat portant erreurs, succès et raisons causales ?* |
-| **FirstClassErrors** | *Comment transformer les erreurs en connaissance documentée et diagnosticable — et les faire circuler selon les besoins de chaque couche ?* |
+L’objectif est de montrer une même situation à travers trois centres de gravité afin de choisir le modèle qui correspond réellement au système.
 
-Pour ErrorOr et FluentResults, l’**erreur est une charge utile du type résultat**. Pour FirstClassErrors, l’**erreur est le modèle**, et le type résultat (`Outcome`) n’est que l’une des façons de la transporter.
+## Le scénario
 
-## 🧩 Un modèle d’erreur, trois transports
+Un fournisseur de paiement refuse une demande d’autorisation. L’application doit :
 
-Le modèle `Error` est découplé de la manière dont il voyage. La *même* erreur peut être :
+- retourner un échec sans faire planter le processus ;
+- exposer un message sûr à l’appelant ;
+- conserver un message de diagnostic interne ;
+- garder un code stable pour les logs et le support ;
+- éventuellement documenter la manière d’investiguer cet échec.
 
-- conservée comme **donnée** — une valeur `Error` que vous inspectez, journalisez ou enrichissez ;
-- **levée** — transformée en exception typée via `error.ToException()`, puis attrapée et routée par type ;
-- **transportée** — encapsulée dans un `Outcome` / `Outcome<T>` et composée sans lever.
+## ErrorOr : une union discriminée entre valeur et erreurs
 
-Des passerelles relient les trois : vous n’êtes jamais enfermé dans un style. Vous pouvez *transporter* les erreurs dans votre domaine et les *lever* à une frontière — avec **le même objet erreur**, sans re-modélisation entre les deux.
+ErrorOr place `ErrorOr<T>` au centre de son API. Ce type porte soit une valeur de succès, soit une ou plusieurs erreurs.
 
-ErrorOr et FluentResults sont, par conception, *uniquement erreurs-comme-valeurs* : l’erreur est soudée au type résultat et le modèle évite délibérément de lever. FirstClassErrors traite le chemin exception comme une **citoyenne de première classe**, au même titre que le chemin valeur.
+```csharp
+private static readonly Error PaymentDeclined = Error.Failure(
+    code: "PAYMENT_DECLINED",
+    description: "The payment was declined.");
 
-## 📖 Des erreurs qui portent du sens, pas seulement un identifiant
+public ErrorOr<Receipt> Pay(Order order)
+{
+    if (provider.Declines(order))
+    {
+        return PaymentDeclined;
+    }
 
-Une `Error` d’ErrorOr, c’est un code, une description, un `Type` et un sac de métadonnées. Une erreur FluentResults, c’est un message avec métadonnées et raisons imbriquées. C’est suffisant pour *traiter* une erreur au runtime.
+    return new Receipt(order.Id);
+}
+```
 
-Une erreur FirstClassErrors est décrite pour des **humains** : un titre, une explication en langage clair, la **règle métier** violée et des exemples représentatifs. L’erreur cesse d’être un jeton technique pour devenir quelque chose qu’un développeur — ou un ingénieur support — peut réellement *comprendre*.
+L’appelant peut inspecter, faire un `Match`, un `Switch` ou composer le résultat. Les types d’erreurs intégrés et les métadonnées permettent de catégoriser l’échec et d’ajouter des informations propres à l’application.
 
-## 🔎 Des diagnostics faits pour l’investigation
+Choisissez cette approche lorsque le besoin central est un flux ergonomique « valeur ou erreurs », notamment lorsque plusieurs erreurs de validation sont courantes, ou lorsque les types d’erreurs sont mappés vers des réponses HTTP.
 
-Là où les autres *classifient* une erreur (une enum `ErrorType`, une entrée de métadonnées), FirstClassErrors permet à une erreur de déclarer **comment l’investiguer** :
+## FluentResults : un résultat portant des raisons et des métadonnées
 
-- une ou plusieurs **causes probables** ;
-- l’**origine** probable de chacune (`Internal`, `External`, `InternalOrExternal`) ;
-- une **piste d’analyse** — par où commencer.
+FluentResults place `Result` et `Result<T>` au centre de son API. Les échecs portent une ou plusieurs raisons, auxquelles peuvent être associés des métadonnées et des causes imbriquées.
 
-L’erreur passe ainsi de *« ce qui a échoué »* à *« ce qui a probablement mal tourné, et par où commencer »* — la différence entre un message d’erreur et un runbook d’astreinte.
+```csharp
+public Result<Receipt> Pay(Order order)
+{
+    if (provider.Declines(order))
+    {
+        return Result.Fail<Receipt>(
+            new Error("The payment was declined.")
+                .WithMetadata("Code", "PAYMENT_DECLINED"));
+    }
 
-## 📚 Une documentation générée depuis votre code
+    return Result.Ok(new Receipt(order.Id));
+}
+```
 
-Parce que les erreurs sont décrites dans le code avec le DSL `DescribeError`, leur documentation est **générée automatiquement sous forme de catalogue d’erreurs** — une référence vivante qui reste synchronisée avec le code, prête pour les développeurs comme pour les équipes support.
+Le modèle de raisons est utile lorsqu’une application souhaite enrichir aussi bien les succès que les échecs, conserver des causes hiérarchiques et composer plusieurs résultats.
 
-Ni ErrorOr ni FluentResults ne produisent de documentation à partir de vos définitions d’erreurs ; la description vit, au mieux, dans des chaînes et des métadonnées éparpillées. Ici, **documenter une erreur et la définir sont un seul et même geste**.
+Choisissez cette approche lorsque le résultat et son graphe de raisons sont l’abstraction principale que vous souhaitez enrichir et composer.
 
-## 🎚️ Le fluent là où il aide, du code simple là où il gêne
+## FirstClassErrors : un modèle d’erreur avec plusieurs transports
 
-`Outcome` offre un pipeline fluent (`Then`, `To`, `Recover`, `Finally`) pour composer des étapes sans lever — utilisez-le quand il rend vraiment le flux plus clair.
+FirstClassErrors place l’erreur elle-même au centre. Dans l’usage recommandé, une factory nommée définit et crée l’erreur ; `Outcome<T>` (le type résultat succès-ou-échec de la bibliothèque) est une façon de faire circuler — ou de transporter — l’erreur comme une valeur :
 
-Mais ce pipeline est un **transport optionnel, pas le centre de gravité**. Quand un simple `if` retournant une erreur de domaine bien nommée lit plus près du métier, FirstClassErrors vous encourage à *écrire ça à la place*. Votre gestion d’erreurs reste à **hauteur métier** ; vous n’êtes jamais poussé vers de longues chaînes fluent juste pour rester « idiomatique ».
+```csharp
+public Outcome<Receipt> Pay(Order order)
+{
+    if (provider.Declines(order, out string providerCode))
+    {
+        return Outcome<Receipt>.Failure(
+            PaymentError.PaymentDeclined(providerCode, order.PaymentId));
+    }
 
-Les librairies *Result* orientées railway tendent à faire du pipeline fluent l’idiome principal. Ici, le pipeline sert l’erreur — pas l’inverse.
+    return Outcome<Receipt>.Success(new Receipt(order.Id));
+}
+```
 
-## 🏛️ Consciente de l’architecture et de l’exploitation
+À ce niveau, les trois bibliothèques se ressemblent : une méthode retourne un succès ou un échec que l’appelant inspecte. La différence tient à l’endroit où vit le sens de l’échec — [ce que FirstClassErrors ajoute](#ce-que-firstclasserrors-ajoute-au-modèle-de-résultat) est montré plus bas.
 
-Le modèle parle nativement le langage de la conception en couches / hexagonale :
+Choisissez cette approche lorsque la définition de l’erreur doit rester stable, documentée, diagnosticable et indépendante du fait qu’un appelant la retourne ou la lève.
 
-- une taxonomie de `DomainError`, `InfrastructureError`, et d’erreurs de **port** primaire / secondaire ;
-- des préoccupations d’infrastructure comme `Transience` (transitoire / non transitoire) et `InteractionDirection` (entrant / sortant) ;
-- une **identité d’occurrence** sur chaque erreur — un `InstanceId` unique et un horodatage UTC — pour corréler journaux et évènements de diagnostic.
+## Ce que FirstClassErrors ajoute au modèle de résultat
 
-ErrorOr et FluentResults sont délibérément agnostiques de l’architecture et gardent l’erreur légère ; ces concepts sont simplement hors de leur périmètre.
+Le transport ci-dessus ressemble aux deux autres. La différence, c’est que l’erreur est définie une seule fois, dans une factory nommée qui porte son code, ses messages, son contexte d’occurrence et un lien vers sa documentation :
 
-## 📊 En un coup d’œil
+```csharp
+internal static DomainError PaymentDeclined(
+    string providerCode,
+    Guid paymentId)
+{
+    // Code.PaymentDeclined et ContextKey.PaymentId sont des constantes définies
+    // par l'application : ErrorCode.Create("PAYMENT_DECLINED") et une clé de contexte typée.
+    return DomainError.Create(
+            Code.PaymentDeclined,
+            diagnosticMessage:
+                $"Provider refused payment {paymentId} with code {providerCode}.",
+            configureContext: context =>
+                context.Add(ContextKey.PaymentId, paymentId))
+        .WithPublicMessage(
+            shortMessage: "The payment was declined.",
+            detailedMessage:
+                "Use another payment method or contact your bank.");
+}
+```
 
-| | FirstClassErrors | ErrorOr | FluentResults |
-|---|:---:|:---:|:---:|
-| Retourner les erreurs comme valeurs (style railway) | ✅ (optionnel) | ✅ | ✅ |
-| Lever la *même* erreur comme exception typée | ✅ | ➖ | ➖ |
-| Modèle d’erreur orienté humain (titre, règle métier, explication) | ✅ | ➖ | ➖ |
-| Diagnostics : cause + origine + piste d’analyse | ✅ | ➖ | ➖ |
-| Documentation générée depuis le code | ✅ | ➖ | ➖ |
-| Taxonomie d’architecture (domaine / infrastructure / port) | ✅ | ➖ | ➖ |
-| Identité par occurrence (id + horodatage) | ✅ | ➖ | ➖ |
-| Pipeline fluent | Optionnel, par conception | Central | Central |
+La même factory alimente le flux par exception. L’erreur voyage alors comme une exception structurée et typée par catégorie (`DomainException` ici) portant la même `Error` :
 
-*➖ signifie « pas un objectif de cette librairie », pas « mal fait » : ErrorOr et FluentResults sont concentrées sur le fait d’être des types résultat épurés.*
+```csharp
+throw PaymentError
+    .PaymentDeclined(providerCode, paymentId)
+    .ToException();
+```
 
-## 🧭 Laquelle choisir ?
+L’erreur peut en outre être liée à une documentation structurée décrivant son titre, sa règle, ses causes possibles, ses pistes d’analyse et ses exemples. Le catalogue généré (une référence lisible de toutes les erreurs documentées) et le workflow de versionnage qui le protège des changements cassants font partie de l’usage prévu de la bibliothèque.
 
-- Prenez **ErrorOr** quand vous voulez un type résultat minimal et ergonomique, avec une catégorisation d’erreurs propre et adaptée au HTTP.
-- Prenez **FluentResults** quand vous voulez un résultat portant des chaînes de raisons riches et des métadonnées.
-- Prenez **FirstClassErrors** quand vous voulez que vos erreurs soient une **connaissance documentée et diagnosticable** — décrite une fois dans le code, transportée comme valeur ou levée comme exception, et transformée en catalogue sur lequel toute l’équipe peut s’appuyer.
+Rien de tout cela ne change la méthode `Pay` ci-dessus : le transport reste léger, et la connaissance durable vit avec la définition de l’erreur, pas dans chaque site d’appel.
 
-Elles ne se disputent pas vraiment le même rôle : les deux premières rendent les erreurs faciles à *retourner* ; FirstClassErrors les rend faciles à *comprendre, supporter et documenter*.
+## Qu’est-ce qui change entre les approches ?
+
+| Préoccupation | ErrorOr | FluentResults | FirstClassErrors |
+| --- | --- | --- | --- |
+| Abstraction principale | valeur ou erreurs | résultat avec raisons | erreur structurée |
+| Flux d’échec sous forme de valeur | central | central | disponible via `Outcome` |
+| Erreurs ou raisons multiples | intégré | intégré | causes structurées ; l’agrégation d’erreurs indépendantes est à la charge de l’application |
+| Métadonnées / faits propres à l’occurrence | métadonnées | métadonnées | `ErrorContext` typé |
+| Séparation dédiée entre messages publics et internes | définie par l’application | définie par l’application | explicite dans le modèle central |
+| Transport par exception depuis la même définition d’erreur | pas le modèle principal | pas le modèle principal | intégré via `ToException()` — une exception structurée et typée par catégorie |
+| Taxonomie domaine / infrastructure / ports (frontières entrantes/sortantes) | définie par l’application | définie par l’application | intégrée |
+| Transience (retenter peut-il réussir ?) et direction de l’interaction (entrante ou sortante) | définies par l’application | définies par l’application | intégrées pour les erreurs d’infrastructure |
+| Documentation humaine générée | hors du périmètre principal de la bibliothèque | hors du périmètre principal de la bibliothèque | intégrée |
+| Vérification de compatibilité du catalogue | hors du périmètre principal de la bibliothèque | hors du périmètre principal de la bibliothèque | intégrée |
+
+« Défini par l’application » ou « hors du périmètre principal » ne signifie pas impossible. Cela signifie que la préoccupation n’est pas l’abstraction centrale de la bibliothèque et qu’elle peut être prise en charge par des conventions applicatives ou un outillage externe.
+
+## Guide de décision
+
+Choisissez **ErrorOr** lorsque :
+
+- vous voulez principalement une union concise entre `T` et une ou plusieurs erreurs ;
+- les erreurs de validation multiples sont courantes ;
+- le matching et la composition fonctionnelle sont le style d’interaction principal ;
+- une représentation légère de l’erreur suffit.
+
+Choisissez **FluentResults** lorsque :
+
+- vous souhaitez représenter des raisons de succès comme d’échec ;
+- les chaînes de raisons imbriquées et les métadonnées sont centrales ;
+- le graphe de résultat est lui-même le modèle que vous voulez enrichir et composer.
+
+Choisissez **FirstClassErrors** lorsque :
+
+- les erreurs sont des concepts durables utilisés par les développeurs, le support, l’exploitation ou les clients ;
+- les messages publics et de diagnostic doivent avoir des audiences explicites ;
+- une même erreur doit circuler comme donnée, `Outcome` ou exception ;
+- les échecs métier et infrastructurels doivent porter un sens opérationnel différent ;
+- la documentation générée et les contrôles de compatibilité font partie du besoin.
+
+## Une combinaison peut aussi être valable
+
+Ces choix ne sont pas toujours exclusifs. Une application peut utiliser une bibliothèque de résultat généraliste à certaines frontières tout en conservant un catalogue d’erreurs documenté séparé.
+
+Avant de combiner les modèles, décidez quel type possède l’identité stable de l’erreur. Dupliquer les codes, les messages, les métadonnées et les mappings entre deux modèles concurrents crée généralement plus de travail que cela n’en économise.
+
+## Questions à poser avant de choisir
+
+1. Le problème principal est-il le **contrôle du flux**, la **composition des raisons** ou la **connaissance partagée des erreurs** ?
+2. Une même définition d’erreur doit-elle supporter le retour et l’exception ?
+3. Qui consomme le modèle : seulement le code, ou également le support et l’exploitation ?
+4. Les codes et les clés de contexte sont-ils considérés comme un contrat versionné ?
+5. La documentation générée est-elle une exigence ou une préoccupation externe ?
+6. L’application a-t-elle besoin d’une sémantique intégrée pour le domaine et l’infrastructure ?
+7. Combien de conventions êtes-vous prêt à construire autour d’un type résultat plus petit ?
+
+Le meilleur choix est le plus petit modèle qui couvre les besoins réels sans obliger l’application à reconstruire ailleurs les sémantiques manquantes.
+
+---
+
+<div align="center">
+<a href="Internationalisation.fr.md">← Internationalisation</a> · <a href="DocumentationMap.fr.md">Carte de la documentation</a> · <a href="FAQ.fr.md">FAQ →</a>
+</div>
+
+---
