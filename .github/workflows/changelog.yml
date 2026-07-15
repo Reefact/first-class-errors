@@ -1,0 +1,205 @@
+name: Draft changelog
+
+# Run it by hand from the Actions tab. It never publishes anything on its own — it
+# drafts the "[Unreleased]" section of ONE release train's changelog from the pull
+# requests merged since that train's last tag, then opens a pull request so a human
+# can review it (and delete any benefit the model inferred rather than found)
+# before merging. The two trains version independently and keep separate changelogs:
+#   lib -> CHANGELOG.md                     (FirstClassErrors + FirstClassErrors.Testing)
+#   cli -> FirstClassErrors.Cli/CHANGELOG.md (the fce .NET tool)
+on:
+  workflow_dispatch:
+    inputs:
+      component:
+        description: 'Which release train to draft a changelog for'
+        type: choice
+        options:
+          - lib
+          - cli
+        required: true
+      from_ref:
+        description: "Previous tag to diff from (blank = the train's latest tag; none = whole history)"
+        required: false
+        default: ''
+
+# Two dispatches of the SAME train would both push to that train's draft branch;
+# serialise them so a newer run supersedes an in-flight one. Different trains use
+# different groups, so a lib draft and a cli draft never block each other. Unlike
+# release, cancelling is safe here — the workflow only pushes an idempotent draft
+# branch and opens a pull request; there is nothing half-published to protect.
+concurrency:
+  group: changelog-${{ inputs.component }}
+  cancel-in-progress: true
+
+# Least privilege at the top level: read-only by default, matching release.yml and
+# what OpenSSF Scorecard's Token-Permissions check rewards. The single job widens
+# only the write scopes it needs.
+permissions:
+  contents: read
+
+jobs:
+  draft-changelog:
+    name: Draft ${{ inputs.component }} changelog
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write        # push the draft branch
+      pull-requests: write   # open the review pull request
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          # Full history + tags so the train's previous tag (and its merge time,
+          # the lower bound of the pull-request range) resolves.
+          fetch-depth: 0
+
+      - name: Resolve component
+        id: setup
+        env:
+          COMPONENT: ${{ inputs.component }}
+        run: |
+          case "$COMPONENT" in
+            lib) FILE="CHANGELOG.md"; PACKAGE="FirstClassErrors and FirstClassErrors.Testing"; TRAIN="lib" ;;
+            cli) FILE="FirstClassErrors.Cli/CHANGELOG.md"; PACKAGE="FirstClassErrors.Cli (the fce .NET tool)"; TRAIN="cli" ;;
+            *) echo "::error::unknown component '$COMPONENT' (expected lib or cli)"; exit 1 ;;
+          esac
+          {
+            echo "file=$FILE"
+            echo "package=$PACKAGE"
+            echo "train=$TRAIN"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Collect merged pull requests for the train
+        id: collect
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMPONENT: ${{ inputs.component }}
+          FROM_REF: ${{ inputs.from_ref }}
+        run: |
+          tools/changelog/collect-prs.sh "$COMPONENT" > prs.json
+          echo "count=$(jq 'length' prs.json)" >> "$GITHUB_OUTPUT"
+          echo "Collected $(jq 'length' prs.json) ${COMPONENT}-facing pull request(s) for this changelog."
+        # COMPONENT is a choice input (lib|cli only), safe to pass straight through.
+        # from_ref is free text, so it travels via the environment (never inlined
+        # into the script) and is only ever handed to `git log`.
+
+      - name: Draft the changelog entry with Claude
+        if: steps.collect.outputs.count != '0'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          COMPONENT: ${{ inputs.component }}
+          PACKAGE: ${{ steps.setup.outputs.package }}
+        run: |
+          if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+            echo "::error::Secret ANTHROPIC_API_KEY is not set (Settings -> Secrets and variables -> Actions)."
+            exit 1
+          fi
+
+          PROMPT="$(cat .github/changelog-prompt.md)"
+          PRS="$(cat prs.json)"
+          CONTEXT="$(printf 'Release train: %s\nPackage(s) this changelog documents: %s\nAudience: developers who consume this package from NuGet.\nOnly describe changes to this package; ignore unrelated components.' "$COMPONENT" "$PACKAGE")"
+
+          # claude-sonnet-5 is the current Sonnet 5 alias; thinking is disabled so the
+          # whole token budget goes to the changelog. Build the body with jq so all
+          # JSON escaping (of untrusted PR text) is handled for us.
+          jq -n \
+            --arg model "claude-sonnet-5" \
+            --arg prompt "$PROMPT" \
+            --arg context "$CONTEXT" \
+            --arg prs "$PRS" \
+            '{
+               model: $model,
+               max_tokens: 4000,
+               thinking: { type: "disabled" },
+               messages: [
+                 { role: "user",
+                   content: ($prompt
+                     + "\n\n<context>\n" + $context + "\n</context>"
+                     + "\n\n<pull_requests>\n" + $prs + "\n</pull_requests>") }
+               ]
+             }' > payload.json
+
+          curl -sS https://api.anthropic.com/v1/messages \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -H "content-type: application/json" \
+            -d @payload.json > response.json
+
+          if jq -e '.type == "error"' response.json >/dev/null 2>&1; then
+            echo "::error::Anthropic API returned an error:"; jq -r '.error.message // .' response.json
+            exit 1
+          fi
+          STOP="$(jq -r '.stop_reason // empty' response.json)"
+          if [ "$STOP" = "refusal" ]; then
+            echo "::error::Model refused to generate the changelog:"; jq -r '.stop_details' response.json
+            exit 1
+          fi
+          if [ "$STOP" = "max_tokens" ]; then
+            echo "::error::Changelog truncated (hit max_tokens). Raise max_tokens or narrow the range with from_ref."
+            exit 1
+          fi
+
+          jq -r '[.content[] | select(.type=="text") | .text] | join("")' response.json > entry.md
+          # Guard against any stray text before the heading so the idempotent merge
+          # (which replaces the whole "## [Unreleased]" block) can never accumulate.
+          if ! grep -q '^## \[Unreleased\]' entry.md; then
+            echo "::error::Model output is missing the '## [Unreleased]' heading:"; cat entry.md
+            exit 1
+          fi
+          sed -n '/^## \[Unreleased\]/,$p' entry.md > entry.trimmed && mv entry.trimmed entry.md
+          echo "----- drafted entry -----"; cat entry.md
+
+      - name: Merge into the changelog
+        if: steps.collect.outputs.count != '0'
+        env:
+          FILE: ${{ steps.setup.outputs.file }}
+          PACKAGE: ${{ steps.setup.outputs.package }}
+          TRAIN: ${{ steps.setup.outputs.train }}
+        run: |
+          tools/changelog/merge-unreleased.sh "$FILE" entry.md "$PACKAGE" "$TRAIN"
+
+      - name: Open a review pull request
+        if: steps.collect.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMPONENT: ${{ inputs.component }}
+          FILE: ${{ steps.setup.outputs.file }}
+        run: |
+          BRANCH="chore/changelog-${COMPONENT}-draft"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet -- "$FILE"; then
+            echo "No changes to $FILE — nothing to propose."
+            exit 0
+          fi
+
+          git checkout -B "$BRANCH"
+          git add "$FILE"
+          git commit -m "docs: draft ${COMPONENT} changelog"
+          git push -f -u origin "$BRANCH"
+
+          cat > pr-body.md <<'BODY'
+          Auto-drafted from the merged pull requests of this release train.
+
+          **Before merging**, read the entry against the actual pull requests and
+          delete any benefit the model inferred rather than found. The generator is
+          told to invent nothing, but the human check is the whole point of this PR.
+          BODY
+
+          # Attach the `documentation` label only if the repo already defines it, so a
+          # missing label never fails the run.
+          label_args=""
+          if gh label list --json name --jq '.[].name' | grep -qx documentation; then
+            label_args="--label documentation"
+          fi
+
+          if [ -n "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[].number')" ]; then
+            echo "A pull request for $BRANCH is already open; the force-push refreshed it."
+          else
+            # shellcheck disable=SC2086
+            gh pr create --base main --head "$BRANCH" \
+              --title "docs: draft ${COMPONENT} changelog" \
+              $label_args \
+              --body-file pr-body.md
+          fi

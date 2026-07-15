@@ -18,7 +18,7 @@ namespace FirstClassErrors.PropertyTests;
 /// <remarks>
 ///     Two outcomes are compared with <see cref="Equivalent" />: successes by their carried value, failures by
 ///     <b>reference identity</b> of their error. Reference identity is deliberate — the library propagates the
-///     very same <see cref="Error" /> instance through <c>Then</c>/<c>To</c>/<c>Recover</c>, and these tests
+///     very same <see cref="Error" /> instance through <c>Then</c>/<c>Recover</c>, and these tests
 ///     lock that in.
 /// </remarks>
 [TestSubject(typeof(Outcome<>))]
@@ -75,20 +75,20 @@ public sealed class OutcomeMonadLawTests {
             .QuickCheckThrowOnFailure();
     }
 
-    [Fact(DisplayName = "Functor identity: m.To(x => x) is equivalent to m.")]
+    [Fact(DisplayName = "Functor identity: m.Then(x => x) is equivalent to m.")]
     public void FunctorIdentity() {
-        Prop.ForAll(Outcomes().ToArbitrary(), outcome => Equivalent(outcome.To(value => value), outcome))
+        Prop.ForAll(Outcomes().ToArbitrary(), outcome => Equivalent(outcome.Then(value => value), outcome))
             .QuickCheckThrowOnFailure();
     }
 
-    [Fact(DisplayName = "To is a special case of Then: m.To(f) equals m.Then(x => Success(f(x))).")]
+    [Fact(DisplayName = "The value-mapping Then is a special case of the outcome-returning Then: m.Then(f) equals m.Then(x => Success(f(x))).")]
     public void MapIsBindWithSuccess() {
         var inputs = (from outcome in Outcomes()
                       from delta in Ints()
                       select (outcome, delta)).ToArbitrary();
 
         Prop.ForAll(inputs,
-                    input => Equivalent(input.outcome.To(value => value + input.delta),
+                    input => Equivalent(input.outcome.Then(value => value + input.delta),
                                         input.outcome.Then(value => Outcome<int>.Success(value + input.delta))))
             .QuickCheckThrowOnFailure();
     }
