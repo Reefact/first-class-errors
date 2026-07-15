@@ -5,7 +5,9 @@
 
 FirstClassErrors documentation is organized by **reader intent**, not by implementation namespace.
 
-Start with the question you are trying to answer. Each primary page may link to more focused guides or references for advanced details.
+The project README introduces the library and lists every document by area. This page is different: it helps you choose *what to read next* based on what you are trying to accomplish.
+
+Start with the question you are trying to answer. Each primary page then links to the focused guides and references you need for advanced details.
 
 ## I am discovering the library
 
@@ -21,26 +23,26 @@ Follow this path when you are deciding whether FirstClassErrors fits your applic
 Use these pages before defining project-wide conventions.
 
 - [Core Concepts](CoreConcepts.en.md) — `Error`, factories, documentation, exceptions, and `Outcome`.
+- [Error Taxonomy and Composition](ErrorTaxonomy.en.md) — domain, infrastructure, and port errors, and how errors nest as structured causes.
 - [Error Context Guide](ErrorContext.en.md) — structured facts attached to one occurrence.
-- [Usage Patterns](UsagePatterns.en.md) — choose between exceptions, outcomes, domain errors, and infrastructure errors.
-
-The primary pages link to any dedicated taxonomy or composition guides available in the current documentation version.
 
 ## I am writing an error
 
-Use this path when adding or reviewing an application error.
+Use these pages when adding or reviewing an application error.
 
-1. [Writing Errors Guide](WritingErrorsGuide.en.md) — code, title, description, rule, diagnostics, and examples.
-2. [Best Practices](BestPractices.en.md) — project and pull-request review checklist.
-3. [Internationalization](Internationalization.en.md) — localize public and documentation content while keeping stable identifiers invariant.
-4. [Analyzer rules](analyzers/README.md) — understand the compile-time checks that protect the model and documentation links.
+- [Writing Errors Guide](WritingErrorsGuide.en.md) — code, title, description, rule, diagnostics, and examples.
+- [Best Practices](BestPractices.en.md) — project and pull-request review checklist.
+
+Then, as optional complements:
+
+- [Internationalization](Internationalization.en.md) — localize public and documentation content while keeping stable identifiers invariant.
+- [Analyzer rules](analyzers/README.md) — the compile-time checks that protect the model and its documentation links.
 
 ## I am using errors in application code
 
 - [Usage Patterns](UsagePatterns.en.md) — select the right representation for common situations.
 - [Error Context Guide](ErrorContext.en.md) — attach useful, safe occurrence-level facts.
 - [Testing Guide](Testing.en.md) — assert outcomes and errors without manual plumbing.
-- [FAQ](FAQ.en.md) — resolve common design questions and find the relevant focused guide.
 
 ## I am integrating delivery and operations
 
@@ -49,23 +51,33 @@ Use this path when adding or reviewing an application error.
 3. [Catalog Versioning — command reference](CatalogVersioningReference.en.md) — find exact CLI options and exit codes.
 4. [Catalog Versioning — CI/CD integration](CatalogVersioningCI.en.md) — implement read-only contract checks in pipelines.
 
-The operational integration pages link to any dedicated logging guidance available in the current documentation version.
+To connect runtime failures back to the catalog:
+
+- [Integrate with structured logging](LoggingIntegration.en.md) — what to log, how to preserve inner errors, and how to link an occurrence to the generated catalog.
 
 ## I am extending the documentation pipeline
 
 - [Architecture of the Documentation Pipeline](ArchitectureOfTheDocumentationPipeline.en.md) — understand the end-to-end model and component responsibilities.
+- [Extraction and Project Discovery Reference](DocumentationExtractionReference.en.md) — select projects and assemblies, configure isolated extraction, and handle its failures.
 - [Writing a custom renderer](WritingACustomRenderer.en.md) — implement and register another output format.
 - [Internationalization](Internationalization.en.md) — understand the extraction/rendering culture boundary.
-
-The architecture page links to any focused extraction and project-discovery reference available in the current documentation version.
 
 ## I need a reference, not a tutorial
 
 Use these pages when you already understand the model and need exact behavior.
 
-- [Catalog Versioning command reference](CatalogVersioningReference.en.md)
-- [Analyzer rules](analyzers/README.md)
-- [FAQ](FAQ.en.md)
+- [Extraction and Project Discovery Reference](DocumentationExtractionReference.en.md) — projects, assemblies, isolated extraction, and failure handling.
+- [Catalog Versioning command reference](CatalogVersioningReference.en.md) — exact CLI options and exit codes.
+- [Analyzer rules (FCExxx)](analyzers/README.md) — the full list of compile-time diagnostics.
+
+## I am stuck or unsure about a decision
+
+Use these pages when you need to make a design call or weigh options.
+
+- [FAQ](FAQ.en.md) — resolve common design questions and find the relevant focused guide.
+- [Usage Patterns](UsagePatterns.en.md) — choose the right representation for a situation.
+- [When Not to Use FirstClassErrors](WhenNotToUseFirstClassErrors.en.md) — recognize when the library adds more ceremony than value.
+- [Comparison with error-handling libraries](ComparisonWithOtherLibraries.en.md) — compare FirstClassErrors with ErrorOr and FluentResults.
 
 ## Suggested team reading order
 
