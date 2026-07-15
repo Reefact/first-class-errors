@@ -51,9 +51,6 @@ public sealed class RequestBinder<TRequest> {
     /// <summary>The options this binder (and every binder nested under it) binds with.</summary>
     internal RequestBinderOptions Options { get; private set; }
 
-    /// <summary>Indicates whether at least one binding failure has been recorded.</summary>
-    internal bool HasErrors => _errors.Count > 0;
-
     /// <summary>
     ///     Replaces the binder options (for example to plug a serializer-aware
     ///     <see cref="IArgumentNameProvider" />). Call it before binding any property; nested binders inherit the
