@@ -67,7 +67,15 @@ endroits :
 réellement spécifique au train (quel `.csproj` packer, si un package de symboles est
 livré), donc elle n'est pas pilotée par `trains.sh`.
 
-**5. [`.github/workflows/changelog.yml`](../.github/workflows/changelog.yml)** —
+**5. [`.github/workflows/release-dryrun.yml`](../.github/workflows/release-dryrun.yml)** —
+les deux étapes de répétition codent la liste des trains en dur : ajoutez
+`tools/packaging/pack.sh "$DRYRUN_VERSION" <id>` à l'étape *Pack with SBOM* et
+`tools/packaging/release-notes.sh <id> HEAD` à l'étape *Rehearse release notes*.
+Sans cela, le packaging et les notes du nouveau train ne sont jamais exercés avant
+une vraie release — rien n'échoue, ils ne sont simplement jamais lancés, ce qui
+annule tout l'intérêt du dry-run.
+
+**6. [`.github/workflows/changelog.yml`](../.github/workflows/changelog.yml)** —
 ajoutez `- <id>` aux `options` du choix `component` du `workflow_dispatch`. (Le
 workflow lit tout le reste du train depuis `trains.sh`.)
 
@@ -89,9 +97,10 @@ workflow lit tout le reste du train depuis `trains.sh`.)
   `commit-lint` le partagent).
 - **Notes de release :** lancez `tools/packaging/release-notes.sh <id> <préfixe>0.0.0 HEAD`
   en local ; il doit lister les commits de ce train et rien des autres trains.
-- **Packaging :** le workflow [`release-dryrun`](workflows/release-dryrun.fr.md) packe
-  sur chaque PR ; confirmez qu'il packe le(s) projet(s) du nouveau train. Ou lancez
-  `tools/packaging/pack.sh 0.0.0-dry.1 <id>` en local.
+- **Packaging :** après l'édit de l'étape 5, le workflow
+  [`release-dryrun`](workflows/release-dryrun.fr.md) packe et répète les notes du
+  nouveau train sur chaque PR — vérifiez que son log liste le nouveau train. Ou
+  lancez `tools/packaging/pack.sh 0.0.0-dry.1 <id>` en local.
 - **Changelog :** une fois mergé sur la branche par défaut, déclenchez le workflow
   [`changelog`](workflows/changelog.fr.md) pour le nouveau composant et relisez la
   pull request rédigée.
