@@ -32,6 +32,8 @@ N’ajoutez pas dans le contexte :
 
 Si l’information est instable, bruyante, sensible ou non actionnable, ne l’ajoutez pas.
 
+> Deux analyseurs opt-in aident à faire respecter les deux dernières règles dès la compilation : [FCE017](analyzers/FCE017.fr.md) signale une clé de contexte dont le **nom** paraît sensible (mot de passe, token, secret, …), et [FCE018](analyzers/FCE018.fr.md) signale une clé dont le **type de valeur** est un gros payload (tableau d’octets, `Stream`, `FileInfo`). Ce sont des heuristiques : activez-les dans `.editorconfig` et voyez-les comme un filet de sécurité, pas une garantie.
+
 ## 🎯 Pourquoi cela améliore l’observabilité
 
 Avec `ErrorCode`, vous regroupez les erreurs par type.
