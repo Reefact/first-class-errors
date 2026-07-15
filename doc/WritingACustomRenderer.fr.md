@@ -50,7 +50,7 @@ Les types du contrat de rendu sont dans le namespace `FirstClassErrors.GenDoc.Re
 public string Format => "csv";
 ```
 
-Choisissez un nom stable en minuscules. Les formats intégrés restent prioritaires si un renderer personnalisé réutilise `json`, `markdown` ou `html`.
+Choisissez un nom stable en minuscules. Les formats intégrés restent prioritaires si un renderer personnalisé réutilise `json`, `markdown` ou `html`. Si deux renderers personnalisés déclarent le même format, le premier chargé l’emporte — l’entrée la plus en amont dans la liste `renderers` de `fce.json` — sans aucun avertissement ; deux renderers personnalisés ne doivent donc pas partager un format.
 
 ### `SupportedLayouts`
 
@@ -87,12 +87,13 @@ Gardez les chemins relatifs, déterministes et sûrs. N’écrivez pas directeme
 `RenderRequest` porte :
 
 - `Layout`, sélectionné avec `--layout` ;
-- `Culture`, utilisée pour les titres, libellés et textes fixes appartenant au renderer ;
-- `ServiceName`, issu de `--service-name` ou de la configuration, utilisé par les renderers qui émettent des types de problème RFC 9457 (« Problem Details » pour les API HTTP) de la forme `urn:problem:{service}:{code}` ; `null` si non configuré.
+- `Culture`, utilisée pour les titres, libellés et textes fixes appartenant au renderer.
+
+Elle porte aussi `ServiceName` (issu de `--service-name` ou de la configuration), dont seuls les renderers qui émettent des types de problème RFC 9457 (« Problem Details » pour les API HTTP) de la forme `urn:problem:{service}:{code}` ont besoin ; il vaut `null` si non configuré.
 
 Le contenu du catalogue a déjà été localisé pendant l’extraction. Un renderer ne doit pas retraduire les titres, règles, messages ou diagnostics des erreurs.
 
-## Renderer CSV minimal complet
+## Renderer CSV minimal de bout en bout
 
 ```csharp
 using System;
@@ -117,8 +118,9 @@ public sealed class CsvErrorDocumentationRenderer : IErrorDocumentationRenderer 
             throw new LayoutNotSupportedException(Format, request.Layout, SupportedLayouts);
         }
 
-        IEnumerable<string> rows = catalog.Select(error =>
-            $"{Quote(error.Code.ToString())},{Quote(error.Title)}");
+        IEnumerable<string> rows = catalog
+            .OrderBy(error => error.Code, StringComparer.Ordinal)
+            .Select(error => $"{Quote(error.Code)},{Quote(error.Title)}");
 
         string content = "code,title\n" + string.Join("\n", rows);
 
@@ -134,7 +136,63 @@ public sealed class CsvErrorDocumentationRenderer : IErrorDocumentationRenderer 
 }
 ```
 
-Ce renderer est déterministe, prend en charge un seul layout et renvoie un fichier complet.
+Trier par `Code` fait de l’ordre de sortie une propriété du renderer, et non un hasard de l’ordre du catalogue. Cet exemple illustre le contrat de rendu ; pour un CSV destiné à des consommateurs externes, décidez aussi explicitement de l’encodage, des séparateurs de champ et de ligne, de l’ordre des colonnes et d’une politique de protection contre l’injection de formules de tableur.
+
+## Tester le renderer
+
+Les comportements exigés par la checklist — ordre déterministe, échappement correct, layouts rejetés — sont précisément ce qu’un test doit verrouiller. Les tests du dépôt utilisent NFluent, ce qui convient bien à un exemple de point d’extension :
+
+```csharp
+[Fact]
+public void Render_produces_a_deterministic_csv_document() {
+    var renderer = new CsvErrorDocumentationRenderer();
+    var request  = new RenderRequest(RenderLayouts.Single, CultureInfo.InvariantCulture);
+
+    IReadOnlyList<RenderedDocument> documents = renderer.Render(CreateCatalog(), request);
+
+    Check.That(documents).HasSize(1);
+    Check.That(documents[0].RelativePath).IsEqualTo("errors.csv");
+    Check.That(documents[0].Content).IsEqualTo(
+        "code,title\n" +
+        "\"ORDER_NOT_FOUND\",\"Order not found\"");
+}
+
+[Fact]
+public void Render_rejects_an_unsupported_layout() {
+    var renderer = new CsvErrorDocumentationRenderer();
+
+    Check.ThatCode(() =>
+            renderer.Render(CreateCatalog(), new RenderRequest(RenderLayouts.Split, CultureInfo.InvariantCulture)))
+        .Throws<LayoutNotSupportedException>();
+}
+```
+
+`CreateCatalog()` est un helper de test renvoyant un petit `IEnumerable<ErrorDocumentation>` — ici une seule entrée `ORDER_NOT_FOUND` / « Order not found ». Comparer le contenu complet du document, plutôt qu’un seul champ, est ce qui rend les garanties d’échappement et d’ordre robustes aux régressions.
+
+## Le projet du renderer
+
+Un renderer se livre sous forme de bibliothèque de classes .NET ordinaire qui référence `FirstClassErrors` pour les types de contrat :
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Compiler contre le contrat, mais ne pas copier FirstClassErrors.dll à côté du
+         plugin. La CLI l'a déjà chargé ; une seconde copie sur disque ferait résoudre
+         IErrorDocumentationRenderer vers un type différent, et le renderer serait
+         silencieusement ignoré. -->
+    <PackageReference Include="FirstClassErrors" Version="..." ExcludeAssets="runtime" />
+  </ItemGroup>
+
+</Project>
+```
+
+`ExcludeAssets="runtime"` garde le contrat disponible à la compilation tout en laissant l’hôte le fournir à l’exécution. Une référence projet obtient le même résultat avec `<Private>false</Private>`. Seules les dépendances propres au renderer — jamais `FirstClassErrors` lui-même — doivent être déployées à côté du plugin.
 
 ## L’enregistrer dans la CLI
 
@@ -175,7 +233,7 @@ La CLI découvre les types de renderer publics dans les assemblies configurés. 
 - utiliser l’assembly de contrat résolu par le processus CLI ;
 - cibler un framework chargeable par ce runtime.
 
-Ne déployez pas de copie privée de `FirstClassErrors` à côté du plugin : si la CLI et le plugin chargent chacun leur propre copie, `IErrorDocumentationRenderer` devient deux types distincts et le renderer n’est silencieusement pas reconnu. Une référence projet peut utiliser `<Private>false</Private>` lorsque ce choix correspond au packaging.
+Ne déployez pas de copie privée de `FirstClassErrors` à côté du plugin : si la CLI et le plugin chargent chacun leur propre copie, `IErrorDocumentationRenderer` devient deux types distincts et le renderer n’est silencieusement pas reconnu. Voir [Le projet du renderer](#le-projet-du-renderer) pour le montage de référence qui évite cela.
 
 Un plugin impossible à charger est signalé puis ignoré. Examinez ces avertissements : un format inconnu peut simplement indiquer que son plugin n’a pas été chargé.
 
@@ -204,6 +262,14 @@ Voir [Internationalisation](Internationalisation.fr.md).
 Un renderer est une classe ordinaire. Un appelant programmatique peut extraire puis rendre directement :
 
 ```csharp
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+
+using FirstClassErrors;
+using FirstClassErrors.GenDoc;
+using FirstClassErrors.GenDoc.Rendering;
+
 CultureInfo culture = CultureInfo.GetCultureInfo("fr");
 
 IEnumerable<ErrorDocumentation> catalog =
