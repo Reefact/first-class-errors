@@ -85,6 +85,7 @@ documentées une seule fois ici plutôt que répétées sur chaque page.
 | --- | --- |
 | [`release`](release.fr.md) | Construit, atteste et publie les packages NuGet sur un tag de version (avec un dry run manuel). |
 | [`release-dryrun`](release-dryrun.fr.md) | Répète en continu la partie sans effet de bord de la release (pack + SBOM) sur chaque PR et push. |
+| [`changelog`](changelog.fr.md) | Rédige la section `[Unreleased]` du changelog d'un train à partir des PR mergées, sur déclenchement manuel, et ouvre une PR de relecture. |
 
 ### Maintenance des dépendances
 
