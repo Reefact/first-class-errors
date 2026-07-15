@@ -213,13 +213,13 @@ Outcome<Receipt> outcome = checkout.Pay(order);
 
 if (outcome.IsFailure) {
     logger.LogWarning(
-        "Checkout failed with {ErrorCode} ({ErrorInstanceId})",
+        "Checkout failed with {ErrorCode} {@FirstClassError}",
         outcome.Error!.Code,
-        outcome.Error.InstanceId);
+        ErrorLogModel.From(outcome.Error));
 }
 ```
 
-Do not throw solely to make the logging framework see the error. A shared serializer can handle both `Error` and `DiagnosableException.Error`.
+Do not throw solely to make the logging framework see the error. The same `ErrorLogModel.From` projection serves both paths — a thrown `DiagnosableException.Error` and a returned `Outcome` failure — so neither one re-lists the error's properties.
 
 ## Choose the log level from operational impact
 

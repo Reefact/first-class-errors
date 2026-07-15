@@ -213,13 +213,13 @@ Outcome<Receipt> outcome = checkout.Pay(order);
 
 if (outcome.IsFailure) {
     logger.LogWarning(
-        "Checkout failed with {ErrorCode} ({ErrorInstanceId})",
+        "Checkout failed with {ErrorCode} {@FirstClassError}",
         outcome.Error!.Code,
-        outcome.Error.InstanceId);
+        ErrorLogModel.From(outcome.Error));
 }
 ```
 
-Ne levez pas une exception uniquement pour que le framework de logging voie l’erreur. Un sérialiseur partagé peut gérer à la fois `Error` et `DiagnosableException.Error`.
+Ne levez pas une exception uniquement pour que le framework de logging voie l’erreur. La même projection `ErrorLogModel.From` sert les deux chemins — une `DiagnosableException.Error` levée et un échec d’`Outcome` retourné — de sorte qu’aucun des deux ne réénumère les propriétés de l’erreur.
 
 ## Choisir le niveau selon l’impact opérationnel
 
