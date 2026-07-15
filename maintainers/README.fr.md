@@ -27,15 +27,20 @@ l'utiliser. Il complète les pages [`release`](workflows/release.fr.md) et
 [`release-dryrun`](workflows/release-dryrun.fr.md) de la référence, qui décrivent
 ces workflows structurellement. Aussi en [anglais](ReleaseDryRun.en.md).
 
-### [Registres de décision d'architecture (ADR)](adr/)
+### [Registres de décision d'architecture (ADR)](adr/README.md)
 
 Des enregistrements datés des décisions importantes — leur contexte, l'option
 retenue et les conséquences. Un ADR est un journal historique : il est *superseded*
-par un ADR plus récent, pas édité sur place.
+par un ADR plus récent, pas édité sur place. L'[index](adr/README.md) définit le
+format que suit chaque ADR et fournit un [template](adr/template.md) prêt à
+copier. *(En anglais uniquement.)*
 
-- [ADR 0001 — Verrouiller le floor Roslyn de l'analyzer](adr/0001-lock-the-analyzer-roslyn-floor.md)
+- [ADR-0001 — Verrouiller le floor Roslyn de l'analyzer](adr/0001-lock-the-analyzer-roslyn-floor.md)
   — pourquoi la version de Roslyn de l'analyzer est gelée, ce que le workflow
-  [`analyzers`](workflows/analyzers.fr.md) fait respecter. *(En anglais uniquement.)*
+  [`analyzers`](workflows/analyzers.fr.md) fait respecter.
+- [ADR-0002 — Fixer le floor du runtime de l'outillage sur la plus ancienne LTS supportée](adr/0002-floor-the-tooling-runtime.md)
+  — pourquoi l'outillage cible `net8.0` avec roll-forward, ce que le job
+  `floor` du workflow [`ci`](workflows/ci.fr.md) fait respecter.
 
 ## En rapport
 
