@@ -50,7 +50,7 @@ The renderer contract types live in the `FirstClassErrors.GenDoc.Rendering` name
 public string Format => "csv";
 ```
 
-Choose a stable, lowercase name. Built-in formats take precedence if a custom renderer reuses `json`, `markdown`, or `html`. If two custom renderers declare the same format, the first one loaded wins — the earlier entry in the `renderers` list of `fce.json` — and no warning is emitted, so two custom renderers must not share a format.
+Choose a stable, lowercase name. Built-in formats take precedence if a custom renderer reuses `json`, `markdown`, or `html`. Two custom renderers must not declare the same format: in the current implementation the first one loaded wins — the earlier entry in the `renderers` list of `fce.json`, with no warning — but do not rely on that resolution; keep custom formats unique.
 
 ### `SupportedLayouts`
 
@@ -154,6 +154,7 @@ public void Render_produces_a_deterministic_csv_document() {
     Check.That(documents[0].RelativePath).IsEqualTo("errors.csv");
     Check.That(documents[0].Content).IsEqualTo(
         "code,title\n" +
+        "\"CUSTOMER_NOT_FOUND\",\"The \"\"requested\"\" customer was not found\"\n" +
         "\"ORDER_NOT_FOUND\",\"Order not found\"");
 }
 
@@ -167,7 +168,7 @@ public void Render_rejects_an_unsupported_layout() {
 }
 ```
 
-`CreateCatalog()` is a test helper returning a small `IEnumerable<ErrorDocumentation>` — here a single `ORDER_NOT_FOUND` / "Order not found" entry. Comparing the whole document content, rather than one field, is what makes the escaping and ordering guarantees regression-proof.
+`CreateCatalog()` is a test helper returning a small `IEnumerable<ErrorDocumentation>` — here two entries, one whose title contains quotes so the doubled-quote escaping is exercised, with codes chosen so `CUSTOMER_NOT_FOUND` sorts before `ORDER_NOT_FOUND`. (Test-framework and namespace imports are omitted for brevity.) Comparing the whole document content, rather than one field, is what makes the escaping and ordering guarantees regression-proof.
 
 ## The renderer project
 

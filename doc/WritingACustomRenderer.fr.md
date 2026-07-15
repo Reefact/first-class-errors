@@ -50,7 +50,7 @@ Les types du contrat de rendu sont dans le namespace `FirstClassErrors.GenDoc.Re
 public string Format => "csv";
 ```
 
-Choisissez un nom stable en minuscules. Les formats intégrés restent prioritaires si un renderer personnalisé réutilise `json`, `markdown` ou `html`. Si deux renderers personnalisés déclarent le même format, le premier chargé l’emporte — l’entrée la plus en amont dans la liste `renderers` de `fce.json` — sans aucun avertissement ; deux renderers personnalisés ne doivent donc pas partager un format.
+Choisissez un nom stable en minuscules. Les formats intégrés restent prioritaires si un renderer personnalisé réutilise `json`, `markdown` ou `html`. Deux renderers personnalisés ne doivent pas déclarer le même format : dans l’implémentation actuelle, le premier chargé l’emporte — l’entrée la plus en amont dans la liste `renderers` de `fce.json`, sans aucun avertissement — mais ne vous reposez pas sur cette résolution ; gardez les formats personnalisés uniques.
 
 ### `SupportedLayouts`
 
@@ -154,6 +154,7 @@ public void Render_produces_a_deterministic_csv_document() {
     Check.That(documents[0].RelativePath).IsEqualTo("errors.csv");
     Check.That(documents[0].Content).IsEqualTo(
         "code,title\n" +
+        "\"CUSTOMER_NOT_FOUND\",\"The \"\"requested\"\" customer was not found\"\n" +
         "\"ORDER_NOT_FOUND\",\"Order not found\"");
 }
 
@@ -167,7 +168,7 @@ public void Render_rejects_an_unsupported_layout() {
 }
 ```
 
-`CreateCatalog()` est un helper de test renvoyant un petit `IEnumerable<ErrorDocumentation>` — ici une seule entrée `ORDER_NOT_FOUND` / « Order not found ». Comparer le contenu complet du document, plutôt qu’un seul champ, est ce qui rend les garanties d’échappement et d’ordre robustes aux régressions.
+`CreateCatalog()` est un helper de test renvoyant un petit `IEnumerable<ErrorDocumentation>` — ici deux entrées, dont l’une contient des guillemets dans son titre pour exercer le doublement des guillemets, avec des codes choisis pour que `CUSTOMER_NOT_FOUND` soit trié avant `ORDER_NOT_FOUND`. (Les imports du framework de test et des espaces de noms sont omis par souci de concision.) Comparer le contenu complet du document, plutôt qu’un seul champ, est ce qui rend les garanties d’échappement et d’ordre robustes aux régressions.
 
 ## Le projet du renderer
 
