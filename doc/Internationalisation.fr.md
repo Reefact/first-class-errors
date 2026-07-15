@@ -5,26 +5,22 @@
 
 FirstClassErrors peut générer le même catalogue d’erreurs dans plusieurs langues. L’internationalisation est optionnelle et granulaire : un projet peut tout localiser, ne localiser que certaines sources, ou ne rien localiser.
 
-La règle essentielle est que la localisation intervient à **deux étapes distinctes du pipeline**.
+Cette page décrit l’internationalisation du pipeline et, plus précisément, la manière dont son contenu et ses gabarits sont **localisés** pour une culture donnée. La règle essentielle est que la localisation intervient à **deux étapes distinctes du pipeline**.
 
 ## Le modèle en un coup d’œil
 
+Une seule culture cible pilote normalement les deux étapes : l’extraction localise le contenu d’erreur, le rendu localise le gabarit autour.
+
 ```mermaid
 flowchart LR
-    A[Langue demandée]
-    B[Culture d'extraction]
-    C[Contenu d'erreur localisé]
-    D[Culture de rendu]
-    E[Gabarit de renderer localisé]
-    F[Catalogue généré]
-
-    A --> B --> C
-    A --> D --> E
-    C --> F
+    A[Langue demandée] --> T[Culture cible]
+    T --> B[Culture d'extraction] --> C[Contenu d'erreur localisé]
+    T --> D[Culture de rendu] --> E[Gabarit de renderer localisé]
+    C --> F[Catalogue généré]
     E --> F
 ```
 
-| Étape | Responsable de |
+| Étape | Localise |
 | --- | --- |
 | extraction | titres, descriptions, règles, hypothèses de diagnostic, exemples, messages publics, descriptions de source et de clés de contexte |
 | rendu | titres, libellés, en-têtes, navigation et autres textes fixes du renderer |
@@ -40,10 +36,11 @@ Ne localisez pas les valeurs utilisées comme contrats ou identifiants opératio
 - valeurs d’`ErrorOrigin` ;
 - noms de clés de contexte ;
 - noms de fichiers et ancres générés ;
-- noms de champs JSON et autres schémas machine ;
-- `DiagnosticMessage`, le message runtime interne.
+- noms de champs JSON et autres schémas machine.
 
 Ces valeurs stables garantissent que les liens, branches clientes, dashboards et requêtes de logs fonctionnent dans toutes les langues du catalogue.
+
+`DiagnosticMessage` relève de la même habitude « garder stable », mais pour une raison différente. C’est une simple chaîne — rien dans la bibliothèque n’empêche de la localiser — donc la garder dans une seule langue interne est une convention, pas une contrainte technique. La section suivante explique pourquoi cette convention mérite d’être suivie.
 
 ## Les trois messages runtime
 
@@ -51,9 +48,9 @@ Ces valeurs stables garantissent que les liens, branches clientes, dashboards et
 | --- | --- | --- |
 | `ShortMessage` | oui | message public pour utilisateurs ou clients d’API |
 | `DetailedMessage` | oui | détail public maîtrisé |
-| `DiagnosticMessage` | non | une langue interne cohérente pour les logs, le support et les développeurs |
+| `DiagnosticMessage` | non, par convention | une langue interne cohérente pour les logs, le support et les développeurs |
 
-Un catalogue français peut donc afficher des messages publics français tout en conservant un message de diagnostic anglais. C’est volontaire : le diagnostic explique une occurrence runtime à un public interne commun.
+Un catalogue français peut donc afficher des messages publics français tout en conservant un message de diagnostic anglais. C’est volontaire : le diagnostic explique une occurrence runtime à un public interne commun. La bibliothèque ne l’impose pas — c’est un choix de gouvernance — mais localiser le diagnostic par appelant rend les logs d’un même type d’erreur dépendants de la langue et plus difficiles à rechercher.
 
 Pour les règles d’écriture, voir [Écrire les messages d’erreur](WritingErrorMessages.fr.md).
 
@@ -81,11 +78,15 @@ Ou configurez une valeur par défaut dans `fce.json` :
 
 Une valeur en ligne de commande écrase la configuration. Sans option de langue, la langue par défaut du catalogue est l’anglais.
 
+`--language` accepte un nom de culture .NET : une culture neutre comme `fr`, ou une culture spécifique comme `fr-FR` ou `en-GB`. Utilisez une culture spécifique lorsque les variantes régionales doivent différer. Un nom non reconnu est rejeté avec une erreur, sans repli silencieux. L’API programmatique nomme la même valeur `Culture` (un `CultureInfo`) ; l’option CLI s’appelle `--language` par familiarité, mais c’est bien une culture, pas un simple code de langue.
+
 ## Localiser le contenu documentaire
 
-Pendant l’extraction, le processus worker d’extraction (voir [Architecture](ArchitectureOfTheDocumentationPipeline.fr.md)) utilise `CultureInfo.CurrentUICulture` avec la langue demandée. Les méthodes de documentation et factories peuvent donc lire normalement des ressources `.resx`.
+Pendant l’extraction, le worker s’exécute sous la culture demandée : il définit à la fois `CultureInfo.CurrentUICulture`, qui pilote la résolution des ressources `.resx`, et `CultureInfo.CurrentCulture`, qui pilote le formatage des nombres et dates sensible à la culture. Les méthodes de documentation et factories résolvent donc les ressources localisées — et formatent les valeurs — pour cette culture.
 
 ```csharp
+// Messages.Get(...) représente ici le mécanisme de ressources de votre
+// application (une classe adossée à des .resx), pas une API FirstClassErrors.
 private static ErrorDocumentation BelowAbsoluteZeroDocumentation() {
     return DescribeError
         .WithTitle(Messages.Get("Temperature_BelowAbsoluteZero_Title"))
@@ -168,7 +169,7 @@ Un projet peut contenir :
 - des descriptions de source issues de ressources avec des diagnostics fixes ;
 - des renderers traduits dans moins de langues que le contenu applicatif.
 
-Lorsqu’une ressource manque, le fallback appartient à la stratégie de ressources de l’application. Vérifiez qu’une ressource absente ne produit pas silencieusement des titres, règles ou messages publics vides.
+Lorsqu’une ressource manque, le fallback appartient à la stratégie de ressources de l’application. Avec `Messages.resx` et `Messages.fr.resx`, une clé absente du fichier français retombe sur la ressource neutre — le comportement standard des assemblies satellites `.resx`. Une clé absente de *toutes* les ressources doit faire échouer un test plutôt que produire un catalogue incomplet : vérifiez qu’une ressource absente ne produit pas silencieusement des titres, règles ou messages publics vides.
 
 ## Générer plusieurs langues en CI
 

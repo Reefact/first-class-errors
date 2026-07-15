@@ -5,26 +5,22 @@
 
 FirstClassErrors can generate the same error catalog in several languages. Internationalization is optional and granular: a project may localize every documented error, only selected sources, or nothing at all.
 
-The most important rule is that localization happens at **two different pipeline stages**.
+This page describes the internationalization of the pipeline and, more specifically, how its content and templates are **localized** for a given culture. The most important rule is that localization happens at **two different pipeline stages**.
 
 ## The model at a glance
 
+One target culture normally drives both stages: extraction localizes the error content, rendering localizes the template around it.
+
 ```mermaid
 flowchart LR
-    A[Requested language]
-    B[Extraction culture]
-    C[Localized error content]
-    D[Render culture]
-    E[Localized renderer template]
-    F[Generated catalog]
-
-    A --> B --> C
-    A --> D --> E
-    C --> F
+    A[Requested language] --> T[Target culture]
+    T --> B[Extraction culture] --> C[Localized error content]
+    T --> D[Render culture] --> E[Localized renderer template]
+    C --> F[Generated catalog]
     E --> F
 ```
 
-| Stage | Owns |
+| Stage | Localizes |
 | --- | --- |
 | extraction | titles, descriptions, rules, diagnostic hypotheses, examples, public messages, source descriptions, context-key descriptions |
 | rendering | headings, labels, table headers, navigation, and other renderer-owned boilerplate |
@@ -40,10 +36,11 @@ Do not localize values used as contracts or operational identifiers:
 - `ErrorOrigin` values;
 - context-key names;
 - generated file names and anchors;
-- JSON field names and other machine schemas;
-- `DiagnosticMessage`, the internal runtime message.
+- JSON field names and other machine schemas.
 
 Keeping these values stable ensures that links, client branches, dashboards, and log queries work across every catalog language.
+
+`DiagnosticMessage` belongs to the same "keep it stable" habit, but for a different reason. It is a plain string — nothing in the library prevents a localized one — so keeping it in one internal language is a convention, not a technical constraint. The next section explains why that convention is worth following.
 
 ## The three runtime messages
 
@@ -51,9 +48,9 @@ Keeping these values stable ensures that links, client branches, dashboards, and
 | --- | --- | --- |
 | `ShortMessage` | yes | public message for users or API clients |
 | `DetailedMessage` | yes | controlled public detail |
-| `DiagnosticMessage` | no | one consistent internal language for logs, support, and development |
+| `DiagnosticMessage` | no, by convention | one consistent internal language for logs, support, and development |
 
-A French catalog may therefore show French public messages while preserving an English diagnostic message. This is intentional: the diagnostic message identifies and explains one runtime occurrence for the internal audience.
+A French catalog may therefore show French public messages while preserving an English diagnostic message. This is intentional: the diagnostic message identifies and explains one runtime occurrence for the internal audience. The library does not enforce this — it is a governance choice — but localizing the diagnostic per caller makes logs for one error type language-dependent and harder to search.
 
 For message-writing rules, see [Writing Error Messages](WritingErrorMessages.en.md).
 
@@ -81,11 +78,15 @@ Or configure a default in `fce.json`:
 
 A command-line value overrides the configuration. Without a language option, the default catalog language is English.
 
+`--language` takes a .NET culture name: a neutral culture such as `fr`, or a specific one such as `fr-FR` or `en-GB`. Use a specific culture when regional variants must differ. An unrecognized name is rejected with an error rather than falling back silently. The programmatic API calls the same value `Culture` (a `CultureInfo`); the CLI option is spelled `--language` for familiarity, but it is a culture, not a bare language code.
+
 ## Localize documentation content
 
-During extraction, the extraction worker process (see [Architecture](ArchitectureOfTheDocumentationPipeline.en.md)) runs with `CultureInfo.CurrentUICulture` set from the requested language. Documentation methods and error factories can therefore read `.resx` resources normally.
+During extraction, the worker runs under the requested culture: it sets both `CultureInfo.CurrentUICulture`, which drives `.resx` resource lookup, and `CultureInfo.CurrentCulture`, which drives culture-sensitive formatting of numbers and dates. Documentation methods and error factories therefore resolve localized resources — and format any values — for that culture.
 
 ```csharp
+// Messages.Get(...) stands for your application's own resource accessor
+// (a .resx-backed class), not a FirstClassErrors API.
 private static ErrorDocumentation BelowAbsoluteZeroDocumentation() {
     return DescribeError
         .WithTitle(Messages.Get("Temperature_BelowAbsoluteZero_Title"))
@@ -168,7 +169,7 @@ A project may contain:
 - source descriptions backed by resources but fixed diagnostic messages;
 - custom renderers localized in fewer languages than the application content.
 
-When a resource is unavailable, the fallback behavior belongs to the application’s resource strategy. Ensure that missing resources do not silently produce empty titles, rules, or public messages.
+When a resource is unavailable, the fallback behavior belongs to the application’s resource strategy. With `Messages.resx` and `Messages.fr.resx`, a key missing from the French file falls back to the neutral resource — the standard `.resx` satellite-assembly behavior. A key missing from *every* resource should fail a test, not produce an incomplete catalog: ensure that missing resources do not silently produce empty titles, rules, or public messages.
 
 ## Generate several languages in CI
 
