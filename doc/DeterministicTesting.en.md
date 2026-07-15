@@ -48,12 +48,10 @@ Check.That(error.OccurredAt >= before && error.OccurredAt <= after).IsTrue();
 
 ```csharp
 [Fact]
-public void An_error_records_the_fixed_occurrence_time()
-{
+public void An_error_records_the_fixed_occurrence_time() {
     var instant = new DateTimeOffset(2026, 7, 8, 10, 30, 0, TimeSpan.Zero);
 
-    using (Clock.UseFixed(instant))
-    {
+    using (Clock.UseFixed(instant)) {
         DomainError error = MakeError();
 
         Check.That(error.OccurredAt).IsEqualTo(instant);
@@ -68,16 +66,13 @@ The override applies only inside the `using` scope. Disposing the scope restores
 When a test needs several controlled instants, implement `IClock` and pass it to `Clock.Use(...)`:
 
 ```csharp
-sealed class StepClock : IClock
-{
+sealed class StepClock : IClock {
     private DateTimeOffset _now;
 
     public StepClock(DateTimeOffset start) => _now = start;
 
-    public DateTimeOffset UtcNow
-    {
-        get
-        {
+    public DateTimeOffset UtcNow {
+        get {
             DateTimeOffset current = _now;
             _now = _now.AddSeconds(1);
             return current;
@@ -87,8 +82,7 @@ sealed class StepClock : IClock
 ```
 
 ```csharp
-using (Clock.Use(new StepClock(start)))
-{
+using (Clock.Use(new StepClock(start))) {
     DomainError first = MakeError();
     DomainError second = MakeError();
 
@@ -105,12 +99,10 @@ A random `Guid` is correct in production but unstable in a snapshot:
 
 ```csharp
 [Fact]
-public void A_missing_order_error_has_a_stable_instance_id()
-{
+public void A_missing_order_error_has_a_stable_instance_id() {
     var id = new Guid("11111111-1111-1111-1111-111111111111");
 
-    using (InstanceIds.UseFixed(id))
-    {
+    using (InstanceIds.UseFixed(id)) {
         Error error = orders.Find(missingOrderId).ShouldFail().Subject;
 
         Check.That(error.InstanceId).IsEqualTo(id);
@@ -125,16 +117,14 @@ As with the clock, the override ends when the scope is disposed.
 When one test creates several errors, provide a deterministic source:
 
 ```csharp
-static Func<Guid> SequentialIds()
-{
+static Func<Guid> SequentialIds() {
     int value = 0;
     return () => new Guid(++value, 0, 0, new byte[8]);
 }
 ```
 
 ```csharp
-using (InstanceIds.Use(SequentialIds()))
-{
+using (InstanceIds.Use(SequentialIds())) {
     DomainError first = MakeError();
     DomainError second = MakeError();
 
@@ -149,22 +139,21 @@ Prefer identifiers that are visibly synthetic so they cannot be confused with pr
 
 ```csharp
 [Fact]
-public void A_missing_order_error_is_fully_deterministic()
-{
+public void A_missing_order_error_is_fully_deterministic() {
     var instant = new DateTimeOffset(2026, 7, 8, 10, 30, 0, TimeSpan.Zero);
     var id = new Guid("11111111-1111-1111-1111-111111111111");
 
-    using (Clock.UseFixed(instant))
-    using (InstanceIds.UseFixed(id))
-    {
-        Error error = orders.Find(missingOrderId)
-                            .ShouldFail()
-                            .WithCode("ORDER_NOT_FOUND")
-                            .WithContextEntry("OrderId", missingOrderId)
-                            .Subject;
+    using (Clock.UseFixed(instant)) {
+        using (InstanceIds.UseFixed(id)) {
+            Error error = orders.Find(missingOrderId)
+                                .ShouldFail()
+                                .WithCode("ORDER_NOT_FOUND")
+                                .WithContextEntry("OrderId", missingOrderId)
+                                .Subject;
 
-        Check.That(error.OccurredAt).IsEqualTo(instant);
-        Check.That(error.InstanceId).IsEqualTo(id);
+            Check.That(error.OccurredAt).IsEqualTo(instant);
+            Check.That(error.InstanceId).IsEqualTo(id);
+        }
     }
 }
 ```

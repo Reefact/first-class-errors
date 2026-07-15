@@ -48,12 +48,10 @@ Check.That(error.OccurredAt >= before && error.OccurredAt <= after).IsTrue();
 
 ```csharp
 [Fact]
-public void Une_erreur_enregistre_l_instant_fixe()
-{
+public void Une_erreur_enregistre_l_instant_fixe() {
     var instant = new DateTimeOffset(2026, 7, 8, 10, 30, 0, TimeSpan.Zero);
 
-    using (Clock.UseFixed(instant))
-    {
+    using (Clock.UseFixed(instant)) {
         DomainError error = MakeError();
 
         Check.That(error.OccurredAt).IsEqualTo(instant);
@@ -68,16 +66,13 @@ L’override ne s’applique qu’à l’intérieur de la portée `using`. La fi
 Lorsqu’un test nécessite plusieurs instants contrôlés, implémentez `IClock` et passez-la à `Clock.Use(...)` :
 
 ```csharp
-sealed class StepClock : IClock
-{
+sealed class StepClock : IClock {
     private DateTimeOffset _now;
 
     public StepClock(DateTimeOffset start) => _now = start;
 
-    public DateTimeOffset UtcNow
-    {
-        get
-        {
+    public DateTimeOffset UtcNow {
+        get {
             DateTimeOffset current = _now;
             _now = _now.AddSeconds(1);
             return current;
@@ -87,8 +82,7 @@ sealed class StepClock : IClock
 ```
 
 ```csharp
-using (Clock.Use(new StepClock(start)))
-{
+using (Clock.Use(new StepClock(start))) {
     DomainError first = MakeError();
     DomainError second = MakeError();
 
@@ -105,12 +99,10 @@ Un `Guid` aléatoire est correct en production, mais instable dans un snapshot :
 
 ```csharp
 [Fact]
-public void Une_erreur_de_commande_absente_a_un_identifiant_stable()
-{
+public void Une_erreur_de_commande_absente_a_un_identifiant_stable() {
     var id = new Guid("11111111-1111-1111-1111-111111111111");
 
-    using (InstanceIds.UseFixed(id))
-    {
+    using (InstanceIds.UseFixed(id)) {
         Error error = orders.Find(missingOrderId).ShouldFail().Subject;
 
         Check.That(error.InstanceId).IsEqualTo(id);
@@ -125,16 +117,14 @@ Comme pour l’horloge, l’override prend fin lorsque la portée est disposée.
 Lorsqu’un test crée plusieurs erreurs, fournissez une source déterministe :
 
 ```csharp
-static Func<Guid> SequentialIds()
-{
+static Func<Guid> SequentialIds() {
     int value = 0;
     return () => new Guid(++value, 0, 0, new byte[8]);
 }
 ```
 
 ```csharp
-using (InstanceIds.Use(SequentialIds()))
-{
+using (InstanceIds.Use(SequentialIds())) {
     DomainError first = MakeError();
     DomainError second = MakeError();
 
@@ -149,22 +139,21 @@ Préférez des identifiants visiblement synthétiques afin qu’ils ne puissent 
 
 ```csharp
 [Fact]
-public void Une_erreur_de_commande_absente_est_totalement_deterministe()
-{
+public void Une_erreur_de_commande_absente_est_totalement_deterministe() {
     var instant = new DateTimeOffset(2026, 7, 8, 10, 30, 0, TimeSpan.Zero);
     var id = new Guid("11111111-1111-1111-1111-111111111111");
 
-    using (Clock.UseFixed(instant))
-    using (InstanceIds.UseFixed(id))
-    {
-        Error error = orders.Find(missingOrderId)
-                            .ShouldFail()
-                            .WithCode("ORDER_NOT_FOUND")
-                            .WithContextEntry("OrderId", missingOrderId)
-                            .Subject;
+    using (Clock.UseFixed(instant)) {
+        using (InstanceIds.UseFixed(id)) {
+            Error error = orders.Find(missingOrderId)
+                                .ShouldFail()
+                                .WithCode("ORDER_NOT_FOUND")
+                                .WithContextEntry("OrderId", missingOrderId)
+                                .Subject;
 
-        Check.That(error.OccurredAt).IsEqualTo(instant);
-        Check.That(error.InstanceId).IsEqualTo(id);
+            Check.That(error.OccurredAt).IsEqualTo(instant);
+            Check.That(error.InstanceId).IsEqualTo(id);
+        }
     }
 }
 ```
