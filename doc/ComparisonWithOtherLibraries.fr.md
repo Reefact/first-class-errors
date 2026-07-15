@@ -1,4 +1,4 @@
-# Comparaison avec les librairies de gestion d’erreurs
+# Comparaison avec les bibliothèques de gestion d’erreurs
 
 🌍 **Langues :**  
 🇬🇧 [English](./ComparisonWithOtherLibraries.en.md) | 🇫🇷 Français (ce fichier)
@@ -122,7 +122,7 @@ throw PaymentError
     .ToException();
 ```
 
-L’erreur peut en outre être liée à une documentation structurée décrivant son titre, sa règle, ses causes possibles, ses pistes d’analyse et ses exemples. Le catalogue généré (une référence lisible de toutes les erreurs documentées) et le workflow de versionnage qui le protège des changements cassants font partie de l’usage prévu de la librairie.
+L’erreur peut en outre être liée à une documentation structurée décrivant son titre, sa règle, ses causes possibles, ses pistes d’analyse et ses exemples. Le catalogue généré (une référence lisible de toutes les erreurs documentées) et le workflow de versionnage qui le protège des changements cassants font partie de l’usage prévu de la bibliothèque.
 
 Rien de tout cela ne change la méthode `Pay` ci-dessus : le transport reste léger, et la connaissance durable vit avec la définition de l’erreur, pas dans chaque site d’appel.
 
@@ -138,10 +138,10 @@ Rien de tout cela ne change la méthode `Pay` ci-dessus : le transport reste lé
 | Transport par exception depuis la même définition d’erreur | pas le modèle principal | pas le modèle principal | intégré via `ToException()` — une exception structurée et typée par catégorie |
 | Taxonomie domaine / infrastructure / ports (frontières entrantes/sortantes) | définie par l’application | définie par l’application | intégrée |
 | Transience (retenter peut-il réussir ?) et direction de l’interaction (entrante ou sortante) | définies par l’application | définies par l’application | intégrées pour les erreurs d’infrastructure |
-| Documentation humaine générée | hors du périmètre principal de la librairie | hors du périmètre principal de la librairie | intégrée |
-| Vérification de compatibilité du catalogue | hors du périmètre principal de la librairie | hors du périmètre principal de la librairie | intégrée |
+| Documentation humaine générée | hors du périmètre principal de la bibliothèque | hors du périmètre principal de la bibliothèque | intégrée |
+| Vérification de compatibilité du catalogue | hors du périmètre principal de la bibliothèque | hors du périmètre principal de la bibliothèque | intégrée |
 
-« Défini par l’application » ou « hors du périmètre principal » ne signifie pas impossible. Cela signifie que la préoccupation n’est pas l’abstraction centrale de la librairie et qu’elle peut être prise en charge par des conventions applicatives ou un outillage externe.
+« Défini par l’application » ou « hors du périmètre principal » ne signifie pas impossible. Cela signifie que la préoccupation n’est pas l’abstraction centrale de la bibliothèque et qu’elle peut être prise en charge par des conventions applicatives ou un outillage externe.
 
 ## Guide de décision
 
@@ -162,13 +162,13 @@ Choisissez **FirstClassErrors** lorsque :
 
 - les erreurs sont des concepts durables utilisés par les développeurs, le support, l’exploitation ou les clients ;
 - les messages publics et de diagnostic doivent avoir des audiences explicites ;
-- une même erreur doit circuler comme donnée, outcome ou exception ;
+- une même erreur doit circuler comme donnée, `Outcome` ou exception ;
 - les échecs métier et infrastructurels doivent porter un sens opérationnel différent ;
 - la documentation générée et les contrôles de compatibilité font partie du besoin.
 
 ## Une combinaison peut aussi être valable
 
-Ces choix ne sont pas toujours exclusifs. Une application peut utiliser une librairie de résultat généraliste à certaines frontières tout en conservant un catalogue d’erreurs documenté séparé.
+Ces choix ne sont pas toujours exclusifs. Une application peut utiliser une bibliothèque de résultat généraliste à certaines frontières tout en conservant un catalogue d’erreurs documenté séparé.
 
 Avant de combiner les modèles, décidez quel type possède l’identité stable de l’erreur. Dupliquer les codes, les messages, les métadonnées et les mappings entre deux modèles concurrents crée généralement plus de travail que cela n’en économise.
 

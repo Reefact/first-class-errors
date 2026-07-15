@@ -162,7 +162,7 @@ Choose **FirstClassErrors** when:
 
 - errors are durable concepts used by developers, support, operations, or clients;
 - public and diagnostic messages must have explicit audiences;
-- the same error must travel as data, an outcome, or an exception;
+- the same error must travel as data, an `Outcome`, or an exception;
 - domain and infrastructure failures require different operational meaning;
 - generated documentation and compatibility checks are part of the requirement.
 
