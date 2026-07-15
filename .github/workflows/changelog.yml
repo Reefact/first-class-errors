@@ -22,6 +22,15 @@ on:
         required: false
         default: ''
 
+# Two dispatches of the SAME train would both push to that train's draft branch;
+# serialise them so a newer run supersedes an in-flight one. Different trains use
+# different groups, so a lib draft and a cli draft never block each other. Unlike
+# release, cancelling is safe here — the workflow only pushes an idempotent draft
+# branch and opens a pull request; there is nothing half-published to protect.
+concurrency:
+  group: changelog-${{ inputs.component }}
+  cancel-in-progress: true
+
 # Least privilege at the top level: read-only by default, matching release.yml and
 # what OpenSSF Scorecard's Token-Permissions check rewards. The single job widens
 # only the write scopes it needs.
