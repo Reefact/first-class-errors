@@ -5,6 +5,16 @@
 
 This page is the operational reference for selecting projects and assemblies, configuring isolated extraction, and handling its failures. For the mental model first, read [Architecture of the Documentation Pipeline](ArchitectureOfTheDocumentationPipeline.en.md).
 
+**On this page:**
+
+- [Choosing a mode](#choosing-a-mode) — `--solution` vs `--assemblies`
+- [Project opt-in](#project-opt-in)
+- [Worker execution](#worker-execution)
+- [Failures and continuation](#failures-and-continuation)
+- [Timeouts and process failures](#timeouts-and-process-failures)
+- [Building and `--no-build`](#building-and---no-build)
+- [Troubleshooting checklist](#troubleshooting-checklist)
+
 ## Choosing a mode
 
 Two entry points select what gets documented. Pick from the need, not the command:
@@ -158,10 +168,17 @@ Two categories of failure behave differently, and the difference is exactly what
 
 The command exits `0` even when the catalog is partial, so a generated file does not prove that every assembly was documented. It exits `1` only on a fatal process-level failure (under `--strict`) or an invalid invocation, and `130` on cancellation. Programmatic callers set the same behavior through `SolutionGenerationOptions.FailureBehavior`.
 
-A recorded extraction failure is logged as an error and also appears in the extraction result:
+The CLI writes these to standard error. A per-error extraction failure — here a documentation method that throws — is logged as an error and also appears in the extraction result's `Failures`:
 
 ```text
-Documentation extraction issue in 'artifacts/MyApp.Application.dll': MyApp.Errors.OrderErrors.OutOfStockDocumentation: The documentation factory threw while being executed. (System.InvalidOperationException: Inventory service was called during documentation extraction.)
+error: Documentation extraction issue in 'artifacts/MyApp.Application.dll': MyApp.Errors.OrderErrors.OutOfStockDocumentation: The documentation factory threw while being executed. (System.InvalidOperationException: Inventory service was called during documentation extraction.)
+```
+
+A worker timeout is a process-level failure; the default run records it and continues, and it becomes fatal under `--strict`. The default worker timeout is two minutes:
+
+```text
+error: Process 'dotnet' timed out after 00:02:00 and was killed.
+warning: The documentation worker failed (exit code -1) for 'artifacts/MyApp.Application.dll'.
 ```
 
 ## Timeouts and process failures

@@ -5,6 +5,16 @@
 
 Cette page est la référence opérationnelle pour sélectionner les projets et assemblies, configurer l’extraction isolée et traiter ses échecs. Pour commencer par le modèle mental, lisez [Architecture du pipeline de documentation](ArchitectureOfTheDocumentationPipeline.fr.md).
 
+**Sur cette page :**
+
+- [Choisir un mode](#choisir-un-mode) — `--solution` vs `--assemblies`
+- [Opt-in des projets](#opt-in-des-projets)
+- [Exécution des workers](#exécution-des-workers)
+- [Échecs et poursuite](#échecs-et-poursuite)
+- [Timeouts et crashs](#timeouts-et-crashs)
+- [Build et `--no-build`](#build-et---no-build)
+- [Checklist de dépannage](#checklist-de-dépannage)
+
 ## Choisir un mode
 
 Deux points d’entrée décident de ce qui est documenté. Choisissez à partir du besoin, pas de la commande :
@@ -158,10 +168,17 @@ Les **échecs de processus** surviennent autour d’un worker, pas à l’intér
 
 La commande se termine avec le code `0` même quand le catalogue est partiel : un fichier généré ne prouve pas que tous les assemblies ont été documentés. Elle renvoie `1` seulement sur un échec de processus fatal (avec `--strict`) ou une invocation invalide, et `130` sur annulation. Les appelants programmatiques règlent le même comportement via `SolutionGenerationOptions.FailureBehavior`.
 
-Un échec d’extraction enregistré est journalisé en erreur et apparaît aussi dans le résultat d’extraction :
+La CLI écrit ces lignes sur la sortie d’erreur standard. Un échec d’extraction par erreur — ici une méthode de documentation qui lève — est journalisé en erreur et apparaît aussi dans les `Failures` du résultat d’extraction :
 
 ```text
-Documentation extraction issue in 'artifacts/MyApp.Application.dll': MyApp.Errors.OrderErrors.OutOfStockDocumentation: The documentation factory threw while being executed. (System.InvalidOperationException: Inventory service was called during documentation extraction.)
+error: Documentation extraction issue in 'artifacts/MyApp.Application.dll': MyApp.Errors.OrderErrors.OutOfStockDocumentation: The documentation factory threw while being executed. (System.InvalidOperationException: Inventory service was called during documentation extraction.)
+```
+
+Un timeout de worker est un échec de processus ; par défaut, l’exécution l’enregistre et poursuit, et il devient fatal avec `--strict`. Le timeout de worker par défaut est de deux minutes :
+
+```text
+error: Process 'dotnet' timed out after 00:02:00 and was killed.
+warning: The documentation worker failed (exit code -1) for 'artifacts/MyApp.Application.dll'.
 ```
 
 ## Timeouts et crashs
