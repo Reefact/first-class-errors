@@ -106,7 +106,7 @@ Avant de merger une modification liée aux erreurs, vérifiez que :
 - [ ] les diagnostics sont des hypothèses et les pistes d’analyse sont actionnables ;
 - [ ] les exemples sont réalistes et appellent la vraie factory ;
 - [ ] les documentations anglaise et française restent alignées lorsqu’elles sont modifiées ;
-- [ ] les modifications de baseline du catalogue sont délibérées et relues lorsque le contrat évolue.
+- [ ] les modifications de baseline du catalogue (le snapshot de catalogue commité — voir [Versionnage du catalogue](CatalogVersioning.fr.md)) sont délibérées et relues lorsque le contrat évolue.
 
 ---
 

@@ -18,7 +18,7 @@ Keeping those audiences separate prevents internal information from leaking whil
 | `DetailedMessage` | no | public | an optional controlled explanation |
 | `DiagnosticMessage` | yes | internal | concrete diagnostic information for this occurrence |
 
-They are created through the staged builder:
+They are created through a staged builder — a fluent builder whose steps require the diagnostic message and the public short message before an `Error` can exist:
 
 ```csharp
 return DomainError.Create(
@@ -39,7 +39,7 @@ It should be:
 
 - safe to display directly;
 - understandable without internal knowledge;
-- concise enough for a UI notification or an RFC 9457 `title`;
+- concise enough for a UI notification or the `title` of an RFC 9457 (Problem Details for HTTP APIs) response;
 - stable in meaning, although its wording may evolve or be localized.
 
 Good:
@@ -136,7 +136,7 @@ See [Error Context](ErrorContext.en.md) for key design and sensitivity guidance.
 
 ## HTTP and RFC 9457
 
-The core error model is HTTP-agnostic. An application may map:
+RFC 9457 defines “Problem Details”, the standard error-response format for HTTP APIs. The core error model is HTTP-agnostic. An application may map:
 
 | FirstClassErrors value | Typical RFC 9457 field |
 | --- | --- |
@@ -154,6 +154,8 @@ For example:
   "status": 422
 }
 ```
+
+The `urn:problem:{service}:{code}` form of `type` is a convention your application chooses (the catalog renderer uses the same one); RFC 9457 only requires a URI.
 
 `DiagnosticMessage` is not a default response field. The application remains responsible for choosing `status`, deciding whether to expose `detail`, and enforcing its security policy.
 

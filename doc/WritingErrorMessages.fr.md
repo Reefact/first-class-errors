@@ -18,7 +18,7 @@ Séparer ces publics empêche les fuites d’informations internes tout en conse
 | `DetailedMessage` | non | externe | une explication optionnelle et maîtrisée |
 | `DiagnosticMessage` | oui | interne | les informations de diagnostic propres à cette occurrence |
 
-Ils sont créés avec le builder étagé :
+Ils sont créés avec un builder étagé — un builder fluide dont les étapes exigent le message de diagnostic puis le message public court avant qu’une `Error` puisse exister :
 
 ```csharp
 return DomainError.Create(
@@ -39,7 +39,7 @@ Il doit être :
 
 - affichable directement sans risque ;
 - compréhensible sans connaissance interne ;
-- assez concis pour une notification UI ou le `title` d’un problem detail RFC 9457 ;
+- assez concis pour une notification UI ou le `title` d’une réponse RFC 9457 (« Problem Details », le format d’erreur standard des API HTTP) ;
 - stable dans son sens, même si sa formulation évolue ou est localisée.
 
 Bon :
@@ -136,7 +136,7 @@ Voir [Contexte d’erreur](ErrorContext.fr.md) pour la conception des clés et l
 
 ## HTTP et RFC 9457
 
-Le modèle d’erreur du cœur est agnostique vis-à-vis d’HTTP. Une application peut mapper :
+La RFC 9457 définit « Problem Details », le format standard de réponse d’erreur des API HTTP. Le modèle d’erreur du cœur est agnostique vis-à-vis d’HTTP. Une application peut mapper :
 
 | Valeur FirstClassErrors | Champ RFC 9457 courant |
 | --- | --- |
@@ -154,6 +154,8 @@ Exemple :
   "status": 422
 }
 ```
+
+La forme `urn:problem:{service}:{code}` du champ `type` est une convention choisie par votre application (le renderer du catalogue utilise la même) ; la RFC 9457 exige seulement une URI.
 
 `DiagnosticMessage` n’est pas un champ de réponse par défaut. L’application reste responsable du choix de `status`, de la décision d’exposer ou non `detail` et de l’application de sa politique de sécurité.
 

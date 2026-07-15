@@ -106,7 +106,7 @@ Before merging an error-related change, verify that:
 - [ ] diagnostics are hypotheses and analysis leads are actionable;
 - [ ] examples are realistic and call the real factory;
 - [ ] English and French documentation remain aligned when both are changed;
-- [ ] catalog baseline changes are deliberate and reviewed when the contract changes.
+- [ ] catalog baseline changes (the committed catalog snapshot — see [Catalog Versioning](CatalogVersioning.en.md)) are deliberate and reviewed when the contract changes.
 
 ---
 

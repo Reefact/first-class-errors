@@ -11,7 +11,7 @@ The library enriches the `Error` carried by that exception with a stable code, s
 
 ## Why not use `Result<T, string>`?
 
-A string loses structure. `Outcome<T>` carries the same rich `Error` model used by the exception path: code, messages, context, diagnostics, and documentation identity.
+A string loses structure. `Outcome<T>`, the library’s result type, carries the same rich `Error` model used by the exception path: code, messages, context, diagnostics, and a link to its documented definition.
 
 See [Usage Patterns](UsagePatterns.en.md) and [Comparison with error-handling libraries](ComparisonWithOtherLibraries.en.md).
 
