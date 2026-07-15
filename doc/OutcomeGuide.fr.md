@@ -211,7 +211,7 @@ Préférez un branchement explicite lorsque :
 - des résultats partiels doivent être collectés ;
 - la chaîne devient moins lisible que quelques `if`.
 
-FirstClassErrors n’impose pas du railway-oriented programming partout. `Outcome` sert le modèle ; le modèle ne sert pas la syntaxe fluide.
+FirstClassErrors n’impose pas du railway-oriented programming (enchaîner chaque étape dans un pipeline succès/échec) partout. `Outcome` sert le modèle ; le modèle ne sert pas la syntaxe fluide.
 
 ## Exemple complet
 

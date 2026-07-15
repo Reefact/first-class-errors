@@ -16,7 +16,7 @@ This guide helps you choose the appropriate pattern. For the complete `Outcome` 
 | One item fails inside a batch | return an `Outcome<T>` for each item | one failure does not need to abort the whole batch |
 | An incoming boundary rejects an interaction | use a `PrimaryPortError` | it preserves the incoming direction and any underlying domain cause |
 | An outgoing dependency fails | use a `SecondaryPortError` | it preserves outgoing direction and transience |
-| A failure must cross an application boundary as an exception | call `ThrowIfFailure()` or `GetResultOrThrow()` at that boundary | the error remains data until the chosen escalation point |
+| A failure must cross an application boundary as an exception | call `ThrowIfFailure()` or `GetResultOrThrow()` at that boundary | both convert a failed outcome into its exception (see [Composing with Outcome](OutcomeGuide.en.md)); the error remains data until the chosen escalation point |
 
 The same documented error factory may be used in more than one transport. The error describes **what happened**; throwing or returning it describes **how this caller chooses to propagate it**.
 
@@ -139,7 +139,7 @@ Outcome<Receipt> result =
 
 The first failure short-circuits the remaining steps and is propagated unchanged. Use a fluent chain only when it reads more clearly than ordinary branching.
 
-The full behavior of `Then`, `To`, `Recover`, `Finally`, async overloads, and escape hatches is documented in [Composing with Outcome](OutcomeGuide.en.md).
+The full behavior of `Then`, `To`, `Recover`, `Finally`, async overloads, and the escape hatches back to exceptions (`ThrowIfFailure()`, `GetResultOrThrow()`) is documented in [Composing with Outcome](OutcomeGuide.en.md).
 
 ## 🧩 Logging and support
 
