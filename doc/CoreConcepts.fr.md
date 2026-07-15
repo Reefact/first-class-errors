@@ -38,14 +38,14 @@ Une factory doit donc correspondre à un cas d’erreur documenté.
 
 ## Ce que porte une `Error`
 
-Une occurrence d’erreur contient :
+Une occurrence d’erreur — une instance de la situation à l’exécution — contient :
 
 - un `Code` stable ;
 - un `InstanceId` unique ;
 - un horodatage `OccurredAt` ;
 - des messages publics et internes ;
 - un contexte typé optionnel ;
-- des erreurs internes optionnelles.
+- des erreurs internes optionnelles (erreurs imbriquées qui enregistrent la cause).
 
 La factory centralise la création de ces valeurs, afin que chaque occurrence d’une même situation reste cohérente.
 
@@ -109,7 +109,7 @@ L’erreur d’exécution décrit une **occurrence** :
 - son message de diagnostic réel ;
 - les valeurs de contexte propres à cette occurrence.
 
-Par exemple, `ORDER_NOT_FOUND` est la catégorie stable. `OrderId = 42` appartient à une occurrence précise et doit donc être placé dans `ErrorContext`.
+Par exemple, `ORDER_NOT_FOUND` est la catégorie stable. `OrderId = 42` appartient à une occurrence précise et doit donc être placé dans [`ErrorContext`](ErrorContext.fr.md).
 
 ## Les diagnostics orientent l’investigation
 

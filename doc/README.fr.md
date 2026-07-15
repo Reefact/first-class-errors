@@ -19,7 +19,7 @@
 
 FirstClassErrors est une bibliothèque .NET destinée aux erreurs applicatives qui doivent être comprises, diagnostiquées, documentées et conservées dans le temps.
 
-Au lieu de disperser les codes et messages d’erreur dans le code, vous définissez chaque situation significative une seule fois, dans une factory nommée. La même `Error` structurée peut ensuite être levée sous forme d’exception, transportée dans un `Outcome<T>`, journalisée et intégrée à un catalogue d’erreurs généré automatiquement.
+Au lieu de disperser les codes et messages d’erreur dans le code, vous définissez chaque situation significative une seule fois, dans une factory nommée. La même `Error` structurée peut ensuite être levée sous forme d’exception ou renvoyée comme résultat explicite sans exception (le type `Outcome` de la bibliothèque), journalisée et intégrée à un catalogue d’erreurs généré automatiquement.
 
 ## 🚨 Le problème
 
@@ -41,7 +41,7 @@ Lorsque cette connaissance est répartie entre les logs, les tickets, les commen
 
 ## 💡 L’approche FirstClassErrors
 
-Une factory donne une identité stable à la situation d’erreur et centralise sa construction :
+Une factory donne une identité stable à la situation d’erreur, centralise sa construction et y attache une documentation structurée qui alimentera un catalogue généré, lisible par des humains :
 
 ```csharp
 [ProvidesErrorsFor(nameof(Amount))]
@@ -80,7 +80,7 @@ if (Currency != other.Currency) {
 }
 ```
 
-La factory retourne une `Error`, donc un échec attendu peut employer le même modèle sans lever d’exception :
+La factory retourne une `Error` (`DomainError` en est une des catégories), donc un échec attendu peut employer le même modèle sans lever d’exception :
 
 ```csharp
 return Outcome<Amount>.Failure(

@@ -38,14 +38,14 @@ One factory should therefore correspond to one documented error case.
 
 ## What an `Error` carries
 
-An error occurrence contains:
+An error occurrence — one runtime instance of the situation — contains:
 
 - a stable `Code`;
 - a unique `InstanceId`;
 - an `OccurredAt` timestamp;
 - public and internal messages;
 - optional typed context;
-- optional inner errors.
+- optional inner errors (nested errors recording the cause).
 
 The factory centralizes how these values are created, so every occurrence of the same situation remains consistent.
 
@@ -109,7 +109,7 @@ The runtime error describes one **occurrence**:
 - the actual diagnostic message;
 - occurrence-specific context values.
 
-For example, `ORDER_NOT_FOUND` is the stable category. `OrderId = 42` belongs to one occurrence and therefore belongs in `ErrorContext`.
+For example, `ORDER_NOT_FOUND` is the stable category. `OrderId = 42` belongs to one occurrence and therefore belongs in [`ErrorContext`](ErrorContext.en.md).
 
 ## Diagnostics guide investigation
 

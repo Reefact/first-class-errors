@@ -41,7 +41,7 @@ The marker must be present in the `.csproj` itself. Projects without it are skip
 
 ## 3. Define one error situation
 
-Create a static factory class. Each factory method represents one precise situation the system recognizes.
+Create a static factory class. Each factory method represents one precise situation the system recognizes. The examples use a small `Amount` value type with a `Currency`; substitute any type from your own domain.
 
 ```csharp
 using FirstClassErrors;
@@ -66,8 +66,9 @@ public static class InvalidAmountOperationError {
 }
 ```
 
-The three important parts are:
+The four important parts are:
 
+- `[ProvidesErrorsFor]` ties the factory class to the concept whose errors it declares; the generator uses it to find and group errors;
 - the factory name expresses the situation in code;
 - the error code is its stable, machine-readable identity;
 - the diagnostic message is internal, while the public messages are safe for callers.
@@ -98,6 +99,8 @@ private static ErrorDocumentation CurrencyMismatchDocumentation() {
 ```
 
 This is structured knowledge rather than a comment: the generator can extract the title, explanation, rule, diagnostics, and real example produced by the factory.
+
+Each diagnostic is a hypothesis: a plausible cause, an origin (whether the suspected cause lies inside the system or with an external caller), and an investigation lead.
 
 ## 5. Use the error
 

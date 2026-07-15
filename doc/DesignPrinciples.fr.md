@@ -44,7 +44,7 @@ FirstClassErrors sépare :
 - les messages publics destinés aux utilisateurs ou clients d’API ;
 - le message de diagnostic interne destiné aux logs, au support et aux développeurs.
 
-Le builder étagé impose cette distinction lors de la création de l’erreur.
+Le builder étagé — chaque étape de construction n’expose que les appels valides suivants — impose cette distinction lors de la création de l’erreur.
 
 **Conséquence :** les messages publics restent sûrs et maîtrisés, tandis que les diagnostics peuvent conserver les détails nécessaires à l’investigation.
 

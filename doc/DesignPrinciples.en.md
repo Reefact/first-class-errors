@@ -44,7 +44,7 @@ FirstClassErrors separates:
 - public messages intended for users or API clients;
 - an internal diagnostic message intended for logs, support, and developers.
 
-The staged builder enforces that distinction when the error is created.
+The staged builder — each construction step only exposes the next valid calls — enforces that distinction when the error is created.
 
 **Consequence:** public messages remain safe and controlled, while diagnostics can still contain the detail required for investigation.
 
