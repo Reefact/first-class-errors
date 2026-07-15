@@ -9,19 +9,28 @@ FirstClassErrors derives error documentation from the code that defines and crea
 
 ```mermaid
 flowchart LR
-    A[Error factories and DescribeError DSL]
-    B[Assembly extraction]
-    C[Isolated worker process]
-    D[Solution aggregation]
+    CLI[CLI or programmatic caller]
+    G[Solution generator]
+
+    subgraph W[Worker: isolated process per assembly]
+        A[Error factories and DescribeError DSL]
+        X[Extractor]
+        A --> X
+    end
+
+    D[Aggregated ErrorDocumentation catalog]
     E[Renderer]
     F[Markdown, HTML, JSON, or custom output]
 
-    A --> B
-    B --> C
-    C --> D
+    CLI --> G
+    G -->|starts| W
+    X -->|JSON result| G
+    G --> D
     D --> E
     E --> F
 ```
+
+The worker is the isolated process **inside which** extraction runs: the generator starts a worker per assembly, the worker executes the factories and returns a serialized result, and only then does the generator aggregate and render. Control flows from the generator into each worker; data flows back out as JSON.
 
 The important boundary is this:
 
@@ -29,7 +38,7 @@ The important boundary is this:
 
 ## 1. Knowledge is defined next to the error
 
-A static class groups the errors associated with one source:
+A static class groups the errors associated with one application source — for example a domain type or a component:
 
 ```csharp
 [ProvidesErrorsFor(nameof(Temperature))]
@@ -67,7 +76,7 @@ At this point there is no Markdown, HTML, or JSON. There is structured knowledge
 
 The extractor finds `[ProvidesErrorsFor]` classes, resolves `[DocumentedBy]` links, and invokes the documentation methods and their example factories.
 
-This matters because examples are produced by the real factory code. They are not copied strings that can silently drift from runtime behavior.
+This matters because the examples invoke the real error factories: their structure and data come from that code, not from strings recopied into the documentation that can silently drift from it.
 
 The result is an in-memory catalog of `ErrorDocumentation` objects plus any extraction failures.
 
@@ -97,7 +106,7 @@ At solution level, the generator:
 4. collects documentation and extraction failures;
 5. deduplicates and orders errors by code.
 
-The output of this stage is one global catalog for the selected application or set of assemblies.
+The output of this stage is one global catalog for the selected application or set of assemblies. This catalog — a set of `ErrorDocumentation` objects — is the format-independent intermediate representation: every renderer consumes the same catalog, so no output format is privileged over another.
 
 The CLI exposes the common path:
 
