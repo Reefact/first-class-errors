@@ -13,33 +13,33 @@ namespace FirstClassErrors.RequestBinder.UnitTests;
 public sealed class BookingEndToEndTests {
 
     private static Outcome<Stay> BindStay(RequestBinder<StayDto> stay) {
-        RequiredProperty<BookingDate> checkIn  = stay.SimpleProperty(s => s.CheckIn).AsRequired(BookingDate.Parse);
-        RequiredProperty<BookingDate> checkOut = stay.SimpleProperty(s => s.CheckOut).AsRequired(BookingDate.Parse);
+        RequiredField<BookingDate> checkIn  = stay.SimpleProperty(s => s.CheckIn).AsRequired(BookingDate.Parse);
+        RequiredField<BookingDate> checkOut = stay.SimpleProperty(s => s.CheckOut).AsRequired(BookingDate.Parse);
 
-        return stay.Build(() => new Stay(checkIn.Value, checkOut.Value));
+        return stay.Build(read => new Stay(read.Get(checkIn), read.Get(checkOut)));
     }
 
     private static Outcome<Guest> BindGuest(RequestBinder<GuestDto> guest) {
-        RequiredProperty<string>                firstName = guest.SimpleProperty(g => g.FirstName).AsRequired();
-        OptionalReferenceProperty<EmailAddress> email     = guest.SimpleProperty(g => g.Email).AsOptionalReference(EmailAddress.Parse);
+        RequiredField<string>                firstName = guest.SimpleProperty(g => g.FirstName).AsRequired();
+        OptionalReferenceField<EmailAddress> email     = guest.SimpleProperty(g => g.Email).AsOptionalReference(EmailAddress.Parse);
 
-        return guest.Build(() => new Guest(firstName.Value, email.Value));
+        return guest.Build(read => new Guest(read.Get(firstName), read.Get(email)));
     }
 
     private static Outcome<BookingCommand> BindCommand(BookingRequest request) {
         var bind = Bind.PropertiesOf(request).FailWith(BookingEnvelopeError.CommandInvalid);
 
-        RequiredProperty<EmailAddress>          email     = bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
-        RequiredProperty<string>                reference = bind.SimpleProperty(r => r.Reference).AsRequired();
-        RequiredProperty<Currency>              currency  = bind.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
-        OptionalValueProperty<int>              maxNights = bind.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
-        OptionalReferenceProperty<Stay>         stay      = bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptional(BindStay);
-        RequiredProperty<IReadOnlyList<Tag>>    tags      = bind.ListOfSimpleProperties(r => r.Tags).AsOptional(Tag.Parse);
-        RequiredProperty<IReadOnlyList<Guest>>  guests    = bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
+        RequiredField<EmailAddress>         email     = bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+        RequiredField<string>               reference = bind.SimpleProperty(r => r.Reference).AsRequired();
+        RequiredField<Currency>             currency  = bind.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
+        OptionalValueField<int>             maxNights = bind.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
+        OptionalReferenceField<Stay>        stay      = bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptional(BindStay);
+        RequiredField<IReadOnlyList<Tag>>   tags      = bind.ListOfSimpleProperties(r => r.Tags).AsOptional(Tag.Parse);
+        RequiredField<IReadOnlyList<Guest>> guests    = bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
 
-        return bind.Build(() => new BookingCommand(
-                              email.Value, reference.Value, currency.Value, maxNights.Value,
-                              stay.Value, tags.Value, guests.Value));
+        return bind.Build(read => new BookingCommand(
+                              read.Get(email), read.Get(reference), read.Get(currency), read.Get(maxNights),
+                              read.Get(stay), read.Get(tags), read.Get(guests)));
     }
 
     [Fact(DisplayName = "A fully valid request binds into the complete command and flows through Then/Finally.")]

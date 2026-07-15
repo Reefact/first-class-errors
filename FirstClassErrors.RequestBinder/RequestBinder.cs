@@ -121,17 +121,18 @@ public sealed class RequestBinder<TRequest> {
 
     /// <summary>
     ///     Terminal: assembles the command when — and only when — no binding failure was recorded; otherwise returns
-    ///     the failure of the envelope grouping every recorded error. Inside <paramref name="assemble" />, every
-    ///     property handle's <c>Value</c> is therefore valid by construction.
+    ///     the failure of the envelope grouping every recorded error. The assembler receives a
+    ///     <see cref="BindingScope" /> and reads each bound value through it; because that scope is created only on this
+    ///     success branch, every read is valid by construction.
     /// </summary>
     /// <typeparam name="TCommand">The type of the bound command or query.</typeparam>
-    /// <param name="assemble">The assembly function, reading the bound values from the property handles.</param>
+    /// <param name="assemble">The assembler, reading the bound values from the supplied <see cref="BindingScope" />.</param>
     /// <returns>The bound command, or the envelope failure.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="assemble" /> is <c>null</c>.</exception>
-    public Outcome<TCommand> Build<TCommand>(Func<TCommand> assemble) where TCommand : notnull {
+    public Outcome<TCommand> Build<TCommand>(BindingAssembler<TCommand> assemble) where TCommand : notnull {
         if (assemble is null) { throw new ArgumentNullException(nameof(assemble)); }
 
-        if (_errors.Count == 0) { return Outcome<TCommand>.Success(assemble()); }
+        if (_errors.Count == 0) { return Outcome<TCommand>.Success(assemble(new BindingScope(this))); }
 
         PrimaryPortInnerErrors innerErrors = new();
         foreach (PrimaryPortError error in _errors) {

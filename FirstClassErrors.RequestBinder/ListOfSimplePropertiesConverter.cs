@@ -35,16 +35,15 @@ public sealed class ListOfSimplePropertiesConverter<TRequest, TArgument> {
     /// </summary>
     /// <typeparam name="TProperty">The type of the element value object.</typeparam>
     /// <param name="convertElement">The value-object converter applied to each element.</param>
-    /// <returns>The bound property handle.</returns>
+    /// <returns>The bound field token.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="convertElement" /> is <c>null</c>.</exception>
-    public RequiredProperty<IReadOnlyList<TProperty>> AsRequired<TProperty>(Func<TArgument, Outcome<TProperty>> convertElement) where TProperty : notnull {
+    public RequiredField<IReadOnlyList<TProperty>> AsRequired<TProperty>(Func<TArgument, Outcome<TProperty>> convertElement) where TProperty : notnull {
         if (convertElement is null) { throw new ArgumentNullException(nameof(convertElement)); }
 
         if (_isMissing) {
-            PrimaryPortError error = RequestBindingError.ArgumentRequired(_argumentPath);
-            _binder.Record(error);
+            _binder.Record(RequestBindingError.ArgumentRequired(_argumentPath));
 
-            return new RequiredProperty<IReadOnlyList<TProperty>>(default!, error);
+            return new RequiredField<IReadOnlyList<TProperty>>(_binder, default!);
         }
 
         return ConvertElements(convertElement);
@@ -56,43 +55,37 @@ public sealed class ListOfSimplePropertiesConverter<TRequest, TArgument> {
     /// </summary>
     /// <typeparam name="TProperty">The type of the element value object.</typeparam>
     /// <param name="convertElement">The value-object converter applied to each element.</param>
-    /// <returns>The bound property handle.</returns>
+    /// <returns>The bound field token.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="convertElement" /> is <c>null</c>.</exception>
-    public RequiredProperty<IReadOnlyList<TProperty>> AsOptional<TProperty>(Func<TArgument, Outcome<TProperty>> convertElement) where TProperty : notnull {
+    public RequiredField<IReadOnlyList<TProperty>> AsOptional<TProperty>(Func<TArgument, Outcome<TProperty>> convertElement) where TProperty : notnull {
         if (convertElement is null) { throw new ArgumentNullException(nameof(convertElement)); }
 
         if (_isMissing) {
             IReadOnlyList<TProperty> empty = new List<TProperty>();
 
-            return new RequiredProperty<IReadOnlyList<TProperty>>(empty, failure: null);
+            return new RequiredField<IReadOnlyList<TProperty>>(_binder, empty);
         }
 
         return ConvertElements(convertElement);
     }
 
-    private RequiredProperty<IReadOnlyList<TProperty>> ConvertElements<TProperty>(Func<TArgument, Outcome<TProperty>> convertElement) where TProperty : notnull {
-        List<TProperty>   converted    = new();
-        PrimaryPortError? firstFailure = null;
-        int               index        = 0;
+    private RequiredField<IReadOnlyList<TProperty>> ConvertElements<TProperty>(Func<TArgument, Outcome<TProperty>> convertElement) where TProperty : notnull {
+        List<TProperty> converted = new();
+        int             index     = 0;
 
         foreach (TArgument? element in _values!) {
             string elementPath = $"{_argumentPath}[{index}]";
             index++;
 
             if (element is null) {
-                // Every failing element is recorded (collect-all); the FIRST one also seeds the handle's outcome.
-                PrimaryPortError missing = RequestBindingError.ArgumentRequired(elementPath);
-                _binder.Record(missing);
-                firstFailure ??= missing;
+                _binder.Record(RequestBindingError.ArgumentRequired(elementPath));
 
                 continue;
             }
 
             Outcome<TProperty> outcome = convertElement(element!);
             if (outcome.IsFailure) {
-                PrimaryPortError invalid = RequestBindingError.ArgumentInvalid(elementPath, outcome.Error!);
-                _binder.Record(invalid);
-                firstFailure ??= invalid;
+                _binder.Record(RequestBindingError.ArgumentInvalid(elementPath, outcome.Error!));
 
                 continue;
             }
@@ -100,11 +93,9 @@ public sealed class ListOfSimplePropertiesConverter<TRequest, TArgument> {
             converted.Add(outcome.GetResultOrThrow());
         }
 
-        if (firstFailure is not null) {
-            return new RequiredProperty<IReadOnlyList<TProperty>>(default!, firstFailure);
-        }
-
-        return new RequiredProperty<IReadOnlyList<TProperty>>(converted, failure: null);
+        // The value is read only through a BindingScope, which Build creates solely when no failure was recorded —
+        // i.e. only when every element converted — so `converted` is the complete list exactly when it is observed.
+        return new RequiredField<IReadOnlyList<TProperty>>(_binder, converted);
     }
 
 }
