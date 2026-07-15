@@ -70,6 +70,7 @@ documentées une seule fois ici plutôt que répétées sur chaque page.
 | [`sonar`](sonar.fr.md) | Analyse SonarQube Cloud — quality gate et remontée de couverture. |
 | [`analyzers`](analyzers.fr.md) | Dogfood des analyzers Roslyn embarqués, y compris sur le plus vieux compilateur supporté (le floor Roslyn). |
 | [`commit-lint`](commit-lint.fr.md) | Impose la convention Conventional Commits sur chaque commit de PR, via le même script que le hook local. |
+| [`adr-check`](adr-check.fr.md) | Consultatif, dispatch manuel : confronte une branche à la base d'ADR (nouvelle décision / remplacement / conflit). Le repli pour les contributeurs sans Claude Code ; ne bloque jamais. |
 
 ### Sécurité & chaîne d'approvisionnement
 
