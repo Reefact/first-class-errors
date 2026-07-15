@@ -44,23 +44,32 @@ The type follows **which rule was violated**, not which layer happened to observ
 
 A primary port represents an interaction entering the application: HTTP, messaging, a CLI command, a file import, or another inbound adapter.
 
-Consider an API request containing an invalid amount. Two facts may need to be preserved:
-
-1. the domain rejected the value because an invariant was violated;
-2. the incoming request therefore cannot be accepted.
-
-The adapter can wrap the domain cause in a primary-port error:
+Consider a bank-statement file import rejecting a transaction whose date falls outside the statement period:
 
 ```csharp
-DomainError invalidAmount = InvalidAmountError.NegativeValue(request.Amount);
-var innerErrors = new PrimaryPortInnerErrors().Add(invalidAmount);
+internal static PrimaryPortError DateOutOfStatementPeriod(DateOnly periodStart, DateOnly periodEnd, DateOnly transactionDate) {
+    return PrimaryPortError.Create(
+            Code.DateOutOfStatementPeriod,
+            $"Transaction dated {transactionDate} is outside the statement period [{periodStart};{periodEnd}].",
+            Transience.NonTransient,
+            ctx => ctx.Add(ErrCtxKey.TransactionDate, transactionDate))
+        .WithPublicMessage("The file contains a transaction outside the statement period.");
+}
+```
+
+The port error describes the boundary condition on its own: this incoming file cannot be accepted as it stands.
+
+Two facts may instead need to be preserved together: the domain rejected a value because an invariant was violated, and the incoming request therefore cannot be accepted. The adapter can wrap the domain cause in a primary-port error:
+
+```csharp
+DomainError mismatch = InvalidAmountOperationError.CurrencyMismatch(left, right);
+var innerErrors = new PrimaryPortInnerErrors().Add(mismatch);
 
 return PrimaryPortError.Create(
-        Code.RequestRejected,
-        diagnosticMessage: $"Request {request.Id} contains an invalid amount.",
-        innerErrors: innerErrors)
-    .WithPublicMessage(
-        shortMessage: "The request contains invalid data.");
+        ErrorCode.Create("REQUEST_REJECTED"),
+        $"Request rejected: {mismatch.DiagnosticMessage}",
+        innerErrors)
+    .WithPublicMessage("The request contains invalid data.");
 ```
 
 `PrimaryPortInnerErrors` is a typed collection that only accepts the error types a primary-port error may nest (see [Composition rules](#composition-rules)).
