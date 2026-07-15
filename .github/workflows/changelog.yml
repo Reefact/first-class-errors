@@ -52,6 +52,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
+          # Always draft from main, whatever branch the dispatch UI had selected:
+          # collect-prs.sh gathers PRs merged into main, so drafting on any other
+          # ref would edit a stale copy of the changelog and drag that branch's
+          # commits into the draft pull request.
+          ref: main
           # Full history + tags so the train's previous tag (and its merge time,
           # the lower bound of the pull-request range) resolves.
           fetch-depth: 0

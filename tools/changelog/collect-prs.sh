@@ -65,6 +65,16 @@ fi
 candidates="$(gh pr list --search "$search" --limit 200 \
   --json number,title,body,labels,author)"
 
+# gh truncates at --limit SILENTLY, and with a search query the ordering (hence
+# WHICH 200 survive) is the search API's. A changelog that quietly omits merged
+# work is worse than a failed run: stop at saturation and ask for a narrower
+# range instead. (Exactly-200 is indistinguishable from more-than-200; the rare
+# false positive costs one re-run with from_ref set.)
+if [ "$(printf '%s\n' "$candidates" | jq 'length')" -eq 200 ]; then
+  echo "error: the candidate list saturated gh's --limit 200 and may be truncated; narrow the range with from_ref" >&2
+  exit 2
+fi
+
 # Classify each candidate by the scopes of its own commits. One `gh pr view` per
 # candidate is fine for a manually dispatched job (a release spans a handful of
 # PRs). `</dev/null` on gh keeps it from consuming the outer loop's stdin.
