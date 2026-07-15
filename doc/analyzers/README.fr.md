@@ -42,6 +42,8 @@ Chaque règle a un identifiant stable `FCExxx`. Les erreurs sont des défauts du
 | Règle | Sévérité | Défaut | Description |
 |------|----------|---------|-------------|
 | [FCE016 UnusedToExceptionResult](FCE016.fr.md) | 🟠 Warning | activée | Error.ToException() est appelé comme instruction isolée, ou son résultat est explicitement ignoré avec `_ =`. |
+| [FCE017 SensitiveDataInErrorContext](FCE017.fr.md) | 🟠 Warning | opt-in | Le nom d'une ErrorContextKey désigne un secret, un identifiant d'authentification ou une donnée personnelle (mot de passe, token, secret, chaîne de connexion, carte bancaire, …). |
+| [FCE018 OversizedErrorContextValue](FCE018.fr.md) | 🔵 Info | opt-in | Le type de valeur d'une ErrorContextKey est un gros payload (tableau d'octets, Stream ou FileInfo) qui n'a pas sa place dans un contexte destiné aux logs. |
 
 ## Configuration
 
