@@ -13,6 +13,9 @@ Testing helpers for **FirstClassErrors** — so your tests about errors and outc
   deterministic instead of asserted over a time window.
 - **Freezable instance ids** (`InstanceIds.UseFixed(...)`) so `InstanceId` is stable
   for snapshot and equality assertions.
+- **Arbitrary values** (`Any.ErrorCode()`, `Any.DiagnosticMessage()`, ...) for the
+  inputs a test needs but never asserts on — seedable via `Any.UseSeed(...)`, with
+  `Clock.UseAny()` / `InstanceIds.UseAny()` variants of the seams above.
 
 Overrides are scoped (`using`), context-local (safe under parallel tests), and never
 affect production behavior.

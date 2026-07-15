@@ -158,6 +158,61 @@ public void A_missing_order_error_is_fully_deterministic() {
 }
 ```
 
+## Supply arbitrary values you don't assert on
+
+Freezing pins a value the test *does* care about. The mirror-image need is just as common: an input the test must provide but never checks — an error code, a message, an occurrence instant. Written as a literal it reads as if it mattered, and a constant reused across a suite can let a test pass for the wrong reason.
+
+`Any` supplies a valid-but-arbitrary value instead, so the one input that matters stands out and the rest announce themselves as incidental:
+
+```csharp
+// Only the code identifies the scenario; the messages are incidental.
+DomainError error = DomainError
+    .Create(ErrorCode.Create("ORDER_NOT_FOUND"), Any.DiagnosticMessage())
+    .WithPublicMessage(Any.ShortMessage());
+
+Outcome<Order>.Failure(error).ShouldFail().WithCode("ORDER_NOT_FOUND");
+```
+
+What `Any` offers:
+
+| Helper | Returns |
+| --- | --- |
+| `Any.ErrorCode()` | a non-blank code, shaped like `ANY_CODE_7F3A9C` |
+| `Any.DiagnosticMessage()` / `Any.ShortMessage()` / `Any.DetailedMessage()` | a non-blank message |
+| `Any.Guid()` / `Any.Instant()` / `Any.String()` / `Any.Int()` / `Any.Bool()` | an arbitrary primitive (`Instant` is UTC) |
+| `Any.Enum<TEnum>()` | any member of the enum (may be a sentinel such as `Unknown`) |
+| `Any.Transience()` / `Any.InteractionDirection()` | a *meaningful* value — never the `Unknown` sentinel |
+| `Any.ErrorOrigin()` | any `ErrorOrigin` |
+
+Values are recognizable as arbitrary (codes look like `ANY_CODE_…`), so an incidental value that surfaces in a failure message is easy to spot.
+
+### Reproduce a run with a seed
+
+By default the values differ on every run — which is what exposes a test that secretly depends on one. To reproduce a specific run, pin the seed for a scope; every `Any` call inside it becomes deterministic:
+
+```csharp
+using (Any.UseSeed(1234)) {
+    ErrorCode code = Any.ErrorCode(); // the same value on every run
+}
+```
+
+`Any.UseSeed(...)` follows the same scope rules as the overrides above: disposable, context-local, and nestable.
+
+### Arbitrary `OccurredAt` and `InstanceId`
+
+When a test needs stable occurrence data but does not assert the exact values, the clock and instance-id seams pair a `UseAny` with their `UseFixed`:
+
+```csharp
+using (Clock.UseAny()) {           // OccurredAt is frozen to one arbitrary instant
+    using (InstanceIds.UseAny()) { // each error gets its own arbitrary id
+        DomainError error = MakeError();
+        // ... assert on the code or context, not on the time or id
+    }
+}
+```
+
+Both take an optional seed (`Clock.UseAny(1234)`, `InstanceIds.UseAny(1234)`) to make the chosen values reproducible.
+
 ## Scope and parallel tests
 
 An override takes effect when its `using` opens and is undone when the `using` is disposed. Outside that block, the clock and instance ids are back to their real behavior.
