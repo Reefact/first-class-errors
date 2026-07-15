@@ -27,6 +27,13 @@ l'utiliser. Il complète les pages [`release`](workflows/release.fr.md) et
 [`release-dryrun`](workflows/release-dryrun.fr.md) de la référence, qui décrivent
 ces workflows structurellement. Aussi en [anglais](ReleaseDryRun.en.md).
 
+### [Ajouter un train de release](AddingAReleaseTrain.fr.md)
+
+La checklist pour ajouter un nouveau paquet versionné indépendamment : l'unique
+édit de données dans [`tools/trains.sh`](../tools/trains.sh) et les édits statiques
+imposés par GitHub et la tooling (trigger de tag, options de choix, scopes du
+commit-lint, packaging). Aussi en [anglais](AddingAReleaseTrain.en.md).
+
 ### [Registres de décision d'architecture (ADR)](adr/README.md)
 
 Des enregistrements datés des décisions importantes — leur contexte, l'option

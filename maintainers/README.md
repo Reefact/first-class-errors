@@ -25,6 +25,13 @@ complements the workflow reference's [`release`](workflows/release.en.md) and
 [`release-dryrun`](workflows/release-dryrun.en.md) pages, which describe those
 workflows structurally. Also in [French](ReleaseDryRun.fr.md).
 
+### [Adding a release train](AddingAReleaseTrain.en.md)
+
+The checklist for adding a new independently-versioned package: the single data
+edit in [`tools/trains.sh`](../tools/trains.sh) and the static edits GitHub and the
+tooling force (tag trigger, choice options, commit-lint scopes, packing). Also in
+[French](AddingAReleaseTrain.fr.md).
+
 ### [Architecture Decision Records](adr/README.md)
 
 Dated records of significant decisions — their context, the option chosen, and

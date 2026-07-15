@@ -89,12 +89,14 @@ exposée aux PR de forks.
 
 ## À manipuler avec précaution
 
-- **La partition par train est définie une seule fois, par les scopes — gardez-la
-  synchronisée avec `release-notes.sh`.** `collect-prs.sh` et `release-notes.sh`
-  doivent s'accorder sur quels scopes appartiennent à quel train (`lib` →
-  core/analyzers/testing, `cli` → cli/gendoc). Si vous ajoutez un scope ou en
-  déplacez un entre trains, changez **les deux**, sinon le changelog et les notes
-  de release GitHub décriront des ensembles différents.
+- **La partition par train vit à un seul endroit : [`tools/trains.sh`](../../tools/trains.sh).**
+  `collect-prs.sh`, `release-notes.sh` et ce workflow le *sourcent* tous, donc le
+  changelog et les notes de release GitHub ne peuvent jamais diverger sur quels
+  scopes appartiennent à quel train (`lib` → core/analyzers/testing, `cli` →
+  cli/gendoc). Ajoutez un train, ou déplacez un scope entre trains, **là** — pas
+  dans les scripts. Un train entièrement nouveau demande aussi les édits statiques
+  que GitHub impose (trigger de tag, options du choix, scopes du commit-lint) :
+  suivez [Ajouter un train de release](../AddingAReleaseTrain.fr.md).
 - **Le bloc `[Unreleased]` est *remplacé*, jamais préfixé.** `merge-unreleased.sh`
   est propriétaire du bloc : à chaque run il échange toute la section
   `## [Unreleased]` contre celle fraîchement rédigée et laisse intactes les
