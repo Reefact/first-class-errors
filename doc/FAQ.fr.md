@@ -11,7 +11,7 @@ La bibliothèque enrichit l’`Error` portée par l’exception avec un code sta
 
 ## Pourquoi ne pas utiliser `Result<T, string>` ?
 
-Une chaîne perd la structure. `Outcome<T>` transporte le même modèle riche d’`Error` que le chemin par exception : code, messages, contexte, diagnostics et identité documentaire.
+Une chaîne perd la structure. `Outcome<T>`, le type résultat de la bibliothèque, transporte le même modèle riche d’`Error` que le chemin par exception : code, messages, contexte, diagnostics et lien vers sa définition documentée.
 
 Voir [Cas d’usage](UsagePatterns.fr.md) et [Comparaison avec les librairies de gestion d’erreurs](ComparisonWithOtherLibraries.fr.md).
 
