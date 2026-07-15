@@ -111,7 +111,7 @@ Expected the outcome to succeed, but it failed with [PAYMENT_DECLINED]: L’éme
 Expected the error to have code "ORDER_NOT_FOUND", but it was "ORDER_LOCKED".
 ```
 
-L’échec d’assertion reste distinct de l’exception métier. Le test indique donc ce qu’il attendait et ce que l’outcome contenait réellement.
+`OutcomeAssertionException` est un échec du framework de test, pas l’exception que produirait `error.ToException()`. Le test indique donc ce qu’il attendait et ce que l’outcome contenait réellement.
 
 ## Que doit vérifier un test ?
 
@@ -149,7 +149,7 @@ Le test se lit comme une description du contrat d’échec plutôt que comme une
 
 ## Horodatages et identifiants déterministes
 
-Chaque occurrence d’erreur contient un horodatage `OccurredAt` et un `InstanceId` unique. Lorsqu’un test ou un snapshot doit vérifier ces valeurs, utilisez les overrides bornés fournis par le package de test.
+Chaque occurrence d’erreur contient un horodatage `OccurredAt` et un `InstanceId` unique. Lorsqu’un test ou un snapshot (un test qui compare un objet sérialisé à un fichier de référence approuvé) doit vérifier ces valeurs, utilisez les overrides bornés fournis par le package de test.
 
 Voir [Tests d’erreur déterministes](DeterministicTesting.fr.md) pour `Clock.UseFixed(...)`, `InstanceIds.UseFixed(...)`, les sources personnalisées, le comportement en tests parallèles et les snapshots d’erreurs complètes.
 

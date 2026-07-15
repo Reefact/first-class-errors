@@ -3,7 +3,7 @@
 🌍 **Languages:**  
 🇬🇧 English (this file) | 🇫🇷 [Français](./OperationalIntegration.fr.md)
 
-FirstClassErrors becomes operationally useful when the catalog is generated from the exact code being built and published where developers, support teams, and operators can reach it.
+FirstClassErrors becomes operationally useful when the catalog is generated from the exact code being built, and published where developers, support teams, and operators can reach it.
 
 This guide covers the delivery workflow. For structured logging and production diagnostics, see [Logging and Operational Integration](LoggingIntegration.en.md).
 
@@ -22,7 +22,7 @@ A reliable pipeline should:
 1. build the application;
 2. generate the catalog from the built code;
 3. publish the generated files;
-4. optionally compare the current contract with a committed baseline.
+4. optionally compare the current contract with a committed baseline — the last accepted snapshot of your error codes and context keys (see [Catalog Versioning](CatalogVersioning.en.md)).
 
 ## Opt projects into generation
 
@@ -65,6 +65,8 @@ urn:problem:my-api:payment-declined
 JSON output does not require a service name.
 
 ## Recommended GitHub Actions workflow
+
+The workflow renders the catalog as HTML with `--layout split` (one page per error; see [The HTML Renderer](TheHtmlRenderer.en.md)):
 
 ```yaml
 name: error-documentation
@@ -162,11 +164,13 @@ For long-lived or support-critical systems, publish at least one immutable form 
 /errors/releases/2.3.1/
 ```
 
-This lets an `InstanceId`, deployment version, or release tag lead support to the matching documentation.
+Log events that record the deployed version alongside the error then let support start from a logged occurrence — its `InstanceId` plus that version — and open the matching catalog.
 
 ## Guard the error contract
 
 Generation answers “what does this version document?” Catalog versioning answers “did this version break a previously accepted contract?”
+
+`fce catalog diff` compares the catalog extracted from the current build against a baseline file committed to the repository and reports contract changes:
 
 ```bash
 fce catalog diff --solution MyApp.sln --configuration Release --no-build
