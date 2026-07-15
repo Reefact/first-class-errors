@@ -41,7 +41,7 @@ Le marqueur doit être présent dans le `.csproj` lui-même. Les projets qui ne 
 
 ## 3. Définir une situation d’erreur
 
-Créez une classe factory statique. Chaque méthode factory représente une situation précise reconnue par le système.
+Créez une classe factory statique. Chaque méthode factory représente une situation précise reconnue par le système. Les exemples utilisent un petit type valeur `Amount` doté d’une `Currency` ; remplacez-le par n’importe quel type de votre propre domaine.
 
 ```csharp
 using FirstClassErrors;
@@ -66,8 +66,9 @@ public static class InvalidAmountOperationError {
 }
 ```
 
-Trois éléments sont essentiels :
+Quatre éléments sont essentiels :
 
+- `[ProvidesErrorsFor]` relie la classe factory au concept dont elle déclare les erreurs ; le générateur s’en sert pour les découvrir et les regrouper ;
 - le nom de la factory exprime la situation dans le code ;
 - le code d’erreur constitue son identité stable et lisible par machine ;
 - le message de diagnostic est interne, tandis que les messages publics sont sûrs pour les appelants.
@@ -98,6 +99,8 @@ private static ErrorDocumentation CurrencyMismatchDocumentation() {
 ```
 
 Il s’agit de connaissance structurée, pas d’un commentaire : le générateur peut extraire le titre, l’explication, la règle, les hypothèses de diagnostic et l’exemple réellement produit par la factory.
+
+Chaque diagnostic est une hypothèse : une cause plausible, une origine (le soupçon porte-t-il sur l’intérieur du système ou sur un appelant externe ?) et une piste d’investigation.
 
 ## 5. Utiliser l’erreur
 

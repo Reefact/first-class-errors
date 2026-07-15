@@ -5,7 +5,7 @@
 
 FirstClassErrors distingue la **nature d’un échec** de l’endroit où il est détecté.
 
-Cette distinction permet au domaine de rester indépendant de l’infrastructure, tout en fournissant à l’exploitation des signaux utiles comme la direction de l’interaction et la transience.
+Cette distinction permet au domaine de rester indépendant de l’infrastructure, tout en fournissant à l’exploitation des signaux utiles comme la direction de l’interaction (entrante ou sortante) et la transience (retenter peut-il réussir ?).
 
 ## La hiérarchie en un coup d’œil
 
@@ -62,6 +62,8 @@ return PrimaryPortError.Create(
     .WithPublicMessage(
         shortMessage: "La requête contient des données invalides.");
 ```
+
+`PrimaryPortInnerErrors` est une collection typée qui n’accepte que les types d’erreurs qu’une erreur de port primaire peut imbriquer (voir [Règles de composition](#règles-de-composition)).
 
 L’erreur de domaine décrit toujours la règle violée. L’erreur de port primaire décrit la condition à la frontière : cette interaction entrante est rejetée. Lorsque des erreurs internes sont fournies, l’erreur de port calcule sa transience globale à partir d’elles.
 

@@ -5,7 +5,7 @@
 
 FirstClassErrors distinguishes the **nature of a failure** from the place where it happens to be detected.
 
-That distinction helps domain code remain independent from infrastructure while giving operational tooling useful signals such as interaction direction and transience.
+That distinction helps domain code remain independent from infrastructure while giving operational tooling useful signals such as interaction direction (incoming or outgoing) and transience (whether retrying may succeed).
 
 ## The hierarchy at a glance
 
@@ -62,6 +62,8 @@ return PrimaryPortError.Create(
     .WithPublicMessage(
         shortMessage: "The request contains invalid data.");
 ```
+
+`PrimaryPortInnerErrors` is a typed collection that only accepts the error types a primary-port error may nest (see [Composition rules](#composition-rules)).
 
 The domain error still describes the violated business rule. The primary-port error describes the boundary condition: this incoming interaction is rejected. When inner errors are supplied, the port error computes its overall transience from them.
 
