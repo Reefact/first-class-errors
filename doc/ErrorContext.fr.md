@@ -104,8 +104,8 @@ Le contexte appartient à l’`Error`, pas à un transport particulier.
 ```mermaid
 flowchart LR
     A[Factory d’erreur] --> B[Error avec Context]
-    B --> C[Outcome<T>]
-    B --> D[error.ToException()]
+    B --> C[Outcome de T]
+    B --> D[error.ToException]
     C --> E[result.Error.Context]
     D --> F[exception.Error.Context]
 ```

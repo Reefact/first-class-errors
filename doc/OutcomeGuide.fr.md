@@ -12,8 +12,8 @@ Cette page est le guide dédié à la création, l’inspection, la composition,
 ```mermaid
 flowchart LR
     A[Opération] --> B{Succès ?}
-    B -->|oui| C[Succès Outcome ou Outcome<T>]
-    B -->|non| D[Échec Outcome ou Outcome<T> portant Error]
+    B -->|oui| C[Succès Outcome ou Outcome de T]
+    B -->|non| D[Échec Outcome ou Outcome de T portant Error]
     C --> E[Continuer ou récupérer le résultat]
     D --> F[Traiter, récupérer, propager ou lever]
 ```
