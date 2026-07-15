@@ -42,6 +42,8 @@ Each rule has a stable id `FCExxx`. Errors are hard defects; warnings flag likel
 | Rule | Severity | Default | Description |
 |------|----------|---------|-------------|
 | [FCE016 UnusedToExceptionResult](FCE016.en.md) | 🟠 Warning | on | Error.ToException() is called as a standalone statement, or its result is explicitly discarded with `_ =`. |
+| [FCE017 SensitiveDataInErrorContext](FCE017.en.md) | 🟠 Warning | opt-in | An ErrorContextKey name denotes a secret, credential, or personal data (password, token, secret, connection string, credit card, ...). |
+| [FCE018 OversizedErrorContextValue](FCE018.en.md) | 🔵 Info | opt-in | An ErrorContextKey value type is a bulk payload (byte array, Stream, or FileInfo) that does not belong in a loggable context. |
 
 ## Configuring
 

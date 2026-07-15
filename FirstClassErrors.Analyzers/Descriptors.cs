@@ -170,4 +170,24 @@ internal static class Descriptors {
         description: "A title such as \"Error\" or \"Invalid value\" tells the reader nothing. A good title names the condition (e.g. \"Temperature below absolute zero\"). Opt-in.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.DocumentationTitleTooGeneric));
 
+    public static readonly DiagnosticDescriptor SensitiveDataInErrorContext = new(
+        id: DiagnosticIds.SensitiveDataInErrorContext,
+        title: "Error context key looks like it carries sensitive data",
+        messageFormat: "Context key '{0}' looks like it carries a secret or personal data; keep passwords, tokens and secrets out of error context",
+        category: DiagnosticCategories.Usage,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: false,
+        description: "Error context is copied into logs, dashboards and error catalogs, so a secret placed there leaks wherever the error travels. This rule matches the key name against a curated set of secret/credential/PII terms (password, token, secret, api key, connection string, credit card, SSN...). It is a name heuristic: it cannot see the runtime value, so it neither proves a leak nor catches a secret hidden behind an innocuous key name. Opt-in; may need per-project tuning.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.SensitiveDataInErrorContext));
+
+    public static readonly DiagnosticDescriptor OversizedErrorContextValue = new(
+        id: DiagnosticIds.OversizedErrorContextValue,
+        title: "Error context value type is a large payload",
+        messageFormat: "Context key '{0}' stores '{1}'; error context is for small, loggable values, not files, streams or byte buffers",
+        category: DiagnosticCategories.Usage,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: false,
+        description: "Error context should hold small, serializable facts that log cleanly. A key typed as a byte array, a Stream or a FileInfo carries a whole file or buffer into every log line and error-catalog entry, bloating output and often smuggling sensitive data along with it. Detection is based on the key's declared value type. Opt-in.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.OversizedErrorContextValue));
+
 }

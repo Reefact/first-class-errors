@@ -32,6 +32,8 @@ Do not put in context:
 
 If data is unstable, noisy, sensitive, or not actionable, keep it out.
 
+> Two opt-in analyzers help enforce the last two rules at build time: [FCE017](analyzers/FCE017.en.md) flags a context key whose **name** looks sensitive (password, token, secret, ...), and [FCE018](analyzers/FCE018.en.md) flags a context key whose **value type** is a large payload (byte array, `Stream`, `FileInfo`). They are heuristics — enable them in `.editorconfig` and treat them as a safety net, not a guarantee.
+
 ## 🎯 Why it improves observability
 
 With `ErrorCode` you can group errors by type.

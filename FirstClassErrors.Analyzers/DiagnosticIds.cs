@@ -28,6 +28,8 @@ internal static class DiagnosticIds {
     public const string DocumentationTitleTooGeneric     = "FCE015";
 
     // Category: Usage
-    public const string UnusedToExceptionResult = "FCE016";
+    public const string UnusedToExceptionResult      = "FCE016";
+    public const string SensitiveDataInErrorContext  = "FCE017";
+    public const string OversizedErrorContextValue   = "FCE018";
 
 }

@@ -21,3 +21,5 @@ FCE013  | FirstClassErrors.DocumentationContent| Warning  | ExampleDoesNotCallDo
 FCE014  | FirstClassErrors.DocumentationContent| Info     | ShortMessageSameAsDetailedMessageAnalyzer
 FCE015  | FirstClassErrors.DocumentationContent| Disabled | DocumentationTitleTooGenericAnalyzer
 FCE016  | FirstClassErrors.Usage               | Warning  | UnusedToExceptionResultAnalyzer
+FCE017  | FirstClassErrors.Usage               | Disabled | SensitiveDataInErrorContextAnalyzer
+FCE018  | FirstClassErrors.Usage               | Disabled | OversizedErrorContextValueAnalyzer
