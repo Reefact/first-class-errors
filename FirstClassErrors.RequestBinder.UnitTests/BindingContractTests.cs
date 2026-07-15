@@ -198,6 +198,16 @@ public sealed class BindingContractTests {
         Check.That(property.Name).IsEqualTo("Count");
     }
 
+    [Fact(DisplayName = "The selector resolver unwraps EVERY stacked Convert node, not just the outermost.")]
+    public void SelectorResolverUnwrapsNestedConvertNodes() {
+        // Widening then boxing a value-type property stacks two Convert nodes: Convert(Convert(c.Count, long), object).
+        Expression<Func<Counted, object?>> doublyBoxed = c => (long)c.Count;
+
+        PropertyInfo property = PropertySelectors.GetProperty(doublyBoxed);
+
+        Check.That(property.Name).IsEqualTo("Count");
+    }
+
     [Fact(DisplayName = "A null selector is a programming error and throws.")]
     public void NullSelectorThrows() {
         Check.ThatCode(() => PropertySelectors.GetProperty<BookingRequest, string?>(null!))
@@ -253,10 +263,12 @@ public sealed class BindingContractTests {
 
     #region The binding scope guards its reads
 
-    [Fact(DisplayName = "The binding scope rejects a null field (every overload) and a field owned by a different binder — programming errors both.")]
+    [Fact(DisplayName = "The binding scope rejects a null field and a field owned by a different binder — on every Get overload, programming errors both.")]
     public void BindingScopeGuardsItsReads() {
         var binderA = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
-        RequiredField<EmailAddress> tokenOfA = binderA.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+        RequiredField<EmailAddress>          requiredOfA = binderA.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+        OptionalReferenceField<EmailAddress> optRefOfA   = binderA.SimpleProperty(r => r.GuestEmail).AsOptionalReference(EmailAddress.Parse);
+        OptionalValueField<int>              optValOfA   = binderA.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
 
         var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
 
@@ -265,8 +277,36 @@ public sealed class BindingContractTests {
         Check.ThatCode(() => bind.Build(s => s.Get((OptionalReferenceField<EmailAddress>)null!) is null)).Throws<ArgumentNullException>();
         Check.ThatCode(() => bind.Build(s => s.Get((OptionalValueField<int>)null!).HasValue)).Throws<ArgumentNullException>();
 
-        // A field owned by a different binder is a cross-binder mix-up — rejected loudly, not read silently.
-        Check.ThatCode(() => bind.Build(s => s.Get(tokenOfA).Value)).Throws<InvalidOperationException>();
+        // A field owned by a different binder is a cross-binder mix-up — rejected loudly on every overload, not read silently.
+        Check.ThatCode(() => bind.Build(s => s.Get(requiredOfA).Value)).Throws<InvalidOperationException>();
+        Check.ThatCode(() => bind.Build(s => s.Get(optRefOfA) is null)).Throws<InvalidOperationException>();
+        Check.ThatCode(() => bind.Build(s => s.Get(optValOfA).HasValue)).Throws<InvalidOperationException>();
+    }
+
+    #endregion
+
+    #region The binder-owned errors carry their coded messages
+
+    [Fact(DisplayName = "REQUEST_ARGUMENT_REQUIRED carries its public summary, and its detailed and diagnostic messages name the argument path.")]
+    public void RequiredArgumentErrorCarriesItsMessages() {
+        PrimaryPortError error = RequestBindingError.ArgumentRequired("GuestEmail");
+
+        Check.That(error.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_REQUIRED");
+        Check.That(error.ShortMessage).IsEqualTo("A required argument is missing.");
+        Check.That(error.DetailedMessage).Contains("GuestEmail");
+        Check.That(error.DiagnosticMessage).Contains("GuestEmail");
+        Check.That(error.DiagnosticMessage).Contains("required");
+    }
+
+    [Fact(DisplayName = "REQUEST_ARGUMENT_INVALID carries its public summary, its detailed message names the path, and it wraps the cause.")]
+    public void InvalidArgumentErrorCarriesItsMessages() {
+        PrimaryPortError error = RequestBindingError.ArgumentInvalid("GuestEmail", BookingDomainError.EmailInvalid("x"));
+
+        Check.That(error.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
+        Check.That(error.ShortMessage).IsEqualTo("An argument is invalid.");
+        Check.That(error.DetailedMessage).Contains("GuestEmail");
+        Check.That(error.DiagnosticMessage).Contains("GuestEmail");
+        Check.That(error.InnerErrors.Single().Code.ToString()).IsEqualTo("TEST_EMAIL_INVALID");
     }
 
     #endregion
