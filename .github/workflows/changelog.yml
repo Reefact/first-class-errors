@@ -58,15 +58,18 @@ jobs:
         env:
           COMPONENT: ${{ inputs.component }}
         run: |
-          case "$COMPONENT" in
-            lib) FILE="CHANGELOG.md"; PACKAGE="FirstClassErrors and FirstClassErrors.Testing"; TRAIN="lib" ;;
-            cli) FILE="FirstClassErrors.Cli/CHANGELOG.md"; PACKAGE="FirstClassErrors.Cli (the fce .NET tool)"; TRAIN="cli" ;;
-            *) echo "::error::unknown component '$COMPONENT' (expected lib or cli)"; exit 1 ;;
-          esac
+          # Changelog file and package label come from tools/trains.sh, the single
+          # source of truth shared with release-notes.sh / collect-prs.sh.
+          . tools/trains.sh
+          PACKAGE="$(package_of "$COMPONENT")"
+          if [ -z "$PACKAGE" ]; then
+            echo "::error::unknown component '$COMPONENT' (expected one of: $(train_ids | tr '\n' ' ' | sed 's/ *$//'))"
+            exit 1
+          fi
           {
-            echo "file=$FILE"
+            echo "file=$(changelog_of "$COMPONENT")"
             echo "package=$PACKAGE"
-            echo "train=$TRAIN"
+            echo "train=$COMPONENT"
           } >> "$GITHUB_OUTPUT"
 
       - name: Collect merged pull requests for the train

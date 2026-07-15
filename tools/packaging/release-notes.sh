@@ -27,11 +27,15 @@ current_tag="$2"
 # the tag being created from the previous-same-train-tag lookup, so it need not exist as a ref.
 end_ref="${3:-$current_tag}"
 
-case "$scope" in
-  lib) prefix='lib-v'; train_scopes='core,analyzers,testing' ;;
-  cli) prefix='cli-v'; train_scopes='cli,gendoc' ;;
-  *)   echo "error: unknown scope '$scope' (expected 'lib' or 'cli')" >&2; exit 2 ;;
-esac
+# Tag prefix and train scopes come from tools/trains.sh (the single source of truth
+# shared with the changelog tooling), so the two can never disagree on the partition.
+. "$(dirname "$0")/../trains.sh"
+prefix="$(prefix_of "$scope")"
+train_scopes="$(scopes_of "$scope")"
+if [ -z "$prefix" ]; then
+  echo "error: unknown scope '$scope' (expected one of: $(train_ids | tr '\n' ' ' | sed 's/ *$//'))" >&2
+  exit 2
+fi
 
 # Previous tag of the SAME train (most recent one that is not the current tag). When there is none,
 # this is the train's first release: take the whole history up to the current tag.
