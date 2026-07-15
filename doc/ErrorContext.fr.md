@@ -113,7 +113,7 @@ flowchart LR
 Le même contexte est conservé lorsque l’erreur :
 
 - est retournée dans `Outcome` ou `Outcome<T>` ;
-- est propagée via `Then`, `To` ou d’autres opérations d’outcome ;
+- est propagée via `Then` ou d’autres opérations d’outcome ;
 - est transformée en exception via `ToException()` ;
 - est imbriquée comme erreur interne.
 

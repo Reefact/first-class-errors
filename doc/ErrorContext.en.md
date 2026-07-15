@@ -113,7 +113,7 @@ flowchart LR
 The same context is preserved when the error:
 
 - is returned inside `Outcome` or `Outcome<T>`;
-- is propagated through `Then`, `To`, or other outcome operations;
+- is propagated through `Then` or other outcome operations;
 - is converted into an exception through `ToException()`;
 - is nested as an inner error.
 
