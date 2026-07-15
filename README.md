@@ -17,9 +17,24 @@
 
 ![FirstClassErrors](./doc/images/first-class-errors.png "FirstClassErrors")
 
-FirstClassErrors is a .NET library for application errors that need to be understood, diagnosed, documented, and preserved over time.
+An application error too often boils down to a bare code or string, with nothing that explains what it actually means. FirstClassErrors turns it into a first-class concept of your domain. You describe each error situation once, with its rules, in one place in the code; the whole library then builds on that model.
 
-Instead of scattering error codes and messages throughout the codebase, you define each meaningful error situation once, in a named factory. The same structured `Error` can then be thrown as an exception or returned as an explicit result without throwing (the library's `Outcome` type), logged, and included in a generated error catalog.
+From there, it covers the full chain:
+
+**Model the error**
+An error becomes an object that carries its own meaning — a violated business rule, a rejected incoming request, or a failing external service, transient or not.
+
+**Handle the failure**
+You choose how it travels: thrown as an ordinary exception, or returned as an explicit result the caller inspects without a try/catch.
+
+**Document the error**
+Each error can carry its explanation, its rule, and its likely causes right there in the code. FirstClassErrors generates a human-readable catalog from that same code — so it never drifts.
+
+**Check the model**
+Roslyn analyzers enforce these rules at compile time: a duplicated error code or inconsistent documentation becomes a build error, caught before it ever reaches production.
+
+**Bind external input**
+A form or a JSON request must become a valid domain object. Where classic .NET binding restates those rules separately, in a validator or attributes, FirstClassErrors binds that input directly to your value objects, reusing their own construction rules instead of duplicating them.
 
 ## 🚨 The problem
 

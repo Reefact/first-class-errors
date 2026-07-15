@@ -17,9 +17,24 @@
 
 ![FirstClassErrors](./images/first-class-errors.png "FirstClassErrors")
 
-FirstClassErrors est une bibliothèque .NET destinée aux erreurs applicatives qui doivent être comprises, diagnostiquées, documentées et conservées dans le temps.
+Une erreur applicative se réduit trop souvent à un code ou une chaîne de caractères, sans rien qui en explique le sens. FirstClassErrors en fait un concept de première classe de votre domaine. Vous décrivez chaque situation d’erreur une seule fois, avec ses règles, à un seul endroit du code ; toute la bibliothèque s’appuie ensuite sur ce modèle.
 
-Au lieu de disperser les codes et messages d’erreur dans le code, vous définissez chaque situation significative une seule fois, dans une factory nommée. La même `Error` structurée peut ensuite être levée sous forme d’exception ou renvoyée comme résultat explicite sans exception (le type `Outcome` de la bibliothèque), journalisée et intégrée à un catalogue d’erreurs généré automatiquement.
+À partir de là, elle couvre toute la chaîne :
+
+**Modéliser l’erreur**
+Une erreur devient un objet qui porte son propre sens — qu’il s’agisse d’une règle métier violée, d’un appel entrant rejeté ou d’une panne d’un service externe, passagère ou définitive.
+
+**Gérer l’échec**
+À vous de choisir comment elle voyage : levée comme une exception classique, ou renvoyée comme un résultat explicite que l’appelant inspecte sans try/catch.
+
+**Documenter l’erreur**
+Chaque erreur peut porter, dans le code, son explication, sa règle et ses causes probables. FirstClassErrors en génère un catalogue lisible, extrait de ce même code — il ne dérive donc jamais.
+
+**Vérifier le modèle**
+Des analyseurs Roslyn contrôlent ces règles dès la compilation : un code d’erreur dupliqué ou une documentation incohérente deviennent des erreurs de build, détectées avant la production.
+
+**Lier les entrées externes**
+Un formulaire ou une requête JSON doit devenir un objet métier valide. Là où le binding .NET classique redéclare ces règles séparément, dans un validateur ou des attributs, FirstClassErrors lie ces entrées directement à vos objets valeur, en réutilisant leurs propres règles de construction au lieu de les dupliquer.
 
 ## 🚨 Le problème
 
