@@ -49,8 +49,10 @@ Deux entrées :
 
 Un seul job, `draft-changelog` :
 
-1. Checkout avec **`fetch-depth: 0`** — le tag précédent du train (et l'horodatage
-   de son commit, la borne basse de la plage de pull requests) doit se résoudre.
+1. Checkout de **`main`** (épinglé — quelle que soit la branche choisie dans
+   l'interface de dispatch) avec **`fetch-depth: 0`** — le tag précédent du train
+   (et l'horodatage de son commit, la borne basse de la plage de pull requests)
+   doit se résoudre.
 2. **Collecter** les pull requests du train avec
    [`tools/changelog/collect-prs.sh`](../../tools/changelog/collect-prs.sh) :
    `gh pr list` rassemble les candidates mergées dans `main` après l'heure du
