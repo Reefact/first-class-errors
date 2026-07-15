@@ -46,7 +46,8 @@ Two inputs:
 
 One job, `draft-changelog`:
 
-1. Checkout with **`fetch-depth: 0`** — the train's previous tag (and its commit
+1. Checkout **`main`** (pinned — whatever branch the dispatch UI had selected)
+   with **`fetch-depth: 0`** — the train's previous tag (and its commit
    timestamp, the lower bound of the pull-request range) must resolve.
 2. **Collect** the train's pull requests with
    [`tools/changelog/collect-prs.sh`](../../tools/changelog/collect-prs.sh):
