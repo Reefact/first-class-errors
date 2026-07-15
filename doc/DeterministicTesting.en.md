@@ -8,9 +8,29 @@ Every error occurrence records two values that should vary in production:
 - `OccurredAt`, the UTC instant at which the error was created;
 - `InstanceId`, a unique identifier for that occurrence.
 
-Those values improve observability, but they make whole-object assertions and snapshots (tests comparing a serialized object against an approved reference file) unstable. `FirstClassErrors.Testing` provides scoped overrides for tests that deliberately need deterministic values.
+Those values improve observability, but they make whole-object assertions and snapshots (tests comparing a serialized object against an approved reference file) unstable. `FirstClassErrors.Testing` lets you temporarily replace the two generators behind them — the clock and the instance-id source — only within the scope of a test that deliberately needs deterministic values.
 
 For fluent assertions on outcomes and errors, start with [Testing Outcomes and Errors](Testing.en.md).
+
+## Shared setup for the examples
+
+Every example below tells the same small story — looking up a missing order — through one factory and two stubs, so each snippet stays short:
+
+```csharp
+// The documented error every example reports.
+private static DomainError MakeError() =>
+    DomainError
+        .Create(ErrorCode.Create("ORDER_NOT_FOUND"), "Order 42 was not found.")
+        .WithPublicMessage("The order does not exist.");
+
+private static readonly DateTimeOffset start = new(2026, 7, 8, 10, 30, 0, TimeSpan.Zero);
+
+// A repository whose lookup fails for missingOrderId, returning a failed Outcome<Order>.
+private readonly IOrderRepository orders = /* test double */;
+private readonly OrderId missingOrderId  = /* an id with no match */;
+```
+
+`MakeError()` returns the concrete `DomainError`. When an example instead pulls the error out of a failed outcome with `ShouldFail().Subject`, it comes back typed as the base `Error` — that is why some snippets below say `DomainError` and others `Error`. It is the same object seen at two levels of its type hierarchy, not two interchangeable types.
 
 ## Freeze `OccurredAt`
 
@@ -34,9 +54,7 @@ public void An_error_records_the_fixed_occurrence_time()
 
     using (Clock.UseFixed(instant))
     {
-        DomainError error = DomainError
-            .Create(ErrorCode.Create("ORDER_NOT_FOUND"), "Order 42 was not found.")
-            .WithPublicMessage("The order does not exist.");
+        DomainError error = MakeError();
 
         Check.That(error.OccurredAt).IsEqualTo(instant);
     }
@@ -117,8 +135,8 @@ static Func<Guid> SequentialIds()
 ```csharp
 using (InstanceIds.Use(SequentialIds()))
 {
-    Error first = MakeError();
-    Error second = MakeError();
+    DomainError first = MakeError();
+    DomainError second = MakeError();
 
     Check.That(first.InstanceId.ToString()).IsEqualTo("00000001-0000-0000-0000-000000000000");
     Check.That(second.InstanceId.ToString()).IsEqualTo("00000002-0000-0000-0000-000000000000");
@@ -127,7 +145,7 @@ using (InstanceIds.Use(SequentialIds()))
 
 Prefer identifiers that are visibly synthetic so they cannot be confused with production values.
 
-## Freeze both values for a snapshot
+## Freeze `OccurredAt` and `InstanceId` together
 
 ```csharp
 [Fact]
@@ -151,7 +169,7 @@ public void A_missing_order_error_is_fully_deterministic()
 }
 ```
 
-This is useful when serializing or snapshotting the complete error. If the test only cares about the error code or context, do not freeze unrelated fields merely because the helpers exist.
+Freeze both when a single test asserts both occurrence values, or when it feeds the whole error to a hand-written snapshot compared against a fixed reference string. A snapshot library such as [Verify](https://github.com/VerifyTests/Verify) is a different case: it already scrubs volatile `Guid` and `DateTime` values to stable placeholders (`Guid_1`, `DateTimeOffset_1`) on its own, so there you usually leave them alone and freeze only when the snapshot must show the exact value. Either way, if a test only cares about the error code or context, do not freeze unrelated fields merely because the helpers exist.
 
 ## Scope and parallel tests
 
