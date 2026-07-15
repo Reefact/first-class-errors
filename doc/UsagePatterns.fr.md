@@ -16,7 +16,7 @@ Ce guide aide à choisir le bon pattern. Pour l’API complète d’`Outcome` et
 | Un élément échoue dans un batch | retourner un `Outcome<T>` par élément | un échec ne doit pas forcément interrompre tout le lot |
 | Une frontière entrante rejette une interaction | utiliser une `PrimaryPortError` | elle conserve la direction entrante et l’éventuelle cause métier |
 | Une dépendance sortante échoue | utiliser une `SecondaryPortError` | elle conserve la direction sortante et la transience |
-| Un échec doit franchir une frontière applicative sous forme d’exception | appeler `ThrowIfFailure()` ou `GetResultOrThrow()` à cette frontière | l’erreur reste une donnée jusqu’au point d’escalade choisi |
+| Un échec doit franchir une frontière applicative sous forme d’exception | appeler `ThrowIfFailure()` ou `GetResultOrThrow()` à cette frontière | les deux convertissent un outcome en échec en son exception (voir [Composer avec Outcome](OutcomeGuide.fr.md)) ; l’erreur reste une donnée jusqu’au point d’escalade choisi |
 
 La même factory documentée peut servir à plusieurs transports. L’erreur décrit **ce qui s’est produit** ; la lever ou la retourner décrit **comment cet appelant choisit de la propager**.
 
@@ -139,7 +139,7 @@ Outcome<Receipt> result =
 
 Le premier échec court-circuite les étapes suivantes et est propagé sans modification. Utilisez une chaîne fluide uniquement lorsqu’elle est plus lisible qu’un branchement explicite.
 
-Le comportement complet de `Then`, `To`, `Recover`, `Finally`, des surcharges async et des échappatoires est documenté dans [Composer avec Outcome](OutcomeGuide.fr.md).
+Le comportement complet de `Then`, `To`, `Recover`, `Finally`, des surcharges async et des échappatoires vers les exceptions (`ThrowIfFailure()`, `GetResultOrThrow()`) est documenté dans [Composer avec Outcome](OutcomeGuide.fr.md).
 
 ## 🧩 Logging et support
 

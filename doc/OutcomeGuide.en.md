@@ -211,7 +211,7 @@ Prefer explicit branching when:
 - partial results must be collected;
 - the chain becomes harder to read than a few `if` statements.
 
-FirstClassErrors does not require railway-oriented code everywhere. `Outcome` serves the model; the model does not serve the fluent syntax.
+FirstClassErrors does not require railway-oriented code (chaining every step through a success/failure pipeline) everywhere. `Outcome` serves the model; the model does not serve the fluent syntax.
 
 ## Complete example
 
