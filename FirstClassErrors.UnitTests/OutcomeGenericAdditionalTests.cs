@@ -43,13 +43,13 @@ public sealed class OutcomeGenericAdditionalTests {
         Check.That(result.Error).IsSameReferenceAs(error);
     }
 
-    [Fact(DisplayName = "Awaiting the async instance To maps the value on success.")]
+    [Fact(DisplayName = "Awaiting the async instance Then maps the value on success.")]
     public async Task AwaitingTheAsyncInstanceToMapsTheValueOnSuccess() {
         // Setup
         Outcome<int> outcome = Outcome<int>.Success(7);
 
         // Exercise
-        Outcome<string> result = await outcome.To(async (value, ct) => {
+        Outcome<string> result = await outcome.Then(async (value, ct) => {
             await System.Threading.Tasks.Task.CompletedTask;
 
             return value.ToString();
@@ -87,13 +87,13 @@ public sealed class OutcomeGenericAdditionalTests {
              .Throws<ArgumentNullException>();
     }
 
-    [Fact(DisplayName = "To throws an ArgumentNullException when the converter is null.")]
+    [Fact(DisplayName = "Then (value mapping) throws an ArgumentNullException when the converter is null.")]
     public void ToThrowsAnArgumentNullExceptionWhenTheConverterIsNull() {
         // Setup
         Outcome<int> outcome = Outcome<int>.Success(1);
 
         // Exercise & verify
-        Check.ThatCode(() => outcome.To((Func<int, string>)null!))
+        Check.ThatCode(() => outcome.Then((Func<int, string>)null!))
              .Throws<ArgumentNullException>();
     }
 

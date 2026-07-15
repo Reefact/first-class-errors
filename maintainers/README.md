@@ -25,15 +25,26 @@ complements the workflow reference's [`release`](workflows/release.en.md) and
 [`release-dryrun`](workflows/release-dryrun.en.md) pages, which describe those
 workflows structurally. Also in [French](ReleaseDryRun.fr.md).
 
-### [Architecture Decision Records](adr/)
+### [Adding a release train](AddingAReleaseTrain.en.md)
+
+The checklist for adding a new independently-versioned package: the single data
+edit in [`tools/trains.sh`](../tools/trains.sh) and the static edits GitHub and the
+tooling force (tag trigger, choice options, commit-lint scopes, packing). Also in
+[French](AddingAReleaseTrain.fr.md).
+
+### [Architecture Decision Records](adr/README.md)
 
 Dated records of significant decisions — their context, the option chosen, and
 the consequences. An ADR is a historical log: it is superseded by a newer ADR, not
-edited in place.
+edited in place. The [index](adr/README.md) defines the format every ADR
+follows and provides a copy-ready [template](adr/template.md). *(English only.)*
 
-- [ADR 0001 — Lock the analyzer Roslyn floor](adr/0001-lock-the-analyzer-roslyn-floor.md)
+- [ADR-0001 — Lock the analyzer's Roslyn floor](adr/0001-lock-the-analyzer-roslyn-floor.md)
   — why the analyzer's Roslyn version is frozen, enforced by the
-  [`analyzers`](workflows/analyzers.en.md) workflow. *(English only.)*
+  [`analyzers`](workflows/analyzers.en.md) workflow.
+- [ADR-0002 — Floor the tooling runtime at the oldest supported LTS](adr/0002-floor-the-tooling-runtime.md)
+  — why the tooling targets `net8.0` and rolls forward, enforced by the
+  `floor` job of the [`ci`](workflows/ci.en.md) workflow.
 
 ## Related
 

@@ -81,6 +81,7 @@ here instead of being repeated on every page.
 | --- | --- |
 | [`release`](release.en.md) | Build, attest, and publish the NuGet packages on a version tag (with a manual dry run). |
 | [`release-dryrun`](release-dryrun.en.md) | Continuously rehearse the side-effect-free part of the release (pack + SBOM) on every PR and push. |
+| [`changelog`](changelog.en.md) | Draft the `[Unreleased]` section of a train's changelog from merged PRs, on manual dispatch, and open a review PR. |
 
 ### Dependency maintenance
 

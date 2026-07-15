@@ -78,10 +78,46 @@ l'éditer, lisez les commentaires du YAML — ils font foi. Les pièges :
   l'assembly.** Le nom de l'assembly apparaît dans des lignes de build ordinaires
   même si l'analyzer ne s'est jamais chargé ; seul le type apparaît dans la table
   `ReportAnalyzer`. Un analyzer jamais chargé laisserait sinon le build vert.
+- **Trois autres réglages NuGet isolent le package local.**
+  `packageSourceMapping` route l'id `FirstClassErrors` *exclusivement* vers le
+  feed local, pour que nuget.org ne puisse jamais substituer un package publié à
+  celui qu'on vient de packer (nuget.org reste actif pour les targeting packs
+  net8.0, qui échoueraient sinon au restore avec `NU1101`).
+  `RestorePackagesPath=./packages` garde le package jetable hors du cache global
+  machine `~/.nuget/packages`, indexé par `(id, version)` et qui ne relit jamais
+  un feed pour une version déjà extraite — un piège de copie périmée.
+  `DefaultItemExcludes;packages/**` empêche les globs par défaut du SDK de
+  compiler le moindre `.cs` qu'un package restauré transporterait (contentFiles,
+  polyfills, générateurs de source) maintenant que `packages/` vit sous le
+  répertoire du projet. L'étape de pack efface `local-feed/` et `packages/` pour
+  qu'un workspace réutilisé reste idempotent.
 
 **Pour relever le floor délibérément**, suivez la procédure de l'ADR 0001 —
 c'est une décision produit, pas une montée de routine (raison pour laquelle
 Dependabot est configuré pour ignorer `Microsoft.CodeAnalysis.*`).
+
+## Le garde rapide jumeau du floor : le test unitaire `RoslynFloorTests`
+
+Le job floor-check ci-dessus est le garde *authentique* — l'artefact livré sur le
+plus vieux host — mais il est lent. Un garde **rapide** le double : le test
+unitaire `RoslynFloorTests` dans `FirstClassErrors.Analyzers.UnitTests`, exécuté
+par [`ci`](ci.fr.md), pas par ce workflow. Il lit le floor depuis la métadonnée
+`RoslynFloorVersion` de l'assembly de l'analyzer et vérifie qu'**aucune** assembly
+`Microsoft.CodeAnalysis*` référencée ne le dépasse. Trois subtilités doivent
+survivre à toute édition :
+
+- il borne **toute la famille `Microsoft.CodeAnalysis*`** (via `StartsWith`), pas
+  un seul nom d'assembly, parce que les analyzers n'utilisent que l'API agnostique
+  du langage `IOperation` ; le compilateur enregistre donc une référence à
+  `Microsoft.CodeAnalysis` mais pas forcément à `Microsoft.CodeAnalysis.CSharp` ;
+- il **échoue si cette famille est absente** des métadonnées, plutôt que de passer
+  à vide ;
+- il compare sur **major.minor.build** seulement, pour qu'une version de référence
+  à 4 parties (`4.8.0.0`) ne se lise pas comme plus récente que le floor `4.8.0`.
+
+Il attrape la dérive de *référence*, vite et en process ; le job floor-check
+attrape ce qu'il ne peut pas — si l'analyzer livré se **charge** réellement et est
+réellement **packagé** sur le floor.
 
 ## En rapport
 
