@@ -158,19 +158,13 @@ public void A_missing_order_error_is_fully_deterministic() {
 }
 ```
 
-Freeze both when a single test asserts both occurrence values, or when it feeds the whole error to a hand-written snapshot compared against a fixed reference string. A snapshot library such as [Verify](https://github.com/VerifyTests/Verify) is a different case: it already scrubs volatile `Guid` and `DateTime` values to stable placeholders (`Guid_1`, `DateTimeOffset_1`) on its own, so there you usually leave them alone and freeze only when the snapshot must show the exact value. Either way, if a test only cares about the error code or context, do not freeze unrelated fields merely because the helpers exist.
-
 ## Scope and parallel tests
 
-The overrides are:
+An override takes effect when its `using` opens and is undone when the `using` is disposed. Outside that block, the clock and instance ids are back to their real behavior.
 
-- disposable and intended for `using` scopes;
-- local to the current execution context;
-- restored when the scope ends;
-- inactive outside the scope;
-- designed not to leak into unrelated parallel tests.
+The override is not a shared global: it follows the test's own execution flow (internally it is stored in an `AsyncLocal`). So a value frozen inside one test is invisible to any code running outside that test — including other tests running at the same time. Two tests can each freeze the clock to a different instant and run in parallel without disturbing each other.
 
-Keep the scope as narrow as possible around the code that creates the errors.
+Because of that, keep the `using` as tight as possible around the code that creates the errors: the frozen values then cover exactly what the test asserts, and nothing else.
 
 ## Common mistakes
 
