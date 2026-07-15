@@ -3,7 +3,22 @@
 🌍 **Langues :**  
 🇬🇧 [English](./DocumentationExtractionReference.en.md) | 🇫🇷 Français (ce fichier)
 
-Cette page est la référence opérationnelle pour sélectionner les projets et assemblies, exécuter les workers d’extraction et traiter les échecs. Pour commencer par le modèle mental, lisez [Architecture du pipeline de documentation](ArchitectureOfTheDocumentationPipeline.fr.md).
+Cette page est la référence opérationnelle pour sélectionner les projets et assemblies, configurer l’extraction isolée et traiter ses échecs. Pour commencer par le modèle mental, lisez [Architecture du pipeline de documentation](ArchitectureOfTheDocumentationPipeline.fr.md).
+
+## Choisir un mode
+
+Deux points d’entrée décident de ce qui est documenté. Choisissez à partir du besoin, pas de la commande :
+
+| Besoin | Mode |
+| --- | --- |
+| partir directement d’une `.sln` | `--solution` |
+| appliquer le filtre d’opt-in des `.csproj` | `--solution` |
+| réutiliser la sortie d’un build précédent | `--solution --no-build` |
+| sélectionner précisément certaines `.dll` | `--assemblies` |
+| agréger des assemblies venant de plusieurs solutions | `--assemblies` |
+| éviter complètement la découverte de projets MSBuild | `--assemblies` |
+
+Les deux modes sont détaillés ci-dessous.
 
 ## Mode solution
 
@@ -103,7 +118,7 @@ Elle est utile pour des outils contrôlés et des tests. La génération au nive
 
 ## Exécution des workers
 
-Chaque assembly sélectionné est extrait dans un processus worker éphémère. Le générateur le lance avec le contexte de dépendances de la cible afin d’isoler les dépendances applicatives et la version de FirstClassErrors.
+Chaque assembly sélectionné est extrait dans un processus de travail isolé (« worker »). Le générateur le lance avec le contexte de dépendances de la cible afin d’isoler les dépendances applicatives et la version de FirstClassErrors.
 
 Le worker :
 
@@ -112,43 +127,46 @@ Le worker :
 3. sérialise le résultat complet en JSON ;
 4. se termine.
 
-Le générateur lit ce résultat puis passe à l’assembly suivant.
+Le générateur intègre ensuite le résultat de chaque worker au catalogue agrégé.
 
-## Pourquoi les workers sont nécessaires
-
-Les méthodes de documentation et factories d’exemples sont du code exécutable. Elles peuvent :
-
-- initialiser de l’état statique ;
-- charger des dépendances applicatives ;
-- utiliser une autre version de FirstClassErrors ;
-- lever une exception ;
-- faire planter le processus ;
-- rester bloquées.
-
-Les workers par assembly isolent ces risques et rattachent l’échec à l’assembly qui l’a produit.
+Chaque assembly s’exécute dans son propre worker afin d’isoler son contexte de chargement, sa version de FirstClassErrors et tout crash ou blocage, de sorte que l’échec reste rattaché à l’assembly qui l’a produit. Pour les raisons architecturales de cette isolation, voir [Architecture du pipeline de documentation](ArchitectureOfTheDocumentationPipeline.fr.md#3-les-workers-isolent-lexécution-des-cibles).
 
 ## Échecs et poursuite
 
-Les échecs d’extraction sont des données et ne provoquent pas nécessairement l’arrêt immédiat.
+Deux catégories d’échec se comportent différemment, et c’est précisément cette différence que contrôle `--strict`.
 
-Les échecs rapportés par un worker qui se termine normalement sont toujours enregistrés et journalisés, et la génération poursuit avec les assemblies restants quelle que soit la politique d’échec configurée :
+Les **échecs d’extraction par erreur** surviennent pendant qu’un worker exécute les factories et sont capturés dans son résultat. L’exécution les enregistre toujours et poursuit — `--strict` n’y change rien — de sorte qu’ils ne font jamais échouer la commande à eux seuls :
 
-- cible `[DocumentedBy]` introuvable ;
-- signature invalide ;
-- méthode de documentation qui lève ;
-- factory d’exemple qui lève.
+- une cible `[DocumentedBy]` introuvable ou de signature invalide ;
+- une méthode de documentation qui lève ;
+- une factory d’exemple qui lève.
 
-Les échecs de processus honorent la politique d’échec configurée, qui décide si le générateur enregistre le problème et poursuit avec les autres assemblies, ou le considère comme fatal :
+Les **échecs de processus** surviennent autour d’un worker, pas à l’intérieur de son extraction. Par défaut, le générateur les enregistre et poursuit avec les autres assemblies ; avec `--strict` (qui active `FailureBehavior.Stop`), il traite le premier comme fatal :
 
-- assembly impossible à charger ;
-- arrêt inattendu du worker ;
-- timeout du worker.
+- l’assembly de sortie d’un projet est introuvable ;
+- le marqueur d’opt-in est ambigu (déclaré deux fois, ou sous `Condition`) ;
+- le worker plante, dépasse son timeout, ou ne produit aucune sortie lisible.
 
-Une exécution poursuivie peut donc produire un catalogue partiel avec des échecs explicites. La présence d’un fichier généré ne prouve pas que tous les assemblies ont été documentés correctement.
+| Échec | Par défaut | `--strict` | Code de sortie | Présent dans |
+| --- | --- | --- | --- | --- |
+| `[DocumentedBy]` manquant ou signature invalide | enregistré, poursuite | enregistré, poursuite | `0` | `Failures` du résultat et logs d’erreur |
+| méthode de documentation qui lève | enregistré, poursuite | enregistré, poursuite | `0` | `Failures` du résultat et logs d’erreur |
+| factory d’exemple qui lève | enregistré, poursuite | enregistré, poursuite | `0` | `Failures` du résultat et logs d’erreur |
+| opt-in ambigu | projet ignoré, poursuite | fatal | `0` / `1` | logs |
+| assembly de sortie introuvable | ignoré, poursuite | fatal | `0` / `1` | logs |
+| crash, timeout ou absence de sortie du worker | enregistré, poursuite | fatal | `0` / `1` | logs |
+
+La commande se termine avec le code `0` même quand le catalogue est partiel : un fichier généré ne prouve pas que tous les assemblies ont été documentés. Elle renvoie `1` seulement sur un échec de processus fatal (avec `--strict`) ou une invocation invalide, et `130` sur annulation. Les appelants programmatiques règlent le même comportement via `SolutionGenerationOptions.FailureBehavior`.
+
+Un échec d’extraction enregistré est journalisé en erreur et apparaît aussi dans le résultat d’extraction :
+
+```text
+Documentation extraction issue in 'artifacts/MyApp.Application.dll': MyApp.Errors.OrderErrors.OutOfStockDocumentation: The documentation factory threw while being executed. (System.InvalidOperationException: Inventory service was called during documentation extraction.)
+```
 
 ## Timeouts et crashs
 
-Un worker qui dépasse son timeout est arrêté et enregistré comme échoué. Un crash est également enregistré avec les informations disponibles.
+Un worker qui dépasse son timeout est arrêté ; le timeout et l’échec de processus qui en résulte sont ensuite traités comme dans le tableau ci-dessus.
 
 Pour analyser un timeout :
 
@@ -214,17 +232,15 @@ Une méthode de documentation doit être :
 
 ## Checklist de dépannage
 
-Lorsque des erreurs attendues manquent, vérifiez :
+Lorsque des erreurs attendues manquent, parcourez le pipeline dans l’ordre — chaque étape dépend de la précédente :
 
-- la présence du marqueur littéral `<GenerateErrorDocumentation>true</GenerateErrorDocumentation>` dans le `.csproj` du projet ;
-- `[ProvidesErrorsFor]` sur la classe factory ;
-- `[DocumentedBy]` sur la factory ;
-- l’existence et la signature de la méthode référencée ;
-- le succès des méthodes de documentation et exemples ;
-- la configuration et le framework compilés ;
-- l’absence de sorties obsolètes avec `--no-build` ;
-- les avertissements et échecs des workers ;
-- les chemins exacts en mode assemblies.
+1. le projet a-t-il été sélectionné ? (marqueur littéral `<GenerateErrorDocumentation>true</GenerateErrorDocumentation>` dans son propre `.csproj`, ou les bons chemins `--assemblies`) ;
+2. l’assembly attendu a-t-il été trouvé ? (configuration et framework compilés ; `--no-build` ne réutilise pas de sorties obsolètes) ;
+3. l’assembly a-t-il été chargé ? (avertissements et échecs des workers examinés) ;
+4. les classes `[ProvidesErrorsFor]` ont-elles été trouvées ? (l’attribut est présent sur la classe factory) ;
+5. les références `[DocumentedBy]` sont-elles valides ? (la méthode référencée existe avec une signature de factory de documentation valide) ;
+6. les méthodes se sont-elles exécutées ? (la méthode de documentation et les factories d’exemples se terminent sans lever) ;
+7. la sortie est-elle partielle ? (échecs d’extraction enregistrés dans les logs ou le résultat).
 
 ---
 
