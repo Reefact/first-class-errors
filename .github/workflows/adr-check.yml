@@ -1,0 +1,143 @@
+name: adr-check
+
+# Advisory ADR check, run BY HAND on a branch. It asks the model whether the
+# branch embarks an architectural decision that should be recorded as an ADR,
+# supersedes an existing ADR, or conflicts with an accepted one, and writes the
+# answer to the run summary. It is the fallback for a contributor without Claude
+# Code, whose coding session performs the same check automatically.
+#
+# It is manual (workflow_dispatch), never a per-pull-request gate: rewriting or
+# recording a decision is a human-reviewed act, exactly like the sibling
+# `changelog` workflow. It NEVER blocks anything and NEVER writes an ADR — every
+# failure mode is a warning, and the verdict is a recommendation a human acts on.
+# See maintainers/workflows/adr-check.en.md.
+on:
+  workflow_dispatch:
+    inputs:
+      base:
+        description: "Ref to diff the branch against (its changes are checked)"
+        required: false
+        default: main
+
+# Read-only by default; the job widens only pull-requests: write, and only to post
+# the optional comment when the dispatched branch already has an open pull request.
+permissions:
+  contents: read
+
+concurrency:
+  group: adr-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  adr-check:
+    name: ADR check (advisory)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write # only for the optional comment when a PR is open
+    steps:
+      - name: Checkout the dispatched branch
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          # Full history so the merge-base with the base ref resolves for the diff.
+          fetch-depth: 0
+
+      - name: Run the advisory ADR check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          BASE: ${{ inputs.base }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -eu
+
+          if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+            echo "::warning::ANTHROPIC_API_KEY is not set; cannot run the ADR check."
+            echo "The ADR check needs the \`ANTHROPIC_API_KEY\` repository secret." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # Resolve the base into the branch's fork point, so the diff is exactly
+          # what this branch introduces (not unrelated commits already on the base).
+          git fetch --no-tags origin "$BASE"
+          base_sha="$(git merge-base FETCH_HEAD HEAD)"
+          echo "Checking $BRANCH against $BASE (merge-base ${base_sha})."
+
+          context="$(tools/adr-check/collect-context.sh "$base_sha")"
+          prompt="$(cat .github/adr-check-prompt.md)"
+
+          # Build the request with jq so every untrusted block (branch text, diff,
+          # ADRs) is JSON-escaped exactly once. thinking is disabled and the reply is
+          # a small JSON verdict, so max_tokens stays low.
+          jq -n \
+            --arg model "claude-sonnet-5" \
+            --arg prompt "$prompt" \
+            --arg context "$context" \
+            '{
+               model: $model,
+               max_tokens: 2000,
+               thinking: { type: "disabled" },
+               messages: [
+                 { role: "user", content: ($prompt + "\n\n" + $context) }
+               ]
+             }' > payload.json
+
+          if ! curl -sS https://api.anthropic.com/v1/messages \
+              -H "x-api-key: $ANTHROPIC_API_KEY" \
+              -H "anthropic-version: 2023-06-01" \
+              -H "content-type: application/json" \
+              -d @payload.json > response.json; then
+            echo "::warning::Anthropic API call failed; skipping the ADR check for this run."
+            exit 0
+          fi
+
+          if jq -e '.type == "error"' response.json >/dev/null 2>&1; then
+            echo "::warning::Anthropic API returned an error; skipping the ADR check."
+            jq -r '.error.message // .' response.json
+            exit 0
+          fi
+          case "$(jq -r '.stop_reason // empty' response.json)" in
+            refusal)    echo "::warning::Model refused; skipping the ADR check.";             exit 0 ;;
+            max_tokens) echo "::warning::Model output was truncated (max_tokens); skipping."; exit 0 ;;
+          esac
+
+          # The model returns one JSON object as text. Strip any stray code fence,
+          # then validate; anything unparseable is a warning, not a failure.
+          text="$(jq -r '[.content[] | select(.type=="text") | .text] | join("")' response.json)"
+          verdict="$(printf '%s' "$text" | sed '/^```/d' | jq -c '.' 2>/dev/null || true)"
+          if [ -z "$verdict" ]; then
+            echo "::warning::Model output was not valid JSON; skipping the ADR check. Raw output:"
+            printf '%s\n' "$text"
+            exit 0
+          fi
+
+          echo "Analysis: $(printf '%s' "$verdict" | jq -r '.analysis // ""')"
+          needs="$(printf '%s' "$verdict" | jq -r '.needs_report // false')"
+          report="$(printf '%s' "$verdict" | jq -r '.report // ""')"
+
+          # Always write the verdict to the run summary — the primary output of a
+          # manual, branch-level check (works whether or not a PR exists).
+          if [ "$needs" = "true" ] && [ -n "$report" ]; then
+            printf '%s\n' "$report" >> "$GITHUB_STEP_SUMMARY"
+          else
+            printf '### 🏛️ ADR check (advisory)\n\nNo architectural decision detected on `%s` versus `%s`. Nothing to flag.\n' \
+              "$BRANCH" "$BASE" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          # If the branch already has an open pull request, mirror the report there
+          # too, as the single marked comment — the original per-PR nudge.
+          pr="$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty' 2>/dev/null || true)"
+          if [ -n "$pr" ]; then
+            if [ "$needs" = "true" ] && [ -n "$report" ]; then
+              { printf '%s\n\n' '<!-- adr-check -->'; printf '%s\n' "$report"; } > comment-body.md
+              tools/adr-check/upsert-comment.sh "$pr" true comment-body.md
+            else
+              printf '%s' '<!-- adr-check -->' > comment-body.md
+              tools/adr-check/upsert-comment.sh "$pr" false comment-body.md
+            fi
+          else
+            echo "No open pull request for $BRANCH; the verdict is in the run summary only."
+          fi
