@@ -48,7 +48,7 @@ Bon :
 
 À éviter :
 
-> « La validation des devises a échoué dans `Amount.Add` pour la commande 42. »
+> « La validation des devises a échoué dans `Amount.AddOrThrow` pour la commande 42. »
 
 Le second exemple expose un détail d’implémentation et un identifiant d’occurrence qui n’ont pas leur place dans un résumé public réutilisable.
 

@@ -26,29 +26,29 @@ A value object must not enter an invalid state. Whether failure belongs to the c
 
 ```csharp
 // Contract: returns a valid Temperature or fails — failure has no place in this method's return type.
-public static Temperature FromKelvin(decimal kelvin) {
-    return TryFromKelvin(kelvin).GetResultOrThrow();
+public static Temperature FromKelvinOrThrow(decimal kelvin) {
+    return FromKelvin(kelvin).GetResultOrThrow();
 }
 ```
 
 ```csharp
 // Contract: an out-of-range value is part of the normal contract — the caller must handle it explicitly.
-public static Outcome<Temperature> TryFromKelvin(decimal kelvin) {
+public static Outcome<Temperature> FromKelvin(decimal kelvin) {
     if (kelvin < 0) { return Outcome<Temperature>.Failure(InvalidTemperatureError.BelowAbsoluteZero(kelvin, TemperatureUnit.Kelvin)); }
 
     return Outcome<Temperature>.Success(new Temperature(kelvin));
 }
 ```
 
-Both report the exact same documented error, `InvalidTemperatureError.BelowAbsoluteZero`. `FromKelvin` does not repeat the check; it escalates `TryFromKelvin`'s failure with `GetResultOrThrow()`. When both contracts are genuinely useful, centralize validation in the `Outcome`-returning version and derive the throwing one from it — not the reverse.
+Both report the exact same documented error, `InvalidTemperatureError.BelowAbsoluteZero`. `FromKelvinOrThrow` does not repeat the check; it escalates `FromKelvin`'s failure with `GetResultOrThrow()`. When both contracts are genuinely useful, centralize validation in the `Outcome`-returning version and derive the throwing one from it — not the reverse.
 
 ## 🧮 Domain operations
 
-Operations between valid domain objects may still violate a rule. The choice here is a matter of API contract, not of who is theoretically allowed to react — a caller of `Add` could still catch and handle a thrown mismatch, just as a caller of `TryAdd` could still ignore a returned one. What differs is what each method promises to its caller:
+Operations between valid domain objects may still violate a rule. The choice here is a matter of API contract, not of who is theoretically allowed to react — a caller of `AddOrThrow` could still catch and handle a thrown mismatch, just as a caller of `Add` could still ignore a returned one. What differs is what each method promises to its caller:
 
 ```csharp
 // Contract: the amounts passed in must already share the same currency.
-public Amount Add(Amount other) {
+public Amount AddOrThrow(Amount other) {
     if (Currency != other.Currency) { throw InvalidAmountOperationError.CurrencyMismatch(this, other).ToException(); }
 
     return new Amount(Value + other.Value, Currency);
@@ -57,7 +57,7 @@ public Amount Add(Amount other) {
 
 ```csharp
 // Contract: a currency mismatch is an expected outcome the caller must handle.
-public Outcome<Amount> TryAdd(Amount other) {
+public Outcome<Amount> Add(Amount other) {
     if (Currency != other.Currency) { return Outcome<Amount>.Failure(InvalidAmountOperationError.CurrencyMismatch(this, other)); }
 
     return Outcome<Amount>.Success(new Amount(Value + other.Value, Currency));
@@ -73,7 +73,7 @@ Each item in a batch can fail independently — but whether that failure is part
 ```csharp
 // Contract: a per-line failure is expected and handled locally — log it and move on.
 foreach (string line in file) {
-    TryParseAmount(line).Finally(
+    ParseAmount(line).Finally(
         onSuccess: Process,
         onFailure: Log);
 }
@@ -82,7 +82,7 @@ foreach (string line in file) {
 ```csharp
 // Contract: any invalid line invalidates the whole file — stop immediately.
 foreach (string line in file) {
-    Amount amount = TryParseAmount(line).GetResultOrThrow();
+    Amount amount = ParseAmount(line).GetResultOrThrow();
     Process(amount);
 }
 ```
@@ -148,7 +148,7 @@ When several expected-failure operations must run in sequence, compose their out
 
 ```csharp
 Outcome<Receipt> result =
-    TryCreateAmount(value, currencyCode)
+    CreateAmount(value, currencyCode)
         .Then(CheckLimits)
         .Then(Charge);
 ```

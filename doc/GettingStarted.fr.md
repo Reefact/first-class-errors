@@ -107,7 +107,7 @@ Chaque diagnostic est une hypothèse : une cause plausible, une origine (le soup
 Lorsque l’échec est exceptionnel, transformez l’erreur en son exception associée :
 
 ```csharp
-public Amount Add(Amount other) {
+public Amount AddOrThrow(Amount other) {
     if (Currency != other.Currency) {
         throw InvalidAmountOperationError.CurrencyMismatch(this, other).ToException();
     }
@@ -121,7 +121,7 @@ Le code métier nomme la situation sans répéter les codes ni les messages.
 Lorsque l’échec fait normalement partie du flux, transportez la même `Error` sans la lever :
 
 ```csharp
-public static Outcome<Amount> TryAdd(Amount left, Amount right) {
+public static Outcome<Amount> Add(Amount left, Amount right) {
     if (left.Currency != right.Currency) {
         return Outcome<Amount>.Failure(
             InvalidAmountOperationError.CurrencyMismatch(left, right));
