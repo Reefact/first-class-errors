@@ -1,7 +1,7 @@
 # ADR-0005 | Reserve the plain factory name for the Outcome-returning variant
 
-**Status:** Proposed
-**Date:** 2026-07-15
+**Status:** Accepted
+**Date:** 2026-07-16
 **Decision Makers:** Reefact
 
 ## Context
