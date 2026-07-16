@@ -250,7 +250,7 @@ Before publishing localized catalogs, verify that:
 ---
 
 <div align="center">
-<a href="WritingACustomRenderer.en.md">← Writing a custom renderer</a> · <a href="../../../README.md#-next-steps">↑ Table of contents</a> · <a href="FAQ.en.md">FAQ →</a>
+<a href="WritingACustomRenderer.en.md">← Writing a custom renderer</a> · <a href="../../../README.md#-documentation">↑ Table of contents</a> · <a href="FAQ.en.md">FAQ →</a>
 </div>
 
 ---

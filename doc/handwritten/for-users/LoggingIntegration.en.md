@@ -267,7 +267,7 @@ Before approving a logging integration, verify that:
 ---
 
 <div align="center">
-<a href="OperationalIntegration.en.md">← Generating and Publishing the Catalog</a> · <a href="../../../README.md#-next-steps">↑ Table of contents</a> · <a href="CatalogVersioning.en.md">Catalog Versioning →</a>
+<a href="OperationalIntegration.en.md">← Generating and Publishing the Catalog</a> · <a href="../../../README.md#-documentation">↑ Table of contents</a> · <a href="CatalogVersioning.en.md">Catalog Versioning →</a>
 </div>
 
 ---

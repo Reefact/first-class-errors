@@ -280,7 +280,7 @@ When expected errors are missing, walk the pipeline in order — each step depen
 ---
 
 <div align="center">
-<a href="ArchitectureOfTheDocumentationPipeline.en.md">← Architecture of the Documentation Pipeline</a> · <a href="../../../README.md#-next-steps">↑ Table of contents</a> · <a href="WritingACustomRenderer.en.md">Writing a custom renderer →</a>
+<a href="ArchitectureOfTheDocumentationPipeline.en.md">← Architecture of the Documentation Pipeline</a> · <a href="../../../README.md#-documentation">↑ Table of contents</a> · <a href="WritingACustomRenderer.en.md">Writing a custom renderer →</a>
 </div>
 
 ---

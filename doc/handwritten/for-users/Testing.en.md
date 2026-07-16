@@ -166,7 +166,7 @@ Before approving an error test, verify that:
 ---
 
 <div align="center">
-<a href="BestPractices.en.md">← Best Practices</a> · <a href="../../../README.md#-next-steps">↑ Table of contents</a> · <a href="DeterministicTesting.en.md">Deterministic Error Tests →</a>
+<a href="BestPractices.en.md">← Best Practices</a> · <a href="../../../README.md#-documentation">↑ Table of contents</a> · <a href="DeterministicTesting.en.md">Deterministic Error Tests →</a>
 </div>
 
 ---

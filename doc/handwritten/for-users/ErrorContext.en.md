@@ -173,7 +173,7 @@ If the answer is yes to all six, it is a strong context candidate.
 ---
 
 <div align="center">
-<a href="CoreConcepts.en.md">← Core Concepts</a> · <a href="../../../README.md#-next-steps">↑ Table of contents</a> · <a href="WritingErrorsGuide.en.md">Writing Errors Guide →</a>
+<a href="CoreConcepts.en.md">← Core Concepts</a> · <a href="../../../README.md#-documentation">↑ Table of contents</a> · <a href="WritingErrorsGuide.en.md">Writing Errors Guide →</a>
 </div>
 
 ---

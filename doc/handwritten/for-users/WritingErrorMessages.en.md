@@ -212,7 +212,7 @@ For the stable title, description, rule, diagnostics, and examples, return to [W
 ---
 
 <div align="center">
-<a href="WritingErrorsGuide.en.md">← Writing Error Documentation</a> · <a href="../../../README.md#-next-steps">↑ Table of contents</a> · <a href="UsagePatterns.en.md">Usage Patterns →</a>
+<a href="WritingErrorsGuide.en.md">← Writing Error Documentation</a> · <a href="../../../README.md#-documentation">↑ Table of contents</a> · <a href="UsagePatterns.en.md">Usage Patterns →</a>
 </div>
 
 ---

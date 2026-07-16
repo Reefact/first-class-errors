@@ -73,7 +73,7 @@ The goal of this library is not to make every exception richer. It is to make me
 ---
 
 <div align="center">
-<a href="DesignPrinciples.en.md">← Design Principles</a> · <a href="../../../README.md#-next-steps">↑ Table of contents</a> · <a href="CoreConcepts.en.md">Core Concepts →</a>
+<a href="DesignPrinciples.en.md">← Design Principles</a> · <a href="../../../README.md#-documentation">↑ Table of contents</a> · <a href="CoreConcepts.en.md">Core Concepts →</a>
 </div>
 
 ---

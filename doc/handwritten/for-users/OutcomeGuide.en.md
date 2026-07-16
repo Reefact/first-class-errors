@@ -241,7 +241,7 @@ Before approving an `Outcome` flow, verify that:
 ---
 
 <div align="center">
-<a href="UsagePatterns.en.md">← Usage Patterns</a> · <a href="../../../README.md#-next-steps">↑ Table of contents</a> · <a href="BestPractices.en.md">Best Practices →</a>
+<a href="UsagePatterns.en.md">← Usage Patterns</a> · <a href="../../../README.md#-documentation">↑ Table of contents</a> · <a href="BestPractices.en.md">Best Practices →</a>
 </div>
 
 ---
