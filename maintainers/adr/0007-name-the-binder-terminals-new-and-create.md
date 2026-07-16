@@ -1,7 +1,9 @@
 # ADR-0007 | Name the binder terminals New and Create
 
-**Status:** Proposed
-**Date:** 2026-07-15
+🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0007-name-the-binder-terminals-new-and-create.fr.md)
+
+**Status:** Accepted
+**Date:** 2026-07-16
 **Decision Makers:** Reefact
 
 ## Context
