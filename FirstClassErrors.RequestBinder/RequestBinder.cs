@@ -1,0 +1,231 @@
+#region Usings declarations
+
+using System.Linq.Expressions;
+using System.Reflection;
+
+#endregion
+
+namespace FirstClassErrors.RequestBinder;
+
+/// <summary>
+///     Binds the properties of a request DTO into value objects, collecting <b>every</b> failure — instead of
+///     stopping at the first — and grouping them under the envelope declared with
+///     <see cref="RequestBinderEnvelopeStage{TRequest}.FailWith" />.
+/// </summary>
+/// <remarks>
+///     <para>
+///         <b>No throw on the invalid-input path.</b> Converters return <see cref="Outcome{T}" />; every failure is
+///         recorded as a coded error and surfaces once, as the failure of the build terminal
+///         (<see cref="New{TCommand}" /> / <see cref="Create{TCommand}" />). A request
+///         whose every field is invalid raises zero exceptions. Exceptions are reserved for programming errors
+///         (a converter that throws, an invalid selector, a mis-declared fallback): the binder catches nothing, so a
+///         genuine bug propagates to the host's exception boundary instead of being disguised as a client error.
+///     </para>
+///     <para>
+///         Instances are created through <see cref="Bind.PropertiesOf{TRequest}" /> and are not thread-safe: a binder
+///         binds one request, in one scope.
+///     </para>
+/// </remarks>
+/// <typeparam name="TRequest">The type of the request DTO.</typeparam>
+public sealed class RequestBinder<TRequest> {
+
+    #region Fields declarations
+
+    private readonly TRequest                                        _request;
+    private readonly Func<PrimaryPortInnerErrors, PrimaryPortError>  _envelope;
+    private readonly string?                                         _argumentPrefix;
+    private readonly List<PrimaryPortError>                          _errors = new();
+
+    #endregion
+
+    #region Constructors declarations
+
+    internal RequestBinder(TRequest request, Func<PrimaryPortInnerErrors, PrimaryPortError> envelope, RequestBinderOptions options, string? argumentPrefix) {
+        _request        = request;
+        _envelope       = envelope;
+        Options         = options;
+        _argumentPrefix = argumentPrefix;
+    }
+
+    #endregion
+
+    /// <summary>The options this binder (and every binder nested under it) binds with.</summary>
+    internal RequestBinderOptions Options { get; private set; }
+
+    /// <summary>
+    ///     The envelope instance the most recent failing build terminal
+    ///     (<see cref="New{TCommand}" /> / <see cref="Create{TCommand}" />) produced, or <c>null</c> when
+    ///     no build has failed. A parent binder compares a nested failure against this <b>by reference</b> to tell this
+    ///     binder's own self-describing envelope (recorded as-is) from a leaf error a nested binding returned directly
+    ///     (wrapped under the argument path).
+    /// </summary>
+    internal PrimaryPortError? BuiltEnvelope { get; private set; }
+
+    /// <summary>
+    ///     Replaces the binder options (for example to plug a serializer-aware
+    ///     <see cref="IArgumentNameProvider" />). Call it before binding any property; nested binders inherit the
+    ///     options in effect when they are created.
+    /// </summary>
+    /// <param name="options">The options to bind with.</param>
+    /// <returns>This binder, for chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options" /> is <c>null</c>.</exception>
+    public RequestBinder<TRequest> WithOptions(RequestBinderOptions options) {
+        if (options is null) { throw new ArgumentNullException(nameof(options)); }
+
+        Options = options;
+
+        return this;
+    }
+
+    /// <summary>
+    ///     Selects a scalar property, converted by a plain value-object converter
+    ///     (<c>Func&lt;TArgument, Outcome&lt;T&gt;&gt;</c>).
+    /// </summary>
+    /// <typeparam name="TArgument">The type of the DTO property.</typeparam>
+    /// <param name="selector">A direct property access on the request parameter (e.g. <c>r =&gt; r.GuestEmail</c>).</param>
+    /// <returns>The converter stage offering <c>AsRequired</c> / <c>AsOptional</c> and their variants.</returns>
+    /// <exception cref="ArgumentException">
+    ///     Thrown when <paramref name="selector" /> points at a <b>non-nullable value-type</b> property: a missing value
+    ///     would be indistinguishable from its default (<c>0</c>, <c>false</c>, ...), so such a property must be declared
+    ///     nullable (e.g. <c>int?</c>) for the binder to detect an absent argument.
+    /// </exception>
+    public SimplePropertyConverter<TRequest, TArgument> SimpleProperty<TArgument>(Expression<Func<TRequest, TArgument?>> selector) {
+        (string path, object? value) = ResolveArgument(selector);
+
+        return new SimplePropertyConverter<TRequest, TArgument>(this, path, (TArgument?)value, value is null);
+    }
+
+    /// <summary>
+    ///     Selects a complex property, bound by a nested binder. Declare the nested envelope next, with
+    ///     <see cref="ComplexPropertyEnvelopeStage{TRequest, TArgument}.FailWith" />.
+    /// </summary>
+    /// <typeparam name="TArgument">The type of the nested DTO.</typeparam>
+    /// <param name="selector">A direct property access on the request parameter (e.g. <c>r =&gt; r.Stay</c>).</param>
+    /// <returns>The stage on which the nested envelope is declared.</returns>
+    public ComplexPropertyEnvelopeStage<TRequest, TArgument> ComplexProperty<TArgument>(Expression<Func<TRequest, TArgument?>> selector) {
+        (string path, object? value) = ResolveArgument(selector);
+
+        return new ComplexPropertyEnvelopeStage<TRequest, TArgument>(this, path, (TArgument?)value, value is null);
+    }
+
+    /// <summary>
+    ///     Selects a list property whose elements are converted by a plain value-object converter.
+    /// </summary>
+    /// <typeparam name="TArgument">The element type of the DTO list.</typeparam>
+    /// <param name="selector">A direct property access on the request parameter (e.g. <c>r =&gt; r.Tags</c>).</param>
+    /// <returns>The converter stage offering <c>AsRequired</c> / <c>AsOptional</c>.</returns>
+    public ListOfSimplePropertiesConverter<TRequest, TArgument> ListOfSimpleProperties<TArgument>(Expression<Func<TRequest, IEnumerable<TArgument?>?>> selector) {
+        (string path, object? value) = ResolveArgument(selector);
+
+        return new ListOfSimplePropertiesConverter<TRequest, TArgument>(this, path, (IEnumerable<TArgument?>?)value, value is null);
+    }
+
+    /// <summary>
+    ///     Selects a list property whose elements are bound by a nested binder (one per element). Declare the
+    ///     per-element envelope next, with
+    ///     <see cref="ListOfComplexPropertiesEnvelopeStage{TRequest, TArgument}.FailWith" />.
+    /// </summary>
+    /// <typeparam name="TArgument">The element type of the DTO list.</typeparam>
+    /// <param name="selector">A direct property access on the request parameter (e.g. <c>r =&gt; r.Guests</c>).</param>
+    /// <returns>The stage on which the per-element envelope is declared.</returns>
+    public ListOfComplexPropertiesEnvelopeStage<TRequest, TArgument> ListOfComplexProperties<TArgument>(Expression<Func<TRequest, IEnumerable<TArgument?>?>> selector) {
+        (string path, object? value) = ResolveArgument(selector);
+
+        return new ListOfComplexPropertiesEnvelopeStage<TRequest, TArgument>(this, path, (IEnumerable<TArgument?>?)value, value is null);
+    }
+
+    /// <summary>
+    ///     Terminal (total assembler): builds the command with a <c>new</c> — when, and only when, no binding failure
+    ///     was recorded; otherwise returns the failure of the envelope grouping every recorded error. The assembler
+    ///     receives a <see cref="BindingScope" /> and reads each bound value through it; because that scope is created
+    ///     only on this success branch, every read is valid by construction, and the assembler itself cannot fail.
+    /// </summary>
+    /// <remarks>
+    ///     Mirror the shape of the assembler at the call site: <see cref="New{TCommand}" /> takes a <c>new</c> — a total
+    ///     constructor, because all validation already happened field by field. When the command is produced by a
+    ///     validating factory returning <see cref="Outcome{T}" /> — one that may still reject an all-valid combination
+    ///     through a cross-field rule (<c>CheckOut &gt; CheckIn</c>) — call <see cref="Create{TCommand}" /> instead.
+    /// </remarks>
+    /// <typeparam name="TCommand">The type of the bound command or query.</typeparam>
+    /// <param name="assemble">The assembler, reading the bound values from the supplied <see cref="BindingScope" />.</param>
+    /// <returns>The bound command, or the envelope failure.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="assemble" /> is <c>null</c>.</exception>
+    public Outcome<TCommand> New<TCommand>(BindingAssembler<TCommand> assemble) where TCommand : notnull {
+        if (assemble is null) { throw new ArgumentNullException(nameof(assemble)); }
+
+        if (_errors.Count == 0) { return Outcome<TCommand>.Success(assemble(new BindingScope(this))); }
+
+        return Outcome<TCommand>.Failure(BuildFailureEnvelope());
+    }
+
+    /// <summary>
+    ///     Terminal (validating assembler): builds the command through a factory returning <see cref="Outcome{T}" /> —
+    ///     when, and only when, no binding failure was recorded — and <b>flattens</b> the result, so a cross-field rule
+    ///     the factory enforces (<c>CheckOut &gt; CheckIn</c>) surfaces directly instead of nesting a second
+    ///     <see cref="Outcome{T}" />. When a binding failure was recorded, the factory is never called and the envelope
+    ///     grouping every recorded error is returned.
+    /// </summary>
+    /// <remarks>
+    ///     The factory runs only on the zero-error branch — every field is already bound and readable through the
+    ///     supplied <see cref="BindingScope" /> — so a cross-field rule can assume all its inputs are present and valid.
+    ///     Its failure is returned <b>as-is</b>: the factory owns that error, and only field-binding failures are grouped
+    ///     under the envelope declared with <see cref="RequestBinderEnvelopeStage{TRequest}.FailWith" />. For a total
+    ///     constructor that cannot fail, call <see cref="New{TCommand}" />.
+    /// </remarks>
+    /// <typeparam name="TCommand">The type of the bound command or query.</typeparam>
+    /// <param name="assemble">
+    ///     The validating assembler, reading the bound values from the supplied <see cref="BindingScope" /> and returning
+    ///     an <see cref="Outcome{T}" />.
+    /// </param>
+    /// <returns>The bound command, the factory's own failure, or the envelope failure.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="assemble" /> is <c>null</c>.</exception>
+    public Outcome<TCommand> Create<TCommand>(ValidatingAssembler<TCommand> assemble) where TCommand : notnull {
+        if (assemble is null) { throw new ArgumentNullException(nameof(assemble)); }
+
+        if (_errors.Count == 0) { return assemble(new BindingScope(this)); }
+
+        return Outcome<TCommand>.Failure(BuildFailureEnvelope());
+    }
+
+    private PrimaryPortError BuildFailureEnvelope() {
+        PrimaryPortInnerErrors innerErrors = new();
+        foreach (PrimaryPortError error in _errors) {
+            innerErrors.Add(error);
+        }
+
+        // Remember the exact envelope instance produced here, so a parent binder can tell this self-describing
+        // envelope (recorded as-is) from any other failure a nested binding returned (wrapped under the path).
+        BuiltEnvelope = _envelope(innerErrors);
+
+        return BuiltEnvelope;
+    }
+
+    /// <summary>Records a binding failure; it will surface in the envelope built by <see cref="New{TCommand}" /> / <see cref="Create{TCommand}" />.</summary>
+    internal void Record(PrimaryPortError error) {
+        _errors.Add(error);
+    }
+
+    /// <summary>Prepends this binder's argument prefix to a path segment ("CheckIn" -&gt; "Stay.CheckIn").</summary>
+    internal string PathOf(string argumentName) {
+        return _argumentPrefix is null ? argumentName : $"{_argumentPrefix}.{argumentName}";
+    }
+
+    private (string Path, object? Value) ResolveArgument<TArgument>(Expression<Func<TRequest, TArgument>> selector) {
+        PropertyInfo property = PropertySelectors.GetProperty(selector);
+
+        // A non-nullable value-type property can never be null, so a missing argument (deserialized to default(T) —
+        // 0, false, ...) is indistinguishable from a legitimately-sent default: absence would be silently lost. The
+        // information does not exist at runtime, so reject the mis-declaration loudly (the binder's programming-error
+        // channel) — the DTO property must be declared nullable so that an absent argument arrives as null.
+        if (property.PropertyType.IsValueType && Nullable.GetUnderlyingType(property.PropertyType) is null) {
+            throw new ArgumentException(
+                $"The request property '{property.Name}' is a non-nullable value type ({property.PropertyType.Name}); a missing value would be indistinguishable from its default. Declare it as {property.PropertyType.Name}? so the binder can detect an absent argument.",
+                nameof(selector));
+        }
+
+        string path = PathOf(Options.ArgumentNameProvider.GetArgumentNameFrom(property));
+
+        return (path, property.GetValue(_request));
+    }
+
+}
