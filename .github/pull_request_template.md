@@ -47,14 +47,14 @@
 
 * [ ] Public API / error documentation updated
 * [ ] README / `doc/` updated
-* [ ] French translation (`doc/README.fr.md`) updated if user-facing behavior changed
+* [ ] French translation (`doc/handwritten/for-users/README.fr.md`) updated if user-facing behavior changed
 * [ ] No documentation change required
 
 ## Architecture decisions
 
-<!-- Every pull request is checked against the ADR base (maintainers/adr/). Most
+<!-- Every pull request is checked against the ADR base (doc/handwritten/for-maintainers/adr/). Most
      embark no architectural decision — tick the first box. Agents draft ADRs as
-     `Proposed`; the maintainer accepts or supersedes. See maintainers/adr/README.md. -->
+     `Proposed`; the maintainer accepts or supersedes. See doc/handwritten/for-maintainers/adr/README.md. -->
 
 * [ ] No architectural decision in this pull request
 * [ ] New decision recorded — ADR drafted as `Proposed`: ADR-____

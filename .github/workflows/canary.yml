@@ -3,7 +3,7 @@ name: canary
 # Early-warning that the documentation tooling still runs on the NEXT, not-yet-released .NET.
 #
 # The shipped tooling targets net8.0 and reaches every newer runtime purely by roll-forward (the worker uses
-# LatestMajor; see maintainers/adr/0002-floor-the-tooling-runtime.md). A runtime breaking change in a future
+# LatestMajor; see doc/handwritten/for-maintainers/adr/0002-floor-the-tooling-runtime.md). A runtime breaking change in a future
 # major would surface here first — on a schedule, against the current preview — instead of in a user's CI the
 # day that major ships. It is the upper-end counterpart of the `floor` job in ci.yml, which pins the lower end.
 #
