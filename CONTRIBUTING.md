@@ -255,6 +255,7 @@ The scope MAY be provided. When present it MUST be lowercase and MUST be one of:
 |---|---|
 | `core` | `FirstClassErrors` — the runtime library (`Error`, `Outcome`, `ErrorCode`, `ErrorContextKey`, …) |
 | `analyzers` | `FirstClassErrors.Analyzers` — the Roslyn analyzers and their `FCExxx` diagnostics |
+| `binder` | `FirstClassErrors.RequestBinder` — the request binder for the primary-adapter boundary |
 | `cli` | `FirstClassErrors.Cli` — the command-line tool |
 | `gendoc` | `FirstClassErrors.GenDoc` and its worker — the documentation generator |
 | `testing` | `FirstClassErrors.Testing` — the test-support package |

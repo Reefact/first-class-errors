@@ -24,9 +24,9 @@
 set -u
 
 TYPES='feat|fix|build|chore|ci|docs|perf|refactor|revert|style|test'
-SCOPES='core|analyzers|cli|gendoc|testing'
+SCOPES='core|analyzers|binder|cli|gendoc|testing'
 TYPES_HUMAN='feat, fix, build, chore, ci, docs, perf, refactor, revert, style, test'
-SCOPES_HUMAN='core, analyzers, cli, gendoc, testing'
+SCOPES_HUMAN='core, analyzers, binder, cli, gendoc, testing'
 MAX=72
 
 # --- options ------------------------------------------------------------------
