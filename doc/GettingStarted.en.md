@@ -107,7 +107,7 @@ Each diagnostic is a hypothesis: a plausible cause, an origin (whether the suspe
 When the failure is exceptional, turn the error into its paired exception:
 
 ```csharp
-public Amount Add(Amount other) {
+public Amount AddOrThrow(Amount other) {
     if (Currency != other.Currency) {
         throw InvalidAmountOperationError.CurrencyMismatch(this, other).ToException();
     }
@@ -121,7 +121,7 @@ The business code names the situation without repeating codes or messages.
 When failure is an expected part of the flow, carry the same `Error` without throwing:
 
 ```csharp
-public static Outcome<Amount> TryAdd(Amount left, Amount right) {
+public static Outcome<Amount> Add(Amount left, Amount right) {
     if (left.Currency != right.Currency) {
         return Outcome<Amount>.Failure(
             InvalidAmountOperationError.CurrencyMismatch(left, right));

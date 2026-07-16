@@ -48,7 +48,7 @@ Good:
 
 Avoid:
 
-> “Currency validation failed in `Amount.Add` for order 42.”
+> “Currency validation failed in `Amount.AddOrThrow` for order 42.”
 
 The second example exposes implementation detail and an occurrence identifier that does not belong in a reusable public summary.
 

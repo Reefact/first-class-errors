@@ -39,7 +39,7 @@ public sealed class Amount : IEquatable<Amount>, IComparable<Amount> {
     public decimal  Value    { get; }
     public Currency Currency { get; }
 
-    public Amount Add(Amount other) {
+    public Amount AddOrThrow(Amount other) {
         ArgumentNullException.ThrowIfNull(other);
 
         EnsureSameCurrency(other);
@@ -47,7 +47,7 @@ public sealed class Amount : IEquatable<Amount>, IComparable<Amount> {
         return new Amount(Value + other.Value, Currency);
     }
 
-    public Amount Subtract(Amount other) {
+    public Amount SubtractOrThrow(Amount other) {
         ArgumentNullException.ThrowIfNull(other);
 
         EnsureSameCurrency(other);
