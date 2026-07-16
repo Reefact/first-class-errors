@@ -174,6 +174,8 @@ Les **échecs de processus** surviennent autour d’un worker, pas à l’intér
 - le marqueur d’opt-in est ambigu (déclaré deux fois, ou sous `Condition`) ;
 - le worker plante, dépasse son timeout, ou ne produit aucune sortie lisible.
 
+Les échecs de processus sont eux-mêmes des erreurs de première classe : chacun porte un code stable préfixé `GENDOC_` (par exemple `GENDOC_WORKER_FAILED`, `GENDOC_PROCESS_TIMED_OUT`), un contexte structuré et une documentation générée — l’outil documente sa propre surface d’échec avec le pipeline même qu’il implémente. Les lignes de log commencent par le code, et avec `--strict` la `SolutionDocumentationGenerationException` levée expose l’erreur complète via sa propriété `Error`.
+
 | Échec | Par défaut | `--strict` | Code de sortie | Présent dans |
 | --- | --- | --- | --- | --- |
 | `[DocumentedBy]` manquant ou signature invalide | enregistré, poursuite | enregistré, poursuite | `0` | `Failures` du résultat et logs d’erreur |
@@ -194,8 +196,7 @@ error: Documentation extraction issue in 'artifacts/MyApp.Application.dll': MyAp
 Un timeout de worker est un échec de processus ; par défaut, l’exécution l’enregistre et poursuit, et il devient fatal avec `--strict`. Le timeout de worker par défaut est de deux minutes :
 
 ```text
-error: Process 'dotnet' timed out after 00:02:00 and was killed.
-warning: The documentation worker failed (exit code -1) for 'artifacts/MyApp.Application.dll'.
+warning: GENDOC_PROCESS_TIMED_OUT: Process 'documentation worker for artifacts/MyApp.Application.dll' timed out after 00:02:00 and was killed.
 ```
 
 ## Timeouts et crashs

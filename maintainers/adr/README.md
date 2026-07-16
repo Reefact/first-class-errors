@@ -180,10 +180,6 @@ Optional supporting material:
 | [ADR-0004](0004-check-every-pull-request-against-the-adr-base.md) | Check every pull request against the ADR base | Accepted |
 | [ADR-0005](0005-reserve-the-plain-factory-name-for-the-outcome-returning-variant.md) | Reserve the plain factory name for the Outcome-returning variant | Accepted |
 | [ADR-0006](0006-supply-arbitrary-test-values-from-a-seedable-source.md) | Supply arbitrary test values from a single seedable source | Accepted |
-<<<<<<< 5b74f5107bb98b4367571c992a8113470c3efcb7
 | [ADR-0007](0007-name-the-binder-terminals-new-and-create.md) | Name the binder terminals New and Create | Accepted |
 | [ADR-0008](0008-bind-nullable-value-type-properties-through-a-struct-constrained-overload.md) | Bind nullable value-type properties through a struct-constrained overload | Proposed |
-=======
-| [ADR-0007](0007-name-the-binder-terminals-new-and-create.md) | Name the binder terminals New and Create | Proposed |
-| [ADR-0008](0008-report-the-toolings-failures-as-first-class-errors.md) | Report the tooling's failures as first-class errors | Proposed |
->>>>>>> bd8ca03f1a73e2428b84ca18580afe375416dfb3
+| [ADR-0009](0009-report-the-toolings-failures-as-first-class-errors.md) | Report the tooling's failures as first-class errors | Proposed |
