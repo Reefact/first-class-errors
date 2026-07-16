@@ -96,6 +96,29 @@ public sealed class RequestBinder<TRequest> {
     }
 
     /// <summary>
+    ///     Selects a scalar <b>value-type</b> property declared nullable (e.g. <c>int?</c>), converted by a value-object
+    ///     converter over the <b>underlying, non-nullable type</b> (<c>Func&lt;int, Outcome&lt;T&gt;&gt;</c>).
+    /// </summary>
+    /// <remarks>
+    ///     A nullable value-type property surfaces its underlying type here, not its <see cref="Nullable{T}" />: a
+    ///     converter written against the underlying type — a value-object factory such as <c>PositiveInt.From</c> — binds
+    ///     as a method group, exactly as a reference-type converter does on the reference overload. A missing value (a
+    ///     <c>null</c> property) is still distinguished from a legitimate default and is handled by the <c>AsRequired</c>
+    ///     / <c>AsOptional</c> variant chosen next. This overload exists because a value type and a reference type cannot
+    ///     share one selector method (the two would differ only by a <c>class</c> / <c>struct</c> constraint, which C#
+    ///     does not treat as an overload); the two selectors carry genuinely different parameter types
+    ///     (<c>TArgument</c> versus <c>Nullable&lt;TArgument&gt;</c>), so they coexist.
+    /// </remarks>
+    /// <typeparam name="TArgument">The underlying (non-nullable) value type of the DTO property.</typeparam>
+    /// <param name="selector">A direct property access on a nullable value-type property (e.g. <c>r =&gt; r.MaxNights</c>).</param>
+    /// <returns>The converter stage offering <c>AsRequired</c> / <c>AsOptional</c> and their variants.</returns>
+    public SimplePropertyConverter<TRequest, TArgument> SimpleProperty<TArgument>(Expression<Func<TRequest, TArgument?>> selector) where TArgument : struct {
+        (string path, object? value) = ResolveArgument(selector);
+
+        return new SimplePropertyConverter<TRequest, TArgument>(this, path, value is null ? default : (TArgument)value, value is null);
+    }
+
+    /// <summary>
     ///     Selects a complex property, bound by a nested binder. Declare the nested envelope next, with
     ///     <see cref="ComplexPropertyEnvelopeStage{TRequest, TArgument}.FailWith" />.
     /// </summary>
@@ -118,6 +141,26 @@ public sealed class RequestBinder<TRequest> {
         (string path, object? value) = ResolveArgument(selector);
 
         return new ListOfSimplePropertiesConverter<TRequest, TArgument>(this, path, (IEnumerable<TArgument?>?)value, value is null);
+    }
+
+    /// <summary>
+    ///     Selects a list property whose elements are a nullable <b>value type</b> (e.g. <c>int?</c>), each converted by
+    ///     a value-object converter over the <b>underlying, non-nullable type</b> (<c>Func&lt;int, Outcome&lt;T&gt;&gt;</c>).
+    /// </summary>
+    /// <remarks>
+    ///     The value-type counterpart of the reference/string list overload: each element surfaces its underlying type,
+    ///     so a converter written against it binds as a method group, while a <c>null</c> element is still recorded as a
+    ///     missing argument under its indexed path. It exists for the same reason as the value-type
+    ///     <c>SimpleProperty</c> overload — an <c>IEnumerable&lt;TArgument&gt;</c> selector and an
+    ///     <c>IEnumerable&lt;Nullable&lt;TArgument&gt;&gt;</c> selector are distinct parameter types, so the two coexist.
+    /// </remarks>
+    /// <typeparam name="TArgument">The underlying (non-nullable) value type of the DTO list elements.</typeparam>
+    /// <param name="selector">A direct property access on a list of nullable value types (e.g. <c>r =&gt; r.Quantities</c>).</param>
+    /// <returns>The converter stage offering <c>AsRequired</c> / <c>AsOptional</c>.</returns>
+    public ListOfSimpleValuePropertiesConverter<TRequest, TArgument> ListOfSimpleProperties<TArgument>(Expression<Func<TRequest, IEnumerable<TArgument?>?>> selector) where TArgument : struct {
+        (string path, object? value) = ResolveArgument(selector);
+
+        return new ListOfSimpleValuePropertiesConverter<TRequest, TArgument>(this, path, (IEnumerable<TArgument?>?)value, value is null);
     }
 
     /// <summary>
