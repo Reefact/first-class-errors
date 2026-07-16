@@ -148,6 +148,28 @@ OptionalValueField<int> maxNights = bind.SimpleProperty(r => r.MaxNights).AsOpti
 // object, records nothing). It is shown on the guest's optional email under "Lists", below.
 ```
 
+**A value-type property binds over its *underlying* type.** When the DTO property
+is itself a value type — an `int?`, `bool?`, or `decimal?` that a JSON number or
+boolean deserializes into — the converter you pass runs over the **non-nullable
+underlying** type: the binder unwraps the `Nullable` for you. A value-object
+factory such as `Quantity.From(int)` therefore binds as a method group, exactly as
+`EmailAddress.Parse(string)` does for a reference-type property:
+
+```csharp
+// DTO: public sealed record CartRequest(int? Quantity, IReadOnlyList<int?>? Lines);
+
+// Quantity.From is `int -> Outcome<Quantity>`; the binder feeds it the unwrapped int.
+RequiredField<Quantity>                qty   = bind.SimpleProperty(r => r.Quantity).AsRequired(Quantity.From);
+
+// A list of value types works the same way: each element is converted over its underlying
+// int, and a null element records REQUEST_ARGUMENT_REQUIRED under its indexed path (Lines[2]).
+RequiredField<IReadOnlyList<Quantity>> lines = bind.ListOfSimpleProperties(r => r.Lines).AsRequired(Quantity.From);
+```
+
+The property must still be declared nullable (`int?`, not `int`) so the binder can
+tell an absent argument from a real value; a non-nullable value-type property
+throws instead, as *The bug channel* explains below.
+
 **Optional means "may be absent", never "may be malformed".** A present argument
 that fails to convert is always an error — even on an optional binding. Only a
 *missing* optional argument is silent (falling back, yielding `null`, or an empty

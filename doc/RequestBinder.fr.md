@@ -151,6 +151,29 @@ OptionalValueField<int> maxNights = bind.SimpleProperty(r => r.MaxNights).AsOpti
 // valeur null, n'enregistre rien). Il est montré sur l'email optionnel de l'invité dans « Listes », plus bas.
 ```
 
+**Une propriété de type valeur se lie sur son type *sous-jacent*.** Lorsque la
+propriété du DTO est elle-même un type valeur — un `int?`, `bool?` ou `decimal?`
+dans lequel un nombre ou un booléen JSON est désérialisé — le convertisseur que
+vous passez opère sur le type **sous-jacent non-nullable** : le binder déballe le
+`Nullable` pour vous. Une fabrique d'objet valeur comme `Quantity.From(int)` se lie
+donc comme un groupe de méthodes, exactement comme `EmailAddress.Parse(string)`
+pour une propriété de type référence :
+
+```csharp
+// DTO : public sealed record CartRequest(int? Quantity, IReadOnlyList<int?>? Lines);
+
+// Quantity.From est `int -> Outcome<Quantity>` ; le binder lui passe l'int déballé.
+RequiredField<Quantity>                qty   = bind.SimpleProperty(r => r.Quantity).AsRequired(Quantity.From);
+
+// Une liste de types valeur fonctionne de même : chaque élément est converti sur son int
+// sous-jacent, et un élément null enregistre REQUEST_ARGUMENT_REQUIRED sous son chemin indexé (Lines[2]).
+RequiredField<IReadOnlyList<Quantity>> lines = bind.ListOfSimpleProperties(r => r.Lines).AsRequired(Quantity.From);
+```
+
+La propriété doit toujours être déclarée nullable (`int?`, pas `int`) pour que le
+binder distingue un argument absent d'une vraie valeur ; une propriété de type
+valeur non-nullable lève à la place, comme l'explique *Le canal des bugs* plus bas.
+
 **Optionnel signifie « peut être absent », jamais « peut être malformé ».** Un
 argument présent qui échoue à se convertir est toujours une erreur — même sur une
 liaison optionnelle. Seul un argument optionnel *manquant* est silencieux (repli,
