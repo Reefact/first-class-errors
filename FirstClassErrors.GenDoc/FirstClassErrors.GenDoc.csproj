@@ -10,8 +10,22 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- Opt-in marker for the FirstClassErrors error-documentation generator, NOT a build switch.
+         GenDoc documents its own GENDOC_-prefixed errors with the very pipeline it implements (see
+         DocumentationRequestError / DocumentationToolchainError): the tool reads this property straight
+         from the project XML (SolutionErrorDocumentationGenerator.ReadMsBuildProperty via XDocument.Load)
+         to decide which projects to document; see SolutionGenerationOptions.OptInPropertyName. -->
+    <GenerateErrorDocumentation>true</GenerateErrorDocumentation>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
+    <!-- Dogfood the analyzers on GenDoc's own error factories: OutputItemType=Analyzer runs them at
+         build/IDE time, ReferenceOutputAssembly=false keeps the analyzer off the runtime graph. -->
+    <ProjectReference Include="..\FirstClassErrors.Analyzers\FirstClassErrors.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
