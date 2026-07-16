@@ -55,4 +55,19 @@ public static class InstanceIds {
         return Use(() => new Guid(++counter, 0, 0, new byte[8]));
     }
 
+    /// <summary>
+    ///     Assigns an <b>arbitrary</b> identifier to each error created within the scope. Use this when a test needs
+    ///     stable-yet-distinct ids but does not assert on their exact values: it reads as "the ids are irrelevant here".
+    /// </summary>
+    /// <remarks>
+    ///     Each error created within the scope gets its own fresh arbitrary id (as in production, several errors do not
+    ///     collide), drawn from <see cref="Any" />'s source rather than <see cref="System.Guid.NewGuid" />. Run the test
+    ///     inside <c>Any.Reproducibly(...)</c> to make the sequence reproducible and reported on failure. To pin a single
+    ///     fixed id instead, use <see cref="UseFixed" />.
+    /// </remarks>
+    /// <returns>A scope that restores the default (random) identifier when disposed.</returns>
+    public static IDisposable UseAny() {
+        return Use(() => ArbitrarySource.Guid());
+    }
+
 }

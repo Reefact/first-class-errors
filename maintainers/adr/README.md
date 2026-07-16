@@ -174,3 +174,4 @@ Optional supporting material:
 | [ADR-0003](0003-unify-outcome-value-mapping-under-then.md) | Unify Outcome value mapping under Then | Accepted |
 | [ADR-0004](0004-check-every-pull-request-against-the-adr-base.md) | Check every pull request against the ADR base | Accepted |
 | [ADR-0005](0005-reserve-the-plain-factory-name-for-the-outcome-returning-variant.md) | Reserve the plain factory name for the Outcome-returning variant | Proposed |
+| [ADR-0006](0006-supply-arbitrary-test-values-from-a-seedable-source.md) | Supply arbitrary test values from a single seedable source | Proposed |

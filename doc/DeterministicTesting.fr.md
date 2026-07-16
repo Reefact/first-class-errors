@@ -158,6 +158,10 @@ public void Une_erreur_de_commande_absente_est_totalement_deterministe() {
 }
 ```
 
+## Données d’occurrence arbitraires
+
+Lorsqu’un test a besoin que `OccurredAt` et `InstanceId` soient stables sans asserter leurs valeurs exactes, figez-les sur une valeur *arbitraire* avec `Clock.UseAny()` et `InstanceIds.UseAny()` plutôt que `UseFixed` ; les deux acceptent une graine optionnelle pour la reproductibilité. Ils appartiennent à la factory `Any`, plus large, dédiée aux valeurs qu’un test n’assertit pas — voir [Valeurs de test arbitraires](ArbitraryTestValues.fr.md).
+
 ## Portée et tests parallèles
 
 Un override prend effet à l’ouverture de son `using` et est défait à sa libération. En dehors de ce bloc, l’horloge et les identifiants retrouvent leur comportement réel.
@@ -199,7 +203,7 @@ Avant d’approuver un test déterministe, vérifiez que :
 ---
 
 <div align="center">
-<a href="Testing.fr.md">← Tester les outcomes et les erreurs</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="OperationalIntegration.fr.md">Générer et publier le catalogue →</a>
+<a href="Testing.fr.md">← Tester les outcomes et les erreurs</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="ArbitraryTestValues.fr.md">Valeurs de test arbitraires →</a>
 </div>
 
 ---

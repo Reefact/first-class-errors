@@ -158,6 +158,10 @@ public void A_missing_order_error_is_fully_deterministic() {
 }
 ```
 
+## Arbitrary occurrence data
+
+When a test needs `OccurredAt` and `InstanceId` to be stable but does not assert their exact values, freeze them to an *arbitrary* value with `Clock.UseAny()` and `InstanceIds.UseAny()` rather than `UseFixed`; both take an optional seed for reproducibility. They belong to the broader `Any` factory for values a test does not assert on — see [Arbitrary Test Values](ArbitraryTestValues.en.md).
+
 ## Scope and parallel tests
 
 An override takes effect when its `using` opens and is undone when the `using` is disposed. Outside that block, the clock and instance ids are back to their real behavior.
@@ -199,7 +203,7 @@ Before approving a deterministic error test, verify that:
 ---
 
 <div align="center">
-<a href="Testing.en.md">← Testing Outcomes and Errors</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="OperationalIntegration.en.md">Generating and Publishing the Catalog →</a>
+<a href="Testing.en.md">← Testing Outcomes and Errors</a> · <a href="../README.md#-next-steps">↑ Table of contents</a> · <a href="ArbitraryTestValues.en.md">Arbitrary Test Values →</a>
 </div>
 
 ---
