@@ -1,0 +1,2 @@
+# Placeholder so the CI/CD output directory is tracked before the first
+# generation run. GenDoc writes the rendered error catalog here.
