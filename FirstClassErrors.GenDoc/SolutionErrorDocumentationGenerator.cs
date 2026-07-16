@@ -33,7 +33,7 @@ public static class SolutionErrorDocumentationGenerator {
         options.Logger.Info($"Starting documentation generation for solution '{solutionPath}'");
 
         string fullSolutionPath = Path.GetFullPath(solutionPath);
-        if (!File.Exists(fullSolutionPath)) { throw new FileNotFoundException($"Solution file not found: '{fullSolutionPath}'", fullSolutionPath); }
+        if (!File.Exists(fullSolutionPath)) { throw new SolutionDocumentationGenerationException(DocumentationRequestError.SolutionNotFound(fullSolutionPath)); }
 
         // Accept both the classic (.sln) and the XML (.slnx) solution formats: "dotnet sln list", used below to
         // enumerate the projects, handles the two uniformly. Solution filters (.slnf) are intentionally excluded —
@@ -41,7 +41,7 @@ public static class SolutionErrorDocumentationGenerator {
         string extension = Path.GetExtension(fullSolutionPath);
         bool isSolution = string.Equals(extension, ".sln", StringComparison.OrdinalIgnoreCase)
                        || string.Equals(extension, ".slnx", StringComparison.OrdinalIgnoreCase);
-        if (!isSolution) { throw new ArgumentException($"Expected a .sln or .slnx file path, got: '{fullSolutionPath}'", nameof(solutionPath)); }
+        if (!isSolution) { throw new SolutionDocumentationGenerationException(DocumentationRequestError.SolutionPathUnsupported(fullSolutionPath)); }
 
         if (options.BuildSolution) {
             DotNetBuild(fullSolutionPath, options);
@@ -61,14 +61,17 @@ public static class SolutionErrorDocumentationGenerator {
                 if (string.IsNullOrWhiteSpace(targetPath)) { continue; }
 
                 if (!File.Exists(targetPath)) {
-                    HandleFailure(options, $"Target assembly not found for project '{projectPath}'. Resolved TargetPath='{targetPath}'.");
+                    HandleFailure(options, DocumentationRequestError.TargetAssemblyNotFound(projectPath, targetPath!));
 
                     continue;
                 }
 
                 assemblyPaths.Add(targetPath);
-            } catch (Exception ex) {
-                HandleFailure(options, $"Failed to resolve target path for project '{projectPath}'.", ex);
+            } catch (Exception ex) when (ex is not SolutionDocumentationGenerationException and not OperationCanceledException) {
+                // A cancellation must abandon the whole generation, and an already-coded failure (e.g. the SDK-query
+                // timeout raised below) must keep its own code — both propagate rather than being rewired into a
+                // per-project resolution failure (and swallowed under FailureBehavior.Continue).
+                HandleFailure(options, DocumentationToolchainError.TargetPathResolutionFailed(projectPath), ex);
             }
         }
 
@@ -95,7 +98,7 @@ public static class SolutionErrorDocumentationGenerator {
         foreach (string assemblyPath in assemblyPaths) {
             string fullPath = Path.GetFullPath(assemblyPath);
             if (!File.Exists(fullPath)) {
-                HandleFailure(options, $"Assembly not found: '{fullPath}'.");
+                HandleFailure(options, DocumentationRequestError.AssemblyNotFound(fullPath));
 
                 continue;
             }
@@ -120,7 +123,9 @@ public static class SolutionErrorDocumentationGenerator {
         ProcessResult result = RunProcess(DotNetCli, ["sln", solutionPath, "list"], solutionDirectory, options.Logger, options.SdkQueryTimeout, options.CancellationToken);
         if (result.ExitCode != 0) {
             throw new SolutionDocumentationGenerationException(
-                $"Failed to list the projects of solution '{solutionPath}' (exit code {result.ExitCode}).\n{result.StandardError}");
+                result.TimedOut
+                    ? DocumentationToolchainError.ProcessTimedOut($"dotnet sln {solutionPath} list", solutionPath, options.SdkQueryTimeout, result.StandardError)
+                    : DocumentationToolchainError.ProjectEnumerationFailed(solutionPath, result.ExitCode, result.StandardError));
         }
 
         List<string> projects = new();
@@ -171,11 +176,7 @@ public static class SolutionErrorDocumentationGenerator {
         // silently picking one occurrence keeps a library about first-class errors honest about its own opt-in: the
         // project is left out with a trace instead of being documented on a coin toss.
         if (optIn.IsAmbiguous) {
-            HandleFailure(
-                options,
-                $"Cannot determine the opt-in for project '{projectPath}': the '{options.OptInPropertyName}' property is " +
-                $"{optIn.AmbiguityReason} in the project XML, which GenDoc reads without MSBuild evaluation. Declare it once, " +
-                "literally and unconditionally in the .csproj, or document the assembly explicitly with --assemblies. The project is skipped.");
+            HandleFailure(options, DocumentationRequestError.OptInAmbiguous(projectPath, options.OptInPropertyName, optIn.AmbiguityReason!));
 
             return false;
         }
@@ -311,7 +312,9 @@ public static class SolutionErrorDocumentationGenerator {
 
         if (result.ExitCode != 0) {
             throw new SolutionDocumentationGenerationException(
-                $"dotnet build failed (exit code {result.ExitCode}).\n{result.StandardOutput}\n{result.StandardError}");
+                result.TimedOut
+                    ? DocumentationToolchainError.ProcessTimedOut($"dotnet build {solutionPath}", solutionPath, options.BuildTimeout, $"{result.StandardOutput}\n{result.StandardError}")
+                    : DocumentationToolchainError.SolutionBuildFailed(solutionPath, result.ExitCode, $"{result.StandardOutput}\n{result.StandardError}"));
         }
     }
 
@@ -326,6 +329,15 @@ public static class SolutionErrorDocumentationGenerator {
         args.Add("-nologo");
 
         ProcessResult result = RunProcess(DotNetCli, args, Path.GetDirectoryName(projectPath)!, options.Logger, options.SdkQueryTimeout, options.CancellationToken);
+
+        if (result.TimedOut) {
+            // Unlike an ordinary query failure (below), a timeout must not degrade into a silent project skip: it is
+            // an environment problem, not a property the project lacks, so it goes through the failure policy like
+            // every other toolchain timeout.
+            HandleFailure(options, DocumentationToolchainError.ProcessTimedOut($"dotnet msbuild {projectPath} -getProperty:{propertyName}", projectPath, options.SdkQueryTimeout, result.StandardError));
+
+            return null;
+        }
 
         if (result.ExitCode != 0) {
             return null;
@@ -406,7 +418,7 @@ public static class SolutionErrorDocumentationGenerator {
         };
 
         bool started = process.Start();
-        if (!started) { throw new SolutionDocumentationGenerationException($"Failed to start process '{fileName}'."); }
+        if (!started) { throw new SolutionDocumentationGenerationException(DocumentationToolchainError.ProcessStartFailed(fileName)); }
 
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
@@ -434,9 +446,12 @@ public static class SolutionErrorDocumentationGenerator {
 
             // A cancellation that raced the timeout is reported as cancellation, not as a spurious timeout.
             cancellationToken.ThrowIfCancellationRequested();
-            logger.Error($"Process '{fileName}' timed out after {limit} and was killed.");
 
-            return new ProcessResult(-1, stdout.ToString(), stderr.ToString());
+            // TimedOut lets the caller raise the dedicated (transient) timeout error instead of reading the synthetic
+            // -1 exit code as an ordinary process failure. Reporting is owned by the callers — every one of them
+            // raises GENDOC_PROCESS_TIMED_OUT from this flag — so no error is logged here, which would double-report
+            // the same kill on the same stream.
+            return new ProcessResult(-1, stdout.ToString(), stderr.ToString(), TimedOut: true);
         }
 
         // A final no-argument wait blocks until the async stdout/stderr handlers have flushed.
@@ -448,19 +463,20 @@ public static class SolutionErrorDocumentationGenerator {
         return new ProcessResult(process.ExitCode, stdout.ToString(), stderr.ToString());
     }
 
-    private static void HandleFailure(SolutionGenerationOptions options, string message, Exception? ex = null) {
+    private static void HandleFailure(SolutionGenerationOptions options, Error error, Exception? ex = null) {
         if (options.FailureBehavior == FailureBehavior.Continue) {
             // In Continue mode the failure is swallowed so the generation proceeds with the remaining assemblies, but it
             // must never be silent: log it as a warning (with the exception detail when present) so the skipped assembly
-            // leaves a trace the caller can diagnose.
+            // leaves a trace the caller can diagnose. The stable error code leads the line so logs stay grep-able.
+            string message = $"{error.Code}: {error.DiagnosticMessage}";
             options.Logger.Warning(ex is not null ? $"{message} {ex}" : message);
 
             return;
         }
 
-        if (ex is not null) { throw new SolutionDocumentationGenerationException(message, ex); }
+        if (ex is not null) { throw new SolutionDocumentationGenerationException(error, ex); }
 
-        throw new SolutionDocumentationGenerationException(message);
+        throw new SolutionDocumentationGenerationException(error);
     }
 
     private static bool IsTrue(string? value) {
@@ -530,7 +546,7 @@ public static class SolutionErrorDocumentationGenerator {
     private static string ResolveWorkerAssemblyPath(SolutionGenerationOptions options) {
         if (!string.IsNullOrWhiteSpace(options.WorkerAssemblyPath)) {
             if (!File.Exists(options.WorkerAssemblyPath)) {
-                throw new SolutionDocumentationGenerationException($"The configured documentation worker was not found at '{options.WorkerAssemblyPath}'.");
+                throw new SolutionDocumentationGenerationException(DocumentationRequestError.WorkerPathInvalid(options.WorkerAssemblyPath!));
             }
 
             return options.WorkerAssemblyPath!;
@@ -540,9 +556,7 @@ public static class SolutionErrorDocumentationGenerator {
         string candidate = Path.Combine(AppContext.BaseDirectory, "FirstClassErrors.GenDoc.Worker.dll");
         if (File.Exists(candidate)) { return candidate; }
 
-        throw new SolutionDocumentationGenerationException(
-            "The documentation worker 'FirstClassErrors.GenDoc.Worker.dll' could not be located. Set " +
-            $"{nameof(SolutionGenerationOptions)}.{nameof(SolutionGenerationOptions.WorkerAssemblyPath)}, or ensure the worker is deployed next to the tool.");
+        throw new SolutionDocumentationGenerationException(DocumentationToolchainError.WorkerNotDeployed(AppContext.BaseDirectory));
     }
 
     private static ErrorDocumentationExtractionResult RunWorker(string workerAssemblyPath, string targetAssemblyPath, SolutionGenerationOptions options) {
@@ -552,7 +566,7 @@ public static class SolutionErrorDocumentationGenerator {
         try {
             string depsFile = Path.ChangeExtension(targetAssemblyPath, ".deps.json");
 
-            // Run the worker on its own runtimeconfig (RollForward=Major) but against the TARGET's dependency graph, so
+            // Run the worker on its own runtimeconfig (RollForward=LatestMajor) but against the TARGET's dependency graph, so
             // the target and its own FirstClassErrors resolve from the target's deps.json. The worker's own directory is
             // added as a fallback probing path (consulted only for assemblies the target's deps.json does not provide).
             List<string> args = ["exec"];
@@ -577,13 +591,15 @@ public static class SolutionErrorDocumentationGenerator {
             ProcessResult result = RunProcess(DotNetCli, args, workerDirectory, options.Logger, options.WorkerTimeout, options.CancellationToken);
 
             if (result.ExitCode != 0) {
-                HandleFailure(options, $"The documentation worker failed (exit code {result.ExitCode}) for '{targetAssemblyPath}'.\n{result.StandardError}");
+                HandleFailure(options, result.TimedOut
+                                  ? DocumentationToolchainError.ProcessTimedOut($"documentation worker for {targetAssemblyPath}", targetAssemblyPath, options.WorkerTimeout, result.StandardError)
+                                  : DocumentationToolchainError.WorkerFailed(targetAssemblyPath, result.ExitCode, result.StandardError));
 
                 return new ErrorDocumentationExtractionResult([], []);
             }
 
             if (!File.Exists(outputPath)) {
-                HandleFailure(options, $"The documentation worker produced no output for '{targetAssemblyPath}'.");
+                HandleFailure(options, DocumentationToolchainError.WorkerOutputMissing(targetAssemblyPath));
 
                 return new ErrorDocumentationExtractionResult([], []);
             }
@@ -592,7 +608,7 @@ public static class SolutionErrorDocumentationGenerator {
             ErrorDocumentationExtractionResult? extraction = JsonSerializer.Deserialize<ErrorDocumentationExtractionResult>(json);
 
             if (extraction is null) {
-                HandleFailure(options, $"The documentation worker produced unreadable output for '{targetAssemblyPath}'.");
+                HandleFailure(options, DocumentationToolchainError.WorkerOutputUnreadable(targetAssemblyPath));
 
                 return new ErrorDocumentationExtractionResult([], []);
             }
@@ -601,7 +617,7 @@ public static class SolutionErrorDocumentationGenerator {
         } catch (Exception ex) when (ex is not SolutionDocumentationGenerationException and not OperationCanceledException) {
             // A cancellation must abandon the whole generation, so it is allowed to propagate rather than being recorded
             // as a per-assembly failure and swallowed under FailureBehavior.Continue.
-            HandleFailure(options, $"Failed to run the documentation worker for '{targetAssemblyPath}'.", ex);
+            HandleFailure(options, DocumentationToolchainError.WorkerRunFailed(targetAssemblyPath), ex);
 
             return new ErrorDocumentationExtractionResult([], []);
         } finally {
@@ -617,7 +633,7 @@ public static class SolutionErrorDocumentationGenerator {
 
     #region Nested types declarations
 
-    private sealed record ProcessResult(int ExitCode, string StandardOutput, string StandardError);
+    private sealed record ProcessResult(int ExitCode, string StandardOutput, string StandardError, bool TimedOut = false);
 
     private enum MsBuildPropertyReadKind {
 

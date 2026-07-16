@@ -29,22 +29,30 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
              .Throws<ArgumentNullException>();
     }
 
-    [Fact(DisplayName = "GetErrorDocumentationFrom fails when the solution file does not exist.")]
+    [Fact(DisplayName = "GetErrorDocumentationFrom fails with a coded error when the solution file does not exist.")]
     public void GetErrorDocumentationFromFailsWhenTheSolutionDoesNotExist() {
-        // Exercise & verify
-        Check.ThatCode(() => SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom("this-solution-does-not-exist.sln", new SolutionGenerationOptions()))
-             .Throws<FileNotFoundException>();
+        // Exercise
+        Exception? caught = Record.Exception(
+            () => SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom("this-solution-does-not-exist.sln", new SolutionGenerationOptions()));
+
+        // Verify: the failure is a first-class error with the stable code, not a bare framework exception.
+        Check.That(caught).IsInstanceOf<SolutionDocumentationGenerationException>();
+        Check.That(((SolutionDocumentationGenerationException)caught!).Error.Code.ToString()).IsEqualTo("GENDOC_SOLUTION_NOT_FOUND");
     }
 
-    [Fact(DisplayName = "GetErrorDocumentationFrom rejects a path that is not a .sln file.")]
+    [Fact(DisplayName = "GetErrorDocumentationFrom rejects a path that is not a .sln file with a coded error.")]
     public void GetErrorDocumentationFromRejectsANonSolutionFile() {
         // Setup: a real file whose extension is not .sln.
         string path = Path.GetTempFileName();
 
         try {
-            // Exercise & verify
-            Check.ThatCode(() => SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(path, new SolutionGenerationOptions()))
-                 .Throws<ArgumentException>();
+            // Exercise
+            Exception? caught = Record.Exception(
+                () => SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(path, new SolutionGenerationOptions()));
+
+            // Verify
+            Check.That(caught).IsInstanceOf<SolutionDocumentationGenerationException>();
+            Check.That(((SolutionDocumentationGenerationException)caught!).Error.Code.ToString()).IsEqualTo("GENDOC_SOLUTION_PATH_UNSUPPORTED");
         } finally {
             File.Delete(path);
         }
@@ -56,8 +64,8 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
     public void GetErrorDocumentationFromAcceptsSolutionFormats(string extension) {
         // Setup: a real file carrying a solution extension. It is not a valid solution, so the enumeration further
         // down the pipeline will ultimately fail — but only *after* the extension validation, which is what this test
-        // guards. The rejected-extension path is the one that throws ArgumentException (see the sibling test); proving
-        // the format is accepted therefore means the call throws anything *but* an ArgumentException.
+        // guards. The rejected-extension path raises GENDOC_SOLUTION_PATH_UNSUPPORTED (see the sibling test); proving
+        // the format is accepted therefore means the failure, if any, carries any code but that one.
         // Compose the path instead of deriving it from GetTempFileName(): the latter CREATES a .tmp file on disk that
         // a mere extension rewrite would orphan on every run.
         string path = Path.Combine(Path.GetTempPath(), $"fce-gendoc-test-{Guid.NewGuid():N}{extension}");
@@ -68,8 +76,10 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
             Exception? caught = Record.Exception(
                 () => SolutionErrorDocumentationGenerator.GetErrorDocumentationFrom(path, new SolutionGenerationOptions { BuildSolution = false }).ToList());
 
-            // Verify: the extension was accepted, so no ArgumentException was raised for it.
-            Check.That(caught).IsNotInstanceOf<ArgumentException>();
+            // Verify: the extension was accepted, so any failure comes from further down the pipeline.
+            if (caught is SolutionDocumentationGenerationException exception) {
+                Check.That(exception.Error.Code.ToString()).IsNotEqualTo("GENDOC_SOLUTION_PATH_UNSUPPORTED");
+            }
         } finally {
             File.Delete(path);
         }
