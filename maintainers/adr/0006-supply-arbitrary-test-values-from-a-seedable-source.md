@@ -44,8 +44,9 @@ one, a failing run cannot be replayed.
 
 `FirstClassErrors.Testing` supplies arbitrary test values through a single,
 dependency-free, context-local pseudo-random source whose determinism is opt-in
-via a seed scope, and the clock and instance-id seams gain `UseAny` variants
-layered on that same source.
+through a `Reproducibly` runner that seeds a run, reports the seed on failure, and
+replays it on demand; the clock and instance-id seams gain unseeded `UseAny`
+variants that draw from that same source.
 
 ## Rationale
 
@@ -59,10 +60,12 @@ layered on that same source.
   seams already keep. The new surface is the same shape as the surface it sits
   next to, rather than a second, unrelated mechanism.
 * **Arbitrary by default, reproducible on demand.** An unseeded default makes
-  values differ between runs, which is what exposes overfitting; an opt-in seed
-  scope makes a chosen test or run replayable. This directly serves the
-  legibility and overfitting facts, and the reproducibility requirement, without
-  forcing every test to manage a seed.
+  values differ between runs, which is what exposes overfitting; wrapping a
+  value-sensitive test in `Reproducibly` pins a seed, reports it when the body
+  fails, and replays it when given one — so a failing run is recoverable without
+  forcing every test to manage a seed. Because the seed lives on the run that
+  owns execution, the standalone clock and instance-id `UseAny` scopes need no
+  seeded overload of their own: run inside `Reproducibly`, they inherit the seed.
 * **The name carries the intent.** Reaching for an explicitly *arbitrary* value
   reads as "this input is incidental", which is the distinction a hand-picked
   literal cannot make. The `UseAny` variants extend the existing `UseFixed` /
@@ -128,9 +131,10 @@ ship test-only surface in the main package.
   coincidentally start from the same seed, their "arbitrary" values coincide.
   This is harmless (the values are not asserted on) and is mitigated by deriving
   the default seed from a fresh identifier per context.
-* Reproducing a failure still depends on the author having set a seed; an
-  unseeded failing test is not replayable from its output alone. Surfacing the
-  auto-chosen seed for replay is a possible later refinement.
+* Reproducing a failure requires the author to have wrapped the test in
+  `Reproducibly`, and holds only while the body's sequence of `Any` calls is
+  deterministic; an ordinary unwrapped test that fails on an arbitrary value is
+  still not replayable from its output alone.
 * Until enforced by tooling, the "arbitrary value ⇒ use the source, not a
   literal" habit holds only through review and documentation.
 
@@ -139,7 +143,9 @@ ship test-only surface in the main package.
 * Document the surface in the testing guide, in English and French, in lockstep.
 * Consider a design for arbitrary `ErrorContextKey` values that respects the
   process-wide registry.
-* Consider surfacing the auto-chosen seed so an unseeded failure can be replayed.
+* Consider an optional test-framework adapter (for example an xUnit
+  `[ReproducibleFact]`) so the seed is surfaced automatically, without wrapping
+  each body in `Reproducibly`.
 * Consider an instance-based generator if callers ask for an explicit object.
 * Consider extracting the generic value engine into a standalone, error-agnostic
   utility if a second consumer appears; it is kept internally separable from the

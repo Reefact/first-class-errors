@@ -31,20 +31,24 @@ public sealed class ClockUseAnyTests {
         }
     }
 
-    [Fact(DisplayName = "Clock.UseAny(seed) picks the same instant for a given seed.")]
-    public void UseAnyWithSeedIsReproducible() {
-        DateTimeOffset first;
-        DateTimeOffset second;
+    [Fact(DisplayName = "Inside Any.Reproducibly, Clock.UseAny picks the same instant for a given seed.")]
+    public void UseAnyIsReproducibleUnderAReproduciblyScope() {
+        DateTimeOffset first  = default;
+        DateTimeOffset second = default;
 
-        using (Clock.UseAny(42)) { first = AnError().OccurredAt; }
-        using (Clock.UseAny(42)) { second = AnError().OccurredAt; }
+        Any.Reproducibly(42, () => {
+            using (Clock.UseAny()) { first = AnError().OccurredAt; }
+        });
+        Any.Reproducibly(42, () => {
+            using (Clock.UseAny()) { second = AnError().OccurredAt; }
+        });
 
         Check.That(second).IsEqualTo(first);
     }
 
     [Fact(DisplayName = "Clock.UseAny only affects code inside the scope; the real clock resumes after disposal.")]
     public void UseAnyIsScoped() {
-        using (Clock.UseAny(1)) { AnError(); }
+        using (Clock.UseAny()) { AnError(); }
 
         DateTimeOffset before = DateTimeOffset.UtcNow;
         DateTimeOffset live   = AnError().OccurredAt;

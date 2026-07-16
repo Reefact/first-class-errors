@@ -56,22 +56,12 @@ public static class Clock {
     /// <remarks>
     ///     The instant is drawn once, when this method is called, and stays fixed for every error created within the
     ///     scope — the same freezing behavior as <see cref="UseFixed" />. The value comes from <see cref="Any" />'s
-    ///     unseeded source; wrap the call in <c>Any.UseSeed(...)</c>, or use the <see cref="UseAny(int)" /> overload, to
-    ///     make it reproducible.
+    ///     source; run the test inside <c>Any.Reproducibly(...)</c> to make the chosen instant reproducible and reported
+    ///     on failure.
     /// </remarks>
     /// <returns>A scope that restores the real system clock when disposed.</returns>
     public static IDisposable UseAny() {
         return UseFixed(ArbitrarySource.Instant());
-    }
-
-    /// <summary>
-    ///     Freezes the clock to an arbitrary but <b>reproducible</b> instant, derived from <paramref name="seed" />, for
-    ///     the duration of the returned scope.
-    /// </summary>
-    /// <param name="seed">The seed that makes the chosen instant reproducible across runs.</param>
-    /// <returns>A scope that restores the real system clock when disposed.</returns>
-    public static IDisposable UseAny(int seed) {
-        return UseFixed(ArbitrarySource.NewInstant(new Random(seed)));
     }
 
 }

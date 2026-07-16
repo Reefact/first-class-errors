@@ -9,9 +9,9 @@ namespace FirstClassErrors.Testing;
 /// <remarks>
 ///     <para>
 ///         Every value is drawn from a pseudo-random source. By default that source is unseeded, so each run produces
-///         fresh values; wrap the code in <see cref="UseSeed" /> to make the sequence deterministic and reproducible.
-///         The source flows with the current execution context, so it never leaks across tests running in parallel —
-///         the same contract the rest of this package keeps.
+///         fresh values — which surfaces a test that secretly depends on one. Wrap a value-sensitive test in
+///         <c>Reproducibly</c> to make a failing run replayable. The source flows with the current execution context,
+///         so it never leaks across tests running in parallel — the same contract the rest of this package keeps.
 ///     </para>
 ///     <para>
 ///         The values are <b>valid</b> (an <see cref="Any.ErrorCode" /> is never blank, an <see cref="Any.Instant" />
@@ -29,10 +29,10 @@ namespace FirstClassErrors.Testing;
 ///             DomainError.Create(ErrorCode.Create("ORDER_NOT_FOUND"), Any.DiagnosticMessage())
 ///                        .WithPublicMessage(Any.ShortMessage()));
 ///
-///         // Reproduce a run by pinning the seed:
-///         using (Any.UseSeed(1234)) {
-///             ErrorCode code = Any.ErrorCode(); // same value on every run
-///         }
+///         // Make a value-sensitive test replayable: the seed is reported on failure...
+///         Any.Reproducibly(() => { /* arrange with Any, act, assert */ });
+///         // ...and replayed by passing it back:
+///         Any.Reproducibly(1234, () => { /* ... */ });
 ///         </code>
 ///     </example>
 /// </remarks>
@@ -46,18 +46,91 @@ public static class Any {
     #endregion
 
     /// <summary>
-    ///     Pins the arbitrary-value source to a deterministic sequence seeded with <paramref name="seed" /> until the
-    ///     returned scope is disposed, so a test (or a whole run) using <see cref="Any" /> becomes reproducible.
+    ///     Runs <paramref name="body" /> with the arbitrary-value source pinned to a fresh seed and, if the body throws,
+    ///     reports that seed before letting the exception propagate. This is how a test that draws on <see cref="Any" />
+    ///     stays reproducible: the values still vary between runs (which surfaces accidental dependencies), yet a failure
+    ///     names the exact seed to replay.
     /// </summary>
     /// <remarks>
-    ///     Scopes nest: an inner <see cref="UseSeed" /> uses its own source and restores the outer one when disposed,
-    ///     without disturbing the outer sequence. Always scope the override with <c>using</c>. Outside any scope the
-    ///     source is unseeded and every run differs.
+    ///     <para>
+    ///         On failure the seed is written to <paramref name="report" /> (by default <see cref="Console.Error" />),
+    ///         with a message naming the <c>Any.Reproducibly(seed, ...)</c> call that reproduces the run. Pass your test
+    ///         framework's output writer (for example xUnit's <c>ITestOutputHelper.WriteLine</c>) to route it there
+    ///         instead. The original exception is rethrown unchanged, so the test still fails with its real message.
+    ///     </para>
+    ///     <para>
+    ///         Reproducing a run needs the same sequence of <see cref="Any" /> calls, so a body whose call order depends
+    ///         on non-deterministic external state is not fully replayable from the seed alone.
+    ///     </para>
     /// </remarks>
-    /// <param name="seed">The seed that makes the sequence of arbitrary values reproducible.</param>
-    /// <returns>A scope that restores the previous source when disposed.</returns>
-    public static IDisposable UseSeed(int seed) {
-        return ArbitrarySource.UseSeed(seed);
+    /// <param name="body">The test body to run under a reproducible arbitrary-value source.</param>
+    /// <param name="report">The sink the seed is written to on failure. Defaults to <see cref="Console.Error" /> when <c>null</c>.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="body" /> is <c>null</c>.</exception>
+    public static void Reproducibly(Action body, Action<string>? report = null) {
+        Reproducibly(ArbitrarySource.NewSeed(), body, report);
+    }
+
+    /// <summary>
+    ///     Replays <paramref name="body" /> with the arbitrary-value source pinned to <paramref name="seed" />, so a run
+    ///     first seen through the parameterless <see cref="Reproducibly(Action, Action{String})" /> overload can be
+    ///     reproduced exactly. If the body throws, the seed is reported before the exception propagates.
+    /// </summary>
+    /// <param name="seed">The seed to replay — typically the one a previous failure reported.</param>
+    /// <param name="body">The test body to run under the seeded arbitrary-value source.</param>
+    /// <param name="report">The sink the seed is written to on failure. Defaults to <see cref="Console.Error" /> when <c>null</c>.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="body" /> is <c>null</c>.</exception>
+    public static void Reproducibly(int seed, Action body, Action<string>? report = null) {
+        if (body is null) { throw new ArgumentNullException(nameof(body)); }
+
+        using (ArbitrarySource.UseSeed(seed)) {
+            try {
+                body();
+            } catch {
+                Report(report, seed);
+
+                throw;
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Asynchronous counterpart of <see cref="Reproducibly(Action, Action{String})" />: awaits <paramref name="body" />
+    ///     under a fresh seed and reports it if the body faults.
+    /// </summary>
+    /// <param name="body">The asynchronous test body to run under a reproducible arbitrary-value source.</param>
+    /// <param name="report">The sink the seed is written to on failure. Defaults to <see cref="Console.Error" /> when <c>null</c>.</param>
+    /// <returns>A task that completes when <paramref name="body" /> completes.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="body" /> is <c>null</c>.</exception>
+    public static Task Reproducibly(Func<Task> body, Action<string>? report = null) {
+        return Reproducibly(ArbitrarySource.NewSeed(), body, report);
+    }
+
+    /// <summary>
+    ///     Asynchronous counterpart of <see cref="Reproducibly(int, Action, Action{String})" />: awaits
+    ///     <paramref name="body" /> under <paramref name="seed" /> and reports it if the body faults.
+    /// </summary>
+    /// <param name="seed">The seed to replay — typically the one a previous failure reported.</param>
+    /// <param name="body">The asynchronous test body to run under the seeded arbitrary-value source.</param>
+    /// <param name="report">The sink the seed is written to on failure. Defaults to <see cref="Console.Error" /> when <c>null</c>.</param>
+    /// <returns>A task that completes when <paramref name="body" /> completes.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="body" /> is <c>null</c>.</exception>
+    public static async Task Reproducibly(int seed, Func<Task> body, Action<string>? report = null) {
+        if (body is null) { throw new ArgumentNullException(nameof(body)); }
+
+        using (ArbitrarySource.UseSeed(seed)) {
+            try {
+                await body().ConfigureAwait(false);
+            } catch {
+                Report(report, seed);
+
+                throw;
+            }
+        }
+    }
+
+    private static void Report(Action<string>? report, int seed) {
+        (report ?? Console.Error.WriteLine)(
+            $"[FirstClassErrors.Testing] These arbitrary values were seeded with {seed}. Reproduce this run with Any.Reproducibly({seed}, ...).");
     }
 
     /// <summary>
@@ -78,7 +151,7 @@ public static class Any {
 
     /// <summary>
     ///     Returns an arbitrary <see cref="System.Guid" />. Unlike <see cref="System.Guid.NewGuid" />, it is drawn from
-    ///     the seedable source, so it is reproducible inside a <see cref="UseSeed" /> scope.
+    ///     the seedable source, so it is reproducible inside an <c>Any.Reproducibly(...)</c> run.
     /// </summary>
     /// <returns>An arbitrary identifier.</returns>
     public static Guid Guid() {

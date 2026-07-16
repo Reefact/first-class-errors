@@ -31,22 +31,25 @@ public sealed class InstanceIdsUseAnyTests {
         }
     }
 
-    [Fact(DisplayName = "InstanceIds.UseAny(seed) reproduces the same sequence of ids.")]
-    public void UseAnyWithSeedIsReproducible() {
-        Guid firstRunA;
-        Guid firstRunB;
-        Guid secondRunA;
-        Guid secondRunB;
+    [Fact(DisplayName = "Inside Any.Reproducibly, InstanceIds.UseAny reproduces the same id sequence for a given seed.")]
+    public void UseAnyIsReproducibleUnderAReproduciblyScope() {
+        Guid firstRunA  = Guid.Empty;
+        Guid firstRunB  = Guid.Empty;
+        Guid secondRunA = Guid.Empty;
+        Guid secondRunB = Guid.Empty;
 
-        using (InstanceIds.UseAny(7)) {
-            firstRunA = AnError().InstanceId;
-            firstRunB = AnError().InstanceId;
-        }
-
-        using (InstanceIds.UseAny(7)) {
-            secondRunA = AnError().InstanceId;
-            secondRunB = AnError().InstanceId;
-        }
+        Any.Reproducibly(7, () => {
+            using (InstanceIds.UseAny()) {
+                firstRunA = AnError().InstanceId;
+                firstRunB = AnError().InstanceId;
+            }
+        });
+        Any.Reproducibly(7, () => {
+            using (InstanceIds.UseAny()) {
+                secondRunA = AnError().InstanceId;
+                secondRunB = AnError().InstanceId;
+            }
+        });
 
         Check.That(secondRunA).IsEqualTo(firstRunA);
         Check.That(secondRunB).IsEqualTo(firstRunB);

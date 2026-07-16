@@ -61,25 +61,13 @@ public static class InstanceIds {
     /// </summary>
     /// <remarks>
     ///     Each error created within the scope gets its own fresh arbitrary id (as in production, several errors do not
-    ///     collide), but the ids are drawn from <see cref="Any" />'s source rather than <see cref="System.Guid.NewGuid" />.
-    ///     Wrap the call in <c>Any.UseSeed(...)</c>, or use the <see cref="UseAny(int)" /> overload, to make the sequence
-    ///     reproducible. To pin a single fixed id instead, use <see cref="UseFixed" />.
+    ///     collide), drawn from <see cref="Any" />'s source rather than <see cref="System.Guid.NewGuid" />. Run the test
+    ///     inside <c>Any.Reproducibly(...)</c> to make the sequence reproducible and reported on failure. To pin a single
+    ///     fixed id instead, use <see cref="UseFixed" />.
     /// </remarks>
     /// <returns>A scope that restores the default (random) identifier when disposed.</returns>
     public static IDisposable UseAny() {
         return Use(() => ArbitrarySource.Guid());
-    }
-
-    /// <summary>
-    ///     Assigns arbitrary but <b>reproducible</b> identifiers, drawn from a sequence seeded with
-    ///     <paramref name="seed" />, to the errors created within the scope.
-    /// </summary>
-    /// <param name="seed">The seed that makes the sequence of assigned identifiers reproducible across runs.</param>
-    /// <returns>A scope that restores the default (random) identifier when disposed.</returns>
-    public static IDisposable UseAny(int seed) {
-        Random random = new(seed);
-
-        return Use(() => ArbitrarySource.NewGuid(random));
     }
 
 }
