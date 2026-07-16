@@ -1,7 +1,7 @@
 # Contributing to FirstClassErrors
 
 🌍 **Languages:**  
-🇬🇧 English (this file) | 🇫🇷 [Français](./doc/CONTRIBUTING.fr.md)
+🇬🇧 English (this file) | 🇫🇷 [Français](doc/handwritten/for-users/CONTRIBUTING.fr.md)
 
 FirstClassErrors treats errors as first-class, documented, diagnosable
 concepts. The history of the repository should be as legible as the errors the
@@ -473,7 +473,7 @@ Ordered as the rules are: type, scope, description, body, breaking, issue.
 ### Adoption
 
 This guide is the rule for commits in this repository. Deviating from it
-requires a justification — an ADR under `maintainers/adr/`, or an update to this
+requires a justification — an ADR under `doc/handwritten/for-maintainers/adr/`, or an update to this
 guide.
 
 It applies from its adoption on, to every commit created after. Prior history is

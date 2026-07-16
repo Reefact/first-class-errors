@@ -10,7 +10,7 @@ errors should stay structured, documented, and close to the code.
   source code, code comments, commit messages, branch names,
   PR titles and descriptions, and issues.
 * The English documentation is canonical.
-* The French documentation in `doc/README.fr.md` is an intentional translation
+* The French documentation in `doc/handwritten/for-users/README.fr.md` is an intentional translation
   and must stay in sync with the English documentation when user-facing behavior changes.
 * You may reply to me in French in the chat, but never write repository content in French
   unless you are updating the French documentation.
@@ -34,7 +34,7 @@ errors should stay structured, documented, and close to the code.
 * `FirstClassErrors.Cli`           — command-line tool
 * `FirstClassErrors.RequestBinder` — request binder for the primary-adapter boundary (+ `.UnitTests`)
 * `FirstClassErrors.Usage`         — usage examples
-* `doc/`                           — documentation, including the French translation
+* `doc/`                           — documentation: `handwritten/` (`for-users`, `for-maintainers`) and `generated/` (CI/CD living docs)
 
 ## Change guidelines
 
@@ -62,16 +62,16 @@ errors should stay structured, documented, and close to the code.
 
 * When you add or change an error, update its documentation accordingly.
 * When you change user-facing behavior, keep the English README and the French translation
-  (`doc/README.fr.md`) in sync.
+  (`doc/handwritten/for-users/README.fr.md`) in sync.
 * When you change analyzers, update or add analyzer tests.
 * When you change diagnostics, keep diagnostic IDs, messages, documentation, and tests consistent.
 
 ## Architecture decisions (ADRs)
 
 Before finalizing a pull request, check the change against the ADR base under
-`maintainers/adr/`. This is **advisory**: produce a recommendation, never a
+`doc/handwritten/for-maintainers/adr/`. This is **advisory**: produce a recommendation, never a
 blocker. Full procedure in [`AGENTS.md`](AGENTS.md) ("Architecture decisions");
-format and conventions in [`maintainers/adr/README.md`](maintainers/adr/README.md).
+format and conventions in [`doc/handwritten/for-maintainers/adr/README.md`](doc/handwritten/for-maintainers/adr/README.md).
 The essentials, inlined so they hold even if `AGENTS.md` is not read:
 
 * An ADR records a **significant, lasting decision** — one a future maintainer

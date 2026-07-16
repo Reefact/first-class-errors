@@ -3,11 +3,15 @@
   <!--
     Documentation-only project.
 
-    This project compiles nothing. Its sole purpose is to surface everything
-    under doc/ in the Visual Studio Solution Explorer, so the documentation is
-    easy to find, read and edit right next to the code: the Markdown pages
-    (English *.en.md and French *.fr.md, including the analyzer pages under
-    analyzers/), the images, and any other asset that may be added later.
+    This project compiles nothing. Its sole purpose is to surface every piece of
+    documentation under doc/ in the Visual Studio Solution Explorer, so it is
+    easy to find, read and edit right next to the code. It covers the whole tree:
+
+      doc/generated/    - living documentation produced by CI/CD (e.g. GenDoc)
+      doc/handwritten/  - documentation written by hand
+        for-users/        the library's user documentation (English *.en.md and
+                          French *.fr.md, including the analyzer pages and images)
+        for-maintainers/  the maintainer documentation (ADRs, workflow notes, ...)
 
     The <None> glob below picks up new files automatically: no need to touch
     this project or the solution when documentation is added or renamed. The
@@ -45,10 +49,11 @@
     <!--
       The repository's main README lives at the solution root, outside doc/, so
       the glob above cannot reach it. Reference it as a link so it is browsable
-      from this project too. Link metadata is required for files located outside
+      from this project too, placed next to its French translation under
+      handwritten/for-users. Link metadata is required for files located outside
       the project directory.
     -->
-    <None Include="..\README.md" Link="README.md" />
+    <None Include="..\README.md" Link="handwritten\for-users\README.md" />
   </ItemGroup>
 
 </Project>

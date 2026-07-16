@@ -9,7 +9,7 @@ Two roles are covered: **writing code** and **reviewing pull requests**.
 - Build: `dotnet build FirstClassErrors.sln`
 - Test: `dotnet test FirstClassErrors.sln` (analyzer tests: `dotnet test FirstClassErrors.Analyzers.UnitTests`).
 - Repository language is **English** (code, comments, commits, PRs, issues, and
-  review comments). French lives only in `doc/README.fr.md` and must stay in sync
+  review comments). French lives only in `doc/handwritten/for-users/README.fr.md` and must stay in sync
   with the English README.
 - `Error` and its hierarchy, `ErrorCode`, `ErrorContextKey`, `Outcome`/`Outcome<T>`
   and any value object are **`class`, never `struct`** — a struct exposes a
@@ -21,7 +21,7 @@ Two roles are covered: **writing code** and **reviewing pull requests**.
 ## Architecture decisions (code changes)
 
 Before finalizing a pull request, check it against the ADR base under
-`maintainers/adr/` (format and conventions: `maintainers/adr/README.md`). An ADR
+`doc/handwritten/for-maintainers/adr/` (format and conventions: `doc/handwritten/for-maintainers/adr/README.md`). An ADR
 records a **significant, lasting decision** — one a future maintainer would ask
 "why did they do it this way?" about — not every change. Apply the README's test:
 *if the implementation changed but the decision stood, the ADR should not need

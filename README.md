@@ -1,7 +1,7 @@
 # FirstClassErrors
 
 🌍 **Languages:**  
-🇬🇧 English (this file) | 🇫🇷 [Français](./doc/README.fr.md)
+🇬🇧 English (this file) | 🇫🇷 [Français](doc/handwritten/for-users/README.fr.md)
 
 |  |  |
 | :-- | :-- |
@@ -15,7 +15,7 @@
 
 **Turn your errors into structured, living knowledge about your system.**
 
-![FirstClassErrors](./doc/images/first-class-errors.png "FirstClassErrors")
+![FirstClassErrors](doc/handwritten/for-users/images/first-class-errors.png "FirstClassErrors")
 
 ## 🚨 The problem
 
@@ -124,7 +124,7 @@ To generate documentation, install the CLI:
 dotnet tool install --global FirstClassErrors.Cli
 ```
 
-Then follow the [Getting Started guide](doc/GettingStarted.en.md) to create and generate your first documented error.
+Then follow the [Getting Started guide](doc/handwritten/for-users/GettingStarted.en.md) to create and generate your first documented error.
 
 ## 🎯 When it is a good fit
 
@@ -135,11 +135,11 @@ FirstClassErrors is especially useful for long-lived application or domain code 
 - support and operations investigate production failures;
 - documentation must remain aligned with behavior.
 
-For prototypes, tiny utilities, or low-level technical code, standard exceptions may be enough. See [When Not to Use FirstClassErrors](doc/WhenNotToUseFirstClassErrors.en.md).
+For prototypes, tiny utilities, or low-level technical code, standard exceptions may be enough. See [When Not to Use FirstClassErrors](doc/handwritten/for-users/WhenNotToUseFirstClassErrors.en.md).
 
 ## 🔍 Analyzers and supply-chain information
 
-The package includes Roslyn rules with stable `FCExxx` identifiers. They detect duplicate or malformed error codes, invalid documentation wiring, missing examples, and common API misuse. See the [analyzer rules reference](doc/analyzers/README.md).
+The package includes Roslyn rules with stable `FCExxx` identifiers. They detect duplicate or malformed error codes, invalid documentation wiring, missing examples, and common API misuse. See the [analyzer rules reference](doc/handwritten/for-users/analyzers/README.md).
 
 Released packages include signed build provenance and an embedded SPDX SBOM. See the release and verification details in the [supply-chain documentation](SECURITY.md).
 
@@ -153,39 +153,39 @@ For security vulnerabilities, follow the private process in [SECURITY.md](SECURI
 
 ### Discover
 
-- [Getting Started](doc/GettingStarted.en.md)
-- [Design Principles](doc/DesignPrinciples.en.md)
-- [When Not to Use FirstClassErrors](doc/WhenNotToUseFirstClassErrors.en.md)
+- [Getting Started](doc/handwritten/for-users/GettingStarted.en.md)
+- [Design Principles](doc/handwritten/for-users/DesignPrinciples.en.md)
+- [When Not to Use FirstClassErrors](doc/handwritten/for-users/WhenNotToUseFirstClassErrors.en.md)
 
 ### Understand the model
 
-- [Core Concepts](doc/CoreConcepts.en.md)
-- [Error Taxonomy and Composition](doc/ErrorTaxonomy.en.md)
-- [Error Context Guide](doc/ErrorContext.en.md)
+- [Core Concepts](doc/handwritten/for-users/CoreConcepts.en.md)
+- [Error Taxonomy and Composition](doc/handwritten/for-users/ErrorTaxonomy.en.md)
+- [Error Context Guide](doc/handwritten/for-users/ErrorContext.en.md)
 
 ### Write and use errors
 
-- [Writing Errors Guide](doc/WritingErrorsGuide.en.md)
-- [Usage Patterns](doc/UsagePatterns.en.md)
-- [Binding requests at the boundary (RequestBinder)](doc/RequestBinder.en.md)
-- [Best Practices](doc/BestPractices.en.md)
-- [Testing Guide](doc/Testing.en.md)
-  - [Deterministic Error Tests](doc/DeterministicTesting.en.md)
-  - [Arbitrary Test Values](doc/ArbitraryTestValues.en.md)
+- [Writing Errors Guide](doc/handwritten/for-users/WritingErrorsGuide.en.md)
+- [Usage Patterns](doc/handwritten/for-users/UsagePatterns.en.md)
+- [Binding requests at the boundary (RequestBinder)](doc/handwritten/for-users/RequestBinder.en.md)
+- [Best Practices](doc/handwritten/for-users/BestPractices.en.md)
+- [Testing Guide](doc/handwritten/for-users/Testing.en.md)
+  - [Deterministic Error Tests](doc/handwritten/for-users/DeterministicTesting.en.md)
+  - [Arbitrary Test Values](doc/handwritten/for-users/ArbitraryTestValues.en.md)
 
 ### Generate and operate the catalog
 
-- [CI/CD and Operational Integration](doc/OperationalIntegration.en.md)
+- [CI/CD and Operational Integration](doc/handwritten/for-users/OperationalIntegration.en.md)
 - Catalog versioning
-  - [Overview and workflow](doc/CatalogVersioning.en.md)
-  - [Command reference](doc/CatalogVersioningReference.en.md)
-  - [CI/CD integration](doc/CatalogVersioningCI.en.md)
-- [Architecture of the Documentation Pipeline](doc/ArchitectureOfTheDocumentationPipeline.en.md)
-- [Writing a custom renderer](doc/WritingACustomRenderer.en.md)
-- [Internationalization](doc/Internationalization.en.md)
+  - [Overview and workflow](doc/handwritten/for-users/CatalogVersioning.en.md)
+  - [Command reference](doc/handwritten/for-users/CatalogVersioningReference.en.md)
+  - [CI/CD integration](doc/handwritten/for-users/CatalogVersioningCI.en.md)
+- [Architecture of the Documentation Pipeline](doc/handwritten/for-users/ArchitectureOfTheDocumentationPipeline.en.md)
+- [Writing a custom renderer](doc/handwritten/for-users/WritingACustomRenderer.en.md)
+- [Internationalization](doc/handwritten/for-users/Internationalization.en.md)
 
 ### Evaluate and troubleshoot
 
-- [Comparison with error-handling libraries](doc/ComparisonWithOtherLibraries.en.md)
-- [Analyzer rules (FCExxx)](doc/analyzers/README.md)
-- [FAQ](doc/FAQ.en.md)
+- [Comparison with error-handling libraries](doc/handwritten/for-users/ComparisonWithOtherLibraries.en.md)
+- [Analyzer rules (FCExxx)](doc/handwritten/for-users/analyzers/README.md)
+- [FAQ](doc/handwritten/for-users/FAQ.en.md)

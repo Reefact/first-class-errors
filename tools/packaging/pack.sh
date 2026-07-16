@@ -98,7 +98,7 @@ fi
 # content, so dropping the target (or PackAsTool ceasing to pack the publish output) would pass every local
 # check and only surface as "documentation worker could not be located" on a user's first `fce generate`.
 # A pack that stops bundling the worker must fail here, loudly, not in the field. This asserts presence; the
-# closure is completeness-checked out of band by the tool-install smoke test in maintainers/ReleaseDryRun.
+# closure is completeness-checked out of band by the tool-install smoke test in doc/handwritten/for-maintainers/ReleaseDryRun.
 if [ "$scope" = "cli" ]; then
   # The fce tool package carries the CLI's PackageId (FirstClassErrors.Cli), not the ToolCommandName (fce).
   for package in artifacts/FirstClassErrors.Cli.*.nupkg; do

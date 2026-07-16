@@ -73,7 +73,7 @@ Rules:
 - Base every claim strictly on the provided data. **Invent nothing.** Do not
   guess an ADR number — only cite an ADR that appears in the ADR base.
 - The `report` is **advisory**. It must make clear that nothing here blocks a
-  merge, that a human or an agent drafts the ADR(s) under `maintainers/adr/` with
+  merge, that a human or an agent drafts the ADR(s) under `doc/handwritten/for-maintainers/adr/` with
   `Status: Proposed`, and that the maintainer accepts, supersedes, or deprecates.
   Never claim to have written an ADR or to block anything.
 
@@ -95,6 +95,6 @@ nothing here blocks a merge.
 **Conflicts with**
 - ⚠️ ADR-NNNN (<title>) — <the contradiction>
 
-_Agents: draft the ADR(s) under `maintainers/adr/` as `Status: Proposed` and link
+_Agents: draft the ADR(s) under `doc/handwritten/for-maintainers/adr/` as `Status: Proposed` and link
 them; the maintainer decides. See `AGENTS.md` → "Architecture decisions"._
 ```

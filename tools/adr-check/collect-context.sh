@@ -20,7 +20,7 @@ base="${1:?usage: collect-context.sh <base-ref>}"
 
 DIFF_MAX_BYTES="${DIFF_MAX_BYTES:-200000}"
 ADR_MAX_BYTES="${ADR_MAX_BYTES:-120000}"
-adr_dir="maintainers/adr"
+adr_dir="doc/handwritten/for-maintainers/adr"
 
 # --- changed files (a strong, cheap signal on its own) ------------------------
 # The set of touched paths already separates "only tests/docs" from "public API

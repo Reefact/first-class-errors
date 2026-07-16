@@ -110,7 +110,7 @@
        Do NOT rely on `dotnet build` or `dotnet publish` to validate that the tool ships its worker: neither exercises
        the .nupkg content, so both stay green even if the worker never reaches the package. The real gates are the
        worker-present assertion in tools/packaging/pack.sh and the manual tool-install smoke test documented in
-       maintainers/ReleaseDryRun (install the packed tool, run `fce generate`, expect a non-empty catalog). -->
+       doc/handwritten/for-maintainers/ReleaseDryRun (install the packed tool, run `fce generate`, expect a non-empty catalog). -->
   <Target Name="_CopyDocumentationWorker" AfterTargets="Build">
     <ItemGroup>
       <_DocumentationWorkerFiles Include="$(MSBuildThisFileDirectory)..\FirstClassErrors.GenDoc.Worker\bin\$(Configuration)\$(TargetFramework)\**\*.*" />

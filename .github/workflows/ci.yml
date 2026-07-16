@@ -72,7 +72,7 @@ jobs:
 
   # build-test above runs the whole suite on the LATEST .NET (10). This job proves the other end of the
   # supported range: that the fce tool and its worker, which ship targeting net8.0 (the floor — see
-  # maintainers/adr/0002-floor-the-tooling-runtime.md), actually run on the .NET 8 RUNTIME. The net8 TFM
+  # doc/handwritten/for-maintainers/adr/0002-floor-the-tooling-runtime.md), actually run on the .NET 8 RUNTIME. The net8 TFM
   # already guards the compile-time API surface on every build; what it cannot show is that the tooling
   # executes on its advertised minimum runtime, which is what this job checks against the real artifacts.
   floor:

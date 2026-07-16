@@ -10,7 +10,7 @@ name: adr-check
 # recording a decision is a human-reviewed act, exactly like the sibling
 # `changelog` workflow. It NEVER blocks anything and NEVER writes an ADR — every
 # failure mode is a warning, and the verdict is a recommendation a human acts on.
-# See maintainers/workflows/adr-check.en.md.
+# See doc/handwritten/for-maintainers/workflows/adr-check.en.md.
 on:
   workflow_dispatch:
     inputs:

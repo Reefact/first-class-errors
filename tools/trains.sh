@@ -14,7 +14,7 @@
 # ── Adding a train ────────────────────────────────────────────────────────────
 # Add one row to trains_rows() below, then make the static edits GitHub forces
 # (tag trigger, choice options, commit-lint scopes, packaging). The full checklist
-# is maintainers/AddingAReleaseTrain.en.md.
+# is doc/handwritten/for-maintainers/AddingAReleaseTrain.en.md.
 #
 # Row format (pipe-separated, no spaces around the pipes except inside the label):
 #   <id>|<tag-prefix>|<scopes csv>|<changelog file>|<package label>
