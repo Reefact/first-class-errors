@@ -1,5 +1,7 @@
 # ADR-0002 | Floor the tooling runtime at the oldest supported LTS
 
+🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0002-floor-the-tooling-runtime.fr.md)
+
 **Status:** Accepted
 **Date:** 2026-07-13
 **Decision Makers:** Reefact
