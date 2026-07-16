@@ -1,5 +1,7 @@
 #region Usings declarations
 
+using FirstClassErrors.Testing;
+
 using JetBrains.Annotations;
 
 using NFluent;
@@ -27,7 +29,7 @@ public sealed class OutcomeTaskExtensionsTests {
     [Fact(DisplayName = "Awaiting Then over a Task<Outcome<T>> propagates the error on failure.")]
     public async Task AwaitingThenOverATaskOutcomePropagatesTheErrorOnFailure() {
         // Setup
-        DomainError                               error  = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError                               error  = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
         System.Threading.Tasks.Task<Outcome<int>> task   = System.Threading.Tasks.Task.FromResult(Outcome<int>.Failure(error));
         bool                                      called = false;
 
@@ -59,7 +61,7 @@ public sealed class OutcomeTaskExtensionsTests {
     [Fact(DisplayName = "Awaiting Recover over a Task<Outcome<T>> recovers a failure into a success.")]
     public async Task AwaitingRecoverOverATaskOutcomeRecoversAFailureIntoASuccess() {
         // Setup
-        DomainError                               error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError                               error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
         System.Threading.Tasks.Task<Outcome<int>> task  = System.Threading.Tasks.Task.FromResult(Outcome<int>.Failure(error));
 
         // Exercise
@@ -85,7 +87,7 @@ public sealed class OutcomeTaskExtensionsTests {
     [Fact(DisplayName = "Awaiting Finally over a Task<Outcome<T>> resolves the failure branch.")]
     public async Task AwaitingFinallyOverATaskOutcomeResolvesTheFailureBranch() {
         // Setup
-        DomainError                               error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError                               error = ErrorFactory.Domain(Any.ErrorCode(), "boom");
         System.Threading.Tasks.Task<Outcome<int>> task  = System.Threading.Tasks.Task.FromResult(Outcome<int>.Failure(error));
 
         // Exercise

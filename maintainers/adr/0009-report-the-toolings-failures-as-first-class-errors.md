@@ -1,4 +1,6 @@
-# ADR-0008 | Report the tooling's failures as first-class errors
+# ADR-0009 | Report the tooling's failures as first-class errors
+
+🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0009-report-the-toolings-failures-as-first-class-errors.fr.md)
 
 **Status:** Proposed
 **Date:** 2026-07-16
