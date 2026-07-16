@@ -148,6 +148,8 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
             logger.Error("Generation canceled.");
 
             return 130;
+        } catch (DiagnosableException exception) {
+            return FailureReporting.ReportCodedFailure(logger, exception);
         } catch (Exception exception) {
             // Report expected failures (missing solution, worker crash, …) as a terse line, not a stack trace. The full
             // exception (type, stack trace, inner exceptions) goes to the debug channel, which surfaces only under

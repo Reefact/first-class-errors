@@ -133,6 +133,8 @@ internal sealed class CatalogDiffCommand : Command<CatalogDiffSettings> {
             logger.Error("Catalog diff canceled.");
 
             return 130;
+        } catch (DiagnosableException exception) {
+            return FailureReporting.ReportCodedFailure(logger, exception);
         } catch (Exception exception) {
             // Report expected failures (missing solution, worker crash, invalid baseline, …) as a terse line.
             logger.Error(exception.Message);

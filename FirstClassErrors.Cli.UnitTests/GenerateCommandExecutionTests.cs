@@ -72,6 +72,37 @@ public sealed class GenerateCommandExecutionTests {
         Check.That(capturedVerbose).IsEqualTo(verbose);
     }
 
+    [Fact(DisplayName = "A coded generation failure is reported with its stable error code and returns 1.")]
+    public void ACodedGenerationFailureIsReportedWithItsCode() {
+        // Setup: the generator raises the pipeline's own diagnosable failure (a GENDOC_ coded error). The error is
+        // built through the public core API: the GenDoc factories are internal, and this test only cares about how
+        // the command surfaces a DiagnosableException, whatever produced it.
+        PrimaryPortError error = PrimaryPortError
+                                .Create(ErrorCode.Create("GENDOC_SOLUTION_NOT_FOUND"),
+                                        "Solution file not found: '/src/app/Application.sln'.",
+                                        Transience.NonTransient)
+                                .WithPublicMessage("The solution file was not found.");
+        RecordingLogger logger = new();
+        GenerateCommand command = new(
+            new FailingGenerator(new SolutionDocumentationGenerationException(error)),
+            new RecordingOutputSink(),
+            _ => logger);
+        GenerateSettings settings = new() {
+            ConfigPath   = CliTestHelpers.NonExistentConfigPath(),
+            SolutionPath = "app.sln",
+            Format       = "json"
+        };
+
+        // Exercise
+        int exitCode = command.Run(settings, CancellationToken.None);
+
+        // Verify: the error line leads with the stable code, so it is grep-able and can be looked up in the catalog.
+        Check.That(exitCode).IsEqualTo(1);
+        Check.That(logger.Errors).HasSize(1);
+        Check.That(logger.Errors[0]).StartsWith("GENDOC_SOLUTION_NOT_FOUND: ");
+        Check.That(logger.Errors[0]).Contains("/src/app/Application.sln");
+    }
+
     [Fact(DisplayName = "A cancelled generation is reported and returns the SIGINT exit code (130).")]
     public void ACancelledGenerationReturnsTheSigintExitCode() {
         // Setup: a JSON generation from a solution reaches the generator (no service name needed for json), which
