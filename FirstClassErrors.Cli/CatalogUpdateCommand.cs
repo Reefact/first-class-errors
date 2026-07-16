@@ -105,6 +105,8 @@ internal sealed class CatalogUpdateCommand : Command<CatalogUpdateSettings> {
             logger.Error("Catalog update canceled.");
 
             return 130;
+        } catch (DiagnosableException exception) {
+            return FailureReporting.ReportCodedFailure(logger, exception);
         } catch (Exception exception) {
             // Report expected failures (missing solution, worker crash, …) as a terse line, not a stack trace.
             logger.Error(exception.Message);

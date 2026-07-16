@@ -174,6 +174,8 @@ Two categories of failure behave differently, and the difference is exactly what
 - the opt-in marker is ambiguous (declared twice, or under a `Condition`);
 - the worker crashes, times out, or produces no readable output.
 
+Process-level failures are themselves first-class errors: each carries a stable `GENDOC_`-prefixed code (for example `GENDOC_WORKER_FAILED`, `GENDOC_PROCESS_TIMED_OUT`), structured context, and generated documentation — the tool documents its own failure surface with the very pipeline it implements. Log lines lead with the code, and under `--strict` the raised `SolutionDocumentationGenerationException` exposes the full error through its `Error` property.
+
 | Failure | Default | `--strict` | Exit code | Surfaced in |
 | --- | --- | --- | --- | --- |
 | `[DocumentedBy]` missing or bad signature | recorded, run continues | recorded, run continues | `0` | result `Failures` and error log |
@@ -194,8 +196,7 @@ error: Documentation extraction issue in 'artifacts/MyApp.Application.dll': MyAp
 A worker timeout is a process-level failure; the default run records it and continues, and it becomes fatal under `--strict`. The default worker timeout is two minutes:
 
 ```text
-error: Process 'dotnet' timed out after 00:02:00 and was killed.
-warning: The documentation worker failed (exit code -1) for 'artifacts/MyApp.Application.dll'.
+warning: GENDOC_PROCESS_TIMED_OUT: Process 'documentation worker for artifacts/MyApp.Application.dll' timed out after 00:02:00 and was killed.
 ```
 
 ## Timeouts and process failures

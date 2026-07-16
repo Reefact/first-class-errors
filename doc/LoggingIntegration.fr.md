@@ -115,7 +115,7 @@ Voir [Contexte d’erreur](ErrorContext.fr.md) pour la conception des clés et l
 
 Ne réénumérez pas les propriétés de l’erreur dans chaque `catch`. Projetez une `Error` vers un modèle de log une seule fois, à un seul endroit, et réutilisez-le partout où un échec est loggé.
 
-La projection doit être récursive : `DiagnosableException` n’utilise pas `Exception.InnerException` pour l’arbre diagnostique FirstClassErrors — les causes et erreurs agrégées vivent dans `error.InnerErrors`. Elle doit aussi ajouter les champs propres à l’infrastructure lorsque l’erreur est une `InfrastructureError` :
+La projection doit être récursive : `DiagnosableException` n’utilise pas `Exception.InnerException` pour l’arbre diagnostique FirstClassErrors — les causes et erreurs agrégées vivent dans `error.InnerErrors`. (Une `DiagnosableException` peut néanmoins porter une exception runtime ordinaire — une erreur d’E/S, par exemple — sur `Exception.InnerException` ; ce canal transporte la cause technique avec sa stack trace, pas des erreurs modélisées : loggez-le comme n’importe quelle cause d’exception.) Elle doit aussi ajouter les champs propres à l’infrastructure lorsque l’erreur est une `InfrastructureError` :
 
 ```csharp
 public static class ErrorLogModel {
