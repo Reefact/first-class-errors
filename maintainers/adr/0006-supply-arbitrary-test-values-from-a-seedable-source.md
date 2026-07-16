@@ -1,7 +1,7 @@
 # ADR-0006 | Supply arbitrary test values from a single seedable source
 
-**Status:** Proposed
-**Date:** 2026-07-15
+**Status:** Accepted
+**Date:** 2026-07-16
 **Decision Makers:** Reefact
 
 ## Context
