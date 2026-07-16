@@ -25,6 +25,24 @@ public abstract class DiagnosableException : Exception {
         Error = error;
     }
 
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="DiagnosableException" /> class with the specified
+    ///     <paramref name="error" /> and the runtime <paramref name="innerException" /> that caused it.
+    /// </summary>
+    /// <param name="error">
+    ///     An instance of the <see cref="Error" /> class that provides detailed information about the exception.
+    /// </param>
+    /// <param name="innerException">The runtime exception that caused this failure.</param>
+    /// <remarks>
+    ///     The <paramref name="innerException" /> is the technical cause captured at the throw site (an I/O failure, a
+    ///     serialization error…), preserved with its stack trace on <see cref="Exception.InnerException" />. It is distinct
+    ///     from <see cref="FirstClassErrors.Error.InnerErrors" />, which nests modeled errors, not runtime exceptions.
+    /// </remarks>
+    protected DiagnosableException(Error error, Exception innerException)
+        : base(error.DiagnosticMessage, innerException) {
+        Error = error;
+    }
+
     #endregion
 
     /// <summary>
