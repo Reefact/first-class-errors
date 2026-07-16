@@ -60,7 +60,7 @@ return Outcome<Amount>.Failure(
 Use `IsSuccess` and `IsFailure` when explicit branching is clearest.
 
 ```csharp
-Outcome<Amount> result = TryCreateAmount(value, currencyCode);
+Outcome<Amount> result = CreateAmount(value, currencyCode);
 
 if (result.IsFailure) {
     Log(result.Error!);
@@ -83,7 +83,7 @@ A function that **returns a value** transforms the carried value (a step that ca
 
 ```csharp
 Outcome<Money> total =
-    TryCreateAmount(value, currencyCode)
+    CreateAmount(value, currencyCode)
         .Then(amount => amount.WithVat());
 ```
 
@@ -91,7 +91,7 @@ A function that **returns an `Outcome`** runs another step that may itself fail:
 
 ```csharp
 Outcome<Receipt> result =
-    TryCreateAmount(value, currencyCode)
+    CreateAmount(value, currencyCode)
         .Then(CheckLimits)
         .Then(Charge);
 ```
@@ -116,7 +116,7 @@ A value fallback can be returned as a successful outcome:
 
 ```csharp
 Outcome<Amount> amount =
-    TryCreateAmount(value, currencyCode)
+    CreateAmount(value, currencyCode)
         .Recover(error => Outcome<Amount>.Success(Amount.Zero));
 ```
 
@@ -160,7 +160,7 @@ It does nothing on success and throws `error.ToException()` on failure.
 Use it with `Outcome<T>` when the boundary requires a value or an exception.
 
 ```csharp
-Amount amount = TryCreateAmount(value, currencyCode).GetResultOrThrow();
+Amount amount = CreateAmount(value, currencyCode).GetResultOrThrow();
 ```
 
 The exception is created and thrown at this point. The stack trace therefore begins at the escalation point, not where the `Outcome` failure was created.
@@ -212,13 +212,13 @@ public async Task<Outcome<Receipt>> CheckoutAsync(
     string currencyCode,
     CancellationToken cancellationToken) {
 
-    return await TryCreateAmount(value, currencyCode)
+    return await CreateAmount(value, currencyCode)
         .Then(CheckLimits)
         .Then(
             (amount, ct) => ChargeAsync(amount, ct),
             cancellationToken)
         .Recover(
-            (error, ct) => TryAlternativeProviderAsync(error, ct),
+            (error, ct) => AlternativeProviderAsync(error, ct),
             cancellationToken);
 }
 ```

@@ -26,29 +26,29 @@ Un value object ne doit jamais entrer dans un état invalide. Que l’échec app
 
 ```csharp
 // Contrat : renvoie une Temperature valide ou échoue — l'échec n'a pas sa place dans le type de retour de cette méthode.
-public static Temperature FromKelvin(decimal kelvin) {
-    return TryFromKelvin(kelvin).GetResultOrThrow();
+public static Temperature FromKelvinOrThrow(decimal kelvin) {
+    return FromKelvin(kelvin).GetResultOrThrow();
 }
 ```
 
 ```csharp
 // Contrat : une valeur hors limite fait partie du contrat normal — l'appelant doit la traiter explicitement.
-public static Outcome<Temperature> TryFromKelvin(decimal kelvin) {
+public static Outcome<Temperature> FromKelvin(decimal kelvin) {
     if (kelvin < 0) { return Outcome<Temperature>.Failure(InvalidTemperatureError.BelowAbsoluteZero(kelvin, TemperatureUnit.Kelvin)); }
 
     return Outcome<Temperature>.Success(new Temperature(kelvin));
 }
 ```
 
-Les deux rapportent exactement la même erreur documentée, `InvalidTemperatureError.BelowAbsoluteZero`. `FromKelvin` ne répète pas la vérification : elle escalade l’échec de `TryFromKelvin` avec `GetResultOrThrow()`. Lorsque les deux contrats sont réellement utiles, centralisez la validation dans la version retournant un `Outcome`, puis dérivez-en la version levante — pas l’inverse.
+Les deux rapportent exactement la même erreur documentée, `InvalidTemperatureError.BelowAbsoluteZero`. `FromKelvinOrThrow` ne répète pas la vérification : elle escalade l’échec de `FromKelvin` avec `GetResultOrThrow()`. Lorsque les deux contrats sont réellement utiles, centralisez la validation dans la version retournant un `Outcome`, puis dérivez-en la version levante — pas l’inverse.
 
 ## 🧮 Opérations métier
 
-Des objets métier valides peuvent néanmoins participer à une opération qui viole une règle. Le choix ici est une question de contrat d’API, pas de qui serait théoriquement en mesure de réagir — un appelant d’`Add` pourrait tout à fait capturer et traiter un écart levé, tout comme un appelant de `TryAdd` pourrait tout à fait ignorer un échec retourné. Ce qui diffère, c’est ce que chaque méthode promet à son appelant :
+Des objets métier valides peuvent néanmoins participer à une opération qui viole une règle. Le choix ici est une question de contrat d’API, pas de qui serait théoriquement en mesure de réagir — un appelant d’`AddOrThrow` pourrait tout à fait capturer et traiter un écart levé, tout comme un appelant de `Add` pourrait tout à fait ignorer un échec retourné. Ce qui diffère, c’est ce que chaque méthode promet à son appelant :
 
 ```csharp
 // Contrat : les montants fournis doivent déjà être exprimés dans la même devise.
-public Amount Add(Amount other) {
+public Amount AddOrThrow(Amount other) {
     if (Currency != other.Currency) { throw InvalidAmountOperationError.CurrencyMismatch(this, other).ToException(); }
 
     return new Amount(Value + other.Value, Currency);
@@ -57,7 +57,7 @@ public Amount Add(Amount other) {
 
 ```csharp
 // Contrat : une incompatibilité de devises est une issue attendue que l'appelant doit traiter.
-public Outcome<Amount> TryAdd(Amount other) {
+public Outcome<Amount> Add(Amount other) {
     if (Currency != other.Currency) { return Outcome<Amount>.Failure(InvalidAmountOperationError.CurrencyMismatch(this, other)); }
 
     return Outcome<Amount>.Success(new Amount(Value + other.Value, Currency));
@@ -73,7 +73,7 @@ Chaque élément d’un lot peut échouer indépendamment — mais le fait que c
 ```csharp
 // Contrat : un échec par ligne est attendu et traité localement — le loguer et continuer.
 foreach (string line in file) {
-    TryParseAmount(line).Finally(
+    ParseAmount(line).Finally(
         onSuccess: Process,
         onFailure: Log);
 }
@@ -82,7 +82,7 @@ foreach (string line in file) {
 ```csharp
 // Contrat : une ligne invalide invalide tout le fichier — arrêter immédiatement.
 foreach (string line in file) {
-    Amount amount = TryParseAmount(line).GetResultOrThrow();
+    Amount amount = ParseAmount(line).GetResultOrThrow();
     Process(amount);
 }
 ```
@@ -148,7 +148,7 @@ Lorsque plusieurs opérations susceptibles d’échouer doivent s’enchaîner, 
 
 ```csharp
 Outcome<Receipt> result =
-    TryCreateAmount(value, currencyCode)
+    CreateAmount(value, currencyCode)
         .Then(CheckLimits)
         .Then(Charge);
 ```

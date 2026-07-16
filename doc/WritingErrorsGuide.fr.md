@@ -101,7 +101,7 @@ Bon :
 
 À éviter :
 
-> « Cette exception est levée par `Amount.Add` lorsque les champs de devise sont différents. »
+> « Cette exception est levée par `Amount.AddOrThrow` lorsque les champs de devise sont différents. »
 
 ## 5. Énoncer la règle violée
 

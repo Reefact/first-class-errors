@@ -101,7 +101,7 @@ Good:
 
 Avoid:
 
-> “This exception is thrown by `Amount.Add` when the currency fields are different.”
+> “This exception is thrown by `Amount.AddOrThrow` when the currency fields are different.”
 
 ## 5. State the violated rule
 

@@ -25,7 +25,7 @@ public sealed class Temperature : IEquatable<Temperature>, IComparable<Temperatu
     /// <summary>
     ///     Represents the absolute zero temperature, the lowest possible temperature where particles have minimal energy.
     /// </summary>
-    public static readonly Temperature AbsoluteZero = FromKelvin(AbsoluteZeroInKelvin);
+    public static readonly Temperature AbsoluteZero = FromKelvinOrThrow(AbsoluteZeroInKelvin);
 
     /// <summary>
     ///     Creates a <see cref="Temperature" /> from a kelvin value.
@@ -35,12 +35,12 @@ public sealed class Temperature : IEquatable<Temperature>, IComparable<Temperatu
     /// <exception cref="DomainException">
     ///     Thrown when <paramref name="kelvin" /> is lower than absolute zero.
     /// </exception>
-    public static Temperature FromKelvin(decimal kelvin) {
-        return TryFromKelvin(kelvin).GetResultOrThrow();
+    public static Temperature FromKelvinOrThrow(decimal kelvin) {
+        return FromKelvin(kelvin).GetResultOrThrow();
     }
 
     /// <summary>
-    ///     Attempts to create a <see cref="Temperature" /> from a kelvin value.
+    ///     Creates a <see cref="Temperature" /> from a kelvin value.
     /// </summary>
     /// <param name="kelvin">Temperature in kelvin.</param>
     /// <returns>
@@ -48,7 +48,7 @@ public sealed class Temperature : IEquatable<Temperature>, IComparable<Temperatu
     ///     is not below absolute zero; otherwise a failure containing the corresponding
     ///     <see cref="InvalidTemperatureError" />.
     /// </returns>
-    public static Outcome<Temperature> TryFromKelvin(decimal kelvin) {
+    public static Outcome<Temperature> FromKelvin(decimal kelvin) {
         if (IsLowerThanAbsoluteZero(kelvin)) { return Outcome<Temperature>.Failure(InvalidTemperatureError.BelowAbsoluteZero(kelvin, TemperatureUnit.Kelvin)); }
 
         return Outcome<Temperature>.Success(new Temperature(kelvin));
@@ -62,12 +62,12 @@ public sealed class Temperature : IEquatable<Temperature>, IComparable<Temperatu
     /// <exception cref="DomainException">
     ///     Thrown when the converted kelvin value is lower than absolute zero.
     /// </exception>
-    public static Temperature FromCelsius(decimal celsius) {
-        return TryFromCelsius(celsius).GetResultOrThrow();
+    public static Temperature FromCelsiusOrThrow(decimal celsius) {
+        return FromCelsius(celsius).GetResultOrThrow();
     }
 
     /// <summary>
-    ///     Attempts to create a <see cref="Temperature" /> from a Celsius value.
+    ///     Creates a <see cref="Temperature" /> from a Celsius value.
     /// </summary>
     /// <param name="celsius">Temperature in degrees Celsius.</param>
     /// <returns>
@@ -75,7 +75,7 @@ public sealed class Temperature : IEquatable<Temperature>, IComparable<Temperatu
     ///     is not below absolute zero; otherwise a failure containing the corresponding
     ///     <see cref="InvalidTemperatureError" />.
     /// </returns>
-    public static Outcome<Temperature> TryFromCelsius(decimal celsius) {
+    public static Outcome<Temperature> FromCelsius(decimal celsius) {
         decimal kelvin = celsius + CelsiusToKelvinOffset;
         if (IsLowerThanAbsoluteZero(kelvin)) { return Outcome<Temperature>.Failure(InvalidTemperatureError.BelowAbsoluteZero(celsius, TemperatureUnit.Celsius)); }
 
