@@ -35,7 +35,12 @@ need editing.
 * One file per decision, under `maintainers/adr/`, named
   `NNNN-short-title.md` — a four-digit sequence number and a lowercase,
   kebab-case title: `0001-lock-the-analyzer-roslyn-floor.md`.
-* ADRs are written in **English**, like all repository content.
+* ADRs are written in **English** — the canonical version — with a French
+  translation kept alongside as `NNNN-short-title.fr.md`, matching the rest of
+  the repository's bilingual documentation. The English version is
+  authoritative; the French one is a convenience for the project's maintainers
+  and follows it. Each file carries a language banner linking to its
+  counterpart.
 * Every ADR follows the format below; [`template.md`](template.md) is a
   copy-ready skeleton.
 
@@ -175,5 +180,5 @@ Optional supporting material:
 | [ADR-0004](0004-check-every-pull-request-against-the-adr-base.md) | Check every pull request against the ADR base | Accepted |
 | [ADR-0005](0005-reserve-the-plain-factory-name-for-the-outcome-returning-variant.md) | Reserve the plain factory name for the Outcome-returning variant | Accepted |
 | [ADR-0006](0006-supply-arbitrary-test-values-from-a-seedable-source.md) | Supply arbitrary test values from a single seedable source | Accepted |
-| [ADR-0007](0007-name-the-binder-terminals-new-and-create.md) | Name the binder terminals New and Create | Proposed |
+| [ADR-0007](0007-name-the-binder-terminals-new-and-create.md) | Name the binder terminals New and Create | Accepted |
 | [ADR-0008](0008-bind-nullable-value-type-properties-through-a-struct-constrained-overload.md) | Bind nullable value-type properties through a struct-constrained overload | Proposed |

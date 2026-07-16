@@ -1,5 +1,7 @@
 # ADR-0006 | Supply arbitrary test values from a single seedable source
 
+🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0006-supply-arbitrary-test-values-from-a-seedable-source.fr.md)
+
 **Status:** Accepted
 **Date:** 2026-07-16
 **Decision Makers:** Reefact

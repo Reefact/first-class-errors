@@ -1,5 +1,7 @@
 # ADR-0004 | Check every pull request against the ADR base
 
+🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0004-check-every-pull-request-against-the-adr-base.fr.md)
+
 **Status:** Accepted
 **Date:** 2026-07-15
 **Decision Makers:** Reefact

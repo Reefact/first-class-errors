@@ -1,5 +1,7 @@
 # ADR-0005 | Reserve the plain factory name for the Outcome-returning variant
 
+🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0005-reserve-the-plain-factory-name-for-the-outcome-returning-variant.fr.md)
+
 **Status:** Accepted
 **Date:** 2026-07-16
 **Decision Makers:** Reefact

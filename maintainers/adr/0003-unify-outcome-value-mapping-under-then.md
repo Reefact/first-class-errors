@@ -1,5 +1,7 @@
 # ADR-0003 | Unify Outcome value mapping under Then
 
+🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0003-unify-outcome-value-mapping-under-then.fr.md)
+
 **Status:** Accepted
 **Date:** 2026-07-15
 **Decision Makers:** Reefact

@@ -1,5 +1,7 @@
 # ADR-0001 | Lock the analyzer's Roslyn floor
 
+🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0001-lock-the-analyzer-roslyn-floor.fr.md)
+
 **Status:** Accepted
 **Date:** 2026-07-10
 **Decision Makers:** Reefact
