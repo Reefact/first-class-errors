@@ -203,7 +203,7 @@ Before approving a deterministic error test, verify that:
 ---
 
 <div align="center">
-<a href="Testing.en.md">← Testing Outcomes and Errors</a> · <a href="../../../README.md#-next-steps">↑ Table of contents</a> · <a href="ArbitraryTestValues.en.md">Arbitrary Test Values →</a>
+<a href="Testing.en.md">← Testing Outcomes and Errors</a> · <a href="../../../README.md#-documentation">↑ Table of contents</a> · <a href="ArbitraryTestValues.en.md">Arbitrary Test Values →</a>
 </div>
 
 ---

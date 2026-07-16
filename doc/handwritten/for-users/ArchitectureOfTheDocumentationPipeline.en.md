@@ -184,7 +184,7 @@ The code remains the source of truth; the pipeline makes that knowledge portable
 ---
 
 <div align="center">
-<a href="CatalogVersioning.en.md">← Catalog Versioning</a> · <a href="../../../README.md#-next-steps">↑ Table of contents</a> · <a href="DocumentationExtractionReference.en.md">Extraction and Project Discovery Reference →</a>
+<a href="CatalogVersioning.en.md">← Catalog Versioning</a> · <a href="../../../README.md#-documentation">↑ Table of contents</a> · <a href="DocumentationExtractionReference.en.md">Extraction and Project Discovery Reference →</a>
 </div>
 
 ---

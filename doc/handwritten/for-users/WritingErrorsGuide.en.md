@@ -218,7 +218,7 @@ For choosing public and internal runtime text, continue with [Writing Error Mess
 ---
 
 <div align="center">
-<a href="ErrorContext.en.md">← Error Context Guide</a> · <a href="../../../README.md#-next-steps">↑ Table of contents</a> · <a href="WritingErrorMessages.en.md">Writing Error Messages →</a>
+<a href="ErrorContext.en.md">← Error Context Guide</a> · <a href="../../../README.md#-documentation">↑ Table of contents</a> · <a href="WritingErrorMessages.en.md">Writing Error Messages →</a>
 </div>
 
 ---

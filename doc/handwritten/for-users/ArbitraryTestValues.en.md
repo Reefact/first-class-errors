@@ -113,7 +113,7 @@ Before reaching for an arbitrary value, verify that:
 ---
 
 <div align="center">
-<a href="DeterministicTesting.en.md">← Deterministic Error Tests</a> · <a href="../../../README.md#-next-steps">↑ Table of contents</a> · <a href="OperationalIntegration.en.md">Generating and Publishing the Catalog →</a>
+<a href="DeterministicTesting.en.md">← Deterministic Error Tests</a> · <a href="../../../README.md#-documentation">↑ Table of contents</a> · <a href="OperationalIntegration.en.md">Generating and Publishing the Catalog →</a>
 </div>
 
 ---

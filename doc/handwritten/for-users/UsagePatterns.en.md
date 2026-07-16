@@ -199,7 +199,7 @@ Choose the contract from the first list, the error type from the second, and the
 ---
 
 <div align="center">
-<a href="WritingErrorsGuide.en.md">← Writing Errors Guide</a> · <a href="../../../README.md#-next-steps">↑ Table of contents</a> · <a href="OutcomeGuide.en.md">Composing with Outcome →</a>
+<a href="WritingErrorsGuide.en.md">← Writing Errors Guide</a> · <a href="../../../README.md#-documentation">↑ Table of contents</a> · <a href="OutcomeGuide.en.md">Composing with Outcome →</a>
 </div>
 
 ---

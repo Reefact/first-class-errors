@@ -163,7 +163,7 @@ A rename remains breaking because consumers know the old code. When the title su
 ---
 
 <div align="center">
-<a href="OperationalIntegration.en.md">← CI/CD and Operational Integration</a> · <a href="../../../README.md#-next-steps">↑ Table of contents</a> · <a href="CatalogVersioningReference.en.md">Command reference →</a>
+<a href="OperationalIntegration.en.md">← CI/CD and Operational Integration</a> · <a href="../../../README.md#-documentation">↑ Table of contents</a> · <a href="CatalogVersioningReference.en.md">Command reference →</a>
 </div>
 
 ---

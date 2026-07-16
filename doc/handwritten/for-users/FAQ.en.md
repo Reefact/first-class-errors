@@ -130,7 +130,7 @@ See [Error Taxonomy and Composition](ErrorTaxonomy.en.md).
 ---
 
 <div align="center">
-<a href="Internationalization.en.md">← Internationalization</a> · <a href="../../../README.md#-next-steps">↑ Table of contents</a>
+<a href="Internationalization.en.md">← Internationalization</a> · <a href="../../../README.md#-documentation">↑ Table of contents</a>
 </div>
 
 ---

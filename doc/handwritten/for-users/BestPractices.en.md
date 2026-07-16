@@ -111,7 +111,7 @@ Before merging an error-related change, verify that:
 ---
 
 <div align="center">
-<a href="UsagePatterns.en.md">← Usage Patterns</a> · <a href="../../../README.md#-next-steps">↑ Table of contents</a> · <a href="Testing.en.md">Testing Guide →</a>
+<a href="UsagePatterns.en.md">← Usage Patterns</a> · <a href="../../../README.md#-documentation">↑ Table of contents</a> · <a href="Testing.en.md">Testing Guide →</a>
 </div>
 
 ---

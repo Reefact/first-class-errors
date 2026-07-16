@@ -307,7 +307,7 @@ Before publishing a renderer, verify that:
 ---
 
 <div align="center">
-<a href="DocumentationExtractionReference.en.md">← Extraction and Project Discovery Reference</a> · <a href="../../../README.md#-next-steps">↑ Table of contents</a> · <a href="Internationalization.en.md">Internationalization →</a>
+<a href="DocumentationExtractionReference.en.md">← Extraction and Project Discovery Reference</a> · <a href="../../../README.md#-documentation">↑ Table of contents</a> · <a href="Internationalization.en.md">Internationalization →</a>
 </div>
 
 ---
