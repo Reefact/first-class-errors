@@ -164,7 +164,7 @@ public sealed class ErrorTests : IDisposable {
         // Exercise
         string              anyErrorMessage = Any.DiagnosticMessage();
         ErrorCode           anyErrorCode    = Any.ErrorCode();
-        InfrastructureError error           = InfrastructureError.Create(anyErrorCode, anyErrorMessage, InteractionDirection.Incoming, Transience.NonTransient)
+        InfrastructureError error           = InfrastructureError.Create(anyErrorCode, anyErrorMessage, Any.InteractionDirection(), Any.Transience())
                                                                   .WithPublicMessage("short");
 
         // Verify
@@ -188,7 +188,7 @@ public sealed class ErrorTests : IDisposable {
         // Exercise
         string              anyErrorMessage = Any.DiagnosticMessage();
         ErrorCode           anyErrorCode    = Any.ErrorCode();
-        InfrastructureError error           = InfrastructureError.Create(anyErrorCode, anyErrorMessage, InteractionDirection.Outgoing, Transience.Transient)
+        InfrastructureError error           = InfrastructureError.Create(anyErrorCode, anyErrorMessage, Any.InteractionDirection(), Any.Transience())
                                                                   .WithPublicMessage(anyErrorMessage);
 
         // Verify
@@ -222,7 +222,7 @@ public sealed class ErrorTests : IDisposable {
         // Exercise
         string              anyErrorMessage = Any.DiagnosticMessage();
         ErrorCode           anyErrorCode    = Any.ErrorCode();
-        InfrastructureError error           = InfrastructureError.Create(anyErrorCode, anyErrorMessage, InteractionDirection.Outgoing, Transience.Unknown)
+        InfrastructureError error           = InfrastructureError.Create(anyErrorCode, anyErrorMessage, Any.InteractionDirection(), Transience.Unknown)
                                                                   .WithPublicMessage(anyErrorMessage);
 
         // Verify
@@ -235,7 +235,7 @@ public sealed class ErrorTests : IDisposable {
         // Setup
         string      anyErrorMessage = Any.DiagnosticMessage();
         ErrorCode   anyErrorCode    = Any.ErrorCode();
-        DomainError innerError      = DomainError.Create(anyErrorCode, "inner").WithPublicMessage("inner");
+        DomainError innerError      = DomainError.Create(anyErrorCode, Any.DiagnosticMessage()).WithPublicMessage(Any.ShortMessage());
 
         // Exercise
         DomainError rootError = DomainError.Create(anyErrorCode, anyErrorMessage, innerError).WithPublicMessage(anyErrorMessage);
@@ -250,10 +250,10 @@ public sealed class ErrorTests : IDisposable {
         // Setup
         string      anyErrorMessage = Any.DiagnosticMessage();
         ErrorCode   anyErrorCode    = Any.ErrorCode();
-        DomainError innerError      = DomainError.Create(anyErrorCode, "inner").WithPublicMessage("inner");
+        DomainError innerError      = DomainError.Create(anyErrorCode, Any.DiagnosticMessage()).WithPublicMessage(Any.ShortMessage());
 
         // Exercise
-        InfrastructureError rootError = InfrastructureError.Create(anyErrorCode, anyErrorMessage, InteractionDirection.Incoming, Transience.NonTransient, innerError)
+        InfrastructureError rootError = InfrastructureError.Create(anyErrorCode, anyErrorMessage, Any.InteractionDirection(), Any.Transience(), innerError)
                                                            .WithPublicMessage(anyErrorMessage);
 
         // Verify

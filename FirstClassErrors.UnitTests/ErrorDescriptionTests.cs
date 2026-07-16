@@ -1,5 +1,7 @@
 #region Usings declarations
 
+using FirstClassErrors.Testing;
+
 using JetBrains.Annotations;
 
 using NFluent;
@@ -14,7 +16,7 @@ public sealed class ErrorDescriptionTests {
     [Fact(DisplayName = "An error description cannot be created with a null short message.")]
     public void AnErrorDescriptionCannotBeCreatedWithANullShortMessage() {
         // Exercise & verify
-        Check.ThatCode(() => new ErrorDescription(null!, "diagnostic"))
+        Check.ThatCode(() => new ErrorDescription(null!, Any.DiagnosticMessage()))
              .Throws<ArgumentNullException>();
     }
 
@@ -24,14 +26,14 @@ public sealed class ErrorDescriptionTests {
     [InlineData("        ")]
     public void AnErrorDescriptionCannotBeCreatedWithAnEmptyOrWhitespaceShortMessage(string value) {
         // Exercise & verify
-        Check.ThatCode(() => new ErrorDescription(value, "diagnostic"))
+        Check.ThatCode(() => new ErrorDescription(value, Any.DiagnosticMessage()))
              .Throws<ArgumentException>();
     }
 
     [Fact(DisplayName = "An error description cannot be created with a null diagnostic message.")]
     public void AnErrorDescriptionCannotBeCreatedWithANullDiagnosticMessage() {
         // Exercise & verify
-        Check.ThatCode(() => new ErrorDescription("short", null!))
+        Check.ThatCode(() => new ErrorDescription(Any.ShortMessage(), null!))
              .Throws<ArgumentNullException>();
     }
 
@@ -41,14 +43,14 @@ public sealed class ErrorDescriptionTests {
     [InlineData("        ")]
     public void AnErrorDescriptionCannotBeCreatedWithAnEmptyOrWhitespaceDiagnosticMessage(string value) {
         // Exercise & verify
-        Check.ThatCode(() => new ErrorDescription("short", value))
+        Check.ThatCode(() => new ErrorDescription(Any.ShortMessage(), value))
              .Throws<ArgumentException>();
     }
 
     [Fact(DisplayName = "An error description trims the short message.")]
     public void AnErrorDescriptionTrimsTheShortMessage() {
         // Exercise
-        ErrorDescription description = new("  Short message  ", "Diagnostic message");
+        ErrorDescription description = new("  Short message  ", Any.DiagnosticMessage());
 
         // Verify
         Check.That(description.ShortMessage).IsEqualTo("Short message");
@@ -57,7 +59,7 @@ public sealed class ErrorDescriptionTests {
     [Fact(DisplayName = "An error description trims the diagnostic message.")]
     public void AnErrorDescriptionTrimsTheDiagnosticMessage() {
         // Exercise
-        ErrorDescription description = new("Short message", "  Diagnostic message  ");
+        ErrorDescription description = new(Any.ShortMessage(), "  Diagnostic message  ");
 
         // Verify
         Check.That(description.DiagnosticMessage).IsEqualTo("Diagnostic message");
@@ -66,7 +68,7 @@ public sealed class ErrorDescriptionTests {
     [Fact(DisplayName = "An error description sets detailed message to null when not provided.")]
     public void AnErrorDescriptionSetsDetailedMessageToNullWhenNotProvided() {
         // Exercise
-        ErrorDescription description = new("Short message", "Diagnostic message");
+        ErrorDescription description = new(Any.ShortMessage(), Any.DiagnosticMessage());
 
         // Verify
         Check.That(description.DetailedMessage).IsNull();
@@ -78,7 +80,7 @@ public sealed class ErrorDescriptionTests {
     [InlineData("      ")]
     public void AnErrorDescriptionSetsDetailedMessageToNullWhenItIsEmptyOrWhitespace(string value) {
         // Exercise
-        ErrorDescription description = new("Short message", "Diagnostic message", value);
+        ErrorDescription description = new(Any.ShortMessage(), Any.DiagnosticMessage(), value);
 
         // Verify
         Check.That(description.DetailedMessage).IsNull();
@@ -87,7 +89,7 @@ public sealed class ErrorDescriptionTests {
     [Fact(DisplayName = "An error description trims the detailed message when provided.")]
     public void AnErrorDescriptionTrimsTheDetailedMessageWhenProvided() {
         // Exercise
-        ErrorDescription description = new("Short message", "Diagnostic message", "  Detailed  ");
+        ErrorDescription description = new(Any.ShortMessage(), Any.DiagnosticMessage(), "  Detailed  ");
 
         // Verify
         Check.That(description.DetailedMessage).IsEqualTo("Detailed");
