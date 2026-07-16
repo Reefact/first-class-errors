@@ -102,7 +102,9 @@ jobs:
           dotnet build FirstClassErrors.Usage/FirstClassErrors.Usage.csproj -c Release -f net8.0
 
       # Run the net8 fce + worker on the .NET 8 RUNTIME (not rolled forward to the newer one the runner also
-      # carries) and document a net8 assembly end to end.
+      # carries) and document a net8 assembly end to end. GenDoc's own assembly (deployed next to fce) rides
+      # along as a second target: it documents its own GENDOC_-prefixed errors with the very pipeline it
+      # implements, so this run also proves the tool's self-catalog end to end.
       #
       # DOTNET_ROLL_FORWARD=LatestPatch overrides the roll-forward baked into each runtimeconfig (Major on the
       # CLI, LatestMajor on the worker): the environment variable wins over runtimeconfig, and LatestPatch stays
@@ -116,6 +118,7 @@ jobs:
           set -euo pipefail
           dotnet FirstClassErrors.Cli/bin/Release/net8.0/fce.dll generate \
             --assemblies FirstClassErrors.Usage/bin/Release/net8.0/FirstClassErrors.Usage.dll \
+            --assemblies FirstClassErrors.Cli/bin/Release/net8.0/FirstClassErrors.GenDoc.dll \
             --format json --verbose > floor-catalog.json
           # Positive proof, not just exit 0: the worker actually loaded the target and extracted documented errors.
           if ! grep -q '"code"' floor-catalog.json; then
@@ -123,4 +126,10 @@ jobs:
             cat floor-catalog.json
             exit 1
           fi
-          echo "ok: the net8 fce and worker documented a net8 target on the .NET 8 runtime"
+          # Dogfooding proof: the tool documented its own failure surface in the same catalog.
+          if ! grep -q '"GENDOC_' floor-catalog.json; then
+            echo "::error::the tool's own GENDOC_ errors are missing from the generated catalog"
+            cat floor-catalog.json
+            exit 1
+          fi
+          echo "ok: the net8 fce and worker documented a net8 target and the tool's own errors on the .NET 8 runtime"
