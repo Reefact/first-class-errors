@@ -2,6 +2,8 @@
 
 using System.Diagnostics.CodeAnalysis;
 
+using FirstClassErrors.Testing;
+
 using JetBrains.Annotations;
 
 using NFluent;
@@ -56,7 +58,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
     public void AnErrorDocumentationTitleIsTrimmed() {
         // Setup
         ErrorDocumentationBuilder builder             = new();
-        ErrorCode                 anyErrorCode        = ErrorCodeFactory.CreateAny();
+        ErrorCode                 anyErrorCode        = Any.ErrorCode();
         string                    anyErrorLongMessage = StringFactory.AnyErrorLongMessage();
 
         // Exercise
@@ -85,7 +87,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
     public void AnErrorDocumentationDescriptionIsTrimmed() {
         // Setup
         ErrorDocumentationBuilder builder             = new();
-        ErrorCode                 anyErrorCode        = ErrorCodeFactory.CreateAny();
+        ErrorCode                 anyErrorCode        = Any.ErrorCode();
         string                    anyTitle            = StringFactory.AnyTitle();
         string                    anyErrorLongMessage = StringFactory.AnyErrorLongMessage();
 
@@ -115,7 +117,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
     public void AnErrorDocumentationRuleIsTrimmed() {
         // Setup
         ErrorDocumentationBuilder builder             = new();
-        ErrorCode                 anyErrorCode        = ErrorCodeFactory.CreateAny();
+        ErrorCode                 anyErrorCode        = Any.ErrorCode();
         string                    anyTitle            = StringFactory.AnyTitle();
         string                    anyExplanation      = StringFactory.AnyExplanation();
         string                    anyErrorLongMessage = StringFactory.AnyErrorLongMessage();
@@ -136,7 +138,7 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
     public void AnErrorDocumentationCanBeBuiltWithoutARule() {
         // Setup
         ErrorDocumentationBuilder builder             = new();
-        ErrorCode                 anyErrorCode        = ErrorCodeFactory.CreateAny();
+        ErrorCode                 anyErrorCode        = Any.ErrorCode();
         string                    anyTitle            = StringFactory.AnyTitle();
         string                    anyExplanation      = StringFactory.AnyExplanation();
         string                    anyErrorLongMessage = StringFactory.AnyErrorLongMessage();
