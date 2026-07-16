@@ -33,51 +33,76 @@ public sealed class AnyTests {
 
     #endregion
 
-    [Fact(DisplayName = "UseSeed makes the whole sequence of Any values reproducible.")]
-    public void UseSeedIsReproducible() {
-        string first;
-        string second;
+    [Fact(DisplayName = "Reproducibly with a given seed replays the same sequence of values.")]
+    public void ReproduciblyWithASeedIsDeterministic() {
+        string first  = string.Empty;
+        string second = string.Empty;
 
-        using (Any.UseSeed(1234)) { first = Batch(); }
-        using (Any.UseSeed(1234)) { second = Batch(); }
+        Any.Reproducibly(1234, () => { first = Batch(); });
+        Any.Reproducibly(1234, () => { second = Batch(); });
 
         Check.That(second).IsEqualTo(first);
     }
 
     [Fact(DisplayName = "Different seeds produce different sequences.")]
     public void DifferentSeedsDiffer() {
-        string fromOne;
-        string fromTwo;
+        string fromOne = string.Empty;
+        string fromTwo = string.Empty;
 
-        using (Any.UseSeed(1)) { fromOne = Batch(); }
-        using (Any.UseSeed(2)) { fromTwo = Batch(); }
+        Any.Reproducibly(1, () => { fromOne = Batch(); });
+        Any.Reproducibly(2, () => { fromTwo = Batch(); });
 
         Check.That(fromTwo).IsNotEqualTo(fromOne);
     }
 
-    [Fact(DisplayName = "A nested UseSeed scope leaves the outer sequence undisturbed.")]
-    public void NestedScopeDoesNotDisturbTheOuterSequence() {
-        int outerFirst;
-        int outerSecond;
-        using (Any.UseSeed(7)) {
-            outerFirst = Any.Int();
-            using (Any.UseSeed(99)) {
-                Any.Int();
-                Any.Int();
-            }
+    [Fact(DisplayName = "Reproducibly reports the seed and rethrows the original exception on failure.")]
+    public void ReproduciblyReportsTheSeedAndRethrows() {
+        string?                   reported = null;
+        InvalidOperationException boom     = new("boom");
+        Action                    failing  = () => throw boom;
 
-            outerSecond = Any.Int();
-        }
+        InvalidOperationException thrown = Assert.Throws<InvalidOperationException>(
+            () => Any.Reproducibly(4242, failing, message => reported = message));
 
-        int expectedFirst;
-        int expectedSecond;
-        using (Any.UseSeed(7)) {
-            expectedFirst  = Any.Int();
-            expectedSecond = Any.Int();
-        }
+        Check.That(ReferenceEquals(thrown, boom)).IsTrue();
+        Check.That(reported).IsNotNull();
+        Check.That(reported!).Contains("4242");
+    }
 
-        Check.That(outerFirst).IsEqualTo(expectedFirst);
-        Check.That(outerSecond).IsEqualTo(expectedSecond);
+    [Fact(DisplayName = "Reproducibly does not report when the body succeeds.")]
+    public void ReproduciblyIsSilentOnSuccess() {
+        bool reported = false;
+
+        Any.Reproducibly(() => { Any.ErrorCode(); }, _ => reported = true);
+
+        Check.That(reported).IsFalse();
+    }
+
+    [Fact(DisplayName = "Reproducibly without a seed reports a replayable seed on failure.")]
+    public void ReproduciblyWithoutSeedStillReportsAReplayableSeed() {
+        string? reported = null;
+        Action  failing  = () => throw new InvalidOperationException("x");
+
+        Assert.Throws<InvalidOperationException>(
+            () => Any.Reproducibly(failing, message => reported = message));
+
+        Check.That(reported).IsNotNull();
+        Check.That(reported!).Contains("Any.Reproducibly(");
+    }
+
+    [Fact(DisplayName = "The async Reproducibly reports the seed and rethrows on failure.")]
+    public async Task AsyncReproduciblyReportsTheSeedAndRethrows() {
+        string? reported = null;
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => Any.Reproducibly(7, async () => {
+                await Task.Yield();
+
+                throw new InvalidOperationException("boom");
+            }, message => reported = message));
+
+        Check.That(reported).IsNotNull();
+        Check.That(reported!).Contains("7");
     }
 
     [Fact(DisplayName = "ErrorCode returns a non-blank code shaped like ANY_CODE_*.")]
@@ -95,19 +120,15 @@ public sealed class AnyTests {
 
     [Fact(DisplayName = "Transience never returns the Unknown sentinel.")]
     public void TransienceExcludesUnknown() {
-        using (Any.UseSeed(0)) {
-            for (int i = 0; i < 200; i++) {
-                Check.That(Any.Transience()).IsNotEqualTo(Transience.Unknown);
-            }
+        for (int i = 0; i < 200; i++) {
+            Check.That(Any.Transience()).IsNotEqualTo(Transience.Unknown);
         }
     }
 
     [Fact(DisplayName = "InteractionDirection never returns the Unknown sentinel.")]
     public void InteractionDirectionExcludesUnknown() {
-        using (Any.UseSeed(0)) {
-            for (int i = 0; i < 200; i++) {
-                Check.That(Any.InteractionDirection()).IsNotEqualTo(InteractionDirection.Unknown);
-            }
+        for (int i = 0; i < 200; i++) {
+            Check.That(Any.InteractionDirection()).IsNotEqualTo(InteractionDirection.Unknown);
         }
     }
 

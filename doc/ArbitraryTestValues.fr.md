@@ -52,20 +52,29 @@ Les garanties s’arrêtent à la validité du type. Un helper ne vise aucune pr
 
 Utilisez `Any.Enum<TEnum>()` quand n’importe quel membre convient — sentinelle comprise — et les helpers d’enum nommés quand le test a besoin d’une valeur qui déclenche réellement le comportement concerné.
 
-## Reproduire une exécution avec une graine
+## Reproduire une exécution en échec
 
 La source n’est pas seedée par défaut : les valeurs diffèrent donc d’une exécution à l’autre. C’est délibéré : un test qui ne passe que pour une valeur particulière dépend de quelque chose qu’il n’énonce pas, et faire varier la valeur révèle ce couplage.
 
-Le coût, c’est la reproductibilité. La graine par défaut **n’est pas exposée aujourd’hui** : une exécution ayant échoué sur une valeur non seedée précise ne peut donc pas être rejouée à partir de sa seule sortie. Gardez la valeur arbitraire hors de ce qui décide du succès ou de l’échec — ou, lorsqu’une exécution précise doit être reproductible, épinglez une graine sur la portée la plus étroite utile ; une graine commune à toute la suite convient lorsque la stabilité complète est préférable à la variation entre les exécutions. Chaque appel à `Any` dans la portée devient alors déterministe :
+Quand une exécution mérite d’être reproduite, enveloppez le corps du test dans `Any.Reproducibly`. La méthode épingle une graine fraîche pour l’exécution et, si le corps lève une exception, **rapporte cette graine** avant de laisser l’échec se propager — un test rouge te dit ainsi exactement comment le rejouer :
 
 ```csharp
-using (Any.UseSeed(1234)) {
-    ErrorCode first  = Any.ErrorCode();
-    ErrorCode second = Any.ErrorCode(); // les deux mêmes valeurs à chaque exécution
-}
+[Fact]
+public void Some_value_sensitive_test() =>
+    Any.Reproducibly(() => {
+        // ... arrange avec Any, act, assert ...
+    });
 ```
 
-Les graines s’imbriquent : un `Any.UseSeed(...)` interne utilise sa propre séquence et restaure celle de l’extérieur à sa sortie. Hors de toute portée, la source n’est pas seedée et chaque exécution diffère.
+En cas d’échec, la graine est écrite sur `Console.Error` par défaut ; passe le writer de ton framework (par exemple l’`ITestOutputHelper.WriteLine` de xUnit) pour l’y router. Rejoue l’exécution en redonnant la graine rapportée :
+
+```csharp
+Any.Reproducibly(1234, () => {
+    // ... le même corps ...
+});
+```
+
+Reproduire une exécution nécessite la **même séquence** d’appels à `Any` : un corps dont l’ordre des tirages dépend d’un état externe non déterministe n’est pas entièrement rejouable à partir de la seule graine. Une surcharge asynchrone, `Any.Reproducibly(Func<Task>)`, existe pour les corps de test `async`.
 
 ## `OccurredAt` et `InstanceId` arbitraires
 
@@ -85,11 +94,11 @@ using (InstanceIds.UseAny()) {
 }
 ```
 
-Les deux acceptent une graine optionnelle (`Clock.UseAny(1234)`, `InstanceIds.UseAny(1234)`) pour rendre les valeurs choisies reproductibles. Pour épingler un instant ou un identifiant *précis*, utilisez `UseFixed` — voir [Tests d’erreur déterministes](DeterministicTesting.fr.md).
+Les deux tirent de la même source qu’`Any` : les exécuter à l’intérieur d’un `Any.Reproducibly` rend donc leur instant et leurs identifiants reproductibles eux aussi. Pour épingler un instant ou un identifiant *précis*, utilisez `UseFixed` — voir [Tests d’erreur déterministes](DeterministicTesting.fr.md).
 
 ## Portée et tests parallèles
 
-`Any.UseSeed`, `Clock.UseAny` et `InstanceIds.UseAny` ne prennent effet qu’à l’intérieur de leur bloc `using` et sont restaurés à la sortie de la portée. La source seedée est stockée dans un `AsyncLocal` : elle suit le flux d’exécution du test lui-même et ne fuit jamais dans d’autres tests s’exécutant en même temps.
+`Any.Reproducibly`, `Clock.UseAny` et `InstanceIds.UseAny` ne prennent effet que pour l’exécution ou le bloc `using` qu’ils enveloppent, et la source arbitraire est restaurée à leur sortie. Cette source est stockée dans un `AsyncLocal` : elle suit le flux d’exécution du test lui-même et ne fuit jamais dans d’autres tests s’exécutant en même temps.
 
 ## Checklist de revue
 
@@ -98,7 +107,7 @@ Avant de recourir à une valeur arbitraire, vérifiez que :
 - la valeur ne **modifie pas** le chemin fonctionnel exercé par le test — elle ne doit alimenter ni une branche, ni une validation, ni une sérialisation, ni un classement, même indirectement ;
 - la valeur n’est réellement pas vérifiée par le test — sinon utilisez un littéral ;
 - un helper d’enum nommé est utilisé quand le test a besoin d’une valeur significative, plutôt que `Any.Enum<TEnum>()` ;
-- une graine est épinglée dès qu’une exécution en échec serait sinon irreproductible ;
+- un test sensible aux valeurs est enveloppé dans `Any.Reproducibly`, pour qu’une exécution en échec rapporte la graine à rejouer ;
 - `Clock.UseAny` / `InstanceIds.UseAny` servent pour des données d’occurrence stables mais sans importance, et `UseFixed` lorsque la valeur exacte est assertée.
 
 ---

@@ -52,20 +52,29 @@ The guarantees stop at type validity. A helper does not target a domain precondi
 
 Use `Any.Enum<TEnum>()` when any member will do — a sentinel included — and the named enum helpers when the test needs a value that actually drives the behavior under test.
 
-## Reproduce a run with a seed
+## Reproduce a failing run
 
 The source is unseeded by default, so the values differ between runs. That is deliberate: a test that passes only for one particular value is relying on something it never states, and varying the value surfaces that coupling.
 
-The cost is reproducibility. The default seed is **not surfaced today**, so a run that failed on a particular unseeded value cannot be replayed from its output alone. Keep the arbitrary value out of what decides pass or fail — or, when a specific run must be reproducible, pin a seed on the narrowest useful scope; a suite-wide seed is fine when full stability is preferable to variation between runs. Every `Any` call inside the scope then becomes deterministic:
+When a run matters enough to reproduce, wrap the test body in `Any.Reproducibly`. It pins a fresh seed for the run and, if the body throws, **reports that seed** before the failure propagates — so a red test tells you exactly how to replay it:
 
 ```csharp
-using (Any.UseSeed(1234)) {
-    ErrorCode first  = Any.ErrorCode();
-    ErrorCode second = Any.ErrorCode(); // the same two values on every run
-}
+[Fact]
+public void Some_value_sensitive_test() =>
+    Any.Reproducibly(() => {
+        // ... arrange with Any, act, assert ...
+    });
 ```
 
-Seeds nest: an inner `Any.UseSeed(...)` uses its own sequence and restores the outer one when it exits. Outside any scope the source is unseeded and every run differs.
+On failure the seed is written to `Console.Error` by default; pass your framework's writer (for example xUnit's `ITestOutputHelper.WriteLine`) to route it there instead. Replay the run by handing the reported seed back:
+
+```csharp
+Any.Reproducibly(1234, () => {
+    // ... the same body ...
+});
+```
+
+Reproducing a run needs the same sequence of `Any` calls, so a body whose call order depends on non-deterministic external state is not fully replayable from the seed alone. There is also an asynchronous overload, `Any.Reproducibly(Func<Task>)`, for `async` test bodies.
 
 ## Arbitrary `OccurredAt` and `InstanceId`
 
@@ -85,11 +94,11 @@ using (InstanceIds.UseAny()) {
 }
 ```
 
-Both take an optional seed (`Clock.UseAny(1234)`, `InstanceIds.UseAny(1234)`) to make the chosen values reproducible. To pin a *specific* instant or id instead, use `UseFixed` — see [Deterministic Error Tests](DeterministicTesting.en.md).
+Both draw from the same source as `Any`, so running them inside `Any.Reproducibly` makes their instant and ids reproducible too. To pin a *specific* instant or id instead, use `UseFixed` — see [Deterministic Error Tests](DeterministicTesting.en.md).
 
 ## Scope and parallel tests
 
-`Any.UseSeed`, `Clock.UseAny`, and `InstanceIds.UseAny` all take effect only inside their `using` block and are restored when the scope exits. The seeded source is stored in an `AsyncLocal`, so it follows the test's own execution flow and never leaks into other tests running at the same time.
+`Any.Reproducibly`, `Clock.UseAny`, and `InstanceIds.UseAny` all take effect only for the run or `using` block they wrap, and the arbitrary source is restored when it exits. That source is stored in an `AsyncLocal`, so it follows the test's own execution flow and never leaks into other tests running at the same time.
 
 ## Review checklist
 
@@ -98,7 +107,7 @@ Before reaching for an arbitrary value, verify that:
 - the value does **not** change the functional path the test exercises — it must not feed a branch, a validation, a serialization, or an ordering, even indirectly;
 - the value is genuinely not checked by the test — otherwise use a literal;
 - a named enum helper is used when the test needs a meaningful value, rather than `Any.Enum<TEnum>()`;
-- a seed is pinned whenever a failing run would otherwise be irreproducible;
+- a value-sensitive test is wrapped in `Any.Reproducibly` so a failing run reports the seed to replay;
 - `Clock.UseAny` / `InstanceIds.UseAny` are used for stable-but-irrelevant occurrence data, and `UseFixed` when the exact value is asserted.
 
 ---

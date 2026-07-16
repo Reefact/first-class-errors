@@ -25,12 +25,16 @@ internal static class ArbitrarySource {
         get {
             Random? random = Seeded.Value;
             if (random is null) {
-                random       = new Random(System.Guid.NewGuid().GetHashCode());
+                random       = new Random(NewSeed());
                 Seeded.Value = random;
             }
 
             return random;
         }
+    }
+
+    internal static int NewSeed() {
+        return System.Guid.NewGuid().GetHashCode();
     }
 
     internal static IDisposable UseSeed(int seed) {
@@ -83,14 +87,14 @@ internal static class ArbitrarySource {
         return pool[Current.Next(pool.Count)];
     }
 
-    internal static Guid NewGuid(Random random) {
+    private static Guid NewGuid(Random random) {
         byte[] bytes = new byte[16];
         random.NextBytes(bytes);
 
         return new Guid(bytes);
     }
 
-    internal static DateTimeOffset NewInstant(Random random) {
+    private static DateTimeOffset NewInstant(Random random) {
         return Origin.AddSeconds(random.Next());
     }
 
