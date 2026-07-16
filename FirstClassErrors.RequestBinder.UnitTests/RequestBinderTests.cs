@@ -2,6 +2,8 @@
 
 using System.Reflection;
 
+using FirstClassErrors.Testing;
+
 using NFluent;
 
 #endregion
@@ -24,8 +26,8 @@ public sealed class RequestBinderTests {
     private static Outcome<Stay> AssembleStay(BookingDate checkIn, BookingDate checkOut) {
         return checkOut.Value > checkIn.Value
                    ? Outcome<Stay>.Success(new Stay(checkIn, checkOut))
-                   : Outcome<Stay>.Failure(DomainError.Create(CheckOutNotAfterCheckIn, "Check-out must be after check-in.")
-                                                      .WithPublicMessage("The stay dates are inconsistent."));
+                   : Outcome<Stay>.Failure(DomainError.Create(CheckOutNotAfterCheckIn, Any.DiagnosticMessage())
+                                                      .WithPublicMessage(Any.ShortMessage()));
     }
 
     [Fact(DisplayName = "New assembles the command exactly once when every property bound.")]

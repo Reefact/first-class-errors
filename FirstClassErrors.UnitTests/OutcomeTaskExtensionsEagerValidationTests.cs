@@ -1,5 +1,7 @@
 #region Usings declarations
 
+using FirstClassErrors.Testing;
+
 using JetBrains.Annotations;
 
 using NFluent;
@@ -68,7 +70,7 @@ public sealed class OutcomeTaskExtensionsEagerValidationTests {
     [Fact(DisplayName = "Recover over a null Task<Outcome<T>> throws synchronously, before the task is awaited.")]
     public void RecoverOverANullGenericTaskOutcomeThrowsSynchronously() {
         // Exercise & verify
-        Check.ThatCode(() => { _ = ((Task<Outcome<int>>)null!).Recover(_ => Outcome<int>.Success(1)); })
+        Check.ThatCode(() => { _ = ((Task<Outcome<int>>)null!).Recover(_ => Outcome<int>.Success(Any.Int())); })
              .Throws<ArgumentNullException>();
     }
 
@@ -137,7 +139,7 @@ public sealed class OutcomeTaskExtensionsEagerValidationTests {
     [Fact(DisplayName = "Then (value mapping) over a Task<Outcome<T>> with a null conversion throws synchronously.")]
     public void ToWithANullConversionThrowsSynchronously() {
         // Setup
-        Task<Outcome<int>> task = Task.FromResult(Outcome<int>.Success(1));
+        Task<Outcome<int>> task = Task.FromResult(Outcome<int>.Success(Any.Int()));
 
         // Exercise & verify
         Check.ThatCode(() => { _ = task.Then((Func<int, string>)null!); })
@@ -147,7 +149,7 @@ public sealed class OutcomeTaskExtensionsEagerValidationTests {
     [Fact(DisplayName = "Recover over a Task<Outcome<T>> with a null fallback throws synchronously.")]
     public void GenericRecoverWithANullFallbackThrowsSynchronously() {
         // Setup
-        Task<Outcome<int>> task = Task.FromResult(Outcome<int>.Success(1));
+        Task<Outcome<int>> task = Task.FromResult(Outcome<int>.Success(Any.Int()));
 
         // Exercise & verify
         Check.ThatCode(() => { _ = task.Recover((Func<Error, Outcome<int>>)null!); })
@@ -157,7 +159,7 @@ public sealed class OutcomeTaskExtensionsEagerValidationTests {
     [Fact(DisplayName = "Finally over a Task<Outcome<T>> with a null failure branch throws synchronously.")]
     public void GenericFinallyWithANullFailureBranchThrowsSynchronously() {
         // Setup
-        Task<Outcome<int>> task = Task.FromResult(Outcome<int>.Success(1));
+        Task<Outcome<int>> task = Task.FromResult(Outcome<int>.Success(Any.Int()));
 
         // Exercise & verify
         Check.ThatCode(() => { _ = task.Finally(value => $"ok:{value}", (Func<Error, string>)null!); })

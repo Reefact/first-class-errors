@@ -1,5 +1,7 @@
 #region Usings declarations
 
+using FirstClassErrors.Testing;
+
 using JetBrains.Annotations;
 
 using NFluent;
@@ -14,7 +16,7 @@ public sealed class OutcomeGenericAdditionalTests {
     [Fact(DisplayName = "Then discarding the value chains to a non-generic Outcome on success.")]
     public void ThenDiscardingTheValueChainsToANonGenericOutcomeOnSuccess() {
         // Setup
-        Outcome<int> outcome = Outcome<int>.Success(3);
+        Outcome<int> outcome = Outcome<int>.Success(Any.Int());
 
         // Exercise
         Outcome result = outcome.Then(_ => Outcome.Success);
@@ -80,7 +82,7 @@ public sealed class OutcomeGenericAdditionalTests {
     [Fact(DisplayName = "Then throws an ArgumentNullException when the continuation is null.")]
     public void ThenThrowsAnArgumentNullExceptionWhenTheContinuationIsNull() {
         // Setup
-        Outcome<int> outcome = Outcome<int>.Success(1);
+        Outcome<int> outcome = Outcome<int>.Success(Any.Int());
 
         // Exercise & verify
         Check.ThatCode(() => outcome.Then((Func<int, Outcome>)null!))
@@ -90,7 +92,7 @@ public sealed class OutcomeGenericAdditionalTests {
     [Fact(DisplayName = "Then (value mapping) throws an ArgumentNullException when the converter is null.")]
     public void ToThrowsAnArgumentNullExceptionWhenTheConverterIsNull() {
         // Setup
-        Outcome<int> outcome = Outcome<int>.Success(1);
+        Outcome<int> outcome = Outcome<int>.Success(Any.Int());
 
         // Exercise & verify
         Check.ThatCode(() => outcome.Then((Func<int, string>)null!))
@@ -100,7 +102,7 @@ public sealed class OutcomeGenericAdditionalTests {
     [Fact(DisplayName = "Recover throws an ArgumentNullException when the fallback is null.")]
     public void RecoverThrowsAnArgumentNullExceptionWhenTheFallbackIsNull() {
         // Setup
-        Outcome<int> outcome = Outcome<int>.Success(1);
+        Outcome<int> outcome = Outcome<int>.Success(Any.Int());
 
         // Exercise & verify
         Check.ThatCode(() => outcome.Recover((Func<Error, Outcome<int>>)null!))
@@ -110,7 +112,7 @@ public sealed class OutcomeGenericAdditionalTests {
     [Fact(DisplayName = "Finally throws an ArgumentNullException when the success handler is null.")]
     public void FinallyThrowsAnArgumentNullExceptionWhenTheSuccessHandlerIsNull() {
         // Setup
-        Outcome<int> outcome = Outcome<int>.Success(1);
+        Outcome<int> outcome = Outcome<int>.Success(Any.Int());
 
         // Exercise & verify
         Check.ThatCode(() => outcome.Finally((Func<int, string>)null!, _ => "ko"))

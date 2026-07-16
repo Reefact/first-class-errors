@@ -1,5 +1,7 @@
 #region Usings declarations
 
+using FirstClassErrors.Testing;
+
 using JetBrains.Annotations;
 
 using NFluent;
@@ -35,7 +37,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     [Fact(DisplayName = "Then over a failed Task<Outcome> to a typed outcome propagates the error.")]
     public async Task ThenOverAFailedTaskOutcomeToATypedOutcomePropagatesTheError() {
         // Setup
-        DomainError   error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError   error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
         Task<Outcome> task  = Task.FromResult(Outcome.Failure(error));
 
         // Exercise
@@ -56,7 +58,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     [Fact(DisplayName = "Then over a failed Task<Outcome> propagates the error unchanged.")]
     public async Task ThenOverAFailedTaskOutcomePropagatesTheErrorUnchanged() {
         // Setup
-        DomainError   error  = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError   error  = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
         Task<Outcome> task   = Task.FromResult(Outcome.Failure(error));
         bool          called = false;
 
@@ -89,7 +91,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     public async Task TheAsyncThenOverAFailedTaskOutcomeToATypedOutcomePropagatesTheError() {
         // Setup
         CancellationToken token = TestContext.Current.CancellationToken;
-        DomainError       error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError       error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
         Task<Outcome>     task  = Task.FromResult(Outcome.Failure(error));
 
         // Exercise
@@ -125,7 +127,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     public async Task TheAsyncThenOverAFailedTaskOutcomePropagatesTheErrorUnchanged() {
         // Setup
         CancellationToken token = TestContext.Current.CancellationToken;
-        DomainError       error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError       error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
         Task<Outcome>     task  = Task.FromResult(Outcome.Failure(error));
 
         // Exercise
@@ -151,7 +153,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     [Fact(DisplayName = "Recover over a failed Task<Outcome> replaces the failure with the fallback.")]
     public async Task RecoverOverAFailedTaskOutcomeReplacesTheFailureWithTheFallback() {
         // Setup
-        DomainError   error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError   error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
         Task<Outcome> task  = Task.FromResult(Outcome.Failure(error));
 
         // Exercise
@@ -167,7 +169,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
         Task<Outcome> task = Task.FromResult(Outcome.Success);
 
         // Exercise
-        Outcome result = await task.Recover(_ => Outcome.Failure(ErrorFactory.Domain(ErrorCode.Unspecified, "fallback")));
+        Outcome result = await task.Recover(_ => Outcome.Failure(ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage())));
 
         // Verify
         Check.That(result.IsSuccess).IsTrue();
@@ -184,7 +186,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     public async Task TheAsyncRecoverOverAFailedTaskOutcomeReplacesTheFailureWithTheFallback() {
         // Setup
         CancellationToken token = TestContext.Current.CancellationToken;
-        DomainError       error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError       error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
         Task<Outcome>     task  = Task.FromResult(Outcome.Failure(error));
 
         // Exercise
@@ -222,7 +224,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     [Fact(DisplayName = "Finally over a Task<Outcome> resolves the failure branch to a value.")]
     public async Task FinallyOverATaskOutcomeResolvesTheFailureBranchToAValue() {
         // Setup
-        DomainError   error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError   error = ErrorFactory.Domain(Any.ErrorCode(), "boom");
         Task<Outcome> task  = Task.FromResult(Outcome.Failure(error));
 
         // Exercise
@@ -242,7 +244,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     [Fact(DisplayName = "Finally with actions over a Task<Outcome> runs the branch matching the outcome.")]
     public async Task FinallyWithActionsOverATaskOutcomeRunsTheBranchMatchingTheOutcome() {
         // Setup
-        DomainError   error          = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError   error          = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
         bool          successOnOk    = false;
         Error?        capturedOnFail = null;
 
@@ -266,7 +268,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     public async Task TheAsyncFinallyOverATaskOutcomeResolvesBothBranchesToAValue() {
         // Setup
         CancellationToken token = TestContext.Current.CancellationToken;
-        DomainError       error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError       error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
 
         // Exercise
         string onSuccess = await Task.FromResult(Outcome.Success)
@@ -293,7 +295,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     public async Task TheAsyncFinallyWithActionsOverATaskOutcomeRunsTheBranchMatchingTheOutcome() {
         // Setup
         CancellationToken token          = TestContext.Current.CancellationToken;
-        DomainError       error          = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError       error          = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
         bool              successOnOk    = false;
         Error?            capturedOnFail = null;
 
@@ -337,7 +339,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     [Fact(DisplayName = "Then discarding the value over a failed Task<Outcome<T>> propagates the error.")]
     public async Task ThenDiscardingTheValueOverAFailedTaskOutcomePropagatesTheError() {
         // Setup
-        DomainError        error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError        error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
         Task<Outcome<int>> task  = Task.FromResult(Outcome<int>.Failure(error));
 
         // Exercise
@@ -358,7 +360,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     public async Task TheAsyncThenOverAFailedTaskOutcomeToATypedOutcomePropagatesTheErrorGeneric() {
         // Setup
         CancellationToken  token = TestContext.Current.CancellationToken;
-        DomainError        error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError        error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
         Task<Outcome<int>> task  = Task.FromResult(Outcome<int>.Failure(error));
 
         // Exercise
@@ -372,7 +374,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     public async Task TheAsyncThenDiscardingTheValueOverATaskOutcomeChainsOnSuccessAndPropagatesOnFailure() {
         // Setup
         CancellationToken token = TestContext.Current.CancellationToken;
-        DomainError       error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError       error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
 
         // Exercise
         Outcome onSuccess = await Task.FromResult(Outcome<int>.Success(3))
@@ -402,7 +404,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     [Fact(DisplayName = "Then (value mapping) over a failed Task<Outcome<T>> propagates the error.")]
     public async Task ToOverAFailedTaskOutcomePropagatesTheError() {
         // Setup
-        DomainError        error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError        error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
         Task<Outcome<int>> task  = Task.FromResult(Outcome<int>.Failure(error));
 
         // Exercise
@@ -416,7 +418,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     public async Task TheAsyncToOverATaskOutcomeMapsOnSuccessAndPropagatesOnFailure() {
         // Setup
         CancellationToken token = TestContext.Current.CancellationToken;
-        DomainError       error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError       error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
 
         // Exercise
         Outcome<string> onSuccess = await Task.FromResult(Outcome<int>.Success(6))
@@ -446,7 +448,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     [Fact(DisplayName = "Recover with an outcome fallback over a failed Task<Outcome<T>> replaces the failure.")]
     public async Task RecoverWithAnOutcomeFallbackOverAFailedTaskOutcomeReplacesTheFailure() {
         // Setup
-        DomainError        error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError        error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
         Task<Outcome<int>> task  = Task.FromResult(Outcome<int>.Failure(error));
 
         // Exercise
@@ -498,7 +500,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     public async Task TheAsyncRecoverWithAnOutcomeFallbackOverATaskOutcomeRecoversAndPassesThrough() {
         // Setup
         CancellationToken token = TestContext.Current.CancellationToken;
-        DomainError       error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError       error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
 
         // Exercise
         Outcome<int> recovered = await Task.FromResult(Outcome<int>.Failure(error))
@@ -525,7 +527,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     public async Task TheAsyncRecoverWithAValueFallbackOverATaskOutcomeRecoversAndPassesThrough() {
         // Setup
         CancellationToken token = TestContext.Current.CancellationToken;
-        DomainError       error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError       error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
 
         // Exercise
         Outcome<int> recovered = await Task.FromResult(Outcome<int>.Failure(error))
@@ -555,7 +557,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     [Fact(DisplayName = "Finally over a failed Task<Outcome<T>> resolves the failure branch to a value.")]
     public async Task FinallyOverAFailedTaskOutcomeResolvesTheFailureBranchToAValue() {
         // Setup
-        DomainError        error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError        error = ErrorFactory.Domain(Any.ErrorCode(), "boom");
         Task<Outcome<int>> task  = Task.FromResult(Outcome<int>.Failure(error));
 
         // Exercise
@@ -575,7 +577,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     [Fact(DisplayName = "Finally with actions over a Task<Outcome<T>> runs the branch matching the outcome.")]
     public async Task FinallyWithActionsOverATaskGenericOutcomeRunsTheBranchMatchingTheOutcome() {
         // Setup
-        DomainError error          = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError error          = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
         int         capturedValue  = 0;
         Error?      capturedOnFail = null;
 
@@ -599,7 +601,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     public async Task TheAsyncFinallyOverATaskGenericOutcomeResolvesBothBranchesToAValue() {
         // Setup
         CancellationToken token = TestContext.Current.CancellationToken;
-        DomainError       error = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError       error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
 
         // Exercise
         string onSuccess = await Task.FromResult(Outcome<int>.Success(5))
@@ -626,7 +628,7 @@ public sealed class OutcomeTaskExtensionsCoverageTests {
     public async Task TheAsyncFinallyWithActionsOverATaskGenericOutcomeRunsTheBranchMatchingTheOutcome() {
         // Setup
         CancellationToken token          = TestContext.Current.CancellationToken;
-        DomainError       error          = ErrorFactory.Domain(ErrorCode.Unspecified, "boom");
+        DomainError       error          = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
         int               capturedValue  = 0;
         Error?            capturedOnFail = null;
 

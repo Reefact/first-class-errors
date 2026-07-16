@@ -3,6 +3,8 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
+using FirstClassErrors.Testing;
+
 using NFluent;
 
 #endregion
@@ -30,8 +32,8 @@ public sealed class BindingContractTests {
         var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
 
         bind.SimpleProperty(r => r.GuestEmail).AsRequired(_ => Outcome<EmailAddress>.Failure(
-            PrimaryPortError.Create(ErrorCode.Create("TEST_PORT_LEVEL_REJECTION"), "Rejected at the port.", Transience.NonTransient)
-                            .WithPublicMessage("Rejected.")));
+            PrimaryPortError.Create(ErrorCode.Create("TEST_PORT_LEVEL_REJECTION"), Any.DiagnosticMessage(), Any.Transience())
+                            .WithPublicMessage(Any.ShortMessage())));
 
         Outcome<string> outcome = bind.New(_ => "never");
         Error invalid = outcome.Error!.InnerErrors.Single();
@@ -44,9 +46,9 @@ public sealed class BindingContractTests {
         var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
 
         InfrastructureError foreignFamily =
-            InfrastructureError.Create(ErrorCode.Create("TEST_FOREIGN_FAMILY"), "A family the port envelope cannot hold.",
-                                       InteractionDirection.Outgoing, Transience.Unknown)
-                               .WithPublicMessage("Foreign.");
+            InfrastructureError.Create(Any.ErrorCode(), Any.DiagnosticMessage(),
+                                       Any.InteractionDirection(), Transience.Unknown)
+                               .WithPublicMessage(Any.ShortMessage());
 
         InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
             () => { bind.SimpleProperty(r => r.GuestEmail).AsRequired(_ => Outcome<EmailAddress>.Failure(foreignFamily)); });
@@ -87,9 +89,9 @@ public sealed class BindingContractTests {
     }
 
     private static PrimaryPortError LeafPortError() {
-        return PrimaryPortError.Create(ErrorCode.Create("TEST_NESTED_PORT_LEAF"), "A bare port-level leaf, not a build-terminal envelope.",
-                                       Transience.NonTransient)
-                               .WithPublicMessage("Rejected.");
+        return PrimaryPortError.Create(ErrorCode.Create("TEST_NESTED_PORT_LEAF"), Any.DiagnosticMessage(),
+                                       Any.Transience())
+                               .WithPublicMessage(Any.ShortMessage());
     }
 
     [Fact(DisplayName = "A required nested binding that fails with a bare PrimaryPortError leaf (not its build-terminal envelope) is wrapped, so the path survives.")]

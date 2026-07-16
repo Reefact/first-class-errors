@@ -1,5 +1,7 @@
 #region Usings declarations
 
+using FirstClassErrors.Testing;
+
 using JetBrains.Annotations;
 
 using NFluent;
@@ -27,8 +29,8 @@ public sealed class PortInnerErrorsTests {
     public void ComputeTransienceIsNonTransientWhenAnyEntryIsNonTransient() {
         // Setup
         PrimaryPortInnerErrors innerErrors = new PrimaryPortInnerErrors()
-                                            .Add(ErrorFactory.Primary(ErrorCode.Unspecified, "transient", Transience.Transient))
-                                            .Add(ErrorFactory.Primary(ErrorCode.Unspecified, "non-transient", Transience.NonTransient));
+                                            .Add(ErrorFactory.Primary(Any.ErrorCode(), Any.DiagnosticMessage(), Transience.Transient))
+                                            .Add(ErrorFactory.Primary(Any.ErrorCode(), Any.DiagnosticMessage(), Transience.NonTransient));
 
         // Exercise
         Transience transience = innerErrors.ComputeTransience();
@@ -41,8 +43,8 @@ public sealed class PortInnerErrorsTests {
     public void ComputeTransienceIsTransientWhenAtLeastOneEntryIsTransientAndNoneIsNonTransient() {
         // Setup
         PrimaryPortInnerErrors innerErrors = new PrimaryPortInnerErrors()
-                                            .Add(ErrorFactory.Primary(ErrorCode.Unspecified, "unknown", Transience.Unknown))
-                                            .Add(ErrorFactory.Primary(ErrorCode.Unspecified, "transient", Transience.Transient));
+                                            .Add(ErrorFactory.Primary(Any.ErrorCode(), Any.DiagnosticMessage(), Transience.Unknown))
+                                            .Add(ErrorFactory.Primary(Any.ErrorCode(), Any.DiagnosticMessage(), Transience.Transient));
 
         // Exercise
         Transience transience = innerErrors.ComputeTransience();
@@ -55,8 +57,8 @@ public sealed class PortInnerErrorsTests {
     public void ComputeTransienceIsUnknownWhenTheCollectionContainsOnlyDomainErrors() {
         // Setup
         PrimaryPortInnerErrors innerErrors = new PrimaryPortInnerErrors()
-                                            .Add(ErrorFactory.Domain(ErrorCode.Unspecified, "first"))
-                                            .Add(ErrorFactory.Domain(ErrorCode.Unspecified, "second"));
+                                            .Add(ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage()))
+                                            .Add(ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage()));
 
         // Exercise
         Transience transience = innerErrors.ComputeTransience();
@@ -68,8 +70,8 @@ public sealed class PortInnerErrorsTests {
     [Fact(DisplayName = "Add ignores null domain and primary port errors.")]
     public void AddIgnoresNullDomainAndPrimaryPortErrors() {
         // Setup
-        DomainError      domainError      = ErrorFactory.Domain(ErrorCode.Unspecified, "domain");
-        PrimaryPortError primaryPortError = ErrorFactory.Primary(ErrorCode.Unspecified, "primary", Transience.NonTransient);
+        DomainError      domainError      = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        PrimaryPortError primaryPortError = ErrorFactory.Primary(Any.ErrorCode(), Any.DiagnosticMessage(), Any.Transience());
 
         PrimaryPortInnerErrors innerErrors = new PrimaryPortInnerErrors()
                                             .Add((DomainError)null!)
@@ -78,7 +80,7 @@ public sealed class PortInnerErrorsTests {
                                             .Add(primaryPortError);
 
         // Exercise
-        PrimaryPortError root = ErrorFactory.Primary(ErrorCode.Unspecified, "root", innerErrors);
+        PrimaryPortError root = ErrorFactory.Primary(Any.ErrorCode(), Any.DiagnosticMessage(), innerErrors);
 
         // Verify
         Check.That(root.InnerErrors).CountIs(2);
@@ -88,8 +90,8 @@ public sealed class PortInnerErrorsTests {
     public void AddReturnsTheSameInstanceToAllowFluentChaining() {
         // Setup
         PrimaryPortInnerErrors innerErrors = new();
-        DomainError            domainError = ErrorFactory.Domain(ErrorCode.Unspecified, "domain");
-        PrimaryPortError       portError   = ErrorFactory.Primary(ErrorCode.Unspecified, "primary", Transience.Transient);
+        DomainError            domainError = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        PrimaryPortError       portError   = ErrorFactory.Primary(Any.ErrorCode(), Any.DiagnosticMessage(), Any.Transience());
 
         // Exercise & verify
         Check.That(innerErrors.Add(domainError)).IsSameReferenceAs(innerErrors);
@@ -99,15 +101,15 @@ public sealed class PortInnerErrorsTests {
     [Fact(DisplayName = "A primary port error built from inner errors exposes the aggregated transience and the inner errors.")]
     public void APrimaryPortErrorBuiltFromInnerErrorsExposesTheAggregatedTransienceAndTheInnerErrors() {
         // Setup
-        DomainError      firstInnerError  = ErrorFactory.Domain(ErrorCode.Unspecified, "first");
-        PrimaryPortError secondInnerError = ErrorFactory.Primary(ErrorCode.Unspecified, "second", Transience.Transient);
+        DomainError      firstInnerError  = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        PrimaryPortError secondInnerError = ErrorFactory.Primary(Any.ErrorCode(), Any.DiagnosticMessage(), Transience.Transient);
 
         PrimaryPortInnerErrors innerErrors = new PrimaryPortInnerErrors()
                                             .Add(firstInnerError)
                                             .Add(secondInnerError);
 
         // Exercise
-        PrimaryPortError root = ErrorFactory.Primary(ErrorCode.Unspecified, "root", innerErrors);
+        PrimaryPortError root = ErrorFactory.Primary(Any.ErrorCode(), Any.DiagnosticMessage(), innerErrors);
 
         // Verify
         Check.That(root.Transience).IsEqualTo(innerErrors.ComputeTransience());
@@ -121,8 +123,8 @@ public sealed class PortInnerErrorsTests {
     public void ToStringRendersThePluralizedCountOfAggregatedErrors() {
         // Setup
         PrimaryPortInnerErrors innerErrors = new PrimaryPortInnerErrors()
-                                            .Add(ErrorFactory.Domain(ErrorCode.Unspecified, "first"))
-                                            .Add(ErrorFactory.Primary(ErrorCode.Unspecified, "second", Transience.Transient));
+                                            .Add(ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage()))
+                                            .Add(ErrorFactory.Primary(Any.ErrorCode(), Any.DiagnosticMessage(), Any.Transience()));
 
         // Exercise & verify
         Check.That(innerErrors.ToString()).IsEqualTo("2 inner errors");
@@ -132,7 +134,7 @@ public sealed class PortInnerErrorsTests {
     public void ToStringRendersTheSingularFormForASingleAggregatedError() {
         // Setup
         PrimaryPortInnerErrors innerErrors = new PrimaryPortInnerErrors()
-            .Add(ErrorFactory.Domain(ErrorCode.Unspecified, "only"));
+            .Add(ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage()));
 
         // Exercise & verify
         Check.That(innerErrors.ToString()).IsEqualTo("1 inner error");
@@ -156,8 +158,8 @@ public sealed class SecondaryPortInnerErrorsTests {
     public void ComputeTransienceIsNonTransientWhenAnyEntryIsNonTransient() {
         // Setup
         SecondaryPortInnerErrors innerErrors = new SecondaryPortInnerErrors()
-                                              .Add(ErrorFactory.Secondary(ErrorCode.Unspecified, "transient", Transience.Transient))
-                                              .Add(ErrorFactory.Secondary(ErrorCode.Unspecified, "non-transient", Transience.NonTransient));
+                                              .Add(ErrorFactory.Secondary(Any.ErrorCode(), Any.DiagnosticMessage(), Transience.Transient))
+                                              .Add(ErrorFactory.Secondary(Any.ErrorCode(), Any.DiagnosticMessage(), Transience.NonTransient));
 
         // Exercise
         Transience transience = innerErrors.ComputeTransience();
@@ -170,8 +172,8 @@ public sealed class SecondaryPortInnerErrorsTests {
     public void ComputeTransienceIsTransientWhenAtLeastOneEntryIsTransientAndNoneIsNonTransient() {
         // Setup
         SecondaryPortInnerErrors innerErrors = new SecondaryPortInnerErrors()
-                                              .Add(ErrorFactory.Secondary(ErrorCode.Unspecified, "unknown", Transience.Unknown))
-                                              .Add(ErrorFactory.Secondary(ErrorCode.Unspecified, "transient", Transience.Transient));
+                                              .Add(ErrorFactory.Secondary(Any.ErrorCode(), Any.DiagnosticMessage(), Transience.Unknown))
+                                              .Add(ErrorFactory.Secondary(Any.ErrorCode(), Any.DiagnosticMessage(), Transience.Transient));
 
         // Exercise
         Transience transience = innerErrors.ComputeTransience();
@@ -184,8 +186,8 @@ public sealed class SecondaryPortInnerErrorsTests {
     public void ComputeTransienceIsUnknownWhenTheCollectionContainsOnlyDomainErrors() {
         // Setup
         SecondaryPortInnerErrors innerErrors = new SecondaryPortInnerErrors()
-                                              .Add(ErrorFactory.Domain(ErrorCode.Unspecified, "first"))
-                                              .Add(ErrorFactory.Domain(ErrorCode.Unspecified, "second"));
+                                              .Add(ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage()))
+                                              .Add(ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage()));
 
         // Exercise
         Transience transience = innerErrors.ComputeTransience();
@@ -197,8 +199,8 @@ public sealed class SecondaryPortInnerErrorsTests {
     [Fact(DisplayName = "Add ignores null domain and secondary port errors.")]
     public void AddIgnoresNullDomainAndSecondaryPortErrors() {
         // Setup
-        DomainError        domainError        = ErrorFactory.Domain(ErrorCode.Unspecified, "domain");
-        SecondaryPortError secondaryPortError = ErrorFactory.Secondary(ErrorCode.Unspecified, "secondary", Transience.NonTransient);
+        DomainError        domainError        = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        SecondaryPortError secondaryPortError = ErrorFactory.Secondary(Any.ErrorCode(), Any.DiagnosticMessage(), Any.Transience());
 
         SecondaryPortInnerErrors innerErrors = new SecondaryPortInnerErrors()
                                               .Add((DomainError)null!)
@@ -207,7 +209,7 @@ public sealed class SecondaryPortInnerErrorsTests {
                                               .Add(secondaryPortError);
 
         // Exercise
-        SecondaryPortError root = ErrorFactory.Secondary(ErrorCode.Unspecified, "root", innerErrors);
+        SecondaryPortError root = ErrorFactory.Secondary(Any.ErrorCode(), Any.DiagnosticMessage(), innerErrors);
 
         // Verify
         Check.That(root.InnerErrors).CountIs(2);
@@ -217,8 +219,8 @@ public sealed class SecondaryPortInnerErrorsTests {
     public void AddReturnsTheSameInstanceToAllowFluentChaining() {
         // Setup
         SecondaryPortInnerErrors innerErrors = new();
-        DomainError              domainError = ErrorFactory.Domain(ErrorCode.Unspecified, "domain");
-        SecondaryPortError       portError   = ErrorFactory.Secondary(ErrorCode.Unspecified, "secondary", Transience.Transient);
+        DomainError              domainError = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        SecondaryPortError       portError   = ErrorFactory.Secondary(Any.ErrorCode(), Any.DiagnosticMessage(), Any.Transience());
 
         // Exercise & verify
         Check.That(innerErrors.Add(domainError)).IsSameReferenceAs(innerErrors);
@@ -229,8 +231,8 @@ public sealed class SecondaryPortInnerErrorsTests {
     public void ToStringRendersThePluralizedCountOfAggregatedErrors() {
         // Setup
         SecondaryPortInnerErrors innerErrors = new SecondaryPortInnerErrors()
-                                              .Add(ErrorFactory.Domain(ErrorCode.Unspecified, "first"))
-                                              .Add(ErrorFactory.Secondary(ErrorCode.Unspecified, "second", Transience.Transient));
+                                              .Add(ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage()))
+                                              .Add(ErrorFactory.Secondary(Any.ErrorCode(), Any.DiagnosticMessage(), Any.Transience()));
 
         // Exercise & verify
         Check.That(innerErrors.ToString()).IsEqualTo("2 inner errors");
@@ -240,7 +242,7 @@ public sealed class SecondaryPortInnerErrorsTests {
     public void ToStringRendersTheSingularFormForASingleAggregatedError() {
         // Setup
         SecondaryPortInnerErrors innerErrors = new SecondaryPortInnerErrors()
-            .Add(ErrorFactory.Domain(ErrorCode.Unspecified, "only"));
+            .Add(ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage()));
 
         // Exercise & verify
         Check.That(innerErrors.ToString()).IsEqualTo("1 inner error");
@@ -270,15 +272,15 @@ public sealed class SecondaryPortInnerErrorsTests {
     [Fact(DisplayName = "A secondary port error built from inner errors exposes the aggregated transience and the inner errors.")]
     public void ASecondaryPortErrorBuiltFromInnerErrorsExposesTheAggregatedTransienceAndTheInnerErrors() {
         // Setup
-        DomainError        firstInnerError  = ErrorFactory.Domain(ErrorCode.Unspecified, "first");
-        SecondaryPortError secondInnerError = ErrorFactory.Secondary(ErrorCode.Unspecified, "second", Transience.NonTransient);
+        DomainError        firstInnerError  = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        SecondaryPortError secondInnerError = ErrorFactory.Secondary(Any.ErrorCode(), Any.DiagnosticMessage(), Transience.NonTransient);
 
         SecondaryPortInnerErrors innerErrors = new SecondaryPortInnerErrors()
                                               .Add(firstInnerError)
                                               .Add(secondInnerError);
 
         // Exercise
-        SecondaryPortError root = ErrorFactory.Secondary(ErrorCode.Unspecified, "root", innerErrors);
+        SecondaryPortError root = ErrorFactory.Secondary(Any.ErrorCode(), Any.DiagnosticMessage(), innerErrors);
 
         // Verify
         Check.That(root.Transience).IsEqualTo(innerErrors.ComputeTransience());

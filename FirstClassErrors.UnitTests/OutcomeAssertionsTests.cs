@@ -68,7 +68,7 @@ public sealed class OutcomeAssertionsTests : IDisposable {
 
     [Fact(DisplayName = "ShouldFail on a successful outcome throws.")]
     public void ShouldFailOnSuccessThrows() {
-        Outcome<int> outcome = Outcome<int>.Success(1);
+        Outcome<int> outcome = Outcome<int>.Success(Any.Int());
 
         Assert.Throws<OutcomeAssertionException>(() => outcome.ShouldFail());
     }
@@ -85,8 +85,8 @@ public sealed class OutcomeAssertionsTests : IDisposable {
     [Fact(DisplayName = "WithContextEntry checks the presence and value of a context entry.")]
     public void WithContextEntryChecksPresenceAndValue() {
         ErrorContextKey<string> cardNetwork = ErrorContextKey.Create<string>("CardNetwork", "The card network.");
-        DomainError error = DomainError.Create(ErrorCode.Create("PAYMENT_DECLINED"), "diagnostic", context => context.Add(cardNetwork, "VISA"))
-                                       .WithPublicMessage("short");
+        DomainError error = DomainError.Create(Any.ErrorCode(), Any.DiagnosticMessage(), context => context.Add(cardNetwork, "VISA"))
+                                       .WithPublicMessage(Any.ShortMessage());
         Outcome<int> outcome = Outcome<int>.Failure(error);
 
         // Passes for the present key and matching value.

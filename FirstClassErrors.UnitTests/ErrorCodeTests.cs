@@ -1,5 +1,7 @@
 ﻿#region Usings declarations
 
+using FirstClassErrors.Testing;
+
 using JetBrains.Annotations;
 
 using NFluent;
@@ -72,7 +74,7 @@ public class ErrorCodeTests {
     [Fact(DisplayName = "An error code compared to null is not equal.")]
     public void ErrorCodeComparedToNullIsNotEqual() {
         // Setup
-        ErrorCode? errorCode = ErrorCode.Create("NULL_TEST");
+        ErrorCode? errorCode = Any.ErrorCode();
 
         // Exercise
         bool result = errorCode.Equals(null);
