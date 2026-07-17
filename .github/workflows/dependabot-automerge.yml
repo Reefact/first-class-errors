@@ -1,6 +1,6 @@
 name: dependabot-automerge
 
-# Palier A of the Dependabot automation policy: for Dependabot PRs, enable
+# The low-friction lane of the Dependabot automation policy: for Dependabot PRs, enable
 # GitHub auto-merge on patch and minor updates so they merge on their own once
 # the required checks pass. Major updates are deliberately left untouched for
 # human review.
