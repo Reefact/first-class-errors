@@ -42,6 +42,18 @@ public sealed class AnyInt32 : IAny<int>, IHasRandomSource {
         return generator.Generate();
     }
 
+    internal static AnyInt32 Create(RandomSource source) {
+        return new AnyInt32(source, OrdinalIntervalSpec.Unconstrained("Int32", ordinal => V(Val(ordinal)), Ord(int.MinValue), Ord(int.MaxValue)));
+    }
+
+    private static ulong Ord(int value) {
+        return OrdinalMapping.FromInt64(value);
+    }
+
+    private static int Val(ulong ordinal) {
+        return (int)OrdinalMapping.ToInt64(ordinal);
+    }
+
     private static string V(int value) {
         return value.ToString(CultureInfo.InvariantCulture);
     }
@@ -54,44 +66,44 @@ public sealed class AnyInt32 : IAny<int>, IHasRandomSource {
 
     #region Fields declarations
 
-    private readonly RandomSource _source;
-    private readonly Int32Spec    _spec;
+    private readonly RandomSource        _source;
+    private readonly OrdinalIntervalSpec _spec;
 
     #endregion
 
-    internal AnyInt32(RandomSource source, Int32Spec spec) {
+    private AnyInt32(RandomSource source, OrdinalIntervalSpec spec) {
         _source = source;
         _spec   = spec;
     }
 
-    RandomSource IHasRandomSource.Source => _source;
+    RandomSource? IHasRandomSource.Source => _source;
 
     /// <summary>Requires a value strictly greater than zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyInt32 Positive() {
-        return new AnyInt32(_source, _spec.WithMinimum(1, "Positive()"));
+        return new AnyInt32(_source, _spec.WithMinimum(Ord(1), "Positive()"));
     }
 
     /// <summary>Requires a value strictly less than zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyInt32 Negative() {
-        return new AnyInt32(_source, _spec.WithMaximum(-1, "Negative()"));
+        return new AnyInt32(_source, _spec.WithMaximum(Ord(-1), "Negative()"));
     }
 
     /// <summary>Pins the value to exactly zero. Useful for symmetry with the other constraints when a test sweeps cases.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyInt32 Zero() {
-        return new AnyInt32(_source, _spec.WithMinimum(0, "Zero()").WithMaximum(0, "Zero()"));
+        return new AnyInt32(_source, _spec.WithMinimum(Ord(0), "Zero()").WithMaximum(Ord(0), "Zero()"));
     }
 
     /// <summary>Requires a value different from zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyInt32 NonZero() {
-        return new AnyInt32(_source, _spec.WithExcluded([0], "NonZero()"));
+        return new AnyInt32(_source, _spec.WithExcluded([Ord(0)], "NonZero()"));
     }
 
     /// <summary>Requires a value strictly greater than <paramref name="value" />.</summary>
@@ -99,7 +111,7 @@ public sealed class AnyInt32 : IAny<int>, IHasRandomSource {
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyInt32 GreaterThan(int value) {
-        return new AnyInt32(_source, _spec.WithMinimum((long)value + 1, $"GreaterThan({V(value)})"));
+        return new AnyInt32(_source, _spec.WithMinimumAbove(Ord(value), $"GreaterThan({V(value)})"));
     }
 
     /// <summary>Requires a value greater than or equal to <paramref name="value" />.</summary>
@@ -107,7 +119,7 @@ public sealed class AnyInt32 : IAny<int>, IHasRandomSource {
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyInt32 GreaterThanOrEqualTo(int value) {
-        return new AnyInt32(_source, _spec.WithMinimum(value, $"GreaterThanOrEqualTo({V(value)})"));
+        return new AnyInt32(_source, _spec.WithMinimum(Ord(value), $"GreaterThanOrEqualTo({V(value)})"));
     }
 
     /// <summary>Requires a value strictly less than <paramref name="value" />.</summary>
@@ -115,7 +127,7 @@ public sealed class AnyInt32 : IAny<int>, IHasRandomSource {
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyInt32 LessThan(int value) {
-        return new AnyInt32(_source, _spec.WithMaximum((long)value - 1, $"LessThan({V(value)})"));
+        return new AnyInt32(_source, _spec.WithMaximumBelow(Ord(value), $"LessThan({V(value)})"));
     }
 
     /// <summary>Requires a value less than or equal to <paramref name="value" />.</summary>
@@ -123,7 +135,7 @@ public sealed class AnyInt32 : IAny<int>, IHasRandomSource {
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyInt32 LessThanOrEqualTo(int value) {
-        return new AnyInt32(_source, _spec.WithMaximum(value, $"LessThanOrEqualTo({V(value)})"));
+        return new AnyInt32(_source, _spec.WithMaximum(Ord(value), $"LessThanOrEqualTo({V(value)})"));
     }
 
     /// <summary>Requires a value within the inclusive range [<paramref name="minimum" />, <paramref name="maximum" />].</summary>
@@ -137,7 +149,7 @@ public sealed class AnyInt32 : IAny<int>, IHasRandomSource {
 
         string constraint = $"Between({V(minimum)}, {V(maximum)})";
 
-        return new AnyInt32(_source, _spec.WithMinimum(minimum, constraint).WithMaximum(maximum, constraint));
+        return new AnyInt32(_source, _spec.WithMinimum(Ord(minimum), constraint).WithMaximum(Ord(maximum), constraint));
     }
 
     /// <summary>Requires the value to be one of the supplied values. Declared once per generator.</summary>
@@ -150,7 +162,7 @@ public sealed class AnyInt32 : IAny<int>, IHasRandomSource {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        return new AnyInt32(_source, _spec.WithAllowed(values, $"OneOf({Join(values)})"));
+        return new AnyInt32(_source, _spec.WithAllowed(values.Select(Ord).ToArray(), $"OneOf({Join(values)})"));
     }
 
     /// <summary>Requires the value to be none of the supplied values.</summary>
@@ -163,7 +175,7 @@ public sealed class AnyInt32 : IAny<int>, IHasRandomSource {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        return new AnyInt32(_source, _spec.WithExcluded(values, $"Except({Join(values)})"));
+        return new AnyInt32(_source, _spec.WithExcluded(values.Select(Ord).ToArray(), $"Except({Join(values)})"));
     }
 
     /// <summary>
@@ -174,12 +186,12 @@ public sealed class AnyInt32 : IAny<int>, IHasRandomSource {
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyInt32 DifferentFrom(int value) {
-        return new AnyInt32(_source, _spec.WithExcluded([value], $"DifferentFrom({V(value)})"));
+        return new AnyInt32(_source, _spec.WithExcluded([Ord(value)], $"DifferentFrom({V(value)})"));
     }
 
     /// <inheritdoc />
     public int Generate() {
-        return _spec.Generate(_source.Current.Random);
+        return Val(_spec.GenerateOrdinal(_source.Current.Random));
     }
 
 }

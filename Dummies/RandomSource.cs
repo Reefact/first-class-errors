@@ -153,4 +153,24 @@ internal static class RandomSampling {
         return (int)random.NextInt64(minInclusive, maxInclusive);
     }
 
+    /// <summary>Draws 8 random bytes as a <see cref="ulong" /> — the raw material of the ordinal sampling.</summary>
+    internal static ulong NextUInt64(this Random random) {
+        byte[] bytes = new byte[8];
+        random.NextBytes(bytes);
+
+        return BitConverter.ToUInt64(bytes, 0);
+    }
+
+    /// <summary>
+    ///     Draws a uniform <see cref="ulong" /> in the inclusive range. A size of zero (max - min + 1 wrapped) means
+    ///     the full <see cref="ulong" /> width; the modulo bias is at most 2^-64 per unit of range — irrelevant for
+    ///     arbitrary test values.
+    /// </summary>
+    internal static ulong NextUInt64(this Random random, ulong minInclusive, ulong maxInclusive) {
+        ulong size = unchecked(maxInclusive - minInclusive + 1UL);
+        ulong draw = random.NextUInt64();
+
+        return size == 0UL ? draw : minInclusive + draw % size;
+    }
+
 }
