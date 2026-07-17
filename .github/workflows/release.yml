@@ -3,7 +3,7 @@ name: release
 on:
   push:
     # Publish on a train-prefixed semantic-version tag. The trains version independently:
-    #   lib-v1.2.3  -> FirstClassErrors + FirstClassErrors.Testing
+    #   lib-v1.2.3  -> FirstClassErrors + FirstClassErrors.Testing + FirstClassErrors.RequestBinder
     #   cli-v1.2.3  -> FirstClassErrors.Cli (the fce .NET tool)
     #   dum-v1.2.3  -> Dummies (the standalone arbitrary-test-value library)
     tags:
@@ -27,9 +27,9 @@ on:
       # pack, SBOM generation, OIDC and the attestation permissions only ever execute in production
       # conditions. Three defects were found here that were invisible from the repository (the
       # +metadata regex, the nuget.org re-signing mismatch, the dispatch-tag target). Dry run makes
-      # all of it testable on demand: everything runs up to AND INCLUDING the OIDC login and the
-      # attestation — both deliberately stay in, since OIDC/permission failures are exactly what a dry
-      # run rehearses — while the steps that actually publish (the NuGet push, the GitHub Release, and,
+      # all of it testable on demand: everything runs up to AND INCLUDING the attestation and the OIDC
+      # login — both deliberately stay in, since OIDC/permission failures are exactly what a dry run
+      # rehearses — while the steps that actually publish (the NuGet push, the GitHub Release, and,
       # on the cli train, the error-catalog baseline refresh) are skipped. Defaults to true so an
       # accidental dispatch publishes nothing; publishing requires explicitly unticking it.
       dry_run:
@@ -60,7 +60,9 @@ jobs:
     # build + test + pack + attest + push is ~4 min; cap a hung release rather than the 6-hour default.
     timeout-minutes: 20
     permissions:
-      # Create the GitHub Release and upload the attested .nupkg/.snupkg as its assets (see the publish step).
+      # Two uses of the write scope: create the GitHub Release and upload the attested .nupkg/.snupkg as its
+      # assets (the publish step), and — on a cli release — push the refreshed error-catalog baseline straight
+      # to main (the baseline-refresh step, the one direct-to-main write in this pipeline).
       contents: write
       # Request a GitHub OIDC token, exchanged for a short-lived NuGet API key via trusted publishing
       # (no long-lived NUGET_API_KEY secret is stored).
@@ -187,9 +189,10 @@ jobs:
           fi
           echo "ok: GenDoc's error catalog has a breaking change since $PREVIOUS_TAG, matched by the major version bump ($PREVIOUS_MAJOR -> $NEW_MAJOR)."
 
-      # Pack only the train this release targets (lib -> FirstClassErrors + .Testing; cli -> the fce
-      # tool; dum -> Dummies), so a lib release never republishes the CLI and vice versa. The analyzer is bundled inside the main
-      # package and the GenDoc worker inside the CLI tool; the samples are not published.
+      # Pack only the train this release targets (lib -> FirstClassErrors + .Testing + .RequestBinder;
+      # cli -> the fce tool; dum -> Dummies), so a lib release never republishes the CLI and vice versa.
+      # The analyzer is bundled inside the main package and the GenDoc worker inside the CLI tool; the
+      # samples are not published.
       # GenerateSBOM activates Microsoft.Sbom.Targets in each packable project: each package embeds its SPDX
       # inventory at _manifest/spdx_2.2/manifest.spdx.json. tools/packaging/pack.sh is the single source of
       # truth (packed projects per train, flags, embedded SBOM, and the SBOM-present check); the
