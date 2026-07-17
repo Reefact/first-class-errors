@@ -34,7 +34,7 @@
   convertisseur sur le type sous-jacent non nullable ne peut pas représenter cet élément, et
   le convertisseur de liste de référence déréférence les éléments sans déballer un
   `Nullable`.
-* La librairie est en pré-version, non publiée sur NuGet et sans consommateurs externes. Des
+* La bibliothèque est en pré-version, non publiée sur NuGet et sans consommateurs externes. Des
   surcharges additives figées avant le gel de la v1 ne peuvent pas déplacer l'inférence sur
   des sites d'appel de consommateurs qui n'existent pas encore ; les mêmes surcharges
   ajoutées après que des consommateurs ont écrit des bindings de type valeur pourraient

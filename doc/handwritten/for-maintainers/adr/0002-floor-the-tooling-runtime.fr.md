@@ -10,8 +10,8 @@
 
 FirstClassErrors livre deux types d'artefacts très différents :
 
-* la **librairie** (`FirstClassErrors`, `FirstClassErrors.Testing`) cible
-  **`netstandard2.0`**. Une librairie netstandard est consommée par
+* la **bibliothèque** (`FirstClassErrors`, `FirstClassErrors.Testing`) cible
+  **`netstandard2.0`**. Une bibliothèque netstandard est consommée par
   *n'importe quel* runtime qui implémente le standard — .NET Framework 4.6.1+,
   .NET Core 2.0+, .NET 5–10+, Mono/Unity — de sorte que la question
   « fonctionne presque partout » est déjà résolue, une seule fois, par le TFM,
@@ -26,9 +26,9 @@ FirstClassErrors livre deux types d'artefacts très différents :
 
 Le TFM de l'outillage décide donc *quels consommateurs peuvent exécuter `fce`
 tout court*. Il était à `net10.0`, ce qui signifiait qu'un atelier dont le
-runtime installé le plus récent est .NET 8 pouvait référencer la librairie
+runtime installé le plus récent est .NET 8 pouvait référencer la bibliothèque
 mais **ne pouvait pas exécuter le générateur de documentation** — alors même que
-la librairie qu'il documente est `netstandard2.0`.
+la bibliothèque qu'il documente est `netstandard2.0`.
 
 Il existe une seconde contrainte, plus subtile. Le worker charge l'assembly
 **cible** via `Assembly.LoadFrom` (voir
@@ -61,7 +61,7 @@ avec le roll-forward, et non une matrice de cibles.
 ## Justification
 
 Le floor réduit l'histoire du support à une seule phrase : *FirstClassErrors
-supporte .NET 8 et au-delà pour son outillage et son analyzer ; la librairie
+supporte .NET 8 et au-delà pour son outillage et son analyzer ; la bibliothèque
 elle-même est `netstandard2.0` et descend jusqu'à .NET Framework 4.6.1.* Le
 floor de l'outillage et le floor de l'analyzer (ADR-0001) énoncent le **même**
 minimum, de sorte que le produit énonce **un seul** chiffre de support.
@@ -72,7 +72,7 @@ Le roll-forward couvre tous les runtimes plus récents, ajusté par processus :
 |---|---|---|
 | `FirstClassErrors.Cli` (`fce`) | `Major` | Le front-end a seulement besoin de *s'exécuter*. `Major` monte le build net8 à la majeure suivante lorsque .NET 8 est absent, de sorte qu'une machine qui n'a que .NET 10 l'exécute (monte 8→10). Sans lui, la politique `Minor` par défaut ne franchit jamais une majeure et `fce` échouerait à démarrer sur la machine courante « .NET plus récent, pas de .NET 8 ». |
 | `FirstClassErrors.GenDoc.Worker` | `LatestMajor` | Le worker doit **surclasser la cible qu'il charge**. `Major` ne monte que lorsque la majeure demandée est *absente*, de sorte que sur une machine qui embarque **à la fois** .NET 8 et .NET 10, un worker net8 se lierait à 8 et échouerait à charger une cible net10. `LatestMajor` se lie toujours à la **plus haute** majeure **installée**, de sorte que le worker peut documenter une cible compilée pour n'importe quel runtime présent. |
-| `FirstClassErrors.GenDoc` | — | Chargé in-process par `fce` ; le runtime est choisi par le runtimeconfig de la CLI, de sorte qu'une librairie ne fixe aucune politique. |
+| `FirstClassErrors.GenDoc` | — | Chargé in-process par `fce` ; le runtime est choisi par le runtimeconfig de la CLI, de sorte qu'une bibliothèque ne fixe aucune politique. |
 
 `<LangVersion>latest</LangVersion>` reste sur les trois projets afin que le floor
 net8 ne borne que la **surface BCL et le runtime cible**, et non le C# que la
@@ -121,7 +121,7 @@ roll-forward.
 
 Rejeté parce que le TFM est un minimum strict pour une application dépendante du
 framework : un atelier dont le runtime installé le plus récent est .NET 8
-pourrait référencer la librairie `netstandard2.0` mais ne pourrait pas
+pourrait référencer la bibliothèque `netstandard2.0` mais ne pourrait pas
 exécuter le générateur de documentation qui la documente.
 
 ### Multi-cibler l'outillage (`net8.0;net10.0`)
@@ -168,7 +168,7 @@ simple et a la même portée.
 * `fce` ne peut pas s'exécuter sur une machine dont le runtime le plus récent
   est antérieur à .NET 8 (par exemple un .NET 6/7 en EOL, ou uniquement
   .NET Framework). Accepté : ces consommateurs **utilisent** toujours la
-  librairie `netstandard2.0` dans leur application ; exécuter un *outil* de
+  bibliothèque `netstandard2.0` dans leur application ; exécuter un *outil* de
   dev/CI sur un runtime actuellement supporté est un prérequis raisonnable (un
   SDK .NET moderne est déjà présent partout où l'on compile du .NET moderne).
 
