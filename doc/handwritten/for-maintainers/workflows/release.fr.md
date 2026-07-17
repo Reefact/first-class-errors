@@ -23,14 +23,22 @@ l'attestation incluse tout en sautant les étapes de publication.
 
 ## Quand il s'exécute
 
-- Sur **push d'un tag de version** `v*.*.*` (p. ex. `v1.2.3`, `v1.2.3-beta.1`) —
-  cela publie.
-- Sur **`workflow_dispatch`** avec deux entrées : `version` et `dry_run` (**défaut
+- Sur **push d'un tag de version préfixé par un train** — chaque train de
+  release se versionne et se publie indépendamment sur son propre préfixe :
+  `lib-v*.*.*` (FirstClassErrors + FirstClassErrors.Testing +
+  FirstClassErrors.RequestBinder, en lockstep), `cli-v*.*.*` (l'outil .NET
+  `fce`), `dum-v*.*.*` (Dummies). P. ex. `lib-v1.2.3`, `cli-v1.2.3-beta.1`. Un
+  push de tag publie. Le mapping des trains vit dans
+  [`tools/trains.sh`](../../../../tools/trains.sh) ; le câblage complet est le
+  runbook [Ajouter un train de release](../AddingAReleaseTrain.fr.md).
+- Sur **`workflow_dispatch`** avec trois entrées : `component` (quel train
+  packer/publier : `lib`, `cli` ou `dum`), `version` et `dry_run` (**défaut
   `true`**). Un run manuel ne publie que si `dry_run` est explicitement décoché.
 
 ## Étiquettes de pré-version
 
-La version est une chaîne SemVer (le `v` d'un tag est retiré). Une release **stable**
+La version est une chaîne SemVer (le préfixe de train du tag — `lib-v`,
+`cli-v`, `dum-v` — est retiré). Une release **stable**
 n'a pas d'étiquette (`1.4.2`) ; tout ce qui suit un `-` est une étiquette de
 **pré-version**, que le workflow marque comme pre-release sur GitHub — et que nuget.org
 liste de la même façon. Étiquettes courantes, du moins mûr au plus mûr :
@@ -52,11 +60,16 @@ un consommateur doit passer `--prerelease`, d'où le badge README en `nuget/vpre
 ## Comment il s'exécute
 
 Un seul job, `pack-push` : checkout → setup .NET → **résoudre & valider la
-version** → restore → build → test → **pack** (via `tools/packaging/pack.sh`, qui
-embarque le SBOM SPDX) → upload des artefacts → **attester la provenance de
+version** (le train et le SemVer, depuis le tag ou les entrées) → restore →
+build → test → **exiger un bump majeur pour les breaking changes de GenDoc**
+(train cli uniquement) → **packer uniquement le train résolu** (via
+`tools/packaging/pack.sh`, qui embarque le SBOM SPDX et vérifie les gardes
+propres à chaque train) → upload des artefacts → **attester la provenance de
 build** → **login NuGet (OIDC)** → **push vers NuGet** → **publier la GitHub
-Release**. Les deux dernières étapes (et elles seules) sont désactivées en dry
-run.
+Release** (avec des notes scopées au train via
+`tools/packaging/release-notes.sh`, pour qu'une release lib ne liste jamais du
+travail cli ou dum). Les deux dernières étapes (et elles seules) sont
+désactivées en dry run.
 
 ## Permissions & sécurité
 
@@ -75,15 +88,22 @@ suivants est délibéré :
 
 - **L'entrée de version est validée contre une allowlist SemVer stricte, lue via
   l'environnement.** Le tag/entrée est contrôlable par un attaquant (un tag comme
-  `v1.2.3;id` est une ref valide qui matche le trigger). Il passe par `env:`
+  `lib-v1.2.3;id` est une ref valide qui matche le trigger). Il passe par `env:`
   plutôt que d'être interpolé dans le shell, et il est rejeté s'il ne matche pas
   la regex — sinon il pourrait injecter des commandes dans chaque étape qui
   l'utilise.
 - **Les métadonnées de build (`+…`) sont rejetées bien que SemVer les autorise.**
-  NuGet retire `+build` de l'identité du package, donc `v1.2.3+build5` packerait
-  en `1.2.3` ; combiné à `--skip-duplicate` au push, un `1.2.3` déjà publié
+  NuGet retire `+build` de l'identité du package, donc `lib-v1.2.3+build5`
+  packerait en `1.2.3` ; combiné à `--skip-duplicate` au push, un `1.2.3` déjà publié
   transformerait la release en no-op vert qui ne publie rien. Échouer bruyamment
   est le but.
+- **La garde de bump majeur GenDoc tourne avant le pack, sur le train cli
+  uniquement — et en dry run aussi.** GenDoc est embarqué dans l'outil fce, donc
+  un breaking change de son catalogue d'erreurs est un breaking change du train
+  cli : la release refuse de publier tant que la version ne bumpe pas la
+  composante majeure par rapport au précédent tag `cli-v`. Répéter la garde en
+  dry run attrape un bump majeur oublié avant une vraie tentative de release,
+  pas pendant.
 - **`Attest build provenance` tourne *avant* les deux publications, et tourne
   même en dry run.** Seuls des artefacts attestés sont jamais publiés ou poussés ;
   et les échecs d'OIDC / de permission d'attestation sont exactement ce que le dry
@@ -121,5 +141,7 @@ suivants est délibéré :
   le guide opérationnel.
 - [`release-dryrun`](release-dryrun.fr.md) — la répétition automatique et sans
   effet de bord qui tourne sur chaque PR et push, partageant le même `pack.sh`.
+- [Ajouter un train de release](../AddingAReleaseTrain.fr.md) — comment les
+  préfixes de tag, les scopes et les branches de pack des trains sont câblés.
 - La section **Supply chain** du README documente comment un consommateur vérifie
   la provenance et le SBOM que ce workflow produit.
