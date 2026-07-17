@@ -49,7 +49,7 @@ public sealed class AnyContext {
     /// </summary>
     /// <returns>An integer generator to constrain fluently.</returns>
     public AnyInt32 Int32() {
-        return new AnyInt32(_source, Int32Spec.Unconstrained);
+        return AnyInt32.Create(_source);
     }
 
 }

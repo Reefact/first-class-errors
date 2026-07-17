@@ -56,7 +56,7 @@ public static class Any {
     /// </summary>
     /// <returns>An integer generator to constrain fluently.</returns>
     public static AnyInt32 Int32() {
-        return new AnyInt32(AmbientRandomSource.Instance, Int32Spec.Unconstrained);
+        return AnyInt32.Create(AmbientRandomSource.Instance);
     }
 
     /// <summary>
