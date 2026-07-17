@@ -1,5 +1,7 @@
 # ADR-0008 | Bind nullable value-type properties through a struct-constrained overload
 
+🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0008-bind-nullable-value-type-properties-through-a-struct-constrained-overload.fr.md)
+
 **Status:** Proposed
 **Date:** 2026-07-16
 **Decision Makers:** Reefact
