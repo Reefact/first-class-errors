@@ -23,12 +23,13 @@ produces the complementary artifact: a **narrative, user-facing changelog** in
 (Breaking / Added / Changed / Fixed / Deprecated), written for the developer who
 consumes the package from NuGet.
 
-The two trains version independently and keep **separate** changelog files:
+The trains version independently and keep **separate** changelog files:
 
 | Train | Scopes | Changelog file |
 | --- | --- | --- |
-| `lib` | `core`, `analyzers`, `testing` | [`CHANGELOG.md`](../../../../CHANGELOG.md) |
+| `lib` | `core`, `analyzers`, `testing`, `binder` | [`CHANGELOG.md`](../../../../CHANGELOG.md) |
 | `cli` | `cli`, `gendoc` | [`FirstClassErrors.Cli/CHANGELOG.md`](../../../../FirstClassErrors.Cli/CHANGELOG.md) |
+| `dum` | `dummies` | [`Dummies/CHANGELOG.md`](../../../../Dummies/CHANGELOG.md) |
 
 ## When it runs
 
