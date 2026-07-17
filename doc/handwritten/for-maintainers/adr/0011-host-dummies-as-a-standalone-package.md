@@ -1,6 +1,6 @@
-# ADR-0010 | Host Dummies as a standalone package in this repository
+# ADR-0011 | Host Dummies as a standalone package in this repository
 
-🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0010-host-dummies-as-a-standalone-package.fr.md)
+🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0011-host-dummies-as-a-standalone-package.fr.md)
 
 **Status:** Proposed
 **Date:** 2026-07-17

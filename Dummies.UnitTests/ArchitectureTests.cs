@@ -29,7 +29,9 @@ public sealed class ArchitectureTests {
         AssemblyName[] references = typeof(Any).Assembly.GetReferencedAssemblies();
 
         foreach (AssemblyName reference in references) {
-            bool standard = reference.Name is "netstandard" or "System.Runtime" or "System.Linq" or "System.Threading" or "System.Runtime.Extensions" or "System.Collections";
+            // The exact facade split (System.Runtime, System.Threading, ...) varies with the SDK and build
+            // configuration, so the guard checks the intent — standard library only — not a fixed list.
+            bool standard = reference.Name is "netstandard" or "mscorlib" || reference.Name!.StartsWith("System.", StringComparison.Ordinal);
             Check.WithCustomMessage($"Unexpected assembly reference: {reference.Name}").That(standard).IsTrue();
         }
     }
