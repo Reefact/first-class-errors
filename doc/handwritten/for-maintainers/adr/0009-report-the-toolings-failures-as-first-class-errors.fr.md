@@ -2,8 +2,8 @@
 
 🌍 🇬🇧 [English](0009-report-the-toolings-failures-as-first-class-errors.md) · 🇫🇷 Français (ce fichier)
 
-**Statut :** Proposé
-**Date :** 2026-07-16
+**Statut :** Accepté
+**Date :** 2026-07-17
 **Décideurs :** Reefact
 
 ## Contexte
