@@ -1,19 +1,20 @@
 #!/bin/sh
-# Collect the merged pull requests that belong to ONE release train (lib or cli)
-# and emit them as slim JSON on stdout, for the changelog drafter to summarise.
+# Collect the merged pull requests that belong to ONE release train (lib, cli or
+# dum) and emit them as slim JSON on stdout, for the changelog drafter to summarise.
 #
 # The train partition mirrors tools/packaging/release-notes.sh EXACTLY — by the
 # Conventional Commit scope carried by a pull request's own commits, not by
 # labels or by the pull request title:
-#   lib -> scopes core, analyzers, testing   (FirstClassErrors + FirstClassErrors.Testing)
-#   cli -> scopes cli, gendoc                 (the fce tool: CLI + GenDoc + worker)
+#   lib -> scopes core, analyzers, testing, binder (FirstClassErrors + .Testing + .RequestBinder)
+#   cli -> scopes cli, gendoc                      (the fce tool: CLI + GenDoc + worker)
+#   dum -> scope dummies                           (the standalone Dummies library)
 # A pull request is kept when at least one of its commits carries a scope in the
 # train's set. Pull requests whose commits are all scopeless infrastructure
 # (bare `ci:` / `chore:` / `docs:` ...) belong to neither train and are dropped —
 # the same rule release-notes.sh applies to commits, so the human-facing changelog
 # and the generated GitHub Release notes describe the same set of changes.
 #
-# Usage: tools/changelog/collect-prs.sh <lib|cli>
+# Usage: tools/changelog/collect-prs.sh <lib|cli|dum>
 #   Reads the optional environment variable FROM_REF: the previous tag whose merge
 #   time bounds the range. When empty, the train's latest tag is used; when there
 #   is none either (the train's first release), the whole history is taken.

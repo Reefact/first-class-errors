@@ -1,7 +1,7 @@
 #!/bin/sh
 # Single source of truth for the release trains.
 #
-# The two published trains version independently and each owns a tag prefix, a set
+# The published trains version independently and each owns a tag prefix, a set
 # of Conventional Commit scopes, a NuGet package label, and a changelog file. That
 # mapping used to be copied verbatim into tools/packaging/release-notes.sh and
 # tools/changelog/collect-prs.sh; it now lives here, once. The scripts and the
@@ -24,6 +24,7 @@ trains_rows() {
   cat <<'ROWS'
 lib|lib-v|core,analyzers,testing,binder|CHANGELOG.md|FirstClassErrors, FirstClassErrors.Testing and FirstClassErrors.RequestBinder
 cli|cli-v|cli,gendoc|FirstClassErrors.Cli/CHANGELOG.md|FirstClassErrors.Cli (the fce .NET tool)
+dum|dum-v|dummies|Dummies/CHANGELOG.md|Dummies
 ROWS
 }
 

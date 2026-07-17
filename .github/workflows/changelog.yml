@@ -4,9 +4,10 @@ name: Draft changelog
 # drafts the "[Unreleased]" section of ONE release train's changelog from the pull
 # requests merged since that train's last tag, then opens a pull request so a human
 # can review it (and delete any benefit the model inferred rather than found)
-# before merging. The two trains version independently and keep separate changelogs:
+# before merging. The trains version independently and keep separate changelogs:
 #   lib -> CHANGELOG.md                     (FirstClassErrors + FirstClassErrors.Testing)
 #   cli -> FirstClassErrors.Cli/CHANGELOG.md (the fce .NET tool)
+#   dum -> Dummies/CHANGELOG.md             (the standalone Dummies library)
 on:
   workflow_dispatch:
     inputs:
@@ -16,6 +17,7 @@ on:
         options:
           - lib
           - cli
+          - dum
         required: true
       from_ref:
         description: "Previous tag to diff from. Leave blank to auto-detect the train's latest tag; if the train has no tag yet, the whole history is used."
@@ -90,7 +92,7 @@ jobs:
           tools/changelog/collect-prs.sh "$COMPONENT" > prs.json
           echo "count=$(jq 'length' prs.json)" >> "$GITHUB_OUTPUT"
           echo "Collected $(jq 'length' prs.json) ${COMPONENT}-facing pull request(s) for this changelog."
-        # COMPONENT is a choice input (lib|cli only), safe to pass straight through.
+        # COMPONENT is a choice input (lib|cli|dum only), safe to pass straight through.
         # from_ref is free text, so it travels via the environment (never inlined
         # into the script) and is only ever handed to `git log`.
 

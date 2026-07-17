@@ -28,7 +28,7 @@ before it matters.
 | --- | --- | --- |
 | Resolve & validate version | ✅ | ✅ |
 | Restore, build, test | ✅ | ✅ |
-| Pack the two published projects | ✅ | ✅ |
+| Pack the published trains | ✅ | ✅ |
 | Embed the SPDX SBOM | ✅ | ✅ |
 | Upload packages as workflow artifacts | ✅ | ✅ |
 | **Sign the provenance attestation** | ✅ | ✅ (see *Impacts*) |
