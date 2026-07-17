@@ -27,12 +27,13 @@ on:
       # pack, SBOM generation, OIDC and the attestation permissions only ever execute in production
       # conditions. Three defects were found here that were invisible from the repository (the
       # +metadata regex, the nuget.org re-signing mismatch, the dispatch-tag target). Dry run makes
-      # all of it testable on demand: everything runs up to AND INCLUDING the attestation — which
-      # deliberately stays in, since OIDC/permission failures are exactly what it rehearses — while
-      # NuGet login, the push and the GitHub Release are skipped. Defaults to true so an accidental
-      # dispatch publishes nothing; publishing requires explicitly unticking it.
+      # all of it testable on demand: everything runs up to AND INCLUDING the OIDC login and the
+      # attestation — both deliberately stay in, since OIDC/permission failures are exactly what a dry
+      # run rehearses — while the steps that actually publish (the NuGet push, the GitHub Release, and,
+      # on the cli train, the error-catalog baseline refresh) are skipped. Defaults to true so an
+      # accidental dispatch publishes nothing; publishing requires explicitly unticking it.
       dry_run:
-        description: 'Dry run: stop after pack + attestation; skip NuGet push and the GitHub Release'
+        description: 'Dry run: stop after pack + attestation; skip the publish steps (NuGet push, GitHub Release, cli catalog-baseline refresh)'
         type: boolean
         default: true
 
@@ -233,9 +234,10 @@ jobs:
       # trusted-publishing policy, so rehearsing it here makes a dry run fail red when the policy or
       # NUGET_USER is missing/misconfigured — instead of only ever finding out during a real release. It
       # mints a short-lived, single-use key that a dry run never spends (the push below is skipped). Only the
-      # steps that actually PUBLISH — the push and the GitHub Release — are gated off on a dry run: a tag
-      # push always publishes (inputs.* is empty on push, so the event check short-circuits first); a manual
-      # dispatch publishes only with dry_run explicitly unticked.
+      # steps that actually PUBLISH — the push, the GitHub Release, and (on the cli train) the error-catalog
+      # baseline refresh — are gated off on a dry run: a tag push always publishes (inputs.* is empty on
+      # push, so the event check short-circuits first); a manual dispatch publishes only with dry_run
+      # explicitly unticked.
       - name: NuGet login (OIDC)
         id: nuget-login
         uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
