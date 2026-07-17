@@ -101,7 +101,11 @@ fi
 # FirstClassErrors dependency sneaking into the nuspec must fail the pack, not surface on nuget.org.
 if [ "$scope" = "dum" ]; then
   for package in artifacts/Dummies.*.nupkg; do
-    if unzip -p "$package" '*.nuspec' | grep -q '<dependency [^>]*id="FirstClassErrors'; then
+    # Fail CLOSED, like the cli guard: an unmatched glob or an unreadable nuspec must not pass as
+    # "standalone" -- read the nuspec first (unzip fails loudly on both), then reject any
+    # FirstClassErrors dependency found in it.
+    nuspec="$(unzip -p "$package" '*.nuspec')" || { echo "error: cannot read the nuspec from $package" >&2; exit 1; }
+    if printf '%s\n' "$nuspec" | grep -q '<dependency [^>]*id="FirstClassErrors'; then
       echo "error: $package declares a FirstClassErrors dependency; Dummies is standalone (ADR-0011)" >&2
       exit 1
     fi

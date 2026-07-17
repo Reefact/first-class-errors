@@ -23,13 +23,14 @@ au format [Keep a Changelog](https://keepachangelog.com/), groupé par nature de
 changement (Breaking / Added / Changed / Fixed / Deprecated), écrit pour le
 développeur qui consomme le package depuis NuGet.
 
-Les deux trains sont versionnés indépendamment et gardent des fichiers de
+Les trains sont versionnés indépendamment et gardent des fichiers de
 changelog **distincts** :
 
 | Train | Scopes | Fichier de changelog |
 | --- | --- | --- |
-| `lib` | `core`, `analyzers`, `testing` | [`CHANGELOG.md`](../../../../CHANGELOG.md) |
+| `lib` | `core`, `analyzers`, `testing`, `binder` | [`CHANGELOG.md`](../../../../CHANGELOG.md) |
 | `cli` | `cli`, `gendoc` | [`FirstClassErrors.Cli/CHANGELOG.md`](../../../../FirstClassErrors.Cli/CHANGELOG.md) |
+| `dum` | `dummies` | [`Dummies/CHANGELOG.md`](../../../../Dummies/CHANGELOG.md) |
 
 ## Quand il s'exécute
 

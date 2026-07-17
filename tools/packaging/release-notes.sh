@@ -1,14 +1,15 @@
 #!/bin/sh
-# Generate GitHub Release notes for ONE release train (lib or cli), containing only the commits
-# that belong to that train — so a lib release never lists cli work, and vice versa.
+# Generate GitHub Release notes for ONE release train (lib, cli or dum), containing only the
+# commits that belong to that train — so a lib release never lists cli work, and vice versa.
 #
 # The partition is by Conventional Commit scope (enforced by tools/commit-lint):
-#   lib -> scopes core, analyzers, testing   (FirstClassErrors + FirstClassErrors.Testing)
-#   cli -> scopes cli, gendoc                 (the fce tool: CLI + GenDoc + worker)
+#   lib -> scopes core, analyzers, testing, binder (FirstClassErrors + .Testing + .RequestBinder)
+#   cli -> scopes cli, gendoc                      (the fce tool: CLI + GenDoc + worker)
+#   dum -> scope dummies                           (the standalone Dummies library)
 # Commits with no scope (bare `ci:`, `build:`, `chore:` ...) are infrastructure and are left out
 # of both trains: these notes describe what changed for the consumer of the package, nothing else.
 #
-# Usage: tools/packaging/release-notes.sh <scope:lib|cli> <current-tag> [<end-ref>]
+# Usage: tools/packaging/release-notes.sh <scope:lib|cli|dum> <current-tag> [<end-ref>]
 #   Emits Markdown on stdout. Needs full history + tags in the checkout (actions/checkout with
 #   fetch-depth: 0) so the previous same-train tag — the lower bound of the range — resolves. <end-ref>
 #   is the upper bound and defaults to <current-tag>; pass the release commit when the tag does not exist
@@ -17,7 +18,7 @@
 set -eu
 
 if [ "$#" -lt 2 ] || [ "$#" -gt 3 ] || [ -z "$1" ] || [ -z "$2" ]; then
-  echo "usage: tools/packaging/release-notes.sh <scope:lib|cli> <current-tag> [<end-ref>]" >&2
+  echo "usage: tools/packaging/release-notes.sh <scope:lib|cli|dum> <current-tag> [<end-ref>]" >&2
   exit 2
 fi
 scope="$1"
