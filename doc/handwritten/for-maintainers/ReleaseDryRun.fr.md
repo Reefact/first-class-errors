@@ -29,7 +29,7 @@ saine avant que ça ne compte.
 | --- | --- | --- |
 | Résoudre & valider la version | ✅ | ✅ |
 | Restore, build, tests | ✅ | ✅ |
-| Packer les deux projets publiés | ✅ | ✅ |
+| Packer les trains publiés | ✅ | ✅ |
 | Embarquer le SBOM SPDX | ✅ | ✅ |
 | Uploader les packages en artefacts de run | ✅ | ✅ |
 | **Signer l'attestation de provenance** | ✅ | ✅ (voir *Impacts*) |

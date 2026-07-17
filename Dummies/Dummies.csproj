@@ -10,8 +10,8 @@
     <!-- XML documentation -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-    <!-- Version. This is only a local/dev fallback: the release workflow overrides it with -p:Version
-         once the package gets its own release train (see tools/packaging/pack.sh). -->
+    <!-- Version. This is only a local/dev fallback: release.yml overrides it with -p:Version from the
+         Git tag of the dum release train (dum-v*, see tools/packaging/pack.sh). -->
     <Version>0.1.0-dev</Version>
 
     <!-- NuGet identity -->

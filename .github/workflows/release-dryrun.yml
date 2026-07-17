@@ -1,7 +1,7 @@
 name: release-dryrun
 
 # Continuously rehearses the SIDE-EFFECT-FREE portion of the release pipeline — build, pack, and embed the
-# SBOM for the two published projects — on every push to main and every pull request. release.yml itself
+# SBOM for the published trains — on every push to main and every pull request. release.yml itself
 # runs only on a tag or a manual dispatch, so its packaging path is otherwise exercised for the first time
 # in production, on a tag, once; this catches packaging/SBOM regressions in ordinary CI instead.
 #
@@ -63,17 +63,19 @@ jobs:
 
       # The SAME script release.yml packs with — it packs each train's projects with their SBOM and then
       # asserts the SBOM is actually embedded. Sharing it is the point: this rehearsal cannot drift from the
-      # real release, because there is only one definition of "pack the release artifacts". Both trains are
-      # rehearsed so neither packaging path first runs in production.
+      # real release, because there is only one definition of "pack the release artifacts". All trains are
+      # rehearsed so no packaging path first runs in production.
       # (The unit/integration tests run in ci.yml; this job's unique contribution is the packaging.)
       - name: Pack with SBOM (build artifacts, no publish)
         run: |
           tools/packaging/pack.sh "$DRYRUN_VERSION" lib
           tools/packaging/pack.sh "$DRYRUN_VERSION" cli
+          tools/packaging/pack.sh "$DRYRUN_VERSION" dum
 
       # Rehearse the train-scoped release-notes generation too (release.yml's other production-only path),
       # so a bug in it surfaces here instead of during a real release. Prints to the log; publishes nothing.
-      - name: Rehearse release notes (both trains, no publish)
+      - name: Rehearse release notes (all trains, no publish)
         run: |
           echo "----- lib notes -----"; tools/packaging/release-notes.sh lib HEAD
           echo "----- cli notes -----"; tools/packaging/release-notes.sh cli HEAD
+          echo "----- dum notes -----"; tools/packaging/release-notes.sh dum HEAD

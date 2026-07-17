@@ -16,6 +16,7 @@ on:
         options:
           - lib
           - cli
+          - dum
         required: true
       from_ref:
         description: "Previous tag to diff from. Leave blank to auto-detect the train's latest tag; if the train has no tag yet, the whole history is used."
