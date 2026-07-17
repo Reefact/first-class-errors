@@ -8,12 +8,12 @@
 
 ## Contexte
 
-* `Outcome` et `Outcome<T>` sont le type de résultat succès-ou-échec de la librairie ; ils se composent au travers d'une petite surface fluide.
+* `Outcome` et `Outcome<T>` sont le type de résultat succès-ou-échec de la bibliothèque ; ils se composent au travers d'une petite surface fluide.
 * Deux opérations de composition existaient sous des noms distincts : `Then` enchaînait avec une fonction pouvant elle-même échouer (elle retourne un `Outcome`), et `To` transformait une valeur en cas de succès avec une fonction ne pouvant pas échouer (elle retourne une valeur simple). Ce sont les opérations *bind* et *map* de la programmation fonctionnelle.
-* L'objectif affiché de la librairie est une API nommée pour l'**intention**, non pour la mécanique de la programmation fonctionnelle ; la FAQ défend ce choix précis lorsqu'elle oppose `Outcome` à un `Result<T, Error>` générique.
+* L'objectif affiché de la bibliothèque est une API nommée pour l'**intention**, non pour la mécanique de la programmation fonctionnelle ; la FAQ défend ce choix précis lorsqu'elle oppose `Outcome` à un `Result<T, Error>` générique.
 * Le fait qu'une étape de composition puisse échouer est déjà exprimé par le type de retour de la fonction que l'appelant fournit : une fonction retournant un `Outcome` peut échouer ; une fonction retournant une valeur ne le peut pas.
 * C# interdit la surcharge sur le seul type de retour, et sa résolution de surcharge sélectionne le type de paramètre le plus spécifique lorsque plusieurs candidats s'appliquent. La distinction map/bind est donc imposée par le système de types à chaque site d'appel, indépendamment du nom de la méthode.
-* La librairie est en pré-version : non publiée sur NuGet, sans consommateurs externes, de sorte qu'un renommage cassant n'entraîne aujourd'hui aucun coût de migration en aval.
+* La bibliothèque est en pré-version : non publiée sur NuGet, sans consommateurs externes, de sorte qu'un renommage cassant n'entraîne aujourd'hui aucun coût de migration en aval.
 
 ## Décision
 
@@ -32,7 +32,7 @@ L'opération de transformation de valeur sur `Outcome` est exposée sous forme d
 
 Envisagée parce qu'elle reflète la nomenclature établie `map`/`bind` familière aux praticiens de la programmation fonctionnelle et garde chaque opération sans ambiguïté par elle-même.
 
-Rejetée parce qu'elle expose précisément la mécanique que la librairie masque délibérément, et la distinction échec/sans-échec qu'elle encode est déjà portée par le type de retour de la fonction fournie — le second nom ajoute du vocabulaire sans ajouter d'information.
+Rejetée parce qu'elle expose précisément la mécanique que la bibliothèque masque délibérément, et la distinction échec/sans-échec qu'elle encode est déjà portée par le type de retour de la fonction fournie — le second nom ajoute du vocabulaire sans ajouter d'information.
 
 ### Conserver `To` comme alias déprécié de `Then`
 

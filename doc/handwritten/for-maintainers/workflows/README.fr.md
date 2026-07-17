@@ -6,7 +6,7 @@
 
 > Documentation mainteneur. Elle décrit les workflows GitHub Actions qui
 > construisent, vérifient et publient FirstClassErrors. Elle ne fait **pas**
-> partie de la documentation utilisateur de la librairie, sous `doc/`.
+> partie de la documentation utilisateur de la bibliothèque, sous `doc/`.
 
 ## De quoi il s'agit
 

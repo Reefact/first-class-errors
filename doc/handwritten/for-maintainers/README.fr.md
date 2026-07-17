@@ -4,7 +4,7 @@
 
 > Documentation pour les **mainteneurs et opérateurs** de FirstClassErrors —
 > comment le projet est construit, publié et maintenu en bonne santé. Elle ne
-> fait **pas** partie de la documentation utilisateur de la librairie, sous
+> fait **pas** partie de la documentation utilisateur de la bibliothèque, sous
 > [`doc/`](../for-users/). La version anglaise est canonique ; les pages françaises sont
 > tenues à jour en parallèle.
 
