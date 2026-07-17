@@ -1,0 +1,213 @@
+{
+  "schema": 1,
+  "errors": [
+    {
+      "code": "GENDOC_ASSEMBLY_NOT_FOUND",
+      "source": "DocumentationRequest",
+      "title": "Requested assembly not found",
+      "context": [
+        {
+          "key": "AssemblyPath",
+          "valueType": "System.String"
+        }
+      ]
+    },
+    {
+      "code": "GENDOC_OPT_IN_AMBIGUOUS",
+      "source": "DocumentationRequest",
+      "title": "Documentation opt-in ambiguous",
+      "context": [
+        {
+          "key": "AmbiguityReason",
+          "valueType": "System.String"
+        },
+        {
+          "key": "OptInProperty",
+          "valueType": "System.String"
+        },
+        {
+          "key": "ProjectPath",
+          "valueType": "System.String"
+        }
+      ]
+    },
+    {
+      "code": "GENDOC_PROCESS_START_FAILED",
+      "source": "DocumentationToolchain",
+      "title": "Toolchain process failed to start",
+      "context": [
+        {
+          "key": "ProcessFileName",
+          "valueType": "System.String"
+        }
+      ]
+    },
+    {
+      "code": "GENDOC_PROCESS_TIMED_OUT",
+      "source": "DocumentationToolchain",
+      "title": "Toolchain process timed out",
+      "context": [
+        {
+          "key": "Command",
+          "valueType": "System.String"
+        },
+        {
+          "key": "Target",
+          "valueType": "System.String"
+        },
+        {
+          "key": "Timeout",
+          "valueType": "System.TimeSpan"
+        }
+      ]
+    },
+    {
+      "code": "GENDOC_PROJECT_ENUMERATION_FAILED",
+      "source": "DocumentationToolchain",
+      "title": "Solution project enumeration failed",
+      "context": [
+        {
+          "key": "ExitCode",
+          "valueType": "System.Int32"
+        },
+        {
+          "key": "SolutionPath",
+          "valueType": "System.String"
+        }
+      ]
+    },
+    {
+      "code": "GENDOC_SOLUTION_BUILD_FAILED",
+      "source": "DocumentationToolchain",
+      "title": "Solution build failed",
+      "context": [
+        {
+          "key": "ExitCode",
+          "valueType": "System.Int32"
+        },
+        {
+          "key": "SolutionPath",
+          "valueType": "System.String"
+        }
+      ]
+    },
+    {
+      "code": "GENDOC_SOLUTION_NOT_FOUND",
+      "source": "DocumentationRequest",
+      "title": "Solution file not found",
+      "context": [
+        {
+          "key": "SolutionPath",
+          "valueType": "System.String"
+        }
+      ]
+    },
+    {
+      "code": "GENDOC_SOLUTION_PATH_UNSUPPORTED",
+      "source": "DocumentationRequest",
+      "title": "Solution path not supported",
+      "context": [
+        {
+          "key": "SolutionPath",
+          "valueType": "System.String"
+        }
+      ]
+    },
+    {
+      "code": "GENDOC_TARGET_ASSEMBLY_NOT_FOUND",
+      "source": "DocumentationRequest",
+      "title": "Project build output not found",
+      "context": [
+        {
+          "key": "ProjectPath",
+          "valueType": "System.String"
+        },
+        {
+          "key": "TargetPath",
+          "valueType": "System.String"
+        }
+      ]
+    },
+    {
+      "code": "GENDOC_TARGET_PATH_RESOLUTION_FAILED",
+      "source": "DocumentationToolchain",
+      "title": "Target path resolution failed",
+      "context": [
+        {
+          "key": "ProjectPath",
+          "valueType": "System.String"
+        }
+      ]
+    },
+    {
+      "code": "GENDOC_WORKER_FAILED",
+      "source": "DocumentationToolchain",
+      "title": "Documentation worker failed",
+      "context": [
+        {
+          "key": "AssemblyPath",
+          "valueType": "System.String"
+        },
+        {
+          "key": "ExitCode",
+          "valueType": "System.Int32"
+        }
+      ]
+    },
+    {
+      "code": "GENDOC_WORKER_NOT_DEPLOYED",
+      "source": "DocumentationToolchain",
+      "title": "Documentation worker not deployed",
+      "context": [
+        {
+          "key": "ProbedDirectory",
+          "valueType": "System.String"
+        }
+      ]
+    },
+    {
+      "code": "GENDOC_WORKER_OUTPUT_MISSING",
+      "source": "DocumentationToolchain",
+      "title": "Documentation worker output missing",
+      "context": [
+        {
+          "key": "AssemblyPath",
+          "valueType": "System.String"
+        }
+      ]
+    },
+    {
+      "code": "GENDOC_WORKER_OUTPUT_UNREADABLE",
+      "source": "DocumentationToolchain",
+      "title": "Documentation worker output unreadable",
+      "context": [
+        {
+          "key": "AssemblyPath",
+          "valueType": "System.String"
+        }
+      ]
+    },
+    {
+      "code": "GENDOC_WORKER_PATH_INVALID",
+      "source": "DocumentationRequest",
+      "title": "Configured worker path invalid",
+      "context": [
+        {
+          "key": "WorkerPath",
+          "valueType": "System.String"
+        }
+      ]
+    },
+    {
+      "code": "GENDOC_WORKER_RUN_FAILED",
+      "source": "DocumentationToolchain",
+      "title": "Documentation worker run failed",
+      "context": [
+        {
+          "key": "AssemblyPath",
+          "valueType": "System.String"
+        }
+      ]
+    }
+  ]
+}
