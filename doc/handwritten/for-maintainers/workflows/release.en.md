@@ -66,7 +66,10 @@ SPDX SBOM and asserting each train's own guards) → upload artifacts → **atte
 build provenance** → **NuGet login (OIDC)** → **push to NuGet** → **publish
 GitHub Release** (with train-scoped notes from
 `tools/packaging/release-notes.sh`, so a lib release never lists cli or dum
-work). The last two steps (and only those) are gated off on a dry run.
+work) → **refresh GenDoc's error-catalog baseline** (cli train only: accept
+the just-published catalog as the new contract, pushed straight to `main`).
+The three publish steps — the NuGet push, the GitHub Release, and the
+baseline refresh — are the only ones gated off on a dry run.
 
 ## Permissions & security
 
@@ -107,8 +110,9 @@ deliberate:
   Release assets**, and consumers verify provenance against *those* with `gh
   attestation verify` — the nuget.org copy is verified with `dotnet nuget verify`
   instead. Do not "simplify" by attesting only the nuget.org copy.
-- **`NuGet login (OIDC)` runs on every trigger, including dry run — only the push
-  and the Release are gated.** The token exchange is what validates the
+- **`NuGet login (OIDC)` runs on every trigger, including dry run — only the
+  publish steps (the push, the Release, and the cli baseline refresh) are
+  gated.** The token exchange is what validates the
   trusted-publishing policy, so a dry run fails red when the policy or
   `NUGET_USER` is missing. It mints a single-use key the dry run never spends.
   Requires a trusted-publishing policy on nuget.org and the `NUGET_USER` secret

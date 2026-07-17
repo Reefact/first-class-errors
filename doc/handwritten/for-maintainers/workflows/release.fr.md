@@ -68,8 +68,11 @@ propres à chaque train) → upload des artefacts → **attester la provenance d
 build** → **login NuGet (OIDC)** → **push vers NuGet** → **publier la GitHub
 Release** (avec des notes scopées au train via
 `tools/packaging/release-notes.sh`, pour qu'une release lib ne liste jamais du
-travail cli ou dum). Les deux dernières étapes (et elles seules) sont
-désactivées en dry run.
+travail cli ou dum) → **rafraîchir la baseline du catalogue d'erreurs de
+GenDoc** (train cli uniquement : accepter le catalogue tout juste publié comme
+nouveau contrat, poussé directement sur `main`). Les trois étapes de
+publication — le push NuGet, la GitHub Release et le rafraîchissement de la
+baseline — sont les seules désactivées en dry run.
 
 ## Permissions & sécurité
 
@@ -115,8 +118,9 @@ suivants est délibéré :
   contre *ceux-là* avec `gh attestation verify` — la copie de nuget.org se
   vérifie avec `dotnet nuget verify`. Ne « simplifiez » pas en attestant
   seulement la copie de nuget.org.
-- **`NuGet login (OIDC)` tourne à chaque trigger, dry run inclus — seuls le push
-  et la Release sont conditionnés.** L'échange de token est ce qui valide la
+- **`NuGet login (OIDC)` tourne à chaque trigger, dry run inclus — seules les
+  étapes de publication (le push, la Release et le rafraîchissement de baseline
+  cli) sont conditionnées.** L'échange de token est ce qui valide la
   policy trusted-publishing, donc un dry run échoue (rouge) quand la policy ou
   `NUGET_USER` est absent. Il génère une clé à usage unique que le dry run ne
   dépense jamais. Nécessite une policy trusted-publishing sur nuget.org et le
