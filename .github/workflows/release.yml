@@ -2,12 +2,14 @@ name: release
 
 on:
   push:
-    # Publish on a train-prefixed semantic-version tag. The two trains version independently:
+    # Publish on a train-prefixed semantic-version tag. The trains version independently:
     #   lib-v1.2.3  -> FirstClassErrors + FirstClassErrors.Testing
     #   cli-v1.2.3  -> FirstClassErrors.Cli (the fce .NET tool)
+    #   dum-v1.2.3  -> Dummies (the standalone arbitrary-test-value library)
     tags:
       - 'lib-v*.*.*'
       - 'cli-v*.*.*'
+      - 'dum-v*.*.*'
   workflow_dispatch:
     inputs:
       component:
@@ -16,6 +18,7 @@ on:
         options:
           - lib
           - cli
+          - dum
         required: true
       version:
         description: 'Package version, without any prefix (e.g. 1.2.3; a dry run can use any SemVer, e.g. 0.0.0-dry.1)'
@@ -99,12 +102,13 @@ jobs:
             case "$REF_NAME" in
               lib-v*) COMPONENT="lib"; VERSION="${REF_NAME#lib-v}" ;;
               cli-v*) COMPONENT="cli"; VERSION="${REF_NAME#cli-v}" ;;
-              *) echo "::error::Tag '$REF_NAME' is not a release tag; expected lib-v*.*.* or cli-v*.*.*."; exit 1 ;;
+              dum-v*) COMPONENT="dum"; VERSION="${REF_NAME#dum-v}" ;;
+              *) echo "::error::Tag '$REF_NAME' is not a release tag; expected lib-v*.*.*, cli-v*.*.* or dum-v*.*.*."; exit 1 ;;
             esac
           fi
           case "$COMPONENT" in
-            lib|cli) ;;
-            *) echo "::error::Invalid component '$COMPONENT'; expected 'lib' or 'cli'."; exit 1 ;;
+            lib|cli|dum) ;;
+            *) echo "::error::Invalid component '$COMPONENT'; expected 'lib', 'cli' or 'dum'."; exit 1 ;;
           esac
           # Build metadata (+...) is deliberately REJECTED even though SemVer allows it: NuGet strips it
           # from the package identity, so a tag like lib-v1.2.3+build5 packs as FirstClassErrors.1.2.3.nupkg.
@@ -129,8 +133,8 @@ jobs:
       - name: Test
         run: dotnet test FirstClassErrors.sln -c Release --no-build --logger "console;verbosity=normal"
 
-      # Pack only the train this release targets (lib -> FirstClassErrors + .Testing; cli -> the fce tool),
-      # so a lib release never republishes the CLI and vice versa. The analyzer is bundled inside the main
+      # Pack only the train this release targets (lib -> FirstClassErrors + .Testing; cli -> the fce
+      # tool; dum -> Dummies), so a lib release never republishes the CLI and vice versa. The analyzer is bundled inside the main
       # package and the GenDoc worker inside the CLI tool; the samples are not published.
       # GenerateSBOM activates Microsoft.Sbom.Targets in each packable project: each package embeds its SPDX
       # inventory at _manifest/spdx_2.2/manifest.spdx.json. tools/packaging/pack.sh is the single source of

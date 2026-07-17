@@ -9,12 +9,13 @@
 ## What a train is
 
 A **release train** is a package (or lockstep group of packages) that versions and
-publishes on its own tag prefix. Today there are two:
+publishes on its own tag prefix. Today there are three:
 
 | Train | Tag prefix | Scopes | Package(s) | Changelog |
 | --- | --- | --- | --- | --- |
-| `lib` | `lib-v*` | `core`, `analyzers`, `testing` | FirstClassErrors + FirstClassErrors.Testing | `CHANGELOG.md` |
+| `lib` | `lib-v*` | `core`, `analyzers`, `testing`, `binder` | FirstClassErrors + FirstClassErrors.Testing + FirstClassErrors.RequestBinder | `CHANGELOG.md` |
 | `cli` | `cli-v*` | `cli`, `gendoc` | FirstClassErrors.Cli (the `fce` tool) | `FirstClassErrors.Cli/CHANGELOG.md` |
+| `dum` | `dum-v*` | `dummies` | Dummies (the standalone test-value library) | `Dummies/CHANGELOG.md` |
 
 The train → (prefix, scopes, package, changelog file) mapping lives in **one place**,
 [`tools/trains.sh`](../../../tools/trains.sh), which the release-notes generator, the

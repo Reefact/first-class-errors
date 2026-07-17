@@ -9,13 +9,14 @@
 ## Ce qu'est un train
 
 Un **train de release** est un paquet (ou un groupe de paquets versionnés en
-lockstep) qui se version et se publie sur son propre préfixe de tag. Il y en a deux
+lockstep) qui se version et se publie sur son propre préfixe de tag. Il y en a trois
 aujourd'hui :
 
 | Train | Préfixe de tag | Scopes | Paquet(s) | Changelog |
 | --- | --- | --- | --- | --- |
-| `lib` | `lib-v*` | `core`, `analyzers`, `testing` | FirstClassErrors + FirstClassErrors.Testing | `CHANGELOG.md` |
+| `lib` | `lib-v*` | `core`, `analyzers`, `testing`, `binder` | FirstClassErrors + FirstClassErrors.Testing + FirstClassErrors.RequestBinder | `CHANGELOG.md` |
 | `cli` | `cli-v*` | `cli`, `gendoc` | FirstClassErrors.Cli (l'outil `fce`) | `FirstClassErrors.Cli/CHANGELOG.md` |
+| `dum` | `dum-v*` | `dummies` | Dummies (la bibliothèque autonome de valeurs de test) | `Dummies/CHANGELOG.md` |
 
 Le mapping train → (préfixe, scopes, paquet, fichier changelog) vit à **un seul
 endroit**, [`tools/trains.sh`](../../../tools/trains.sh), que le générateur de notes de
