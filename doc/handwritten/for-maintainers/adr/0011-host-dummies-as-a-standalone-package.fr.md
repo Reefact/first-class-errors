@@ -1,6 +1,6 @@
-# ADR-0010 | Héberger Dummies comme package autonome dans ce dépôt
+# ADR-0011 | Héberger Dummies comme package autonome dans ce dépôt
 
-🌍 🇬🇧 [English](0010-host-dummies-as-a-standalone-package.md) · 🇫🇷 Français (ce fichier)
+🌍 🇬🇧 [English](0011-host-dummies-as-a-standalone-package.md) · 🇫🇷 Français (ce fichier)
 
 **Statut :** Proposé
 **Date :** 2026-07-17

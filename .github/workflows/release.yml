@@ -133,6 +133,59 @@ jobs:
       - name: Test
         run: dotnet test FirstClassErrors.sln -c Release --no-build --logger "console;verbosity=normal"
 
+      # GenDoc ships bundled inside the fce tool (no package of its own -- see pack.sh), so a breaking
+      # change to its own error catalog is a breaking change of the cli train. doc/generated/gendoc/
+      # accumulates the pending diff against errors-baseline.json (the catalog as of the last cli
+      # release) on every pull request -- see gendoc-docs.yml. Enforce it here, once, at the one point a
+      # breaking change actually ships: refuse the release unless the version being published bumps the
+      # major component over the previous cli-v tag. Runs on a dry run too (everything up to attestation
+      # does, per the philosophy above), so a misconfigured or forgotten major bump is caught before a
+      # real release attempt, not during one.
+      - name: Require a major bump for GenDoc breaking changes
+        if: steps.version.outputs.component == 'cli'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          PREFIX="cli-v"
+          CURRENT_TAG="${PREFIX}${VERSION}"
+          # Same lookup as tools/packaging/release-notes.sh: most recent same-train tag that is not the
+          # one being published. Empty on the train's first-ever release.
+          PREVIOUS_TAG="$(git tag --list "${PREFIX}*" --sort=-version:refname | grep -Fxv "$CURRENT_TAG" | head -n1 || true)"
+
+          set +e
+          dotnet FirstClassErrors.Cli/bin/Release/net8.0/fce.dll catalog diff \
+            --assemblies FirstClassErrors.GenDoc/bin/Release/net8.0/FirstClassErrors.GenDoc.dll \
+            --baseline doc/generated/gendoc/errors-baseline.json \
+            --fail-on breaking
+          DIFF_EXIT=$?
+          set -e
+
+          if [ "$DIFF_EXIT" -eq 0 ]; then
+            echo "ok: GenDoc's error catalog has no breaking change since the last cli release."
+            exit 0
+          fi
+          if [ "$DIFF_EXIT" -ne 2 ]; then
+            echo "::error::fce catalog diff failed unexpectedly (exit $DIFF_EXIT); see the output above."
+            exit 1
+          fi
+
+          # DIFF_EXIT = 2: at least one breaking change. Only acceptable if this release bumps the major
+          # version -- the major component is always the first dot-segment, pre-release suffix included.
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "ok: no previous $PREFIX tag; this is the train's first release, nothing to compare the major version against."
+            exit 0
+          fi
+          NEW_MAJOR="${VERSION%%.*}"
+          PREVIOUS_VERSION="${PREVIOUS_TAG#"$PREFIX"}"
+          PREVIOUS_MAJOR="${PREVIOUS_VERSION%%.*}"
+
+          if [ "$NEW_MAJOR" -le "$PREVIOUS_MAJOR" ]; then
+            echo "::error::GenDoc's error catalog has a breaking change since $PREVIOUS_TAG, but $CURRENT_TAG does not bump the major version ($PREVIOUS_MAJOR -> $NEW_MAJOR). Publish $((PREVIOUS_MAJOR + 1)).0.0 instead, or revert the breaking change."
+            exit 1
+          fi
+          echo "ok: GenDoc's error catalog has a breaking change since $PREVIOUS_TAG, matched by the major version bump ($PREVIOUS_MAJOR -> $NEW_MAJOR)."
+
       # Pack only the train this release targets (lib -> FirstClassErrors + .Testing; cli -> the fce
       # tool; dum -> Dummies), so a lib release never republishes the CLI and vice versa. The analyzer is bundled inside the main
       # package and the GenDoc worker inside the CLI tool; the samples are not published.
@@ -238,3 +291,30 @@ jobs:
             --title "$TAG" --notes-file release-notes.md --target "$GITHUB_SHA" --prerelease="$PRERELEASE" \
           || { gh release upload "$TAG" "${assets[@]}" --clobber \
                  && gh release edit "$TAG" --prerelease="$PRERELEASE"; }
+
+      # Closes the loop opened by "Require a major bump...": now that the catalog above has actually been
+      # published, explicitly accept it as the new contract (fce catalog update) so the next pull request's
+      # diff starts from zero again. Real publishes only -- a dry run must never touch the real baseline.
+      # Best-effort: the actual release already succeeded by this point, so a rare race against another
+      # push to main (this step pushes directly, the one direct-to-main write in this pipeline, justified
+      # because it only ever follows a deliberate, already-published release) degrades to a warning rather
+      # than failing an otherwise-successful release; a maintainer can rerun `fce catalog update` by hand.
+      - name: Refresh GenDoc's error-catalog baseline
+        if: steps.version.outputs.component == 'cli' && (github.event_name == 'push' || inputs.dry_run == false)
+        run: |
+          set -euo pipefail
+          dotnet FirstClassErrors.Cli/bin/Release/net8.0/fce.dll catalog update \
+            --assemblies FirstClassErrors.GenDoc/bin/Release/net8.0/FirstClassErrors.GenDoc.dll \
+            --baseline doc/generated/gendoc/errors-baseline.json
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if [ -z "$(git status --porcelain -- doc/generated/gendoc/errors-baseline.json)" ]; then
+            echo "Baseline already reflects the published catalog; nothing to refresh."
+            exit 0
+          fi
+
+          git add doc/generated/gendoc/errors-baseline.json
+          git commit -m "docs(gendoc): accept the released error-catalog contract (${{ steps.version.outputs.component }}-v${{ steps.version.outputs.version }})"
+          git push origin HEAD:main || echo "::warning::Could not push the refreshed baseline to main (the release itself already succeeded); run 'fce catalog update' by hand."

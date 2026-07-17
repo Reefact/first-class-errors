@@ -1,0 +1,93 @@
+name: gendoc-docs
+
+# Keeps doc/generated/gendoc (GenDoc's own error catalog) in sync with a pull request's branch on every
+# push, so the regenerated content travels through normal review like any other change — never pushed
+# straight to main. See doc/handwritten/for-users/CatalogVersioningReference.en.md for the underlying `fce
+# catalog update`/`diff` mechanics, and release.yml for the release-time gate that turns a breaking change
+# reported here into a required major version bump of the cli train.
+on:
+  pull_request:
+    branches:
+      - main
+
+# Cancel a superseded run of the same pull request.
+concurrency:
+  group: gendoc-docs-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+# Least privilege: read-only at the top level; the single job below widens only what it needs.
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+
+jobs:
+  publish:
+    name: Regenerate GenDoc's error catalog
+    runs-on: ubuntu-latest
+    # A pull request from a fork gets a read-only GITHUB_TOKEN regardless of the permissions below (GitHub's
+    # own security default), so the commit step would fail there anyway. Every pull request in this
+    # repository's history is same-repo, but skip outright rather than run a doomed build first.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    timeout-minutes: 15
+    permissions:
+      # Push the regenerated catalog back onto the pull request's own branch (never main).
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build the tooling
+        run: dotnet build FirstClassErrors.Cli/FirstClassErrors.Cli.csproj -c Release
+
+      - name: Regenerate the catalog and its diff report
+        run: |
+          set -euo pipefail
+          FCE="dotnet FirstClassErrors.Cli/bin/Release/net8.0/fce.dll"
+          GENDOC_DLL="FirstClassErrors.GenDoc/bin/Release/net8.0/FirstClassErrors.GenDoc.dll"
+          BASELINE="doc/generated/gendoc/errors-baseline.json"
+
+          # catalog/ is entirely renderer output: wipe it first so a removed error's page never lingers
+          # (fce generate only writes files, it never deletes a stale one from a previous run).
+          rm -rf doc/generated/gendoc/catalog
+          $FCE generate \
+            --assemblies "$GENDOC_DLL" \
+            --format markdown --layout split --service-name gendoc \
+            --output doc/generated/gendoc/catalog
+
+          # Informational only (--fail-on none): this workflow never blocks a pull request. Whether a
+          # breaking change is acceptable is enforced later, at release time, against the major version
+          # bump of the cli train (release.yml) -- not here.
+          $FCE catalog diff \
+            --assemblies "$GENDOC_DLL" \
+            --baseline "$BASELINE" \
+            --report markdown --fail-on none \
+            > doc/generated/gendoc/errors-diff.md
+
+      - name: Commit the regenerated catalog to this branch
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if [ -z "$(git status --porcelain -- doc/generated/gendoc)" ]; then
+            echo "GenDoc's error catalog is unchanged; nothing to publish."
+            exit 0
+          fi
+
+          git add doc/generated/gendoc
+          git commit -m "docs(gendoc): regenerate the tool's own error catalog"
+          # Pushes made with the default GITHUB_TOKEN do not re-trigger workflows (GitHub's own loop
+          # guard), so this never causes another 'pull_request: synchronize' event and another run of
+          # this job.
+          git push origin HEAD:${{ github.head_ref }}

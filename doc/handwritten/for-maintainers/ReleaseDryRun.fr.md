@@ -7,7 +7,7 @@ référence des workflows pour [`release`](workflows/release.fr.md) et
 [`release-dryrun`](workflows/release-dryrun.fr.md).
 
 > Documentation technique / mainteneur. Elle ne fait **pas** partie de la
-> documentation utilisateur de la librairie, sous `doc/`.
+> documentation utilisateur de la bibliothèque, sous `doc/`.
 
 ## De quoi s'agit-il
 
