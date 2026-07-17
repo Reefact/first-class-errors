@@ -7,3 +7,11 @@
 # leaves line-ending/charset handling untouched on purpose (see .editorconfig).
 *.verified.* text eol=lf
 *.received.* text eol=lf
+
+# GenDoc's own error catalog is produced by CI (the gendoc-docs workflow runs
+# `fce generate` / `fce catalog` and commits the result); see doc/generated/README.md.
+# Mark the whole output tree as generated so GitHub collapses it in pull-request diffs
+# — a reviewer reads errors-diff.md, not 19 regenerated pages line by line — and drops
+# it from the repository's language statistics. Scoped to the gendoc/ output only: the
+# handwritten doc/generated/README.md sits one level up and is untouched.
+doc/generated/gendoc/** linguist-generated=true
