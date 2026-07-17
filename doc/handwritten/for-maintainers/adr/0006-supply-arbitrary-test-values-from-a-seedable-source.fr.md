@@ -30,7 +30,7 @@ manière dont ces entrées sont fournies aujourd'hui.
   à cette unique constante). Une valeur qui varie d'une exécution à l'autre fait
   apparaître un tel couplage.
 
-Les librairies établies résolvent cela avec un dispositif de « valeur
+Les bibliothèques établies résolvent cela avec un dispositif de « valeur
 anonyme / arbitraire » (AutoFixture, Bogus, l'utilitaire `Any` de GOOS, les
 générateurs FsCheck). En adopter un ici doit satisfaire deux contraintes
 strictes de ce package :
@@ -120,7 +120,7 @@ avant.
 ### Ajouter des fabriques de test aux value objects eux-mêmes
 
 Placer « fabrique-en une arbitraire » sur `ErrorCode`, `Error`, et consorts dans
-la librairie cœur. Rejeté parce que cela mêle une préoccupation de test à des
+la bibliothèque cœur. Rejeté parce que cela mêle une préoccupation de test à des
 types de production et livrerait une surface réservée aux tests dans le package
 principal.
 

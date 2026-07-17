@@ -77,7 +77,7 @@ une brèche que les autres ne peuvent fermer :
   de l'assembly et échoue, rapidement et in-process, si un quelconque assembly
   `Microsoft.CodeAnalysis*` référencé le dépasse — attrapant la dérive de
   *référence* ;
-* **le job CI de floor-check** empaquette la librairie et reconstruit
+* **le job CI de floor-check** empaquette la bibliothèque et reconstruit
   l'exemple contre l'analyzer empaqueté sous le SDK du floor, prouvant que
   l'**artefact livré** à la fois se **charge** et est **packagé** correctement sur
   le **compilateur pris en charge le plus ancien** — les deux brèches que le test

@@ -14,7 +14,7 @@ une erreur est une valeur qu'un appelant retourne et inspecte
 La levée d'exception reste prise en charge comme commodité optionnelle — le README
 la présente comme un choix (« vous choisissez comment elle circule ») — mais
 retourner un `Outcome` est le chemin par défaut et de première classe de la
-librairie.
+bibliothèque.
 
 Les opérations de type fabrique se présentent donc couramment en deux variantes
 sur les mêmes entrées : l'une retourne `Outcome<T>`, l'autre lève une exception en
@@ -30,7 +30,7 @@ fournit sa valeur via un paramètre `out`, et se lit en ligne dans un `if`
 présument tous cette forme exacte à la vue d'un préfixe `Try`. Deux faits en
 découlent :
 
-* **Forme.** Un `TryXxx` dans cette librairie retourne `Outcome<T>` — il
+* **Forme.** Un `TryXxx` dans cette bibliothèque retourne `Outcome<T>` — il
   emprunte le nom sans la forme `bool`+`out`, si bien qu'il ne peut pas être
   utilisé en ligne dans un `if` et rompt discrètement l'attente que le nom
   établit.
@@ -38,10 +38,10 @@ découlent :
   nom *marqué* est celui qui est sûr (`TryParse`). Le code actuel suit cette
   disposition (`FromKelvin` lève, `TryFromKelvin` est sûr) — plaçant le nom
   simple, non marqué, sur le chemin qui lève, c'est-à-dire le chemin que cette
-  librairie traite comme l'exception plutôt que comme le défaut.
+  bibliothèque traite comme l'exception plutôt que comme le défaut.
 
 `Outcome<T>` expose déjà `GetResultOrThrow()`, si bien que « lever en cas
-d'échec » dispose d'un vocabulaire établi dans la librairie.
+d'échec » dispose d'un vocabulaire établi dans la bibliothèque.
 
 ## Décision
 
@@ -51,15 +51,15 @@ retournant `Outcome<T>`) ; la variante qui lève est marquée d'un suffixe `OrTh
 
 ## Justification
 
-* **Un seul principe, appliqué au défaut de cette librairie.** La convention qui
+* **Un seul principe, appliqué au défaut de cette bibliothèque.** La convention qui
   mérite d'être conservée de la BCL n'est pas le mot `Try` mais la règle
   sous-jacente : *la variante qui s'écarte du défaut dominant porte le marqueur.*
   Le défaut de la BCL est de lever, donc sa variante sûre est marquée (`Try`) ; le
-  défaut de cette librairie est de retourner un `Outcome`, donc sa variante qui
+  défaut de cette bibliothèque est de retourner un `Outcome`, donc sa variante qui
   lève est l'écart et prend le marqueur (`OrThrow`). Même règle, référence opposée
   — ce qui est précisément la raison pour laquelle réutiliser `Try` ici serait
   incohérent, et non un simple conflit de noms.
-* **L'appel risqué est celui qui est visible.** Toute la thèse de la librairie
+* **L'appel risqué est celui qui est visible.** Toute la thèse de la bibliothèque
   est qu'une exception est le mode d'échec qui se cache au site d'appel. `OrThrow`
   la remet dans le nom : `FromKelvinOrThrow(k)` annonce qu'elle peut lever ;
   `FromKelvin(k)` annonce qu'elle retourne une valeur à inspecter. Le nom simple et
@@ -82,7 +82,7 @@ C'est la disposition de la BCL : le nom simple lève, le nom marqué retourne un
 `XxxOrError`, `AttemptXxx`, `XxxSafe` — la disposition partage un même défaut :
 elle laisse l'appel qui *lève* non marqué, de sorte que le seul appel qui peut
 échouer de manière invisible porte le nom le plus court et le plus semblable à un
-défaut. Pour une librairie dont la raison d'être est de rendre explicite le
+défaut. Pour une bibliothèque dont la raison d'être est de rendre explicite le
 chemin d'échec, c'est à l'envers. `Try` entre de plus en conflit avec la forme de
 la BCL ; les autres évitent le conflit mais pas le défaut sous-jacent.
 
@@ -100,7 +100,7 @@ introduire un synonyme fragmenterait le vocabulaire.
   d'appel : un `FromKelvin` simple retourne un `Outcome` à inspecter, tandis que
   `FromKelvinOrThrow` annonce d'emblée qu'il peut lever.
 * Le nom simple, celui vers lequel on se tourne le plus, appartient désormais au
-  chemin de première classe de la librairie, si bien que la variante vers
+  chemin de première classe de la bibliothèque, si bien que la variante vers
   laquelle un appelant se dirige par défaut est celle qui est inspectable.
 * Aucune méthode n'annonce la forme `Try`/`out` de la BCL qu'elle n'implémente pas.
 
@@ -115,7 +115,7 @@ introduire un synonyme fragmenterait le vocabulaire.
 * Les exemples de documentation qui utilisent le préfixe `Try` (`GettingStarted`,
   `UsagePatterns`, en EN comme en FR) doivent être reformulés avec les nouveaux
   noms.
-* Il s'agit d'un renommage cassant de membres publics. La librairie est en
+* Il s'agit d'un renommage cassant de membres publics. La bibliothèque est en
   pré-version et non publiée sur NuGet, sans consommateurs externes, si bien
   qu'elle n'entraîne aujourd'hui aucun coût de migration en aval.
 

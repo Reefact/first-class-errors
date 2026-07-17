@@ -9,7 +9,7 @@
 
 ## À quoi il sert
 
-La librairie livre des analyzers Roslyn (`FCExxx`) **embarqués dans le package
+La bibliothèque livre des analyzers Roslyn (`FCExxx`) **embarqués dans le package
 NuGet**. Ce workflow prouve deux choses que la CI ordinaire ne prouve pas :
 
 1. **Dogfood** — les analyzers tournent réellement et ne signalent rien
@@ -59,7 +59,7 @@ l'éditer, lisez les commentaires du YAML — ils font foi. Les pièges :
 
 - **Le pack tourne sous le SDK de release, la consommation sous le SDK floor.**
   Packer sous le SDK floor testerait un analyzer que personne ne livre et
-  épinglerait la librairie à C# 12. Ce découpage est tout l'intérêt.
+  épinglerait la bibliothèque à C# 12. Ce découpage est tout l'intérêt.
 - **`FLOORCHECK_VERSION` porte un suffixe `run_number.run_attempt`** pour que
   chaque run produise une version que NuGet n'a jamais mise en cache, forçant
   l'étape de consommation à restaurer le `.nupkg` fraîchement packé *de ce run*

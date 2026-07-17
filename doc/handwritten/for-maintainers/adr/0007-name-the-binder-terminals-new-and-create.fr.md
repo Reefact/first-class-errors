@@ -28,14 +28,14 @@
   consommateur dont la fabrique retourne `Outcome<TCommand>` à imbriquer le résultat sous
   la forme `Outcome<Outcome<TCommand>>`, et ne laisse aucun endroit où exécuter une règle
   inter-champs.
-* La librairie réserve déjà le nom de fabrique simple à la variante retournant un
+* La bibliothèque réserve déjà le nom de fabrique simple à la variante retournant un
   `Outcome` (ADR-0005) ; dans tout le code, les fabriques `Parse` / `Create` des value
   objects retournent `Outcome<T>`, si bien que « une fabrique au nom simple restitue un
   `Outcome` » constitue un vocabulaire établi.
 * L'assembleur reçoit un `BindingScope`, un `readonly ref struct` ; un ref struct ne peut
   pas être un argument de type générique, si bien qu'un assembleur ne peut pas être un
   `Func<>` et doit être un type delegate nommé.
-* La librairie est en pré-version, non publiée sur NuGet et sans consommateurs
+* La bibliothèque est en pré-version, non publiée sur NuGet et sans consommateurs
   externes, si bien qu'un choix de nommage sur cette nouvelle API n'entraîne aucun coût
   de migration en aval.
 
