@@ -183,3 +183,4 @@ Optional supporting material:
 | [ADR-0007](0007-name-the-binder-terminals-new-and-create.md) | Name the binder terminals New and Create | Accepted |
 | [ADR-0008](0008-bind-nullable-value-type-properties-through-a-struct-constrained-overload.md) | Bind nullable value-type properties through a struct-constrained overload | Proposed |
 | [ADR-0009](0009-report-the-toolings-failures-as-first-class-errors.md) | Report the tooling's failures as first-class errors | Proposed |
+| [ADR-0010](0010-host-dummies-as-a-standalone-package.md) | Host Dummies as a standalone package in this repository | Proposed |
