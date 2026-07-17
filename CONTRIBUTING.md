@@ -257,6 +257,7 @@ The scope MAY be provided. When present it MUST be lowercase and MUST be one of:
 | `analyzers` | `FirstClassErrors.Analyzers` — the Roslyn analyzers and their `FCExxx` diagnostics |
 | `binder` | `FirstClassErrors.RequestBinder` — the request binder for the primary-adapter boundary |
 | `cli` | `FirstClassErrors.Cli` — the command-line tool |
+| `dummies` | `Dummies` — the standalone arbitrary-test-value generator |
 | `gendoc` | `FirstClassErrors.GenDoc` and its worker — the documentation generator |
 | `testing` | `FirstClassErrors.Testing` — the test-support package |
 
