@@ -72,32 +72,12 @@ public sealed class ListOfSimplePropertiesConverter<TRequest, TArgument> {
     }
 
     private RequiredField<IReadOnlyList<TProperty>> ConvertElements<TProperty>(Func<TArgument, Outcome<TProperty>> convertElement) where TProperty : notnull {
-        List<TProperty> converted = new();
-        int             index     = 0;
-
-        foreach (TArgument? element in _values!) {
-            string elementPath = $"{_argumentPath}[{index}]";
-            index++;
-
-            if (element is null) {
-                _binder.RecordArgumentRequired(elementPath);
-
-                continue;
-            }
-
+        return _binder.ConvertEachElement<TArgument?, TProperty>(_argumentPath, _values!, (element, elementPath) => {
             Outcome<TProperty> outcome = convertElement(element!);
-            if (outcome.IsFailure) {
-                _binder.RecordArgumentInvalid(elementPath, outcome.Error!);
+            if (outcome.IsFailure) { _binder.RecordArgumentInvalid(elementPath, outcome.Error!); }
 
-                continue;
-            }
-
-            converted.Add(outcome.GetResultOrThrow());
-        }
-
-        // The value is read only through a BindingScope, which a build terminal creates solely when no failure was recorded —
-        // i.e. only when every element converted — so `converted` is the complete list exactly when it is observed.
-        return new RequiredField<IReadOnlyList<TProperty>>(_binder, converted);
+            return outcome;
+        });
     }
 
 }
