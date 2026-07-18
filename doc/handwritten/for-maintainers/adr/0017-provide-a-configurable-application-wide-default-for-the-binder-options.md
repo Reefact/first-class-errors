@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0017-provide-a-configurable-application-wide-default-for-the-binder-options.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-07-18
 **Decision Makers:** Reefact
 
