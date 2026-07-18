@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- Build -->
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <!-- Build. netstandard2.0 keeps the widest reach; the net8.0 leg additionally carries the modern
+         types that do not exist downlevel (DateOnly, TimeOnly, Int128, UInt128, Half). -->
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
