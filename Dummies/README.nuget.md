@@ -46,6 +46,9 @@ matter — and that is the point.
   `WithCount`/`NonEmpty`/`Distinct`/`Containing`. A distinct collection asked for more
   elements than its element domain can produce fails fast, just like any other
   conflict; `Any.PairOf`/`TripleOf` pair generators into value tuples.
+- **Optional values**: `.OrNull()` turns any generator into one that is `null` about
+  half the time and otherwise a constrained value — the dummy for an optional field,
+  for value types (`int?`, `Guid?`, ...) and reference types alike.
 - **Reproducible runs**: wrap a test in `Any.Reproducibly(...)` and a failing run
   reports the seed to replay; `Any.WithSeed(seed)` gives an isolated, deterministic
   context.

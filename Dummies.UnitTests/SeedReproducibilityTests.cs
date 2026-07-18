@@ -34,11 +34,13 @@ public sealed class SeedReproducibilityTests {
         Half     tiny     = Any.Half();
         List<int>    list = Any.ListOf(Any.Int32().Between(0, 9)).WithCount(4);
         HashSet<int> set  = Any.SetOf(Any.Int32().Between(0, 99)).WithCount(3);
+        int?         maybe = Any.Int32().Between(0, 9).OrNull().Generate();
 
         return string.Join("|", full, bounded, free, capped, shaped,
                            wide, unsigned, real, exact, flag, id, letter,
                            span.Ticks, instant.Ticks, huge, tiny,
-                           string.Join("-", list), string.Join("-", set.OrderBy(value => value)));
+                           string.Join("-", list), string.Join("-", set.OrderBy(value => value)),
+                           maybe?.ToString() ?? "null");
     }
 
     #endregion
