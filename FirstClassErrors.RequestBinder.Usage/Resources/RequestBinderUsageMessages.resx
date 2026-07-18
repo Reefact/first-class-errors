@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- ============================ Source group descriptions ============================ -->
+  <data name="EmailAddress_Source" xml:space="preserve">
+    <value>Errors raised when parsing a guest e-mail address from a request string.</value>
+  </data>
+  <data name="Currency_Source" xml:space="preserve">
+    <value>Errors raised when parsing a billing currency code from a request string.</value>
+  </data>
+  <data name="Tag_Source" xml:space="preserve">
+    <value>Errors raised when parsing a booking tag from an element of a request list.</value>
+  </data>
+  <data name="BookingDate_Source" xml:space="preserve">
+    <value>Errors raised when parsing a booking date (check-in / check-out) from a request string.</value>
+  </data>
+  <data name="NightCount_Source" xml:space="preserve">
+    <value>Errors raised when building the number of nights from a request value.</value>
+  </data>
+  <data name="RoomNumber_Source" xml:space="preserve">
+    <value>Errors raised when building a room number from an element of a request list.</value>
+  </data>
+  <data name="Stay_Source" xml:space="preserve">
+    <value>Errors raised when validating a stay's check-in and check-out dates together.</value>
+  </data>
+  <data name="BookingEndpoint_Source" xml:space="preserve">
+    <value>Primary-port errors raised by the booking endpoint when it binds an incoming request into a command.</value>
+  </data>
+  <!-- ============================ EmailAddress ============================ -->
+  <data name="EmailAddress_Malformed_Title" xml:space="preserve">
+    <value>Malformed e-mail address</value>
+  </data>
+  <data name="EmailAddress_Malformed_Description" xml:space="preserve">
+    <value>An incoming request carries a value that is not a well-formed e-mail address, so it cannot be parsed into an EmailAddress value object.</value>
+  </data>
+  <data name="EmailAddress_Malformed_Rule" xml:space="preserve">
+    <value>A guest e-mail address must contain a single '@' with a non-empty local part and domain.</value>
+  </data>
+  <data name="EmailAddress_Malformed_Cause1" xml:space="preserve">
+    <value>The client sent a misspelled or truncated address (missing '@', empty local part or domain).</value>
+  </data>
+  <data name="EmailAddress_Malformed_Hint1" xml:space="preserve">
+    <value>Validate the address on the client, and compare the sent value against the expected format.</value>
+  </data>
+  <data name="EmailAddress_Malformed_ShortMessage" xml:space="preserve">
+    <value>The e-mail address is invalid.</value>
+  </data>
+  <data name="EmailAddress_Malformed_DetailedMessage" xml:space="preserve">
+    <value>The value provided is not a valid e-mail address.</value>
+  </data>
+  <!-- ============================ Currency ============================ -->
+  <data name="Currency_Malformed_Title" xml:space="preserve">
+    <value>Malformed currency code</value>
+  </data>
+  <data name="Currency_Malformed_Description" xml:space="preserve">
+    <value>An incoming request carries a value that is not a well-formed three-letter currency code, so it cannot be parsed into a Currency value object.</value>
+  </data>
+  <data name="Currency_Malformed_Rule" xml:space="preserve">
+    <value>A currency code must be exactly three upper-case ASCII letters (for example EUR).</value>
+  </data>
+  <data name="Currency_Malformed_Cause1" xml:space="preserve">
+    <value>The client sent a currency in the wrong shape (lower-case, a symbol, a name, or the wrong length).</value>
+  </data>
+  <data name="Currency_Malformed_Hint1" xml:space="preserve">
+    <value>Send the ISO-4217 alphabetic code in upper case, for example USD or EUR.</value>
+  </data>
+  <data name="Currency_Malformed_ShortMessage" xml:space="preserve">
+    <value>The currency is invalid.</value>
+  </data>
+  <data name="Currency_Malformed_DetailedMessage" xml:space="preserve">
+    <value>The billing currency code is not a valid three-letter code.</value>
+  </data>
+  <!-- ============================ Tag ============================ -->
+  <data name="Tag_Malformed_Title" xml:space="preserve">
+    <value>Malformed booking tag</value>
+  </data>
+  <data name="Tag_Malformed_Description" xml:space="preserve">
+    <value>An element of the request's tag list is empty, too long, or contains whitespace, so it cannot be parsed into a Tag value object.</value>
+  </data>
+  <data name="Tag_Malformed_Rule" xml:space="preserve">
+    <value>A tag must be a single non-empty token of at most 32 characters, without whitespace.</value>
+  </data>
+  <data name="Tag_Malformed_Cause1" xml:space="preserve">
+    <value>The client sent a blank tag, a phrase containing spaces, or an over-long value.</value>
+  </data>
+  <data name="Tag_Malformed_Hint1" xml:space="preserve">
+    <value>Send each tag as a single whitespace-free token; join multi-word tags with a hyphen.</value>
+  </data>
+  <data name="Tag_Malformed_ShortMessage" xml:space="preserve">
+    <value>A tag is invalid.</value>
+  </data>
+  <data name="Tag_Malformed_DetailedMessage" xml:space="preserve">
+    <value>One of the booking tags is not a valid single token.</value>
+  </data>
+  <!-- ============================ BookingDate ============================ -->
+  <data name="BookingDate_Malformed_Title" xml:space="preserve">
+    <value>Malformed booking date</value>
+  </data>
+  <data name="BookingDate_Malformed_Description" xml:space="preserve">
+    <value>An incoming request carries a value that is not an ISO yyyy-MM-dd date, so it cannot be parsed into a BookingDate value object.</value>
+  </data>
+  <data name="BookingDate_Malformed_Rule" xml:space="preserve">
+    <value>A booking date must be an ISO calendar date in the yyyy-MM-dd format.</value>
+  </data>
+  <data name="BookingDate_Malformed_Cause1" xml:space="preserve">
+    <value>The client sent a date in a locale-specific or malformed format, or an impossible calendar date.</value>
+  </data>
+  <data name="BookingDate_Malformed_Hint1" xml:space="preserve">
+    <value>Send dates in ISO 8601 yyyy-MM-dd form, for example 2026-08-10.</value>
+  </data>
+  <data name="BookingDate_Malformed_ShortMessage" xml:space="preserve">
+    <value>The date is invalid.</value>
+  </data>
+  <data name="BookingDate_Malformed_DetailedMessage" xml:space="preserve">
+    <value>A booking date is not a valid ISO (yyyy-MM-dd) date.</value>
+  </data>
+  <!-- ============================ NightCount ============================ -->
+  <data name="NightCount_NotPositive_Title" xml:space="preserve">
+    <value>Non-positive number of nights</value>
+  </data>
+  <data name="NightCount_NotPositive_Description" xml:space="preserve">
+    <value>An incoming request asks for zero or a negative number of nights, which is not a valid stay length.</value>
+  </data>
+  <data name="NightCount_NotPositive_Rule" xml:space="preserve">
+    <value>A booking must be for at least one night.</value>
+  </data>
+  <data name="NightCount_NotPositive_Cause1" xml:space="preserve">
+    <value>The client sent a number of nights of zero or below.</value>
+  </data>
+  <data name="NightCount_NotPositive_Hint1" xml:space="preserve">
+    <value>Send a number of nights of one or more.</value>
+  </data>
+  <data name="NightCount_NotPositive_ShortMessage" xml:space="preserve">
+    <value>The number of nights is invalid.</value>
+  </data>
+  <data name="NightCount_NotPositive_DetailedMessage" xml:space="preserve">
+    <value>The requested number of nights must be one or more.</value>
+  </data>
+  <!-- ============================ RoomNumber ============================ -->
+  <data name="RoomNumber_OutOfRange_Title" xml:space="preserve">
+    <value>Room number out of range</value>
+  </data>
+  <data name="RoomNumber_OutOfRange_Description" xml:space="preserve">
+    <value>An element of the request's room-number list is outside the supported 1-999 range.</value>
+  </data>
+  <data name="RoomNumber_OutOfRange_Rule" xml:space="preserve">
+    <value>A room number must be between 1 and 999 inclusive.</value>
+  </data>
+  <data name="RoomNumber_OutOfRange_Cause1" xml:space="preserve">
+    <value>The client sent a room number of zero, a negative value, or a value above 999.</value>
+  </data>
+  <data name="RoomNumber_OutOfRange_Hint1" xml:space="preserve">
+    <value>Send room numbers within the supported 1-999 range.</value>
+  </data>
+  <data name="RoomNumber_OutOfRange_ShortMessage" xml:space="preserve">
+    <value>A room number is invalid.</value>
+  </data>
+  <data name="RoomNumber_OutOfRange_DetailedMessage" xml:space="preserve">
+    <value>One of the requested room numbers is outside the supported range.</value>
+  </data>
+  <!-- ============================ Stay (cross-field) ============================ -->
+  <data name="Stay_CheckOutNotAfterCheckIn_Title" xml:space="preserve">
+    <value>Check-out not after check-in</value>
+  </data>
+  <data name="Stay_CheckOutNotAfterCheckIn_Description" xml:space="preserve">
+    <value>Both stay dates parse, but the check-out date is on or before the check-in date, so the stay has no positive length. This cross-field rule is enforced by the Stay.Create factory.</value>
+  </data>
+  <data name="Stay_CheckOutNotAfterCheckIn_Rule" xml:space="preserve">
+    <value>Check-out must be strictly after check-in.</value>
+  </data>
+  <data name="Stay_CheckOutNotAfterCheckIn_Cause1" xml:space="preserve">
+    <value>The client sent a check-out date equal to or earlier than the check-in date.</value>
+  </data>
+  <data name="Stay_CheckOutNotAfterCheckIn_Hint1" xml:space="preserve">
+    <value>Send a check-out date at least one day after the check-in date.</value>
+  </data>
+  <data name="Stay_CheckOutNotAfterCheckIn_ShortMessage" xml:space="preserve">
+    <value>The stay dates are invalid.</value>
+  </data>
+  <data name="Stay_CheckOutNotAfterCheckIn_DetailedMessage" xml:space="preserve">
+    <value>The check-out date must be after the check-in date.</value>
+  </data>
+  <!-- ============================ PlaceBooking envelopes ============================ -->
+  <data name="PlaceBooking_CommandInvalid_Title" xml:space="preserve">
+    <value>Booking request invalid</value>
+  </data>
+  <data name="PlaceBooking_CommandInvalid_Description" xml:space="preserve">
+    <value>The endpoint could not bind the incoming request into a booking command: one or more arguments were missing or invalid. Every failure is collected under this envelope, each with its full argument path.</value>
+  </data>
+  <data name="PlaceBooking_CommandInvalid_Rule" xml:space="preserve">
+    <value>Every required argument must be present, and every argument must convert into its value object.</value>
+  </data>
+  <data name="PlaceBooking_CommandInvalid_Cause1" xml:space="preserve">
+    <value>The client sent a request that violates the endpoint's contract (missing or malformed arguments).</value>
+  </data>
+  <data name="PlaceBooking_CommandInvalid_Hint1" xml:space="preserve">
+    <value>Read the inner errors: each names the failing argument and the rule it violated.</value>
+  </data>
+  <data name="PlaceBooking_CommandInvalid_ShortMessage" xml:space="preserve">
+    <value>We could not accept your booking request.</value>
+  </data>
+  <data name="PlaceBooking_CommandInvalid_DetailedMessage" xml:space="preserve">
+    <value>One or more details of the booking request are missing or invalid.</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_Title" xml:space="preserve">
+    <value>Booking stay invalid</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_Description" xml:space="preserve">
+    <value>The stay sub-object of the request could not be bound: one or both of its dates were missing or malformed. Its failures are grouped under this nested envelope, with paths prefixed by Stay.</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_Rule" xml:space="preserve">
+    <value>Both stay dates must be present and valid ISO dates.</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_Cause1" xml:space="preserve">
+    <value>The client sent a stay with a missing or malformed check-in or check-out date.</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_Hint1" xml:space="preserve">
+    <value>Read the inner errors under the Stay path for the failing date.</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_ShortMessage" xml:space="preserve">
+    <value>We could not read the stay dates.</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_DetailedMessage" xml:space="preserve">
+    <value>The check-in or check-out date of the stay is missing or invalid.</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_Title" xml:space="preserve">
+    <value>Booking guest invalid</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_Description" xml:space="preserve">
+    <value>A guest in the request's guests list could not be bound: its first name was missing or its e-mail was malformed. Its failures are grouped under this per-element envelope, with indexed paths such as Guests[1].</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_Rule" xml:space="preserve">
+    <value>Each guest must have a first name, and any e-mail present must be valid.</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_Cause1" xml:space="preserve">
+    <value>The client sent a guest with a missing first name or a malformed e-mail address.</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_Hint1" xml:space="preserve">
+    <value>Read the inner errors under the indexed Guests[i] path for the failing field.</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_ShortMessage" xml:space="preserve">
+    <value>A guest's information is invalid.</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_DetailedMessage" xml:space="preserve">
+    <value>One of the guests is missing a first name or has an invalid e-mail address.</value>
+  </data>
+</root>

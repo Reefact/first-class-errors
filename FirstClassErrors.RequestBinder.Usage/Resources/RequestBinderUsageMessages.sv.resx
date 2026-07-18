@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- ============================ Beskrivningar av källgrupper ============================ -->
+  <data name="EmailAddress_Source" xml:space="preserve">
+    <value>Fel som utlöses när en gästs e-postadress tolkas från en begäranssträng.</value>
+  </data>
+  <data name="Currency_Source" xml:space="preserve">
+    <value>Fel som utlöses när en faktureringsvalutakod tolkas från en begäranssträng.</value>
+  </data>
+  <data name="Tag_Source" xml:space="preserve">
+    <value>Fel som utlöses när en bokningstagg tolkas från ett element i en begäranslista.</value>
+  </data>
+  <data name="BookingDate_Source" xml:space="preserve">
+    <value>Fel som utlöses när ett bokningsdatum (incheckning / utcheckning) tolkas från en begäranssträng.</value>
+  </data>
+  <data name="NightCount_Source" xml:space="preserve">
+    <value>Fel som utlöses när antalet nätter byggs från ett begäransvärde.</value>
+  </data>
+  <data name="RoomNumber_Source" xml:space="preserve">
+    <value>Fel som utlöses när ett rumsnummer byggs från ett element i en begäranslista.</value>
+  </data>
+  <data name="Stay_Source" xml:space="preserve">
+    <value>Fel som utlöses vid gemensam validering av en vistelses in- och utcheckningsdatum.</value>
+  </data>
+  <data name="BookingEndpoint_Source" xml:space="preserve">
+    <value>Primärportsfel som utlöses av bokningsslutpunkten när den binder en inkommande begäran till ett kommando.</value>
+  </data>
+  <!-- ============================ EmailAddress ============================ -->
+  <data name="EmailAddress_Malformed_Title" xml:space="preserve">
+    <value>Felaktig e-postadress</value>
+  </data>
+  <data name="EmailAddress_Malformed_Description" xml:space="preserve">
+    <value>En inkommande begäran innehåller ett värde som inte är en välformad e-postadress och därför inte kan tolkas till ett EmailAddress-värdeobjekt.</value>
+  </data>
+  <data name="EmailAddress_Malformed_Rule" xml:space="preserve">
+    <value>En gästs e-postadress måste innehålla exakt ett ”@” med en icke-tom lokal del och en icke-tom domän.</value>
+  </data>
+  <data name="EmailAddress_Malformed_Cause1" xml:space="preserve">
+    <value>Klienten skickade en felstavad eller avkortad adress (saknat ”@”, tom lokal del eller domän).</value>
+  </data>
+  <data name="EmailAddress_Malformed_Hint1" xml:space="preserve">
+    <value>Validera adressen på klienten och jämför det skickade värdet med det förväntade formatet.</value>
+  </data>
+  <data name="EmailAddress_Malformed_ShortMessage" xml:space="preserve">
+    <value>E-postadressen är ogiltig.</value>
+  </data>
+  <data name="EmailAddress_Malformed_DetailedMessage" xml:space="preserve">
+    <value>Det angivna värdet är inte en giltig e-postadress.</value>
+  </data>
+  <!-- ============================ Currency ============================ -->
+  <data name="Currency_Malformed_Title" xml:space="preserve">
+    <value>Felaktig valutakod</value>
+  </data>
+  <data name="Currency_Malformed_Description" xml:space="preserve">
+    <value>En inkommande begäran innehåller ett värde som inte är en välformad valutakod med tre bokstäver och därför inte kan tolkas till ett Currency-värdeobjekt.</value>
+  </data>
+  <data name="Currency_Malformed_Rule" xml:space="preserve">
+    <value>En valutakod måste bestå av exakt tre versala ASCII-bokstäver (till exempel EUR).</value>
+  </data>
+  <data name="Currency_Malformed_Cause1" xml:space="preserve">
+    <value>Klienten skickade en valuta i fel form (gemener, en symbol, ett namn eller fel längd).</value>
+  </data>
+  <data name="Currency_Malformed_Hint1" xml:space="preserve">
+    <value>Skicka den alfabetiska ISO-4217-koden i versaler, till exempel USD eller EUR.</value>
+  </data>
+  <data name="Currency_Malformed_ShortMessage" xml:space="preserve">
+    <value>Valutan är ogiltig.</value>
+  </data>
+  <data name="Currency_Malformed_DetailedMessage" xml:space="preserve">
+    <value>Faktureringsvalutakoden är inte en giltig kod med tre bokstäver.</value>
+  </data>
+  <!-- ============================ Tag ============================ -->
+  <data name="Tag_Malformed_Title" xml:space="preserve">
+    <value>Felaktig bokningstagg</value>
+  </data>
+  <data name="Tag_Malformed_Description" xml:space="preserve">
+    <value>Ett element i begärans tagglista är tomt, för långt eller innehåller blanksteg och kan därför inte tolkas till ett Tag-värdeobjekt.</value>
+  </data>
+  <data name="Tag_Malformed_Rule" xml:space="preserve">
+    <value>En tagg måste vara en enda icke-tom token på högst 32 tecken, utan blanksteg.</value>
+  </data>
+  <data name="Tag_Malformed_Cause1" xml:space="preserve">
+    <value>Klienten skickade en tom tagg, ett uttryck med blanksteg eller ett för långt värde.</value>
+  </data>
+  <data name="Tag_Malformed_Hint1" xml:space="preserve">
+    <value>Skicka varje tagg som en enda token utan blanksteg; koppla ihop flerordstaggar med bindestreck.</value>
+  </data>
+  <data name="Tag_Malformed_ShortMessage" xml:space="preserve">
+    <value>En tagg är ogiltig.</value>
+  </data>
+  <data name="Tag_Malformed_DetailedMessage" xml:space="preserve">
+    <value>En av bokningstaggarna är inte en giltig enskild token.</value>
+  </data>
+  <!-- ============================ BookingDate ============================ -->
+  <data name="BookingDate_Malformed_Title" xml:space="preserve">
+    <value>Felaktigt bokningsdatum</value>
+  </data>
+  <data name="BookingDate_Malformed_Description" xml:space="preserve">
+    <value>En inkommande begäran innehåller ett värde som inte är ett ISO-datum (yyyy-MM-dd) och därför inte kan tolkas till ett BookingDate-värdeobjekt.</value>
+  </data>
+  <data name="BookingDate_Malformed_Rule" xml:space="preserve">
+    <value>Ett bokningsdatum måste vara ett ISO-kalenderdatum i formatet yyyy-MM-dd.</value>
+  </data>
+  <data name="BookingDate_Malformed_Cause1" xml:space="preserve">
+    <value>Klienten skickade ett datum i ett språkspecifikt eller felaktigt format, eller ett omöjligt kalenderdatum.</value>
+  </data>
+  <data name="BookingDate_Malformed_Hint1" xml:space="preserve">
+    <value>Skicka datum i formatet ISO 8601 yyyy-MM-dd, till exempel 2026-08-10.</value>
+  </data>
+  <data name="BookingDate_Malformed_ShortMessage" xml:space="preserve">
+    <value>Datumet är ogiltigt.</value>
+  </data>
+  <data name="BookingDate_Malformed_DetailedMessage" xml:space="preserve">
+    <value>Ett bokningsdatum är inte ett giltigt ISO-datum (yyyy-MM-dd).</value>
+  </data>
+  <!-- ============================ NightCount ============================ -->
+  <data name="NightCount_NotPositive_Title" xml:space="preserve">
+    <value>Icke-positivt antal nätter</value>
+  </data>
+  <data name="NightCount_NotPositive_Description" xml:space="preserve">
+    <value>En inkommande begäran begär noll eller ett negativt antal nätter, vilket inte är en giltig vistelselängd.</value>
+  </data>
+  <data name="NightCount_NotPositive_Rule" xml:space="preserve">
+    <value>En bokning måste omfatta minst en natt.</value>
+  </data>
+  <data name="NightCount_NotPositive_Cause1" xml:space="preserve">
+    <value>Klienten skickade ett antal nätter på noll eller lägre.</value>
+  </data>
+  <data name="NightCount_NotPositive_Hint1" xml:space="preserve">
+    <value>Skicka ett antal nätter på en eller fler.</value>
+  </data>
+  <data name="NightCount_NotPositive_ShortMessage" xml:space="preserve">
+    <value>Antalet nätter är ogiltigt.</value>
+  </data>
+  <data name="NightCount_NotPositive_DetailedMessage" xml:space="preserve">
+    <value>Det begärda antalet nätter måste vara en eller fler.</value>
+  </data>
+  <!-- ============================ RoomNumber ============================ -->
+  <data name="RoomNumber_OutOfRange_Title" xml:space="preserve">
+    <value>Rumsnummer utanför intervallet</value>
+  </data>
+  <data name="RoomNumber_OutOfRange_Description" xml:space="preserve">
+    <value>Ett element i begärans lista över rumsnummer ligger utanför det intervall som stöds (1-999).</value>
+  </data>
+  <data name="RoomNumber_OutOfRange_Rule" xml:space="preserve">
+    <value>Ett rumsnummer måste vara mellan 1 och 999 inklusive.</value>
+  </data>
+  <data name="RoomNumber_OutOfRange_Cause1" xml:space="preserve">
+    <value>Klienten skickade ett rumsnummer på noll, ett negativt värde eller ett värde över 999.</value>
+  </data>
+  <data name="RoomNumber_OutOfRange_Hint1" xml:space="preserve">
+    <value>Skicka rumsnummer inom det intervall som stöds (1-999).</value>
+  </data>
+  <data name="RoomNumber_OutOfRange_ShortMessage" xml:space="preserve">
+    <value>Ett rumsnummer är ogiltigt.</value>
+  </data>
+  <data name="RoomNumber_OutOfRange_DetailedMessage" xml:space="preserve">
+    <value>Ett av de begärda rumsnumren ligger utanför det intervall som stöds.</value>
+  </data>
+  <!-- ============================ Stay (regel över flera fält) ============================ -->
+  <data name="Stay_CheckOutNotAfterCheckIn_Title" xml:space="preserve">
+    <value>Utcheckning inte efter incheckning</value>
+  </data>
+  <data name="Stay_CheckOutNotAfterCheckIn_Description" xml:space="preserve">
+    <value>Båda vistelsedatumen tolkas, men utcheckningsdatumet är före eller lika med incheckningsdatumet, så vistelsen har ingen positiv längd. Denna regel över flera fält tillämpas av fabriken Stay.Create.</value>
+  </data>
+  <data name="Stay_CheckOutNotAfterCheckIn_Rule" xml:space="preserve">
+    <value>Utcheckningen måste vara strikt efter incheckningen.</value>
+  </data>
+  <data name="Stay_CheckOutNotAfterCheckIn_Cause1" xml:space="preserve">
+    <value>Klienten skickade ett utcheckningsdatum som är lika med eller tidigare än incheckningsdatumet.</value>
+  </data>
+  <data name="Stay_CheckOutNotAfterCheckIn_Hint1" xml:space="preserve">
+    <value>Skicka ett utcheckningsdatum minst en dag efter incheckningsdatumet.</value>
+  </data>
+  <data name="Stay_CheckOutNotAfterCheckIn_ShortMessage" xml:space="preserve">
+    <value>Vistelsedatumen är ogiltiga.</value>
+  </data>
+  <data name="Stay_CheckOutNotAfterCheckIn_DetailedMessage" xml:space="preserve">
+    <value>Utcheckningsdatumet måste vara efter incheckningsdatumet.</value>
+  </data>
+  <!-- ============================ PlaceBooking-höljen ============================ -->
+  <data name="PlaceBooking_CommandInvalid_Title" xml:space="preserve">
+    <value>Bokningsbegäran ogiltig</value>
+  </data>
+  <data name="PlaceBooking_CommandInvalid_Description" xml:space="preserve">
+    <value>Slutpunkten kunde inte binda den inkommande begäran till ett bokningskommando: ett eller flera argument saknades eller var ogiltiga. Varje fel samlas under detta hölje, vart och ett med sin fullständiga argumentsökväg.</value>
+  </data>
+  <data name="PlaceBooking_CommandInvalid_Rule" xml:space="preserve">
+    <value>Varje obligatoriskt argument måste finnas, och varje argument måste konverteras till sitt värdeobjekt.</value>
+  </data>
+  <data name="PlaceBooking_CommandInvalid_Cause1" xml:space="preserve">
+    <value>Klienten skickade en begäran som bryter mot slutpunktens kontrakt (saknade eller felaktiga argument).</value>
+  </data>
+  <data name="PlaceBooking_CommandInvalid_Hint1" xml:space="preserve">
+    <value>Läs de inre felen: vart och ett namnger det felande argumentet och regeln som bryts.</value>
+  </data>
+  <data name="PlaceBooking_CommandInvalid_ShortMessage" xml:space="preserve">
+    <value>Vi kunde inte acceptera din bokningsbegäran.</value>
+  </data>
+  <data name="PlaceBooking_CommandInvalid_DetailedMessage" xml:space="preserve">
+    <value>En eller flera uppgifter i bokningsbegäran saknas eller är ogiltiga.</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_Title" xml:space="preserve">
+    <value>Bokningens vistelse ogiltig</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_Description" xml:space="preserve">
+    <value>Begärans vistelsedelobjekt kunde inte bindas: ett eller båda av dess datum saknades eller var felaktiga. Dess fel grupperas under detta nästlade hölje, med sökvägar prefixerade med Stay.</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_Rule" xml:space="preserve">
+    <value>Båda vistelsedatumen måste finnas och vara giltiga ISO-datum.</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_Cause1" xml:space="preserve">
+    <value>Klienten skickade en vistelse med ett saknat eller felaktigt in- eller utcheckningsdatum.</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_Hint1" xml:space="preserve">
+    <value>Läs de inre felen under Stay-sökvägen för det felande datumet.</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_ShortMessage" xml:space="preserve">
+    <value>Vi kunde inte läsa vistelsedatumen.</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_DetailedMessage" xml:space="preserve">
+    <value>Vistelsens in- eller utcheckningsdatum saknas eller är ogiltigt.</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_Title" xml:space="preserve">
+    <value>Bokningens gäst ogiltig</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_Description" xml:space="preserve">
+    <value>En gäst i begärans gästlista kunde inte bindas: dess förnamn saknades eller dess e-post var felaktig. Dess fel grupperas under detta hölje per element, med indexerade sökvägar som Guests[1].</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_Rule" xml:space="preserve">
+    <value>Varje gäst måste ha ett förnamn, och varje e-post som finns måste vara giltig.</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_Cause1" xml:space="preserve">
+    <value>Klienten skickade en gäst med ett saknat förnamn eller en felaktig e-postadress.</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_Hint1" xml:space="preserve">
+    <value>Läs de inre felen under den indexerade sökvägen Guests[i] för det felande fältet.</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_ShortMessage" xml:space="preserve">
+    <value>En gästs uppgifter är ogiltiga.</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_DetailedMessage" xml:space="preserve">
+    <value>En av gästerna saknar förnamn eller har en ogiltig e-postadress.</value>
+  </data>
+</root>

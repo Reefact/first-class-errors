@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Multi-targeted on purpose, exactly like FirstClassErrors.Usage: net10.0 is what the unit tests and the
+         GenDoc snapshots reference, while net8.0 gives the "documentation tooling on the .NET 8 floor" CI job a real
+         net8 target and, for free, dogfoods the netstandard2.0 core + binder on the floor runtime. This is a sample,
+         never packed. -->
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Opt-in marker for the FirstClassErrors error-documentation generator, NOT a build switch (see the identical
+         note in FirstClassErrors.Usage.csproj). "fce generate" reads this straight from the project XML to decide
+         which projects to document; a plain "dotnet build" ignores it. -->
+    <GenerateErrorDocumentation>true</GenerateErrorDocumentation>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
+    <ProjectReference Include="..\FirstClassErrors.RequestBinder\FirstClassErrors.RequestBinder.csproj" />
+    <!-- Dogfood the analyzers on this sample: OutputItemType=Analyzer runs them at build/IDE time,
+         ReferenceOutputAssembly=false keeps the analyzer off the runtime graph. -->
+    <ProjectReference Include="..\FirstClassErrors.Analyzers\FirstClassErrors.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+</Project>
