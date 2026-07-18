@@ -10,10 +10,6 @@ namespace Dummies;
 /// </summary>
 public sealed class AnyChar : IAny<char>, IHasRandomSource {
 
-    private const string UpperLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    private const string LowerLetters = "abcdefghijklmnopqrstuvwxyz";
-    private const string Digits       = "0123456789";
-
     #region Statics members declarations
 
     /// <summary>
@@ -189,17 +185,17 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource {
 
     private string BasePool() {
         return _charset switch {
-            CharacterSet.Alpha   => UpperLetters + LowerLetters,
-            CharacterSet.Numeric => Digits,
-            _                    => UpperLetters + LowerLetters + Digits
+            CharacterSet.Alpha   => CharacterPools.UpperLetters + CharacterPools.LowerLetters,
+            CharacterSet.Numeric => CharacterPools.Digits,
+            _                    => CharacterPools.UpperLetters + CharacterPools.LowerLetters + CharacterPools.Digits
         };
     }
 
     private bool MatchesCharset(char character) {
         return _charset switch {
-            CharacterSet.Alpha        => IsAsciiLetter(character),
-            CharacterSet.Numeric      => IsAsciiDigit(character),
-            CharacterSet.AlphaNumeric => IsAsciiLetter(character) || IsAsciiDigit(character),
+            CharacterSet.Alpha        => CharacterPools.IsAsciiLetter(character),
+            CharacterSet.Numeric      => CharacterPools.IsAsciiDigit(character),
+            CharacterSet.AlphaNumeric => CharacterPools.IsAsciiLetter(character) || CharacterPools.IsAsciiDigit(character),
             _                         => true
         };
     }
@@ -210,14 +206,6 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource {
             LetterCasing.Upper => character is not (>= 'a' and <= 'z'),
             _                  => true
         };
-    }
-
-    private static bool IsAsciiLetter(char character) {
-        return character is >= 'A' and <= 'Z' or >= 'a' and <= 'z';
-    }
-
-    private static bool IsAsciiDigit(char character) {
-        return character is >= '0' and <= '9';
     }
 
 }
