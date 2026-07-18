@@ -49,13 +49,6 @@ internal sealed class RegexGenerationContext {
 /// </summary>
 internal abstract class RegexNode {
 
-    #region Statics members declarations
-
-    /// <summary>A node that matches the empty string — an anchor, or an empty alternation branch.</summary>
-    internal static readonly RegexNode Empty = new RegexSequence(Array.Empty<RegexNode>());
-
-    #endregion
-
     internal abstract void Append(RegexGenerationContext context);
 
 }
