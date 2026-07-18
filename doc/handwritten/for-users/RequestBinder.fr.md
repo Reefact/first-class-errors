@@ -467,6 +467,38 @@ expose.
 if (error.Code == RequestBindingError.DefaultArgumentRequiredCode) { return 422; }
 ```
 
+### Documenter vos erreurs surchargées dans votre propre catalogue
+
+Quand vous surchargez les codes ou les messages et que vous générez un catalogue d’erreurs
+avec `fce generate`, documentez les erreurs là où vous en êtes désormais propriétaire —
+dans **votre** catalogue, en réutilisant la prose du binder. Les seams publics
+`DescribeArgumentRequired` / `DescribeArgumentInvalid` renvoient la description générique du
+binder avec un exemple vivant bâti depuis votre définition ; `SampleArgumentRequired` /
+`SampleArgumentInvalid` renvoient l’erreur d’exemple elle-même, pour la fabrique
+`[DocumentedBy]` :
+
+```csharp
+[ProvidesErrorsFor("MyApi")]
+public static class MyApiBinderErrors {
+
+    // La définition injectée dans RequestBinderOptions — la source unique de vérité.
+    public static readonly BinderErrorDefinition ArgumentRequired =
+        RequestBindingError.DefaultArgumentRequired.WithCode(ErrorCode.Create("ACME_ARGUMENT_REQUIRED"));
+
+    [DocumentedBy(nameof(ArgumentRequiredDoc))]
+    internal static PrimaryPortError ArgumentRequiredError() => RequestBindingError.SampleArgumentRequired(ArgumentRequired);
+    private  static ErrorDocumentation ArgumentRequiredDoc()  => RequestBindingError.DescribeArgumentRequired(ArgumentRequired);
+
+    // ArgumentInvalid suit la même forme, avec DescribeArgumentInvalid / SampleArgumentInvalid.
+}
+```
+
+Le générateur découvre ceci comme n’importe quel autre catalogue : la prose est celle du
+binder, le code et les messages sont les vôtres, et l’exemple est bâti comme le binder le
+bâtit à la liaison — l’entrée documentée correspond donc à ce que vous émettez réellement.
+Le même patron fait aussi apparaître les codes **par défaut** dans votre catalogue — pointez
+la définition sur `RequestBindingError.DefaultArgumentRequired` / `DefaultArgumentInvalid`.
+
 ## Configurer le défaut pour toute l’application
 
 `Bind.PropertiesOf(request)` lie avec `RequestBinderOptions.Default`. Ce défaut est
