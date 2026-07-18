@@ -12,7 +12,10 @@ public sealed class StructuralCodeOverrideTests {
     private static readonly ErrorCode AcmeInvalid  = ErrorCode.Create("ACME_ARGUMENT_INVALID");
 
     private static RequestBinderOptions CustomCodes() {
-        return new RequestBinderOptions(RequestBinderOptions.Default.ArgumentNameProvider, AcmeRequired, AcmeInvalid);
+        return new RequestBinderOptions(
+            RequestBinderOptions.Default.ArgumentNameProvider,
+            RequestBindingError.DefaultArgumentRequired.WithCode(AcmeRequired),
+            RequestBindingError.DefaultArgumentInvalid.WithCode(AcmeInvalid));
     }
 
     private static BookingRequest Request(string? guestEmail = "a@b.c", StayDto? stay = null,
@@ -37,12 +40,12 @@ public sealed class StructuralCodeOverrideTests {
 
     [Fact(DisplayName = "Options without custom codes keep the default structural codes.")]
     public void OptionsDefaultToTheStructuralCodes() {
-        Check.That(RequestBinderOptions.Default.ArgumentRequiredCode == RequestBindingError.DefaultArgumentRequiredCode).IsTrue();
-        Check.That(RequestBinderOptions.Default.ArgumentInvalidCode == RequestBindingError.DefaultArgumentInvalidCode).IsTrue();
+        Check.That(RequestBinderOptions.Default.ArgumentRequired.Code == RequestBindingError.DefaultArgumentRequiredCode).IsTrue();
+        Check.That(RequestBinderOptions.Default.ArgumentInvalid.Code == RequestBindingError.DefaultArgumentInvalidCode).IsTrue();
 
         var namesOnly = new RequestBinderOptions(RequestBinderOptions.Default.ArgumentNameProvider);
-        Check.That(namesOnly.ArgumentRequiredCode == RequestBindingError.DefaultArgumentRequiredCode).IsTrue();
-        Check.That(namesOnly.ArgumentInvalidCode == RequestBindingError.DefaultArgumentInvalidCode).IsTrue();
+        Check.That(namesOnly.ArgumentRequired.Code == RequestBindingError.DefaultArgumentRequiredCode).IsTrue();
+        Check.That(namesOnly.ArgumentInvalid.Code == RequestBindingError.DefaultArgumentInvalidCode).IsTrue();
     }
 
     [Fact(DisplayName = "By default, a missing required argument still records REQUEST_ARGUMENT_REQUIRED.")]

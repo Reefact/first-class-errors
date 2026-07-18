@@ -82,7 +82,7 @@ public sealed class ListOfComplexPropertiesConverter<TRequest, TArgument> {
             RequestBinder<TArgument> nested  = new(element!, _envelope, _binder.Options, elementPath);
             Outcome<TProperty>       outcome = bindElement(nested);
             if (outcome.IsFailure) {
-                _binder.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, elementPath, _binder.Options.ArgumentInvalidCode));
+                _binder.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, elementPath, _binder.Options.ArgumentInvalid));
             }
 
             return outcome;

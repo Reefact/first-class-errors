@@ -21,7 +21,7 @@ public sealed class RequestBinderOptions {
     ///     once at application startup — before any binding — to configure the binder host-wide without threading
     ///     options through every call; a per-call <see cref="Bind.WithOptions" /> still overrides it. The first bind
     ///     reads it and thereby <b>freezes</b> it, so the default cannot drift once binding has begun. Defaults to the
-    ///     built-in options (C# property names and the default structural codes).
+    ///     built-in options (C# property names and the default structural-error definitions).
     /// </summary>
     /// <exception cref="ArgumentNullException">Thrown when set to <c>null</c>.</exception>
     /// <exception cref="InvalidOperationException">Thrown when set after the first bind has already read it.</exception>
@@ -76,24 +76,27 @@ public sealed class RequestBinderOptions {
 
     #region Constructors declarations
 
-    /// <summary>Instantiates options with the given argument-name provider and, optionally, custom structural error codes.</summary>
+    /// <summary>Instantiates options with the given argument-name provider and, optionally, custom structural-error definitions.</summary>
     /// <param name="argumentNameProvider">The provider resolving the argument name of a bound DTO property.</param>
-    /// <param name="argumentRequiredCode">
-    ///     The code raised when a required argument is missing. <c>null</c> keeps the default
-    ///     <see cref="RequestBindingError.DefaultArgumentRequiredCode" /> (<c>REQUEST_ARGUMENT_REQUIRED</c>); pass a
-    ///     code of your own catalog's convention to keep the binder's failures consistent with your other error codes.
+    /// <param name="argumentRequired">
+    ///     The definition — code and public messages, kept together — raised when a required argument is missing.
+    ///     <c>null</c> keeps the default <see cref="RequestBindingError.DefaultArgumentRequired" />
+    ///     (<c>REQUEST_ARGUMENT_REQUIRED</c> and its English messages). Derive from the default with
+    ///     <see cref="BinderErrorDefinition.WithCode" /> / <see cref="BinderErrorDefinition.WithMessage" /> to align the
+    ///     code with your catalog, localize the messages, or both — code and message stay one coherent unit.
     /// </param>
-    /// <param name="argumentInvalidCode">
-    ///     The code raised when an argument is present but fails to convert. <c>null</c> keeps the default
-    ///     <see cref="RequestBindingError.DefaultArgumentInvalidCode" /> (<c>REQUEST_ARGUMENT_INVALID</c>).
+    /// <param name="argumentInvalid">
+    ///     The definition — code and public messages, kept together — raised when an argument is present but fails to
+    ///     convert. <c>null</c> keeps the default <see cref="RequestBindingError.DefaultArgumentInvalid" />
+    ///     (<c>REQUEST_ARGUMENT_INVALID</c> and its English messages).
     /// </param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="argumentNameProvider" /> is <c>null</c>.</exception>
-    public RequestBinderOptions(IArgumentNameProvider argumentNameProvider, ErrorCode? argumentRequiredCode = null, ErrorCode? argumentInvalidCode = null) {
+    public RequestBinderOptions(IArgumentNameProvider argumentNameProvider, BinderErrorDefinition? argumentRequired = null, BinderErrorDefinition? argumentInvalid = null) {
         if (argumentNameProvider is null) { throw new ArgumentNullException(nameof(argumentNameProvider)); }
 
         ArgumentNameProvider = argumentNameProvider;
-        ArgumentRequiredCode = argumentRequiredCode ?? RequestBindingError.DefaultArgumentRequiredCode;
-        ArgumentInvalidCode  = argumentInvalidCode  ?? RequestBindingError.DefaultArgumentInvalidCode;
+        ArgumentRequired     = argumentRequired ?? RequestBindingError.DefaultArgumentRequired;
+        ArgumentInvalid      = argumentInvalid  ?? RequestBindingError.DefaultArgumentInvalid;
     }
 
     #endregion
@@ -101,11 +104,11 @@ public sealed class RequestBinderOptions {
     /// <summary>The provider resolving the argument name of a bound DTO property (see <see cref="IArgumentNameProvider" />).</summary>
     public IArgumentNameProvider ArgumentNameProvider { get; }
 
-    /// <summary>The code the binder raises when a required argument is missing (defaults to <c>REQUEST_ARGUMENT_REQUIRED</c>).</summary>
-    public ErrorCode ArgumentRequiredCode { get; }
+    /// <summary>The definition — code and public messages — the binder raises when a required argument is missing (defaults to <see cref="RequestBindingError.DefaultArgumentRequired" />).</summary>
+    public BinderErrorDefinition ArgumentRequired { get; }
 
-    /// <summary>The code the binder raises when an argument is present but fails to convert (defaults to <c>REQUEST_ARGUMENT_INVALID</c>).</summary>
-    public ErrorCode ArgumentInvalidCode { get; }
+    /// <summary>The definition — code and public messages — the binder raises when an argument is present but fails to convert (defaults to <see cref="RequestBindingError.DefaultArgumentInvalid" />).</summary>
+    public BinderErrorDefinition ArgumentInvalid { get; }
 
     #region Nested types
 

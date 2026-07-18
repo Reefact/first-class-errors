@@ -30,8 +30,8 @@ public sealed class DefaultOptionsTests {
     [Fact(DisplayName = "Bind.PropertiesOf binds with the configured default options — naming and structural codes — without WithOptions.")]
     public void BindPropertiesOfUsesTheConfiguredDefault() {
         var configured = new RequestBinderOptions(new SnakeCaseNameProvider(),
-                                                  ErrorCode.Create("ACME_ARGUMENT_REQUIRED"),
-                                                  ErrorCode.Create("ACME_ARGUMENT_INVALID"));
+                                                  RequestBindingError.DefaultArgumentRequired.WithCode(ErrorCode.Create("ACME_ARGUMENT_REQUIRED")),
+                                                  RequestBindingError.DefaultArgumentInvalid.WithCode(ErrorCode.Create("ACME_ARGUMENT_INVALID")));
 
         using (RequestBinderOptions.OverrideDefaultForTests(configured)) {
             Error error = BindMissingEmail(Bind.PropertiesOf(MissingEmail()));
@@ -54,11 +54,11 @@ public sealed class DefaultOptionsTests {
     [Fact(DisplayName = "A per-call Bind.WithOptions overrides the configured default.")]
     public void WithOptionsWinsOverTheConfiguredDefault() {
         var appDefault = new RequestBinderOptions(new SnakeCaseNameProvider(),
-                                                  ErrorCode.Create("DEFAULT_REQUIRED"),
-                                                  ErrorCode.Create("DEFAULT_INVALID"));
+                                                  RequestBindingError.DefaultArgumentRequired.WithCode(ErrorCode.Create("DEFAULT_REQUIRED")),
+                                                  RequestBindingError.DefaultArgumentInvalid.WithCode(ErrorCode.Create("DEFAULT_INVALID")));
         var perCall = new RequestBinderOptions(new SnakeCaseNameProvider(),
-                                               ErrorCode.Create("PERCALL_REQUIRED"),
-                                               ErrorCode.Create("PERCALL_INVALID"));
+                                               RequestBindingError.DefaultArgumentRequired.WithCode(ErrorCode.Create("PERCALL_REQUIRED")),
+                                               RequestBindingError.DefaultArgumentInvalid.WithCode(ErrorCode.Create("PERCALL_INVALID")));
 
         using (RequestBinderOptions.OverrideDefaultForTests(appDefault)) {
             Error error = BindMissingEmail(Bind.WithOptions(perCall).PropertiesOf(MissingEmail()));
@@ -71,8 +71,8 @@ public sealed class DefaultOptionsTests {
 
     [Fact(DisplayName = "Unconfigured, RequestBinderOptions.Default is the built-in default (default structural codes).")]
     public void DefaultIsBuiltInWhenUnconfigured() {
-        Check.That(RequestBinderOptions.Default.ArgumentRequiredCode == RequestBindingError.DefaultArgumentRequiredCode).IsTrue();
-        Check.That(RequestBinderOptions.Default.ArgumentInvalidCode == RequestBindingError.DefaultArgumentInvalidCode).IsTrue();
+        Check.That(RequestBinderOptions.Default.ArgumentRequired.Code == RequestBindingError.DefaultArgumentRequiredCode).IsTrue();
+        Check.That(RequestBinderOptions.Default.ArgumentInvalid.Code == RequestBindingError.DefaultArgumentInvalidCode).IsTrue();
     }
 
     // ── Setter contract: null-rejecting and frozen-after-first-use ────────────────────────────────────────

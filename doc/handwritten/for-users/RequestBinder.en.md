@@ -398,27 +398,48 @@ created — so `Stay.check_in` is renamed consistently, top to bottom. The entry
 deliberately ships only the default (C# property names): which serializer names the
 wire keys is the host's knowledge, not the library's.
 
-## Structural error codes
+## Structural errors: codes and messages
 
 The binder raises two coded errors of its own — `REQUEST_ARGUMENT_REQUIRED` when a
 required argument is missing, and `REQUEST_ARGUMENT_INVALID` when one is present but
-fails to convert. These are the only codes the binder manufactures; every other code
+fails to convert. These are the only errors the binder manufactures; every other code
 in a failure tree is yours (the converters' errors, and the envelope).
 
-Because those two codes land in **your** catalog, an API that prefixes its codes can
-override them so they stay consistent with the rest — set them on the options, once,
-alongside the naming policy:
+Each is a `BinderErrorDefinition` — a **code and its public messages, kept together** —
+so you override them as one coherent unit, never a code stranded from its message. Start
+from the exposed default and change the code, the messages, or both; whatever you leave
+untouched keeps the shipped value:
 
 ```csharp
 var options = new RequestBinderOptions(
     new SnakeCaseNames(),
-    argumentRequiredCode: ErrorCode.Create("ACME_ARGUMENT_REQUIRED"),
-    argumentInvalidCode:  ErrorCode.Create("ACME_ARGUMENT_INVALID"));
+    // align the code with your catalog's convention, keep the default messages:
+    argumentRequired: RequestBindingError.DefaultArgumentRequired.WithCode(ErrorCode.Create("ACME_ARGUMENT_REQUIRED")),
+    // a code and its message, defined together in one place:
+    argumentInvalid: new BinderErrorDefinition(
+        ErrorCode.Create("ACME_ARGUMENT_INVALID"),
+        path => new BindingMessage("An argument is invalid.", $"The argument '{path}' is invalid.")));
 
 var bind = Bind.WithOptions(options).PropertiesOf(request).FailWith(PlaceBookingError.Invalid);
 ```
 
-The configured codes flow through **every** structural failure — scalars, list
+The message builder runs **when the error is raised**, not when the options are built —
+so it can read the ambient culture (`CultureInfo.CurrentUICulture`) and return a message
+localized per request. A host serving several languages localizes the binder's structural
+messages through its own resource accessor, exactly as it localizes any other error:
+
+```csharp
+argumentRequired: RequestBindingError.DefaultArgumentRequired.WithMessage(
+    path => new BindingMessage(
+        BinderStrings.ArgumentRequired_Short,                       // .resx, resolved on CurrentUICulture
+        string.Format(BinderStrings.ArgumentRequired_Detailed, path)))
+```
+
+Only the two **public** messages are localizable; the diagnostic message stays in the
+library's internal language (English) by convention, so logs for one structural failure
+never fork by request language. See [Internationalization](Internationalization.en.md).
+
+The configured definitions flow through **every** structural failure — scalars, list
 elements, and the inner failures of nested binders, which inherit them.
 
 To **branch** on a binder failure — mapping it to an HTTP status, say — compare the
@@ -433,15 +454,15 @@ if (error.Code == RequestBindingError.DefaultArgumentRequiredCode) { return 422;
 
 `Bind.PropertiesOf(request)` binds with `RequestBinderOptions.Default`. That default is
 configurable **once, at application startup** — so a whole host (ASP.NET, a CLI, a
-worker) shares one naming policy and one set of structural codes without threading
-options through every call, and without a DI container:
+worker) shares one naming policy and one set of structural-error definitions without
+threading options through every call, and without a DI container:
 
 ```csharp
 // Program.cs, before the first bind:
 RequestBinderOptions.Default = new RequestBinderOptions(
     new SnakeCaseNames(),
-    argumentRequiredCode: ErrorCode.Create("ACME_ARGUMENT_REQUIRED"),
-    argumentInvalidCode:  ErrorCode.Create("ACME_ARGUMENT_INVALID"));
+    argumentRequired: RequestBindingError.DefaultArgumentRequired.WithCode(ErrorCode.Create("ACME_ARGUMENT_REQUIRED")),
+    argumentInvalid:  RequestBindingError.DefaultArgumentInvalid.WithCode(ErrorCode.Create("ACME_ARGUMENT_INVALID")));
 
 // anywhere after that — no options threaded through:
 var bind = Bind.PropertiesOf(request).FailWith(PlaceBookingError.Invalid);
