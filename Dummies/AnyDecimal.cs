@@ -59,14 +59,14 @@ public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource {
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDecimal Positive() {
-        return new AnyDecimal(_source, _spec.WithMinimum(0m, "Positive()").WithExcluded([0m], "Positive()"));
+        return new AnyDecimal(_source, _spec.WithMinimumAbove(0m, "Positive()"));
     }
 
     /// <summary>Requires a value strictly less than zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDecimal Negative() {
-        return new AnyDecimal(_source, _spec.WithMaximum(0m, "Negative()").WithExcluded([0m], "Negative()"));
+        return new AnyDecimal(_source, _spec.WithMaximumBelow(0m, "Negative()"));
     }
 
     /// <summary>Pins the value to exactly zero.</summary>
@@ -88,9 +88,7 @@ public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource {
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDecimal GreaterThan(decimal value) {
-        string constraint = $"GreaterThan({V(value)})";
-
-        return new AnyDecimal(_source, _spec.WithMinimum(value, constraint).WithExcluded([value], constraint));
+        return new AnyDecimal(_source, _spec.WithMinimumAbove(value, $"GreaterThan({V(value)})"));
     }
 
     /// <summary>Requires a value greater than or equal to <paramref name="value" />.</summary>
@@ -106,9 +104,7 @@ public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource {
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDecimal LessThan(decimal value) {
-        string constraint = $"LessThan({V(value)})";
-
-        return new AnyDecimal(_source, _spec.WithMaximum(value, constraint).WithExcluded([value], constraint));
+        return new AnyDecimal(_source, _spec.WithMaximumBelow(value, $"LessThan({V(value)})"));
     }
 
     /// <summary>Requires a value less than or equal to <paramref name="value" />.</summary>

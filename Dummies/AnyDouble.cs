@@ -27,7 +27,7 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource {
     }
 
     internal static AnyDouble Create(RandomSource source) {
-        return new AnyDouble(source, ContinuousIntervalSpec.Unconstrained("Double", V, value => value, -double.MaxValue, double.MaxValue));
+        return new AnyDouble(source, ContinuousIntervalSpec.Unconstrained("Double", V, value => value, ContinuousIntervalSpec.NextUp, -double.MaxValue, double.MaxValue));
     }
 
     private static string V(double value) {
@@ -36,12 +36,6 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource {
 
     private static string Join(double[] values) {
         return string.Join(", ", values.Select(V));
-    }
-
-    private static double Finite(double value, string parameterName) {
-        if (double.IsNaN(value) || double.IsInfinity(value)) { throw new ArgumentException("The value must be finite: NaN and infinities are never generated.", parameterName); }
-
-        return value;
     }
 
     #endregion
@@ -64,14 +58,14 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource {
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDouble Positive() {
-        return new AnyDouble(_source, _spec.WithMinimum(ContinuousIntervalSpec.NextUp(0d), "Positive()"));
+        return new AnyDouble(_source, _spec.WithMinimumAbove(0d, "Positive()"));
     }
 
     /// <summary>Requires a value strictly less than zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDouble Negative() {
-        return new AnyDouble(_source, _spec.WithMaximum(ContinuousIntervalSpec.NextDown(0d), "Negative()"));
+        return new AnyDouble(_source, _spec.WithMaximumBelow(0d, "Negative()"));
     }
 
     /// <summary>Pins the value to exactly zero.</summary>
@@ -94,8 +88,8 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource {
     /// <exception cref="ArgumentException">Thrown when <paramref name="value" /> is not finite.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDouble GreaterThan(double value) {
-        Finite(value, nameof(value));
-        return new AnyDouble(_source, _spec.WithMinimum(ContinuousIntervalSpec.NextUp(value), $"GreaterThan({V(value)})"));
+        ContinuousIntervalSpec.EnsureFinite(value, nameof(value));
+        return new AnyDouble(_source, _spec.WithMinimumAbove(value, $"GreaterThan({V(value)})"));
     }
 
     /// <summary>Requires a value greater than or equal to <paramref name="value" />.</summary>
@@ -104,7 +98,7 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource {
     /// <exception cref="ArgumentException">Thrown when <paramref name="value" /> is not finite.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDouble GreaterThanOrEqualTo(double value) {
-        Finite(value, nameof(value));
+        ContinuousIntervalSpec.EnsureFinite(value, nameof(value));
         return new AnyDouble(_source, _spec.WithMinimum(value, $"GreaterThanOrEqualTo({V(value)})"));
     }
 
@@ -114,8 +108,8 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource {
     /// <exception cref="ArgumentException">Thrown when <paramref name="value" /> is not finite.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDouble LessThan(double value) {
-        Finite(value, nameof(value));
-        return new AnyDouble(_source, _spec.WithMaximum(ContinuousIntervalSpec.NextDown(value), $"LessThan({V(value)})"));
+        ContinuousIntervalSpec.EnsureFinite(value, nameof(value));
+        return new AnyDouble(_source, _spec.WithMaximumBelow(value, $"LessThan({V(value)})"));
     }
 
     /// <summary>Requires a value less than or equal to <paramref name="value" />.</summary>
@@ -124,7 +118,7 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource {
     /// <exception cref="ArgumentException">Thrown when <paramref name="value" /> is not finite.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDouble LessThanOrEqualTo(double value) {
-        Finite(value, nameof(value));
+        ContinuousIntervalSpec.EnsureFinite(value, nameof(value));
         return new AnyDouble(_source, _spec.WithMaximum(value, $"LessThanOrEqualTo({V(value)})"));
     }
 
@@ -135,8 +129,8 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource {
     /// <exception cref="ArgumentException">Thrown when a bound is not finite or <paramref name="minimum" /> is greater than <paramref name="maximum" />.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDouble Between(double minimum, double maximum) {
-        Finite(minimum, nameof(minimum));
-        Finite(maximum, nameof(maximum));
+        ContinuousIntervalSpec.EnsureFinite(minimum, nameof(minimum));
+        ContinuousIntervalSpec.EnsureFinite(maximum, nameof(maximum));
         if (minimum > maximum) { throw new ArgumentException($"The minimum ({V(minimum)}) must be less than or equal to the maximum ({V(maximum)}).", nameof(minimum)); }
 
         string constraint = $"Between({V(minimum)}, {V(maximum)})";
@@ -153,7 +147,7 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource {
     public AnyDouble OneOf(params double[] values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
-        foreach (double value in values) { Finite(value, nameof(values)); }
+        foreach (double value in values) { ContinuousIntervalSpec.EnsureFinite(value, nameof(values)); }
 
         return new AnyDouble(_source, _spec.WithAllowed(values, $"OneOf({Join(values)})"));
     }
@@ -167,7 +161,7 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource {
     public AnyDouble Except(params double[] values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
-        foreach (double value in values) { Finite(value, nameof(values)); }
+        foreach (double value in values) { ContinuousIntervalSpec.EnsureFinite(value, nameof(values)); }
 
         return new AnyDouble(_source, _spec.WithExcluded(values, $"Except({Join(values)})"));
     }
@@ -181,7 +175,7 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource {
     /// <exception cref="ArgumentException">Thrown when <paramref name="value" /> is not finite.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDouble DifferentFrom(double value) {
-        Finite(value, nameof(value));
+        ContinuousIntervalSpec.EnsureFinite(value, nameof(value));
         return new AnyDouble(_source, _spec.WithExcluded([value], $"DifferentFrom({V(value)})"));
     }
 

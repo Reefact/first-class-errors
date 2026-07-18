@@ -138,10 +138,8 @@ internal static class RandomSampling {
     internal static long NextInt64Inclusive(this Random random, long minInclusive, long maxInclusive) {
         if (minInclusive > maxInclusive) { throw new ArgumentOutOfRangeException(nameof(maxInclusive), "The maximum must be greater than or equal to the minimum."); }
 
-        ulong  rangeSize = (ulong)(maxInclusive - minInclusive) + 1UL;
-        byte[] bytes     = new byte[8];
-        random.NextBytes(bytes);
-        ulong draw = BitConverter.ToUInt64(bytes, 0);
+        ulong rangeSize = (ulong)(maxInclusive - minInclusive) + 1UL;
+        ulong draw      = random.NextUInt64();
 
         // rangeSize is 0 only when the range spans the full ulong width, which int-derived bounds never do;
         // guard anyway so the helper stays correct if reused with wider bounds.
@@ -163,16 +161,5 @@ internal static class RandomSampling {
         return BitConverter.ToUInt64(bytes, 0);
     }
 
-    /// <summary>
-    ///     Draws a uniform <see cref="ulong" /> in the inclusive range. A size of zero (max - min + 1 wrapped) means
-    ///     the full <see cref="ulong" /> width; the modulo bias is at most 2^-64 per unit of range — irrelevant for
-    ///     arbitrary test values.
-    /// </summary>
-    internal static ulong NextUInt64(this Random random, ulong minInclusive, ulong maxInclusive) {
-        ulong size = unchecked(maxInclusive - minInclusive + 1UL);
-        ulong draw = random.NextUInt64();
-
-        return size == 0UL ? draw : minInclusive + draw % size;
-    }
 
 }

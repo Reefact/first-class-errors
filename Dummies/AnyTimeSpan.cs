@@ -67,14 +67,14 @@ public sealed class AnyTimeSpan : IAny<TimeSpan>, IHasRandomSource {
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyTimeSpan Positive() {
-        return new AnyTimeSpan(_source, _spec.WithMinimum(OrdinalMapping.FromInt64(1L), "Positive()"));
+        return new AnyTimeSpan(_source, _spec.WithMinimumAbove(Ord(TimeSpan.Zero), "Positive()"));
     }
 
     /// <summary>Requires a duration strictly less than <see cref="TimeSpan.Zero" />.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyTimeSpan Negative() {
-        return new AnyTimeSpan(_source, _spec.WithMaximum(OrdinalMapping.FromInt64(-1L), "Negative()"));
+        return new AnyTimeSpan(_source, _spec.WithMaximumBelow(Ord(TimeSpan.Zero), "Negative()"));
     }
 
     /// <summary>Pins the duration to exactly <see cref="TimeSpan.Zero" />.</summary>

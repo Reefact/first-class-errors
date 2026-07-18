@@ -43,7 +43,7 @@ public sealed class AnyUInt32 : IAny<uint>, IHasRandomSource {
     }
 
     private static string Join(uint[] values) {
-        return string.Join(", ", values.Select(value => value.ToString(CultureInfo.InvariantCulture)));
+        return string.Join(", ", values.Select(V));
     }
 
     #endregion

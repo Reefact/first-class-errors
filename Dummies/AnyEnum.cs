@@ -22,13 +22,16 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource
         return generator.Generate();
     }
 
+    // The declared-members set of an enum type is a process constant; cached once per closed generic type
+    // instead of reflecting on every Any.Enum<T>() call.
+    private static readonly TEnum[] Declared = ((TEnum[])Enum.GetValues(typeof(TEnum))).Distinct().ToArray();
+
     internal static AnyEnum<TEnum> Create(RandomSource source) {
-        TEnum[] declared = ((TEnum[])Enum.GetValues(typeof(TEnum))).Distinct().ToArray();
-        if (declared.Length == 0) {
+        if (Declared.Length == 0) {
             throw new AnyGenerationException($"Cannot generate an arbitrary {typeof(TEnum).Name} value because the enum declares no members.");
         }
 
-        return new AnyEnum<TEnum>(source, declared, null, null, []);
+        return new AnyEnum<TEnum>(source, Declared, null, null, []);
     }
 
     private static string V(TEnum value) {
@@ -47,6 +50,7 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource
     private readonly string?               _allowedConstraint;
     private readonly IReadOnlyList<TEnum>  _declared;
     private readonly IReadOnlyList<TEnum>  _excluded;
+    private readonly List<TEnum>           _pool;
     private readonly RandomSource          _source;
 
     #endregion
@@ -58,6 +62,8 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource
         _allowed           = allowed;
         _allowedConstraint = allowedConstraint;
         _excluded          = excluded;
+        // Materialized once here — "constrain once, draw many": Generate never refilters the pool.
+        _pool = (allowed ?? declared).Where(value => !excluded.Contains(value)).ToList();
     }
 
     RandomSource? IHasRandomSource.Source => _source;
@@ -104,9 +110,7 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource
 
     /// <inheritdoc />
     public TEnum Generate() {
-        List<TEnum> pool = EffectivePool();
-
-        return pool[_source.Current.Random.Next(pool.Count)];
+        return _pool[_source.Current.Random.Next(_pool.Count)];
     }
 
     private AnyEnum<TEnum> WithExcluded(TEnum[] values, string applying) {
@@ -117,19 +121,13 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource
     }
 
     private AnyEnum<TEnum> Validated(AnyEnum<TEnum> candidate, string applying) {
-        if (candidate.EffectivePool().Count > 0) { return candidate; }
+        if (candidate._pool.Count > 0) { return candidate; }
 
         string pool = candidate._allowedConstraint is null
                           ? $"no declared {typeof(TEnum).Name} member remains available"
                           : $"no value {candidate._allowedConstraint} allows remains available";
 
         throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {pool}.");
-    }
-
-    private List<TEnum> EffectivePool() {
-        IEnumerable<TEnum> source = _allowed ?? _declared;
-
-        return source.Where(value => !_excluded.Contains(value)).ToList();
     }
 
 }

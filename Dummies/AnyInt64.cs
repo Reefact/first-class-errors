@@ -43,7 +43,7 @@ public sealed class AnyInt64 : IAny<long>, IHasRandomSource {
     }
 
     private static string Join(long[] values) {
-        return string.Join(", ", values.Select(value => value.ToString(CultureInfo.InvariantCulture)));
+        return string.Join(", ", values.Select(V));
     }
 
     #endregion

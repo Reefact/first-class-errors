@@ -43,7 +43,7 @@ public sealed class AnySByte : IAny<sbyte>, IHasRandomSource {
     }
 
     private static string Join(sbyte[] values) {
-        return string.Join(", ", values.Select(value => value.ToString(CultureInfo.InvariantCulture)));
+        return string.Join(", ", values.Select(V));
     }
 
     #endregion

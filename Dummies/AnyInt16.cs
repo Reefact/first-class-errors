@@ -43,7 +43,7 @@ public sealed class AnyInt16 : IAny<short>, IHasRandomSource {
     }
 
     private static string Join(short[] values) {
-        return string.Join(", ", values.Select(value => value.ToString(CultureInfo.InvariantCulture)));
+        return string.Join(", ", values.Select(V));
     }
 
     #endregion

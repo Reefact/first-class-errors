@@ -27,7 +27,7 @@ public sealed class AnySingle : IAny<float>, IHasRandomSource {
     }
 
     internal static AnySingle Create(RandomSource source) {
-        return new AnySingle(source, ContinuousIntervalSpec.Unconstrained("Single", value => V((float)value), value => (float)value, -float.MaxValue, float.MaxValue));
+        return new AnySingle(source, ContinuousIntervalSpec.Unconstrained("Single", value => V((float)value), value => (float)value, value => NextUp((float)value), -float.MaxValue, float.MaxValue));
     }
 
     private static string V(float value) {
@@ -38,12 +38,6 @@ public sealed class AnySingle : IAny<float>, IHasRandomSource {
         return string.Join(", ", values.Select(V));
     }
 
-    private static float Finite(float value, string parameterName) {
-        if (float.IsNaN(value) || float.IsInfinity(value)) { throw new ArgumentException("The value must be finite: NaN and infinities are never generated.", parameterName); }
-
-        return value;
-    }
-
     /// <summary>The next representable float above <paramref name="value" /> — the exclusive-bound arithmetic.</summary>
     private static double NextUp(float value) {
         int bits = BitConverter.ToInt32(BitConverter.GetBytes(value), 0);
@@ -52,10 +46,6 @@ public sealed class AnySingle : IAny<float>, IHasRandomSource {
         float next = BitConverter.ToSingle(BitConverter.GetBytes(bits), 0);
 
         return float.IsInfinity(next) ? double.PositiveInfinity : next;
-    }
-
-    private static double NextDown(float value) {
-        return -NextUp(-value);
     }
 
     #endregion
@@ -78,14 +68,14 @@ public sealed class AnySingle : IAny<float>, IHasRandomSource {
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnySingle Positive() {
-        return new AnySingle(_source, _spec.WithMinimum(NextUp(0f), "Positive()"));
+        return new AnySingle(_source, _spec.WithMinimumAbove(0d, "Positive()"));
     }
 
     /// <summary>Requires a value strictly less than zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnySingle Negative() {
-        return new AnySingle(_source, _spec.WithMaximum(NextDown(0f), "Negative()"));
+        return new AnySingle(_source, _spec.WithMaximumBelow(0d, "Negative()"));
     }
 
     /// <summary>Pins the value to exactly zero.</summary>
@@ -108,8 +98,8 @@ public sealed class AnySingle : IAny<float>, IHasRandomSource {
     /// <exception cref="ArgumentException">Thrown when <paramref name="value" /> is not finite.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnySingle GreaterThan(float value) {
-        Finite(value, nameof(value));
-        return new AnySingle(_source, _spec.WithMinimum(NextUp(value), $"GreaterThan({V(value)})"));
+        ContinuousIntervalSpec.EnsureFinite(value, nameof(value));
+        return new AnySingle(_source, _spec.WithMinimumAbove(value, $"GreaterThan({V(value)})"));
     }
 
     /// <summary>Requires a value greater than or equal to <paramref name="value" />.</summary>
@@ -118,7 +108,7 @@ public sealed class AnySingle : IAny<float>, IHasRandomSource {
     /// <exception cref="ArgumentException">Thrown when <paramref name="value" /> is not finite.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnySingle GreaterThanOrEqualTo(float value) {
-        Finite(value, nameof(value));
+        ContinuousIntervalSpec.EnsureFinite(value, nameof(value));
         return new AnySingle(_source, _spec.WithMinimum((double)value, $"GreaterThanOrEqualTo({V(value)})"));
     }
 
@@ -128,8 +118,8 @@ public sealed class AnySingle : IAny<float>, IHasRandomSource {
     /// <exception cref="ArgumentException">Thrown when <paramref name="value" /> is not finite.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnySingle LessThan(float value) {
-        Finite(value, nameof(value));
-        return new AnySingle(_source, _spec.WithMaximum(NextDown(value), $"LessThan({V(value)})"));
+        ContinuousIntervalSpec.EnsureFinite(value, nameof(value));
+        return new AnySingle(_source, _spec.WithMaximumBelow(value, $"LessThan({V(value)})"));
     }
 
     /// <summary>Requires a value less than or equal to <paramref name="value" />.</summary>
@@ -138,7 +128,7 @@ public sealed class AnySingle : IAny<float>, IHasRandomSource {
     /// <exception cref="ArgumentException">Thrown when <paramref name="value" /> is not finite.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnySingle LessThanOrEqualTo(float value) {
-        Finite(value, nameof(value));
+        ContinuousIntervalSpec.EnsureFinite(value, nameof(value));
         return new AnySingle(_source, _spec.WithMaximum((double)value, $"LessThanOrEqualTo({V(value)})"));
     }
 
@@ -149,8 +139,8 @@ public sealed class AnySingle : IAny<float>, IHasRandomSource {
     /// <exception cref="ArgumentException">Thrown when a bound is not finite or <paramref name="minimum" /> is greater than <paramref name="maximum" />.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnySingle Between(float minimum, float maximum) {
-        Finite(minimum, nameof(minimum));
-        Finite(maximum, nameof(maximum));
+        ContinuousIntervalSpec.EnsureFinite(minimum, nameof(minimum));
+        ContinuousIntervalSpec.EnsureFinite(maximum, nameof(maximum));
         if (minimum > maximum) { throw new ArgumentException($"The minimum ({V(minimum)}) must be less than or equal to the maximum ({V(maximum)}).", nameof(minimum)); }
 
         string constraint = $"Between({V(minimum)}, {V(maximum)})";
@@ -167,7 +157,7 @@ public sealed class AnySingle : IAny<float>, IHasRandomSource {
     public AnySingle OneOf(params float[] values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
-        foreach (float value in values) { Finite(value, nameof(values)); }
+        foreach (float value in values) { ContinuousIntervalSpec.EnsureFinite(value, nameof(values)); }
 
         return new AnySingle(_source, _spec.WithAllowed(values.Select(value => (double)value).ToArray(), $"OneOf({Join(values)})"));
     }
@@ -181,7 +171,7 @@ public sealed class AnySingle : IAny<float>, IHasRandomSource {
     public AnySingle Except(params float[] values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
-        foreach (float value in values) { Finite(value, nameof(values)); }
+        foreach (float value in values) { ContinuousIntervalSpec.EnsureFinite(value, nameof(values)); }
 
         return new AnySingle(_source, _spec.WithExcluded(values.Select(value => (double)value).ToArray(), $"Except({Join(values)})"));
     }
@@ -195,7 +185,7 @@ public sealed class AnySingle : IAny<float>, IHasRandomSource {
     /// <exception cref="ArgumentException">Thrown when <paramref name="value" /> is not finite.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnySingle DifferentFrom(float value) {
-        Finite(value, nameof(value));
+        ContinuousIntervalSpec.EnsureFinite(value, nameof(value));
         return new AnySingle(_source, _spec.WithExcluded([(double)value], $"DifferentFrom({V(value)})"));
     }
 
