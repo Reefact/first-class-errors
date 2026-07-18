@@ -102,6 +102,16 @@ public sealed class AnySetTypeTests {
         Check.That(conflict.Message).Contains("Except(");
     }
 
+    [Fact(DisplayName = "Enum: OneOf rejects undeclared numeric values — the declared-members-only contract holds.")]
+    public void EnumOneOfRejectsUndeclaredValues() {
+        ArgumentException rejected = Assert.Throws<ArgumentException>(
+            () => Any.Enum<OrderStatus>().OneOf((OrderStatus)42));
+        Check.That(rejected.Message).Contains("42");
+        Check.That(rejected.Message).Contains("OrderStatus");
+
+        Check.ThatCode(() => Any.Enum<OrderStatus>().OneOf(OrderStatus.Draft, (OrderStatus)42)).Throws<ArgumentException>();
+    }
+
     [Fact(DisplayName = "Char: the default pool is ASCII letters and digits; families narrow it.")]
     public void CharPools() {
         for (int i = 0; i < SampleCount; i++) {

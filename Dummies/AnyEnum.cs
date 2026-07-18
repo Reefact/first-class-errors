@@ -69,14 +69,17 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource
     RandomSource? IHasRandomSource.Source => _source;
 
     /// <summary>Requires the value to be one of the supplied members. Declared once per generator.</summary>
-    /// <param name="values">The allowed members; duplicates are ignored.</param>
+    /// <param name="values">The allowed members; duplicates are ignored. Every value must be a declared member of <typeparamref name="TEnum" /> — the generator never yields undeclared numeric values, not even explicitly supplied ones.</param>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="values" /> is <c>null</c>.</exception>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="values" /> is empty.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="values" /> is empty or contains a value that is not a declared member.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyEnum<TEnum> OneOf(params TEnum[] values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
+        foreach (TEnum value in values) {
+            if (!_declared.Contains(value)) { throw new ArgumentException($"The value {value} is not a declared member of {typeof(TEnum).Name}: the generator only ever yields declared members.", nameof(values)); }
+        }
 
         string constraint = $"OneOf({Join(values)})";
         if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {constraint} because {_allowedConstraint} is already defined."); }
