@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 [English](0016-make-the-binders-structural-error-codes-configurable.md) · 🇫🇷 Français (ce fichier)
 
-**Statut :** Proposé
+**Statut :** Remplacé par [ADR-0018](0018-bundle-the-binders-structural-error-code-and-messages.fr.md)
 **Date :** 2026-07-18
 **Décideurs :** Reefact
 

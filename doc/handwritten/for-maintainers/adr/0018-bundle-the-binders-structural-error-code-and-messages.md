@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0018-bundle-the-binders-structural-error-code-and-messages.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-07-18
 **Decision Makers:** Reefact
 
@@ -120,8 +120,8 @@ messages.
 
 ## Follow-up Actions
 
-* On acceptance, decide whether ADR-0016 becomes `Superseded` by this ADR — the maintainer's
-  call, not the drafter's.
+* Resolved on acceptance: ADR-0016 is marked `Superseded` by this ADR, per the maintainer's
+  decision.
 * The overridden-code catalog-drift question deferred by ADR-0016 (relates to #140) is
   unchanged by this decision.
 

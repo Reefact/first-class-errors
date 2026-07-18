@@ -2,11 +2,11 @@
 
 🌍 🇬🇧 [English](0018-bundle-the-binders-structural-error-code-and-messages.md) · 🇫🇷 Français (ce fichier)
 
-**Status:** Proposed
-**Date:** 2026-07-18
-**Decision Makers:** Reefact
+**Statut :** Accepté
+**Date :** 2026-07-18
+**Décideurs :** Reefact
 
-## Context
+## Contexte
 
 * Le binder fabrique exactement deux erreurs structurelles qui lui sont propres : un
   argument requis absent (`REQUEST_ARGUMENT_REQUIRED`) et un argument présent mais invalide
@@ -36,14 +36,14 @@
   externe : remodeler la surface des options n’a aucun coût de migration — et cette forme
   doit être arrêtée avant le gel de l’API v1.
 
-## Decision
+## Décision
 
 Chacune des deux erreurs structurelles du binder est configurée sur `RequestBinderOptions`
 comme une définition unique regroupant son code d’erreur et un constructeur de message
 évalué au moment où l’erreur est levée — remplaçant la surcharge du code seul de l’ADR-0016
 et rendant les messages publics localisables par requête.
 
-## Rationale
+## Justification
 
 * Regrouper le code avec son message garde le modèle d’erreurs codées cohérent : les deux
   facettes qui, ensemble, présentent un échec structurel à un consommateur sont configurées
@@ -70,7 +70,7 @@ et rendant les messages publics localisables par requête.
   en parallèle, est sans coût de migration tant que la bibliothèque est en pré-version, et
   arrête la surface des options comme un seul concept avant le gel v1.
 
-## Alternatives Considered
+## Alternatives considérées
 
 ### Un point de surcharge de message séparé, à côté des codes configurables
 
@@ -98,9 +98,9 @@ contexte du chemin d’argument, le câblage de l’erreur interne — à l’er
 Le binder doit continuer de fabriquer ces erreurs et n’exposer que leur présentation : le
 code et les messages publics.
 
-## Consequences
+## Conséquences
 
-### Positive
+### Positives
 
 * Le code et les messages structurels du binder se surchargent comme une unité cohérente, et
   un consommateur servant des clients non anglophones les localise par requête — clôturant
@@ -111,7 +111,7 @@ code et les messages publics.
   (défauts préservés et toujours documentés, et toujours exposés pour le branchement
   symbolique).
 
-### Negative
+### Négatives
 
 * La surface des options change de forme : la surcharge du code seul consignée par
   l’ADR-0016 est remplacée par une définition code-et-message. Un changement cassant,
@@ -119,7 +119,7 @@ code et les messages publics.
 * Le message de diagnostic reste non surchargeable et anglais par convention ; un
   consommateur qui veut un diagnostic localisé n’est délibérément pas servi.
 
-### Risks
+### Risques
 
 * Le constructeur de message d’un consommateur s’exécute pendant la fabrication de l’erreur
   et pourrait lever, contrairement aux fabriques toujours sûres de la bibliothèque. Cela
@@ -127,14 +127,14 @@ code et les messages publics.
   aussi du code consommateur invoqué pendant la liaison) et relève de la responsabilité du
   consommateur.
 
-## Follow-up Actions
+## Actions de suivi
 
-* À l’acceptation, décider si l’ADR-0016 devient `Superseded` par cette ADR — la décision du
-  mainteneur, pas du rédacteur.
+* Résolu à l’acceptation : l’ADR-0016 est marquée `Superseded`, remplacée par celle-ci —
+  décision du mainteneur.
 * La question de la dérive de catalogue d’un code surchargé, différée par l’ADR-0016 (liée à
   #140), est inchangée par cette décision.
 
-## References
+## Références
 
 * ADR-0016 — rendre configurables les codes d’erreur structurels du binder ; la surcharge du
   code seul que cette décision remplace.
