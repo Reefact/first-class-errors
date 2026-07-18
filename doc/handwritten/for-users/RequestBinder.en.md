@@ -361,10 +361,14 @@ private static Outcome<Guest> BindGuest(RequestBinder<GuestDto> guest) {
 // A failure in the second guest's email reports Guests[1].Email.
 ```
 
-For both list selectors, `AsRequired` records `REQUEST_ARGUMENT_REQUIRED` when the
-list is absent, while `AsOptional` treats an absent list as an **empty** list
-(never `null`) and records nothing. A `null` *element* of a present list is
-recorded as a missing argument at its index.
+For both list selectors, `AsRequired` records `REQUEST_ARGUMENT_REQUIRED` only when
+the list itself is **absent** (`null`): a list that is **present but empty** is a
+valid required list — it binds to an empty list and records nothing, because a
+required list constrains **presence, not size**. `AsOptional` treats an absent list
+as an **empty** list (never `null`) and records nothing. A `null` *element* of a
+present list is recorded as a missing argument at its index. When the domain needs
+at least one element, enforce that cardinality in the value object or command the
+bound list feeds.
 
 ## Argument names and the wire format
 
