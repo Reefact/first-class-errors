@@ -178,9 +178,9 @@ public sealed class RequestBinderTests {
 
     [Fact(DisplayName = "A custom argument-name provider renames the paths — and nested binders inherit it.")]
     public void CustomNameProviderRenamesPaths() {
-        var bind = Bind.PropertiesOf(new BookingRequest("a@b.c", "REF-1", null, null, new StayDto(null, null), null, null))
-                       .FailWith(BookingEnvelopeError.CommandInvalid)
-                       .WithOptions(new RequestBinderOptions(new SnakeCaseNameProvider()));
+        var bind = Bind.WithOptions(new RequestBinderOptions(new SnakeCaseNameProvider()))
+                       .PropertiesOf(new BookingRequest("a@b.c", "REF-1", null, null, new StayDto(null, null), null, null))
+                       .FailWith(BookingEnvelopeError.CommandInvalid);
 
         bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
         bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsRequired(BindStay);
@@ -189,6 +189,23 @@ public sealed class RequestBinderTests {
         Error stayEnvelope = outcome.Error!.InnerErrors.Single(e => e.Code.ToString() == "TEST_STAY_INVALID");
         Check.That(stayEnvelope.InnerErrors.Select(BindingAssertions.ArgumentPathOf))
              .ContainsExactly("stay.check_in", "stay.check_out");
+    }
+
+    [Fact(DisplayName = "A configured entry point is reusable: Bind.WithOptions(...) binds many requests under the same naming policy.")]
+    public void ConfiguredEntryPointIsReusableAcrossRequests() {
+        // Bind.WithOptions holds no per-request state, so one instance configures every request the same way — the
+        // pattern an application sets once at startup and reuses per request, instead of reconfiguring each binder.
+        ConfiguredBind bind = Bind.WithOptions(new RequestBinderOptions(new SnakeCaseNameProvider()));
+
+        string? PathOfMissingEmail(BookingRequest request) {
+            var b = bind.PropertiesOf(request).FailWith(BookingEnvelopeError.CommandInvalid);
+            b.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+
+            return BindingAssertions.ArgumentPathOf(b.New(_ => "never").Error!.InnerErrors.Single());
+        }
+
+        Check.That(PathOfMissingEmail(new BookingRequest(null, "REF-1", null, null, null, null, null))).IsEqualTo("guest_email");
+        Check.That(PathOfMissingEmail(new BookingRequest(null, "REF-2", null, null, null, null, null))).IsEqualTo("guest_email");
     }
 
     [Fact(DisplayName = "Binding failures are non-transient: resubmitting the same request cannot succeed.")]

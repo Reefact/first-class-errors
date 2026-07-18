@@ -21,7 +21,8 @@ public static class Bind {
     #region Statics members declarations
 
     /// <summary>
-    ///     Starts binding the properties of a request DTO. Declare the failure envelope next, with
+    ///     Starts binding the properties of a request DTO with the default options (argument names are the C#
+    ///     property names). Declare the failure envelope next, with
     ///     <see cref="RequestBinderEnvelopeStage{TRequest}.FailWith" />.
     /// </summary>
     /// <typeparam name="TRequest">The type of the request DTO.</typeparam>
@@ -31,7 +32,23 @@ public static class Bind {
     public static RequestBinderEnvelopeStage<TRequest> PropertiesOf<TRequest>(TRequest request) {
         if (request is null) { throw new ArgumentNullException(nameof(request)); }
 
-        return new RequestBinderEnvelopeStage<TRequest>(request);
+        return new RequestBinderEnvelopeStage<TRequest>(request, RequestBinderOptions.Default);
+    }
+
+    /// <summary>
+    ///     Fixes the binding options — for example a serializer-aware <see cref="IArgumentNameProvider" /> — before
+    ///     any property is bound, then starts binding with <see cref="ConfiguredBind.PropertiesOf{TRequest}" />. The
+    ///     options are set once here, so a binder's naming policy can never change mid-binding. The returned entry
+    ///     point holds no per-request state: create it once (for example at application setup) and reuse it for every
+    ///     request.
+    /// </summary>
+    /// <param name="options">The options every binding started from the returned entry point (and its nested binders) binds with.</param>
+    /// <returns>An options-configured entry point offering <see cref="ConfiguredBind.PropertiesOf{TRequest}" />.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options" /> is <c>null</c>.</exception>
+    public static ConfiguredBind WithOptions(RequestBinderOptions options) {
+        if (options is null) { throw new ArgumentNullException(nameof(options)); }
+
+        return new ConfiguredBind(options);
     }
 
     #endregion

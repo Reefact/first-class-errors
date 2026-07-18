@@ -260,7 +260,7 @@ public sealed class BindingContractTests {
 
         Check.ThatCode(() => Bind.PropertiesOf<BookingRequest>(null!)).Throws<ArgumentNullException>();
         Check.ThatCode(() => Bind.PropertiesOf(Request()).FailWith(null!)).Throws<ArgumentNullException>();
-        Check.ThatCode(() => bind.WithOptions(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => Bind.WithOptions(null!)).Throws<ArgumentNullException>();
         Check.ThatCode(() => bind.New<string>(null!)).Throws<ArgumentNullException>();
         Check.ThatCode(() => bind.Create<string>(null!)).Throws<ArgumentNullException>();
 

@@ -379,16 +379,19 @@ public sealed class SnakeCaseNames : IArgumentNameProvider {
         ToSnakeCase(property.Name);   // GuestEmail -> guest_email
 }
 
-var bind = Bind.PropertiesOf(request)
-               .FailWith(PlaceBookingError.Invalid)
-               .WithOptions(new RequestBinderOptions(new SnakeCaseNames()));
+var bind = Bind.WithOptions(new RequestBinderOptions(new SnakeCaseNames()))
+               .PropertiesOf(request)
+               .FailWith(PlaceBookingError.Invalid);
 ```
 
-Call `WithOptions` **before** binding any property. Options are per-binder, never
-global mutable state, and **nested binders inherit** the options in effect when
-they are created — so `Stay.check_in` is renamed consistently, top to bottom.
-The library deliberately ships only the default (C# property names): which
-serializer names the wire keys is the host's knowledge, not the library's.
+Options are chosen **once**, on `Bind.WithOptions`, before the binder even exists —
+so a binder's naming policy can never change mid-binding. They are per-binder, never
+global mutable state, and **nested binders inherit** the options in effect when they
+are created — so `Stay.check_in` is renamed consistently, top to bottom. The entry
+point `Bind.WithOptions(...)` returns carries no per-request state, so you can build
+it once (for example at application startup) and reuse it for every request. The
+library deliberately ships only the default (C# property names): which serializer
+names the wire keys is the host's knowledge, not the library's.
 
 ## The bug channel: what throws vs what is collected
 

@@ -10,14 +10,16 @@ public sealed class RequestBinderEnvelopeStage<TRequest> {
 
     #region Fields declarations
 
-    private readonly TRequest _request;
+    private readonly TRequest             _request;
+    private readonly RequestBinderOptions _options;
 
     #endregion
 
     #region Constructors declarations
 
-    internal RequestBinderEnvelopeStage(TRequest request) {
+    internal RequestBinderEnvelopeStage(TRequest request, RequestBinderOptions options) {
         _request = request;
+        _options = options;
     }
 
     #endregion
@@ -33,7 +35,7 @@ public sealed class RequestBinderEnvelopeStage<TRequest> {
     public RequestBinder<TRequest> FailWith(Func<PrimaryPortInnerErrors, PrimaryPortError> envelope) {
         if (envelope is null) { throw new ArgumentNullException(nameof(envelope)); }
 
-        return new RequestBinder<TRequest>(_request, envelope, RequestBinderOptions.Default, argumentPrefix: null);
+        return new RequestBinder<TRequest>(_request, envelope, _options, argumentPrefix: null);
     }
 
 }

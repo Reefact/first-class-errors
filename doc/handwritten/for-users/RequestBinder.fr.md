@@ -391,17 +391,21 @@ public sealed class SnakeCaseNames : IArgumentNameProvider {
         ToSnakeCase(property.Name);   // GuestEmail -> guest_email
 }
 
-var bind = Bind.PropertiesOf(request)
-               .FailWith(PlaceBookingError.Invalid)
-               .WithOptions(new RequestBinderOptions(new SnakeCaseNames()));
+var bind = Bind.WithOptions(new RequestBinderOptions(new SnakeCaseNames()))
+               .PropertiesOf(request)
+               .FailWith(PlaceBookingError.Invalid);
 ```
 
-Appelez `WithOptions` **avant** de lier la moindre propriété. Les options sont par
-binder, jamais un état global mutable, et **les binders imbriqués héritent** des
-options en vigueur à leur création — donc `Stay.check_in` est renommé de manière
-cohérente, de haut en bas. La bibliothèque ne fournit délibérément que le défaut
-(noms de propriété C#) : quel sérialiseur nomme les clés du fil relève de la
-connaissance de l’hôte, pas de la bibliothèque.
+Les options sont choisies **une seule fois**, sur `Bind.WithOptions`, avant même que
+le binder n’existe — la politique de nommage d’un binder ne peut donc jamais changer
+en cours de liaison. Elles sont par binder, jamais un état global mutable, et **les
+binders imbriqués héritent** des options en vigueur à leur création — donc
+`Stay.check_in` est renommé de manière cohérente, de haut en bas. Le point d’entrée
+renvoyé par `Bind.WithOptions(...)` ne porte aucun état par requête : vous pouvez le
+construire une fois (par exemple au démarrage de l’application) et le réutiliser pour
+chaque requête. La bibliothèque ne fournit délibérément que le défaut (noms de
+propriété C#) : quel sérialiseur nomme les clés du fil relève de la connaissance de
+l’hôte, pas de la bibliothèque.
 
 ## Le canal des bugs : ce qui lève vs ce qui est collecté
 
