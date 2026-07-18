@@ -49,8 +49,8 @@ public sealed class RequestBinder<TRequest> {
 
     #endregion
 
-    /// <summary>The options this binder (and every binder nested under it) binds with.</summary>
-    internal RequestBinderOptions Options { get; private set; }
+    /// <summary>The options this binder (and every binder nested under it) binds with; fixed before binding begins.</summary>
+    internal RequestBinderOptions Options { get; }
 
     /// <summary>
     ///     The envelope instance the most recent failing build terminal
@@ -60,22 +60,6 @@ public sealed class RequestBinder<TRequest> {
     ///     (wrapped under the argument path).
     /// </summary>
     internal PrimaryPortError? BuiltEnvelope { get; private set; }
-
-    /// <summary>
-    ///     Replaces the binder options (for example to plug a serializer-aware
-    ///     <see cref="IArgumentNameProvider" />). Call it before binding any property; nested binders inherit the
-    ///     options in effect when they are created.
-    /// </summary>
-    /// <param name="options">The options to bind with.</param>
-    /// <returns>This binder, for chaining.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options" /> is <c>null</c>.</exception>
-    public RequestBinder<TRequest> WithOptions(RequestBinderOptions options) {
-        if (options is null) { throw new ArgumentNullException(nameof(options)); }
-
-        Options = options;
-
-        return this;
-    }
 
     /// <summary>
     ///     Selects a scalar property, converted by a plain value-object converter

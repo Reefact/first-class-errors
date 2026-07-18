@@ -1,9 +1,9 @@
 namespace FirstClassErrors.RequestBinder;
 
 /// <summary>
-///     The binding options of a <see cref="RequestBinder{TRequest}" />. Options are per-binder — passed through
-///     <see cref="RequestBinder{TRequest}.WithOptions" /> and inherited by nested binders — never global mutable
-///     state.
+///     The binding options of a <see cref="RequestBinder{TRequest}" />. Options are fixed once, before binding
+///     begins — through <see cref="Bind.WithOptions" /> — and inherited by nested binders; they are never global
+///     mutable state and can never change while a binder is binding.
 /// </summary>
 public sealed class RequestBinderOptions {
 
