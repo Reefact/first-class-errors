@@ -30,6 +30,11 @@ matter — and that is the point.
   and `DateTimeOffset`. On modern targets (`net8.0`) the surface extends to
   `DateOnly`, `TimeOnly`, `Int128`, `UInt128` and `Half`; the package also targets
   `netstandard2.0` for the widest reach.
+- **Strings from a regex**: `Any.StringMatching(pattern)` generates arbitrary strings
+  that match a regular expression — the dummy for a format-validated value object.
+  Home-grown (zero dependencies) over the regular subset of the pattern language; a
+  non-regular construct (a lookaround, a backreference) is refused with a clear error
+  rather than a silently non-matching value.
 - **Domain vocabulary where it belongs**: dates constrain with
   `After`/`Before`/`Between`, quantities with `Positive`/`Between`/`NonZero`,
   identities with `NonEmpty`/`DifferentFrom` — and deliberately no clock-relative
