@@ -147,9 +147,9 @@ public sealed class ListBindingTests {
 
     [Fact(DisplayName = "A custom argument-name provider renames the inner paths of complex-list elements: the element binder inherits the parent options.")]
     public void CustomNameProviderRenamesComplexListElementPaths() {
-        var bind = Bind.PropertiesOf(new BookingRequest("a@b.c", "REF-1", null, null, null, null, Guests: [new GuestDto(null, "nope")]))
-                       .FailWith(BookingEnvelopeError.CommandInvalid)
-                       .WithOptions(new RequestBinderOptions(new SnakeCaseNameProvider()));
+        var bind = Bind.WithOptions(new RequestBinderOptions(new SnakeCaseNameProvider()))
+                       .PropertiesOf(new BookingRequest("a@b.c", "REF-1", null, null, null, null, Guests: [new GuestDto(null, "nope")]))
+                       .FailWith(BookingEnvelopeError.CommandInvalid);
 
         bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
 
