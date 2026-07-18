@@ -412,28 +412,51 @@ chaque requête. La bibliothèque ne fournit délibérément que le défaut (nom
 propriété C#) : quel sérialiseur nomme les clés du fil relève de la connaissance de
 l’hôte, pas de la bibliothèque.
 
-## Codes d’erreur structurels
+## Erreurs structurelles : codes et messages
 
 Le binder lève deux erreurs codées qui lui sont propres — `REQUEST_ARGUMENT_REQUIRED`
 quand un argument requis est absent, et `REQUEST_ARGUMENT_INVALID` quand il est présent
-mais échoue à se convertir. Ce sont les seuls codes que le binder fabrique ; tout autre
+mais échoue à se convertir. Ce sont les seules erreurs que le binder fabrique ; tout autre
 code d’un arbre d’échec est le vôtre (les erreurs des convertisseurs, et l’enveloppe).
 
-Comme ces deux codes atterrissent dans **votre** catalogue, une API qui préfixe ses
-codes peut les surcharger pour qu’ils restent cohérents avec le reste — définissez-les
-sur les options, une seule fois, à côté de la politique de nommage :
+Chacune est un `BinderErrorDefinition` — un **code et ses messages publics, tenus
+ensemble** — que vous surchargez comme une unité cohérente, jamais un code séparé de son
+message. Partez du défaut exposé et changez le code, les messages, ou les deux ; ce que
+vous laissez intact garde la valeur livrée :
 
 ```csharp
 var options = new RequestBinderOptions(
     new SnakeCaseNames(),
-    argumentRequiredCode: ErrorCode.Create("ACME_ARGUMENT_REQUIRED"),
-    argumentInvalidCode:  ErrorCode.Create("ACME_ARGUMENT_INVALID"));
+    // aligner le code sur la convention de votre catalogue, garder les messages par défaut :
+    argumentRequired: RequestBindingError.DefaultArgumentRequired.WithCode(ErrorCode.Create("ACME_ARGUMENT_REQUIRED")),
+    // un code et son message, définis ensemble au même endroit :
+    argumentInvalid: new BinderErrorDefinition(
+        ErrorCode.Create("ACME_ARGUMENT_INVALID"),
+        path => new BindingMessage("An argument is invalid.", $"The argument '{path}' is invalid.")));
 
 var bind = Bind.WithOptions(options).PropertiesOf(request).FailWith(PlaceBookingError.Invalid);
 ```
 
-Les codes configurés se propagent à **chaque** échec structurel — scalaires, éléments
-de liste, et les échecs internes des binders imbriqués, qui en héritent.
+Le constructeur de message s’exécute **au moment où l’erreur est levée**, pas à la
+construction des options — il peut donc lire la culture ambiante
+(`CultureInfo.CurrentUICulture`) et renvoyer un message localisé par requête. Un hôte qui
+sert plusieurs langues localise les messages structurels du binder via son propre
+accesseur de ressources, exactement comme il localise toute autre erreur :
+
+```csharp
+argumentRequired: RequestBindingError.DefaultArgumentRequired.WithMessage(
+    path => new BindingMessage(
+        BinderStrings.ArgumentRequired_Short,                       // .resx, résolu sur CurrentUICulture
+        string.Format(BinderStrings.ArgumentRequired_Detailed, path)))
+```
+
+Seuls les deux messages **publics** sont localisables ; le message de diagnostic reste
+dans la langue interne de la bibliothèque (l’anglais) par convention, pour que les logs
+d’un même échec structurel ne se scindent jamais selon la langue de la requête. Voir
+[Internationalisation](Internationalisation.fr.md).
+
+Les définitions configurées se propagent à **chaque** échec structurel — scalaires,
+éléments de liste, et les échecs internes des binders imbriqués, qui en héritent.
 
 Pour **brancher** sur un échec du binder — le mapper vers un statut HTTP, par exemple —
 comparez le code de l’erreur symboliquement, jamais à une chaîne littérale : utilisez le
@@ -448,15 +471,16 @@ if (error.Code == RequestBindingError.DefaultArgumentRequiredCode) { return 422;
 
 `Bind.PropertiesOf(request)` lie avec `RequestBinderOptions.Default`. Ce défaut est
 configurable **une seule fois, au démarrage de l’application** — un hôte entier
-(ASP.NET, une CLI, un worker) partage ainsi une politique de nommage et un jeu de codes
-structurels sans faire transiter d’options par chaque appel, et sans conteneur DI :
+(ASP.NET, une CLI, un worker) partage ainsi une politique de nommage et un jeu de
+définitions d’erreurs structurelles sans faire transiter d’options par chaque appel, et
+sans conteneur DI :
 
 ```csharp
 // Program.cs, avant la première liaison :
 RequestBinderOptions.Default = new RequestBinderOptions(
     new SnakeCaseNames(),
-    argumentRequiredCode: ErrorCode.Create("ACME_ARGUMENT_REQUIRED"),
-    argumentInvalidCode:  ErrorCode.Create("ACME_ARGUMENT_INVALID"));
+    argumentRequired: RequestBindingError.DefaultArgumentRequired.WithCode(ErrorCode.Create("ACME_ARGUMENT_REQUIRED")),
+    argumentInvalid:  RequestBindingError.DefaultArgumentInvalid.WithCode(ErrorCode.Create("ACME_ARGUMENT_INVALID")));
 
 // n’importe où ensuite — aucune option à faire transiter :
 var bind = Bind.PropertiesOf(request).FailWith(PlaceBookingError.Invalid);

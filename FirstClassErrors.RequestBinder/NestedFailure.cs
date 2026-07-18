@@ -21,12 +21,12 @@ internal static class NestedFailure {
     /// <param name="error">The failure the nested binding returned.</param>
     /// <param name="nestedEnvelope">The envelope the nested binder's build terminal produced, or <c>null</c> when it built none.</param>
     /// <param name="argumentPath">The argument path to attach when wrapping.</param>
-    /// <param name="argumentInvalidCode">The code to wrap under — the parent binder's configured <see cref="RequestBinderOptions.ArgumentInvalidCode" />.</param>
+    /// <param name="argumentInvalid">The structural-error definition to wrap under — the parent binder's configured <see cref="RequestBinderOptions.ArgumentInvalid" />.</param>
     /// <returns>The error to record on the parent binder.</returns>
-    internal static PrimaryPortError Group(Error error, PrimaryPortError? nestedEnvelope, string argumentPath, ErrorCode argumentInvalidCode) {
+    internal static PrimaryPortError Group(Error error, PrimaryPortError? nestedEnvelope, string argumentPath, BinderErrorDefinition argumentInvalid) {
         return ReferenceEquals(error, nestedEnvelope)
                    ? (PrimaryPortError)error
-                   : RequestBindingError.ArgumentInvalid(argumentInvalidCode, argumentPath, error);
+                   : RequestBindingError.ArgumentInvalid(argumentInvalid, argumentPath, error);
     }
 
     #endregion
