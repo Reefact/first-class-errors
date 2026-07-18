@@ -177,6 +177,46 @@ public static class Any {
     }
 
     /// <summary>
+    ///     Starts an arbitrary <see cref="bool" /> generator drawing from the ambient random context — an even coin
+    ///     flip unless pinned with <c>True()</c> or <c>False()</c>.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnyBool Bool() {
+        return AnyBool.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="System.Guid" /> generator drawing from the ambient random context — unlike
+    ///     <see cref="System.Guid.NewGuid" />, reproducible inside an <c>Any.Reproducibly(...)</c> run, and for every
+    ///     practical purpose never empty.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnyGuid Guid() {
+        return AnyGuid.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <typeparamref name="TEnum" /> generator drawing from the ambient random context —
+    ///     uniformly across the enum's declared members, never an undeclared numeric value.
+    /// </summary>
+    /// <typeparam name="TEnum">The enum type to draw values from.</typeparam>
+    /// <returns>A generator to constrain fluently.</returns>
+    /// <exception cref="AnyGenerationException">Thrown when <typeparamref name="TEnum" /> declares no members.</exception>
+    public static AnyEnum<TEnum> Enum<TEnum>()
+        where TEnum : struct, Enum {
+        return AnyEnum<TEnum>.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="char" /> generator drawing from the ambient random context — ASCII letters
+    ///     and digits unless constrained, mirroring <see cref="AnyString" />'s character families.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnyChar Char() {
+        return AnyChar.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
     ///     Creates an isolated, deterministic generation context: every generator created from it draws from a
     ///     dedicated source seeded with <paramref name="seed" />, independent of the ambient context. Two contexts
     ///     created with the same seed yield the same sequence of values. Prefer
