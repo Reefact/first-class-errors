@@ -232,6 +232,16 @@ public sealed class RequestBinder<TRequest> {
         _errors.Add(error);
     }
 
+    /// <summary>Records a missing-required-argument failure at <paramref name="argumentPath" /> under this binder's configured <see cref="RequestBinderOptions.ArgumentRequiredCode" />.</summary>
+    internal void RecordArgumentRequired(string argumentPath) {
+        Record(RequestBindingError.ArgumentRequired(Options.ArgumentRequiredCode, argumentPath));
+    }
+
+    /// <summary>Records a present-but-invalid-argument failure at <paramref name="argumentPath" /> under this binder's configured <see cref="RequestBinderOptions.ArgumentInvalidCode" />, wrapping <paramref name="cause" />.</summary>
+    internal void RecordArgumentInvalid(string argumentPath, Error cause) {
+        Record(RequestBindingError.ArgumentInvalid(Options.ArgumentInvalidCode, argumentPath, cause));
+    }
+
     /// <summary>Prepends this binder's argument prefix to a path segment ("CheckIn" -&gt; "Stay.CheckIn").</summary>
     internal string PathOf(string argumentName) {
         return _argumentPrefix is null ? argumentName : $"{_argumentPrefix}.{argumentName}";

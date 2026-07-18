@@ -49,7 +49,7 @@ public sealed class ListOfComplexPropertiesConverter<TRequest, TArgument> {
         if (bindElement is null) { throw new ArgumentNullException(nameof(bindElement)); }
 
         if (_isMissing) {
-            _binder.Record(RequestBindingError.ArgumentRequired(_argumentPath));
+            _binder.RecordArgumentRequired(_argumentPath);
 
             return new RequiredField<IReadOnlyList<TProperty>>(_binder, default!);
         }
@@ -86,7 +86,7 @@ public sealed class ListOfComplexPropertiesConverter<TRequest, TArgument> {
             index++;
 
             if (element is null) {
-                _binder.Record(RequestBindingError.ArgumentRequired(elementPath));
+                _binder.RecordArgumentRequired(elementPath);
 
                 continue;
             }
@@ -94,7 +94,7 @@ public sealed class ListOfComplexPropertiesConverter<TRequest, TArgument> {
             RequestBinder<TArgument> nested  = new(element!, _envelope, _binder.Options, elementPath);
             Outcome<TProperty>       outcome = bindElement(nested);
             if (outcome.IsFailure) {
-                _binder.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, elementPath));
+                _binder.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, elementPath, _binder.Options.ArgumentInvalidCode));
 
                 continue;
             }
