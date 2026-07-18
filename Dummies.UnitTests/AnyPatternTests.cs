@@ -45,7 +45,7 @@ public sealed class AnyPatternTests {
     [InlineData(@"(?:foo|bar)-\d+")]
     [InlineData(@"(?<year>\d{4})-(?<month>\d{2})")]
     [InlineData(@"(?'tag'\d{2})")]
-    [InlineData(@"(?>ab|cd)")]
+    [InlineData(@"^a$|^b$")]
     [InlineData(@"[\d]{3}")]
     [InlineData(@"[-a-z]{2}")]
     [InlineData(@"[a-z-]{2}")]
@@ -199,6 +199,27 @@ public sealed class AnyPatternTests {
 
         UnsupportedRegexException caught = Assert.Throws<UnsupportedRegexException>(() => Any.StringMatching(@"a(?=b)"));
         Check.That(caught.Message).Contains("lookahead");
+    }
+
+    [Fact(DisplayName = "Constructs whose language a plain walk cannot honour are refused, never mis-generated.")]
+    public void NotGeneratableConstructsAreRefused() {
+        // An atomic group commits to its first matching branch: (?>ab|a)b matches only "abb", so lowering it to
+        // a plain alternation could emit "ab" — refused instead.
+        Check.ThatCode(() => Any.StringMatching(@"(?>ab|a)b")).Throws<UnsupportedRegexException>();
+        Check.ThatCode(() => Any.StringMatching(@"(?>a)")).Throws<UnsupportedRegexException>();
+
+        // A misplaced anchor makes the pattern unmatchable by any whole string.
+        Check.ThatCode(() => Any.StringMatching(@"a^")).Throws<UnsupportedRegexException>();
+        Check.ThatCode(() => Any.StringMatching(@"$a")).Throws<UnsupportedRegexException>();
+        Check.ThatCode(() => Any.StringMatching(@"x(^a)")).Throws<UnsupportedRegexException>();
+        Check.ThatCode(() => Any.StringMatching(@"(a$)x")).Throws<UnsupportedRegexException>();
+
+        // .NET class subtraction removes a nested class; parsing '-[' as members would generate outside the set.
+        Check.ThatCode(() => Any.StringMatching(@"[a-z-[aeiou]]")).Throws<UnsupportedRegexException>();
+
+        // IgnorePatternWhitespace changes how the pattern text itself is read: "^A B$" matches "AB", not "A B".
+        Check.ThatCode(() => Any.StringMatching(new Regex("^A B$", RegexOptions.IgnorePatternWhitespace))).Throws<ArgumentException>();
+        Check.ThatCode(() => Any.WithSeed(1).StringMatching(new Regex("^A B$", RegexOptions.IgnorePatternWhitespace))).Throws<ArgumentException>();
     }
 
     [Fact(DisplayName = "Malformed patterns raise ArgumentException; a null pattern raises ArgumentNullException.")]

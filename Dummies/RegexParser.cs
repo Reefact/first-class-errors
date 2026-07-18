@@ -13,12 +13,15 @@ namespace Dummies;
 ///     <c>\d \D \w \W \s \S</c>; character classes with ranges and negation; the quantifiers
 ///     <c>? * + {n} {n,} {n,m}</c> (a lazy <c>?</c> marker is accepted and ignored — it changes matching order, never
 ///     which strings match; possessive quantifiers do not exist in .NET and are rejected); alternation; grouping
-///     (capturing, non-capturing, atomic and named — the name is ignored); the dot; and the anchors <c>^ $</c>
-///     (no-ops, since a whole matching string is generated). A brace that does not form a well-formed quantifier is a
-///     literal, as in the real engine, and groups may nest at most 256 levels deep. A well-formed but non-regular or
-///     out-of-scope construct — a lookaround, a backreference, a Unicode category, a word boundary — is refused with
-///     an <see cref="UnsupportedRegexException" /> rather than silently mis-generated; a malformed pattern (including
-///     an escape the real engine rejects) raises an <see cref="ArgumentException" />.
+///     (capturing, non-capturing and named — the name is ignored); the dot; and the anchors <c>^ $</c> at the start
+///     and end of the pattern or of a top-level alternation branch (no-ops there, since a whole matching string is
+///     generated; anywhere else they are refused, because the pattern could never be matched by a whole generated
+///     string). A brace that does not form a well-formed quantifier is a literal, as in the real engine, and groups
+///     may nest at most 256 levels deep. A well-formed but non-regular or out-of-scope construct — a lookaround, a
+///     backreference, a Unicode category, a word boundary, an atomic group (its first-branch commit is not
+///     language-equivalent to plain alternation), a class subtraction — is refused with an
+///     <see cref="UnsupportedRegexException" /> rather than silently mis-generated; a malformed pattern (including an
+///     escape the real engine rejects) raises an <see cref="ArgumentException" />.
 /// </summary>
 internal sealed class RegexParser {
 
@@ -121,7 +124,28 @@ internal sealed class RegexParser {
 
     private RegexNode ParseSequence() {
         List<RegexNode> parts = new();
-        while (!AtEnd && Peek() != '|' && Peek() != ')') { parts.Add(ParseQuantified()); }
+        while (!AtEnd && Peek() != '|' && Peek() != ')') {
+            // Anchors are no-ops for a whole-string generator, but only where they are guaranteed to match:
+            // '^' at the start and '$' at the end of the pattern or of a top-level alternation branch. Anywhere
+            // else ('a^', '$a', inside a group) the pattern can never be matched by a whole generated string,
+            // so it is refused instead of silently mis-generated.
+            if (Peek() == '^') {
+                if (_depth > 0 || parts.Count > 0) { throw Unsupported("an anchor '^' away from the start of the pattern or of a top-level alternation branch", _index); }
+                _index++;
+
+                continue;
+            }
+
+            if (Peek() == '$') {
+                int position = _index;
+                _index++;
+                if (_depth > 0 || (!AtEnd && Peek() != '|')) { throw Unsupported("an anchor '$' away from the end of the pattern or of a top-level alternation branch", position); }
+
+                continue;
+            }
+
+            parts.Add(ParseQuantified());
+        }
 
         return parts.Count == 1 ? parts[0] : new RegexSequence(parts.ToArray());
     }
@@ -214,8 +238,6 @@ internal sealed class RegexParser {
             case '[': return ParseClass();
             case '\\': return ParseEscape();
             case '.': _index++; return new RegexCharacters(RegexAlphabet.Dot);
-            case '^':
-            case '$': _index++; return RegexNode.Empty;
             case '*':
             case '+':
             case '?': throw Malformed($"quantifier '{character}' has nothing to repeat");
@@ -240,7 +262,10 @@ internal sealed class RegexParser {
 
             switch (Peek()) {
                 case ':': _index++; break; // non-capturing group
-                case '>': _index++; break; // atomic group: it only constrains backtracking, so it generates like (?:…)
+                // An atomic group commits to the first branch that matches, so its language is NOT that of the
+                // plain alternation ('(?>ab|a)b' matches only "abb"); generating from it as if it were would
+                // yield non-matching values, so it is refused.
+                case '>': throw Unsupported("an atomic group '(?>…)'", position);
                 case '=': throw Unsupported("a lookahead '(?=…)'", position);
                 case '!': throw Unsupported("a negative lookahead '(?!…)'", position);
                 case '(': throw Unsupported("a conditional group '(?(…)…)'", position);
@@ -355,6 +380,9 @@ internal sealed class RegexParser {
             }
 
             first = false;
+            // .NET's class subtraction ([a-z-[aeiou]]) removes a nested class; parsing the '-[' as members
+            // would close the class early and generate values outside it, so the construct is refused.
+            if (Peek() == '-' && PeekAt(1) == '[') { throw Unsupported("a character-class subtraction '[…-[…]]'", _index); }
             if (Peek() == '\\' && IsClassShorthand(PeekAt(1))) {
                 _index++; // consume '\'
                 AddClassShorthand(set, Next());
