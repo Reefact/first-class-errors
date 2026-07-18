@@ -199,7 +199,7 @@ internal sealed class StringSpec {
         int effectiveMin = Math.Max(_minLength, required);
         // Long arithmetic: a huge declared minimum must saturate instead of overflowing past int.MaxValue.
         int effectiveMax = _maxLength ?? (int)Math.Min((long)effectiveMin + DefaultLengthSpread, int.MaxValue);
-        int length       = _exactLength ?? random.NextInt32(effectiveMin, effectiveMax);
+        int length       = _exactLength ?? random.NextInt32Inclusive(effectiveMin, effectiveMax);
 
         string pool         = FillerPool();
         int    fillerLength = length - required;
