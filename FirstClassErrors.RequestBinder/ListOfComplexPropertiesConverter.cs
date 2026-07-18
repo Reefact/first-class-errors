@@ -78,33 +78,15 @@ public sealed class ListOfComplexPropertiesConverter<TRequest, TArgument> {
     }
 
     private RequiredField<IReadOnlyList<TProperty>> BindElements<TProperty>(Func<RequestBinder<TArgument>, Outcome<TProperty>> bindElement) where TProperty : notnull {
-        List<TProperty> bound = new();
-        int             index = 0;
-
-        foreach (TArgument? element in _values!) {
-            string elementPath = $"{_argumentPath}[{index}]";
-            index++;
-
-            if (element is null) {
-                _binder.RecordArgumentRequired(elementPath);
-
-                continue;
-            }
-
+        return _binder.ConvertEachElement<TArgument?, TProperty>(_argumentPath, _values!, (element, elementPath) => {
             RequestBinder<TArgument> nested  = new(element!, _envelope, _binder.Options, elementPath);
             Outcome<TProperty>       outcome = bindElement(nested);
             if (outcome.IsFailure) {
                 _binder.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, elementPath, _binder.Options.ArgumentInvalidCode));
-
-                continue;
             }
 
-            bound.Add(outcome.GetResultOrThrow());
-        }
-
-        // The value is read only through a BindingScope, which a build terminal creates solely when no failure was recorded —
-        // i.e. only when every element bound — so `bound` is the complete list exactly when it is observed.
-        return new RequiredField<IReadOnlyList<TProperty>>(_binder, bound);
+            return outcome;
+        });
     }
 
 }

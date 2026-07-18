@@ -242,6 +242,46 @@ public sealed class RequestBinder<TRequest> {
         Record(RequestBindingError.ArgumentInvalid(Options.ArgumentInvalidCode, argumentPath, cause));
     }
 
+    /// <summary>
+    ///     Binds every element of a list property at its indexed path (<c>Tags[2]</c>), collecting <b>every</b>
+    ///     failure so one bad element never hides the others: a <c>null</c> element records
+    ///     <c>REQUEST_ARGUMENT_REQUIRED</c>, and <paramref name="convertElementAt" /> binds each non-null element —
+    ///     recording its own failure (a converter error, or a nested envelope wrapped under the path) and yielding
+    ///     its value on success. The list converters share this single iteration and null-element rule, so a change
+    ///     to either is made in one place.
+    /// </summary>
+    /// <typeparam name="TStored">The element type as stored in the DTO list (a reference or a <see cref="Nullable{T}" />).</typeparam>
+    /// <typeparam name="TProperty">The type each element binds to.</typeparam>
+    /// <param name="argumentPath">The list's argument path; each element is reported under <c>argumentPath[index]</c>.</param>
+    /// <param name="values">The list elements.</param>
+    /// <param name="convertElementAt">Binds a non-null element at its indexed path, recording its own failure.</param>
+    /// <returns>The bound field token carrying the successfully bound elements.</returns>
+    internal RequiredField<IReadOnlyList<TProperty>> ConvertEachElement<TStored, TProperty>(
+        string argumentPath, IEnumerable<TStored> values, Func<TStored, string, Outcome<TProperty>> convertElementAt) where TProperty : notnull {
+        List<TProperty> converted = new();
+        int             index     = 0;
+
+        foreach (TStored element in values) {
+            string elementPath = $"{argumentPath}[{index}]";
+            index++;
+
+            if (element is null) {
+                RecordArgumentRequired(elementPath);
+
+                continue;
+            }
+
+            Outcome<TProperty> outcome = convertElementAt(element, elementPath);
+            if (outcome.IsSuccess) { converted.Add(outcome.GetResultOrThrow()); }
+            // A failing element was already recorded by convertElementAt (REQUEST_ARGUMENT_INVALID, or the nested
+            // envelope wrapped under the indexed path), so it is simply skipped here.
+        }
+
+        // The value is read only through a BindingScope, which a build terminal creates solely when no failure was
+        // recorded — i.e. only when every element bound — so `converted` is the complete list when it is observed.
+        return new RequiredField<IReadOnlyList<TProperty>>(this, converted);
+    }
+
     /// <summary>Prepends this binder's argument prefix to a path segment ("CheckIn" -&gt; "Stay.CheckIn").</summary>
     internal string PathOf(string argumentName) {
         return _argumentPrefix is null ? argumentName : $"{_argumentPrefix}.{argumentName}";
