@@ -56,7 +56,7 @@ public sealed class SimplePropertyConverter<TRequest, TArgument> {
     /// <returns>The bound field token.</returns>
     public RequiredField<TArgument> AsRequired() {
         if (_isMissing) {
-            _binder.Record(RequestBindingError.ArgumentRequired(_argumentPath));
+            _binder.RecordArgumentRequired(_argumentPath);
 
             return new RequiredField<TArgument>(_binder, default!);
         }
@@ -142,7 +142,7 @@ public sealed class SimplePropertyConverter<TRequest, TArgument> {
     }
 
     private RequiredField<TProperty> RequiredMissing<TProperty>() {
-        _binder.Record(RequestBindingError.ArgumentRequired(_argumentPath));
+        _binder.RecordArgumentRequired(_argumentPath);
 
         return new RequiredField<TProperty>(_binder, default!);
     }
@@ -158,7 +158,7 @@ public sealed class SimplePropertyConverter<TRequest, TArgument> {
     }
 
     private void RecordInvalid(Error cause) {
-        _binder.Record(RequestBindingError.ArgumentInvalid(_argumentPath, cause));
+        _binder.RecordArgumentInvalid(_argumentPath, cause);
     }
 
 }

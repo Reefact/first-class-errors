@@ -397,6 +397,37 @@ it once (for example at application startup) and reuse it for every request. The
 library deliberately ships only the default (C# property names): which serializer
 names the wire keys is the host's knowledge, not the library's.
 
+## Structural error codes
+
+The binder raises two coded errors of its own — `REQUEST_ARGUMENT_REQUIRED` when a
+required argument is missing, and `REQUEST_ARGUMENT_INVALID` when one is present but
+fails to convert. These are the only codes the binder manufactures; every other code
+in a failure tree is yours (the converters' errors, and the envelope).
+
+Because those two codes land in **your** catalog, an API that prefixes its codes can
+override them so they stay consistent with the rest — set them on the options, once,
+alongside the naming policy:
+
+```csharp
+var options = new RequestBinderOptions(
+    new SnakeCaseNames(),
+    argumentRequiredCode: ErrorCode.Create("ACME_ARGUMENT_REQUIRED"),
+    argumentInvalidCode:  ErrorCode.Create("ACME_ARGUMENT_INVALID"));
+
+var bind = Bind.WithOptions(options).PropertiesOf(request).FailWith(PlaceBookingError.Invalid);
+```
+
+The configured codes flow through **every** structural failure — scalars, list
+elements, and the inner failures of nested binders, which inherit them.
+
+To **branch** on a binder failure — mapping it to an HTTP status, say — compare the
+error's code symbolically, never against a string literal: use the code you configured,
+or, when you keep the defaults, the ones the binder exposes.
+
+```csharp
+if (error.Code == RequestBindingError.DefaultArgumentRequiredCode) { return 422; }
+```
+
 ## The bug channel: what throws vs what is collected
 
 The binder draws a hard line between a **client error** (recorded, surfaced once
