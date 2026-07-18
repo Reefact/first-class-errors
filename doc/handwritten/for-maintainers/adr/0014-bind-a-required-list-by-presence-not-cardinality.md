@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0014-bind-a-required-list-by-presence-not-cardinality.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-07-18
 **Decision Makers:** Reefact
 
