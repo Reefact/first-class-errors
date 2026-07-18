@@ -65,11 +65,11 @@ public sealed class ComplexPropertyBindingTests {
     [Fact(DisplayName = "An optional complex property yields null when absent — recording nothing — and binds when present.")]
     public void OptionalComplex() {
         var absent = Bind.PropertiesOf(RequestWith(stay: null)).FailWith(BookingEnvelopeError.CommandInvalid);
-        OptionalReferenceField<Stay> none = absent.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptional(BindStay);
+        OptionalReferenceField<Stay> none = absent.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptionalReference(BindStay);
         Check.That(absent.New(s => s.Get(none) is null).GetResultOrThrow()).IsTrue();
 
         var present = Bind.PropertiesOf(RequestWith(new StayDto("2026-08-10", "2026-08-14"))).FailWith(BookingEnvelopeError.CommandInvalid);
-        OptionalReferenceField<Stay> some = present.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptional(BindStay);
+        OptionalReferenceField<Stay> some = present.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptionalReference(BindStay);
         Check.That(present.New(s => s.Get(some)!.CheckOut.Value).GetResultOrThrow()).IsEqualTo(new DateOnly(2026, 8, 14));
     }
 
@@ -77,7 +77,7 @@ public sealed class ComplexPropertyBindingTests {
     public void OptionalComplexPresentButInvalidRecords() {
         var bind = Bind.PropertiesOf(RequestWith(new StayDto(null, null))).FailWith(BookingEnvelopeError.CommandInvalid);
 
-        bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptional(BindStay);
+        bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptionalReference(BindStay);
 
         Outcome<string> outcome = bind.New(_ => "never");
         Check.That(outcome.IsFailure).IsTrue();
