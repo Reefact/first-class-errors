@@ -216,6 +216,53 @@ public static class Any {
         return AnyChar.Create(AmbientRandomSource.Instance);
     }
 
+#if NET8_0_OR_GREATER
+    /// <summary>
+    ///     Starts an arbitrary <see cref="System.DateOnly" /> generator drawing from the ambient random context — any
+    ///     representable date unless constrained. Net8.0 target only, like the type itself.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnyDateOnly DateOnly() {
+        return AnyDateOnly.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="System.TimeOnly" /> generator drawing from the ambient random context — any
+    ///     time of day unless constrained. Net8.0 target only, like the type itself.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnyTimeOnly TimeOnly() {
+        return AnyTimeOnly.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="System.Int128" /> generator drawing from the ambient random context — full
+    ///     range unless constrained. Net8.0 target only, like the type itself.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnyInt128 Int128() {
+        return AnyInt128.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="System.UInt128" /> generator drawing from the ambient random context — full
+    ///     range unless constrained. Net8.0 target only, like the type itself.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnyUInt128 UInt128() {
+        return AnyUInt128.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="System.Half" /> generator drawing from the ambient random context — finite
+    ///     values only. Net8.0 target only, like the type itself.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnyHalf Half() {
+        return AnyHalf.Create(AmbientRandomSource.Instance);
+    }
+#endif
+
     /// <summary>
     ///     Creates an isolated, deterministic generation context: every generator created from it draws from a
     ///     dedicated source seeded with <paramref name="seed" />, independent of the ambient context. Two contexts

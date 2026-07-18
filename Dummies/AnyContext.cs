@@ -209,4 +209,51 @@ public sealed class AnyContext {
         return AnyChar.Create(_source);
     }
 
+#if NET8_0_OR_GREATER
+    /// <summary>
+    ///     Starts an arbitrary <see cref="System.DateOnly" /> generator drawing from this context (deterministic under this context's seed) — any
+    ///     representable date unless constrained. Net8.0 target only, like the type itself.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public AnyDateOnly DateOnly() {
+        return AnyDateOnly.Create(_source);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="System.TimeOnly" /> generator drawing from this context (deterministic under this context's seed) — any
+    ///     time of day unless constrained. Net8.0 target only, like the type itself.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public AnyTimeOnly TimeOnly() {
+        return AnyTimeOnly.Create(_source);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="System.Int128" /> generator drawing from this context (deterministic under this context's seed) — full
+    ///     range unless constrained. Net8.0 target only, like the type itself.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public AnyInt128 Int128() {
+        return AnyInt128.Create(_source);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="System.UInt128" /> generator drawing from this context (deterministic under this context's seed) — full
+    ///     range unless constrained. Net8.0 target only, like the type itself.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public AnyUInt128 UInt128() {
+        return AnyUInt128.Create(_source);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="System.Half" /> generator drawing from this context (deterministic under this context's seed) — finite
+    ///     values only. Net8.0 target only, like the type itself.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public AnyHalf Half() {
+        return AnyHalf.Create(_source);
+    }
+#endif
+
 }
