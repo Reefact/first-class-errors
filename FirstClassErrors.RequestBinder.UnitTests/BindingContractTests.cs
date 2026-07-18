@@ -325,7 +325,7 @@ public sealed class BindingContractTests {
 
     [Fact(DisplayName = "REQUEST_ARGUMENT_REQUIRED carries its public summary, and its detailed and diagnostic messages name the argument path.")]
     public void RequiredArgumentErrorCarriesItsMessages() {
-        PrimaryPortError error = RequestBindingError.ArgumentRequired("GuestEmail");
+        PrimaryPortError error = RequestBindingError.ArgumentRequired(RequestBindingError.DefaultArgumentRequiredCode, "GuestEmail");
 
         Check.That(error.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_REQUIRED");
         Check.That(error.ShortMessage).IsEqualTo("A required argument is missing.");
@@ -336,7 +336,7 @@ public sealed class BindingContractTests {
 
     [Fact(DisplayName = "REQUEST_ARGUMENT_INVALID carries its public summary, its detailed message names the path, and it wraps the cause.")]
     public void InvalidArgumentErrorCarriesItsMessages() {
-        PrimaryPortError error = RequestBindingError.ArgumentInvalid("GuestEmail", BookingDomainError.EmailInvalid("x"));
+        PrimaryPortError error = RequestBindingError.ArgumentInvalid(RequestBindingError.DefaultArgumentInvalidCode, "GuestEmail", BookingDomainError.EmailInvalid("x"));
 
         Check.That(error.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
         Check.That(error.ShortMessage).IsEqualTo("An argument is invalid.");

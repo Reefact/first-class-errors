@@ -407,6 +407,38 @@ chaque requête. La bibliothèque ne fournit délibérément que le défaut (nom
 propriété C#) : quel sérialiseur nomme les clés du fil relève de la connaissance de
 l’hôte, pas de la bibliothèque.
 
+## Codes d’erreur structurels
+
+Le binder lève deux erreurs codées qui lui sont propres — `REQUEST_ARGUMENT_REQUIRED`
+quand un argument requis est absent, et `REQUEST_ARGUMENT_INVALID` quand il est présent
+mais échoue à se convertir. Ce sont les seuls codes que le binder fabrique ; tout autre
+code d’un arbre d’échec est le vôtre (les erreurs des convertisseurs, et l’enveloppe).
+
+Comme ces deux codes atterrissent dans **votre** catalogue, une API qui préfixe ses
+codes peut les surcharger pour qu’ils restent cohérents avec le reste — définissez-les
+sur les options, une seule fois, à côté de la politique de nommage :
+
+```csharp
+var options = new RequestBinderOptions(
+    new SnakeCaseNames(),
+    argumentRequiredCode: ErrorCode.Create("ACME_ARGUMENT_REQUIRED"),
+    argumentInvalidCode:  ErrorCode.Create("ACME_ARGUMENT_INVALID"));
+
+var bind = Bind.WithOptions(options).PropertiesOf(request).FailWith(PlaceBookingError.Invalid);
+```
+
+Les codes configurés se propagent à **chaque** échec structurel — scalaires, éléments
+de liste, et les échecs internes des binders imbriqués, qui en héritent.
+
+Pour **brancher** sur un échec du binder — le mapper vers un statut HTTP, par exemple —
+comparez le code de l’erreur symboliquement, jamais à une chaîne littérale : utilisez le
+code que vous avez configuré, ou, quand vous gardez les défauts, ceux que le binder
+expose.
+
+```csharp
+if (error.Code == RequestBindingError.DefaultArgumentRequiredCode) { return 422; }
+```
+
 ## Le canal des bugs : ce qui lève vs ce qui est collecté
 
 Le binder trace une frontière nette entre une **erreur client** (enregistrée,

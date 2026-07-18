@@ -48,7 +48,7 @@ public sealed class ComplexPropertyConverter<TRequest, TArgument> {
         if (bindNested is null) { throw new ArgumentNullException(nameof(bindNested)); }
 
         if (_isMissing) {
-            _binder.Record(RequestBindingError.ArgumentRequired(_argumentPath));
+            _binder.RecordArgumentRequired(_argumentPath);
 
             return new RequiredField<TProperty>(_binder, default!);
         }
@@ -56,7 +56,7 @@ public sealed class ComplexPropertyConverter<TRequest, TArgument> {
         RequestBinder<TArgument> nested  = NestedBinder();
         Outcome<TProperty>       outcome = bindNested(nested);
         if (outcome.IsFailure) {
-            _binder.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, _argumentPath));
+            _binder.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, _argumentPath, _binder.Options.ArgumentInvalidCode));
 
             return new RequiredField<TProperty>(_binder, default!);
         }
@@ -81,7 +81,7 @@ public sealed class ComplexPropertyConverter<TRequest, TArgument> {
         RequestBinder<TArgument> nested  = NestedBinder();
         Outcome<TProperty>       outcome = bindNested(nested);
         if (outcome.IsFailure) {
-            _binder.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, _argumentPath));
+            _binder.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, _argumentPath, _binder.Options.ArgumentInvalidCode));
 
             return new OptionalReferenceField<TProperty>(_binder, value: null);
         }

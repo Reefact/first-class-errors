@@ -17,13 +17,27 @@ public static class RequestBindingError {
     #region Statics members declarations
 
     /// <summary>
+    ///     The default code raised when a required argument is missing (<c>REQUEST_ARGUMENT_REQUIRED</c>), unless a
+    ///     consumer overrides it through <see cref="RequestBinderOptions.ArgumentRequiredCode" />. Exposed so a
+    ///     consumer can branch on the binder's structural failures symbolically rather than by string.
+    /// </summary>
+    public static ErrorCode DefaultArgumentRequiredCode => Code.ArgumentRequired;
+
+    /// <summary>
+    ///     The default code raised when an argument is present but fails to convert (<c>REQUEST_ARGUMENT_INVALID</c>),
+    ///     unless a consumer overrides it through <see cref="RequestBinderOptions.ArgumentInvalidCode" />. Exposed so a
+    ///     consumer can branch on the binder's structural failures symbolically rather than by string.
+    /// </summary>
+    public static ErrorCode DefaultArgumentInvalidCode => Code.ArgumentInvalid;
+
+    /// <summary>
     ///     The argument at <paramref name="argumentPath" /> is required but was absent from the request.
     /// </summary>
     /// <remarks>Non-transient by nature: resubmitting the same request cannot succeed.</remarks>
     [DocumentedBy(nameof(ArgumentRequiredDocumentation))]
-    internal static PrimaryPortError ArgumentRequired(string argumentPath) {
+    internal static PrimaryPortError ArgumentRequired(ErrorCode code, string argumentPath) {
         return PrimaryPortError.Create(
-                                   Code.ArgumentRequired,
+                                   code,
                                    $"Argument '{argumentPath}' is required but was missing from the request.",
                                    Transience.NonTransient,
                                    ctx => ctx.Add(ErrCtxKey.RequestArgument, argumentPath))
@@ -36,6 +50,7 @@ public static class RequestBindingError {
     ///     The argument at <paramref name="argumentPath" /> was present but failed to convert; the conversion error is
     ///     attached as the inner error.
     /// </summary>
+    /// <param name="code">The structural code to raise — the binder's configured code, defaulting to <see cref="DefaultArgumentInvalidCode" />.</param>
     /// <param name="argumentPath">The full path of the failing argument.</param>
     /// <param name="cause">
     ///     The error the converter failed with. Converters must fail with a <see cref="DomainError" /> or a
@@ -44,7 +59,7 @@ public static class RequestBindingError {
     /// </param>
     /// <exception cref="InvalidOperationException">Thrown when <paramref name="cause" /> belongs to another error family.</exception>
     [DocumentedBy(nameof(ArgumentInvalidDocumentation))]
-    internal static PrimaryPortError ArgumentInvalid(string argumentPath, Error cause) {
+    internal static PrimaryPortError ArgumentInvalid(ErrorCode code, string argumentPath, Error cause) {
         PrimaryPortInnerErrors innerErrors = new();
         switch (cause) {
             case DomainError domainError:
@@ -61,7 +76,7 @@ public static class RequestBindingError {
         }
 
         return PrimaryPortError.Create(
-                                   Code.ArgumentInvalid,
+                                   code,
                                    $"Argument '{argumentPath}' is invalid.",
                                    innerErrors,
                                    ctx => ctx.Add(ErrCtxKey.RequestArgument, argumentPath))
@@ -80,7 +95,7 @@ public static class RequestBindingError {
                             .AndDiagnostic("The argument name reported in the path does not match the wire format (the binder uses the C# property name unless an IArgumentNameProvider is configured).",
                                            ErrorOrigin.Internal,
                                            "Configure an IArgumentNameProvider aligned with the serializer naming policy.")
-                            .WithExamples(() => ArgumentRequired("Guests[1].FirstName"));
+                            .WithExamples(() => ArgumentRequired(Code.ArgumentRequired, "Guests[1].FirstName"));
     }
 
     private static ErrorDocumentation ArgumentInvalidDocumentation() {
@@ -93,7 +108,7 @@ public static class RequestBindingError {
                             .AndDiagnostic("The converter rejects values the contract intends to accept (over-strict parsing rule).",
                                            ErrorOrigin.Internal,
                                            "Review the value object's parsing rule against the API contract.")
-                            .WithExamples(() => ArgumentInvalid("GuestEmail", SampleCause()));
+                            .WithExamples(() => ArgumentInvalid(Code.ArgumentInvalid, "GuestEmail", SampleCause()));
     }
 
     /// <summary>A representative converter failure used only by the documentation example above.</summary>

@@ -48,7 +48,7 @@ public sealed class ListOfSimpleValuePropertiesConverter<TRequest, TArgument> wh
         if (convertElement is null) { throw new ArgumentNullException(nameof(convertElement)); }
 
         if (_isMissing) {
-            _binder.Record(RequestBindingError.ArgumentRequired(_argumentPath));
+            _binder.RecordArgumentRequired(_argumentPath);
 
             return new RequiredField<IReadOnlyList<TProperty>>(_binder, default!);
         }
@@ -85,14 +85,14 @@ public sealed class ListOfSimpleValuePropertiesConverter<TRequest, TArgument> wh
             index++;
 
             if (element is null) {
-                _binder.Record(RequestBindingError.ArgumentRequired(elementPath));
+                _binder.RecordArgumentRequired(elementPath);
 
                 continue;
             }
 
             Outcome<TProperty> outcome = convertElement(element.Value);
             if (outcome.IsFailure) {
-                _binder.Record(RequestBindingError.ArgumentInvalid(elementPath, outcome.Error!));
+                _binder.RecordArgumentInvalid(elementPath, outcome.Error!);
 
                 continue;
             }
