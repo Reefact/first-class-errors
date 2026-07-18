@@ -191,3 +191,4 @@ Optional supporting material:
 | [ADR-0015](0015-cap-any-combine-at-arity-eight.md) | Cap Any.Combine at arity eight | Proposed |
 | [ADR-0016](0016-make-the-binders-structural-error-codes-configurable.md) | Make the binder's structural error codes configurable | Proposed |
 | [ADR-0017](0017-provide-a-configurable-application-wide-default-for-the-binder-options.md) | Provide a configurable application-wide default for the binder options | Accepted |
+| [ADR-0018](0018-bundle-the-binders-structural-error-code-and-messages.md) | Bundle the binder's structural error code and messages in one definition | Proposed |
