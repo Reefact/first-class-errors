@@ -40,6 +40,7 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource {
 
     private readonly IReadOnlyList<char>? _allowed;
     private readonly string?              _allowedConstraint;
+    private readonly List<char>           _pool;
     private readonly LetterCasing?        _casing;
     private readonly string?              _casingConstraint;
     private readonly CharacterSet?        _charset;
@@ -62,6 +63,11 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource {
         _allowed           = allowed;
         _allowedConstraint = allowedConstraint;
         _excluded          = excluded;
+        // Materialized once here — "constrain once, draw many": Generate never refilters the pool. The full
+        // constant pool is the unconstrained start; MatchesCharset narrows it, so no per-charset pre-narrowing
+        // is needed.
+        IEnumerable<char> candidates = allowed ?? (IEnumerable<char>)(CharacterPools.UpperLetters + CharacterPools.LowerLetters + CharacterPools.Digits);
+        _pool = candidates.Where(character => MatchesCharset(character) && MatchesCasing(character) && !excluded.Contains(character)).ToList();
     }
 
     RandomSource? IHasRandomSource.Source => _source;
@@ -143,9 +149,7 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource {
 
     /// <inheritdoc />
     public char Generate() {
-        List<char> pool = EffectivePool();
-
-        return pool[_source.Current.Random.Next(pool.Count)];
+        return _pool[_source.Current.Random.Next(_pool.Count)];
     }
 
     private AnyChar WithCharset(CharacterSet charset, string applying) {
@@ -168,27 +172,13 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource {
     }
 
     private AnyChar Validated(AnyChar candidate, string applying) {
-        if (candidate.EffectivePool().Count > 0) { return candidate; }
+        if (candidate._pool.Count > 0) { return candidate; }
 
         string pool = candidate._allowedConstraint is null
                           ? "no character remains in the pool the declared constraints allow"
                           : $"no character {candidate._allowedConstraint} allows satisfies the constraints already defined";
 
         throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {pool}.");
-    }
-
-    private List<char> EffectivePool() {
-        IEnumerable<char> source = _allowed is not null ? _allowed : BasePool();
-
-        return source.Where(character => MatchesCharset(character) && MatchesCasing(character) && !_excluded.Contains(character)).ToList();
-    }
-
-    private string BasePool() {
-        return _charset switch {
-            CharacterSet.Alpha   => CharacterPools.UpperLetters + CharacterPools.LowerLetters,
-            CharacterSet.Numeric => CharacterPools.Digits,
-            _                    => CharacterPools.UpperLetters + CharacterPools.LowerLetters + CharacterPools.Digits
-        };
     }
 
     private bool MatchesCharset(char character) {

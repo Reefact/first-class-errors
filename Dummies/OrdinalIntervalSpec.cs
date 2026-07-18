@@ -51,6 +51,8 @@ internal sealed class OrdinalIntervalSpec {
     private readonly IReadOnlyList<ulong>? _allowed;
     private readonly string?               _allowedConstraint;
     private readonly ulong                 _domainMax;
+    private readonly List<ulong>?          _effectiveAllowed;
+    private readonly List<ulong>           _excludedInRange;
     private readonly ulong                 _domainMin;
     private readonly IReadOnlyList<ulong>  _excluded;
     private readonly ulong                 _max;
@@ -78,6 +80,13 @@ internal sealed class OrdinalIntervalSpec {
         _allowed           = allowed;
         _allowedConstraint = allowedConstraint;
         _excluded          = excluded;
+        // Materialized once here — "constrain once, draw many": GenerateOrdinal never refilters or resorts.
+        _excludedInRange = excluded.Where(value => value >= min && value <= max).Distinct().ToList();
+        _excludedInRange.Sort();
+        if (allowed is not null) {
+            HashSet<ulong> forbidden = new(excluded);
+            _effectiveAllowed = allowed.Where(value => value >= min && value <= max && !forbidden.Contains(value)).ToList();
+        }
     }
 
     /// <summary>Tightens the lower bound; a looser bound than the current one is a no-op.</summary>
@@ -139,13 +148,11 @@ internal sealed class OrdinalIntervalSpec {
 
     /// <summary>Draws one ordinal satisfying the whole specification — built directly, never generate-then-retry.</summary>
     internal ulong GenerateOrdinal(Random random) {
-        if (_allowed is not null) {
-            List<ulong> pool = EffectiveAllowed();
-
-            return pool[random.Next(pool.Count)];
+        if (_effectiveAllowed is not null) {
+            return _effectiveAllowed[random.Next(_effectiveAllowed.Count)];
         }
 
-        List<ulong> excluded = ExcludedInRangeSorted();
+        List<ulong> excluded = _excludedInRange;
         if (IsFullWidth()) {
             // The interval spans the whole ordinal space, so its size does not fit a ulong and the index
             // mapping below cannot run. Draw anywhere and, in the astronomically rare case the draw hits an
@@ -156,8 +163,8 @@ internal sealed class OrdinalIntervalSpec {
             return candidate;
         }
 
-        ulong validCount = _max - _min + 1 - (ulong)excluded.Count;
-        ulong candidateOrdinal = _min + random.NextUInt64(0, validCount - 1);
+        ulong validCount       = _max - _min + 1 - (ulong)excluded.Count;
+        ulong candidateOrdinal = _min + random.NextUInt64() % validCount;
         // Map the drawn index onto the k-th non-excluded ordinal of the interval: every excluded ordinal at
         // or below the candidate shifts it up by one. Sorted ascending, so a single pass suffices.
         foreach (ulong value in excluded) {
@@ -178,28 +185,15 @@ internal sealed class OrdinalIntervalSpec {
     }
 
     private bool IsSatisfiable() {
-        if (_allowed is not null) { return EffectiveAllowed().Count > 0; }
+        if (_effectiveAllowed is not null) { return _effectiveAllowed.Count > 0; }
         if (IsFullWidth()) { return true; }
 
-        return _max - _min + 1 - (ulong)ExcludedInRangeSorted().Count > 0;
-    }
-
-    private List<ulong> EffectiveAllowed() {
-        HashSet<ulong> excluded = new(_excluded);
-
-        return _allowed!.Where(value => value >= _min && value <= _max && !excluded.Contains(value)).ToList();
-    }
-
-    private List<ulong> ExcludedInRangeSorted() {
-        List<ulong> excluded = _excluded.Where(value => value >= _min && value <= _max).Distinct().ToList();
-        excluded.Sort();
-
-        return excluded;
+        return _max - _min + 1 - (ulong)_excludedInRange.Count > 0;
     }
 
     private string DescribeExhaustion() {
         if (_allowed is not null) {
-            if (_excluded.Count > 0 && _allowed.All(value => _excluded.Contains(value) || value < _min || value > _max)) {
+            if (_excluded.Count > 0) {
                 return $"no value {_allowedConstraint} allows remains available";
             }
 

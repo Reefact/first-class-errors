@@ -29,7 +29,7 @@ public sealed class AnyHalf : IAny<Half>, IHasRandomSource {
     }
 
     internal static AnyHalf Create(RandomSource source) {
-        return new AnyHalf(source, ContinuousIntervalSpec.Unconstrained("Half", value => V((Half)value), value => (double)(Half)value, -(double)Half.MaxValue, (double)Half.MaxValue));
+        return new AnyHalf(source, ContinuousIntervalSpec.Unconstrained("Half", value => V((Half)value), value => (double)(Half)value, value => NextUp((Half)value), -(double)Half.MaxValue, (double)Half.MaxValue));
     }
 
     private static string V(Half value) {
@@ -40,12 +40,6 @@ public sealed class AnyHalf : IAny<Half>, IHasRandomSource {
         return string.Join(", ", values.Select(V));
     }
 
-    private static Half Finite(Half value, string parameterName) {
-        if (Half.IsNaN(value) || Half.IsInfinity(value)) { throw new ArgumentException("The value must be finite: NaN and infinities are never generated.", parameterName); }
-
-        return value;
-    }
-
     /// <summary>The next representable half above <paramref name="value" /> — the exclusive-bound arithmetic.</summary>
     private static double NextUp(Half value) {
         short bits = BitConverter.HalfToInt16Bits(value);
@@ -54,10 +48,6 @@ public sealed class AnyHalf : IAny<Half>, IHasRandomSource {
         Half next = BitConverter.Int16BitsToHalf(bits);
 
         return Half.IsInfinity(next) ? double.PositiveInfinity : (double)next;
-    }
-
-    private static double NextDown(Half value) {
-        return -NextUp(-value);
     }
 
     #endregion
@@ -80,14 +70,14 @@ public sealed class AnyHalf : IAny<Half>, IHasRandomSource {
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyHalf Positive() {
-        return new AnyHalf(_source, _spec.WithMinimum(NextUp(Half.Zero), "Positive()"));
+        return new AnyHalf(_source, _spec.WithMinimumAbove(0d, "Positive()"));
     }
 
     /// <summary>Requires a value strictly less than zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyHalf Negative() {
-        return new AnyHalf(_source, _spec.WithMaximum(NextDown(Half.Zero), "Negative()"));
+        return new AnyHalf(_source, _spec.WithMaximumBelow(0d, "Negative()"));
     }
 
     /// <summary>Pins the value to exactly zero.</summary>
@@ -110,9 +100,9 @@ public sealed class AnyHalf : IAny<Half>, IHasRandomSource {
     /// <exception cref="ArgumentException">Thrown when <paramref name="value" /> is not finite.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyHalf GreaterThan(Half value) {
-        Finite(value, nameof(value));
+        ContinuousIntervalSpec.EnsureFinite((double)value, nameof(value));
 
-        return new AnyHalf(_source, _spec.WithMinimum(NextUp(value), $"GreaterThan({V(value)})"));
+        return new AnyHalf(_source, _spec.WithMinimumAbove((double)value, $"GreaterThan({V(value)})"));
     }
 
     /// <summary>Requires a value greater than or equal to <paramref name="value" />.</summary>
@@ -121,7 +111,7 @@ public sealed class AnyHalf : IAny<Half>, IHasRandomSource {
     /// <exception cref="ArgumentException">Thrown when <paramref name="value" /> is not finite.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyHalf GreaterThanOrEqualTo(Half value) {
-        Finite(value, nameof(value));
+        ContinuousIntervalSpec.EnsureFinite((double)value, nameof(value));
 
         return new AnyHalf(_source, _spec.WithMinimum((double)value, $"GreaterThanOrEqualTo({V(value)})"));
     }
@@ -132,9 +122,9 @@ public sealed class AnyHalf : IAny<Half>, IHasRandomSource {
     /// <exception cref="ArgumentException">Thrown when <paramref name="value" /> is not finite.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyHalf LessThan(Half value) {
-        Finite(value, nameof(value));
+        ContinuousIntervalSpec.EnsureFinite((double)value, nameof(value));
 
-        return new AnyHalf(_source, _spec.WithMaximum(NextDown(value), $"LessThan({V(value)})"));
+        return new AnyHalf(_source, _spec.WithMaximumBelow((double)value, $"LessThan({V(value)})"));
     }
 
     /// <summary>Requires a value less than or equal to <paramref name="value" />.</summary>
@@ -143,7 +133,7 @@ public sealed class AnyHalf : IAny<Half>, IHasRandomSource {
     /// <exception cref="ArgumentException">Thrown when <paramref name="value" /> is not finite.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyHalf LessThanOrEqualTo(Half value) {
-        Finite(value, nameof(value));
+        ContinuousIntervalSpec.EnsureFinite((double)value, nameof(value));
 
         return new AnyHalf(_source, _spec.WithMaximum((double)value, $"LessThanOrEqualTo({V(value)})"));
     }
@@ -155,8 +145,8 @@ public sealed class AnyHalf : IAny<Half>, IHasRandomSource {
     /// <exception cref="ArgumentException">Thrown when a bound is not finite or <paramref name="minimum" /> is greater than <paramref name="maximum" />.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyHalf Between(Half minimum, Half maximum) {
-        Finite(minimum, nameof(minimum));
-        Finite(maximum, nameof(maximum));
+        ContinuousIntervalSpec.EnsureFinite((double)minimum, nameof(minimum));
+        ContinuousIntervalSpec.EnsureFinite((double)maximum, nameof(maximum));
         if (minimum > maximum) { throw new ArgumentException($"The minimum ({V(minimum)}) must be less than or equal to the maximum ({V(maximum)}).", nameof(minimum)); }
 
         string constraint = $"Between({V(minimum)}, {V(maximum)})";
@@ -173,7 +163,7 @@ public sealed class AnyHalf : IAny<Half>, IHasRandomSource {
     public AnyHalf OneOf(params Half[] values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
-        foreach (Half value in values) { Finite(value, nameof(values)); }
+        foreach (Half value in values) { ContinuousIntervalSpec.EnsureFinite((double)value, nameof(values)); }
 
         return new AnyHalf(_source, _spec.WithAllowed(values.Select(value => (double)value).ToArray(), $"OneOf({Join(values)})"));
     }
@@ -187,7 +177,7 @@ public sealed class AnyHalf : IAny<Half>, IHasRandomSource {
     public AnyHalf Except(params Half[] values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
-        foreach (Half value in values) { Finite(value, nameof(values)); }
+        foreach (Half value in values) { ContinuousIntervalSpec.EnsureFinite((double)value, nameof(values)); }
 
         return new AnyHalf(_source, _spec.WithExcluded(values.Select(value => (double)value).ToArray(), $"Except({Join(values)})"));
     }
@@ -201,7 +191,7 @@ public sealed class AnyHalf : IAny<Half>, IHasRandomSource {
     /// <exception cref="ArgumentException">Thrown when <paramref name="value" /> is not finite.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyHalf DifferentFrom(Half value) {
-        Finite(value, nameof(value));
+        ContinuousIntervalSpec.EnsureFinite((double)value, nameof(value));
 
         return new AnyHalf(_source, _spec.WithExcluded([(double)value], $"DifferentFrom({V(value)})"));
     }

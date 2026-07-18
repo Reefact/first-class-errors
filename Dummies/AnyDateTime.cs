@@ -16,7 +16,7 @@ namespace Dummies;
 /// <remarks>
 ///     Generated values carry <see cref="DateTimeKind.Utc" />; constraints compare by <see cref="DateTime.Ticks" />,
 ///     ignoring the <see cref="DateTime.Kind" /> of the supplied bounds — exactly as <see cref="DateTime" />'s own
-///     comparison operators do. There is deliberately no clock-relative constraint (no "in the past/future"): a
+///     comparison operators do. Values supplied to <see cref="OneOf" /> are returned as given, Kind included. There is deliberately no clock-relative constraint (no "in the past/future"): a
 ///     reproducible test pins its reference instants explicitly with <see cref="After" /> and <see cref="Before" />.
 /// </remarks>
 public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource {
@@ -57,14 +57,16 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource {
 
     #region Fields declarations
 
-    private readonly RandomSource        _source;
-    private readonly OrdinalIntervalSpec _spec;
+    private readonly IReadOnlyDictionary<ulong, DateTime>? _allowedOriginals;
+    private readonly RandomSource                          _source;
+    private readonly OrdinalIntervalSpec                   _spec;
 
     #endregion
 
-    private AnyDateTime(RandomSource source, OrdinalIntervalSpec spec) {
-        _source = source;
-        _spec   = spec;
+    private AnyDateTime(RandomSource source, OrdinalIntervalSpec spec, IReadOnlyDictionary<ulong, DateTime>? allowedOriginals = null) {
+        _source           = source;
+        _spec             = spec;
+        _allowedOriginals = allowedOriginals;
     }
 
     RandomSource? IHasRandomSource.Source => _source;
@@ -74,7 +76,7 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource {
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateTime After(DateTime instant) {
-        return new AnyDateTime(_source, _spec.WithMinimumAbove(Ord(instant), $"After({V(instant)})"));
+        return new AnyDateTime(_source, _spec.WithMinimumAbove(Ord(instant), $"After({V(instant)})"), _allowedOriginals);
     }
 
     /// <summary>Requires an instant at or after <paramref name="instant" />.</summary>
@@ -82,7 +84,7 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource {
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateTime AfterOrEqualTo(DateTime instant) {
-        return new AnyDateTime(_source, _spec.WithMinimum(Ord(instant), $"AfterOrEqualTo({V(instant)})"));
+        return new AnyDateTime(_source, _spec.WithMinimum(Ord(instant), $"AfterOrEqualTo({V(instant)})"), _allowedOriginals);
     }
 
     /// <summary>Requires an instant strictly before <paramref name="instant" />.</summary>
@@ -90,7 +92,7 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource {
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateTime Before(DateTime instant) {
-        return new AnyDateTime(_source, _spec.WithMaximumBelow(Ord(instant), $"Before({V(instant)})"));
+        return new AnyDateTime(_source, _spec.WithMaximumBelow(Ord(instant), $"Before({V(instant)})"), _allowedOriginals);
     }
 
     /// <summary>Requires an instant at or before <paramref name="instant" />.</summary>
@@ -98,7 +100,7 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource {
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateTime BeforeOrEqualTo(DateTime instant) {
-        return new AnyDateTime(_source, _spec.WithMaximum(Ord(instant), $"BeforeOrEqualTo({V(instant)})"));
+        return new AnyDateTime(_source, _spec.WithMaximum(Ord(instant), $"BeforeOrEqualTo({V(instant)})"), _allowedOriginals);
     }
 
     /// <summary>Requires an instant within the inclusive range [<paramref name="start" />, <paramref name="end" />].</summary>
@@ -112,7 +114,7 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource {
 
         string constraint = $"Between({V(start)}, {V(end)})";
 
-        return new AnyDateTime(_source, _spec.WithMinimum(Ord(start), constraint).WithMaximum(Ord(end), constraint));
+        return new AnyDateTime(_source, _spec.WithMinimum(Ord(start), constraint).WithMaximum(Ord(end), constraint), _allowedOriginals);
     }
 
     /// <summary>Requires the instant to be one of the supplied values. Declared once per generator.</summary>
@@ -125,7 +127,14 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        return new AnyDateTime(_source, _spec.WithAllowed(values.Select(Ord).ToArray(), $"OneOf({Join(values)})"));
+        // Remember the supplied values by instant, so generation returns them as given: the ordinal space
+        // only carries the ticks, and rebuilding from it would silently normalize the Kind to Utc.
+        Dictionary<ulong, DateTime> originals = new();
+        foreach (DateTime value in values) {
+            if (!originals.ContainsKey(Ord(value))) { originals.Add(Ord(value), value); }
+        }
+
+        return new AnyDateTime(_source, _spec.WithAllowed(values.Select(Ord).ToArray(), $"OneOf({Join(values)})"), originals);
     }
 
     /// <summary>Requires the instant to be none of the supplied values.</summary>
@@ -138,7 +147,7 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        return new AnyDateTime(_source, _spec.WithExcluded(values.Select(Ord).ToArray(), $"Except({Join(values)})"));
+        return new AnyDateTime(_source, _spec.WithExcluded(values.Select(Ord).ToArray(), $"Except({Join(values)})"), _allowedOriginals);
     }
 
     /// <summary>
@@ -149,12 +158,15 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource {
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateTime DifferentFrom(DateTime value) {
-        return new AnyDateTime(_source, _spec.WithExcluded([Ord(value)], $"DifferentFrom({V(value)})"));
+        return new AnyDateTime(_source, _spec.WithExcluded([Ord(value)], $"DifferentFrom({V(value)})"), _allowedOriginals);
     }
 
     /// <inheritdoc />
     public DateTime Generate() {
-        return Val(_spec.GenerateOrdinal(_source.Current.Random));
+        ulong ordinal = _spec.GenerateOrdinal(_source.Current.Random);
+        if (_allowedOriginals is not null && _allowedOriginals.TryGetValue(ordinal, out DateTime original)) { return original; }
+
+        return Val(ordinal);
     }
 
 }

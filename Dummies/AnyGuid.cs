@@ -40,6 +40,7 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource {
 
     private readonly IReadOnlyList<Guid>? _allowed;
     private readonly string?              _allowedConstraint;
+    private readonly List<Guid>?          _effectiveAllowed;
     private readonly IReadOnlyList<Guid>  _excluded;
     private readonly Guid?                _pinned;
     private readonly string?              _pinnedConstraint;
@@ -55,6 +56,8 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource {
         _allowed           = allowed;
         _allowedConstraint = allowedConstraint;
         _excluded          = excluded;
+        // Materialized once here — "constrain once, draw many": Generate never refilters the allow-list.
+        _effectiveAllowed  = allowed?.Where(value => !excluded.Contains(value)).ToList();
     }
 
     RandomSource? IHasRandomSource.Source => _source;
@@ -70,10 +73,6 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource {
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyGuid Empty() {
-        if (_pinnedConstraint is not null && _pinned != Guid.Empty) {
-            throw new ConflictingAnyConstraintException($"Cannot apply Empty() because {_pinnedConstraint} already pins the value to {V(_pinned!.Value)}.");
-        }
-
         return Validated(new AnyGuid(_source, Guid.Empty, "Empty()", _allowed, _allowedConstraint, _excluded), "Empty()");
     }
 
@@ -86,9 +85,11 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource {
     public AnyGuid OneOf(params Guid[] values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
-        if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply OneOf({Join(values)}) because {_allowedConstraint} is already defined."); }
 
-        return Validated(new AnyGuid(_source, _pinned, _pinnedConstraint, values.Distinct().ToArray(), $"OneOf({Join(values)})", _excluded), $"OneOf({Join(values)})");
+        string constraint = $"OneOf({Join(values)})";
+        if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {constraint} because {_allowedConstraint} is already defined."); }
+
+        return Validated(new AnyGuid(_source, _pinned, _pinnedConstraint, values.Distinct().ToArray(), constraint, _excluded), constraint);
     }
 
     /// <summary>Requires the identifier to be none of the supplied values.</summary>
@@ -120,10 +121,8 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource {
         if (_pinned is Guid pinned) { return pinned; }
 
         Random random = _source.Current.Random;
-        if (_allowed is not null) {
-            List<Guid> pool = EffectiveAllowed();
-
-            return pool[random.Next(pool.Count)];
+        if (_effectiveAllowed is not null) {
+            return _effectiveAllowed[random.Next(_effectiveAllowed.Count)];
         }
 
         byte[] bytes = new byte[16];
@@ -158,15 +157,11 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource {
             return candidate;
         }
 
-        if (candidate._allowed is not null && candidate.EffectiveAllowed().Count == 0) {
+        if (candidate._effectiveAllowed is not null && candidate._effectiveAllowed.Count == 0) {
             throw new ConflictingAnyConstraintException($"Cannot apply {applying} because no value {candidate._allowedConstraint} allows remains available.");
         }
 
         return candidate;
-    }
-
-    private List<Guid> EffectiveAllowed() {
-        return _allowed!.Where(value => !_excluded.Contains(value)).ToList();
     }
 
 }

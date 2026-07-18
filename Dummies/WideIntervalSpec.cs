@@ -16,10 +16,7 @@ internal sealed class WideIntervalSpec {
     }
 
     private static UInt128 NextUInt128(Random random) {
-        byte[] bytes = new byte[16];
-        random.NextBytes(bytes);
-
-        return new UInt128(BitConverter.ToUInt64(bytes, 8), BitConverter.ToUInt64(bytes, 0));
+        return new UInt128(random.NextUInt64(), random.NextUInt64());
     }
 
     #endregion
@@ -29,6 +26,8 @@ internal sealed class WideIntervalSpec {
     private readonly IReadOnlyList<UInt128>? _allowed;
     private readonly string?                 _allowedConstraint;
     private readonly UInt128                 _domainMax;
+    private readonly List<UInt128>?          _effectiveAllowed;
+    private readonly List<UInt128>           _excludedInRange;
     private readonly UInt128                 _domainMin;
     private readonly IReadOnlyList<UInt128>  _excluded;
     private readonly UInt128                 _max;
@@ -56,6 +55,13 @@ internal sealed class WideIntervalSpec {
         _allowed           = allowed;
         _allowedConstraint = allowedConstraint;
         _excluded          = excluded;
+        // Materialized once here — "constrain once, draw many": GenerateOrdinal never refilters or resorts.
+        _excludedInRange = excluded.Where(value => value >= min && value <= max).Distinct().ToList();
+        _excludedInRange.Sort();
+        if (allowed is not null) {
+            HashSet<UInt128> forbidden = new(excluded);
+            _effectiveAllowed = allowed.Where(value => value >= min && value <= max && !forbidden.Contains(value)).ToList();
+        }
     }
 
     /// <summary>Tightens the lower bound; a looser bound than the current one is a no-op.</summary>
@@ -117,13 +123,11 @@ internal sealed class WideIntervalSpec {
 
     /// <summary>Draws one ordinal satisfying the whole specification — built directly, never generate-then-retry.</summary>
     internal UInt128 GenerateOrdinal(Random random) {
-        if (_allowed is not null) {
-            List<UInt128> pool = EffectiveAllowed();
-
-            return pool[random.Next(pool.Count)];
+        if (_effectiveAllowed is not null) {
+            return _effectiveAllowed[random.Next(_effectiveAllowed.Count)];
         }
 
-        List<UInt128> excluded = ExcludedInRangeSorted();
+        List<UInt128> excluded = _excludedInRange;
         if (IsFullWidth()) {
             // Same escape as OrdinalIntervalSpec: the full 128-bit space has no representable size, so draw
             // anywhere and walk off an excluded value deterministically.
@@ -153,28 +157,15 @@ internal sealed class WideIntervalSpec {
     }
 
     private bool IsSatisfiable() {
-        if (_allowed is not null) { return EffectiveAllowed().Count > 0; }
+        if (_effectiveAllowed is not null) { return _effectiveAllowed.Count > 0; }
         if (IsFullWidth()) { return true; }
 
-        return _max - _min + 1 - (UInt128)ExcludedInRangeSorted().Count > 0;
-    }
-
-    private List<UInt128> EffectiveAllowed() {
-        HashSet<UInt128> excluded = new(_excluded);
-
-        return _allowed!.Where(value => value >= _min && value <= _max && !excluded.Contains(value)).ToList();
-    }
-
-    private List<UInt128> ExcludedInRangeSorted() {
-        List<UInt128> excluded = _excluded.Where(value => value >= _min && value <= _max).Distinct().ToList();
-        excluded.Sort();
-
-        return excluded;
+        return _max - _min + 1 - (UInt128)_excludedInRange.Count > 0;
     }
 
     private string DescribeExhaustion() {
         if (_allowed is not null) {
-            if (_excluded.Count > 0 && _allowed.All(value => _excluded.Contains(value) || value < _min || value > _max)) {
+            if (_excluded.Count > 0) {
                 return $"no value {_allowedConstraint} allows remains available";
             }
 

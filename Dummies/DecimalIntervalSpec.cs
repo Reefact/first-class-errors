@@ -25,6 +25,7 @@ internal sealed class DecimalIntervalSpec {
 
     private readonly IReadOnlyList<decimal>? _allowed;
     private readonly string?                 _allowedConstraint;
+    private readonly List<decimal>?          _effectiveAllowed;
     private readonly IReadOnlyList<decimal>  _excluded;
     private readonly decimal                 _max;
     private readonly string?                 _maxConstraint;
@@ -49,6 +50,8 @@ internal sealed class DecimalIntervalSpec {
         _allowed           = allowed;
         _allowedConstraint = allowedConstraint;
         _excluded          = excluded;
+        // Materialized once here — "constrain once, draw many": Generate never refilters the allow-list.
+        _effectiveAllowed  = allowed?.Where(value => value >= min && value <= max && !IsExcluded(value)).ToList();
     }
 
     /// <summary>Tightens the lower bound; a looser bound than the current one is a no-op.</summary>
@@ -77,6 +80,16 @@ internal sealed class DecimalIntervalSpec {
         return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, maximum, applying, _allowed, _allowedConstraint, _excluded), applying);
     }
 
+    /// <summary>Tightens the lower bound to strictly above <paramref name="bound" /> — the inclusive bound plus a point exclusion.</summary>
+    internal DecimalIntervalSpec WithMinimumAbove(decimal bound, string applying) {
+        return WithMinimum(bound, applying).WithExcluded([bound], applying);
+    }
+
+    /// <summary>Tightens the upper bound to strictly below <paramref name="bound" /> — the inclusive bound plus a point exclusion.</summary>
+    internal DecimalIntervalSpec WithMaximumBelow(decimal bound, string applying) {
+        return WithMaximum(bound, applying).WithExcluded([bound], applying);
+    }
+
     /// <summary>Restricts the domain to an explicit allow-list; declared once per generator.</summary>
     internal DecimalIntervalSpec WithAllowed(decimal[] values, string applying) {
         if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_allowedConstraint} is already defined."); }
@@ -96,10 +109,8 @@ internal sealed class DecimalIntervalSpec {
 
     /// <summary>Draws one value satisfying the whole specification.</summary>
     internal decimal Generate(Random random, int seed) {
-        if (_allowed is not null) {
-            List<decimal> pool = EffectiveAllowed();
-
-            return pool[random.Next(pool.Count)];
+        if (_effectiveAllowed is not null) {
+            return _effectiveAllowed[random.Next(_effectiveAllowed.Count)];
         }
 
         if (_min == _max) { return _min; }
@@ -152,19 +163,15 @@ internal sealed class DecimalIntervalSpec {
     }
 
     private bool IsSatisfiable() {
-        if (_allowed is not null) { return EffectiveAllowed().Count > 0; }
+        if (_effectiveAllowed is not null) { return _effectiveAllowed.Count > 0; }
         if (_min < _max) { return true; }
 
         return !IsExcluded(_min);
     }
 
-    private List<decimal> EffectiveAllowed() {
-        return _allowed!.Where(value => value >= _min && value <= _max && !IsExcluded(value)).ToList();
-    }
-
     private string DescribeExhaustion() {
         if (_allowed is not null) {
-            if (_excluded.Count > 0 && _allowed.All(value => IsExcluded(value) || value < _min || value > _max)) {
+            if (_excluded.Count > 0) {
                 return $"no value {_allowedConstraint} allows remains available";
             }
 

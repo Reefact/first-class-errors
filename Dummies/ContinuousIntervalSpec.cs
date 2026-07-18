@@ -26,8 +26,13 @@ internal sealed class ContinuousIntervalSpec {
 
     #region Statics members declarations
 
-    internal static ContinuousIntervalSpec Unconstrained(string typeName, Func<double, string> render, Func<double, double> quantize, double domainMin, double domainMax) {
-        return new ContinuousIntervalSpec(typeName, render, quantize, domainMin, null, domainMax, null, null, null, []);
+    internal static ContinuousIntervalSpec Unconstrained(string typeName, Func<double, string> render, Func<double, double> quantize, Func<double, double> nextUp, double domainMin, double domainMax) {
+        return new ContinuousIntervalSpec(typeName, render, quantize, nextUp, domainMin, null, domainMax, null, null, null, []);
+    }
+
+    /// <summary>Rejects NaN and the infinities — the shared argument guard of every floating-point generator.</summary>
+    internal static void EnsureFinite(double value, string parameterName) {
+        if (double.IsNaN(value) || double.IsInfinity(value)) { throw new ArgumentException("The value must be finite: NaN and infinities are never generated.", parameterName); }
     }
 
     /// <summary>The next representable double above <paramref name="value" /> — the exclusive-bound arithmetic.</summary>
@@ -49,7 +54,9 @@ internal sealed class ContinuousIntervalSpec {
 
     private readonly IReadOnlyList<double>? _allowed;
     private readonly string?                _allowedConstraint;
+    private readonly List<double>?          _effectiveAllowed;
     private readonly IReadOnlyList<double>  _excluded;
+    private readonly Func<double, double>   _nextUp;
     private readonly double                 _max;
     private readonly string?                _maxConstraint;
     private readonly double                 _min;
@@ -60,7 +67,7 @@ internal sealed class ContinuousIntervalSpec {
 
     #endregion
 
-    private ContinuousIntervalSpec(string  typeName, Func<double, string> render, Func<double, double> quantize,
+    private ContinuousIntervalSpec(string  typeName, Func<double, string> render, Func<double, double> quantize, Func<double, double> nextUp,
                                    double  min,      string? minConstraint,
                                    double  max,      string? maxConstraint,
                                    IReadOnlyList<double>? allowed, string? allowedConstraint,
@@ -68,6 +75,7 @@ internal sealed class ContinuousIntervalSpec {
         _typeName          = typeName;
         _render            = render;
         _quantize          = quantize;
+        _nextUp            = nextUp;
         _min               = min;
         _minConstraint     = minConstraint;
         _max               = max;
@@ -75,6 +83,8 @@ internal sealed class ContinuousIntervalSpec {
         _allowed           = allowed;
         _allowedConstraint = allowedConstraint;
         _excluded          = excluded;
+        // Materialized once here — "constrain once, draw many": Generate never refilters the allow-list.
+        _effectiveAllowed  = allowed?.Where(value => value >= min && value <= max && !IsExcluded(value)).ToList();
     }
 
     /// <summary>Tightens the lower bound; a looser bound than the current one is a no-op.</summary>
@@ -88,7 +98,7 @@ internal sealed class ContinuousIntervalSpec {
             throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_maxConstraint} already requires values less than or equal to {_render(_max)}.");
         }
 
-        return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, minimum, applying, _max, _maxConstraint, _allowed, _allowedConstraint, _excluded), applying);
+        return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _nextUp, minimum, applying, _max, _maxConstraint, _allowed, _allowedConstraint, _excluded), applying);
     }
 
     /// <summary>Tightens the upper bound; a looser bound than the current one is a no-op.</summary>
@@ -102,7 +112,17 @@ internal sealed class ContinuousIntervalSpec {
             throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_minConstraint} already requires values greater than or equal to {_render(_min)}.");
         }
 
-        return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _min, _minConstraint, maximum, applying, _allowed, _allowedConstraint, _excluded), applying);
+        return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _nextUp, _min, _minConstraint, maximum, applying, _allowed, _allowedConstraint, _excluded), applying);
+    }
+
+    /// <summary>Tightens the lower bound to strictly above <paramref name="bound" /> — via the type's next representable value.</summary>
+    internal ContinuousIntervalSpec WithMinimumAbove(double bound, string applying) {
+        return WithMinimum(_nextUp(bound), applying);
+    }
+
+    /// <summary>Tightens the upper bound to strictly below <paramref name="bound" /> — via the type's next representable value.</summary>
+    internal ContinuousIntervalSpec WithMaximumBelow(double bound, string applying) {
+        return WithMaximum(-_nextUp(-bound), applying);
     }
 
     /// <summary>Restricts the domain to an explicit allow-list; declared once per generator.</summary>
@@ -111,7 +131,7 @@ internal sealed class ContinuousIntervalSpec {
 
         double[] distinct = values.Distinct().ToArray();
 
-        return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _min, _minConstraint, _max, _maxConstraint, distinct, applying, _excluded), applying);
+        return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _nextUp, _min, _minConstraint, _max, _maxConstraint, distinct, applying, _excluded), applying);
     }
 
     /// <summary>Adds values the generator must never produce.</summary>
@@ -119,15 +139,13 @@ internal sealed class ContinuousIntervalSpec {
         List<double> excluded = new(_excluded);
         excluded.AddRange(values);
 
-        return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, excluded), applying);
+        return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _nextUp, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, excluded), applying);
     }
 
     /// <summary>Draws one value satisfying the whole specification.</summary>
     internal double Generate(Random random, int seed) {
-        if (_allowed is not null) {
-            List<double> pool = EffectiveAllowed();
-
-            return pool[random.Next(pool.Count)];
+        if (_effectiveAllowed is not null) {
+            return _effectiveAllowed[random.Next(_effectiveAllowed.Count)];
         }
 
         if (_min == _max) { return _min; }
@@ -178,19 +196,15 @@ internal sealed class ContinuousIntervalSpec {
     }
 
     private bool IsSatisfiable() {
-        if (_allowed is not null) { return EffectiveAllowed().Count > 0; }
+        if (_effectiveAllowed is not null) { return _effectiveAllowed.Count > 0; }
         if (_min < _max) { return true; }
 
         return !IsExcluded(_min);
     }
 
-    private List<double> EffectiveAllowed() {
-        return _allowed!.Where(value => value >= _min && value <= _max && !IsExcluded(value)).ToList();
-    }
-
     private string DescribeExhaustion() {
         if (_allowed is not null) {
-            if (_excluded.Count > 0 && _allowed.All(value => IsExcluded(value) || value < _min || value > _max)) {
+            if (_excluded.Count > 0) {
                 return $"no value {_allowedConstraint} allows remains available";
             }
 

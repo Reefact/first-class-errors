@@ -43,7 +43,7 @@ public sealed class AnyByte : IAny<byte>, IHasRandomSource {
     }
 
     private static string Join(byte[] values) {
-        return string.Join(", ", values.Select(value => value.ToString(CultureInfo.InvariantCulture)));
+        return string.Join(", ", values.Select(V));
     }
 
     #endregion
