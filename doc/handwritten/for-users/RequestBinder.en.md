@@ -327,8 +327,9 @@ The nested binder inherits the parent's options and **prefixes** its argument
 paths, so a failure inside `Stay` reports `Stay.CheckIn`, not just `CheckIn`. A
 missing complex property records `REQUEST_ARGUMENT_REQUIRED`; a nested binding
 that fails contributes its own envelope, whose inner errors already carry the
-prefixed paths. Use `AsOptional` instead of `AsRequired` for a nullable nested
-object: absent yields `null` and records nothing.
+prefixed paths. Use `AsOptionalReference` instead of `AsRequired` for a nullable
+nested object: absent yields `null` and records nothing — the same
+`AsOptionalReference` name the scalar side uses for a nullable reference value.
 
 ## Lists
 
