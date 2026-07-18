@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 [English](0012-fix-the-binder-options-before-binding-begins.md) · 🇫🇷 Français (ce fichier)
 
-**Statut :** Proposé
+**Statut :** Accepté
 **Date :** 2026-07-18
 **Décideurs :** Reefact
 
