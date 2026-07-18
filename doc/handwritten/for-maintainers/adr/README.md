@@ -185,3 +185,4 @@ Optional supporting material:
 | [ADR-0009](0009-report-the-toolings-failures-as-first-class-errors.md) | Report the tooling's failures as first-class errors | Accepted |
 | [ADR-0010](0010-treat-gendocs-error-catalog-as-a-versioned-contract.md) | Treat GenDoc's error catalog as a versioned contract | Accepted |
 | [ADR-0011](0011-host-dummies-as-a-standalone-package.md) | Host Dummies as a standalone package in this repository | Proposed |
+| [ADR-0012](0012-fix-the-binder-options-before-binding-begins.md) | Fix the binder options before binding begins | Proposed |
