@@ -7,7 +7,7 @@ namespace Dummies;
 ///     fails eagerly with a <see cref="ConflictingAnyConstraintException" /> naming both sides.
 /// </summary>
 /// <typeparam name="TEnum">The enum type to draw values from.</typeparam>
-public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource
+public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinalityHint
     where TEnum : struct, Enum {
 
     #region Statics members declarations
@@ -67,6 +67,9 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource
     }
 
     RandomSource? IHasRandomSource.Source => _source;
+
+    // The pool is materialized once at construction, so its size is the exact number of members drawable.
+    long? ICardinalityHint.DistinctCardinality => _pool.Count;
 
     /// <summary>Requires the value to be one of the supplied members. Declared once per generator.</summary>
     /// <param name="values">The allowed members; duplicates are ignored. Every value must be a declared member of <typeparamref name="TEnum" /> — the generator never yields undeclared numeric values, not even explicitly supplied ones.</param>
