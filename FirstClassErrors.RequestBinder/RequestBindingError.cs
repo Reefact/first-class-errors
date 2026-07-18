@@ -1,3 +1,9 @@
+#region Usings declarations
+
+using System.Diagnostics.CodeAnalysis;
+
+#endregion
+
 namespace FirstClassErrors.RequestBinder;
 
 /// <summary>
@@ -117,7 +123,30 @@ public static class RequestBindingError {
                                .WithPublicMessage(message.ShortMessage, message.DetailedMessage);
     }
 
-    private static ErrorDocumentation ArgumentRequiredDocumentation() {
+    /// <summary>
+    ///     Builds a representative missing-required-argument error (<c>REQUEST_ARGUMENT_REQUIRED</c> by default) from
+    ///     <paramref name="definition" />, for documentation. A consumer that overrides the definition through
+    ///     <see cref="RequestBinderOptions.ArgumentRequired" /> uses this to render, in its own catalog, the structural
+    ///     error it actually emits — built the same way the binder builds it at binding time, so the documented example
+    ///     stays faithful to runtime.
+    /// </summary>
+    /// <param name="definition">The definition to render — typically the one injected into <see cref="RequestBinderOptions.ArgumentRequired" />.</param>
+    /// <returns>A representative error carrying the definition's code and public messages.</returns>
+    [SuppressMessage("FirstClassErrors.DocumentationWiring", "FCE009:ErrorFactoryNotDocumented",
+                     Justification = "Not a catalog entry: a public sample builder a consumer calls to document, in its own catalog, the structural error it emits after overriding the definition. The binder's own documented factory is ArgumentRequired.")]
+    public static PrimaryPortError SampleArgumentRequired(BinderErrorDefinition definition) {
+        return ArgumentRequired(definition, "Guests[1].FirstName");
+    }
+
+    /// <summary>
+    ///     The full documentation of the missing-required-argument failure for <paramref name="definition" /> — the
+    ///     binder's own generic prose (title, rule, diagnoses), with a live example built from the definition. A consumer
+    ///     that overrides the definition surfaces its effective structural error in its own catalog by returning this from
+    ///     a <c>[DocumentedBy]</c> documentation method (see the RequestBinder guide).
+    /// </summary>
+    /// <param name="definition">The definition to document — typically the one injected into <see cref="RequestBinderOptions.ArgumentRequired" />.</param>
+    /// <returns>The error documentation, ready to return from a documentation method.</returns>
+    public static ErrorDocumentation DescribeArgumentRequired(BinderErrorDefinition definition) {
         return DescribeError.WithTitle("Required request argument missing")
                             .WithDescription("An incoming request omits an argument that the bound command requires. The full path of the missing argument is carried in the error context.")
                             .WithRule("Every argument bound with AsRequired must be present in the request.")
@@ -127,10 +156,29 @@ public static class RequestBindingError {
                             .AndDiagnostic("The argument name reported in the path does not match the wire format (the binder uses the C# property name unless an IArgumentNameProvider is configured).",
                                            ErrorOrigin.Internal,
                                            "Configure an IArgumentNameProvider aligned with the serializer naming policy.")
-                            .WithExamples(() => ArgumentRequired(DefaultArgumentRequired, "Guests[1].FirstName"));
+                            .WithExamples(() => SampleArgumentRequired(definition));
     }
 
-    private static ErrorDocumentation ArgumentInvalidDocumentation() {
+    /// <summary>
+    ///     Builds a representative present-but-invalid-argument error (<c>REQUEST_ARGUMENT_INVALID</c> by default) from
+    ///     <paramref name="definition" />, for documentation — see <see cref="SampleArgumentRequired" />. A sample
+    ///     converter cause is attached, exactly as the binder attaches the real converter's error at binding time.
+    /// </summary>
+    /// <param name="definition">The definition to render — typically the one injected into <see cref="RequestBinderOptions.ArgumentInvalid" />.</param>
+    /// <returns>A representative error carrying the definition's code and public messages, wrapping a sample cause.</returns>
+    [SuppressMessage("FirstClassErrors.DocumentationWiring", "FCE009:ErrorFactoryNotDocumented",
+                     Justification = "Not a catalog entry: a public sample builder a consumer calls to document, in its own catalog, the structural error it emits after overriding the definition. The binder's own documented factory is ArgumentInvalid.")]
+    public static PrimaryPortError SampleArgumentInvalid(BinderErrorDefinition definition) {
+        return ArgumentInvalid(definition, "GuestEmail", SampleCause());
+    }
+
+    /// <summary>
+    ///     The full documentation of the present-but-invalid-argument failure for <paramref name="definition" /> — see
+    ///     <see cref="DescribeArgumentRequired" />.
+    /// </summary>
+    /// <param name="definition">The definition to document — typically the one injected into <see cref="RequestBinderOptions.ArgumentInvalid" />.</param>
+    /// <returns>The error documentation, ready to return from a documentation method.</returns>
+    public static ErrorDocumentation DescribeArgumentInvalid(BinderErrorDefinition definition) {
         return DescribeError.WithTitle("Request argument invalid")
                             .WithDescription("An incoming request carries an argument that fails to convert into its value object. The full path of the failing argument is carried in the error context, and the precise conversion error is attached as the inner error.")
                             .WithRule("Every bound argument must convert successfully into its target value object.")
@@ -140,7 +188,15 @@ public static class RequestBindingError {
                             .AndDiagnostic("The converter rejects values the contract intends to accept (over-strict parsing rule).",
                                            ErrorOrigin.Internal,
                                            "Review the value object's parsing rule against the API contract.")
-                            .WithExamples(() => ArgumentInvalid(DefaultArgumentInvalid, "GuestEmail", SampleCause()));
+                            .WithExamples(() => SampleArgumentInvalid(definition));
+    }
+
+    private static ErrorDocumentation ArgumentRequiredDocumentation() {
+        return DescribeArgumentRequired(DefaultArgumentRequired);
+    }
+
+    private static ErrorDocumentation ArgumentInvalidDocumentation() {
+        return DescribeArgumentInvalid(DefaultArgumentInvalid);
     }
 
     /// <summary>A representative converter failure used only by the documentation example above.</summary>
