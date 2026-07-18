@@ -60,6 +60,96 @@ public static class Any {
     }
 
     /// <summary>
+    ///     Starts an arbitrary <see cref="sbyte" /> generator drawing from the ambient random context:
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnySByte SByte() {
+        return AnySByte.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="byte" /> generator drawing from the ambient random context:
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnyByte Byte() {
+        return AnyByte.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="short" /> generator drawing from the ambient random context:
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnyInt16 Int16() {
+        return AnyInt16.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="ushort" /> generator drawing from the ambient random context:
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnyUInt16 UInt16() {
+        return AnyUInt16.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="uint" /> generator drawing from the ambient random context:
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnyUInt32 UInt32() {
+        return AnyUInt32.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="long" /> generator drawing from the ambient random context:
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnyInt64 Int64() {
+        return AnyInt64.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="ulong" /> generator drawing from the ambient random context:
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnyUInt64 UInt64() {
+        return AnyUInt64.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="TimeSpan" /> generator drawing from the ambient random context:
+    ///     full range unless constrained, negative durations included. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnyTimeSpan TimeSpan() {
+        return AnyTimeSpan.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="DateTime" /> generator drawing from the ambient random context:
+    ///     any representable instant unless constrained; generated values carry Utc kind. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnyDateTime DateTime() {
+        return AnyDateTime.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="DateTimeOffset" /> generator drawing from the ambient random context:
+    ///     any representable instant unless constrained; generated values carry a zero (UTC) offset. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnyDateTimeOffset DateTimeOffset() {
+        return AnyDateTimeOffset.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
     ///     Creates an isolated, deterministic generation context: every generator created from it draws from a
     ///     dedicated source seeded with <paramref name="seed" />, independent of the ambient context. Two contexts
     ///     created with the same seed yield the same sequence of values. Prefer

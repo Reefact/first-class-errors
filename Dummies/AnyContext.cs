@@ -52,4 +52,94 @@ public sealed class AnyContext {
         return AnyInt32.Create(_source);
     }
 
+    /// <summary>
+    ///     Starts an arbitrary <see cref="sbyte" /> generator drawing from this context — deterministic under this context's seed:
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public AnySByte SByte() {
+        return AnySByte.Create(_source);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="byte" /> generator drawing from this context — deterministic under this context's seed:
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public AnyByte Byte() {
+        return AnyByte.Create(_source);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="short" /> generator drawing from this context — deterministic under this context's seed:
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public AnyInt16 Int16() {
+        return AnyInt16.Create(_source);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="ushort" /> generator drawing from this context — deterministic under this context's seed:
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public AnyUInt16 UInt16() {
+        return AnyUInt16.Create(_source);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="uint" /> generator drawing from this context — deterministic under this context's seed:
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public AnyUInt32 UInt32() {
+        return AnyUInt32.Create(_source);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="long" /> generator drawing from this context — deterministic under this context's seed:
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public AnyInt64 Int64() {
+        return AnyInt64.Create(_source);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="ulong" /> generator drawing from this context — deterministic under this context's seed:
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public AnyUInt64 UInt64() {
+        return AnyUInt64.Create(_source);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="TimeSpan" /> generator drawing from this context — deterministic under this context's seed:
+    ///     full range unless constrained, negative durations included. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public AnyTimeSpan TimeSpan() {
+        return AnyTimeSpan.Create(_source);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="DateTime" /> generator drawing from this context — deterministic under this context's seed:
+    ///     any representable instant unless constrained; generated values carry Utc kind. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public AnyDateTime DateTime() {
+        return AnyDateTime.Create(_source);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="DateTimeOffset" /> generator drawing from this context — deterministic under this context's seed:
+    ///     any representable instant unless constrained; generated values carry a zero (UTC) offset. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public AnyDateTimeOffset DateTimeOffset() {
+        return AnyDateTimeOffset.Create(_source);
+    }
+
 }

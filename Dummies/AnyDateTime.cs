@@ -1,0 +1,160 @@
+#region Usings declarations
+
+using System.Globalization;
+
+#endregion
+
+namespace Dummies;
+
+/// <summary>
+///     A fluent generator of arbitrary <see cref="DateTime" /> values — the same contract as
+///     <see cref="AnyInt32" />: constraints express what the surrounding code requires of the value, never what the
+///     test asserts; contradictory constraints fail eagerly with a <see cref="ConflictingAnyConstraintException" />
+///     naming both sides; instances are immutable recipes, and each value is built to satisfy the constraints in one
+///     draw.
+/// </summary>
+/// <remarks>
+///     Generated values carry <see cref="DateTimeKind.Utc" />; constraints compare by <see cref="DateTime.Ticks" />,
+///     ignoring the <see cref="DateTime.Kind" /> of the supplied bounds — exactly as <see cref="DateTime" />'s own
+///     comparison operators do. There is deliberately no clock-relative constraint (no "in the past/future"): a
+///     reproducible test pins its reference instants explicitly with <see cref="After" /> and <see cref="Before" />.
+/// </remarks>
+public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource {
+
+    #region Statics members declarations
+
+    /// <summary>
+    ///     Generates the value — an <see cref="AnyDateTime" /> can be used wherever a <see cref="DateTime" /> is
+    ///     expected. Each conversion draws a fresh value.
+    /// </summary>
+    /// <param name="generator">The generator to draw from.</param>
+    /// <returns>An arbitrary value satisfying the generator's constraints.</returns>
+    public static implicit operator DateTime(AnyDateTime generator) {
+        return generator.Generate();
+    }
+
+    internal static AnyDateTime Create(RandomSource source) {
+        return new AnyDateTime(source, OrdinalIntervalSpec.Unconstrained("DateTime", ordinal => V(Val(ordinal)), Ord(DateTime.MinValue), Ord(DateTime.MaxValue)));
+    }
+
+    private static ulong Ord(DateTime value) {
+        return (ulong)value.Ticks;
+    }
+
+    private static DateTime Val(ulong ordinal) {
+        return new DateTime((long)ordinal, DateTimeKind.Utc);
+    }
+
+    private static string V(DateTime value) {
+        return value.ToString("O", CultureInfo.InvariantCulture);
+    }
+
+    private static string Join(DateTime[] values) {
+        return string.Join(", ", values.Select(V));
+    }
+
+    #endregion
+
+    #region Fields declarations
+
+    private readonly RandomSource        _source;
+    private readonly OrdinalIntervalSpec _spec;
+
+    #endregion
+
+    private AnyDateTime(RandomSource source, OrdinalIntervalSpec spec) {
+        _source = source;
+        _spec   = spec;
+    }
+
+    RandomSource? IHasRandomSource.Source => _source;
+
+    /// <summary>Requires an instant strictly after <paramref name="instant" />.</summary>
+    /// <param name="instant">The exclusive lower bound.</param>
+    /// <returns>A new generator carrying the added constraint.</returns>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    public AnyDateTime After(DateTime instant) {
+        return new AnyDateTime(_source, _spec.WithMinimumAbove(Ord(instant), $"After({V(instant)})"));
+    }
+
+    /// <summary>Requires an instant at or after <paramref name="instant" />.</summary>
+    /// <param name="instant">The inclusive lower bound.</param>
+    /// <returns>A new generator carrying the added constraint.</returns>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    public AnyDateTime AfterOrEqualTo(DateTime instant) {
+        return new AnyDateTime(_source, _spec.WithMinimum(Ord(instant), $"AfterOrEqualTo({V(instant)})"));
+    }
+
+    /// <summary>Requires an instant strictly before <paramref name="instant" />.</summary>
+    /// <param name="instant">The exclusive upper bound.</param>
+    /// <returns>A new generator carrying the added constraint.</returns>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    public AnyDateTime Before(DateTime instant) {
+        return new AnyDateTime(_source, _spec.WithMaximumBelow(Ord(instant), $"Before({V(instant)})"));
+    }
+
+    /// <summary>Requires an instant at or before <paramref name="instant" />.</summary>
+    /// <param name="instant">The inclusive upper bound.</param>
+    /// <returns>A new generator carrying the added constraint.</returns>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    public AnyDateTime BeforeOrEqualTo(DateTime instant) {
+        return new AnyDateTime(_source, _spec.WithMaximum(Ord(instant), $"BeforeOrEqualTo({V(instant)})"));
+    }
+
+    /// <summary>Requires an instant within the inclusive range [<paramref name="start" />, <paramref name="end" />].</summary>
+    /// <param name="start">The inclusive lower bound.</param>
+    /// <param name="end">The inclusive upper bound.</param>
+    /// <returns>A new generator carrying the added constraint.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="start" /> is after <paramref name="end" />.</exception>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    public AnyDateTime Between(DateTime start, DateTime end) {
+        if (start > end) { throw new ArgumentException($"The start ({V(start)}) must be at or before the end ({V(end)}).", nameof(start)); }
+
+        string constraint = $"Between({V(start)}, {V(end)})";
+
+        return new AnyDateTime(_source, _spec.WithMinimum(Ord(start), constraint).WithMaximum(Ord(end), constraint));
+    }
+
+    /// <summary>Requires the instant to be one of the supplied values. Declared once per generator.</summary>
+    /// <param name="values">The allowed values; duplicates are ignored.</param>
+    /// <returns>A new generator carrying the added constraint.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="values" /> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="values" /> is empty.</exception>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    public AnyDateTime OneOf(params DateTime[] values) {
+        if (values is null) { throw new ArgumentNullException(nameof(values)); }
+        if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
+
+        return new AnyDateTime(_source, _spec.WithAllowed(values.Select(Ord).ToArray(), $"OneOf({Join(values)})"));
+    }
+
+    /// <summary>Requires the instant to be none of the supplied values.</summary>
+    /// <param name="values">The forbidden values.</param>
+    /// <returns>A new generator carrying the added constraint.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="values" /> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="values" /> is empty.</exception>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    public AnyDateTime Except(params DateTime[] values) {
+        if (values is null) { throw new ArgumentNullException(nameof(values)); }
+        if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
+
+        return new AnyDateTime(_source, _spec.WithExcluded(values.Select(Ord).ToArray(), $"Except({Join(values)})"));
+    }
+
+    /// <summary>
+    ///     Requires the instant to differ from <paramref name="value" /> — typically an existing value the test
+    ///     already holds. Semantically equivalent to <see cref="Except" />; the name carries the intent at the call site.
+    /// </summary>
+    /// <param name="value">The value the generated instant must differ from.</param>
+    /// <returns>A new generator carrying the added constraint.</returns>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    public AnyDateTime DifferentFrom(DateTime value) {
+        return new AnyDateTime(_source, _spec.WithExcluded([Ord(value)], $"DifferentFrom({V(value)})"));
+    }
+
+    /// <inheritdoc />
+    public DateTime Generate() {
+        return Val(_spec.GenerateOrdinal(_source.Current.Random));
+    }
+
+}
