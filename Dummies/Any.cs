@@ -150,6 +150,33 @@ public static class Any {
     }
 
     /// <summary>
+    ///     Starts an arbitrary <see cref="double" /> generator drawing from the ambient random context:
+    ///     finite values only — NaN and infinities are never generated. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnyDouble Double() {
+        return AnyDouble.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="float" /> generator drawing from the ambient random context:
+    ///     finite values only — NaN and infinities are never generated. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnySingle Single() {
+        return AnySingle.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="decimal" /> generator drawing from the ambient random context:
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public static AnyDecimal Decimal() {
+        return AnyDecimal.Create(AmbientRandomSource.Instance);
+    }
+
+    /// <summary>
     ///     Creates an isolated, deterministic generation context: every generator created from it draws from a
     ///     dedicated source seeded with <paramref name="seed" />, independent of the ambient context. Two contexts
     ///     created with the same seed yield the same sequence of values. Prefer
