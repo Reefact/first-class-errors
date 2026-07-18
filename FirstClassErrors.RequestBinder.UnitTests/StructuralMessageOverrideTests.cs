@@ -31,6 +31,14 @@ public sealed class StructuralMessageOverrideTests {
         return bind.New(_ => "x").Error!.InnerErrors.Single();
     }
 
+    private static Error BindInvalidEmail(RequestBinderOptions options) {
+        var request = new BookingRequest("not-an-email", "REF-1", null, null, null, null, null);
+        var bind    = Bind.WithOptions(options).PropertiesOf(request).FailWith(BookingEnvelopeError.CommandInvalid);
+        bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+
+        return bind.New(_ => "x").Error!.InnerErrors.Single();
+    }
+
     // ── The default rendering is preserved (the "same output out of the box" guarantee) ───────────────────
 
     [Fact(DisplayName = "By default, a missing required argument carries the shipped English public messages.")]
@@ -99,6 +107,39 @@ public sealed class StructuralMessageOverrideTests {
         return CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "fr"
                    ? new BindingMessage("Un argument requis est manquant.", $"L'argument '{argumentPath}' est requis.")
                    : new BindingMessage("A required argument is missing.", $"The argument '{argumentPath}' is required.");
+    }
+
+    // ── The invalid path has its own message wiring — override it too ─────────────────────────────────────
+
+    [Fact(DisplayName = "Overriding only the invalid message changes the public text, keeps the default code, and still wraps the cause.")]
+    public void InvalidMessageOverrideKeepsCodeAndCause() {
+        var options = new RequestBinderOptions(
+            RequestBinderOptions.Default.ArgumentNameProvider,
+            argumentInvalid: RequestBindingError.DefaultArgumentInvalid.WithMessage(
+                argumentPath => new BindingMessage("The value is malformed.", $"'{argumentPath}' could not be parsed.")));
+
+        Error error = BindInvalidEmail(options);
+
+        Check.That(error.Code == RequestBindingError.DefaultArgumentInvalidCode).IsTrue(); // code untouched
+        Check.That(error.ShortMessage).IsEqualTo("The value is malformed.");
+        Check.That(error.DetailedMessage).IsEqualTo("'GuestEmail' could not be parsed.");
+        Check.That(error.InnerErrors.Single().Code.ToString()).IsEqualTo("TEST_EMAIL_INVALID"); // cause still wrapped
+    }
+
+    [Fact(DisplayName = "An invalid definition can carry a custom code and custom messages together; both flow, and the cause is still wrapped.")]
+    public void InvalidCodeAndMessageOverrideTogether() {
+        var options = new RequestBinderOptions(
+            RequestBinderOptions.Default.ArgumentNameProvider,
+            argumentInvalid: new BinderErrorDefinition(
+                ErrorCode.Create("ACME_INVALID"),
+                argumentPath => new BindingMessage("Valeur invalide.", $"Le champ '{argumentPath}' est invalide.")));
+
+        Error error = BindInvalidEmail(options);
+
+        Check.That(error.Code.ToString()).IsEqualTo("ACME_INVALID");
+        Check.That(error.ShortMessage).IsEqualTo("Valeur invalide.");
+        Check.That(error.DetailedMessage).IsEqualTo("Le champ 'GuestEmail' est invalide.");
+        Check.That(error.InnerErrors.Single().Code.ToString()).IsEqualTo("TEST_EMAIL_INVALID");
     }
 
     // ── Custom options that never touch the definitions keep the shipped defaults ──────────────────────────
