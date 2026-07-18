@@ -115,7 +115,7 @@ public sealed class BindingContractTests {
         var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
 
         bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid)
-            .AsOptional(_ => Outcome<Stay>.Failure(LeafPortError()));
+            .AsOptionalReference(_ => Outcome<Stay>.Failure(LeafPortError()));
 
         Outcome<string> outcome = bind.New(_ => "never");
         Error wrapped = outcome.Error!.InnerErrors.Single();
@@ -271,7 +271,7 @@ public sealed class BindingContractTests {
 
         Check.ThatCode(() => bind.ComplexProperty(r => r.Stay).FailWith(null!)).Throws<ArgumentNullException>();
         Check.ThatCode(() => bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsRequired<Stay>(null!)).Throws<ArgumentNullException>();
-        Check.ThatCode(() => bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptional<Stay>(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptionalReference<Stay>(null!)).Throws<ArgumentNullException>();
 
         Check.ThatCode(() => bind.ListOfSimpleProperties(r => r.Tags).AsRequired<Tag>(null!)).Throws<ArgumentNullException>();
         Check.ThatCode(() => bind.ListOfSimpleProperties(r => r.Tags).AsOptional<Tag>(null!)).Throws<ArgumentNullException>();

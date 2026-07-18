@@ -33,7 +33,7 @@ public sealed class BookingEndToEndTests {
         RequiredField<string>               reference = bind.SimpleProperty(r => r.Reference).AsRequired();
         RequiredField<Currency>             currency  = bind.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
         OptionalValueField<int>             maxNights = bind.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
-        OptionalReferenceField<Stay>        stay      = bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptional(BindStay);
+        OptionalReferenceField<Stay>        stay      = bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptionalReference(BindStay);
         RequiredField<IReadOnlyList<Tag>>   tags      = bind.ListOfSimpleProperties(r => r.Tags).AsOptional(Tag.Parse);
         RequiredField<IReadOnlyList<Guest>> guests    = bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
 

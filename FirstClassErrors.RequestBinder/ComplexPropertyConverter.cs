@@ -65,15 +65,17 @@ public sealed class ComplexPropertyConverter<TRequest, TArgument> {
     }
 
     /// <summary>
-    ///     Binds an optional complex argument: absent yields a <c>null</c>
-    ///     <see cref="OptionalReferenceField{TProperty}" /> value and records nothing; a present-but-invalid nested
-    ///     binding records its envelope.
+    ///     Binds an optional complex argument whose bound type is a <b>reference type</b>: absent yields a
+    ///     <c>null</c> <see cref="OptionalReferenceField{TProperty}" /> value and records nothing; a
+    ///     present-but-invalid nested binding records its envelope. The complex counterpart of the scalar
+    ///     <c>AsOptionalReference</c>; the split name keeps <c>AsOptionalValue</c> free for a future value-type
+    ///     nested object.
     /// </summary>
     /// <typeparam name="TProperty">The reference type the nested binding produces.</typeparam>
     /// <param name="bindNested">The nested binding function (typically a method group such as <c>BindAddress</c>).</param>
     /// <returns>The bound field token.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="bindNested" /> is <c>null</c>.</exception>
-    public OptionalReferenceField<TProperty> AsOptional<TProperty>(Func<RequestBinder<TArgument>, Outcome<TProperty>> bindNested) where TProperty : class {
+    public OptionalReferenceField<TProperty> AsOptionalReference<TProperty>(Func<RequestBinder<TArgument>, Outcome<TProperty>> bindNested) where TProperty : class {
         if (bindNested is null) { throw new ArgumentNullException(nameof(bindNested)); }
 
         if (_isMissing) { return new OptionalReferenceField<TProperty>(_binder, value: null); }
