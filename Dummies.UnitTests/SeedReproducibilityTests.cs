@@ -16,13 +16,26 @@ public sealed class SeedReproducibilityTests {
     private static string Batch() {
         // Explicitly typed locals: string.Join(params object[]) would otherwise box the generators and
         // call their ToString() instead of triggering the implicit conversions.
-        int    full    = Any.Int32();
-        int    bounded = Any.Int32().Between(1, 1000);
-        string free    = Any.String();
-        string capped  = Any.String().NonEmpty().WithMaxLength(50);
-        string shaped  = Any.String().StartingWith("ORD-").WithLength(12);
+        int      full     = Any.Int32();
+        int      bounded  = Any.Int32().Between(1, 1000);
+        string   free     = Any.String();
+        string   capped   = Any.String().NonEmpty().WithMaxLength(50);
+        string   shaped   = Any.String().StartingWith("ORD-").WithLength(12);
+        long     wide     = Any.Int64();
+        ulong    unsigned = Any.UInt64();
+        double   real     = Any.Double().Between(0d, 1000d);
+        decimal  exact    = Any.Decimal().Between(0m, 1000m);
+        bool     flag     = Any.Bool();
+        Guid     id       = Any.Guid();
+        char     letter   = Any.Char();
+        TimeSpan span     = Any.TimeSpan();
+        DateTime instant  = Any.DateTime();
+        Int128   huge     = Any.Int128();
+        Half     tiny     = Any.Half();
 
-        return string.Join("|", full, bounded, free, capped, shaped);
+        return string.Join("|", full, bounded, free, capped, shaped,
+                           wide, unsigned, real, exact, flag, id, letter,
+                           span.Ticks, instant.Ticks, huge, tiny);
     }
 
     #endregion
