@@ -41,6 +41,17 @@ public sealed class ListBindingTests {
         Check.That(BindingAssertions.ArgumentPathOf(required)).IsEqualTo("Tags");
     }
 
+    [Fact(DisplayName = "A required list that is present but empty is valid: it binds an empty list and records nothing — required constrains presence, not element count.")]
+    public void RequiredSimpleListPresentButEmptyBindsEmpty() {
+        var bind = Bind.PropertiesOf(RequestWith(tags: [])).FailWith(BookingEnvelopeError.CommandInvalid);
+
+        RequiredField<IReadOnlyList<Tag>> tags = bind.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
+
+        Outcome<IReadOnlyList<Tag>> outcome = bind.New(s => s.Get(tags));
+        Check.That(outcome.IsSuccess).IsTrue();
+        Check.That(outcome.GetResultOrThrow()).IsEmpty();
+    }
+
     [Fact(DisplayName = "Every failing element of a list is collected, each under its indexed path — one bad element never hides the others.")]
     public void EveryFailingElementIsCollected() {
         var bind = Bind.PropertiesOf(RequestWith(tags: ["ok", "not ok", null, "fine"])).FailWith(BookingEnvelopeError.CommandInvalid);
@@ -77,6 +88,18 @@ public sealed class ListBindingTests {
         Outcome<IReadOnlyList<Guest>> outcome = bind.New(s => s.Get(guests));
         Check.That(outcome.GetResultOrThrow().Select(g => g.FirstName)).ContainsExactly("Alice", "Bob");
         Check.That(outcome.GetResultOrThrow()[1].Email).IsNull();
+    }
+
+    [Fact(DisplayName = "A required complex list that is present but empty is valid: it binds an empty list and records nothing.")]
+    public void RequiredComplexListPresentButEmptyBindsEmpty() {
+        var bind = Bind.PropertiesOf(RequestWith(guests: [])).FailWith(BookingEnvelopeError.CommandInvalid);
+
+        RequiredField<IReadOnlyList<Guest>> guests =
+            bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
+
+        Outcome<IReadOnlyList<Guest>> outcome = bind.New(s => s.Get(guests));
+        Check.That(outcome.IsSuccess).IsTrue();
+        Check.That(outcome.GetResultOrThrow()).IsEmpty();
     }
 
     [Fact(DisplayName = "Each failing element of a complex list records its own envelope, whose inner paths carry the indexed prefix.")]
