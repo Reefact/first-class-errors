@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 [English](0019-document-overridden-binder-errors-in-the-consumers-catalog.md) · 🇫🇷 Français (ce fichier)
 
-**Statut :** Proposé
+**Statut :** Accepté
 **Date :** 2026-07-18
 **Décideurs :** Reefact
 
@@ -73,11 +73,13 @@ des codes d’un paquet référencé par le générateur.
 Considérée parce qu’elle est sans boilerplate : un consommateur référence le paquet et ses codes
 apparaissent dans son catalogue.
 
-Rejetée pour l’instant parce qu’elle est une machinerie disproportionnée pour un paquet et aucun
-consommateur ; elle ne peut pas représenter les codes effectifs d’un consommateur qui surcharge,
-qui sont de la configuration runtime absente du binaire du paquet ; et elle risque de documenter
-un paquet référencé mais non émis, ou les défauts d’un paquet qu’un consommateur a surchargés.
-Elle reste ouverte comme amélioration ergonomique future si l’écosystème grandit.
+Rejetée parce qu’elle est inutile et trompeuse. Le seul paquet qui livre des codes émissibles est
+`FirstClassErrors.RequestBinder`, dont le binaire ne porte que les défauts — l’auto-découverte ne
+pourrait donc jamais faire apparaître les surcharges d’un consommateur (ce que font ces seams), et
+pour un consommateur qui surcharge elle documenterait les codes par défaut qu’il n’émet plus. La
+restreindre à ce seul paquet n’y change rien : la limite est que les surcharges vivent dans
+l’assembly du consommateur, pas dans celui du paquet. Elle n’économiserait qu’une petite glue au
+consommateur zéro-config qui documente les défauts.
 
 ### Un lien en configuration de build reliant une erreur à une méthode de description
 
@@ -115,9 +117,8 @@ compile-safe serait le repli si un lien déclaratif était un jour souhaité.
 
 ## Actions de suivi
 
-* La découverte automatique des codes des paquets référencés (la direction plus large de #140)
-  reste ouverte, à revisiter si plusieurs paquets à codes documentés ou des consommateurs externes
-  apparaissent.
+* Aucune. L’auto-découverte n’est pas nécessaire (voir Alternatives) : le seul paquet à codes
+  émissibles est couvert par ces seams.
 
 ## Références
 

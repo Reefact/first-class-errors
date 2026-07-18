@@ -192,4 +192,4 @@ Optional supporting material:
 | [ADR-0016](0016-make-the-binders-structural-error-codes-configurable.md) | Make the binder's structural error codes configurable | Superseded |
 | [ADR-0017](0017-provide-a-configurable-application-wide-default-for-the-binder-options.md) | Provide a configurable application-wide default for the binder options | Accepted |
 | [ADR-0018](0018-bundle-the-binders-structural-error-code-and-messages.md) | Bundle the binder's structural error code and messages in one definition | Accepted |
-| [ADR-0019](0019-document-overridden-binder-errors-in-the-consumers-catalog.md) | Document overridden binder errors in the consumer's own catalog | Proposed |
+| [ADR-0019](0019-document-overridden-binder-errors-in-the-consumers-catalog.md) | Document overridden binder errors in the consumer's own catalog | Accepted |

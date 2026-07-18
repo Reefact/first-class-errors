@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0019-document-overridden-binder-errors-in-the-consumers-catalog.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-07-18
 **Decision Makers:** Reefact
 
@@ -69,11 +69,12 @@ definition — rather than the generator auto-discovering a referenced package's
 Considered because it is zero-boilerplate: a consumer references the package and its codes
 appear in the consumer's catalog.
 
-Rejected for now because it is disproportionate machinery for one package and no consumers;
-it cannot represent an overriding consumer's effective codes, which are runtime configuration
-absent from the package binary; and it risks documenting a referenced-but-not-emitted package,
-or a package's defaults a consumer overrode. It remains open as a future ergonomic upgrade if
-the ecosystem grows.
+Rejected because it is unnecessary and misleading. The only package that ships emittable codes
+is `FirstClassErrors.RequestBinder`, whose binary carries only the defaults — so auto-discovery
+could never surface a consumer's overrides (these seams do), and for an overriding consumer it
+would document the default codes it no longer emits. Scoping it to that one package removes none
+of this: the limitation is that overrides live in the consumer's assembly, not the package's. It
+would buy only sparing a zero-config consumer the small glue that documents the defaults.
 
 ### A build-configuration link binding an error to a description method
 
@@ -110,8 +111,8 @@ a declarative link is ever wanted.
 
 ## Follow-up Actions
 
-* Auto-discovery of referenced packages' codes (the broader direction of #140) remains open,
-  to revisit if multiple documented-code packages or external consumers appear.
+* None. Auto-discovery is not needed (see Alternatives): the one package that ships emittable
+  codes is covered by these seams.
 
 ## References
 
