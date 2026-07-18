@@ -1,0 +1,130 @@
+#region Usings declarations
+
+using NFluent;
+
+#endregion
+
+namespace Dummies.UnitTests;
+
+public sealed class AnySetTypeTests {
+
+    private const int SampleCount = 200;
+
+    private enum OrderStatus {
+
+        Draft,
+        Validated,
+        Cancelled
+
+    }
+
+    [Fact(DisplayName = "Bool: unconstrained draws hit both values; pins pin; contradictory pins conflict.")]
+    public void BoolBehaves() {
+        HashSet<bool> seen = new();
+        for (int i = 0; i < SampleCount; i++) { seen.Add(Any.Bool().Generate()); }
+        Check.That(seen.Count).IsEqualTo(2);
+
+        for (int i = 0; i < SampleCount; i++) {
+            Check.That(Any.Bool().True().Generate()).IsTrue();
+            Check.That(Any.Bool().False().Generate()).IsFalse();
+            Check.That(Any.Bool().DifferentFrom(true).Generate()).IsFalse();
+        }
+
+        ConflictingAnyConstraintException conflict = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.Bool().True().False());
+        Check.That(conflict.Message).Contains("False()");
+        Check.That(conflict.Message).Contains("True()");
+
+        bool value = Any.Bool().True();
+        Check.That(value).IsTrue();
+    }
+
+    [Fact(DisplayName = "Guid: unconstrained draws are non-empty, varied, and reproducible under a context seed.")]
+    public void GuidBehaves() {
+        HashSet<Guid> seen = new();
+        for (int i = 0; i < SampleCount; i++) {
+            Guid value = Any.Guid().Generate();
+            seen.Add(value);
+            Check.That(value).IsNotEqualTo(Guid.Empty);
+        }
+        Check.That(seen.Count).IsStrictlyGreaterThan(1);
+
+        Check.That(Any.WithSeed(42).Guid().Generate()).IsEqualTo(Any.WithSeed(42).Guid().Generate());
+    }
+
+    [Fact(DisplayName = "Guid: Empty pins, NonEmpty excludes, and the pair conflicts in both orders.")]
+    public void GuidEmptyFamily() {
+        Check.That(Any.Guid().Empty().Generate()).IsEqualTo(Guid.Empty);
+        for (int i = 0; i < SampleCount; i++) {
+            Check.That(Any.Guid().NonEmpty().Generate()).IsNotEqualTo(Guid.Empty);
+        }
+
+        Check.ThatCode(() => Any.Guid().Empty().NonEmpty()).Throws<ConflictingAnyConstraintException>();
+        Check.ThatCode(() => Any.Guid().NonEmpty().Empty()).Throws<ConflictingAnyConstraintException>();
+    }
+
+    [Fact(DisplayName = "Guid: OneOf stays within, exhausting it conflicts, DifferentFrom never yields the value.")]
+    public void GuidSets() {
+        Guid first  = Guid.NewGuid();
+        Guid second = Guid.NewGuid();
+
+        for (int i = 0; i < SampleCount; i++) {
+            Guid value = Any.Guid().OneOf(first, second).Generate();
+            Check.That(value == first || value == second).IsTrue();
+            Check.That(Any.Guid().OneOf(first, second).DifferentFrom(first).Generate()).IsEqualTo(second);
+        }
+
+        Check.ThatCode(() => Any.Guid().OneOf(first).Except(first)).Throws<ConflictingAnyConstraintException>();
+    }
+
+    [Fact(DisplayName = "Enum: unconstrained draws yield only declared members and reach all of them.")]
+    public void EnumDrawsDeclaredMembers() {
+        HashSet<OrderStatus> seen = new();
+        for (int i = 0; i < SampleCount; i++) {
+            OrderStatus value = Any.Enum<OrderStatus>().Generate();
+            seen.Add(value);
+            Check.That(System.Enum.IsDefined(typeof(OrderStatus), value)).IsTrue();
+        }
+        Check.That(seen.Count).IsEqualTo(3);
+    }
+
+    [Fact(DisplayName = "Enum: OneOf restricts, Except removes, exhausting the pool conflicts.")]
+    public void EnumSets() {
+        for (int i = 0; i < SampleCount; i++) {
+            OrderStatus restricted = Any.Enum<OrderStatus>().OneOf(OrderStatus.Draft, OrderStatus.Validated).Generate();
+            Check.That(restricted == OrderStatus.Draft || restricted == OrderStatus.Validated).IsTrue();
+            Check.That(Any.Enum<OrderStatus>().Except(OrderStatus.Cancelled).Generate()).IsNotEqualTo(OrderStatus.Cancelled);
+            Check.That(Any.Enum<OrderStatus>().OneOf(OrderStatus.Draft, OrderStatus.Validated).DifferentFrom(OrderStatus.Draft).Generate()).IsEqualTo(OrderStatus.Validated);
+        }
+
+        ConflictingAnyConstraintException conflict = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.Enum<OrderStatus>().Except(OrderStatus.Draft, OrderStatus.Validated, OrderStatus.Cancelled));
+        Check.That(conflict.Message).Contains("Except(");
+    }
+
+    [Fact(DisplayName = "Char: the default pool is ASCII letters and digits; families narrow it.")]
+    public void CharPools() {
+        for (int i = 0; i < SampleCount; i++) {
+            char value = Any.Char().Generate();
+            Check.That(value is >= 'A' and <= 'Z' or >= 'a' and <= 'z' or >= '0' and <= '9').IsTrue();
+            Check.That(Any.Char().Numeric().Generate() is >= '0' and <= '9').IsTrue();
+            Check.That(Any.Char().Alpha().Generate() is >= 'A' and <= 'Z' or >= 'a' and <= 'z').IsTrue();
+            Check.That(Any.Char().LowerCase().Generate() is >= 'A' and <= 'Z').IsFalse();
+            Check.That(Any.Char().Alpha().UpperCase().Generate() is >= 'A' and <= 'Z').IsTrue();
+        }
+    }
+
+    [Fact(DisplayName = "Char: OneOf restricts, exclusions apply, and contradictions conflict.")]
+    public void CharSets() {
+        for (int i = 0; i < SampleCount; i++) {
+            char value = Any.Char().OneOf('a', 'b').Generate();
+            Check.That(value == 'a' || value == 'b').IsTrue();
+            Check.That(Any.Char().OneOf('a', 'b').DifferentFrom('a').Generate()).IsEqualTo('b');
+        }
+
+        Check.ThatCode(() => Any.Char().Numeric().Alpha()).Throws<ConflictingAnyConstraintException>();
+        Check.ThatCode(() => Any.Char().OneOf('a').Except('a')).Throws<ConflictingAnyConstraintException>();
+        Check.ThatCode(() => Any.Char().OneOf('a').Numeric()).Throws<ConflictingAnyConstraintException>();
+    }
+
+}
