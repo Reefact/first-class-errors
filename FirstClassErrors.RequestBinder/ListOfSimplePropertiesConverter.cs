@@ -30,8 +30,10 @@ public sealed class ListOfSimplePropertiesConverter<TRequest, TArgument> {
     #endregion
 
     /// <summary>
-    ///     Binds a required list: a missing list records <c>REQUEST_ARGUMENT_REQUIRED</c>; each failing element
-    ///     records <c>REQUEST_ARGUMENT_INVALID</c> under its indexed path.
+    ///     Binds a required list: only an <b>absent</b> (<c>null</c>) list records <c>REQUEST_ARGUMENT_REQUIRED</c> —
+    ///     a list that is <b>present but empty</b> is valid and binds an empty list, because a required list
+    ///     constrains the list's <b>presence</b>, not its element count. Each failing element records
+    ///     <c>REQUEST_ARGUMENT_INVALID</c> under its indexed path.
     /// </summary>
     /// <typeparam name="TProperty">The type of the element value object.</typeparam>
     /// <param name="convertElement">The value-object converter applied to each element.</param>

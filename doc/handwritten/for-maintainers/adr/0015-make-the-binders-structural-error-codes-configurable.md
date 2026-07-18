@@ -1,6 +1,6 @@
-# ADR-0014 | Make the binder's structural error codes configurable
+# ADR-0015 | Make the binder's structural error codes configurable
 
-🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0014-make-the-binders-structural-error-codes-configurable.fr.md)
+🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0015-make-the-binders-structural-error-codes-configurable.fr.md)
 
 **Status:** Proposed
 **Date:** 2026-07-18

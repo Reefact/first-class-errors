@@ -187,4 +187,5 @@ Optional supporting material:
 | [ADR-0011](0011-host-dummies-as-a-standalone-package.md) | Host Dummies as a standalone package in this repository | Proposed |
 | [ADR-0012](0012-fix-the-binder-options-before-binding-begins.md) | Fix the binder options before binding begins | Accepted |
 | [ADR-0013](0013-gate-distinct-collections-by-cardinality-else-bounded-draw.md) | Gate distinct collections by cardinality, otherwise by a bounded draw | Proposed |
-| [ADR-0014](0014-make-the-binders-structural-error-codes-configurable.md) | Make the binder's structural error codes configurable | Proposed |
+| [ADR-0014](0014-bind-a-required-list-by-presence-not-cardinality.md) | Bind a required list by presence, not cardinality | Accepted |
+| [ADR-0015](0015-make-the-binders-structural-error-codes-configurable.md) | Make the binder's structural error codes configurable | Proposed |

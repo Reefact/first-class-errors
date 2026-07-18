@@ -162,6 +162,17 @@ public sealed class ValueTypePropertyBindingTests {
         Check.That(required.New(_ => "never").Error!.InnerErrors.Single().Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_REQUIRED");
     }
 
+    [Fact(DisplayName = "A required value-type list that is present but empty is valid: it binds an empty list and records nothing.")]
+    public void RequiredValueTypeListPresentButEmptyBindsEmpty() {
+        var bind = Bind.PropertiesOf(Request(quantities: [])).FailWith(BookingEnvelopeError.CommandInvalid);
+
+        RequiredField<IReadOnlyList<PositiveQty>> quantities = bind.ListOfSimpleProperties(r => r.Quantities).AsRequired(PositiveQty.From);
+
+        Outcome<IReadOnlyList<PositiveQty>> outcome = bind.New(s => s.Get(quantities));
+        Check.That(outcome.IsSuccess).IsTrue();
+        Check.That(outcome.GetResultOrThrow()).IsEmpty();
+    }
+
     // ── Regressions: reference/string paths keep resolving to the original overloads ──────────────────────
 
     [Fact(DisplayName = "A string property still resolves to the reference overload — no ambiguity introduced by the value-type overload.")]
