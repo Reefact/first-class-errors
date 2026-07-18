@@ -12,6 +12,7 @@ public sealed class RequestBinderOptions {
 
     private static readonly RequestBinderOptions                     BuiltIn      = new(new DefaultArgumentNameProvider());
     private static readonly AsyncLocal<RequestBinderOptions?>        TestOverride = new();
+    private static readonly object                                   Gate         = new();
     private static          RequestBinderOptions                     _default     = BuiltIn;
     private static          bool                                     _frozen;
 
@@ -29,18 +30,26 @@ public sealed class RequestBinderOptions {
             RequestBinderOptions? overridden = TestOverride.Value;
             if (overridden is not null) { return overridden; }
 
-            _frozen = true;
+            // Freeze and read under the gate: a concurrent set() either wins entirely (before any read froze the
+            // default) or observes the freeze and throws — never a torn "first bind on the old default, later binds
+            // on the new one". The gate is uncontended once the default is configured at startup.
+            lock (Gate) {
+                _frozen = true;
 
-            return _default;
+                return _default;
+            }
         }
         set {
             if (value is null) { throw new ArgumentNullException(nameof(value)); }
-            if (_frozen) {
-                throw new InvalidOperationException(
-                    "RequestBinderOptions.Default was already read by a binding; configure it once at application startup, before the first bind.");
-            }
 
-            _default = value;
+            lock (Gate) {
+                if (_frozen) {
+                    throw new InvalidOperationException(
+                        "RequestBinderOptions.Default was already read by a binding; configure it once at application startup, before the first bind.");
+                }
+
+                _default = value;
+            }
         }
     }
 
