@@ -52,6 +52,7 @@ public sealed class BinderErrorDefinition {
 
     /// <summary>Returns a copy of this definition raising <paramref name="code" /> instead, keeping the same messages.</summary>
     /// <param name="code">The structural error code the copy raises.</param>
+    /// <returns>A new definition with the given code and this definition's message builder.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="code" /> is <c>null</c>.</exception>
     public BinderErrorDefinition WithCode(ErrorCode code) {
         return new BinderErrorDefinition(code, _message);
@@ -59,6 +60,7 @@ public sealed class BinderErrorDefinition {
 
     /// <summary>Returns a copy of this definition building its messages with <paramref name="message" /> instead, keeping the same code.</summary>
     /// <param name="message">The public-message builder the copy uses.</param>
+    /// <returns>A new definition with this definition's code and the given message builder.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="message" /> is <c>null</c>.</exception>
     public BinderErrorDefinition WithMessage(Func<string, BindingMessage> message) {
         return new BinderErrorDefinition(Code, message);
