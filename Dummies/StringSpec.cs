@@ -7,23 +7,6 @@ using System.Text;
 
 namespace Dummies;
 
-/// <summary>The character families a string generator can be restricted to.</summary>
-internal enum CharacterSet {
-
-    Alpha,
-    Numeric,
-    AlphaNumeric
-
-}
-
-/// <summary>The casing a string generator can impose on alphabetic characters.</summary>
-internal enum LetterCasing {
-
-    Lower,
-    Upper
-
-}
-
 /// <summary>
 ///     The immutable specification behind <see cref="AnyString" />: length bounds, anchored fragments (prefix,
 ///     suffix, contained values), a character set and a letter casing — each remembering the constraint that set it,
@@ -39,10 +22,6 @@ internal enum LetterCasing {
 internal sealed class StringSpec {
 
     private const int DefaultLengthSpread = 16;
-
-    private const string UpperLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    private const string LowerLetters = "abcdefghijklmnopqrstuvwxyz";
-    private const string Digits       = "0123456789";
 
     #region Statics members declarations
 
@@ -320,9 +299,9 @@ internal sealed class StringSpec {
     private static char? FirstOutsideCharset(string fragment, CharacterSet charset) {
         foreach (char character in fragment) {
             bool allowed = charset switch {
-                CharacterSet.Alpha        => IsAsciiLetter(character),
-                CharacterSet.Numeric      => IsAsciiDigit(character),
-                CharacterSet.AlphaNumeric => IsAsciiLetter(character) || IsAsciiDigit(character),
+                CharacterSet.Alpha        => CharacterPools.IsAsciiLetter(character),
+                CharacterSet.Numeric      => CharacterPools.IsAsciiDigit(character),
+                CharacterSet.AlphaNumeric => CharacterPools.IsAsciiLetter(character) || CharacterPools.IsAsciiDigit(character),
                 _                         => true
             };
             if (!allowed) { return character; }
@@ -340,25 +319,17 @@ internal sealed class StringSpec {
         return null;
     }
 
-    private static bool IsAsciiLetter(char character) {
-        return character is >= 'A' and <= 'Z' or >= 'a' and <= 'z';
-    }
-
-    private static bool IsAsciiDigit(char character) {
-        return character is >= '0' and <= '9';
-    }
-
     private string FillerPool() {
         string letters = _casing switch {
-            LetterCasing.Lower => LowerLetters,
-            LetterCasing.Upper => UpperLetters,
-            _                  => UpperLetters + LowerLetters
+            LetterCasing.Lower => CharacterPools.LowerLetters,
+            LetterCasing.Upper => CharacterPools.UpperLetters,
+            _                  => CharacterPools.UpperLetters + CharacterPools.LowerLetters
         };
 
         return _charset switch {
             CharacterSet.Alpha   => letters,
-            CharacterSet.Numeric => Digits,
-            _                    => letters + Digits
+            CharacterSet.Numeric => CharacterPools.Digits,
+            _                    => letters + CharacterPools.Digits
         };
     }
 

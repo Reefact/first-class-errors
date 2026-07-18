@@ -21,8 +21,18 @@ matter — and that is the point.
 
 ## What's inside
 
-- **Fluent, typed generators** (`Any.String()`, `Any.Int32()`, ...) implementing
-  `IAny<T>`, with implicit conversion to the generated type.
+- **Fluent, typed generators** implementing `IAny<T>`, with implicit conversion to
+  the generated type, across the .NET simple types: `String`, `Char`, every integer
+  width (`SByte`/`Byte`/`Int16`/`UInt16`/`Int32`/`UInt32`/`Int64`/`UInt64`),
+  `Double`/`Single`/`Decimal` (finite values only — never NaN or infinities),
+  `Bool`, `Guid`, `Enum<T>` (declared members only), `TimeSpan`, `DateTime` (UTC)
+  and `DateTimeOffset`. On modern targets (`net8.0`) the surface extends to
+  `DateOnly`, `TimeOnly`, `Int128`, `UInt128` and `Half`; the package also targets
+  `netstandard2.0` for the widest reach.
+- **Domain vocabulary where it belongs**: dates constrain with
+  `After`/`Before`/`Between`, quantities with `Positive`/`Between`/`NonZero`,
+  identities with `NonEmpty`/`DifferentFrom` — and deliberately no clock-relative
+  constraints: a reproducible test pins its reference instants explicitly.
 - **Values built to satisfy the constraints** — never generate-then-filter, no retry
   loops.
 - **Conflicting constraints fail fast** with a clear, actionable
