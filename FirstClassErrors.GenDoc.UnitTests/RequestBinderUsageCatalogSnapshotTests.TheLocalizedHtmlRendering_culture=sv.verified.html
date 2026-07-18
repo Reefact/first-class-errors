@@ -1,0 +1,525 @@
+﻿<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Felkatalog</title>
+<style>
+:root {
+  --bg: #ffffff; --bg-soft: #f6f8fa; --surface: #ffffff; --text: #1f2328; --text-soft: #59636e;
+  --border: #d1d9e0; --accent: #0969da; --code-bg: #f6f8fa; --code-text: #1f2328;
+  --radius: 8px; --maxw: 1080px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171c; --bg-soft: #1b1f26; --surface: #1b1f26; --text: #e6edf3; --text-soft: #9aa4b2;
+    --border: #2c333d; --accent: #4493f8; --code-bg: #11151b; --code-text: #e6edf3;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #ffffff; --bg-soft: #f6f8fa; --surface: #ffffff; --text: #1f2328; --text-soft: #59636e;
+  --border: #d1d9e0; --accent: #0969da; --code-bg: #f6f8fa; --code-text: #1f2328;
+}
+:root[data-theme="dark"] {
+  --bg: #14171c; --bg-soft: #1b1f26; --surface: #1b1f26; --text: #e6edf3; --text-soft: #9aa4b2;
+  --border: #2c333d; --accent: #4493f8; --code-bg: #11151b; --code-text: #e6edf3;
+}
+* { box-sizing: border-box; }
+html { color-scheme: light dark; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.55; }
+.container { max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, pre { font-family: var(--mono); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.skip-link { position: absolute; left: -999px; top: 0; background: var(--accent); color: #fff; padding: 8px 12px; border-radius: 0 0 var(--radius) 0; z-index: 10; }
+.skip-link:focus { left: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.site-header { border-bottom: 1px solid var(--border); background: var(--bg-soft); position: sticky; top: 0; z-index: 5; }
+.header-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; }
+.site-title { font-size: 1.15rem; margin: 0; }
+.site-title a { color: var(--text); }
+.theme-toggle { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); cursor: pointer; }
+.theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+main { padding: 24px 0 64px; }
+.count { color: var(--text-soft); margin: 0 0 16px; }
+.controls { margin-bottom: 20px; }
+.search { display: block; max-width: 460px; }
+.search input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1rem; }
+.no-results, .empty { color: var(--text-soft); padding: 16px 0; }
+.back { margin: 0 0 16px; }
+.toc { margin: 0 0 8px; }
+.toc ul { list-style: none; margin: 0; padding: 0; }
+.toc > ul > li { margin: 0 0 16px; }
+.toc-source { display: inline-block; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.toc-group > ul { padding-left: 16px; margin-left: 4px; border-left: 2px solid var(--border); }
+.toc-item { margin: 3px 0; }
+.toc-item code { font-size: 0.9rem; }
+.error-group { margin-top: 40px; }
+.group-title { font-size: 1.5rem; margin: 0 0 4px; padding-bottom: 8px; border-bottom: 2px solid var(--border); scroll-margin-top: 72px; }
+.group-description { color: var(--text-soft); margin: 12px 0 4px; }
+.error-detail { border-top: 1px solid var(--border); padding: 24px 0; }
+.error-group .error-detail:first-of-type { border-top: 0; }
+.error-title { font-size: 1.15rem; margin: 0; scroll-margin-top: 72px; }
+.error-title code { background: var(--code-bg); color: var(--code-text); padding: 2px 8px; border-radius: var(--radius); font-size: 0.95rem; }
+.error-subtitle { color: var(--text-soft); margin: 4px 0 12px; }
+.anchor { color: var(--text-soft); text-decoration: none; opacity: 0; padding-left: 4px; }
+.error-title:hover .anchor, .anchor:focus { opacity: 1; }
+section h3, section h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-soft); margin: 20px 0 8px; }
+.rule { margin: 14px 0; padding: 10px 14px; border-left: 3px solid var(--accent); background: var(--bg-soft); border-radius: 0 var(--radius) var(--radius) 0; }
+.table-wrap { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.data-table th, .data-table td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.data-table thead th { color: var(--text-soft); font-weight: 600; border-bottom: 2px solid var(--border); white-space: nowrap; }
+.example { margin: 12px 0; }
+.example-label { font-weight: 600; margin: 12px 0 6px; font-size: 0.9rem; color: var(--text); }
+pre { margin: 0; padding: 12px 14px; background: var(--code-bg); color: var(--code-text); border: 1px solid var(--border); border-radius: var(--radius); overflow-x: auto; }
+pre code { font-size: 0.86rem; white-space: pre; }
+@media (max-width: 640px) {
+  .group-title { font-size: 1.3rem; }
+}
+</style>
+<script>(function(){try{var t=localStorage.getItem('fce-theme');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t;}}catch(e){/* localStorage may be unavailable (e.g. private mode); fall back to the default theme */}})();</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Hoppa till inneh&#229;ll</a>
+<header class="site-header">
+<div class="container header-row">
+<h1 class="site-title"><a href="#main">Felkatalog</a></h1>
+<button id="theme-toggle" type="button" class="theme-toggle" aria-label="V&#228;xla ljust / m&#246;rkt tema" title="V&#228;xla ljust / m&#246;rkt tema"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></button>
+</div>
+</header>
+<main id="main" class="container">
+<p class="count">10 dokumenterade fel</p>
+<div class="controls">
+<label class="search"><span class="visually-hidden">S&#246;k</span><input id="search" type="search" autocomplete="off" placeholder="S&#246;k efter kod, meddelande, dokumentation…"></label>
+</div>
+<nav class="toc" id="toc" aria-label="Felkatalog">
+<ul>
+<li class="toc-group"><a class="toc-source" href="#src-BookingEndpoint">BookingEndpoint</a>
+<ul>
+<li class="toc-item" data-search="booking_command_invalid bokningsbeg&#228;ran ogiltig slutpunkten kunde inte binda den inkommande beg&#228;ran till ett bokningskommando: ett eller flera argument saknades eller var ogiltiga. varje fel samlas under detta h&#246;lje, vart och ett med sin fullst&#228;ndiga arguments&#246;kv&#228;g. varje obligatoriskt argument m&#229;ste finnas, och varje argument m&#229;ste konverteras till sitt v&#228;rdeobjekt. bookingendpoint vi kunde inte acceptera din bokningsbeg&#228;ran. en eller flera uppgifter i bokningsbeg&#228;ran saknas eller &#228;r ogiltiga. the booking command is invalid: one or more request arguments failed to bind. klienten skickade en beg&#228;ran som bryter mot slutpunktens kontrakt (saknade eller felaktiga argument). l&#228;s de inre felen: vart och ett namnger det felande argumentet och regeln som bryts."><a href="#err-BOOKING_COMMAND_INVALID"><code>BOOKING_COMMAND_INVALID</code></a></li>
+<li class="toc-item" data-search="booking_guest_invalid bokningens g&#228;st ogiltig en g&#228;st i beg&#228;rans g&#228;stlista kunde inte bindas: dess f&#246;rnamn saknades eller dess e-post var felaktig. dess fel grupperas under detta h&#246;lje per element, med indexerade s&#246;kv&#228;gar som guests[1]. varje g&#228;st m&#229;ste ha ett f&#246;rnamn, och varje e-post som finns m&#229;ste vara giltig. bookingendpoint en g&#228;sts uppgifter &#228;r ogiltiga. en av g&#228;sterna saknar f&#246;rnamn eller har en ogiltig e-postadress. the guest is invalid: one or more of its fields failed to bind. klienten skickade en g&#228;st med ett saknat f&#246;rnamn eller en felaktig e-postadress. l&#228;s de inre felen under den indexerade s&#246;kv&#228;gen guests[i] f&#246;r det felande f&#228;ltet."><a href="#err-BOOKING_GUEST_INVALID"><code>BOOKING_GUEST_INVALID</code></a></li>
+<li class="toc-item" data-search="booking_stay_invalid bokningens vistelse ogiltig beg&#228;rans vistelsedelobjekt kunde inte bindas: ett eller b&#229;da av dess datum saknades eller var felaktiga. dess fel grupperas under detta n&#228;stlade h&#246;lje, med s&#246;kv&#228;gar prefixerade med stay. b&#229;da vistelsedatumen m&#229;ste finnas och vara giltiga iso-datum. bookingendpoint vi kunde inte l&#228;sa vistelsedatumen. vistelsens in- eller utcheckningsdatum saknas eller &#228;r ogiltigt. the stay is invalid: one or more of its dates failed to bind. klienten skickade en vistelse med ett saknat eller felaktigt in- eller utcheckningsdatum. l&#228;s de inre felen under stay-s&#246;kv&#228;gen f&#246;r det felande datumet."><a href="#err-BOOKING_STAY_INVALID"><code>BOOKING_STAY_INVALID</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-BookingDate">BookingDate</a>
+<ul>
+<li class="toc-item" data-search="booking_date_malformed felaktigt bokningsdatum en inkommande beg&#228;ran inneh&#229;ller ett v&#228;rde som inte &#228;r ett iso-datum (yyyy-mm-dd) och d&#228;rf&#246;r inte kan tolkas till ett bookingdate-v&#228;rdeobjekt. ett bokningsdatum m&#229;ste vara ett iso-kalenderdatum i formatet yyyy-mm-dd. bookingdate datumet &#228;r ogiltigt. ett bokningsdatum &#228;r inte ett giltigt iso-datum (yyyy-mm-dd). &#39;2026-13-40&#39; is not a valid iso (yyyy-mm-dd) date. klienten skickade ett datum i ett spr&#229;kspecifikt eller felaktigt format, eller ett om&#246;jligt kalenderdatum. skicka datum i formatet iso 8601 yyyy-mm-dd, till exempel 2026-08-10."><a href="#err-BOOKING_DATE_MALFORMED"><code>BOOKING_DATE_MALFORMED</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-Tag">Tag</a>
+<ul>
+<li class="toc-item" data-search="booking_tag_malformed felaktig bokningstagg ett element i beg&#228;rans tagglista &#228;r tomt, f&#246;r l&#229;ngt eller inneh&#229;ller blanksteg och kan d&#228;rf&#246;r inte tolkas till ett tag-v&#228;rdeobjekt. en tagg m&#229;ste vara en enda icke-tom token p&#229; h&#246;gst 32 tecken, utan blanksteg. tag en tagg &#228;r ogiltig. en av bokningstaggarna &#228;r inte en giltig enskild token. &#39;late checkout&#39; is not a valid tag. klienten skickade en tom tagg, ett uttryck med blanksteg eller ett f&#246;r l&#229;ngt v&#228;rde. skicka varje tagg som en enda token utan blanksteg; koppla ihop flerordstaggar med bindestreck."><a href="#err-BOOKING_TAG_MALFORMED"><code>BOOKING_TAG_MALFORMED</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-Currency">Currency</a>
+<ul>
+<li class="toc-item" data-search="currency_code_malformed felaktig valutakod en inkommande beg&#228;ran inneh&#229;ller ett v&#228;rde som inte &#228;r en v&#228;lformad valutakod med tre bokst&#228;ver och d&#228;rf&#246;r inte kan tolkas till ett currency-v&#228;rdeobjekt. en valutakod m&#229;ste best&#229; av exakt tre versala ascii-bokst&#228;ver (till exempel eur). currency valutan &#228;r ogiltig. faktureringsvalutakoden &#228;r inte en giltig kod med tre bokst&#228;ver. &#39;euro&#39; is not a valid three-letter currency code. klienten skickade en valuta i fel form (gemener, en symbol, ett namn eller fel l&#228;ngd). skicka den alfabetiska iso-4217-koden i versaler, till exempel usd eller eur."><a href="#err-CURRENCY_CODE_MALFORMED"><code>CURRENCY_CODE_MALFORMED</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-EmailAddress">EmailAddress</a>
+<ul>
+<li class="toc-item" data-search="email_address_malformed felaktig e-postadress en inkommande beg&#228;ran inneh&#229;ller ett v&#228;rde som inte &#228;r en v&#228;lformad e-postadress och d&#228;rf&#246;r inte kan tolkas till ett emailaddress-v&#228;rdeobjekt. en g&#228;sts e-postadress m&#229;ste inneh&#229;lla exakt ett ”@” med en icke-tom lokal del och en icke-tom dom&#228;n. emailaddress e-postadressen &#228;r ogiltig. det angivna v&#228;rdet &#228;r inte en giltig e-postadress. &#39;not-an-email&#39; is not a valid e-mail address. klienten skickade en felstavad eller avkortad adress (saknat ”@”, tom lokal del eller dom&#228;n). validera adressen p&#229; klienten och j&#228;mf&#246;r det skickade v&#228;rdet med det f&#246;rv&#228;ntade formatet."><a href="#err-EMAIL_ADDRESS_MALFORMED"><code>EMAIL_ADDRESS_MALFORMED</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-NightCount">NightCount</a>
+<ul>
+<li class="toc-item" data-search="night_count_not_positive icke-positivt antal n&#228;tter en inkommande beg&#228;ran beg&#228;r noll eller ett negativt antal n&#228;tter, vilket inte &#228;r en giltig vistelsel&#228;ngd. en bokning m&#229;ste omfatta minst en natt. nightcount antalet n&#228;tter &#228;r ogiltigt. det beg&#228;rda antalet n&#228;tter m&#229;ste vara en eller fler. a booking must be for at least one night, but 0 was requested. klienten skickade ett antal n&#228;tter p&#229; noll eller l&#228;gre. skicka ett antal n&#228;tter p&#229; en eller fler."><a href="#err-NIGHT_COUNT_NOT_POSITIVE"><code>NIGHT_COUNT_NOT_POSITIVE</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-RoomNumber">RoomNumber</a>
+<ul>
+<li class="toc-item" data-search="room_number_out_of_range rumsnummer utanf&#246;r intervallet ett element i beg&#228;rans lista &#246;ver rumsnummer ligger utanf&#246;r det intervall som st&#246;ds (1-999). ett rumsnummer m&#229;ste vara mellan 1 och 999 inklusive. roomnumber ett rumsnummer &#228;r ogiltigt. ett av de beg&#228;rda rumsnumren ligger utanf&#246;r det intervall som st&#246;ds. room number 1000 is outside the supported range 1-999. klienten skickade ett rumsnummer p&#229; noll, ett negativt v&#228;rde eller ett v&#228;rde &#246;ver 999. skicka rumsnummer inom det intervall som st&#246;ds (1-999)."><a href="#err-ROOM_NUMBER_OUT_OF_RANGE"><code>ROOM_NUMBER_OUT_OF_RANGE</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-Stay">Stay</a>
+<ul>
+<li class="toc-item" data-search="stay_checkout_not_after_checkin utcheckning inte efter incheckning b&#229;da vistelsedatumen tolkas, men utcheckningsdatumet &#228;r f&#246;re eller lika med incheckningsdatumet, s&#229; vistelsen har ingen positiv l&#228;ngd. denna regel &#246;ver flera f&#228;lt till&#228;mpas av fabriken stay.create. utcheckningen m&#229;ste vara strikt efter incheckningen. stay vistelsedatumen &#228;r ogiltiga. utcheckningsdatumet m&#229;ste vara efter incheckningsdatumet. check-out 2026-08-10 must be strictly after check-in 2026-08-14. klienten skickade ett utcheckningsdatum som &#228;r lika med eller tidigare &#228;n incheckningsdatumet. skicka ett utcheckningsdatum minst en dag efter incheckningsdatumet."><a href="#err-STAY_CHECKOUT_NOT_AFTER_CHECKIN"><code>STAY_CHECKOUT_NOT_AFTER_CHECKIN</code></a></li>
+</ul>
+</li>
+</ul>
+</nav>
+<p id="no-results" class="no-results" hidden>Inga matchande fel.</p>
+<section class="error-group" id="src-BookingEndpoint">
+<h2 class="group-title">BookingEndpoint</h2>
+<p class="group-description">Prim&#228;rportsfel som utl&#246;ses av bokningsslutpunkten n&#228;r den binder en inkommande beg&#228;ran till ett kommando.</p>
+<article class="error-detail" id="err-BOOKING_COMMAND_INVALID">
+<h3 class="error-title"><code>BOOKING_COMMAND_INVALID</code> <a class="anchor" href="#err-BOOKING_COMMAND_INVALID" aria-label="Kopiera l&#228;nk till detta fel" data-anchor>#</a></h3>
+<p class="error-subtitle">Bokningsbeg&#228;ran ogiltig</p>
+<section class="doc"><h4>Dokumentation</h4><p>Slutpunkten kunde inte binda den inkommande beg&#228;ran till ett bokningskommando: ett eller flera argument saknades eller var ogiltiga. Varje fel samlas under detta h&#246;lje, vart och ett med sin fullst&#228;ndiga arguments&#246;kv&#228;g.</p></section>
+<blockquote class="rule"><strong>Aff&#228;rsregel:</strong> Varje obligatoriskt argument m&#229;ste finnas, och varje argument m&#229;ste konverteras till sitt v&#228;rdeobjekt.</blockquote>
+<section class="diagnostics"><h4>Diagnostik</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;jlig orsak</th><th scope="col">Ursprung</th><th scope="col">Analysledtr&#229;d</th></tr>
+</thead>
+<tbody>
+<tr><td>Klienten skickade en beg&#228;ran som bryter mot slutpunktens kontrakt (saknade eller felaktiga argument).</td><td>External</td><td>L&#228;s de inre felen: vart och ett namnger det felande argumentet och regeln som bryts.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Exempel</h4>
+<div class="example">
+<p class="example-label">Publikt svar (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:booking-command-invalid&quot;,
+  &quot;title&quot;: &quot;Vi kunde inte acceptera din bokningsbeg&#228;ran.&quot;,
+  &quot;detail&quot;: &quot;En eller flera uppgifter i bokningsbeg&#228;ran saknas eller &#228;r ogiltiga.&quot;,
+  &quot;code&quot;: &quot;BOOKING_COMMAND_INVALID&quot;
+}</code></pre>
+<p class="example-label">Diagnostik (intern — inte avsedd f&#246;r extern exponering)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [BookingEndpoint] The booking command is invalid: one or more request arguments failed to bind. error.code=BOOKING_COMMAND_INVALID</code></pre>
+</div>
+</section>
+</article>
+<article class="error-detail" id="err-BOOKING_GUEST_INVALID">
+<h3 class="error-title"><code>BOOKING_GUEST_INVALID</code> <a class="anchor" href="#err-BOOKING_GUEST_INVALID" aria-label="Kopiera l&#228;nk till detta fel" data-anchor>#</a></h3>
+<p class="error-subtitle">Bokningens g&#228;st ogiltig</p>
+<section class="doc"><h4>Dokumentation</h4><p>En g&#228;st i beg&#228;rans g&#228;stlista kunde inte bindas: dess f&#246;rnamn saknades eller dess e-post var felaktig. Dess fel grupperas under detta h&#246;lje per element, med indexerade s&#246;kv&#228;gar som Guests[1].</p></section>
+<blockquote class="rule"><strong>Aff&#228;rsregel:</strong> Varje g&#228;st m&#229;ste ha ett f&#246;rnamn, och varje e-post som finns m&#229;ste vara giltig.</blockquote>
+<section class="diagnostics"><h4>Diagnostik</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;jlig orsak</th><th scope="col">Ursprung</th><th scope="col">Analysledtr&#229;d</th></tr>
+</thead>
+<tbody>
+<tr><td>Klienten skickade en g&#228;st med ett saknat f&#246;rnamn eller en felaktig e-postadress.</td><td>External</td><td>L&#228;s de inre felen under den indexerade s&#246;kv&#228;gen Guests[i] f&#246;r det felande f&#228;ltet.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Exempel</h4>
+<div class="example">
+<p class="example-label">Publikt svar (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:booking-guest-invalid&quot;,
+  &quot;title&quot;: &quot;En g&#228;sts uppgifter &#228;r ogiltiga.&quot;,
+  &quot;detail&quot;: &quot;En av g&#228;sterna saknar f&#246;rnamn eller har en ogiltig e-postadress.&quot;,
+  &quot;code&quot;: &quot;BOOKING_GUEST_INVALID&quot;
+}</code></pre>
+<p class="example-label">Diagnostik (intern — inte avsedd f&#246;r extern exponering)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [BookingEndpoint] The guest is invalid: one or more of its fields failed to bind. error.code=BOOKING_GUEST_INVALID</code></pre>
+</div>
+</section>
+</article>
+<article class="error-detail" id="err-BOOKING_STAY_INVALID">
+<h3 class="error-title"><code>BOOKING_STAY_INVALID</code> <a class="anchor" href="#err-BOOKING_STAY_INVALID" aria-label="Kopiera l&#228;nk till detta fel" data-anchor>#</a></h3>
+<p class="error-subtitle">Bokningens vistelse ogiltig</p>
+<section class="doc"><h4>Dokumentation</h4><p>Beg&#228;rans vistelsedelobjekt kunde inte bindas: ett eller b&#229;da av dess datum saknades eller var felaktiga. Dess fel grupperas under detta n&#228;stlade h&#246;lje, med s&#246;kv&#228;gar prefixerade med Stay.</p></section>
+<blockquote class="rule"><strong>Aff&#228;rsregel:</strong> B&#229;da vistelsedatumen m&#229;ste finnas och vara giltiga ISO-datum.</blockquote>
+<section class="diagnostics"><h4>Diagnostik</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;jlig orsak</th><th scope="col">Ursprung</th><th scope="col">Analysledtr&#229;d</th></tr>
+</thead>
+<tbody>
+<tr><td>Klienten skickade en vistelse med ett saknat eller felaktigt in- eller utcheckningsdatum.</td><td>External</td><td>L&#228;s de inre felen under Stay-s&#246;kv&#228;gen f&#246;r det felande datumet.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Exempel</h4>
+<div class="example">
+<p class="example-label">Publikt svar (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:booking-stay-invalid&quot;,
+  &quot;title&quot;: &quot;Vi kunde inte l&#228;sa vistelsedatumen.&quot;,
+  &quot;detail&quot;: &quot;Vistelsens in- eller utcheckningsdatum saknas eller &#228;r ogiltigt.&quot;,
+  &quot;code&quot;: &quot;BOOKING_STAY_INVALID&quot;
+}</code></pre>
+<p class="example-label">Diagnostik (intern — inte avsedd f&#246;r extern exponering)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [BookingEndpoint] The stay is invalid: one or more of its dates failed to bind. error.code=BOOKING_STAY_INVALID</code></pre>
+</div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-BookingDate">
+<h2 class="group-title">BookingDate</h2>
+<p class="group-description">Fel som utl&#246;ses n&#228;r ett bokningsdatum (incheckning / utcheckning) tolkas fr&#229;n en beg&#228;ransstr&#228;ng.</p>
+<article class="error-detail" id="err-BOOKING_DATE_MALFORMED">
+<h3 class="error-title"><code>BOOKING_DATE_MALFORMED</code> <a class="anchor" href="#err-BOOKING_DATE_MALFORMED" aria-label="Kopiera l&#228;nk till detta fel" data-anchor>#</a></h3>
+<p class="error-subtitle">Felaktigt bokningsdatum</p>
+<section class="doc"><h4>Dokumentation</h4><p>En inkommande beg&#228;ran inneh&#229;ller ett v&#228;rde som inte &#228;r ett ISO-datum (yyyy-MM-dd) och d&#228;rf&#246;r inte kan tolkas till ett BookingDate-v&#228;rdeobjekt.</p></section>
+<blockquote class="rule"><strong>Aff&#228;rsregel:</strong> Ett bokningsdatum m&#229;ste vara ett ISO-kalenderdatum i formatet yyyy-MM-dd.</blockquote>
+<section class="diagnostics"><h4>Diagnostik</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;jlig orsak</th><th scope="col">Ursprung</th><th scope="col">Analysledtr&#229;d</th></tr>
+</thead>
+<tbody>
+<tr><td>Klienten skickade ett datum i ett spr&#229;kspecifikt eller felaktigt format, eller ett om&#246;jligt kalenderdatum.</td><td>External</td><td>Skicka datum i formatet ISO 8601 yyyy-MM-dd, till exempel 2026-08-10.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Exempel</h4>
+<div class="example">
+<p class="example-label">Publikt svar (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:booking-date-malformed&quot;,
+  &quot;title&quot;: &quot;Datumet &#228;r ogiltigt.&quot;,
+  &quot;detail&quot;: &quot;Ett bokningsdatum &#228;r inte ett giltigt ISO-datum (yyyy-MM-dd).&quot;,
+  &quot;code&quot;: &quot;BOOKING_DATE_MALFORMED&quot;
+}</code></pre>
+<p class="example-label">Diagnostik (intern — inte avsedd f&#246;r extern exponering)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [BookingDate] &#39;2026-13-40&#39; is not a valid ISO (yyyy-MM-dd) date. error.code=BOOKING_DATE_MALFORMED</code></pre>
+</div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-Tag">
+<h2 class="group-title">Tag</h2>
+<p class="group-description">Fel som utl&#246;ses n&#228;r en bokningstagg tolkas fr&#229;n ett element i en beg&#228;ranslista.</p>
+<article class="error-detail" id="err-BOOKING_TAG_MALFORMED">
+<h3 class="error-title"><code>BOOKING_TAG_MALFORMED</code> <a class="anchor" href="#err-BOOKING_TAG_MALFORMED" aria-label="Kopiera l&#228;nk till detta fel" data-anchor>#</a></h3>
+<p class="error-subtitle">Felaktig bokningstagg</p>
+<section class="doc"><h4>Dokumentation</h4><p>Ett element i beg&#228;rans tagglista &#228;r tomt, f&#246;r l&#229;ngt eller inneh&#229;ller blanksteg och kan d&#228;rf&#246;r inte tolkas till ett Tag-v&#228;rdeobjekt.</p></section>
+<blockquote class="rule"><strong>Aff&#228;rsregel:</strong> En tagg m&#229;ste vara en enda icke-tom token p&#229; h&#246;gst 32 tecken, utan blanksteg.</blockquote>
+<section class="diagnostics"><h4>Diagnostik</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;jlig orsak</th><th scope="col">Ursprung</th><th scope="col">Analysledtr&#229;d</th></tr>
+</thead>
+<tbody>
+<tr><td>Klienten skickade en tom tagg, ett uttryck med blanksteg eller ett f&#246;r l&#229;ngt v&#228;rde.</td><td>External</td><td>Skicka varje tagg som en enda token utan blanksteg; koppla ihop flerordstaggar med bindestreck.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Exempel</h4>
+<div class="example">
+<p class="example-label">Publikt svar (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:booking-tag-malformed&quot;,
+  &quot;title&quot;: &quot;En tagg &#228;r ogiltig.&quot;,
+  &quot;detail&quot;: &quot;En av bokningstaggarna &#228;r inte en giltig enskild token.&quot;,
+  &quot;code&quot;: &quot;BOOKING_TAG_MALFORMED&quot;
+}</code></pre>
+<p class="example-label">Diagnostik (intern — inte avsedd f&#246;r extern exponering)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [Tag] &#39;late checkout&#39; is not a valid tag. error.code=BOOKING_TAG_MALFORMED</code></pre>
+</div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-Currency">
+<h2 class="group-title">Currency</h2>
+<p class="group-description">Fel som utl&#246;ses n&#228;r en faktureringsvalutakod tolkas fr&#229;n en beg&#228;ransstr&#228;ng.</p>
+<article class="error-detail" id="err-CURRENCY_CODE_MALFORMED">
+<h3 class="error-title"><code>CURRENCY_CODE_MALFORMED</code> <a class="anchor" href="#err-CURRENCY_CODE_MALFORMED" aria-label="Kopiera l&#228;nk till detta fel" data-anchor>#</a></h3>
+<p class="error-subtitle">Felaktig valutakod</p>
+<section class="doc"><h4>Dokumentation</h4><p>En inkommande beg&#228;ran inneh&#229;ller ett v&#228;rde som inte &#228;r en v&#228;lformad valutakod med tre bokst&#228;ver och d&#228;rf&#246;r inte kan tolkas till ett Currency-v&#228;rdeobjekt.</p></section>
+<blockquote class="rule"><strong>Aff&#228;rsregel:</strong> En valutakod m&#229;ste best&#229; av exakt tre versala ASCII-bokst&#228;ver (till exempel EUR).</blockquote>
+<section class="diagnostics"><h4>Diagnostik</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;jlig orsak</th><th scope="col">Ursprung</th><th scope="col">Analysledtr&#229;d</th></tr>
+</thead>
+<tbody>
+<tr><td>Klienten skickade en valuta i fel form (gemener, en symbol, ett namn eller fel l&#228;ngd).</td><td>External</td><td>Skicka den alfabetiska ISO-4217-koden i versaler, till exempel USD eller EUR.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Exempel</h4>
+<div class="example">
+<p class="example-label">Publikt svar (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:currency-code-malformed&quot;,
+  &quot;title&quot;: &quot;Valutan &#228;r ogiltig.&quot;,
+  &quot;detail&quot;: &quot;Faktureringsvalutakoden &#228;r inte en giltig kod med tre bokst&#228;ver.&quot;,
+  &quot;code&quot;: &quot;CURRENCY_CODE_MALFORMED&quot;
+}</code></pre>
+<p class="example-label">Diagnostik (intern — inte avsedd f&#246;r extern exponering)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [Currency] &#39;EURO&#39; is not a valid three-letter currency code. error.code=CURRENCY_CODE_MALFORMED</code></pre>
+</div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-EmailAddress">
+<h2 class="group-title">EmailAddress</h2>
+<p class="group-description">Fel som utl&#246;ses n&#228;r en g&#228;sts e-postadress tolkas fr&#229;n en beg&#228;ransstr&#228;ng.</p>
+<article class="error-detail" id="err-EMAIL_ADDRESS_MALFORMED">
+<h3 class="error-title"><code>EMAIL_ADDRESS_MALFORMED</code> <a class="anchor" href="#err-EMAIL_ADDRESS_MALFORMED" aria-label="Kopiera l&#228;nk till detta fel" data-anchor>#</a></h3>
+<p class="error-subtitle">Felaktig e-postadress</p>
+<section class="doc"><h4>Dokumentation</h4><p>En inkommande beg&#228;ran inneh&#229;ller ett v&#228;rde som inte &#228;r en v&#228;lformad e-postadress och d&#228;rf&#246;r inte kan tolkas till ett EmailAddress-v&#228;rdeobjekt.</p></section>
+<blockquote class="rule"><strong>Aff&#228;rsregel:</strong> En g&#228;sts e-postadress m&#229;ste inneh&#229;lla exakt ett ”@” med en icke-tom lokal del och en icke-tom dom&#228;n.</blockquote>
+<section class="diagnostics"><h4>Diagnostik</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;jlig orsak</th><th scope="col">Ursprung</th><th scope="col">Analysledtr&#229;d</th></tr>
+</thead>
+<tbody>
+<tr><td>Klienten skickade en felstavad eller avkortad adress (saknat ”@”, tom lokal del eller dom&#228;n).</td><td>External</td><td>Validera adressen p&#229; klienten och j&#228;mf&#246;r det skickade v&#228;rdet med det f&#246;rv&#228;ntade formatet.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Exempel</h4>
+<div class="example">
+<p class="example-label">Publikt svar (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:email-address-malformed&quot;,
+  &quot;title&quot;: &quot;E-postadressen &#228;r ogiltig.&quot;,
+  &quot;detail&quot;: &quot;Det angivna v&#228;rdet &#228;r inte en giltig e-postadress.&quot;,
+  &quot;code&quot;: &quot;EMAIL_ADDRESS_MALFORMED&quot;
+}</code></pre>
+<p class="example-label">Diagnostik (intern — inte avsedd f&#246;r extern exponering)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [EmailAddress] &#39;not-an-email&#39; is not a valid e-mail address. error.code=EMAIL_ADDRESS_MALFORMED</code></pre>
+</div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-NightCount">
+<h2 class="group-title">NightCount</h2>
+<p class="group-description">Fel som utl&#246;ses n&#228;r antalet n&#228;tter byggs fr&#229;n ett beg&#228;ransv&#228;rde.</p>
+<article class="error-detail" id="err-NIGHT_COUNT_NOT_POSITIVE">
+<h3 class="error-title"><code>NIGHT_COUNT_NOT_POSITIVE</code> <a class="anchor" href="#err-NIGHT_COUNT_NOT_POSITIVE" aria-label="Kopiera l&#228;nk till detta fel" data-anchor>#</a></h3>
+<p class="error-subtitle">Icke-positivt antal n&#228;tter</p>
+<section class="doc"><h4>Dokumentation</h4><p>En inkommande beg&#228;ran beg&#228;r noll eller ett negativt antal n&#228;tter, vilket inte &#228;r en giltig vistelsel&#228;ngd.</p></section>
+<blockquote class="rule"><strong>Aff&#228;rsregel:</strong> En bokning m&#229;ste omfatta minst en natt.</blockquote>
+<section class="diagnostics"><h4>Diagnostik</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;jlig orsak</th><th scope="col">Ursprung</th><th scope="col">Analysledtr&#229;d</th></tr>
+</thead>
+<tbody>
+<tr><td>Klienten skickade ett antal n&#228;tter p&#229; noll eller l&#228;gre.</td><td>External</td><td>Skicka ett antal n&#228;tter p&#229; en eller fler.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Exempel</h4>
+<div class="example">
+<p class="example-label">Publikt svar (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:night-count-not-positive&quot;,
+  &quot;title&quot;: &quot;Antalet n&#228;tter &#228;r ogiltigt.&quot;,
+  &quot;detail&quot;: &quot;Det beg&#228;rda antalet n&#228;tter m&#229;ste vara en eller fler.&quot;,
+  &quot;code&quot;: &quot;NIGHT_COUNT_NOT_POSITIVE&quot;
+}</code></pre>
+<p class="example-label">Diagnostik (intern — inte avsedd f&#246;r extern exponering)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [NightCount] A booking must be for at least one night, but 0 was requested. error.code=NIGHT_COUNT_NOT_POSITIVE</code></pre>
+</div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-RoomNumber">
+<h2 class="group-title">RoomNumber</h2>
+<p class="group-description">Fel som utl&#246;ses n&#228;r ett rumsnummer byggs fr&#229;n ett element i en beg&#228;ranslista.</p>
+<article class="error-detail" id="err-ROOM_NUMBER_OUT_OF_RANGE">
+<h3 class="error-title"><code>ROOM_NUMBER_OUT_OF_RANGE</code> <a class="anchor" href="#err-ROOM_NUMBER_OUT_OF_RANGE" aria-label="Kopiera l&#228;nk till detta fel" data-anchor>#</a></h3>
+<p class="error-subtitle">Rumsnummer utanf&#246;r intervallet</p>
+<section class="doc"><h4>Dokumentation</h4><p>Ett element i beg&#228;rans lista &#246;ver rumsnummer ligger utanf&#246;r det intervall som st&#246;ds (1-999).</p></section>
+<blockquote class="rule"><strong>Aff&#228;rsregel:</strong> Ett rumsnummer m&#229;ste vara mellan 1 och 999 inklusive.</blockquote>
+<section class="diagnostics"><h4>Diagnostik</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;jlig orsak</th><th scope="col">Ursprung</th><th scope="col">Analysledtr&#229;d</th></tr>
+</thead>
+<tbody>
+<tr><td>Klienten skickade ett rumsnummer p&#229; noll, ett negativt v&#228;rde eller ett v&#228;rde &#246;ver 999.</td><td>External</td><td>Skicka rumsnummer inom det intervall som st&#246;ds (1-999).</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Exempel</h4>
+<div class="example">
+<p class="example-label">Publikt svar (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:room-number-out-of-range&quot;,
+  &quot;title&quot;: &quot;Ett rumsnummer &#228;r ogiltigt.&quot;,
+  &quot;detail&quot;: &quot;Ett av de beg&#228;rda rumsnumren ligger utanf&#246;r det intervall som st&#246;ds.&quot;,
+  &quot;code&quot;: &quot;ROOM_NUMBER_OUT_OF_RANGE&quot;
+}</code></pre>
+<p class="example-label">Diagnostik (intern — inte avsedd f&#246;r extern exponering)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [RoomNumber] Room number 1000 is outside the supported range 1-999. error.code=ROOM_NUMBER_OUT_OF_RANGE</code></pre>
+</div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-Stay">
+<h2 class="group-title">Stay</h2>
+<p class="group-description">Fel som utl&#246;ses vid gemensam validering av en vistelses in- och utcheckningsdatum.</p>
+<article class="error-detail" id="err-STAY_CHECKOUT_NOT_AFTER_CHECKIN">
+<h3 class="error-title"><code>STAY_CHECKOUT_NOT_AFTER_CHECKIN</code> <a class="anchor" href="#err-STAY_CHECKOUT_NOT_AFTER_CHECKIN" aria-label="Kopiera l&#228;nk till detta fel" data-anchor>#</a></h3>
+<p class="error-subtitle">Utcheckning inte efter incheckning</p>
+<section class="doc"><h4>Dokumentation</h4><p>B&#229;da vistelsedatumen tolkas, men utcheckningsdatumet &#228;r f&#246;re eller lika med incheckningsdatumet, s&#229; vistelsen har ingen positiv l&#228;ngd. Denna regel &#246;ver flera f&#228;lt till&#228;mpas av fabriken Stay.Create.</p></section>
+<blockquote class="rule"><strong>Aff&#228;rsregel:</strong> Utcheckningen m&#229;ste vara strikt efter incheckningen.</blockquote>
+<section class="diagnostics"><h4>Diagnostik</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;jlig orsak</th><th scope="col">Ursprung</th><th scope="col">Analysledtr&#229;d</th></tr>
+</thead>
+<tbody>
+<tr><td>Klienten skickade ett utcheckningsdatum som &#228;r lika med eller tidigare &#228;n incheckningsdatumet.</td><td>External</td><td>Skicka ett utcheckningsdatum minst en dag efter incheckningsdatumet.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Exempel</h4>
+<div class="example">
+<p class="example-label">Publikt svar (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:stay-checkout-not-after-checkin&quot;,
+  &quot;title&quot;: &quot;Vistelsedatumen &#228;r ogiltiga.&quot;,
+  &quot;detail&quot;: &quot;Utcheckningsdatumet m&#229;ste vara efter incheckningsdatumet.&quot;,
+  &quot;code&quot;: &quot;STAY_CHECKOUT_NOT_AFTER_CHECKIN&quot;
+}</code></pre>
+<p class="example-label">Diagnostik (intern — inte avsedd f&#246;r extern exponering)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [Stay] Check-out 2026-08-10 must be strictly after check-in 2026-08-14. error.code=STAY_CHECKOUT_NOT_AFTER_CHECKIN</code></pre>
+</div>
+</section>
+</article>
+</section>
+</main>
+<script>
+(function () {
+  var KEY = 'fce-theme';
+  var root = document.documentElement;
+  function apply(t) { if (t === 'light' || t === 'dark') { root.dataset.theme = t; } else { delete root.dataset.theme; } }
+  function current() { return root.dataset.theme || 'auto'; }
+  function store(theme) {
+    // localStorage throws when it is unavailable (e.g. private mode). Report that to the caller instead of
+    // swallowing it in an empty catch — persisting the theme is best effort, so the caller ignores the result.
+    try {
+      if (theme === 'auto') { localStorage.removeItem(KEY); } else { localStorage.setItem(KEY, theme); }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  var btn = document.getElementById('theme-toggle');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var order = ['auto', 'light', 'dark'];
+      var next = order[(order.indexOf(current()) + 1) % order.length];
+      store(next);
+      apply(next);
+    });
+  }
+  var search = document.getElementById('search');
+  var toc = document.getElementById('toc');
+  var noResults = document.getElementById('no-results');
+  function filter() {
+    if (!toc) { return; }
+    var q = ((search && search.value) || '').toLowerCase().trim();
+    var items = toc.querySelectorAll('.toc-item');
+    var visible = 0;
+    for (var item of items) {
+      var ok = !q || (item.dataset.search || '').includes(q);
+      item.hidden = !ok;
+      if (ok) { visible++; }
+    }
+    var groups = toc.querySelectorAll('.toc-group');
+    for (var group of groups) {
+      group.hidden = group.querySelectorAll('.toc-item:not([hidden])').length === 0;
+    }
+    if (noResults) { noResults.hidden = visible !== 0; }
+  }
+  if (search) { search.addEventListener('input', filter); }
+  var anchors = document.querySelectorAll('a[data-anchor]');
+  for (var anchor of anchors) {
+    anchor.addEventListener('click', function () {
+      var href = this.getAttribute('href') || '';
+      var url = location.href.split('#')[0] + href;
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(url).catch(function () {}); }
+    });
+  }
+})();
+</script>
+</body>
+</html>

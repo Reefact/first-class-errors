@@ -1,0 +1,525 @@
+﻿<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fehlerkatalog</title>
+<style>
+:root {
+  --bg: #ffffff; --bg-soft: #f6f8fa; --surface: #ffffff; --text: #1f2328; --text-soft: #59636e;
+  --border: #d1d9e0; --accent: #0969da; --code-bg: #f6f8fa; --code-text: #1f2328;
+  --radius: 8px; --maxw: 1080px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171c; --bg-soft: #1b1f26; --surface: #1b1f26; --text: #e6edf3; --text-soft: #9aa4b2;
+    --border: #2c333d; --accent: #4493f8; --code-bg: #11151b; --code-text: #e6edf3;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #ffffff; --bg-soft: #f6f8fa; --surface: #ffffff; --text: #1f2328; --text-soft: #59636e;
+  --border: #d1d9e0; --accent: #0969da; --code-bg: #f6f8fa; --code-text: #1f2328;
+}
+:root[data-theme="dark"] {
+  --bg: #14171c; --bg-soft: #1b1f26; --surface: #1b1f26; --text: #e6edf3; --text-soft: #9aa4b2;
+  --border: #2c333d; --accent: #4493f8; --code-bg: #11151b; --code-text: #e6edf3;
+}
+* { box-sizing: border-box; }
+html { color-scheme: light dark; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.55; }
+.container { max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, pre { font-family: var(--mono); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.skip-link { position: absolute; left: -999px; top: 0; background: var(--accent); color: #fff; padding: 8px 12px; border-radius: 0 0 var(--radius) 0; z-index: 10; }
+.skip-link:focus { left: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.site-header { border-bottom: 1px solid var(--border); background: var(--bg-soft); position: sticky; top: 0; z-index: 5; }
+.header-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; }
+.site-title { font-size: 1.15rem; margin: 0; }
+.site-title a { color: var(--text); }
+.theme-toggle { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); cursor: pointer; }
+.theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+main { padding: 24px 0 64px; }
+.count { color: var(--text-soft); margin: 0 0 16px; }
+.controls { margin-bottom: 20px; }
+.search { display: block; max-width: 460px; }
+.search input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1rem; }
+.no-results, .empty { color: var(--text-soft); padding: 16px 0; }
+.back { margin: 0 0 16px; }
+.toc { margin: 0 0 8px; }
+.toc ul { list-style: none; margin: 0; padding: 0; }
+.toc > ul > li { margin: 0 0 16px; }
+.toc-source { display: inline-block; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.toc-group > ul { padding-left: 16px; margin-left: 4px; border-left: 2px solid var(--border); }
+.toc-item { margin: 3px 0; }
+.toc-item code { font-size: 0.9rem; }
+.error-group { margin-top: 40px; }
+.group-title { font-size: 1.5rem; margin: 0 0 4px; padding-bottom: 8px; border-bottom: 2px solid var(--border); scroll-margin-top: 72px; }
+.group-description { color: var(--text-soft); margin: 12px 0 4px; }
+.error-detail { border-top: 1px solid var(--border); padding: 24px 0; }
+.error-group .error-detail:first-of-type { border-top: 0; }
+.error-title { font-size: 1.15rem; margin: 0; scroll-margin-top: 72px; }
+.error-title code { background: var(--code-bg); color: var(--code-text); padding: 2px 8px; border-radius: var(--radius); font-size: 0.95rem; }
+.error-subtitle { color: var(--text-soft); margin: 4px 0 12px; }
+.anchor { color: var(--text-soft); text-decoration: none; opacity: 0; padding-left: 4px; }
+.error-title:hover .anchor, .anchor:focus { opacity: 1; }
+section h3, section h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-soft); margin: 20px 0 8px; }
+.rule { margin: 14px 0; padding: 10px 14px; border-left: 3px solid var(--accent); background: var(--bg-soft); border-radius: 0 var(--radius) var(--radius) 0; }
+.table-wrap { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.data-table th, .data-table td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.data-table thead th { color: var(--text-soft); font-weight: 600; border-bottom: 2px solid var(--border); white-space: nowrap; }
+.example { margin: 12px 0; }
+.example-label { font-weight: 600; margin: 12px 0 6px; font-size: 0.9rem; color: var(--text); }
+pre { margin: 0; padding: 12px 14px; background: var(--code-bg); color: var(--code-text); border: 1px solid var(--border); border-radius: var(--radius); overflow-x: auto; }
+pre code { font-size: 0.86rem; white-space: pre; }
+@media (max-width: 640px) {
+  .group-title { font-size: 1.3rem; }
+}
+</style>
+<script>(function(){try{var t=localStorage.getItem('fce-theme');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t;}}catch(e){/* localStorage may be unavailable (e.g. private mode); fall back to the default theme */}})();</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Zum Inhalt springen</a>
+<header class="site-header">
+<div class="container header-row">
+<h1 class="site-title"><a href="#main">Fehlerkatalog</a></h1>
+<button id="theme-toggle" type="button" class="theme-toggle" aria-label="Helles / dunkles Design umschalten" title="Helles / dunkles Design umschalten"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></button>
+</div>
+</header>
+<main id="main" class="container">
+<p class="count">10 dokumentierte Fehler</p>
+<div class="controls">
+<label class="search"><span class="visually-hidden">Suchen</span><input id="search" type="search" autocomplete="off" placeholder="Nach Code, Meldung, Dokumentation suchen…"></label>
+</div>
+<nav class="toc" id="toc" aria-label="Fehlerkatalog">
+<ul>
+<li class="toc-group"><a class="toc-source" href="#src-BookingEndpoint">BookingEndpoint</a>
+<ul>
+<li class="toc-item" data-search="booking_command_invalid buchungsanforderung ung&#252;ltig der endpunkt konnte die eingehende anforderung nicht an einen buchungsbefehl binden: ein oder mehrere argumente fehlten oder waren ung&#252;ltig. jeder fehler wird unter diesem umschlag gesammelt, jeweils mit seinem vollst&#228;ndigen argumentpfad. jedes erforderliche argument muss vorhanden sein, und jedes argument muss in sein value-object konvertiert werden. bookingendpoint wir konnten ihre buchungsanforderung nicht annehmen. eine oder mehrere angaben der buchungsanforderung fehlen oder sind ung&#252;ltig. the booking command is invalid: one or more request arguments failed to bind. der client hat eine anforderung gesendet, die den vertrag des endpunkts verletzt (fehlende oder fehlerhafte argumente). lesen sie die inneren fehler: jeder benennt das fehlerhafte argument und die verletzte regel."><a href="#err-BOOKING_COMMAND_INVALID"><code>BOOKING_COMMAND_INVALID</code></a></li>
+<li class="toc-item" data-search="booking_guest_invalid gast der buchung ung&#252;ltig ein gast der g&#228;steliste der anforderung konnte nicht gebunden werden: sein vorname fehlte oder seine e-mail war fehlerhaft. seine fehler werden unter diesem umschlag pro element gruppiert, mit indizierten pfaden wie guests[1]. jeder gast muss einen vornamen haben, und jede vorhandene e-mail muss g&#252;ltig sein. bookingendpoint die angaben eines gastes sind ung&#252;ltig. einer der g&#228;ste hat keinen vornamen oder eine ung&#252;ltige e-mail-adresse. the guest is invalid: one or more of its fields failed to bind. der client hat einen gast mit einem fehlenden vornamen oder einer fehlerhaften e-mail-adresse gesendet. lesen sie die inneren fehler unter dem indizierten pfad guests[i] f&#252;r das fehlerhafte feld."><a href="#err-BOOKING_GUEST_INVALID"><code>BOOKING_GUEST_INVALID</code></a></li>
+<li class="toc-item" data-search="booking_stay_invalid aufenthalt der buchung ung&#252;ltig das aufenthalts-unterobjekt der anforderung konnte nicht gebunden werden: eines oder beide seiner daten fehlten oder waren fehlerhaft. seine fehler werden unter diesem verschachtelten umschlag gruppiert, mit durch stay pr&#228;fixierten pfaden. beide aufenthaltsdaten m&#252;ssen vorhanden und g&#252;ltige iso-daten sein. bookingendpoint wir konnten die aufenthaltsdaten nicht lesen. das an- oder abreisedatum des aufenthalts fehlt oder ist ung&#252;ltig. the stay is invalid: one or more of its dates failed to bind. der client hat einen aufenthalt mit einem fehlenden oder fehlerhaften an- oder abreisedatum gesendet. lesen sie die inneren fehler unter dem stay-pfad f&#252;r das fehlerhafte datum."><a href="#err-BOOKING_STAY_INVALID"><code>BOOKING_STAY_INVALID</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-BookingDate">BookingDate</a>
+<ul>
+<li class="toc-item" data-search="booking_date_malformed fehlerhaftes buchungsdatum eine eingehende anforderung enth&#228;lt einen wert, der kein iso-datum (yyyy-mm-dd) ist und daher nicht in ein bookingdate-value-object geparst werden kann. ein buchungsdatum muss ein iso-kalenderdatum im format yyyy-mm-dd sein. bookingdate das datum ist ung&#252;ltig. ein buchungsdatum ist kein g&#252;ltiges iso-datum (yyyy-mm-dd). &#39;2026-13-40&#39; is not a valid iso (yyyy-mm-dd) date. der client hat ein datum in einem l&#228;nderspezifischen oder fehlerhaften format oder ein unm&#246;gliches kalenderdatum gesendet. senden sie datumsangaben im format iso 8601 yyyy-mm-dd, zum beispiel 2026-08-10."><a href="#err-BOOKING_DATE_MALFORMED"><code>BOOKING_DATE_MALFORMED</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-Tag">Tag</a>
+<ul>
+<li class="toc-item" data-search="booking_tag_malformed fehlerhaftes buchungs-tag ein element der tag-liste der anforderung ist leer, zu lang oder enth&#228;lt leerzeichen und kann daher nicht in ein tag-value-object geparst werden. ein tag muss ein einzelnes, nicht leeres token von h&#246;chstens 32 zeichen ohne leerzeichen sein. tag ein tag ist ung&#252;ltig. eines der buchungs-tags ist kein g&#252;ltiges einzelnes token. &#39;late checkout&#39; is not a valid tag. der client hat ein leeres tag, einen ausdruck mit leerzeichen oder einen zu langen wert gesendet. senden sie jedes tag als einzelnes token ohne leerzeichen; verbinden sie mehrwortige tags mit einem bindestrich."><a href="#err-BOOKING_TAG_MALFORMED"><code>BOOKING_TAG_MALFORMED</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-Currency">Currency</a>
+<ul>
+<li class="toc-item" data-search="currency_code_malformed fehlerhafter w&#228;hrungscode eine eingehende anforderung enth&#228;lt einen wert, der kein wohlgeformter dreistelliger w&#228;hrungscode ist und daher nicht in ein currency-value-object geparst werden kann. ein w&#228;hrungscode muss aus genau drei ascii-gro&#223;buchstaben bestehen (zum beispiel eur). currency die w&#228;hrung ist ung&#252;ltig. der abrechnungsw&#228;hrungscode ist kein g&#252;ltiger dreistelliger code. &#39;euro&#39; is not a valid three-letter currency code. der client hat eine w&#228;hrung in der falschen form gesendet (kleinbuchstaben, ein symbol, ein name oder die falsche l&#228;nge). senden sie den alphabetischen iso-4217-code in gro&#223;buchstaben, zum beispiel usd oder eur."><a href="#err-CURRENCY_CODE_MALFORMED"><code>CURRENCY_CODE_MALFORMED</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-EmailAddress">EmailAddress</a>
+<ul>
+<li class="toc-item" data-search="email_address_malformed fehlerhafte e-mail-adresse eine eingehende anforderung enth&#228;lt einen wert, der keine wohlgeformte e-mail-adresse ist und daher nicht in ein emailaddress-value-object geparst werden kann. eine e-mail-adresse eines gastes muss genau ein „@“ mit einem nicht leeren lokalen teil und einer nicht leeren dom&#228;ne enthalten. emailaddress die e-mail-adresse ist ung&#252;ltig. der angegebene wert ist keine g&#252;ltige e-mail-adresse. &#39;not-an-email&#39; is not a valid e-mail address. der client hat eine falsch geschriebene oder abgeschnittene adresse gesendet (fehlendes „@“, leerer lokaler teil oder leere dom&#228;ne). validieren sie die adresse auf dem client und vergleichen sie den gesendeten wert mit dem erwarteten format."><a href="#err-EMAIL_ADDRESS_MALFORMED"><code>EMAIL_ADDRESS_MALFORMED</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-NightCount">NightCount</a>
+<ul>
+<li class="toc-item" data-search="night_count_not_positive nicht positive anzahl von n&#228;chten eine eingehende anforderung verlangt null oder eine negative anzahl von n&#228;chten, was keine g&#252;ltige aufenthaltsdauer ist. eine buchung muss mindestens eine nacht umfassen. nightcount die anzahl der n&#228;chte ist ung&#252;ltig. die angeforderte anzahl von n&#228;chten muss eins oder mehr betragen. a booking must be for at least one night, but 0 was requested. der client hat eine anzahl von n&#228;chten von null oder weniger gesendet. senden sie eine anzahl von n&#228;chten von eins oder mehr."><a href="#err-NIGHT_COUNT_NOT_POSITIVE"><code>NIGHT_COUNT_NOT_POSITIVE</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-RoomNumber">RoomNumber</a>
+<ul>
+<li class="toc-item" data-search="room_number_out_of_range zimmernummer au&#223;erhalb des bereichs ein element der zimmernummernliste der anforderung liegt au&#223;erhalb des unterst&#252;tzten bereichs (1-999). eine zimmernummer muss zwischen 1 und 999 (einschlie&#223;lich) liegen. roomnumber eine zimmernummer ist ung&#252;ltig. eine der angeforderten zimmernummern liegt au&#223;erhalb des unterst&#252;tzten bereichs. room number 1000 is outside the supported range 1-999. der client hat eine zimmernummer von null, einen negativen wert oder einen wert &#252;ber 999 gesendet. senden sie zimmernummern innerhalb des unterst&#252;tzten bereichs (1-999)."><a href="#err-ROOM_NUMBER_OUT_OF_RANGE"><code>ROOM_NUMBER_OUT_OF_RANGE</code></a></li>
+</ul>
+</li>
+<li class="toc-group"><a class="toc-source" href="#src-Stay">Stay</a>
+<ul>
+<li class="toc-item" data-search="stay_checkout_not_after_checkin abreise nicht nach anreise beide aufenthaltsdaten werden geparst, aber das abreisedatum liegt vor oder auf dem anreisedatum, sodass der aufenthalt keine positive dauer hat. diese feld&#252;bergreifende regel wird von der stay.create-factory durchgesetzt. die abreise muss streng nach der anreise liegen. stay die aufenthaltsdaten sind ung&#252;ltig. das abreisedatum muss nach dem anreisedatum liegen. check-out 2026-08-10 must be strictly after check-in 2026-08-14. der client hat ein abreisedatum gesendet, das gleich oder fr&#252;her als das anreisedatum ist. senden sie ein abreisedatum, das mindestens einen tag nach dem anreisedatum liegt."><a href="#err-STAY_CHECKOUT_NOT_AFTER_CHECKIN"><code>STAY_CHECKOUT_NOT_AFTER_CHECKIN</code></a></li>
+</ul>
+</li>
+</ul>
+</nav>
+<p id="no-results" class="no-results" hidden>Keine passenden Fehler.</p>
+<section class="error-group" id="src-BookingEndpoint">
+<h2 class="group-title">BookingEndpoint</h2>
+<p class="group-description">Prim&#228;r-Port-Fehler, die vom Buchungsendpunkt ausgel&#246;st werden, wenn er eine eingehende Anforderung an einen Befehl bindet.</p>
+<article class="error-detail" id="err-BOOKING_COMMAND_INVALID">
+<h3 class="error-title"><code>BOOKING_COMMAND_INVALID</code> <a class="anchor" href="#err-BOOKING_COMMAND_INVALID" aria-label="Link zu diesem Fehler kopieren" data-anchor>#</a></h3>
+<p class="error-subtitle">Buchungsanforderung ung&#252;ltig</p>
+<section class="doc"><h4>Dokumentation</h4><p>Der Endpunkt konnte die eingehende Anforderung nicht an einen Buchungsbefehl binden: Ein oder mehrere Argumente fehlten oder waren ung&#252;ltig. Jeder Fehler wird unter diesem Umschlag gesammelt, jeweils mit seinem vollst&#228;ndigen Argumentpfad.</p></section>
+<blockquote class="rule"><strong>Gesch&#228;ftsregel:</strong> Jedes erforderliche Argument muss vorhanden sein, und jedes Argument muss in sein Value-Object konvertiert werden.</blockquote>
+<section class="diagnostics"><h4>Diagnosen</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;gliche Ursache</th><th scope="col">Ursprung</th><th scope="col">Analysehinweis</th></tr>
+</thead>
+<tbody>
+<tr><td>Der Client hat eine Anforderung gesendet, die den Vertrag des Endpunkts verletzt (fehlende oder fehlerhafte Argumente).</td><td>External</td><td>Lesen Sie die inneren Fehler: Jeder benennt das fehlerhafte Argument und die verletzte Regel.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Beispiele</h4>
+<div class="example">
+<p class="example-label">&#214;ffentliche Antwort (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:booking-command-invalid&quot;,
+  &quot;title&quot;: &quot;Wir konnten Ihre Buchungsanforderung nicht annehmen.&quot;,
+  &quot;detail&quot;: &quot;Eine oder mehrere Angaben der Buchungsanforderung fehlen oder sind ung&#252;ltig.&quot;,
+  &quot;code&quot;: &quot;BOOKING_COMMAND_INVALID&quot;
+}</code></pre>
+<p class="example-label">Diagnose (intern — nicht f&#252;r externe Weitergabe)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [BookingEndpoint] The booking command is invalid: one or more request arguments failed to bind. error.code=BOOKING_COMMAND_INVALID</code></pre>
+</div>
+</section>
+</article>
+<article class="error-detail" id="err-BOOKING_GUEST_INVALID">
+<h3 class="error-title"><code>BOOKING_GUEST_INVALID</code> <a class="anchor" href="#err-BOOKING_GUEST_INVALID" aria-label="Link zu diesem Fehler kopieren" data-anchor>#</a></h3>
+<p class="error-subtitle">Gast der Buchung ung&#252;ltig</p>
+<section class="doc"><h4>Dokumentation</h4><p>Ein Gast der G&#228;steliste der Anforderung konnte nicht gebunden werden: Sein Vorname fehlte oder seine E-Mail war fehlerhaft. Seine Fehler werden unter diesem Umschlag pro Element gruppiert, mit indizierten Pfaden wie Guests[1].</p></section>
+<blockquote class="rule"><strong>Gesch&#228;ftsregel:</strong> Jeder Gast muss einen Vornamen haben, und jede vorhandene E-Mail muss g&#252;ltig sein.</blockquote>
+<section class="diagnostics"><h4>Diagnosen</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;gliche Ursache</th><th scope="col">Ursprung</th><th scope="col">Analysehinweis</th></tr>
+</thead>
+<tbody>
+<tr><td>Der Client hat einen Gast mit einem fehlenden Vornamen oder einer fehlerhaften E-Mail-Adresse gesendet.</td><td>External</td><td>Lesen Sie die inneren Fehler unter dem indizierten Pfad Guests[i] f&#252;r das fehlerhafte Feld.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Beispiele</h4>
+<div class="example">
+<p class="example-label">&#214;ffentliche Antwort (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:booking-guest-invalid&quot;,
+  &quot;title&quot;: &quot;Die Angaben eines Gastes sind ung&#252;ltig.&quot;,
+  &quot;detail&quot;: &quot;Einer der G&#228;ste hat keinen Vornamen oder eine ung&#252;ltige E-Mail-Adresse.&quot;,
+  &quot;code&quot;: &quot;BOOKING_GUEST_INVALID&quot;
+}</code></pre>
+<p class="example-label">Diagnose (intern — nicht f&#252;r externe Weitergabe)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [BookingEndpoint] The guest is invalid: one or more of its fields failed to bind. error.code=BOOKING_GUEST_INVALID</code></pre>
+</div>
+</section>
+</article>
+<article class="error-detail" id="err-BOOKING_STAY_INVALID">
+<h3 class="error-title"><code>BOOKING_STAY_INVALID</code> <a class="anchor" href="#err-BOOKING_STAY_INVALID" aria-label="Link zu diesem Fehler kopieren" data-anchor>#</a></h3>
+<p class="error-subtitle">Aufenthalt der Buchung ung&#252;ltig</p>
+<section class="doc"><h4>Dokumentation</h4><p>Das Aufenthalts-Unterobjekt der Anforderung konnte nicht gebunden werden: Eines oder beide seiner Daten fehlten oder waren fehlerhaft. Seine Fehler werden unter diesem verschachtelten Umschlag gruppiert, mit durch Stay pr&#228;fixierten Pfaden.</p></section>
+<blockquote class="rule"><strong>Gesch&#228;ftsregel:</strong> Beide Aufenthaltsdaten m&#252;ssen vorhanden und g&#252;ltige ISO-Daten sein.</blockquote>
+<section class="diagnostics"><h4>Diagnosen</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;gliche Ursache</th><th scope="col">Ursprung</th><th scope="col">Analysehinweis</th></tr>
+</thead>
+<tbody>
+<tr><td>Der Client hat einen Aufenthalt mit einem fehlenden oder fehlerhaften An- oder Abreisedatum gesendet.</td><td>External</td><td>Lesen Sie die inneren Fehler unter dem Stay-Pfad f&#252;r das fehlerhafte Datum.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Beispiele</h4>
+<div class="example">
+<p class="example-label">&#214;ffentliche Antwort (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:booking-stay-invalid&quot;,
+  &quot;title&quot;: &quot;Wir konnten die Aufenthaltsdaten nicht lesen.&quot;,
+  &quot;detail&quot;: &quot;Das An- oder Abreisedatum des Aufenthalts fehlt oder ist ung&#252;ltig.&quot;,
+  &quot;code&quot;: &quot;BOOKING_STAY_INVALID&quot;
+}</code></pre>
+<p class="example-label">Diagnose (intern — nicht f&#252;r externe Weitergabe)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [BookingEndpoint] The stay is invalid: one or more of its dates failed to bind. error.code=BOOKING_STAY_INVALID</code></pre>
+</div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-BookingDate">
+<h2 class="group-title">BookingDate</h2>
+<p class="group-description">Fehler, die beim Parsen eines Buchungsdatums (Anreise / Abreise) aus einer Anforderungszeichenfolge ausgel&#246;st werden.</p>
+<article class="error-detail" id="err-BOOKING_DATE_MALFORMED">
+<h3 class="error-title"><code>BOOKING_DATE_MALFORMED</code> <a class="anchor" href="#err-BOOKING_DATE_MALFORMED" aria-label="Link zu diesem Fehler kopieren" data-anchor>#</a></h3>
+<p class="error-subtitle">Fehlerhaftes Buchungsdatum</p>
+<section class="doc"><h4>Dokumentation</h4><p>Eine eingehende Anforderung enth&#228;lt einen Wert, der kein ISO-Datum (yyyy-MM-dd) ist und daher nicht in ein BookingDate-Value-Object geparst werden kann.</p></section>
+<blockquote class="rule"><strong>Gesch&#228;ftsregel:</strong> Ein Buchungsdatum muss ein ISO-Kalenderdatum im Format yyyy-MM-dd sein.</blockquote>
+<section class="diagnostics"><h4>Diagnosen</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;gliche Ursache</th><th scope="col">Ursprung</th><th scope="col">Analysehinweis</th></tr>
+</thead>
+<tbody>
+<tr><td>Der Client hat ein Datum in einem l&#228;nderspezifischen oder fehlerhaften Format oder ein unm&#246;gliches Kalenderdatum gesendet.</td><td>External</td><td>Senden Sie Datumsangaben im Format ISO 8601 yyyy-MM-dd, zum Beispiel 2026-08-10.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Beispiele</h4>
+<div class="example">
+<p class="example-label">&#214;ffentliche Antwort (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:booking-date-malformed&quot;,
+  &quot;title&quot;: &quot;Das Datum ist ung&#252;ltig.&quot;,
+  &quot;detail&quot;: &quot;Ein Buchungsdatum ist kein g&#252;ltiges ISO-Datum (yyyy-MM-dd).&quot;,
+  &quot;code&quot;: &quot;BOOKING_DATE_MALFORMED&quot;
+}</code></pre>
+<p class="example-label">Diagnose (intern — nicht f&#252;r externe Weitergabe)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [BookingDate] &#39;2026-13-40&#39; is not a valid ISO (yyyy-MM-dd) date. error.code=BOOKING_DATE_MALFORMED</code></pre>
+</div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-Tag">
+<h2 class="group-title">Tag</h2>
+<p class="group-description">Fehler, die beim Parsen eines Buchungs-Tags aus einem Element einer Anforderungsliste ausgel&#246;st werden.</p>
+<article class="error-detail" id="err-BOOKING_TAG_MALFORMED">
+<h3 class="error-title"><code>BOOKING_TAG_MALFORMED</code> <a class="anchor" href="#err-BOOKING_TAG_MALFORMED" aria-label="Link zu diesem Fehler kopieren" data-anchor>#</a></h3>
+<p class="error-subtitle">Fehlerhaftes Buchungs-Tag</p>
+<section class="doc"><h4>Dokumentation</h4><p>Ein Element der Tag-Liste der Anforderung ist leer, zu lang oder enth&#228;lt Leerzeichen und kann daher nicht in ein Tag-Value-Object geparst werden.</p></section>
+<blockquote class="rule"><strong>Gesch&#228;ftsregel:</strong> Ein Tag muss ein einzelnes, nicht leeres Token von h&#246;chstens 32 Zeichen ohne Leerzeichen sein.</blockquote>
+<section class="diagnostics"><h4>Diagnosen</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;gliche Ursache</th><th scope="col">Ursprung</th><th scope="col">Analysehinweis</th></tr>
+</thead>
+<tbody>
+<tr><td>Der Client hat ein leeres Tag, einen Ausdruck mit Leerzeichen oder einen zu langen Wert gesendet.</td><td>External</td><td>Senden Sie jedes Tag als einzelnes Token ohne Leerzeichen; verbinden Sie mehrwortige Tags mit einem Bindestrich.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Beispiele</h4>
+<div class="example">
+<p class="example-label">&#214;ffentliche Antwort (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:booking-tag-malformed&quot;,
+  &quot;title&quot;: &quot;Ein Tag ist ung&#252;ltig.&quot;,
+  &quot;detail&quot;: &quot;Eines der Buchungs-Tags ist kein g&#252;ltiges einzelnes Token.&quot;,
+  &quot;code&quot;: &quot;BOOKING_TAG_MALFORMED&quot;
+}</code></pre>
+<p class="example-label">Diagnose (intern — nicht f&#252;r externe Weitergabe)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [Tag] &#39;late checkout&#39; is not a valid tag. error.code=BOOKING_TAG_MALFORMED</code></pre>
+</div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-Currency">
+<h2 class="group-title">Currency</h2>
+<p class="group-description">Fehler, die beim Parsen eines Abrechnungsw&#228;hrungscodes aus einer Anforderungszeichenfolge ausgel&#246;st werden.</p>
+<article class="error-detail" id="err-CURRENCY_CODE_MALFORMED">
+<h3 class="error-title"><code>CURRENCY_CODE_MALFORMED</code> <a class="anchor" href="#err-CURRENCY_CODE_MALFORMED" aria-label="Link zu diesem Fehler kopieren" data-anchor>#</a></h3>
+<p class="error-subtitle">Fehlerhafter W&#228;hrungscode</p>
+<section class="doc"><h4>Dokumentation</h4><p>Eine eingehende Anforderung enth&#228;lt einen Wert, der kein wohlgeformter dreistelliger W&#228;hrungscode ist und daher nicht in ein Currency-Value-Object geparst werden kann.</p></section>
+<blockquote class="rule"><strong>Gesch&#228;ftsregel:</strong> Ein W&#228;hrungscode muss aus genau drei ASCII-Gro&#223;buchstaben bestehen (zum Beispiel EUR).</blockquote>
+<section class="diagnostics"><h4>Diagnosen</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;gliche Ursache</th><th scope="col">Ursprung</th><th scope="col">Analysehinweis</th></tr>
+</thead>
+<tbody>
+<tr><td>Der Client hat eine W&#228;hrung in der falschen Form gesendet (Kleinbuchstaben, ein Symbol, ein Name oder die falsche L&#228;nge).</td><td>External</td><td>Senden Sie den alphabetischen ISO-4217-Code in Gro&#223;buchstaben, zum Beispiel USD oder EUR.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Beispiele</h4>
+<div class="example">
+<p class="example-label">&#214;ffentliche Antwort (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:currency-code-malformed&quot;,
+  &quot;title&quot;: &quot;Die W&#228;hrung ist ung&#252;ltig.&quot;,
+  &quot;detail&quot;: &quot;Der Abrechnungsw&#228;hrungscode ist kein g&#252;ltiger dreistelliger Code.&quot;,
+  &quot;code&quot;: &quot;CURRENCY_CODE_MALFORMED&quot;
+}</code></pre>
+<p class="example-label">Diagnose (intern — nicht f&#252;r externe Weitergabe)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [Currency] &#39;EURO&#39; is not a valid three-letter currency code. error.code=CURRENCY_CODE_MALFORMED</code></pre>
+</div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-EmailAddress">
+<h2 class="group-title">EmailAddress</h2>
+<p class="group-description">Fehler, die beim Parsen der E-Mail-Adresse eines Gastes aus einer Anforderungszeichenfolge ausgel&#246;st werden.</p>
+<article class="error-detail" id="err-EMAIL_ADDRESS_MALFORMED">
+<h3 class="error-title"><code>EMAIL_ADDRESS_MALFORMED</code> <a class="anchor" href="#err-EMAIL_ADDRESS_MALFORMED" aria-label="Link zu diesem Fehler kopieren" data-anchor>#</a></h3>
+<p class="error-subtitle">Fehlerhafte E-Mail-Adresse</p>
+<section class="doc"><h4>Dokumentation</h4><p>Eine eingehende Anforderung enth&#228;lt einen Wert, der keine wohlgeformte E-Mail-Adresse ist und daher nicht in ein EmailAddress-Value-Object geparst werden kann.</p></section>
+<blockquote class="rule"><strong>Gesch&#228;ftsregel:</strong> Eine E-Mail-Adresse eines Gastes muss genau ein „@“ mit einem nicht leeren lokalen Teil und einer nicht leeren Dom&#228;ne enthalten.</blockquote>
+<section class="diagnostics"><h4>Diagnosen</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;gliche Ursache</th><th scope="col">Ursprung</th><th scope="col">Analysehinweis</th></tr>
+</thead>
+<tbody>
+<tr><td>Der Client hat eine falsch geschriebene oder abgeschnittene Adresse gesendet (fehlendes „@“, leerer lokaler Teil oder leere Dom&#228;ne).</td><td>External</td><td>Validieren Sie die Adresse auf dem Client und vergleichen Sie den gesendeten Wert mit dem erwarteten Format.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Beispiele</h4>
+<div class="example">
+<p class="example-label">&#214;ffentliche Antwort (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:email-address-malformed&quot;,
+  &quot;title&quot;: &quot;Die E-Mail-Adresse ist ung&#252;ltig.&quot;,
+  &quot;detail&quot;: &quot;Der angegebene Wert ist keine g&#252;ltige E-Mail-Adresse.&quot;,
+  &quot;code&quot;: &quot;EMAIL_ADDRESS_MALFORMED&quot;
+}</code></pre>
+<p class="example-label">Diagnose (intern — nicht f&#252;r externe Weitergabe)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [EmailAddress] &#39;not-an-email&#39; is not a valid e-mail address. error.code=EMAIL_ADDRESS_MALFORMED</code></pre>
+</div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-NightCount">
+<h2 class="group-title">NightCount</h2>
+<p class="group-description">Fehler, die beim Erstellen der Anzahl der N&#228;chte aus einem Anforderungswert ausgel&#246;st werden.</p>
+<article class="error-detail" id="err-NIGHT_COUNT_NOT_POSITIVE">
+<h3 class="error-title"><code>NIGHT_COUNT_NOT_POSITIVE</code> <a class="anchor" href="#err-NIGHT_COUNT_NOT_POSITIVE" aria-label="Link zu diesem Fehler kopieren" data-anchor>#</a></h3>
+<p class="error-subtitle">Nicht positive Anzahl von N&#228;chten</p>
+<section class="doc"><h4>Dokumentation</h4><p>Eine eingehende Anforderung verlangt null oder eine negative Anzahl von N&#228;chten, was keine g&#252;ltige Aufenthaltsdauer ist.</p></section>
+<blockquote class="rule"><strong>Gesch&#228;ftsregel:</strong> Eine Buchung muss mindestens eine Nacht umfassen.</blockquote>
+<section class="diagnostics"><h4>Diagnosen</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;gliche Ursache</th><th scope="col">Ursprung</th><th scope="col">Analysehinweis</th></tr>
+</thead>
+<tbody>
+<tr><td>Der Client hat eine Anzahl von N&#228;chten von null oder weniger gesendet.</td><td>External</td><td>Senden Sie eine Anzahl von N&#228;chten von eins oder mehr.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Beispiele</h4>
+<div class="example">
+<p class="example-label">&#214;ffentliche Antwort (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:night-count-not-positive&quot;,
+  &quot;title&quot;: &quot;Die Anzahl der N&#228;chte ist ung&#252;ltig.&quot;,
+  &quot;detail&quot;: &quot;Die angeforderte Anzahl von N&#228;chten muss eins oder mehr betragen.&quot;,
+  &quot;code&quot;: &quot;NIGHT_COUNT_NOT_POSITIVE&quot;
+}</code></pre>
+<p class="example-label">Diagnose (intern — nicht f&#252;r externe Weitergabe)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [NightCount] A booking must be for at least one night, but 0 was requested. error.code=NIGHT_COUNT_NOT_POSITIVE</code></pre>
+</div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-RoomNumber">
+<h2 class="group-title">RoomNumber</h2>
+<p class="group-description">Fehler, die beim Erstellen einer Zimmernummer aus einem Element einer Anforderungsliste ausgel&#246;st werden.</p>
+<article class="error-detail" id="err-ROOM_NUMBER_OUT_OF_RANGE">
+<h3 class="error-title"><code>ROOM_NUMBER_OUT_OF_RANGE</code> <a class="anchor" href="#err-ROOM_NUMBER_OUT_OF_RANGE" aria-label="Link zu diesem Fehler kopieren" data-anchor>#</a></h3>
+<p class="error-subtitle">Zimmernummer au&#223;erhalb des Bereichs</p>
+<section class="doc"><h4>Dokumentation</h4><p>Ein Element der Zimmernummernliste der Anforderung liegt au&#223;erhalb des unterst&#252;tzten Bereichs (1-999).</p></section>
+<blockquote class="rule"><strong>Gesch&#228;ftsregel:</strong> Eine Zimmernummer muss zwischen 1 und 999 (einschlie&#223;lich) liegen.</blockquote>
+<section class="diagnostics"><h4>Diagnosen</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;gliche Ursache</th><th scope="col">Ursprung</th><th scope="col">Analysehinweis</th></tr>
+</thead>
+<tbody>
+<tr><td>Der Client hat eine Zimmernummer von null, einen negativen Wert oder einen Wert &#252;ber 999 gesendet.</td><td>External</td><td>Senden Sie Zimmernummern innerhalb des unterst&#252;tzten Bereichs (1-999).</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Beispiele</h4>
+<div class="example">
+<p class="example-label">&#214;ffentliche Antwort (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:room-number-out-of-range&quot;,
+  &quot;title&quot;: &quot;Eine Zimmernummer ist ung&#252;ltig.&quot;,
+  &quot;detail&quot;: &quot;Eine der angeforderten Zimmernummern liegt au&#223;erhalb des unterst&#252;tzten Bereichs.&quot;,
+  &quot;code&quot;: &quot;ROOM_NUMBER_OUT_OF_RANGE&quot;
+}</code></pre>
+<p class="example-label">Diagnose (intern — nicht f&#252;r externe Weitergabe)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [RoomNumber] Room number 1000 is outside the supported range 1-999. error.code=ROOM_NUMBER_OUT_OF_RANGE</code></pre>
+</div>
+</section>
+</article>
+</section>
+<section class="error-group" id="src-Stay">
+<h2 class="group-title">Stay</h2>
+<p class="group-description">Fehler, die bei der gemeinsamen Validierung von An- und Abreisedatum eines Aufenthalts ausgel&#246;st werden.</p>
+<article class="error-detail" id="err-STAY_CHECKOUT_NOT_AFTER_CHECKIN">
+<h3 class="error-title"><code>STAY_CHECKOUT_NOT_AFTER_CHECKIN</code> <a class="anchor" href="#err-STAY_CHECKOUT_NOT_AFTER_CHECKIN" aria-label="Link zu diesem Fehler kopieren" data-anchor>#</a></h3>
+<p class="error-subtitle">Abreise nicht nach Anreise</p>
+<section class="doc"><h4>Dokumentation</h4><p>Beide Aufenthaltsdaten werden geparst, aber das Abreisedatum liegt vor oder auf dem Anreisedatum, sodass der Aufenthalt keine positive Dauer hat. Diese feld&#252;bergreifende Regel wird von der Stay.Create-Factory durchgesetzt.</p></section>
+<blockquote class="rule"><strong>Gesch&#228;ftsregel:</strong> Die Abreise muss streng nach der Anreise liegen.</blockquote>
+<section class="diagnostics"><h4>Diagnosen</h4>
+<div class="table-wrap"><table class="data-table">
+<thead>
+<tr><th scope="col">M&#246;gliche Ursache</th><th scope="col">Ursprung</th><th scope="col">Analysehinweis</th></tr>
+</thead>
+<tbody>
+<tr><td>Der Client hat ein Abreisedatum gesendet, das gleich oder fr&#252;her als das Anreisedatum ist.</td><td>External</td><td>Senden Sie ein Abreisedatum, das mindestens einen Tag nach dem Anreisedatum liegt.</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class="examples"><h4>Beispiele</h4>
+<div class="example">
+<p class="example-label">&#214;ffentliche Antwort (RFC 9457)</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;urn:problem:booking-service:stay-checkout-not-after-checkin&quot;,
+  &quot;title&quot;: &quot;Die Aufenthaltsdaten sind ung&#252;ltig.&quot;,
+  &quot;detail&quot;: &quot;Das Abreisedatum muss nach dem Anreisedatum liegen.&quot;,
+  &quot;code&quot;: &quot;STAY_CHECKOUT_NOT_AFTER_CHECKIN&quot;
+}</code></pre>
+<p class="example-label">Diagnose (intern — nicht f&#252;r externe Weitergabe)</p>
+<pre class="log"><code>2026-07-04T13:42:18.734Z ERROR [Stay] Check-out 2026-08-10 must be strictly after check-in 2026-08-14. error.code=STAY_CHECKOUT_NOT_AFTER_CHECKIN</code></pre>
+</div>
+</section>
+</article>
+</section>
+</main>
+<script>
+(function () {
+  var KEY = 'fce-theme';
+  var root = document.documentElement;
+  function apply(t) { if (t === 'light' || t === 'dark') { root.dataset.theme = t; } else { delete root.dataset.theme; } }
+  function current() { return root.dataset.theme || 'auto'; }
+  function store(theme) {
+    // localStorage throws when it is unavailable (e.g. private mode). Report that to the caller instead of
+    // swallowing it in an empty catch — persisting the theme is best effort, so the caller ignores the result.
+    try {
+      if (theme === 'auto') { localStorage.removeItem(KEY); } else { localStorage.setItem(KEY, theme); }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  var btn = document.getElementById('theme-toggle');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var order = ['auto', 'light', 'dark'];
+      var next = order[(order.indexOf(current()) + 1) % order.length];
+      store(next);
+      apply(next);
+    });
+  }
+  var search = document.getElementById('search');
+  var toc = document.getElementById('toc');
+  var noResults = document.getElementById('no-results');
+  function filter() {
+    if (!toc) { return; }
+    var q = ((search && search.value) || '').toLowerCase().trim();
+    var items = toc.querySelectorAll('.toc-item');
+    var visible = 0;
+    for (var item of items) {
+      var ok = !q || (item.dataset.search || '').includes(q);
+      item.hidden = !ok;
+      if (ok) { visible++; }
+    }
+    var groups = toc.querySelectorAll('.toc-group');
+    for (var group of groups) {
+      group.hidden = group.querySelectorAll('.toc-item:not([hidden])').length === 0;
+    }
+    if (noResults) { noResults.hidden = visible !== 0; }
+  }
+  if (search) { search.addEventListener('input', filter); }
+  var anchors = document.querySelectorAll('a[data-anchor]');
+  for (var anchor of anchors) {
+    anchor.addEventListener('click', function () {
+      var href = this.getAttribute('href') || '';
+      var url = location.href.split('#')[0] + href;
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(url).catch(function () {}); }
+    });
+  }
+})();
+</script>
+</body>
+</html>

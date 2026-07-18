@@ -1,0 +1,225 @@
+﻿{
+  Documentation: [
+    {
+      Code: BOOKING_COMMAND_INVALID,
+      Title: Booking request invalid,
+      Explanation: The endpoint could not bind the incoming request into a booking command: one or more arguments were missing or invalid. Every failure is collected under this envelope, each with its full argument path.,
+      BusinessRule: Every required argument must be present, and every argument must convert into its value object.,
+      Diagnostics: [
+        {
+          PossibleCause: The client sent a request that violates the endpoint's contract (missing or malformed arguments).,
+          Origin: External,
+          AnalysisHint: Read the inner errors: each names the failing argument and the rule it violated.
+        }
+      ],
+      Examples: [
+        {
+          ShortMessage: We could not accept your booking request.,
+          DiagnosticMessage: The booking command is invalid: one or more request arguments failed to bind.,
+          DetailedMessage: One or more details of the booking request are missing or invalid.
+        }
+      ],
+      Source: BookingEndpoint,
+      SourceDescription: Primary-port errors raised by the booking endpoint when it binds an incoming request into a command.
+    },
+    {
+      Code: BOOKING_DATE_MALFORMED,
+      Title: Malformed booking date,
+      Explanation: An incoming request carries a value that is not an ISO yyyy-MM-dd date, so it cannot be parsed into a BookingDate value object.,
+      BusinessRule: A booking date must be an ISO calendar date in the yyyy-MM-dd format.,
+      Diagnostics: [
+        {
+          PossibleCause: The client sent a date in a locale-specific or malformed format, or an impossible calendar date.,
+          Origin: External,
+          AnalysisHint: Send dates in ISO 8601 yyyy-MM-dd form, for example 2026-08-10.
+        }
+      ],
+      Examples: [
+        {
+          ShortMessage: The date is invalid.,
+          DiagnosticMessage: '2026-13-40' is not a valid ISO (yyyy-MM-dd) date.,
+          DetailedMessage: A booking date is not a valid ISO (yyyy-MM-dd) date.
+        }
+      ],
+      Source: BookingDate,
+      SourceDescription: Errors raised when parsing a booking date (check-in / check-out) from a request string.
+    },
+    {
+      Code: BOOKING_GUEST_INVALID,
+      Title: Booking guest invalid,
+      Explanation: A guest in the request's guests list could not be bound: its first name was missing or its e-mail was malformed. Its failures are grouped under this per-element envelope, with indexed paths such as Guests[1].,
+      BusinessRule: Each guest must have a first name, and any e-mail present must be valid.,
+      Diagnostics: [
+        {
+          PossibleCause: The client sent a guest with a missing first name or a malformed e-mail address.,
+          Origin: External,
+          AnalysisHint: Read the inner errors under the indexed Guests[i] path for the failing field.
+        }
+      ],
+      Examples: [
+        {
+          ShortMessage: A guest's information is invalid.,
+          DiagnosticMessage: The guest is invalid: one or more of its fields failed to bind.,
+          DetailedMessage: One of the guests is missing a first name or has an invalid e-mail address.
+        }
+      ],
+      Source: BookingEndpoint,
+      SourceDescription: Primary-port errors raised by the booking endpoint when it binds an incoming request into a command.
+    },
+    {
+      Code: BOOKING_STAY_INVALID,
+      Title: Booking stay invalid,
+      Explanation: The stay sub-object of the request could not be bound: one or both of its dates were missing or malformed. Its failures are grouped under this nested envelope, with paths prefixed by Stay.,
+      BusinessRule: Both stay dates must be present and valid ISO dates.,
+      Diagnostics: [
+        {
+          PossibleCause: The client sent a stay with a missing or malformed check-in or check-out date.,
+          Origin: External,
+          AnalysisHint: Read the inner errors under the Stay path for the failing date.
+        }
+      ],
+      Examples: [
+        {
+          ShortMessage: We could not read the stay dates.,
+          DiagnosticMessage: The stay is invalid: one or more of its dates failed to bind.,
+          DetailedMessage: The check-in or check-out date of the stay is missing or invalid.
+        }
+      ],
+      Source: BookingEndpoint,
+      SourceDescription: Primary-port errors raised by the booking endpoint when it binds an incoming request into a command.
+    },
+    {
+      Code: BOOKING_TAG_MALFORMED,
+      Title: Malformed booking tag,
+      Explanation: An element of the request's tag list is empty, too long, or contains whitespace, so it cannot be parsed into a Tag value object.,
+      BusinessRule: A tag must be a single non-empty token of at most 32 characters, without whitespace.,
+      Diagnostics: [
+        {
+          PossibleCause: The client sent a blank tag, a phrase containing spaces, or an over-long value.,
+          Origin: External,
+          AnalysisHint: Send each tag as a single whitespace-free token; join multi-word tags with a hyphen.
+        }
+      ],
+      Examples: [
+        {
+          ShortMessage: A tag is invalid.,
+          DiagnosticMessage: 'late checkout' is not a valid tag.,
+          DetailedMessage: One of the booking tags is not a valid single token.
+        }
+      ],
+      Source: Tag,
+      SourceDescription: Errors raised when parsing a booking tag from an element of a request list.
+    },
+    {
+      Code: CURRENCY_CODE_MALFORMED,
+      Title: Malformed currency code,
+      Explanation: An incoming request carries a value that is not a well-formed three-letter currency code, so it cannot be parsed into a Currency value object.,
+      BusinessRule: A currency code must be exactly three upper-case ASCII letters (for example EUR).,
+      Diagnostics: [
+        {
+          PossibleCause: The client sent a currency in the wrong shape (lower-case, a symbol, a name, or the wrong length).,
+          Origin: External,
+          AnalysisHint: Send the ISO-4217 alphabetic code in upper case, for example USD or EUR.
+        }
+      ],
+      Examples: [
+        {
+          ShortMessage: The currency is invalid.,
+          DiagnosticMessage: 'EURO' is not a valid three-letter currency code.,
+          DetailedMessage: The billing currency code is not a valid three-letter code.
+        }
+      ],
+      Source: Currency,
+      SourceDescription: Errors raised when parsing a billing currency code from a request string.
+    },
+    {
+      Code: EMAIL_ADDRESS_MALFORMED,
+      Title: Malformed e-mail address,
+      Explanation: An incoming request carries a value that is not a well-formed e-mail address, so it cannot be parsed into an EmailAddress value object.,
+      BusinessRule: A guest e-mail address must contain a single '@' with a non-empty local part and domain.,
+      Diagnostics: [
+        {
+          PossibleCause: The client sent a misspelled or truncated address (missing '@', empty local part or domain).,
+          Origin: External,
+          AnalysisHint: Validate the address on the client, and compare the sent value against the expected format.
+        }
+      ],
+      Examples: [
+        {
+          ShortMessage: The e-mail address is invalid.,
+          DiagnosticMessage: 'not-an-email' is not a valid e-mail address.,
+          DetailedMessage: The value provided is not a valid e-mail address.
+        }
+      ],
+      Source: EmailAddress,
+      SourceDescription: Errors raised when parsing a guest e-mail address from a request string.
+    },
+    {
+      Code: NIGHT_COUNT_NOT_POSITIVE,
+      Title: Non-positive number of nights,
+      Explanation: An incoming request asks for zero or a negative number of nights, which is not a valid stay length.,
+      BusinessRule: A booking must be for at least one night.,
+      Diagnostics: [
+        {
+          PossibleCause: The client sent a number of nights of zero or below.,
+          Origin: External,
+          AnalysisHint: Send a number of nights of one or more.
+        }
+      ],
+      Examples: [
+        {
+          ShortMessage: The number of nights is invalid.,
+          DiagnosticMessage: A booking must be for at least one night, but 0 was requested.,
+          DetailedMessage: The requested number of nights must be one or more.
+        }
+      ],
+      Source: NightCount,
+      SourceDescription: Errors raised when building the number of nights from a request value.
+    },
+    {
+      Code: ROOM_NUMBER_OUT_OF_RANGE,
+      Title: Room number out of range,
+      Explanation: An element of the request's room-number list is outside the supported 1-999 range.,
+      BusinessRule: A room number must be between 1 and 999 inclusive.,
+      Diagnostics: [
+        {
+          PossibleCause: The client sent a room number of zero, a negative value, or a value above 999.,
+          Origin: External,
+          AnalysisHint: Send room numbers within the supported 1-999 range.
+        }
+      ],
+      Examples: [
+        {
+          ShortMessage: A room number is invalid.,
+          DiagnosticMessage: Room number 1000 is outside the supported range 1-999.,
+          DetailedMessage: One of the requested room numbers is outside the supported range.
+        }
+      ],
+      Source: RoomNumber,
+      SourceDescription: Errors raised when building a room number from an element of a request list.
+    },
+    {
+      Code: STAY_CHECKOUT_NOT_AFTER_CHECKIN,
+      Title: Check-out not after check-in,
+      Explanation: Both stay dates parse, but the check-out date is on or before the check-in date, so the stay has no positive length. This cross-field rule is enforced by the Stay.Create factory.,
+      BusinessRule: Check-out must be strictly after check-in.,
+      Diagnostics: [
+        {
+          PossibleCause: The client sent a check-out date equal to or earlier than the check-in date.,
+          Origin: External,
+          AnalysisHint: Send a check-out date at least one day after the check-in date.
+        }
+      ],
+      Examples: [
+        {
+          ShortMessage: The stay dates are invalid.,
+          DiagnosticMessage: Check-out 2026-08-10 must be strictly after check-in 2026-08-14.,
+          DetailedMessage: The check-out date must be after the check-in date.
+        }
+      ],
+      Source: Stay,
+      SourceDescription: Errors raised when validating a stay's check-in and check-out dates together.
+    }
+  ],
+  HasFailures: false
+}

@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- ============================ Beschreibungen der Quellgruppen ============================ -->
+  <data name="EmailAddress_Source" xml:space="preserve">
+    <value>Fehler, die beim Parsen der E-Mail-Adresse eines Gastes aus einer Anforderungszeichenfolge ausgelöst werden.</value>
+  </data>
+  <data name="Currency_Source" xml:space="preserve">
+    <value>Fehler, die beim Parsen eines Abrechnungswährungscodes aus einer Anforderungszeichenfolge ausgelöst werden.</value>
+  </data>
+  <data name="Tag_Source" xml:space="preserve">
+    <value>Fehler, die beim Parsen eines Buchungs-Tags aus einem Element einer Anforderungsliste ausgelöst werden.</value>
+  </data>
+  <data name="BookingDate_Source" xml:space="preserve">
+    <value>Fehler, die beim Parsen eines Buchungsdatums (Anreise / Abreise) aus einer Anforderungszeichenfolge ausgelöst werden.</value>
+  </data>
+  <data name="NightCount_Source" xml:space="preserve">
+    <value>Fehler, die beim Erstellen der Anzahl der Nächte aus einem Anforderungswert ausgelöst werden.</value>
+  </data>
+  <data name="RoomNumber_Source" xml:space="preserve">
+    <value>Fehler, die beim Erstellen einer Zimmernummer aus einem Element einer Anforderungsliste ausgelöst werden.</value>
+  </data>
+  <data name="Stay_Source" xml:space="preserve">
+    <value>Fehler, die bei der gemeinsamen Validierung von An- und Abreisedatum eines Aufenthalts ausgelöst werden.</value>
+  </data>
+  <data name="BookingEndpoint_Source" xml:space="preserve">
+    <value>Primär-Port-Fehler, die vom Buchungsendpunkt ausgelöst werden, wenn er eine eingehende Anforderung an einen Befehl bindet.</value>
+  </data>
+  <!-- ============================ EmailAddress ============================ -->
+  <data name="EmailAddress_Malformed_Title" xml:space="preserve">
+    <value>Fehlerhafte E-Mail-Adresse</value>
+  </data>
+  <data name="EmailAddress_Malformed_Description" xml:space="preserve">
+    <value>Eine eingehende Anforderung enthält einen Wert, der keine wohlgeformte E-Mail-Adresse ist und daher nicht in ein EmailAddress-Value-Object geparst werden kann.</value>
+  </data>
+  <data name="EmailAddress_Malformed_Rule" xml:space="preserve">
+    <value>Eine E-Mail-Adresse eines Gastes muss genau ein „@“ mit einem nicht leeren lokalen Teil und einer nicht leeren Domäne enthalten.</value>
+  </data>
+  <data name="EmailAddress_Malformed_Cause1" xml:space="preserve">
+    <value>Der Client hat eine falsch geschriebene oder abgeschnittene Adresse gesendet (fehlendes „@“, leerer lokaler Teil oder leere Domäne).</value>
+  </data>
+  <data name="EmailAddress_Malformed_Hint1" xml:space="preserve">
+    <value>Validieren Sie die Adresse auf dem Client und vergleichen Sie den gesendeten Wert mit dem erwarteten Format.</value>
+  </data>
+  <data name="EmailAddress_Malformed_ShortMessage" xml:space="preserve">
+    <value>Die E-Mail-Adresse ist ungültig.</value>
+  </data>
+  <data name="EmailAddress_Malformed_DetailedMessage" xml:space="preserve">
+    <value>Der angegebene Wert ist keine gültige E-Mail-Adresse.</value>
+  </data>
+  <!-- ============================ Currency ============================ -->
+  <data name="Currency_Malformed_Title" xml:space="preserve">
+    <value>Fehlerhafter Währungscode</value>
+  </data>
+  <data name="Currency_Malformed_Description" xml:space="preserve">
+    <value>Eine eingehende Anforderung enthält einen Wert, der kein wohlgeformter dreistelliger Währungscode ist und daher nicht in ein Currency-Value-Object geparst werden kann.</value>
+  </data>
+  <data name="Currency_Malformed_Rule" xml:space="preserve">
+    <value>Ein Währungscode muss aus genau drei ASCII-Großbuchstaben bestehen (zum Beispiel EUR).</value>
+  </data>
+  <data name="Currency_Malformed_Cause1" xml:space="preserve">
+    <value>Der Client hat eine Währung in der falschen Form gesendet (Kleinbuchstaben, ein Symbol, ein Name oder die falsche Länge).</value>
+  </data>
+  <data name="Currency_Malformed_Hint1" xml:space="preserve">
+    <value>Senden Sie den alphabetischen ISO-4217-Code in Großbuchstaben, zum Beispiel USD oder EUR.</value>
+  </data>
+  <data name="Currency_Malformed_ShortMessage" xml:space="preserve">
+    <value>Die Währung ist ungültig.</value>
+  </data>
+  <data name="Currency_Malformed_DetailedMessage" xml:space="preserve">
+    <value>Der Abrechnungswährungscode ist kein gültiger dreistelliger Code.</value>
+  </data>
+  <!-- ============================ Tag ============================ -->
+  <data name="Tag_Malformed_Title" xml:space="preserve">
+    <value>Fehlerhaftes Buchungs-Tag</value>
+  </data>
+  <data name="Tag_Malformed_Description" xml:space="preserve">
+    <value>Ein Element der Tag-Liste der Anforderung ist leer, zu lang oder enthält Leerzeichen und kann daher nicht in ein Tag-Value-Object geparst werden.</value>
+  </data>
+  <data name="Tag_Malformed_Rule" xml:space="preserve">
+    <value>Ein Tag muss ein einzelnes, nicht leeres Token von höchstens 32 Zeichen ohne Leerzeichen sein.</value>
+  </data>
+  <data name="Tag_Malformed_Cause1" xml:space="preserve">
+    <value>Der Client hat ein leeres Tag, einen Ausdruck mit Leerzeichen oder einen zu langen Wert gesendet.</value>
+  </data>
+  <data name="Tag_Malformed_Hint1" xml:space="preserve">
+    <value>Senden Sie jedes Tag als einzelnes Token ohne Leerzeichen; verbinden Sie mehrwortige Tags mit einem Bindestrich.</value>
+  </data>
+  <data name="Tag_Malformed_ShortMessage" xml:space="preserve">
+    <value>Ein Tag ist ungültig.</value>
+  </data>
+  <data name="Tag_Malformed_DetailedMessage" xml:space="preserve">
+    <value>Eines der Buchungs-Tags ist kein gültiges einzelnes Token.</value>
+  </data>
+  <!-- ============================ BookingDate ============================ -->
+  <data name="BookingDate_Malformed_Title" xml:space="preserve">
+    <value>Fehlerhaftes Buchungsdatum</value>
+  </data>
+  <data name="BookingDate_Malformed_Description" xml:space="preserve">
+    <value>Eine eingehende Anforderung enthält einen Wert, der kein ISO-Datum (yyyy-MM-dd) ist und daher nicht in ein BookingDate-Value-Object geparst werden kann.</value>
+  </data>
+  <data name="BookingDate_Malformed_Rule" xml:space="preserve">
+    <value>Ein Buchungsdatum muss ein ISO-Kalenderdatum im Format yyyy-MM-dd sein.</value>
+  </data>
+  <data name="BookingDate_Malformed_Cause1" xml:space="preserve">
+    <value>Der Client hat ein Datum in einem länderspezifischen oder fehlerhaften Format oder ein unmögliches Kalenderdatum gesendet.</value>
+  </data>
+  <data name="BookingDate_Malformed_Hint1" xml:space="preserve">
+    <value>Senden Sie Datumsangaben im Format ISO 8601 yyyy-MM-dd, zum Beispiel 2026-08-10.</value>
+  </data>
+  <data name="BookingDate_Malformed_ShortMessage" xml:space="preserve">
+    <value>Das Datum ist ungültig.</value>
+  </data>
+  <data name="BookingDate_Malformed_DetailedMessage" xml:space="preserve">
+    <value>Ein Buchungsdatum ist kein gültiges ISO-Datum (yyyy-MM-dd).</value>
+  </data>
+  <!-- ============================ NightCount ============================ -->
+  <data name="NightCount_NotPositive_Title" xml:space="preserve">
+    <value>Nicht positive Anzahl von Nächten</value>
+  </data>
+  <data name="NightCount_NotPositive_Description" xml:space="preserve">
+    <value>Eine eingehende Anforderung verlangt null oder eine negative Anzahl von Nächten, was keine gültige Aufenthaltsdauer ist.</value>
+  </data>
+  <data name="NightCount_NotPositive_Rule" xml:space="preserve">
+    <value>Eine Buchung muss mindestens eine Nacht umfassen.</value>
+  </data>
+  <data name="NightCount_NotPositive_Cause1" xml:space="preserve">
+    <value>Der Client hat eine Anzahl von Nächten von null oder weniger gesendet.</value>
+  </data>
+  <data name="NightCount_NotPositive_Hint1" xml:space="preserve">
+    <value>Senden Sie eine Anzahl von Nächten von eins oder mehr.</value>
+  </data>
+  <data name="NightCount_NotPositive_ShortMessage" xml:space="preserve">
+    <value>Die Anzahl der Nächte ist ungültig.</value>
+  </data>
+  <data name="NightCount_NotPositive_DetailedMessage" xml:space="preserve">
+    <value>Die angeforderte Anzahl von Nächten muss eins oder mehr betragen.</value>
+  </data>
+  <!-- ============================ RoomNumber ============================ -->
+  <data name="RoomNumber_OutOfRange_Title" xml:space="preserve">
+    <value>Zimmernummer außerhalb des Bereichs</value>
+  </data>
+  <data name="RoomNumber_OutOfRange_Description" xml:space="preserve">
+    <value>Ein Element der Zimmernummernliste der Anforderung liegt außerhalb des unterstützten Bereichs (1-999).</value>
+  </data>
+  <data name="RoomNumber_OutOfRange_Rule" xml:space="preserve">
+    <value>Eine Zimmernummer muss zwischen 1 und 999 (einschließlich) liegen.</value>
+  </data>
+  <data name="RoomNumber_OutOfRange_Cause1" xml:space="preserve">
+    <value>Der Client hat eine Zimmernummer von null, einen negativen Wert oder einen Wert über 999 gesendet.</value>
+  </data>
+  <data name="RoomNumber_OutOfRange_Hint1" xml:space="preserve">
+    <value>Senden Sie Zimmernummern innerhalb des unterstützten Bereichs (1-999).</value>
+  </data>
+  <data name="RoomNumber_OutOfRange_ShortMessage" xml:space="preserve">
+    <value>Eine Zimmernummer ist ungültig.</value>
+  </data>
+  <data name="RoomNumber_OutOfRange_DetailedMessage" xml:space="preserve">
+    <value>Eine der angeforderten Zimmernummern liegt außerhalb des unterstützten Bereichs.</value>
+  </data>
+  <!-- ============================ Stay (feldübergreifende Regel) ============================ -->
+  <data name="Stay_CheckOutNotAfterCheckIn_Title" xml:space="preserve">
+    <value>Abreise nicht nach Anreise</value>
+  </data>
+  <data name="Stay_CheckOutNotAfterCheckIn_Description" xml:space="preserve">
+    <value>Beide Aufenthaltsdaten werden geparst, aber das Abreisedatum liegt vor oder auf dem Anreisedatum, sodass der Aufenthalt keine positive Dauer hat. Diese feldübergreifende Regel wird von der Stay.Create-Factory durchgesetzt.</value>
+  </data>
+  <data name="Stay_CheckOutNotAfterCheckIn_Rule" xml:space="preserve">
+    <value>Die Abreise muss streng nach der Anreise liegen.</value>
+  </data>
+  <data name="Stay_CheckOutNotAfterCheckIn_Cause1" xml:space="preserve">
+    <value>Der Client hat ein Abreisedatum gesendet, das gleich oder früher als das Anreisedatum ist.</value>
+  </data>
+  <data name="Stay_CheckOutNotAfterCheckIn_Hint1" xml:space="preserve">
+    <value>Senden Sie ein Abreisedatum, das mindestens einen Tag nach dem Anreisedatum liegt.</value>
+  </data>
+  <data name="Stay_CheckOutNotAfterCheckIn_ShortMessage" xml:space="preserve">
+    <value>Die Aufenthaltsdaten sind ungültig.</value>
+  </data>
+  <data name="Stay_CheckOutNotAfterCheckIn_DetailedMessage" xml:space="preserve">
+    <value>Das Abreisedatum muss nach dem Anreisedatum liegen.</value>
+  </data>
+  <!-- ============================ PlaceBooking-Umschläge ============================ -->
+  <data name="PlaceBooking_CommandInvalid_Title" xml:space="preserve">
+    <value>Buchungsanforderung ungültig</value>
+  </data>
+  <data name="PlaceBooking_CommandInvalid_Description" xml:space="preserve">
+    <value>Der Endpunkt konnte die eingehende Anforderung nicht an einen Buchungsbefehl binden: Ein oder mehrere Argumente fehlten oder waren ungültig. Jeder Fehler wird unter diesem Umschlag gesammelt, jeweils mit seinem vollständigen Argumentpfad.</value>
+  </data>
+  <data name="PlaceBooking_CommandInvalid_Rule" xml:space="preserve">
+    <value>Jedes erforderliche Argument muss vorhanden sein, und jedes Argument muss in sein Value-Object konvertiert werden.</value>
+  </data>
+  <data name="PlaceBooking_CommandInvalid_Cause1" xml:space="preserve">
+    <value>Der Client hat eine Anforderung gesendet, die den Vertrag des Endpunkts verletzt (fehlende oder fehlerhafte Argumente).</value>
+  </data>
+  <data name="PlaceBooking_CommandInvalid_Hint1" xml:space="preserve">
+    <value>Lesen Sie die inneren Fehler: Jeder benennt das fehlerhafte Argument und die verletzte Regel.</value>
+  </data>
+  <data name="PlaceBooking_CommandInvalid_ShortMessage" xml:space="preserve">
+    <value>Wir konnten Ihre Buchungsanforderung nicht annehmen.</value>
+  </data>
+  <data name="PlaceBooking_CommandInvalid_DetailedMessage" xml:space="preserve">
+    <value>Eine oder mehrere Angaben der Buchungsanforderung fehlen oder sind ungültig.</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_Title" xml:space="preserve">
+    <value>Aufenthalt der Buchung ungültig</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_Description" xml:space="preserve">
+    <value>Das Aufenthalts-Unterobjekt der Anforderung konnte nicht gebunden werden: Eines oder beide seiner Daten fehlten oder waren fehlerhaft. Seine Fehler werden unter diesem verschachtelten Umschlag gruppiert, mit durch Stay präfixierten Pfaden.</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_Rule" xml:space="preserve">
+    <value>Beide Aufenthaltsdaten müssen vorhanden und gültige ISO-Daten sein.</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_Cause1" xml:space="preserve">
+    <value>Der Client hat einen Aufenthalt mit einem fehlenden oder fehlerhaften An- oder Abreisedatum gesendet.</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_Hint1" xml:space="preserve">
+    <value>Lesen Sie die inneren Fehler unter dem Stay-Pfad für das fehlerhafte Datum.</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_ShortMessage" xml:space="preserve">
+    <value>Wir konnten die Aufenthaltsdaten nicht lesen.</value>
+  </data>
+  <data name="PlaceBooking_StayInvalid_DetailedMessage" xml:space="preserve">
+    <value>Das An- oder Abreisedatum des Aufenthalts fehlt oder ist ungültig.</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_Title" xml:space="preserve">
+    <value>Gast der Buchung ungültig</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_Description" xml:space="preserve">
+    <value>Ein Gast der Gästeliste der Anforderung konnte nicht gebunden werden: Sein Vorname fehlte oder seine E-Mail war fehlerhaft. Seine Fehler werden unter diesem Umschlag pro Element gruppiert, mit indizierten Pfaden wie Guests[1].</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_Rule" xml:space="preserve">
+    <value>Jeder Gast muss einen Vornamen haben, und jede vorhandene E-Mail muss gültig sein.</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_Cause1" xml:space="preserve">
+    <value>Der Client hat einen Gast mit einem fehlenden Vornamen oder einer fehlerhaften E-Mail-Adresse gesendet.</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_Hint1" xml:space="preserve">
+    <value>Lesen Sie die inneren Fehler unter dem indizierten Pfad Guests[i] für das fehlerhafte Feld.</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_ShortMessage" xml:space="preserve">
+    <value>Die Angaben eines Gastes sind ungültig.</value>
+  </data>
+  <data name="PlaceBooking_GuestInvalid_DetailedMessage" xml:space="preserve">
+    <value>Einer der Gäste hat keinen Vornamen oder eine ungültige E-Mail-Adresse.</value>
+  </data>
+</root>

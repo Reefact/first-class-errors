@@ -554,6 +554,19 @@ Check.That(outcome.Error!.InnerErrors.Select(e => e.Code.ToString()))
 Assert the *whole* set of collected failures, in order — that is what proves the
 collect-all behavior, not just that binding failed.
 
+## Runnable examples
+
+The patterns in this guide are realized as compiled, tested, and
+snapshot-documented code in the
+[`FirstClassErrors.RequestBinder.Usage`](../../../FirstClassErrors.RequestBinder.Usage)
+sample: a full hotel-booking boundary bound end-to-end (`BookingBinder`), a
+showcase of every remaining overload and option — required/optional lists, custom
+argument names, custom structural codes (`BinderShowcase`) — a framework-agnostic
+call site (`BookingEndpoint`), and companion unit tests that assert the
+collect-all order, codes, and argument paths. Its documented errors appear in
+their own generated, snapshot-tested catalog, so the binder path is exercised in
+living documentation.
+
 ## 📌 Review checklist
 
 Before approving a binding, verify that:
