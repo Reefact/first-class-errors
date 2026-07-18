@@ -372,10 +372,14 @@ private static Outcome<Guest> BindGuest(RequestBinder<GuestDto> guest) {
 ```
 
 Pour les deux sélecteurs de liste, `AsRequired` enregistre
-`REQUEST_ARGUMENT_REQUIRED` quand la liste est absente, tandis qu’`AsOptional`
-traite une liste absente comme une liste **vide** (jamais `null`) et n’enregistre
-rien. Un *élément* `null` d’une liste présente est enregistré comme un argument
-manquant à son index.
+`REQUEST_ARGUMENT_REQUIRED` uniquement quand la liste elle-même est **absente**
+(`null`) : une liste **présente mais vide** est une liste requise valide — elle se
+lie à une liste vide et n’enregistre rien, car une liste requise contraint la
+**présence, pas la taille**. `AsOptional` traite une liste absente comme une liste
+**vide** (jamais `null`) et n’enregistre rien. Un *élément* `null` d’une liste
+présente est enregistré comme un argument manquant à son index. Quand le domaine
+exige au moins un élément, imposez cette cardinalité dans l’objet valeur ou la
+commande que la liste liée alimente.
 
 ## Noms d’arguments et format du fil
 
