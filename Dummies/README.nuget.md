@@ -41,6 +41,11 @@ matter — and that is the point.
 - **Composition without reflection**: `.As(factory)` turns a constrained primitive
   into a domain value object; `Any.Combine(...)` assembles larger objects through
   constructor lambdas.
+- **Collections over any element generator**: `Any.ListOf(item)`, `ArrayOf`,
+  `SequenceOf`, `SetOf` and `DictionaryOf`, constrained with
+  `WithCount`/`NonEmpty`/`Distinct`/`Containing`. A distinct collection asked for more
+  elements than its element domain can produce fails fast, just like any other
+  conflict; `Any.PairOf`/`TripleOf` pair generators into value tuples.
 - **Reproducible runs**: wrap a test in `Any.Reproducibly(...)` and a failing run
   reports the seed to replay; `Any.WithSeed(seed)` gives an isolated, deterministic
   context.

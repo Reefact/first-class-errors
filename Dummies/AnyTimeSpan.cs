@@ -13,7 +13,7 @@ namespace Dummies;
 ///     naming both sides; instances are immutable recipes, and each value is built to satisfy the constraints in one
 ///     draw. Unconstrained, it draws from the full <see cref="TimeSpan" /> range, negative durations included.
 /// </summary>
-public sealed class AnyTimeSpan : IAny<TimeSpan>, IHasRandomSource {
+public sealed class AnyTimeSpan : IAny<TimeSpan>, IHasRandomSource, ICardinalityHint {
 
     #region Statics members declarations
 
@@ -62,6 +62,8 @@ public sealed class AnyTimeSpan : IAny<TimeSpan>, IHasRandomSource {
     }
 
     RandomSource? IHasRandomSource.Source => _source;
+
+    long? ICardinalityHint.DistinctCardinality => _spec.Cardinality;
 
     /// <summary>Requires a duration strictly greater than <see cref="TimeSpan.Zero" />.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>

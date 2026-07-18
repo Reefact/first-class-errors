@@ -146,6 +146,22 @@ internal sealed class OrdinalIntervalSpec {
         return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, excluded), applying);
     }
 
+    /// <summary>
+    ///     The number of distinct values the specification can produce, or <c>null</c> when that exceeds
+    ///     <see cref="long.MaxValue" /> (a range too wide to ever conflict with a collection count). Feeds
+    ///     <see cref="ICardinalityHint" />, so a distinct collection over a narrow integer range can fail eagerly.
+    /// </summary>
+    internal long? Cardinality {
+        get {
+            if (_effectiveAllowed is not null) { return _effectiveAllowed.Count; }
+            if (IsFullWidth()) { return null; }
+
+            ulong count = _max - _min + 1UL - (ulong)_excludedInRange.Count;
+
+            return count <= long.MaxValue ? (long)count : null;
+        }
+    }
+
     /// <summary>Draws one ordinal satisfying the whole specification — built directly, never generate-then-retry.</summary>
     internal ulong GenerateOrdinal(Random random) {
         if (_effectiveAllowed is not null) {

@@ -44,6 +44,14 @@ internal static class AnyDerivation {
     }
 
     /// <summary>
+    ///     A conservative upper bound on the number of distinct values <paramref name="generator" /> yields, when it
+    ///     advertises one through <see cref="ICardinalityHint" />; <c>null</c> when the domain is unbounded or unknown.
+    /// </summary>
+    internal static long? CardinalityOf<T>(IAny<T> generator) {
+        return (generator as ICardinalityHint)?.DistinctCardinality;
+    }
+
+    /// <summary>
     ///     Runs a user-supplied factory or composer and converts its failure into an
     ///     <see cref="AnyGenerationException" /> that names the generated value(s) and, when the random context is
     ///     known, the seed that replays the run. The library's own exceptions pass through untouched.

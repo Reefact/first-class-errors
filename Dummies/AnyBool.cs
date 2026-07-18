@@ -5,7 +5,7 @@ namespace Dummies;
 ///     mostly useful for symmetry when a test sweeps cases — and contradictory pins fail eagerly with a
 ///     <see cref="ConflictingAnyConstraintException" /> naming both sides, like every other generator.
 /// </summary>
-public sealed class AnyBool : IAny<bool>, IHasRandomSource {
+public sealed class AnyBool : IAny<bool>, IHasRandomSource, ICardinalityHint {
 
     #region Statics members declarations
 
@@ -44,6 +44,9 @@ public sealed class AnyBool : IAny<bool>, IHasRandomSource {
     }
 
     RandomSource? IHasRandomSource.Source => _source;
+
+    // Two distinct values unless a pin has already fixed one of them.
+    long? ICardinalityHint.DistinctCardinality => _pinned is null ? 2 : 1;
 
     /// <summary>Pins the value to <c>true</c>.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>

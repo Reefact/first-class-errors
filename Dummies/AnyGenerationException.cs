@@ -32,6 +32,10 @@ public sealed class AnyGenerationException : AnyException {
         Seed = seed;
     }
 
+    internal AnyGenerationException(string message, int? seed) : base(message) {
+        Seed = seed;
+    }
+
     /// <summary>
     ///     The seed of the random context the failing generation drew from, when it is known — pass it to
     ///     <c>Any.Reproducibly(seed, ...)</c> to replay the run. <c>null</c> when the failing generator does not draw
