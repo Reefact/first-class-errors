@@ -450,6 +450,37 @@ or, when you keep the defaults, the ones the binder exposes.
 if (error.Code == RequestBindingError.DefaultArgumentRequiredCode) { return 422; }
 ```
 
+### Documenting your overridden errors in your own catalog
+
+When you override the codes or messages and you generate an error catalog with
+`fce generate`, document the errors where you now own them — in **your** catalog, reusing
+the binder's own prose. The public seams `DescribeArgumentRequired` /
+`DescribeArgumentInvalid` return the binder's generic description with a live example built
+from your definition; `SampleArgumentRequired` / `SampleArgumentInvalid` return the example
+error itself, for the `[DocumentedBy]` factory:
+
+```csharp
+[ProvidesErrorsFor("MyApi")]
+public static class MyApiBinderErrors {
+
+    // The definition you inject into RequestBinderOptions — the single source of truth.
+    public static readonly BinderErrorDefinition ArgumentRequired =
+        RequestBindingError.DefaultArgumentRequired.WithCode(ErrorCode.Create("ACME_ARGUMENT_REQUIRED"));
+
+    [DocumentedBy(nameof(ArgumentRequiredDoc))]
+    internal static PrimaryPortError ArgumentRequiredError() => RequestBindingError.SampleArgumentRequired(ArgumentRequired);
+    private  static ErrorDocumentation ArgumentRequiredDoc()  => RequestBindingError.DescribeArgumentRequired(ArgumentRequired);
+
+    // ArgumentInvalid follows the same shape, with DescribeArgumentInvalid / SampleArgumentInvalid.
+}
+```
+
+The generator discovers this like any other catalog: the prose is the binder's, the code
+and messages are yours, and the example is built the way the binder builds it at binding
+time — so the documented entry matches what you actually emit. The same pattern folds the
+**default** codes into your catalog too — point the definition at
+`RequestBindingError.DefaultArgumentRequired` / `DefaultArgumentInvalid`.
+
 ## Configuring the default for the whole application
 
 `Bind.PropertiesOf(request)` binds with `RequestBinderOptions.Default`. That default is
