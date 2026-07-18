@@ -40,7 +40,7 @@ matter — and that is the point.
   declared — for example `Any.String().WithLength(3).StartingWith("ORD-")`.
 - **Composition without reflection**: `.As(factory)` turns a constrained primitive
   into a domain value object; `Any.Combine(...)` assembles larger objects through
-  constructor lambdas.
+  constructor lambdas — from two up to eight constrained parts.
 - **Collections over any element generator**: `Any.ListOf(item)`, `ArrayOf`,
   `SequenceOf`, `SetOf` and `DictionaryOf`, constrained with
   `WithCount`/`NonEmpty`/`Distinct`/`Containing`. A distinct collection asked for more

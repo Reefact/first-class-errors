@@ -104,6 +104,43 @@ public sealed class CompositionTests {
         Check.That(caught.InnerException).IsInstanceOf<InvalidOperationException>();
     }
 
+    [Fact(DisplayName = "Combine composes four through eight parts, passing every constrained part to the lambda.")]
+    public void CombineSupportsHigherArities() {
+        IAny<int> part = Any.Int32().Between(1, 9);
+
+        for (int i = 0; i < 50; i++) {
+            int[] four  = Any.Combine(part, part, part, part, (a, b, c, d) => new[] { a, b, c, d }).Generate();
+            int[] five  = Any.Combine(part, part, part, part, part, (a, b, c, d, e) => new[] { a, b, c, d, e }).Generate();
+            int[] six   = Any.Combine(part, part, part, part, part, part, (a, b, c, d, e, f) => new[] { a, b, c, d, e, f }).Generate();
+            int[] seven = Any.Combine(part, part, part, part, part, part, part, (a, b, c, d, e, f, g) => new[] { a, b, c, d, e, f, g }).Generate();
+            int[] eight = Any.Combine(part, part, part, part, part, part, part, part, (a, b, c, d, e, f, g, h) => new[] { a, b, c, d, e, f, g, h }).Generate();
+
+            Check.That(four.Length).IsEqualTo(4);
+            Check.That(five.Length).IsEqualTo(5);
+            Check.That(six.Length).IsEqualTo(6);
+            Check.That(seven.Length).IsEqualTo(7);
+            Check.That(eight.Length).IsEqualTo(8);
+            foreach (int[] parts in new[] { four, five, six, seven, eight }) {
+                Check.That(parts).ContainsOnlyElementsThatMatch(value => value is >= 1 and <= 9);
+            }
+        }
+    }
+
+    [Fact(DisplayName = "A higher-arity Combine validates its arguments and wraps composer failures.")]
+    public void HigherArityCombineValidatesAndWraps() {
+        Check.ThatCode(() => Any.Combine(Any.Int32(), Any.Int32(), Any.Int32(), Any.Int32(), (Func<int, int, int, int, int>)null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => Any.Combine<int, int, int, int, int>(Any.Int32(), Any.Int32(), Any.Int32(), null!, (a, b, c, d) => a)).Throws<ArgumentNullException>();
+
+        IAny<string> failing = Any.Combine<int, int, int, int, int, int, int, int, string>(
+            Any.Int32().Between(1, 2), Any.Int32().Between(1, 2), Any.Int32().Between(1, 2), Any.Int32().Between(1, 2),
+            Any.Int32().Between(1, 2), Any.Int32().Between(1, 2), Any.Int32().Between(1, 2), Any.Int32().Between(1, 2),
+            (a, b, c, d, e, f, g, h) => throw new InvalidOperationException("rejected"));
+
+        AnyGenerationException caught = Assert.Throws<AnyGenerationException>(() => failing.Generate());
+        Check.That(caught.Message).Contains("Combine(...)");
+        Check.That(caught.InnerException).IsInstanceOf<InvalidOperationException>();
+    }
+
     [Fact(DisplayName = "Generic inference flows through IAny<T> without relying on implicit conversions.")]
     public void GenericInferenceFlowsThroughIAny() {
         string text  = Materialize(Any.String().NonEmpty().WithMaxLength(50));
