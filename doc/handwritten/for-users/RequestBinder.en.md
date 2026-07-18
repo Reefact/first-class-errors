@@ -390,13 +390,13 @@ var bind = Bind.WithOptions(new RequestBinderOptions(new SnakeCaseNames()))
 ```
 
 Options are chosen **once**, on `Bind.WithOptions`, before the binder even exists —
-so a binder's naming policy can never change mid-binding. They are per-binder, never
-global mutable state, and **nested binders inherit** the options in effect when they
-are created — so `Stay.check_in` is renamed consistently, top to bottom. The entry
-point `Bind.WithOptions(...)` returns carries no per-request state, so you can build
-it once (for example at application startup) and reuse it for every request. The
-library deliberately ships only the default (C# property names): which serializer
-names the wire keys is the host's knowledge, not the library's.
+so a binder's naming policy can never change mid-binding. They are fixed for the life
+of a binding, and **nested binders inherit** the options in effect when they are
+created — so `Stay.check_in` is renamed consistently, top to bottom. The entry point
+`Bind.WithOptions(...)` returns carries no per-request state, so you can build it once
+(for example at application startup) and reuse it for every request. The library
+deliberately ships only the default (C# property names): which serializer names the
+wire keys is the host's knowledge, not the library's.
 
 ## Structural error codes
 
@@ -428,6 +428,29 @@ or, when you keep the defaults, the ones the binder exposes.
 ```csharp
 if (error.Code == RequestBindingError.DefaultArgumentRequiredCode) { return 422; }
 ```
+
+## Configuring the default for the whole application
+
+`Bind.PropertiesOf(request)` binds with `RequestBinderOptions.Default`. That default is
+configurable **once, at application startup** — so a whole host (ASP.NET, a CLI, a
+worker) shares one naming policy and one set of structural codes without threading
+options through every call, and without a DI container:
+
+```csharp
+// Program.cs, before the first bind:
+RequestBinderOptions.Default = new RequestBinderOptions(
+    new SnakeCaseNames(),
+    argumentRequiredCode: ErrorCode.Create("ACME_ARGUMENT_REQUIRED"),
+    argumentInvalidCode:  ErrorCode.Create("ACME_ARGUMENT_INVALID"));
+
+// anywhere after that — no options threaded through:
+var bind = Bind.PropertiesOf(request).FailWith(PlaceBookingError.Invalid);
+```
+
+The default is **frozen on first use**: the first bind reads it, and any later
+assignment throws — so it is set at composition time and can never drift once requests
+are flowing (the same discipline as `JsonSerializerOptions`). A per-call
+`Bind.WithOptions(...)` still overrides it for a single binding.
 
 ## The bug channel: what throws vs what is collected
 

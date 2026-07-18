@@ -403,7 +403,7 @@ var bind = Bind.WithOptions(new RequestBinderOptions(new SnakeCaseNames()))
 
 Les options sont choisies **une seule fois**, sur `Bind.WithOptions`, avant même que
 le binder n’existe — la politique de nommage d’un binder ne peut donc jamais changer
-en cours de liaison. Elles sont par binder, jamais un état global mutable, et **les
+en cours de liaison. Elles sont fixées pour toute la durée d’une liaison, et **les
 binders imbriqués héritent** des options en vigueur à leur création — donc
 `Stay.check_in` est renommé de manière cohérente, de haut en bas. Le point d’entrée
 renvoyé par `Bind.WithOptions(...)` ne porte aucun état par requête : vous pouvez le
@@ -443,6 +443,30 @@ expose.
 ```csharp
 if (error.Code == RequestBindingError.DefaultArgumentRequiredCode) { return 422; }
 ```
+
+## Configurer le défaut pour toute l’application
+
+`Bind.PropertiesOf(request)` lie avec `RequestBinderOptions.Default`. Ce défaut est
+configurable **une seule fois, au démarrage de l’application** — un hôte entier
+(ASP.NET, une CLI, un worker) partage ainsi une politique de nommage et un jeu de codes
+structurels sans faire transiter d’options par chaque appel, et sans conteneur DI :
+
+```csharp
+// Program.cs, avant la première liaison :
+RequestBinderOptions.Default = new RequestBinderOptions(
+    new SnakeCaseNames(),
+    argumentRequiredCode: ErrorCode.Create("ACME_ARGUMENT_REQUIRED"),
+    argumentInvalidCode:  ErrorCode.Create("ACME_ARGUMENT_INVALID"));
+
+// n’importe où ensuite — aucune option à faire transiter :
+var bind = Bind.PropertiesOf(request).FailWith(PlaceBookingError.Invalid);
+```
+
+Le défaut est **gelé à la première utilisation** : la première liaison le lit, et toute
+affectation ultérieure lève — il est donc défini au moment de la composition et ne peut
+jamais dériver une fois les requêtes en vol (la même discipline que
+`JsonSerializerOptions`). Un `Bind.WithOptions(...)` par appel le surcharge quand même
+pour une liaison donnée.
 
 ## Le canal des bugs : ce qui lève vs ce qui est collecté
 
