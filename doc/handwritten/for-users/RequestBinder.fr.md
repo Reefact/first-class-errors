@@ -335,9 +335,10 @@ Le binder imbriqué hérite des options du parent et **préfixe** ses chemins
 d’argument : un échec dans `Stay` rapporte `Stay.CheckIn`, pas seulement
 `CheckIn`. Une propriété complexe manquante enregistre `REQUEST_ARGUMENT_REQUIRED` ;
 une liaison imbriquée qui échoue contribue sa propre enveloppe, dont les erreurs
-internes portent déjà les chemins préfixés. Utilisez `AsOptional` plutôt
+internes portent déjà les chemins préfixés. Utilisez `AsOptionalReference` plutôt
 qu’`AsRequired` pour un objet imbriqué nullable : l’absence donne `null` et
-n’enregistre rien.
+n’enregistre rien — le même nom `AsOptionalReference` que le côté scalaire utilise
+pour une valeur de référence nullable.
 
 ## Listes
 
