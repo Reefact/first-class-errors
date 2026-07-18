@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AngleSharp" />
     <PackageReference Include="coverlet.collector">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -16,7 +15,6 @@
     <PackageReference Include="JetBrains.Annotations" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="NFluent" />
-    <PackageReference Include="Verify.XunitV3" />
     <PackageReference Include="xunit.runner.visualstudio">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -25,8 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FirstClassErrors.GenDoc\FirstClassErrors.GenDoc.csproj" />
-    <ProjectReference Include="..\FirstClassErrors.Usage\FirstClassErrors.Usage.csproj" />
+    <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
+    <ProjectReference Include="..\FirstClassErrors.RequestBinder\FirstClassErrors.RequestBinder.csproj" />
     <ProjectReference Include="..\FirstClassErrors.RequestBinder.Usage\FirstClassErrors.RequestBinder.Usage.csproj" />
   </ItemGroup>
 

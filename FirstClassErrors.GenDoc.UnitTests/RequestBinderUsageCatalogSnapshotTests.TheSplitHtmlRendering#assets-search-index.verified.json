@@ -1,0 +1,82 @@
+﻿[
+  {
+    "code": "BOOKING_COMMAND_INVALID",
+    "title": "Booking request invalid",
+    "summary": "We could not accept your booking request.",
+    "source": "BookingEndpoint",
+    "href": "errors/BOOKING_COMMAND_INVALID.html",
+    "text": "booking_command_invalid booking request invalid the endpoint could not bind the incoming request into a booking command: one or more arguments were missing or invalid. every failure is collected under this envelope, each with its full argument path. every required argument must be present, and every argument must convert into its value object. bookingendpoint we could not accept your booking request. one or more details of the booking request are missing or invalid. the booking command is invalid: one or more request arguments failed to bind. the client sent a request that violates the endpoint's contract (missing or malformed arguments). read the inner errors: each names the failing argument and the rule it violated."
+  },
+  {
+    "code": "BOOKING_DATE_MALFORMED",
+    "title": "Malformed booking date",
+    "summary": "The date is invalid.",
+    "source": "BookingDate",
+    "href": "errors/BOOKING_DATE_MALFORMED.html",
+    "text": "booking_date_malformed malformed booking date an incoming request carries a value that is not an iso yyyy-mm-dd date, so it cannot be parsed into a bookingdate value object. a booking date must be an iso calendar date in the yyyy-mm-dd format. bookingdate the date is invalid. a booking date is not a valid iso (yyyy-mm-dd) date. '2026-13-40' is not a valid iso (yyyy-mm-dd) date. the client sent a date in a locale-specific or malformed format, or an impossible calendar date. send dates in iso 8601 yyyy-mm-dd form, for example 2026-08-10."
+  },
+  {
+    "code": "BOOKING_GUEST_INVALID",
+    "title": "Booking guest invalid",
+    "summary": "A guest's information is invalid.",
+    "source": "BookingEndpoint",
+    "href": "errors/BOOKING_GUEST_INVALID.html",
+    "text": "booking_guest_invalid booking guest invalid a guest in the request's guests list could not be bound: its first name was missing or its e-mail was malformed. its failures are grouped under this per-element envelope, with indexed paths such as guests[1]. each guest must have a first name, and any e-mail present must be valid. bookingendpoint a guest's information is invalid. one of the guests is missing a first name or has an invalid e-mail address. the guest is invalid: one or more of its fields failed to bind. the client sent a guest with a missing first name or a malformed e-mail address. read the inner errors under the indexed guests[i] path for the failing field."
+  },
+  {
+    "code": "BOOKING_STAY_INVALID",
+    "title": "Booking stay invalid",
+    "summary": "We could not read the stay dates.",
+    "source": "BookingEndpoint",
+    "href": "errors/BOOKING_STAY_INVALID.html",
+    "text": "booking_stay_invalid booking stay invalid the stay sub-object of the request could not be bound: one or both of its dates were missing or malformed. its failures are grouped under this nested envelope, with paths prefixed by stay. both stay dates must be present and valid iso dates. bookingendpoint we could not read the stay dates. the check-in or check-out date of the stay is missing or invalid. the stay is invalid: one or more of its dates failed to bind. the client sent a stay with a missing or malformed check-in or check-out date. read the inner errors under the stay path for the failing date."
+  },
+  {
+    "code": "BOOKING_TAG_MALFORMED",
+    "title": "Malformed booking tag",
+    "summary": "A tag is invalid.",
+    "source": "Tag",
+    "href": "errors/BOOKING_TAG_MALFORMED.html",
+    "text": "booking_tag_malformed malformed booking tag an element of the request's tag list is empty, too long, or contains whitespace, so it cannot be parsed into a tag value object. a tag must be a single non-empty token of at most 32 characters, without whitespace. tag a tag is invalid. one of the booking tags is not a valid single token. 'late checkout' is not a valid tag. the client sent a blank tag, a phrase containing spaces, or an over-long value. send each tag as a single whitespace-free token; join multi-word tags with a hyphen."
+  },
+  {
+    "code": "CURRENCY_CODE_MALFORMED",
+    "title": "Malformed currency code",
+    "summary": "The currency is invalid.",
+    "source": "Currency",
+    "href": "errors/CURRENCY_CODE_MALFORMED.html",
+    "text": "currency_code_malformed malformed currency code an incoming request carries a value that is not a well-formed three-letter currency code, so it cannot be parsed into a currency value object. a currency code must be exactly three upper-case ascii letters (for example eur). currency the currency is invalid. the billing currency code is not a valid three-letter code. 'euro' is not a valid three-letter currency code. the client sent a currency in the wrong shape (lower-case, a symbol, a name, or the wrong length). send the iso-4217 alphabetic code in upper case, for example usd or eur."
+  },
+  {
+    "code": "EMAIL_ADDRESS_MALFORMED",
+    "title": "Malformed e-mail address",
+    "summary": "The e-mail address is invalid.",
+    "source": "EmailAddress",
+    "href": "errors/EMAIL_ADDRESS_MALFORMED.html",
+    "text": "email_address_malformed malformed e-mail address an incoming request carries a value that is not a well-formed e-mail address, so it cannot be parsed into an emailaddress value object. a guest e-mail address must contain a single '@' with a non-empty local part and domain. emailaddress the e-mail address is invalid. the value provided is not a valid e-mail address. 'not-an-email' is not a valid e-mail address. the client sent a misspelled or truncated address (missing '@', empty local part or domain). validate the address on the client, and compare the sent value against the expected format."
+  },
+  {
+    "code": "NIGHT_COUNT_NOT_POSITIVE",
+    "title": "Non-positive number of nights",
+    "summary": "The number of nights is invalid.",
+    "source": "NightCount",
+    "href": "errors/NIGHT_COUNT_NOT_POSITIVE.html",
+    "text": "night_count_not_positive non-positive number of nights an incoming request asks for zero or a negative number of nights, which is not a valid stay length. a booking must be for at least one night. nightcount the number of nights is invalid. the requested number of nights must be one or more. a booking must be for at least one night, but 0 was requested. the client sent a number of nights of zero or below. send a number of nights of one or more."
+  },
+  {
+    "code": "ROOM_NUMBER_OUT_OF_RANGE",
+    "title": "Room number out of range",
+    "summary": "A room number is invalid.",
+    "source": "RoomNumber",
+    "href": "errors/ROOM_NUMBER_OUT_OF_RANGE.html",
+    "text": "room_number_out_of_range room number out of range an element of the request's room-number list is outside the supported 1-999 range. a room number must be between 1 and 999 inclusive. roomnumber a room number is invalid. one of the requested room numbers is outside the supported range. room number 1000 is outside the supported range 1-999. the client sent a room number of zero, a negative value, or a value above 999. send room numbers within the supported 1-999 range."
+  },
+  {
+    "code": "STAY_CHECKOUT_NOT_AFTER_CHECKIN",
+    "title": "Check-out not after check-in",
+    "summary": "The stay dates are invalid.",
+    "source": "Stay",
+    "href": "errors/STAY_CHECKOUT_NOT_AFTER_CHECKIN.html",
+    "text": "stay_checkout_not_after_checkin check-out not after check-in both stay dates parse, but the check-out date is on or before the check-in date, so the stay has no positive length. this cross-field rule is enforced by the stay.create factory. check-out must be strictly after check-in. stay the stay dates are invalid. the check-out date must be after the check-in date. check-out 2026-08-10 must be strictly after check-in 2026-08-14. the client sent a check-out date equal to or earlier than the check-in date. send a check-out date at least one day after the check-in date."
+  }
+]

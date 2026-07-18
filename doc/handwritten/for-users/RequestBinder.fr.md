@@ -576,6 +576,20 @@ Assertez l’ensemble *complet* des échecs collectés, dans l’ordre — c’e
 prouve le comportement de collecte exhaustive, pas seulement que la liaison a
 échoué.
 
+## Exemples exécutables
+
+Les patterns de ce guide sont réalisés en code compilé, testé et documenté par
+snapshot dans l’échantillon
+[`FirstClassErrors.RequestBinder.Usage`](../../../FirstClassErrors.RequestBinder.Usage) :
+une frontière de réservation d’hôtel liée de bout en bout (`BookingBinder`), une
+vitrine de toutes les surcharges et options restantes — listes requises/optionnelles,
+noms d’arguments personnalisés, codes structurels personnalisés (`BinderShowcase`) —
+un site d’appel indépendant de tout framework (`BookingEndpoint`), et des tests
+unitaires compagnons qui assertent l’ordre du collect-all, les codes et les chemins
+d’argument. Ses erreurs documentées apparaissent dans leur propre catalogue généré
+et testé par snapshot, de sorte que le chemin du binder est exercé dans de la
+documentation vivante.
+
 ## 📌 Checklist de revue
 
 Avant d’approuver une liaison, vérifiez que :
