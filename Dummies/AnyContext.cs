@@ -142,4 +142,31 @@ public sealed class AnyContext {
         return AnyDateTimeOffset.Create(_source);
     }
 
+    /// <summary>
+    ///     Starts an arbitrary <see cref="double" /> generator drawing from this context — deterministic under this context's seed:
+    ///     finite values only — NaN and infinities are never generated. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public AnyDouble Double() {
+        return AnyDouble.Create(_source);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="float" /> generator drawing from this context — deterministic under this context's seed:
+    ///     finite values only — NaN and infinities are never generated. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public AnySingle Single() {
+        return AnySingle.Create(_source);
+    }
+
+    /// <summary>
+    ///     Starts an arbitrary <see cref="decimal" /> generator drawing from this context — deterministic under this context's seed:
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    /// </summary>
+    /// <returns>A generator to constrain fluently.</returns>
+    public AnyDecimal Decimal() {
+        return AnyDecimal.Create(_source);
+    }
+
 }
