@@ -69,4 +69,4 @@ Considered as the conventional compatibility strategy. Rejected because one floo
 * [`ci` workflow reference](../workflows/ci.en.md)
 * [ADR-0001](0001-lock-the-analyzer-roslyn-floor.md) — the analyzer-host counterpart.
 * [ADR-0022](0022-floor-the-library-on-net-framework-4-7-2.md) — refines the library's .NET Framework floor; it replaces the incidental 4.6.1 statement formerly present in this ADR.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.

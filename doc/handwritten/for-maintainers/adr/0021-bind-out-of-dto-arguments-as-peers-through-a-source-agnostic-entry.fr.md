@@ -86,4 +86,4 @@ Envisagé pour éviter une seconde valeur de contexte. Rejeté parce que le chem
 * [ADR-0012](0012-fix-the-binder-options-before-binding-begins.fr.md) — les options restent fixées au point d'entrée agnostique de la source ; la forme illustrative de l'API est mise à jour par cet ADR.
 * [ADR-0017](0017-provide-a-configurable-application-wide-default-for-the-binder-options.fr.md) — la valeur par défaut reste valide ; la forme illustrative de l'API est mise à jour par cet ADR.
 * Issue #148.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.

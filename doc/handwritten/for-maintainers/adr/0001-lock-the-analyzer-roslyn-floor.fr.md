@@ -70,4 +70,4 @@ Envisagé car il est rapide et déterministe. Rejeté parce qu'il ne peut prouve
 * [Référence d'implémentation des ADR — Plancher de compatibilité de l'analyseur](../specifications/adr-implementation-reference.fr.md#plancher-de-compatibilité-de-lanalyseur)
 * [Référence du workflow `analyzers`](../workflows/analyzers.fr.md)
 * [ADR-0002](0002-floor-the-tooling-runtime.fr.md) — la décision équivalente pour le runtime.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.

@@ -72,4 +72,4 @@ Considered because it already ships. Rejected because it would couple a generic 
 * [ADR implementation reference — Dummies generation contracts](../specifications/adr-implementation-reference.md#dummies-generation-contracts)
 * [ADR-0006](0006-supply-arbitrary-test-values-from-a-seedable-source.md)
 * Architecture tests in `Dummies.UnitTests`.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.

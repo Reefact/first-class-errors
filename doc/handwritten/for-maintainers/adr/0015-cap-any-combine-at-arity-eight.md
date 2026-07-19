@@ -73,4 +73,4 @@ Considered because it is naturally variadic. Rejected because it does not serve 
 
 * [ADR implementation reference — Dummies generation contracts](../specifications/adr-implementation-reference.md#dummies-generation-contracts)
 * [ADR-0011](0011-host-dummies-as-a-standalone-package.md)
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.

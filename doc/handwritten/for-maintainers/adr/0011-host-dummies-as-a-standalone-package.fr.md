@@ -72,4 +72,4 @@ Envisagé parce qu'elle est déjà publiée. Rejeté parce que cela couplerait u
 * [Référence d'implémentation des ADR — Contrats de génération de Dummies](../specifications/adr-implementation-reference.fr.md#contrats-de-génération-de-dummies)
 * [ADR-0006](0006-supply-arbitrary-test-values-from-a-seedable-source.fr.md)
 * Tests d'architecture dans `Dummies.UnitTests`.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.

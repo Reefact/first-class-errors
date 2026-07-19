@@ -71,4 +71,4 @@ Considered to keep the wiring outside code. Rejected because member names would 
 * [ADR-0018](0018-bundle-the-binders-structural-error-code-and-messages.md)
 * [ADR-0016](0016-make-the-binders-structural-error-codes-configurable.md) — superseded origin of the deferred question.
 * Issue #140 and analyzer FCE009.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.

@@ -74,4 +74,4 @@ Considered because it is test-safe and idiomatic where a container exists. Rejec
 * [ADR-0012](0012-fix-the-binder-options-before-binding-begins.md) — this ADR revisits one rejected alternative while preserving fixed options per binder.
 * [ADR-0006](0006-supply-arbitrary-test-values-from-a-seedable-source.md)
 * Issue #181.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.

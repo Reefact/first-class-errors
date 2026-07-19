@@ -70,4 +70,4 @@ Considered because it is fast and deterministic. Rejected because it cannot prov
 * [ADR implementation reference — Analyzer compatibility floor](../specifications/adr-implementation-reference.md#analyzer-compatibility-floor)
 * [`analyzers` workflow reference](../workflows/analyzers.en.md)
 * [ADR-0002](0002-floor-the-tooling-runtime.md) — the runtime counterpart of this compatibility decision.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.

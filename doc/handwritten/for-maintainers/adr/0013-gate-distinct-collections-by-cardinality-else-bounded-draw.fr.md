@@ -74,4 +74,4 @@ Envisagé car une demande satisfaisable finirait par aboutir. Rejeté parce qu'u
 * [Référence d'implémentation des ADR — Contrats de génération de Dummies](../specifications/adr-implementation-reference.fr.md#contrats-de-génération-de-dummies)
 * [ADR-0011](0011-host-dummies-as-a-standalone-package.fr.md)
 * `CollectionState` et `ICardinalityHint` dans le projet `Dummies`.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.

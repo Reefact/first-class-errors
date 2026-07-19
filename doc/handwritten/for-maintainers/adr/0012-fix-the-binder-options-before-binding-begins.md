@@ -72,4 +72,4 @@ Considered because it requires the smallest code change. Rejected because docume
 * [ADR-0006](0006-supply-arbitrary-test-values-from-a-seedable-source.md)
 * [ADR-0007](0007-name-the-binder-terminals-new-and-create.md)
 * Issue #145 and pull request #126.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.

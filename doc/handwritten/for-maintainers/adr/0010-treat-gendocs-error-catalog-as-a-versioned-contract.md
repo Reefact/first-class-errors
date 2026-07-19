@@ -72,4 +72,4 @@ Considered because it would give the catalog its own version. Rejected because G
 * [ADR-0009](0009-report-the-toolings-failures-as-first-class-errors.md)
 * [ADR-0002](0002-floor-the-tooling-runtime.md)
 * Issue #167.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.
