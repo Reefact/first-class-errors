@@ -34,8 +34,9 @@ matter — and that is the point.
   `After`/`Before`/`Between`, quantities with `Positive`/`Between`/`NonZero`,
   identities with `NonEmpty`/`DifferentFrom` — and deliberately no clock-relative
   constraints: a reproducible test pins its reference instants explicitly.
-- **Values built to satisfy the constraints** — never generate-then-filter, no retry
-  loops.
+- **Values built to satisfy the constraints** — a scalar is constructed directly,
+  never generated-then-filtered. Only a *distinct* collection ever redraws, and only
+  to skip a duplicate: a **bounded** deduplicating draw, never an unbounded retry loop.
 - **Conflicting constraints fail fast** with a clear, actionable
   `ConflictingAnyConstraintException` at the moment the conflicting constraint is
   declared — for example `Any.String().WithLength(3).StartingWith("ORD-")`.
@@ -44,10 +45,12 @@ matter — and that is the point.
   constructor lambdas — from two up to eight constrained parts.
 - **Collections over any element generator**: `Any.ListOf(item)`, `ArrayOf`,
   `SequenceOf`, `SetOf` and `DictionaryOf`, constrained with
-  `WithCount`/`NonEmpty`/`Distinct`/`Containing`. A distinct collection asked for more
+  `WithCount`/`NonEmpty`/`Distinct`/`Containing`. Ask a distinct collection for more
   distinct elements than its effective domain — the element generator plus any values
-  pinned outside it with `Containing` — can produce fails fast, just like any other
-  conflict; `Any.PairOf`/`TripleOf` pair generators into value tuples.
+  pinned outside it with `Containing` — can supply, and it fails fast, just like any
+  other conflict, wherever that domain is countable; where it is not, the same
+  shortfall instead surfaces at generation as an `AnyGenerationException` naming the
+  seed to replay. `Any.PairOf`/`TripleOf` pair generators into value tuples.
 - **Optional values**: `.OrNull()` turns any generator into one that is `null` about
   half the time and otherwise a constrained value — the dummy for an optional field,
   for value types (`int?`, `Guid?`, ...) and reference types alike.
