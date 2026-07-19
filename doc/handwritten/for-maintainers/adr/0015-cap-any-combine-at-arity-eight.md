@@ -2,116 +2,75 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0015-cap-any-combine-at-arity-eight.fr.md)
 
-**Status:** Proposed
-**Date:** 2026-07-18
+**Status:** Accepted
+**Date:** 2026-07-19
 **Decision Makers:** Reefact
 
 ## Context
 
-`Dummies` composes constrained generators into larger objects through
-`Any.Combine(parts..., compose)`: the parts are generated, then handed to a
-caller-supplied constructor lambda, so a value object or aggregate is assembled
-without reflection and the domain's own constructor stays the single gatekeeper.
-Building large objects easily is an explicit goal of the library.
+Dummies composes differently typed generators into larger objects through `Any.Combine`, preserving constructor-based domain validation without reflection.
 
-C# has no heterogeneous variadic generics: passing *N* differently-typed parts in
-one call requires a distinct overload per arity, each with *N*+1 generic type
-parameters and *N*+1 value parameters. Until now `Combine` existed only for two
-and three parts; composing more forced nesting (`Combine(Combine(a, b, …), c, …)`)
-or routing through tuples, both of which surface positional `Item1..ItemN` access
-or nested lambdas at the call site.
+C# has no heterogeneous variadic generics, so each supported arity requires a distinct public overload. Low arities alone force nested composition or positional tuples for larger constructors, while an unlimited surface would create repetitive API and documentation with diminishing value.
 
-The repository runs a SonarCloud analysis whose rule S107 flags a method with more
-than seven parameters. A `Combine` of seven parts has eight parameters (seven
-generators plus the composer) and of eight parts, nine — so the two largest
-overloads cross that threshold. The repository's standing practice is to keep the
-analysis clean, suppressing a rule inline with a justification where a deliberate
-exception is made.
-
-A constructor that needs many parts is itself often a design signal — a missing
-intermediate value object.
+Very wide constructors can also indicate missing intermediate domain concepts.
 
 ## Decision
 
-`Any.Combine` offers overloads from two up to eight parts and stops there,
-accepting the parameter- and generic-count code smell of the two largest overloads
-as a deliberate trade-off for a flat, reflection-free composition call site.
+`Any.Combine` provides flat heterogeneous overloads from arity two through arity eight and deliberately stops there.
 
 ## Rationale
 
-* **It serves the "build large objects" goal directly.** A flat
-  `Combine(a, b, c, d, e, (…) => new Thing(…))` with caller-named lambda parameters
-  reads far better than nested `Combine` calls or tuple `Item1..ItemN` access, and
-  keeps the composition reflection-free — the whole point of `Combine`.
-* **Eight is where the ceiling belongs.** Eight parts cover essentially every
-  hand-written DDD constructor; beyond that, the object is complex enough that
-  intermediate value objects are the healthier design, so a ceiling at eight nudges
-  toward that structure instead of smoothing over arbitrarily wide constructors.
-* **The smell is inherent, not accidental.** There is no lower-smell way to pass
-  *N* differently-typed parts in a single call; the parameter and generic counts
-  are the irreducible cost of heterogeneous composition. Suppressing S107 with a
-  justification on the two largest overloads records that trade-off at the code,
-  and this ADR records why it is acceptable.
-* **Stopping short of sixteen keeps the surface bounded.** Matching `Func`'s
-  sixteen-argument ceiling would add hand-maintained, fully-documented overloads
-  whose marginal value is low and whose boilerplate cost is real; the demand past
-  eight does not justify it.
+A flat call with named lambda parameters is materially clearer than nested composition or positional tuple access for the object sizes commonly encountered in domain code.
+
+Eight is a pragmatic convenience ceiling rather than a mathematical property of DDD. It covers the intended large-object use cases while keeping the manually maintained surface bounded and allowing wider constructors to remain a design signal.
+
+The unavoidable parameter-count warnings on the largest overloads are an explicit local trade-off, not a general relaxation of the repository's code-quality rules.
+
+Exact signatures, documentation, and analyzer suppressions are implementation details recorded in the [ADR implementation reference](../specifications/adr-implementation-reference.md#dummies-generation-contracts) and the Dummies API reference.
 
 ## Alternatives Considered
 
-### Keep only arity two and three; compose more by nesting
+### Keep only the smallest overloads
 
-Considered because it adds no new surface. Rejected because nesting forces
-positional tuple access (`Item1..ItemN`) or nested lambdas at the call site —
-unreadable precisely where the library promises easy large-object construction.
+Considered because it minimizes API surface. Rejected because larger compositions become substantially less readable through nested lambdas or positional tuple members.
 
-### A fluent tuple-accumulating builder (`Combine(a).And(b).And(c)…`)
+### Use a fluent tuple-accumulating builder
 
-Considered as a way to avoid one overload per arity. Rejected because `.And` would
-itself need an overload per source arity, and the accumulated tuple exposes
-positional access again — it trades one form of boilerplate for a worse call site.
+Considered to avoid one overload per arity. Rejected because it moves the same complexity into the builder and still exposes positional structure at the call site.
 
-### Extend all the way to arity sixteen
+### Extend to the maximum arity supported by `Func`
 
-Considered for completeness, matching `Func`. Rejected because nine-to-sixteen-part
-constructors are a design smell the library should not smooth over, and each
-overload is fully-documented, hand-maintained surface with negligible real demand.
+Considered for completeness. Rejected because the maintenance cost and normalization of extremely wide constructors outweigh the marginal convenience.
 
-### A `params` array of same-typed generators
+### Accept only homogeneous generators through `params`
 
-Considered for the homogeneous case. Rejected because it only works when every part
-shares one type and it loses per-part typing — it does not serve the
-heterogeneous-constructor case `Combine` exists for. It remains an orthogonal option
-that could be added later without touching this decision.
+Considered because it is naturally variadic. Rejected because it does not serve the differently typed constructor parameters for which `Combine` exists.
 
 ## Consequences
 
 ### Positive
 
-* Large value objects and aggregates compose in one flat, readable, reflection-free
-  call, with caller-named parameters.
-* The ceiling gently steers very wide constructors toward intermediate value
-  objects.
+* Common large objects compose in one readable, reflection-free call.
+* The convenience API remains deliberately bounded.
+* Extremely wide construction stays visible as a possible design problem.
 
 ### Negative
 
-* Five more hand-maintained, fully-documented overloads on the facade.
-* The two largest overloads carry an inline S107 suppression — a documented,
-  localized exception to the parameter-count guideline.
+* Several hand-maintained overloads remain part of the public surface.
+* The largest overloads require localized analyzer suppressions.
+* The ceiling is heuristic and may not fit every domain.
 
 ### Risks
 
-* **Ceiling pressure** — a genuine nine-or-more-part need could recur. Mitigated
-  because that is itself a design signal; the ceiling is revisited only if the need
-  proves common, and adding higher arities later stays non-breaking.
+* A recurring legitimate need above arity eight may appear. Mitigation: higher arities can be added compatibly through a new decision if evidence shows that the current ceiling is too low.
 
 ## Follow-up Actions
 
-* If a homogeneous, same-type composition need appears, consider a `params`-based
-  `Combine` separately — it is orthogonal to this decision.
-* Reflect the arity ceiling in the user documentation once the surface stabilizes.
+* Keep the supported arity range explicit in the Dummies documentation.
+* Consider homogeneous variadic composition separately if a real use case emerges.
 
 ## References
 
-* ADR-0011 — Host Dummies as a standalone package in this repository.
-* The S107 suppressions on the arity-seven and arity-eight `Combine` overloads.
+* [ADR implementation reference — Dummies generation contracts](../specifications/adr-implementation-reference.md#dummies-generation-contracts)
+* [ADR-0011](0011-host-dummies-as-a-standalone-package.md)
+* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.
