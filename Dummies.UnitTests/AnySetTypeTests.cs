@@ -77,6 +77,39 @@ public sealed class AnySetTypeTests {
         Check.ThatCode(() => Any.Guid().OneOf(first).Except(first)).Throws<ConflictingAnyConstraintException>();
     }
 
+    [Fact(DisplayName = "Guid: excluding all 256 last-byte variants of the drawn prefix escapes by carry, never hangs, and stays reproducible.")]
+    public async Task GuidExclusionByteWraparoundTerminates() {
+        const int seed = 20260718;
+
+        // The first unconstrained draw under this seed fixes the 15-byte prefix the escape starts from; a
+        // second context with the same seed replays that same first draw, since Except() consumes no randomness.
+        Guid   drawn  = Any.WithSeed(seed).Guid().Generate();
+        byte[] prefix = drawn.ToByteArray();
+
+        // Every identifier sharing that prefix and differing only in the last byte — the exact block the former
+        // last-byte-only walk cycled inside forever.
+        Guid[] block = new Guid[256];
+        for (int last = 0; last < 256; last++) {
+            byte[] variant = (byte[])prefix.Clone();
+            variant[15] = (byte)last;
+            block[last]  = new Guid(variant);
+        }
+
+        // Generate off-thread and race a deadline: a regression that reintroduces the unbounded loop loses the
+        // race and fails the test instead of hanging the whole suite.
+        Task<Guid> run   = Task.Run(() => Any.WithSeed(seed).Guid().Except(block).Generate());
+        Task       first = await Task.WhenAny(run, Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+        Check.That(first == run).IsTrue();
+
+        Guid escaped = await run;
+        Check.That(block.Contains(escaped)).IsFalse();
+        Check.That(escaped).IsNotEqualTo(drawn);
+
+        // Same seed and same exclusions yield the same escaped identifier.
+        Guid again = Any.WithSeed(seed).Guid().Except(block).Generate();
+        Check.That(again).IsEqualTo(escaped);
+    }
+
     [Fact(DisplayName = "Enum: unconstrained draws yield only declared members and reach all of them.")]
     public void EnumDrawsDeclaredMembers() {
         HashSet<OrderStatus> seen = new();
