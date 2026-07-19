@@ -157,8 +157,10 @@ public sealed class AnyCollectionTests {
             Check.That(set.Count).IsEqualTo(3);
         }
 
-        // The same reasoning holds for a distinct list, for dictionary-shaped keys, and for several out-of-domain
-        // values at once — the correction applies wherever a distinct collection is gated by cardinality.
+        // The same reasoning holds for a distinct list and for several out-of-domain values at once. Dictionary keys
+        // run through the very same CollectionState path, so the correction reaches them too — but AnyDictionary has
+        // no Containing surface, so its keys are gated purely by count (see DictionaryOfBehaves) and cannot exercise
+        // the out-of-domain case directly.
         for (int i = 0; i < SampleCount; i++) {
             HashSet<int> list = new(Any.ListOf(Any.Int32().OneOf(1, 2)).Containing(3).WithCount(3).Distinct().Generate());
             Check.That(list).Contains(1, 2, 3);
