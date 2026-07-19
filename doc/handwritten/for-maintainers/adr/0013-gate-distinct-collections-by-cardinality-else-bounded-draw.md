@@ -2,132 +2,84 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0013-gate-distinct-collections-by-cardinality-else-bounded-draw.fr.md)
 
-**Status:** Proposed
-**Date:** 2026-07-18
+**Status:** Accepted
+**Date:** 2026-07-19
 **Decision Makers:** Reefact
 
 ## Context
 
-`Dummies` carries a core contract: a constraint expresses what a value must
-satisfy, contradictory constraints fail at the moment they are declared with a
-`ConflictingAnyConstraintException` naming both sides, and a value is built to
-satisfy its constraints in a single pass — never generated then filtered, and
-never behind a retry loop.
+Dummies rejects contradictory constraints when they are declared and otherwise
+builds values from the complete specification without an unbounded retry loop.
+Distinct collections add a requirement that can be proved eagerly only when the
+element generator's domain size is known.
 
-The collection increment adds distinct collections: `SetOf`, `ListOf(...).Distinct()`
-and the like, and a dictionary's keys. A distinct collection of *N* elements is
-satisfiable only if its element generator can yield at least *N* distinct values,
-which is a property of that generator's domain.
-
-Element generators fall into two groups. Some draw from a small, countable
-domain: a boolean has two values, an enum has its declared members, a narrow
-integer range or a restricted character pool has a fixed size. Others draw from a
-domain that is effectively unbounded or simply unknowable to the collection:
-unconstrained integers, strings and identifiers, and — decisively — any foreign
-`IAny<T>` implementation or any derived generator (`As`, `Combine`), which carries
-no domain information at all. `IAny<T>` is a public interface, so the library
-cannot assume every generator can report its cardinality.
-
-A custom equality comparer can only merge distinct values into fewer equivalence
-classes; it can never manufacture new ones.
+Some internal generators have a small countable domain; arbitrary or foreign
+`IAny<T>` implementations, derived generators and custom comparers may have an
+unknown or distribution-dependent number of equivalence classes. Cardinality
+therefore cannot be required on the public generator interface.
 
 ## Decision
 
-A distinct collection rejects, at declaration time, any element count that
-exceeds the element generator's advertised cardinality, and otherwise builds its
-elements by a bounded deduplicating draw that fails at generation, with a
-replayable seed, if the element domain proves too small.
+A distinct collection rejects a requested count eagerly when it exceeds an advertised cardinality and otherwise uses a bounded deduplicating draw that fails reproducibly at generation if it cannot obtain enough distinct values.
 
 ## Rationale
 
-* **Fail eagerly wherever the domain is knowable.** The declaration-time conflict
-  is the library's signature: a count that exceeds a countable element domain is
-  a contradiction in the test's `Arrange`, and it must read as one, named on both
-  sides, exactly like every scalar conflict — not surface later as a puzzling
-  runtime failure.
-* **A bounded draw is the only honest option where it is not.** Because an
-  arbitrary generator's cardinality is generally unknowable, the only universal
-  way to obtain *N* distinct values is to draw and deduplicate. Keeping that draw
-  bounded honours the no-retry-loop principle; on exhaustion it reports the real
-  shortfall as an `AnyGenerationException` naming the seed — the same failure
-  channel a factory rejection already uses — rather than looping.
-* **The advertised bound stays sound under a comparer.** Since a comparer only
-  merges values, the advertised cardinality remains a valid *upper* bound, so the
-  eager check never rejects a request that was actually satisfiable; a comparer
-  that collapses the domain below the requested count is caught by the bounded
-  draw instead.
-* **One principle, applied where its information exists.** Splitting the failure
-  between declaration time (when the domain is countable) and generation time
-  (when it is not) is not a dilution of the eager-conflict principle but its
-  faithful extension to the only place where the information needed to be eager is
-  absent.
+When a sound upper bound is known, exceeding it is a declaration-time conflict and
+should fail with the same diagnostic quality as scalar contradictions. When the
+domain is unknown, drawing and deduplicating is the only general mechanism; it
+must be bounded so an impossible request cannot hang indefinitely.
+
+The split failure timing reflects available information rather than two competing
+principles. A comparer can reduce the effective domain, so the bounded path remains
+necessary even after an eager cardinality check. The current hint model, collision
+budget and replay diagnostics are maintained in the
+[Dummies generation specification](../specifications/dummies-generation.en.md).
 
 ## Alternatives Considered
 
-### Always fail at generation, dropping the eager cardinality check
+### Always fail during generation
 
-Considered because a single failure channel is simpler to explain and to
-implement. Rejected because it discards the library's signature diagnostic
-precisely where it is cheap and certain — a set of three booleans, an enum asked
-for more members than it declares — turning an obvious `Arrange` contradiction
-into a runtime surprise.
+Considered for one failure channel. Rejected because it postpones contradictions
+that are cheap and certain for booleans, enums and other known finite domains.
 
-### Make cardinality part of `IAny<T>`, so every request is decided eagerly
+### Require every `IAny<T>` to report cardinality
 
-Considered because a mandatory cardinality on every generator would let every
-distinct request fail or pass at declaration time. Rejected because `IAny<T>` is
-a public contract with foreign implementations and with derived generators
-(`As`, `Combine`) that cannot honestly report a bound; the guarantee would be
-unenforceable and frequently wrong, and it would burden every implementer with a
-value most of them cannot supply.
+Considered for universal eager validation. Rejected because foreign and derived
+generators often cannot report a sound bound.
 
-### Draw without a bound until *N* distinct values appear
+### Draw until enough values appear
 
-Considered because an unbounded draw always terminates when the request is
-satisfiable. Rejected because it never terminates when the request is *not*
-satisfiable, which is exactly the case this decision must diagnose: it would turn
-an impossible request into a hang instead of an error, breaking the library's
-bounded-work principle.
+Considered because it eventually succeeds for a satisfiable request. Rejected
+because it never terminates for an unsatisfiable one.
 
 ## Consequences
 
 ### Positive
 
-* The signature declaration-time diagnostic now reaches distinct collections
-  wherever the element domain is countable.
-* Requests over unknown or comparer-reduced domains still fail safely and
-  reproducibly, with a seed to replay, never as a hang.
-* The cardinality capability is internal and opt-in, so the public `IAny<T>`
-  contract is unchanged and foreign generators keep working unmodified.
+* Known impossible distinct requests fail in the test arrangement.
+* Unknown domains fail safely and replayably instead of hanging.
+* Public `IAny<T>` remains implementable without domain metadata.
 
 ### Negative
 
-* Failure timing is not uniform: the same logical contradiction surfaces at
-  declaration for a known-small domain and at generation for an unknowable one,
-  which a user must understand.
-* The bounded draw runs to a chosen budget; a request pushed pathologically close
-  to an unknown domain's true size could in principle fail although it was
-  satisfiable — astronomically unlikely for the dummy-sized collections the
-  library targets.
+* Failure timing differs between known and unknown domains.
+* A finite budget can reject a satisfiable but highly biased generator.
 
 ### Risks
 
-* **Overstated hint** — a generator could advertise a cardinality larger than the
-  distinct values it truly yields, so the eager check misses a real conflict.
-  Mitigated because the hint is defined as an upper bound and the bounded draw
-  catches any residual shortfall at generation.
-* **Budget mis-tuning** — too small a draw budget would yield spurious generation
-  failures. Mitigated by scaling the budget to a known cardinality and keeping a
-  generous floor for unknown domains.
+* A cardinality hint can be too generous or a comparer can collapse more values
+  than expected; the bounded draw then detects the shortfall at generation.
+* Budget tuning can produce false exhaustion for pathological distributions.
+  Mitigation: report the seed and revisit the documented budget if real usage
+  demonstrates the problem; no universal probability guarantee is claimed.
 
 ## Follow-up Actions
 
-* Document the two failure channels in the user documentation once the collection
-  surface stabilizes.
-* Revisit the draw budget if real usage ever surfaces a spurious exhaustion.
+* Keep the user documentation explicit about the two failure channels.
+* Revisit the budget or capability model if reproducible false exhaustion occurs.
 
 ## References
 
-* ADR-0011 — Host Dummies as a standalone package in this repository.
-* The distinct-collection engine and the cardinality capability, in the `Dummies`
-  project (`CollectionState`, `ICardinalityHint`).
+* [Dummies generation specification](../specifications/dummies-generation.en.md).
+* ADR-0011 — standalone Dummies package.
+* `Dummies/CollectionState.cs` and `Dummies/ICardinalityHint.cs`.
