@@ -26,6 +26,9 @@
     <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
     <ProjectReference Include="..\FirstClassErrors.RequestBinder\FirstClassErrors.RequestBinder.csproj" />
     <ProjectReference Include="..\FirstClassErrors.Testing\FirstClassErrors.Testing.csproj" />
+    <!-- Direct reference: Testing references Dummies privately (PrivateAssets=all), so it does not flow
+         transitively; this project uses Dummies.Any.* directly for arbitrary primitives. -->
+    <ProjectReference Include="..\Dummies\Dummies.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -43,7 +43,7 @@ public sealed class OutcomeAsyncInstanceCoverageTests {
     public async Task TheAsyncThenToATypedOutcomeChainsOnSuccessAndPropagatesOnFailure() {
         // Setup
         CancellationToken token = TestContext.Current.CancellationToken;
-        DomainError       error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError       error = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
 
         // Exercise
         Outcome<int> onSuccess = await Outcome.Success.Then((_) => Task.FromResult(Outcome<int>.Success(9)), token);
@@ -84,7 +84,7 @@ public sealed class OutcomeAsyncInstanceCoverageTests {
     public async Task TheAsyncRecoverPassesASuccessThroughAndRecoversAFailure() {
         // Setup
         CancellationToken token = TestContext.Current.CancellationToken;
-        DomainError       error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError       error = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
 
         // Exercise
         Outcome passed    = await Outcome.Success.Recover((_, _) => Task.FromResult(Outcome.Failure(error)), token);
@@ -112,7 +112,7 @@ public sealed class OutcomeAsyncInstanceCoverageTests {
     public async Task TheAsyncFinallyWithAValueResolvesTheBranchMatchingTheOutcome() {
         // Setup
         CancellationToken token = TestContext.Current.CancellationToken;
-        DomainError       error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError       error = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
 
         // Exercise
         string onSuccess = await Outcome.Success.Finally((_) => Task.FromResult("ok"), (_, _) => Task.FromResult("ko"), token);
@@ -144,7 +144,7 @@ public sealed class OutcomeAsyncInstanceCoverageTests {
     public async Task TheAsyncFinallyWithActionsRunsTheBranchMatchingTheOutcome() {
         // Setup
         CancellationToken token          = TestContext.Current.CancellationToken;
-        DomainError       error          = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError       error          = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
         bool              successOnOk    = false;
         Error?            capturedOnFail = null;
 
@@ -233,7 +233,7 @@ public sealed class OutcomeAsyncInstanceCoverageTests {
     public void TheAsyncRecoverThrowsWhenFallbackReturnsANullTask() {
         // Setup
         CancellationToken token   = TestContext.Current.CancellationToken;
-        DomainError       error   = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError       error   = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
         Outcome           outcome = Outcome.Failure(error);
 
         // Exercise & verify
@@ -260,7 +260,7 @@ public sealed class OutcomeAsyncInstanceCoverageTests {
     public void TheAsyncFinallyWithActionsThrowsWhenOnFailureReturnsANullTask() {
         // Setup
         CancellationToken token   = TestContext.Current.CancellationToken;
-        DomainError       error   = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError       error   = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
         Outcome           outcome = Outcome.Failure(error);
 
         // Exercise & verify
@@ -293,7 +293,7 @@ public sealed class OutcomeGenericAsyncInstanceCoverageTests {
     public async Task TheAsyncThenToATypedOutcomeChainsOnSuccessAndPropagatesOnFailure() {
         // Setup
         CancellationToken token = TestContext.Current.CancellationToken;
-        DomainError       error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError       error = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
 
         // Exercise
         Outcome<int> onSuccess = await Outcome<int>.Success(4).Then((value, _) => Task.FromResult(Outcome<int>.Success(value + 1)), token);
@@ -321,7 +321,7 @@ public sealed class OutcomeGenericAsyncInstanceCoverageTests {
     public async Task TheAsyncThenDiscardingTheValueChainsOnSuccessAndPropagatesOnFailure() {
         // Setup
         CancellationToken token = TestContext.Current.CancellationToken;
-        DomainError       error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError       error = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
 
         // Exercise
         Outcome onSuccess = await Outcome<int>.Success(4).Then((_, _) => Task.FromResult(Outcome.Success), token);
@@ -349,7 +349,7 @@ public sealed class OutcomeGenericAsyncInstanceCoverageTests {
     public async Task TheAsyncToPropagatesTheErrorOnFailure() {
         // Setup
         CancellationToken token   = TestContext.Current.CancellationToken;
-        DomainError       error   = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError       error   = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
         Outcome<int>      outcome = Outcome<int>.Failure(error);
 
         // Exercise
@@ -379,7 +379,7 @@ public sealed class OutcomeGenericAsyncInstanceCoverageTests {
     [Fact(DisplayName = "Recover with an outcome fallback passes a success through and recovers a failure.")]
     public void RecoverWithAnOutcomeFallbackPassesASuccessThroughAndRecoversAFailure() {
         // Setup
-        DomainError  error   = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError  error   = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
         Outcome<int> success = Outcome<int>.Success(1);
         Outcome<int> failure = Outcome<int>.Failure(error);
 
@@ -395,7 +395,7 @@ public sealed class OutcomeGenericAsyncInstanceCoverageTests {
     [Fact(DisplayName = "Recover with a value fallback passes a success through and recovers a failure.")]
     public void RecoverWithAValueFallbackPassesASuccessThroughAndRecoversAFailure() {
         // Setup
-        DomainError  error   = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError  error   = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
         Outcome<int> success = Outcome<int>.Success(1);
         Outcome<int> failure = Outcome<int>.Failure(error);
 
@@ -422,7 +422,7 @@ public sealed class OutcomeGenericAsyncInstanceCoverageTests {
     public async Task TheAsyncRecoverWithAnOutcomeFallbackPassesASuccessThroughAndRecoversAFailure() {
         // Setup
         CancellationToken token   = TestContext.Current.CancellationToken;
-        DomainError       error   = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError       error   = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
         Outcome<int>      success = Outcome<int>.Success(1);
 
         // Exercise
@@ -476,7 +476,7 @@ public sealed class OutcomeGenericAsyncInstanceCoverageTests {
     [Fact(DisplayName = "Finally with actions runs the branch matching the outcome.")]
     public void FinallyWithActionsRunsTheBranchMatchingTheOutcome() {
         // Setup
-        DomainError error          = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError error          = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
         int         capturedValue  = 0;
         Error?      capturedOnFail = null;
 
@@ -504,7 +504,7 @@ public sealed class OutcomeGenericAsyncInstanceCoverageTests {
     [Fact(DisplayName = "Finally with a value resolves the failure branch.")]
     public void FinallyWithAValueResolvesTheFailureBranch() {
         // Setup
-        DomainError  error   = ErrorFactory.Domain(Any.ErrorCode(), "boom");
+        DomainError  error   = ErrorFactory.Domain(ErrorCodeFactory.Any(), "boom");
         Outcome<int> outcome = Outcome<int>.Failure(error);
 
         // Exercise
@@ -528,7 +528,7 @@ public sealed class OutcomeGenericAsyncInstanceCoverageTests {
     public async Task TheAsyncFinallyWithAValueResolvesTheBranchMatchingTheOutcome() {
         // Setup
         CancellationToken token = TestContext.Current.CancellationToken;
-        DomainError       error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError       error = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
 
         // Exercise
         string onSuccess = await Outcome<int>.Success(5).Finally((value, _) => Task.FromResult($"ok:{value}"), (_, _) => Task.FromResult("ko"), token);
@@ -560,7 +560,7 @@ public sealed class OutcomeGenericAsyncInstanceCoverageTests {
     public async Task TheAsyncFinallyWithActionsRunsTheBranchMatchingTheOutcome() {
         // Setup
         CancellationToken token          = TestContext.Current.CancellationToken;
-        DomainError       error          = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError       error          = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
         int               capturedValue  = 0;
         Error?            capturedOnFail = null;
 
@@ -625,7 +625,7 @@ public sealed class OutcomeGenericAsyncInstanceCoverageTests {
     public void TheAsyncRecoverWithAnOutcomeFallbackThrowsWhenFallbackReturnsANullTask() {
         // Setup
         CancellationToken token   = TestContext.Current.CancellationToken;
-        DomainError       error   = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError       error   = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
         Outcome<int>      outcome = Outcome<int>.Failure(error);
 
         // Exercise & verify
@@ -652,7 +652,7 @@ public sealed class OutcomeGenericAsyncInstanceCoverageTests {
     public void TheAsyncFinallyWithActionsThrowsWhenOnFailureReturnsANullTask() {
         // Setup
         CancellationToken token   = TestContext.Current.CancellationToken;
-        DomainError       error   = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError       error   = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
         Outcome<int>      outcome = Outcome<int>.Failure(error);
 
         // Exercise & verify
