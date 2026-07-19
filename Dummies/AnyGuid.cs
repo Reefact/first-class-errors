@@ -24,6 +24,16 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint {
         return string.Join(", ", values.Select(V));
     }
 
+    // Increments the 16-byte buffer by one with carry, from the last byte down — the full-width successor of
+    // new Guid(bytes). Incrementing only the last byte (the former behaviour) wraps 255 back to 0 and can cycle
+    // forever when every last-byte variant of a prefix is excluded; propagating the carry into the higher bytes
+    // cannot, because it walks distinct values across the whole 128-bit space.
+    private static void Increment(byte[] bytes) {
+        for (int i = bytes.Length - 1; i >= 0; i--) {
+            if (++bytes[i] != 0) { return; }
+        }
+    }
+
     #endregion
 
     #region Fields declarations
@@ -32,6 +42,7 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint {
     private readonly string?              _allowedConstraint;
     private readonly List<Guid>?          _effectiveAllowed;
     private readonly IReadOnlyList<Guid>  _excluded;
+    private readonly HashSet<Guid>        _excludedSet;
     private readonly Guid?                _pinned;
     private readonly string?              _pinnedConstraint;
     private readonly RandomSource         _source;
@@ -46,8 +57,10 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint {
         _allowed           = allowed;
         _allowedConstraint = allowedConstraint;
         _excluded          = excluded;
-        // Materialized once here — "constrain once, draw many": Generate never refilters the allow-list.
-        _effectiveAllowed  = allowed?.Where(value => !excluded.Contains(value)).ToList();
+        // Materialized once here — "constrain once, draw many": Generate never refilters the allow-list, and
+        // the exclusion walk tests membership against a set rather than rescanning the list on every step.
+        _excludedSet       = new HashSet<Guid>(excluded);
+        _effectiveAllowed  = allowed?.Where(value => !_excludedSet.Contains(value)).ToList();
     }
 
     RandomSource? IHasRandomSource.Source => _source;
@@ -121,11 +134,14 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint {
         byte[] bytes = new byte[16];
         random.NextBytes(bytes);
         Guid candidate = new(bytes);
-        // Colliding with an excluded identifier has probability ~2^-122 per draw; walking the last byte is a
-        // deterministic, bounded escape — not a retry loop.
-        while (_excluded.Contains(candidate)) {
-            bytes[15]++;
-            candidate = new Guid(bytes);
+        // Colliding with an excluded identifier has probability |excluded| / 2^128 per draw. On a collision,
+        // walk the whole 128-bit value with carry — the full-width successor of the drawn bytes — off the
+        // excluded values. The exclusion set can never fill the 128-bit space, so the walk visits distinct
+        // values until it lands on an allowed one and terminates: the same deterministic escape
+        // OrdinalIntervalSpec and WideIntervalSpec already use for their 128-bit siblings.
+        while (_excludedSet.Contains(candidate)) {
+            Increment(bytes);
+            candidate = new(bytes);
         }
 
         return candidate;
