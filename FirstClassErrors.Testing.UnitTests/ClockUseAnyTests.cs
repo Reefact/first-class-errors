@@ -8,7 +8,7 @@ using NFluent;
 
 #endregion
 
-namespace FirstClassErrors.UnitTests;
+namespace FirstClassErrors.Testing.UnitTests;
 
 [TestSubject(typeof(Clock))]
 public sealed class ClockUseAnyTests {
@@ -31,15 +31,15 @@ public sealed class ClockUseAnyTests {
         }
     }
 
-    [Fact(DisplayName = "Inside Any.Reproducibly, Clock.UseAny picks the same instant for a given seed.")]
+    [Fact(DisplayName = "Inside Dummies.Any.Reproducibly, Clock.UseAny picks the same instant for a given seed.")]
     public void UseAnyIsReproducibleUnderAReproduciblyScope() {
         DateTimeOffset first  = default;
         DateTimeOffset second = default;
 
-        Any.Reproducibly(42, () => {
+        Dummies.Any.Reproducibly(42, () => {
             using (Clock.UseAny()) { first = AnError().OccurredAt; }
         });
-        Any.Reproducibly(42, () => {
+        Dummies.Any.Reproducibly(42, () => {
             using (Clock.UseAny()) { second = AnError().OccurredAt; }
         });
 

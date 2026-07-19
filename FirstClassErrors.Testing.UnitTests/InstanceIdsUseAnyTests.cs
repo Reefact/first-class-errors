@@ -8,7 +8,7 @@ using NFluent;
 
 #endregion
 
-namespace FirstClassErrors.UnitTests;
+namespace FirstClassErrors.Testing.UnitTests;
 
 [TestSubject(typeof(InstanceIds))]
 public sealed class InstanceIdsUseAnyTests {
@@ -31,20 +31,20 @@ public sealed class InstanceIdsUseAnyTests {
         }
     }
 
-    [Fact(DisplayName = "Inside Any.Reproducibly, InstanceIds.UseAny reproduces the same id sequence for a given seed.")]
+    [Fact(DisplayName = "Inside Dummies.Any.Reproducibly, InstanceIds.UseAny reproduces the same id sequence for a given seed.")]
     public void UseAnyIsReproducibleUnderAReproduciblyScope() {
         Guid firstRunA  = Guid.Empty;
         Guid firstRunB  = Guid.Empty;
         Guid secondRunA = Guid.Empty;
         Guid secondRunB = Guid.Empty;
 
-        Any.Reproducibly(7, () => {
+        Dummies.Any.Reproducibly(7, () => {
             using (InstanceIds.UseAny()) {
                 firstRunA = AnError().InstanceId;
                 firstRunB = AnError().InstanceId;
             }
         });
-        Any.Reproducibly(7, () => {
+        Dummies.Any.Reproducibly(7, () => {
             using (InstanceIds.UseAny()) {
                 secondRunA = AnError().InstanceId;
                 secondRunB = AnError().InstanceId;
