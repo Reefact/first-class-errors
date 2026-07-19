@@ -8,20 +8,6 @@ namespace Dummies;
 /// <typeparam name="T">The element type.</typeparam>
 public sealed class AnyList<T> : AnyCollection<T, List<T>, AnyList<T>> {
 
-    #region Statics members declarations
-
-    /// <summary>
-    ///     Generates the value — an <see cref="AnyList{T}" /> can be used wherever a <see cref="List{T}" /> is expected.
-    ///     Each conversion draws a fresh list.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary list satisfying the generator's constraints.</returns>
-    public static implicit operator List<T>(AnyList<T> generator) {
-        return generator.Generate();
-    }
-
-    #endregion
-
     internal AnyList(RandomSource? source, CollectionState<T> state) : base(source, state) { }
 
     /// <summary>Requires the elements to be pairwise distinct (default equality).</summary>

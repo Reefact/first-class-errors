@@ -16,16 +16,6 @@ public sealed class AnyUInt32 : IAny<uint>, IHasRandomSource, ICardinalityHint {
 
     #region Statics members declarations
 
-    /// <summary>
-    ///     Generates the value — an <see cref="AnyUInt32" /> can be used wherever a <see cref="uint" /> is expected.
-    ///     Each conversion draws a fresh value.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary value satisfying the generator's constraints.</returns>
-    public static implicit operator uint(AnyUInt32 generator) {
-        return generator.Generate();
-    }
-
     internal static AnyUInt32 Create(RandomSource source) {
         return new AnyUInt32(source, OrdinalIntervalSpec.Unconstrained("UInt32", ordinal => V(Val(ordinal)), Ord(uint.MinValue), Ord(uint.MaxValue)));
     }

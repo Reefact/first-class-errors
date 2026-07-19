@@ -16,16 +16,6 @@ public sealed class AnyInt16 : IAny<short>, IHasRandomSource, ICardinalityHint {
 
     #region Statics members declarations
 
-    /// <summary>
-    ///     Generates the value — an <see cref="AnyInt16" /> can be used wherever a <see cref="short" /> is expected.
-    ///     Each conversion draws a fresh value.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary value satisfying the generator's constraints.</returns>
-    public static implicit operator short(AnyInt16 generator) {
-        return generator.Generate();
-    }
-
     internal static AnyInt16 Create(RandomSource source) {
         return new AnyInt16(source, OrdinalIntervalSpec.Unconstrained("Int16", ordinal => V(Val(ordinal)), Ord(short.MinValue), Ord(short.MaxValue)));
     }

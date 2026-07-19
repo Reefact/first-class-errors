@@ -17,16 +17,6 @@ public sealed class AnyTimeSpan : IAny<TimeSpan>, IHasRandomSource, ICardinality
 
     #region Statics members declarations
 
-    /// <summary>
-    ///     Generates the value — an <see cref="AnyTimeSpan" /> can be used wherever a <see cref="TimeSpan" /> is
-    ///     expected. Each conversion draws a fresh value.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary value satisfying the generator's constraints.</returns>
-    public static implicit operator TimeSpan(AnyTimeSpan generator) {
-        return generator.Generate();
-    }
-
     internal static AnyTimeSpan Create(RandomSource source) {
         return new AnyTimeSpan(source, OrdinalIntervalSpec.Unconstrained("TimeSpan", ordinal => V(Val(ordinal)), Ord(TimeSpan.MinValue), Ord(TimeSpan.MaxValue)));
     }

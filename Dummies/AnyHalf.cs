@@ -18,16 +18,6 @@ public sealed class AnyHalf : IAny<Half>, IHasRandomSource {
 
     #region Statics members declarations
 
-    /// <summary>
-    ///     Generates the value — an <see cref="AnyHalf" /> can be used wherever a <see cref="Half" /> is expected.
-    ///     Each conversion draws a fresh value.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary value satisfying the generator's constraints.</returns>
-    public static implicit operator Half(AnyHalf generator) {
-        return generator.Generate();
-    }
-
     internal static AnyHalf Create(RandomSource source) {
         return new AnyHalf(source, ContinuousIntervalSpec.Unconstrained("Half", value => V((Half)value), value => (double)(Half)value, value => NextUp((Half)value), -(double)Half.MaxValue, (double)Half.MaxValue));
     }

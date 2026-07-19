@@ -14,15 +14,16 @@ invariant*, never what the test asserts:
     string code = Any.String()
         .NonEmpty()
         .WithMaxLength(50)
-        .StartingWith("ORD-");
+        .StartingWith("ORD-")
+        .Generate();
 
 Read it as: *any* string that satisfies these constraints. The exact value does not
 matter — and that is the point.
 
 ## What's inside
 
-- **Fluent, typed generators** implementing `IAny<T>`, with implicit conversion to
-  the generated type, across the .NET simple types: `String`, `Char`, every integer
+- **Fluent, typed generators** implementing `IAny<T>`, materialized through
+  `.Generate()`, across the .NET simple types: `String`, `Char`, every integer
   width (`SByte`/`Byte`/`Int16`/`UInt16`/`Int32`/`UInt32`/`Int64`/`UInt64`),
   `Double`/`Single`/`Decimal` (finite values only — never NaN or infinities),
   `Bool`, `Guid`, `Enum<T>` (declared members only), `TimeSpan`, `DateTime` (UTC)
