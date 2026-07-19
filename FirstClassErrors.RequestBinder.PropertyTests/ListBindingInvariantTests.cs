@@ -16,7 +16,7 @@ namespace FirstClassErrors.RequestBinder.PropertyTests;
 ///     fewer, never more — and the positional stability of the indexed error paths, so that reordering the elements
 ///     reorders their paths accordingly and an element's path never depends on its neighbours.
 /// </summary>
-[TestSubject(typeof(ListOfSimplePropertiesConverter<,>))]
+[TestSubject(typeof(ListOfSimplePropertiesConverter<>))]
 public sealed class ListBindingInvariantTests {
 
     [Fact(DisplayName = "Collect-all: a required list records exactly one error per failing element, and none for a valid one.")]
@@ -57,9 +57,10 @@ public sealed class ListBindingInvariantTests {
     /// <summary>Binds the generated tokens as a <b>required</b> list and returns the whole outcome.</summary>
     private static Outcome<IReadOnlyList<Token>> BindTokens((string? Raw, bool Fails)[] slots) {
         TokenListRequest request = new(slots.Select(slot => slot.Raw).ToArray());
-        var              binder  = Bind.PropertiesOf(request).FailWith(CommandError.Invalid);
+        var              binder  = Bind.Request(CommandError.Invalid);
+        var              body    = binder.PropertiesOf(request);
 
-        RequiredField<IReadOnlyList<Token>> tokens = binder.ListOfSimpleProperties(r => r.Tokens).AsRequired(Token.Parse);
+        RequiredField<IReadOnlyList<Token>> tokens = body.ListOfSimpleProperties(r => r.Tokens).AsRequired(Token.Parse);
 
         return binder.New(scope => scope.Get(tokens));
     }

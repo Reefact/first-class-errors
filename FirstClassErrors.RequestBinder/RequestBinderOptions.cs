@@ -1,7 +1,7 @@
 namespace FirstClassErrors.RequestBinder;
 
 /// <summary>
-///     The binding options of a <see cref="RequestBinder{TRequest}" />. A binder's options are fixed once, before
+///     The binding options of a <see cref="RequestBinder" />. A binder's options are fixed once, before
 ///     binding begins — through <see cref="Bind.WithOptions" /> or the application-wide <see cref="Default" /> — and
 ///     inherited by nested binders; they never change while a binder is binding. The process-wide
 ///     <see cref="Default" /> may be configured once at application startup and is frozen on first use.
@@ -17,7 +17,7 @@ public sealed class RequestBinderOptions {
     private static          bool                                     _frozen;
 
     /// <summary>
-    ///     The application-wide default options that <see cref="Bind.PropertiesOf{TRequest}" /> binds with. Assign it
+    ///     The application-wide default options that <see cref="Bind.Request" /> binds with. Assign it
     ///     once at application startup — before any binding — to configure the binder host-wide without threading
     ///     options through every call; a per-call <see cref="Bind.WithOptions" /> still overrides it. The first bind
     ///     reads it and thereby <b>freezes</b> it, so the default cannot drift once binding has begun. Defaults to the

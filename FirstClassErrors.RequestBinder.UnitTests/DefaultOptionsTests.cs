@@ -7,7 +7,7 @@ using NFluent;
 namespace FirstClassErrors.RequestBinder.UnitTests;
 
 /// <summary>
-///     The application-wide <see cref="RequestBinderOptions.Default" />: it is what <see cref="Bind.PropertiesOf{TRequest}" />
+///     The application-wide <see cref="RequestBinderOptions.Default" />: it is what <see cref="Bind.Request" />
 ///     binds with, configurable once at startup and frozen on first use. These tests inject it through the scoped,
 ///     parallel-safe test seam (<c>OverrideDefaultForTests</c>) so they never mutate the process default — the binder
 ///     suite keeps seeing the built-in default.
@@ -18,34 +18,34 @@ public sealed class DefaultOptionsTests {
         return new BookingRequest(null, "R", null, null, null, null, null);
     }
 
-    private static Error BindMissingEmail(RequestBinderEnvelopeStage<BookingRequest> start) {
-        var bind = start.FailWith(BookingEnvelopeError.CommandInvalid);
-        bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+    private static Error BindMissingEmail(RequestBinder bind) {
+        var body = bind.PropertiesOf(MissingEmail());
+        body.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
         return bind.New(_ => "x").Error!.InnerErrors.Single();
     }
 
-    // ── Bind.PropertiesOf binds with the configured default ───────────────────────────────────────────────
+    // ── Bind.Request binds with the configured default ───────────────────────────────────────────────
 
-    [Fact(DisplayName = "Bind.PropertiesOf binds with the configured default options — naming and structural codes — without WithOptions.")]
-    public void BindPropertiesOfUsesTheConfiguredDefault() {
+    [Fact(DisplayName = "Bind.Request binds with the configured default options — naming and structural codes — without WithOptions.")]
+    public void BindRequestUsesTheConfiguredDefault() {
         var configured = new RequestBinderOptions(new SnakeCaseNameProvider(),
                                                   RequestBindingError.DefaultArgumentRequired.WithCode(ErrorCode.Create("ACME_ARGUMENT_REQUIRED")),
                                                   RequestBindingError.DefaultArgumentInvalid.WithCode(ErrorCode.Create("ACME_ARGUMENT_INVALID")));
 
         using (RequestBinderOptions.OverrideDefaultForTests(configured)) {
-            Error error = BindMissingEmail(Bind.PropertiesOf(MissingEmail()));
+            Error error = BindMissingEmail(Bind.Request(BookingEnvelopeError.CommandInvalid));
 
             Check.That(error.Code.ToString()).IsEqualTo("ACME_ARGUMENT_REQUIRED");
             Check.That(BindingAssertions.ArgumentPathOf(error)).IsEqualTo("guest_email");
         }
     }
 
-    [Fact(DisplayName = "Outside the configured scope, Bind.PropertiesOf falls back to the built-in default.")]
+    [Fact(DisplayName = "Outside the configured scope, Bind.Request falls back to the built-in default.")]
     public void OutsideScopeFallsBackToBuiltIn() {
         using (RequestBinderOptions.OverrideDefaultForTests(new RequestBinderOptions(new SnakeCaseNameProvider()))) { }
 
-        Error error = BindMissingEmail(Bind.PropertiesOf(MissingEmail()));
+        Error error = BindMissingEmail(Bind.Request(BookingEnvelopeError.CommandInvalid));
 
         Check.That(error.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_REQUIRED");
         Check.That(BindingAssertions.ArgumentPathOf(error)).IsEqualTo("GuestEmail");
@@ -61,7 +61,7 @@ public sealed class DefaultOptionsTests {
                                                RequestBindingError.DefaultArgumentInvalid.WithCode(ErrorCode.Create("PERCALL_INVALID")));
 
         using (RequestBinderOptions.OverrideDefaultForTests(appDefault)) {
-            Error error = BindMissingEmail(Bind.WithOptions(perCall).PropertiesOf(MissingEmail()));
+            Error error = BindMissingEmail(Bind.WithOptions(perCall).Request(BookingEnvelopeError.CommandInvalid));
 
             Check.That(error.Code.ToString()).IsEqualTo("PERCALL_REQUIRED");
         }
