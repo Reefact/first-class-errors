@@ -150,6 +150,6 @@ principe de travail borné de la bibliothèque.
 ## Références
 
 * ADR-0011 — Héberger Dummies comme un paquet autonome dans ce dépôt.
-* Le moteur de collection distincte et les capacités de cardinalité et
-  d'appartenance, dans le projet `Dummies` (`CollectionState`, `ICardinalityHint`,
-  `IDomainMembership`).
+* Le moteur de collection distincte et sa capacité unifiée de cardinalité et
+  d'appartenance (une seule interface, pour qu'un générateur fini ne puisse pas sortir
+  du périmètre anticipé), dans le projet `Dummies` (`CollectionState`, `ICardinalityHint`).

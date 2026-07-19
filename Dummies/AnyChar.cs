@@ -8,7 +8,7 @@ namespace Dummies;
 ///     <see cref="DifferentFrom" />. A combination that empties the pool fails eagerly with a
 ///     <see cref="ConflictingAnyConstraintException" />.
 /// </summary>
-public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint, IDomainMembership<char> {
+public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint<char> {
 
     #region Statics members declarations
 
@@ -63,10 +63,10 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint, ID
     RandomSource? IHasRandomSource.Source => _source;
 
     // The pool is materialized once at construction, so its size is the exact number of characters drawable.
-    long? ICardinalityHint.DistinctCardinality => _pool.Count;
+    long? ICardinalityHint<char>.DistinctCardinality => _pool.Count;
 
     // The pool is the exact draw set, so membership is a direct pool lookup.
-    bool IDomainMembership<char>.Contains(char value) => _pool.Contains(value);
+    bool ICardinalityHint<char>.Contains(char value) => _pool.Contains(value);
 
     /// <summary>Restricts the character to ASCII letters only. Declared once per generator.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>

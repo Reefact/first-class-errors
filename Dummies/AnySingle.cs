@@ -12,7 +12,7 @@ namespace Dummies;
 ///     contradictory constraints fail eagerly with a <see cref="ConflictingAnyConstraintException" /> naming both
 ///     sides; instances are immutable recipes. NaN and the infinities are never generated nor accepted.
 /// </summary>
-public sealed class AnySingle : IAny<float>, IHasRandomSource {
+public sealed class AnySingle : IAny<float>, IHasRandomSource, ICardinalityHint<float> {
 
     #region Statics members declarations
 
@@ -53,6 +53,11 @@ public sealed class AnySingle : IAny<float>, IHasRandomSource {
     }
 
     RandomSource? IHasRandomSource.Source => _source;
+
+    long? ICardinalityHint<float>.DistinctCardinality => _spec.Cardinality;
+
+    // The allow-list holds the doubles the supplied floats widen to, so membership tests the same widening.
+    bool ICardinalityHint<float>.Contains(float value) => _spec.Contains((double)value);
 
     /// <summary>Requires a value strictly greater than zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>

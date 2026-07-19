@@ -13,7 +13,7 @@ namespace Dummies;
 ///     sides; instances are immutable recipes. Exclusive bounds are expressed as the inclusive bound plus a point
 ///     exclusion, since <see cref="decimal" /> has no next-representable-value ladder.
 /// </summary>
-public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource {
+public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource, ICardinalityHint<decimal> {
 
     #region Statics members declarations
 
@@ -44,6 +44,10 @@ public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource {
     }
 
     RandomSource? IHasRandomSource.Source => _source;
+
+    long? ICardinalityHint<decimal>.DistinctCardinality => _spec.Cardinality;
+
+    bool ICardinalityHint<decimal>.Contains(decimal value) => _spec.Contains(value);
 
     /// <summary>Requires a value strictly greater than zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>

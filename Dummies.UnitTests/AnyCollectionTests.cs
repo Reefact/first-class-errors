@@ -152,7 +152,7 @@ public sealed class AnyCollectionTests {
         // The motivating case: {1, 2, 3} is satisfiable — 3 is supplied directly and lies outside the {1, 2} the
         // generator can produce, so only two elements must be drawn from it.
         for (int i = 0; i < SampleCount; i++) {
-            HashSet<int> set = Any.SetOf(Any.Int32().OneOf(1, 2)).Containing(3).WithCount(3);
+            HashSet<int> set = Any.SetOf(Any.Int32().OneOf(1, 2)).Containing(3).WithCount(3).Generate();
             Check.That(set).Contains(1, 2, 3);
             Check.That(set.Count).IsEqualTo(3);
         }
@@ -165,7 +165,7 @@ public sealed class AnyCollectionTests {
             HashSet<int> list = new(Any.ListOf(Any.Int32().OneOf(1, 2)).Containing(3).WithCount(3).Distinct().Generate());
             Check.That(list).Contains(1, 2, 3);
 
-            HashSet<int> quad = Any.SetOf(Any.Int32().OneOf(1, 2)).Containing(3).Containing(4).WithCount(4);
+            HashSet<int> quad = Any.SetOf(Any.Int32().OneOf(1, 2)).Containing(3).Containing(4).WithCount(4).Generate();
             Check.That(quad).Contains(1, 2, 3, 4);
             Check.That(quad.Count).IsEqualTo(4);
         }
@@ -183,7 +183,7 @@ public sealed class AnyCollectionTests {
         // is exactly reachable as {1, 2, 5}.
         Check.ThatCode(() => Any.SetOf(Any.Int32().OneOf(1, 2)).Containing(1).Containing(5).WithCount(4)).Throws<ConflictingAnyConstraintException>();
         for (int i = 0; i < SampleCount; i++) {
-            HashSet<int> set = Any.SetOf(Any.Int32().OneOf(1, 2)).Containing(1).Containing(5).WithCount(3);
+            HashSet<int> set = Any.SetOf(Any.Int32().OneOf(1, 2)).Containing(1).Containing(5).WithCount(3).Generate();
             Check.That(set).Contains(1, 2, 5);
         }
     }
@@ -209,7 +209,7 @@ public sealed class AnyCollectionTests {
         // Between(0, long.MaxValue - 1) advertises long.MaxValue distinct values; the additive form base + extras
         // would overflow to a negative and reject spuriously. The subtractive check stays correct.
         for (int i = 0; i < SampleCount; i++) {
-            HashSet<long> set = Any.SetOf(Any.Int64().Between(0, long.MaxValue - 1)).Containing(-1L).WithCount(3);
+            HashSet<long> set = Any.SetOf(Any.Int64().Between(0, long.MaxValue - 1)).Containing(-1L).WithCount(3).Generate();
             Check.That(set).Contains(-1L);
             Check.That(set.Count).IsEqualTo(3);
         }
@@ -220,7 +220,7 @@ public sealed class AnyCollectionTests {
         // The generator drawn from can yield a value outside the element domain, so the request cannot be proven
         // impossible at declaration — a wide ContainingAny makes it genuinely satisfiable.
         for (int i = 0; i < SampleCount; i++) {
-            HashSet<int> set = Any.SetOf(Any.Int32().OneOf(1, 2)).ContainingAny(Any.Int32().GreaterThan(100)).WithCount(3);
+            HashSet<int> set = Any.SetOf(Any.Int32().OneOf(1, 2)).ContainingAny(Any.Int32().GreaterThan(100)).WithCount(3).Generate();
             Check.That(set.Count).IsEqualTo(3);
             Check.That(set).Contains(1, 2);
         }
@@ -239,7 +239,7 @@ public sealed class AnyCollectionTests {
         // 15 is outside {1, 2, 3} and its residue class (5) is fresh too, so {1, 2, 3, 15} has four classes and
         // generation succeeds.
         for (int i = 0; i < SampleCount; i++) {
-            HashSet<int> set = Any.SetOf(Any.Int32().OneOf(1, 2, 3), modTen).Containing(15).WithCount(4);
+            HashSet<int> set = Any.SetOf(Any.Int32().OneOf(1, 2, 3), modTen).Containing(15).WithCount(4).Generate();
             Check.That(set.Count).IsEqualTo(4);
         }
 
@@ -247,6 +247,27 @@ public sealed class AnyCollectionTests {
         // (mod 10) collapses it back into the domain, so three distinct-under-the-comparer values are impossible and
         // the shortfall surfaces while drawing, never as a false eager conflict.
         Check.ThatCode(() => Any.SetOf(Any.Int32().OneOf(1, 2), modTen).Containing(12).WithCount(3).Generate()).Throws<AnyGenerationException>();
+    }
+
+    [Fact(DisplayName = "The eager perimeter reaches every finite generator: decimal, floating-point and 128-bit allow-lists gate distinct collections too.")]
+    public void FiniteScalarGeneratorsGateEagerly() {
+        // A finite allow-list or a narrow range over decimal, double, single or Int128 now advertises its cardinality,
+        // so a count beyond it conflicts at declaration — the same promise integers and enums already kept, held
+        // across the whole knowable perimeter rather than only part of it.
+        Check.ThatCode(() => Any.SetOf(Any.Decimal().OneOf(1m, 2m)).WithCount(3)).Throws<ConflictingAnyConstraintException>();
+        Check.ThatCode(() => Any.SetOf(Any.Double().OneOf(1d, 2d)).WithCount(3)).Throws<ConflictingAnyConstraintException>();
+        Check.ThatCode(() => Any.SetOf(Any.Single().OneOf(1f, 2f)).WithCount(3)).Throws<ConflictingAnyConstraintException>();
+        Check.ThatCode(() => Any.SetOf(Any.Int128().Between(1, 3)).WithCount(5)).Throws<ConflictingAnyConstraintException>();
+
+        // Membership travels with cardinality: an out-of-domain contained value extends the effective domain...
+        for (int i = 0; i < SampleCount; i++) {
+            HashSet<decimal> set = Any.SetOf(Any.Decimal().OneOf(1m, 2m)).Containing(3m).WithCount(3).Generate();
+            Check.That(set).Contains(1m, 2m, 3m);
+        }
+
+        // ...while a contained value already inside it does not, so an impossible count still conflicts eagerly.
+        Check.ThatCode(() => Any.SetOf(Any.Decimal().OneOf(1m, 2m)).Containing(1m).WithCount(3)).Throws<ConflictingAnyConstraintException>();
+        Check.ThatCode(() => Any.SetOf(Any.Double().OneOf(1d, 2d)).Containing(2d).WithCount(3)).Throws<ConflictingAnyConstraintException>();
     }
 
     [Fact(DisplayName = "ArrayOf: produces an array of the requested size, distinct when asked.")]

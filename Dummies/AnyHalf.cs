@@ -14,7 +14,7 @@ namespace Dummies;
 ///     sides; instances are immutable recipes. NaN and the infinities are never generated nor accepted. Available on
 ///     the net8.0 target only, like the type itself.
 /// </summary>
-public sealed class AnyHalf : IAny<Half>, IHasRandomSource {
+public sealed class AnyHalf : IAny<Half>, IHasRandomSource, ICardinalityHint<Half> {
 
     #region Statics members declarations
 
@@ -55,6 +55,11 @@ public sealed class AnyHalf : IAny<Half>, IHasRandomSource {
     }
 
     RandomSource? IHasRandomSource.Source => _source;
+
+    long? ICardinalityHint<Half>.DistinctCardinality => _spec.Cardinality;
+
+    // The allow-list holds the doubles the supplied halves widen to, so membership tests the same widening.
+    bool ICardinalityHint<Half>.Contains(Half value) => _spec.Contains((double)value);
 
     /// <summary>Requires a value strictly greater than zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>

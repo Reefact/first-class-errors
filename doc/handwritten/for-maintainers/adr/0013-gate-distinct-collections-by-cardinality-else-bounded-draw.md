@@ -138,5 +138,6 @@ bounded-work principle.
 ## References
 
 * ADR-0011 — Host Dummies as a standalone package in this repository.
-* The distinct-collection engine and the cardinality/membership capabilities, in the
-  `Dummies` project (`CollectionState`, `ICardinalityHint`, `IDomainMembership`).
+* The distinct-collection engine and its unified cardinality-and-membership capability
+  (one interface, so a finite generator cannot drift out of the eager perimeter), in the
+  `Dummies` project (`CollectionState`, `ICardinalityHint`).
