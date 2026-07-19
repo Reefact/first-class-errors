@@ -2,8 +2,8 @@
 
 🌍 🇬🇧 [English](0013-gate-distinct-collections-by-cardinality-else-bounded-draw.md) · 🇫🇷 Français (ce fichier)
 
-**Statut :** Proposé
-**Date :** 2026-07-18
+**Statut :** Accepté
+**Date :** 2026-07-19
 **Décideurs :** Reefact
 
 ## Contexte
