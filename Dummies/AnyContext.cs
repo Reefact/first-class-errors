@@ -1,3 +1,9 @@
+#region Usings declarations
+
+using System.Text.RegularExpressions;
+
+#endregion
+
 namespace Dummies;
 
 /// <summary>
@@ -41,6 +47,39 @@ public sealed class AnyContext {
     /// <returns>A string generator to constrain fluently.</returns>
     public AnyString String() {
         return new AnyString(_source, StringSpec.Unconstrained);
+    }
+
+    /// <summary>
+    ///     Starts a generator of arbitrary strings matching <paramref name="pattern" /> drawing from this context —
+    ///     same fluent surface as <see cref="Any.StringMatching(string)" />, deterministic under this context's seed.
+    /// </summary>
+    /// <param name="pattern">The regular expression the generated strings must match.</param>
+    /// <returns>A generator of strings matching the pattern.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="pattern" /> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="pattern" /> is not a well-formed pattern.</exception>
+    /// <exception cref="UnsupportedRegexException">Thrown when <paramref name="pattern" /> uses a construct outside the supported regular subset.</exception>
+    public AnyPattern StringMatching(string pattern) {
+        if (pattern is null) { throw new ArgumentNullException(nameof(pattern)); }
+
+        return AnyPattern.FromPattern(_source, pattern, ignoreCase: false);
+    }
+
+    /// <summary>
+    ///     Starts a generator of arbitrary strings matching <paramref name="pattern" /> drawing from this context —
+    ///     same fluent surface as <see cref="Any.StringMatching(Regex)" />, deterministic under this context's seed.
+    ///     <see cref="RegexOptions.IgnoreCase" /> is honoured; <see cref="RegexOptions.IgnorePatternWhitespace" /> is
+    ///     rejected; the remaining options are ignored.
+    /// </summary>
+    /// <param name="pattern">The regular expression the generated strings must match.</param>
+    /// <returns>A generator of strings matching the pattern.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="pattern" /> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="pattern" /> is not a well-formed pattern, or carries <see cref="RegexOptions.IgnorePatternWhitespace" />.</exception>
+    /// <exception cref="UnsupportedRegexException">Thrown when <paramref name="pattern" /> uses a construct outside the supported regular subset.</exception>
+    public AnyPattern StringMatching(Regex pattern) {
+        if (pattern is null) { throw new ArgumentNullException(nameof(pattern)); }
+        if ((pattern.Options & RegexOptions.IgnorePatternWhitespace) != 0) { throw new ArgumentException("RegexOptions.IgnorePatternWhitespace changes how the pattern text is read; pass the pattern without it (or with its whitespace and comments removed).", nameof(pattern)); }
+
+        return AnyPattern.FromPattern(_source, pattern.ToString(), (pattern.Options & RegexOptions.IgnoreCase) != 0);
     }
 
     /// <summary>
