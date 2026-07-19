@@ -1,0 +1,81 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Packaged-asset compatibility consumer for the Dummies NuGet package. Deliberately NOT part of
+       FirstClassErrors.sln: ci.yml would build it under the .NET 10 SDK against a single asset, which is
+       exactly what this project exists to AVOID. It is built and run solely by .github/workflows/dummies.yml.
+
+       WHY THIS EXISTS
+       Dummies ships two target-framework assets in one package: lib/netstandard2.0 and lib/net8.0. The main
+       test project (Dummies.UnitTests) targets net10.0, so NuGet resolves the NEAREST compatible asset —
+       net8.0 — and the netstandard2.0 asset, though built, is never executed by a test. This consumer closes
+       that gap by consuming the PACKED package from two different consumer TFMs, each forcing one asset:
+         * net8.0 consumer -> restores lib/net8.0         (DateOnly/TimeOnly/Int128/UInt128/Half present)
+         * net6.0 consumer -> restores lib/netstandard2.0 (those types absent; the #if-additive branch out)
+       Program.cs then proves by reflection WHICH asset it got, that the modern surface is present/absent
+       accordingly, and exercises the common smoke surface (scalars, constraints, composition, collections,
+       seeded reproducibility). A failure prints the offending asset moniker so the red step names the asset.
+
+       WHY NO NESTED global.json (unlike tools/floor-check)
+       The floor check pins an OLD SDK because its contract is "the analyzer loads on the oldest Roslyn". Here
+       the contract is ASSET SELECTION, driven by the consumer's TargetFramework, not by the SDK. So this
+       project builds under the repo-root SDK (.NET 10) and lets each TFM select its asset; the .NET 6 and
+       .NET 8 RUNTIMES (installed by the workflow) are what actually execute each leg.
+
+       FOLLOW-UP: a .NET Framework (net472) leg would additionally exercise the netstandard2.0 asset on the
+       .NET Framework CLR — the emblematic downlevel consumer. It is intentionally deferred: it would be the
+       repository's first Framework target (Windows runner + Framework toolchain). Add it as another entry in
+       <TargetFrameworks> plus a step in dummies.yml when a Framework consumer justifies that cost. -->
+  <PropertyGroup>
+    <!-- net8.0 forces the net8.0 asset; net6.0 forces the netstandard2.0 asset (any runnable TFM below net8.0
+         does — net6.0 is CoreCLR, cheap on ubuntu, and keeps a clean A/B against the net8.0 leg). -->
+    <TargetFrameworks>net8.0;net6.0</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+
+    <!-- Opt out of the repo-wide CI warning ratchet (Directory.Build.props): this project builds a DOWN-LEVEL,
+         out-of-support TFM (net6.0) under the .NET 10 SDK, which legitimately emits SDK warnings the net10 CI
+         legs never see. Elevating those to errors would redden this job for reasons foreign to the one contract
+         it checks — packaged-asset selection. The explicit Environment exit code in Program.cs is the signal. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <MSBuildTreatWarningsAsErrors>false</MSBuildTreatWarningsAsErrors>
+    <!-- net6.0 is out of support; NETSDK1138 would warn on every build. Silence it: consuming a downlevel asset
+         from a downlevel TFM is the deliberate point of this project, not an oversight. -->
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <!-- Opt out of repo-wide Central Package Management (Directory.Packages.props): this project consumes the
+         Dummies package at a dynamic $(DummiesCheckVersion) and is built in isolation, so it keeps its version
+         inline (a PackageReference Version under CPM would otherwise raise NU1008). -->
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- The exact package version to consume. The dummies workflow owns it and passes -p:DummiesCheckVersion
+         (the same value it packs with). The default is only a local-dev fallback for building by hand:
+           rm -rf packages local-feed bin obj
+           dotnet pack ../../Dummies/Dummies.csproj -c Release -p:Version=1.0.0-dummiescheck.dev -o local-feed
+           # only the .NET 10 runtime may be present locally; roll forward so each TFM can still run:
+           DOTNET_ROLL_FORWARD=LatestMajor dotnet run -c Release -f net8.0
+           DOTNET_ROLL_FORWARD=LatestMajor dotnet run -c Release -f net6.0
+         The wipe is MANDATORY on a re-pack: the default version is fixed and NuGet treats a version as
+         immutable, so without it the run silently reuses the previously extracted package. -->
+    <DummiesCheckVersion Condition="'$(DummiesCheckVersion)' == ''">1.0.0-dummiescheck.dev</DummiesCheckVersion>
+    <!-- Extract restored packages into ./packages instead of the machine-global ~/.nuget/packages, which is
+         keyed by (id, version) and never re-reads a feed for a version it already holds — so with the fixed
+         local-dev version a re-pack would silently serve the STALE copy. A project-local folder makes the reset
+         above cheap and keeps this throwaway package out of the developer's real cache. -->
+    <RestorePackagesPath>$(MSBuildThisFileDirectory)packages</RestorePackagesPath>
+    <!-- packages/ lives UNDER the project dir (RestorePackagesPath) and the SDK's default globs compile every
+         **/*.cs beneath it; exclude it so a dependency shipping sources could never be swept into this build. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);packages/**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Consume the PACKED package, NOT a ProjectReference: a ProjectReference binds the project's own
+         multi-target output and would defeat the whole point (asset selection as a real consumer sees it). The
+         version is pinned EXACTLY, not floated, and nuget.config maps the id to the local feed only, so a future
+         stable Dummies on nuget.org can never be substituted for the artifact under test. -->
+    <PackageReference Include="Dummies" Version="$(DummiesCheckVersion)" />
+  </ItemGroup>
+
+</Project>

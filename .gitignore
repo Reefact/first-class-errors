@@ -293,3 +293,9 @@ __pycache__/
 tools/floor-check/local-feed/
 tools/floor-check/packages/
 tools/floor-check/build.log
+# Dummies packaged-asset compatibility check (tools/dummies-check): CI-generated artifacts, never committed.
+# local-feed holds the packed .nupkg the dummies job produces; packages/ is the project-local NuGet
+# extraction folder (RestorePackagesPath); *.log are the job's per-asset run outputs.
+tools/dummies-check/local-feed/
+tools/dummies-check/packages/
+tools/dummies-check/*.log
