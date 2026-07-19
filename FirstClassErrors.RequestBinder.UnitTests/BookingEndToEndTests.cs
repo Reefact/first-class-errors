@@ -12,30 +12,33 @@ namespace FirstClassErrors.RequestBinder.UnitTests;
 /// </summary>
 public sealed class BookingEndToEndTests {
 
-    private static Outcome<Stay> BindStay(RequestBinder<StayDto> stay) {
+    private static Outcome<Stay> BindStay(RequestBinder binder, StayDto dto) {
+        PropertySource<StayDto>    stay     = binder.PropertiesOf(dto);
         RequiredField<BookingDate> checkIn  = stay.SimpleProperty(s => s.CheckIn).AsRequired(BookingDate.Parse);
         RequiredField<BookingDate> checkOut = stay.SimpleProperty(s => s.CheckOut).AsRequired(BookingDate.Parse);
 
-        return stay.New(s => new Stay(s.Get(checkIn), s.Get(checkOut)));
+        return binder.New(s => new Stay(s.Get(checkIn), s.Get(checkOut)));
     }
 
-    private static Outcome<Guest> BindGuest(RequestBinder<GuestDto> guest) {
+    private static Outcome<Guest> BindGuest(RequestBinder binder, GuestDto dto) {
+        PropertySource<GuestDto>             guest     = binder.PropertiesOf(dto);
         RequiredField<string>                firstName = guest.SimpleProperty(g => g.FirstName).AsRequired();
         OptionalReferenceField<EmailAddress> email     = guest.SimpleProperty(g => g.Email).AsOptionalReference(EmailAddress.Parse);
 
-        return guest.New(s => new Guest(s.Get(firstName), s.Get(email)));
+        return binder.New(s => new Guest(s.Get(firstName), s.Get(email)));
     }
 
     private static Outcome<BookingCommand> BindCommand(BookingRequest request) {
-        var bind = Bind.PropertiesOf(request).FailWith(BookingEnvelopeError.CommandInvalid);
+        RequestBinder                  bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(request);
 
-        RequiredField<EmailAddress>         email     = bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
-        RequiredField<string>               reference = bind.SimpleProperty(r => r.Reference).AsRequired();
-        RequiredField<Currency>             currency  = bind.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
-        OptionalValueField<int>             maxNights = bind.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
-        OptionalReferenceField<Stay>        stay      = bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptionalReference(BindStay);
-        RequiredField<IReadOnlyList<Tag>>   tags      = bind.ListOfSimpleProperties(r => r.Tags).AsOptional(Tag.Parse);
-        RequiredField<IReadOnlyList<Guest>> guests    = bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
+        RequiredField<EmailAddress>         email     = body.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+        RequiredField<string>               reference = body.SimpleProperty(r => r.Reference).AsRequired();
+        RequiredField<Currency>             currency  = body.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
+        OptionalValueField<int>             maxNights = body.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
+        OptionalReferenceField<Stay>        stay      = body.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptionalReference(BindStay);
+        RequiredField<IReadOnlyList<Tag>>   tags      = body.ListOfSimpleProperties(r => r.Tags).AsOptional(Tag.Parse);
+        RequiredField<IReadOnlyList<Guest>> guests    = body.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
 
         return bind.New(s => new BookingCommand(
                               s.Get(email), s.Get(reference), s.Get(currency), s.Get(maxNights),

@@ -1,9 +1,9 @@
 namespace FirstClassErrors.RequestBinder;
 
 /// <summary>
-///     Groups the failure of a nested binding (a complex property, or one element of a complex list) under its
-///     argument path — the single decision shared by <see cref="ComplexPropertyConverter{TRequest, TArgument}" /> and
-///     <see cref="ListOfComplexPropertiesConverter{TRequest, TArgument}" />.
+///     Groups the failure of a nested binding (a complex property, or one element of a complex list) under its argument
+///     path — the single decision shared by <see cref="ComplexPropertyConverter{TArgument}" /> and
+///     <see cref="ListOfComplexPropertiesConverter{TArgument}" />.
 /// </summary>
 internal static class NestedFailure {
 
@@ -26,7 +26,7 @@ internal static class NestedFailure {
     internal static PrimaryPortError Group(Error error, PrimaryPortError? nestedEnvelope, string argumentPath, BinderErrorDefinition argumentInvalid) {
         return ReferenceEquals(error, nestedEnvelope)
                    ? (PrimaryPortError)error
-                   : RequestBindingError.ArgumentInvalid(argumentInvalid, argumentPath, error);
+                   : RequestBindingError.ArgumentInvalid(argumentInvalid, argumentPath, error, source: null);
     }
 
     #endregion

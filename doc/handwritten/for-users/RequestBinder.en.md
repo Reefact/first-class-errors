@@ -3,15 +3,15 @@
 🌍 **Languages:**  
 🇬🇧 English (this file) | 🇫🇷 [Français](./RequestBinder.fr.md)
 
-`FirstClassErrors.RequestBinder` converts an incoming request DTO — the loose,
-nullable shape a controller, message consumer, CLI, or gRPC handler receives —
-into a typed command or query of value objects, at the primary-adapter boundary.
-It collects **every** invalid field into one documented `PrimaryPortError`
-instead of stopping at the first, and it never throws on the invalid-input path.
+`FirstClassErrors.RequestBinder` converts an incoming request — a DTO body,
+out-of-DTO route/query/header arguments, or both — into a typed command or query
+of value objects, at the primary-adapter boundary. It collects **every** invalid
+input into one documented `PrimaryPortError` instead of stopping at the first, and
+it never throws on the invalid-input path.
 
-This page is the focused guide to declaring a binder, converting properties,
-reading bound values, assembling the command, and handling the errors it
-produces. If you are new to `Outcome` and error factories, read
+This page is the focused guide to declaring a binder, converting properties and
+arguments, reading bound values, assembling the command, and handling the errors
+it produces. If you are new to `Outcome` and error factories, read
 [Getting Started](GettingStarted.en.md) and the [Outcome Guide](OutcomeGuide.en.md)
 first — the binder builds directly on both.
 
@@ -19,18 +19,22 @@ first — the binder builds directly on both.
 
 ```mermaid
 flowchart LR
-    A[Request DTO] --> B[Bind each property into a value object]
-    B --> C{Every field valid?}
+    A[Request DTO properties] --> B[Bind each input into a value object]
+    A2[Out-of-DTO arguments<br/>route / query / header] --> B
+    B --> C{Every input valid?}
     C -->|yes| D[New / Create assembles the command]
     C -->|no| E[PrimaryPortError envelope grouping every failure]
     D --> F[Outcome of TCommand success]
     E --> F2[Outcome of TCommand failure]
 ```
 
-A binder reads each property, converts it through a value-object factory, and
-**records** every failure rather than raising it. When the terminal runs, either
-every field bound — and the command is assembled — or at least one failed, and
-the result is the failure of a single envelope error carrying all of them.
+A binder is **source-agnostic**: it builds a command, and its inputs are attached
+as **peers** — a DTO's properties on one side, individually named out-of-DTO
+arguments on the other — into one envelope, with one set of paths. Each input is
+read, converted through a value-object factory, and every failure is **recorded**
+rather than raised. When the terminal runs, either every input bound — and the
+command is assembled — or at least one failed, and the result is the failure of a
+single envelope error carrying all of them.
 
 ## Install the package
 
@@ -43,10 +47,11 @@ It targets **.NET Standard 2.0** and ships on the same release train as
 
 ## The shape of a binding
 
-Every binding has the same three parts: **start** from the request and declare
-the envelope, **select and convert** each property, then **assemble** the
-command. The running example is a hotel-booking endpoint whose DTO is the loose
-wire shape, and whose command is a value-object aggregate.
+Every binding has the same three parts: **start** by declaring the envelope,
+**attach and convert** each input — a DTO's properties, out-of-DTO arguments, or
+both — then **assemble** the command. The running example is a hotel-booking
+endpoint whose DTO is the loose wire shape, and whose command is a value-object
+aggregate.
 
 ```csharp
 // The incoming DTO: everything nullable, everything a primitive.
@@ -72,12 +77,13 @@ public sealed record PlaceBookingCommand(
 
 ```csharp
 public Outcome<PlaceBookingCommand> Bind(BookingRequest request) {
-    var bind = Bind.PropertiesOf(request)
-                   .FailWith(PlaceBookingError.Invalid);
+    RequestBinder bind = Bind.Request(PlaceBookingError.Invalid);
 
-    RequiredField<EmailAddress> email     = bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
-    RequiredField<string>       reference = bind.SimpleProperty(r => r.Reference).AsRequired();
-    RequiredField<Currency>     currency  = bind.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
+    PropertySource<BookingRequest> body = bind.PropertiesOf(request);
+
+    RequiredField<EmailAddress> email     = body.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+    RequiredField<string>       reference = body.SimpleProperty(r => r.Reference).AsRequired();
+    RequiredField<Currency>     currency  = body.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
 
     // Assemble the command from the bound fields (the full version is at the end of this guide):
     return bind.New(s => new PlaceBookingCommand(
@@ -88,16 +94,19 @@ public Outcome<PlaceBookingCommand> Bind(BookingRequest request) {
 }
 ```
 
-- **`Bind.PropertiesOf(request)`** starts a binder over the DTO.
-- **`.FailWith(PlaceBookingError.Invalid)`** is mandatory: it declares the single
-  envelope error — one factory from *your* catalog — under which every failure is
-  grouped. A binder can never be left without an envelope, exactly as an error can
-  never be left without a public message.
-- Each `SimpleProperty(...)` selects one property and converts it, returning a
-  **field token**, not a value.
+- **`Bind.Request(PlaceBookingError.Invalid)`** starts a binder and declares the
+  envelope up front — one factory from *your* catalog, under which every failure is
+  grouped. The envelope comes **first**, not last: a binder can never exist without
+  one, exactly as an error can never be left without a public message.
+- **`bind.PropertiesOf(request)`** attaches the DTO as a source of inputs, returning
+  a `PropertySource<BookingRequest>` on which each `SimpleProperty(...)` selects one
+  property and converts it. The DTO is **one source among peers**; out-of-DTO values
+  are attached separately with `bind.Argument(...)` (see *Out-of-DTO arguments*).
+- Each converter returns a **field token**, not a value.
 - **`bind.New(...)`** assembles the command, reading each token through the scope
-  `s`. It returns `Outcome<PlaceBookingCommand>` — success when every field bound,
-  the envelope failure otherwise.
+  `s`. It returns `Outcome<PlaceBookingCommand>` — success when every input bound,
+  the envelope failure otherwise. The command type is inferred from the assembler,
+  so you never name it.
 
 The envelope factory is an ordinary aggregate error from your catalog:
 
@@ -117,8 +126,8 @@ public static class PlaceBookingError {
 
 ## Converting a scalar property
 
-`SimpleProperty(r => r.X)` selects one property; the converter stage that follows
-offers four ways to bind it. All of them take a value-object factory
+`body.SimpleProperty(r => r.X)` selects one property; the converter stage that
+follows offers four ways to bind it. All of them take a value-object factory
 (`Func<TArgument, Outcome<TProperty>>` — typically a method group such as
 `EmailAddress.Parse`) and **fail by returning** `Outcome.Failure`, never by
 throwing.
@@ -133,16 +142,16 @@ throwing.
 
 ```csharp
 // Required with conversion: EmailAddress.Parse turns the raw string into a value object.
-RequiredField<EmailAddress> email = bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+RequiredField<EmailAddress> email = body.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
 // Required without conversion: presence is checked, the raw value is bound as-is.
-RequiredField<string> reference = bind.SimpleProperty(r => r.Reference).AsRequired();
+RequiredField<string> reference = body.SimpleProperty(r => r.Reference).AsRequired();
 
 // Optional with a fallback: absent uses "EUR"; a present-but-invalid value still records an error.
-RequiredField<Currency> currency = bind.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
+RequiredField<Currency> currency = body.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
 
 // Optional value type: absent yields a real Nullable null — never default(int).
-OptionalValueField<int> maxNights = bind.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
+OptionalValueField<int> maxNights = body.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
 
 // AsOptionalReference is the reference-type sibling of AsOptionalValue (absent yields a null value
 // object, records nothing). It is shown on the guest's optional email under "Lists", below.
@@ -159,11 +168,11 @@ factory such as `Quantity.From(int)` therefore binds as a method group, exactly 
 // DTO: public sealed record CartRequest(int? Quantity, IReadOnlyList<int?>? Lines);
 
 // Quantity.From is `int -> Outcome<Quantity>`; the binder feeds it the unwrapped int.
-RequiredField<Quantity>                qty   = bind.SimpleProperty(r => r.Quantity).AsRequired(Quantity.From);
+RequiredField<Quantity>                qty   = body.SimpleProperty(r => r.Quantity).AsRequired(Quantity.From);
 
 // A list of value types works the same way: each element is converted over its underlying
 // int, and a null element records REQUEST_ARGUMENT_REQUIRED under its indexed path (Lines[2]).
-RequiredField<IReadOnlyList<Quantity>> lines = bind.ListOfSimpleProperties(r => r.Lines).AsRequired(Quantity.From);
+RequiredField<IReadOnlyList<Quantity>> lines = body.ListOfSimpleProperties(r => r.Lines).AsRequired(Quantity.From);
 ```
 
 The property must still be declared nullable (`int?`, not `int`) so the binder can
@@ -212,7 +221,8 @@ The token's type carries the nullability:
 ## Assembling the command: `New` and `Create`
 
 There are two terminals. Pick the one that matches the shape of your assembler —
-the name mirrors what you write inside it.
+the name mirrors what you write inside it. Both infer the command type from the
+assembler, so you never name it.
 
 | Terminal | Your assembler | Use when |
 | --- | --- | --- |
@@ -239,28 +249,28 @@ The factory runs **only** on the zero-error branch — every field is already
 bound — so a cross-field rule can assume its inputs are present and valid. Its
 failure is returned **as-is**: the factory owns that error (it is a domain rule,
 not an argument-binding failure), so it is not re-wrapped in the binder envelope.
-A consumer of `Create` therefore sees either the binder's envelope (a field was
-missing or malformed) or the factory's own error (all fields were fine, but the
+A consumer of `Create` therefore sees either the binder's envelope (an input was
+missing or malformed) or the factory's own error (all inputs were fine, but the
 combination was rejected). The decision behind these two names is recorded in
 [ADR-0007](../for-maintainers/adr/0007-name-the-binder-terminals-new-and-create.md).
 
 ## Collect-all, not fail-fast
 
 The whole point of a binder is that a client fixing one field does not discover
-the next only on resubmit. Every failing property is recorded and reported at
-once, in declaration order:
+the next only on resubmit. Every failing input is recorded and reported at once,
+in declaration order:
 
 ```csharp
-var bind = Bind.PropertiesOf(new BookingRequest(
-                   GuestEmail: "not-an-email",   // invalid
-                   Reference: null,              // missing
-                   Currency: "EURO",             // invalid (not 3 letters)
-                   /* ... */))
-               .FailWith(PlaceBookingError.Invalid);
+RequestBinder bind = Bind.Request(PlaceBookingError.Invalid);
+PropertySource<BookingRequest> body = bind.PropertiesOf(new BookingRequest(
+    GuestEmail: "not-an-email",   // invalid
+    Reference: null,              // missing
+    Currency: "EURO",             // invalid (not 3 letters)
+    /* ... */));
 
-bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
-bind.SimpleProperty(r => r.Reference).AsRequired();
-bind.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
+body.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+body.SimpleProperty(r => r.Reference).AsRequired();
+body.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
 
 Outcome<PlaceBookingCommand> outcome = bind.New(s => /* never reached */ null!);
 
@@ -270,29 +280,34 @@ Outcome<PlaceBookingCommand> outcome = bind.New(s => /* never reached */ null!);
 //   REQUEST_ARGUMENT_INVALID   (Currency)
 ```
 
-A request whose every field is invalid raises **zero** exceptions: the binder
+A request whose every input is invalid raises **zero** exceptions: the binder
 never throws on the invalid-input path.
 
 ## The two binder error codes
 
 The binder manufactures exactly two errors of its own. Everything else in a
 failure tree comes from *your* code — the conversion errors your value objects
-return, and the envelope errors you declare with `FailWith`.
+return, and the envelope errors you declare.
 
 | Code | Meaning | Inner error |
 | --- | --- | --- |
-| `REQUEST_ARGUMENT_REQUIRED` | a required argument was absent from the request | — |
-| `REQUEST_ARGUMENT_INVALID` | a present argument failed to convert | the converter's own error |
+| `REQUEST_ARGUMENT_REQUIRED` | a required input was absent from the request | — |
+| `REQUEST_ARGUMENT_INVALID` | a present input failed to convert | the converter's own error |
 
-Both carry the **full argument path** in their context under the key
-`RequestArgument` (for example `Guests[1].FirstName`), so the failing field is
-identifiable without parsing messages:
+Both carry the **full argument path** in their context (for example
+`Guests[1].FirstName`), so the failing input is identifiable without parsing
+messages. Read it through the public typed key `RequestBindingError.ArgumentPathKey`:
 
 ```csharp
 Error required = outcome.Error!.InnerErrors.First();
-required.Context.ToNameDictionary().TryGetValue("RequestArgument", out object? path);
+required.Context.TryGet(RequestBindingError.ArgumentPathKey, out string? path);
 // path == "Reference"
 ```
+
+An out-of-DTO argument additionally carries its **provenance** (`"route"`,
+`"query"`, …) under `RequestBindingError.ArgumentSourceKey`; a DTO property carries
+no source, because its provenance — the request body — is implicit. See
+*Out-of-DTO arguments*, below.
 
 `REQUEST_ARGUMENT_REQUIRED` is **non-transient**: resubmitting the same request
 cannot succeed. `REQUEST_ARGUMENT_INVALID` wraps the converter's `DomainError` or
@@ -308,27 +323,30 @@ bug, reported by throwing, never recorded as a client error.
 
 A complex property is bound by a **nested binder**, declared with its own
 envelope. The nested binding typically lives in a dedicated method, passed as a
-method group:
+method group; it receives the child binder **and** the nested DTO to attach to it:
 
 ```csharp
-RequiredField<Stay> stay = bind.ComplexProperty(r => r.Stay)
+RequiredField<Stay> stay = body.ComplexProperty(r => r.Stay)
                                .FailWith(PlaceBookingError.StayInvalid)
                                .AsRequired(BindStay);
 
-private static Outcome<Stay> BindStay(RequestBinder<StayDto> stay) {
+private static Outcome<Stay> BindStay(RequestBinder binder, StayDto dto) {
+    PropertySource<StayDto> stay = binder.PropertiesOf(dto);
+
     RequiredField<BookingDate> checkIn  = stay.SimpleProperty(s => s.CheckIn).AsRequired(BookingDate.Parse);
     RequiredField<BookingDate> checkOut = stay.SimpleProperty(s => s.CheckOut).AsRequired(BookingDate.Parse);
 
-    return stay.New(s => new Stay(s.Get(checkIn), s.Get(checkOut)));
+    return binder.New(s => new Stay(s.Get(checkIn), s.Get(checkOut)));
 }
 ```
 
-The nested binder inherits the parent's options and **prefixes** its argument
-paths, so a failure inside `Stay` reports `Stay.CheckIn`, not just `CheckIn`. A
-missing complex property records `REQUEST_ARGUMENT_REQUIRED`; a nested binding
-that fails contributes its own envelope, whose inner errors already carry the
-prefixed paths. Use `AsOptionalReference` instead of `AsRequired` for a nullable
-nested object: absent yields `null` and records nothing — the same
+The nested binder is a full `RequestBinder` — the nested value object is built
+exactly like a top-level command. It inherits the parent's options and
+**prefixes** its argument paths, so a failure inside `Stay` reports `Stay.CheckIn`,
+not just `CheckIn`. A missing complex property records `REQUEST_ARGUMENT_REQUIRED`;
+a nested binding that fails contributes its own envelope, whose inner errors
+already carry the prefixed paths. Use `AsOptionalReference` instead of `AsRequired`
+for a nullable nested object: absent yields `null` and records nothing — the same
 `AsOptionalReference` name the scalar side uses for a nullable reference value.
 
 ## Lists
@@ -340,7 +358,7 @@ element never hides the others.
 
 ```csharp
 RequiredField<IReadOnlyList<Tag>> tags =
-    bind.ListOfSimpleProperties(r => r.Tags).AsOptional(Tag.Parse);
+    body.ListOfSimpleProperties(r => r.Tags).AsOptional(Tag.Parse);
 // A failing element records REQUEST_ARGUMENT_INVALID under Tags[2].
 ```
 
@@ -349,15 +367,17 @@ per-element envelope:
 
 ```csharp
 RequiredField<IReadOnlyList<Guest>> guests =
-    bind.ListOfComplexProperties(r => r.Guests)
+    body.ListOfComplexProperties(r => r.Guests)
         .FailWith(PlaceBookingError.GuestInvalid)
         .AsRequired(BindGuest);
 
-private static Outcome<Guest> BindGuest(RequestBinder<GuestDto> guest) {
+private static Outcome<Guest> BindGuest(RequestBinder binder, GuestDto dto) {
+    PropertySource<GuestDto> guest = binder.PropertiesOf(dto);
+
     RequiredField<string>                firstName = guest.SimpleProperty(g => g.FirstName).AsRequired();
     OptionalReferenceField<EmailAddress> email     = guest.SimpleProperty(g => g.Email).AsOptionalReference(EmailAddress.Parse);
 
-    return guest.New(s => new Guest(s.Get(firstName), s.Get(email)));
+    return binder.New(s => new Guest(s.Get(firstName), s.Get(email)));
 }
 // A failure in the second guest's email reports Guests[1].Email.
 ```
@@ -371,9 +391,81 @@ present list is recorded as a missing argument at its index. When the domain nee
 at least one element, enforce that cardinality in the value object or command the
 bound list feeds.
 
+## Out-of-DTO arguments
+
+Not every input is a DTO property. A route identifier, a query parameter, a header
+value, a claim — these are **out-of-DTO arguments**: individual values the host has
+already extracted from the request. The binder attaches them as **peers** of the
+DTO, into the same envelope and the same set of paths, so a route value and a body
+property fail together, uniformly.
+
+Name the argument, state where it comes from, then bind it with the **same**
+converters a DTO property uses:
+
+```csharp
+RequestBinder bind = Bind.Request(ConfirmBookingError.Invalid);
+
+// A body DTO and out-of-DTO arguments, attached as peers into one binder:
+PropertySource<ConfirmRequest> body = bind.PropertiesOf(request);
+RequiredField<PaymentRef>      payment = body.SimpleProperty(r => r.PaymentRef).AsRequired(PaymentRef.Parse);
+
+RequiredField<BookingId> id     = bind.Argument("bookingId").FromRoute(routeBookingId).AsRequired(BookingId.From);
+RequiredField<TenantId>  tenant = bind.Argument("tenant").FromHeader(tenantHeader).AsRequired(TenantId.From);
+
+Outcome<ConfirmBookingCommand> command =
+    bind.New(s => new ConfirmBookingCommand(s.Get(id), s.Get(tenant), s.Get(payment)));
+```
+
+- **`bind.Argument(name)`** names an out-of-DTO argument. The `name` is used
+  verbatim as the argument's error path (`bookingId`) — there is no DTO property to
+  derive it from, so you state it.
+- **`.From(source, value)`** supplies its provenance and value. `source` is a free
+  label (`"route"`, `"query"`, `"header"`, …) recorded in the failure's context; a
+  `null` value means the argument was **absent**. The provenance-shortcut helpers
+  `FromRoute`, `FromQuery`, `FromHeader`, `FromBody`, `FromForm` are exactly
+  `From("route", …)` and so on.
+- The returned converter is the **same** one a DTO property yields: `AsRequired`,
+  `AsRequired()`, `AsOptional`, `AsOptionalReference`, `AsOptionalValue`, with the
+  same absent/invalid semantics and the same two structural codes.
+
+Because the helpers only **tag** an already-extracted value, they carry no
+dependency on any web framework and work the same for an HTTP controller, a
+message consumer, or a CLI. Extracting the value from the incoming request itself
+is the host's job, not the library's.
+
+**Provenance is captured, for diagnostics.** An argument's failure carries both its
+path *and* its source, so you can tell a bad route segment from a bad header without
+parsing anything:
+
+```csharp
+Error inner = command.Error!.InnerErrors.First();
+inner.Context.TryGet(RequestBindingError.ArgumentPathKey,   out string? path);   // "bookingId"
+inner.Context.TryGet(RequestBindingError.ArgumentSourceKey, out string? source); // "route"
+```
+
+The source appears **only** on out-of-DTO arguments. A DTO property records its
+path but no source, because its provenance — the request body — is implicit and the
+same for every property; adding it would be noise. This asymmetry is deliberate: an
+argument is a value whose origin you had to state, so the origin is worth keeping.
+
+**A list argument** is the out-of-DTO counterpart of `ListOfSimpleProperties` — a
+repeated query parameter or header, under one name and an indexed path:
+
+```csharp
+RequiredField<IReadOnlyList<Tag>> tags =
+    bind.ArgumentList("tag").FromQuery(queryTags).AsOptional(Tag.Parse);
+// A failing element records REQUEST_ARGUMENT_INVALID under tag[2], source "query".
+```
+
+There is **no** out-of-DTO counterpart of a *complex* property: a complex property
+is a path into a DTO, and an out-of-DTO argument, by definition, has no DTO to path
+into. Build a complex value from arguments by binding each argument as a peer and
+assembling them in the terminal, exactly as the example above builds
+`ConfirmBookingCommand`.
+
 ## Argument names and the wire format
 
-By default, the argument path uses the **C# property name** (`GuestEmail`). If
+By default, a DTO property's path uses the **C# property name** (`GuestEmail`). If
 your serializer renames keys (snake_case, `JsonPropertyName`, a naming policy),
 plug an `IArgumentNameProvider` so the paths reported in errors match the keys the
 client actually sent:
@@ -384,10 +476,13 @@ public sealed class SnakeCaseNames : IArgumentNameProvider {
         ToSnakeCase(property.Name);   // GuestEmail -> guest_email
 }
 
-var bind = Bind.WithOptions(new RequestBinderOptions(new SnakeCaseNames()))
-               .PropertiesOf(request)
-               .FailWith(PlaceBookingError.Invalid);
+RequestBinder bind = Bind.WithOptions(new RequestBinderOptions(new SnakeCaseNames()))
+                         .Request(PlaceBookingError.Invalid);
 ```
+
+The name provider applies to **DTO properties**, whose name is derived by
+reflection; an out-of-DTO argument's path is the name you passed to
+`bind.Argument(...)`, used verbatim, since you already gave it the wire name.
 
 Options are chosen **once**, on `Bind.WithOptions`, before the binder even exists —
 so a binder's naming policy can never change mid-binding. They are fixed for the life
@@ -401,7 +496,7 @@ wire keys is the host's knowledge, not the library's.
 ## Structural errors: codes and messages
 
 The binder raises two coded errors of its own — `REQUEST_ARGUMENT_REQUIRED` when a
-required argument is missing, and `REQUEST_ARGUMENT_INVALID` when one is present but
+required input is missing, and `REQUEST_ARGUMENT_INVALID` when one is present but
 fails to convert. These are the only errors the binder manufactures; every other code
 in a failure tree is yours (the converters' errors, and the envelope).
 
@@ -420,7 +515,7 @@ var options = new RequestBinderOptions(
         ErrorCode.Create("ACME_ARGUMENT_INVALID"),
         path => new BindingMessage("An argument is invalid.", $"The argument '{path}' is invalid.")));
 
-var bind = Bind.WithOptions(options).PropertiesOf(request).FailWith(PlaceBookingError.Invalid);
+RequestBinder bind = Bind.WithOptions(options).Request(PlaceBookingError.Invalid);
 ```
 
 The message builder runs **when the error is raised**, not when the options are built —
@@ -440,7 +535,8 @@ library's internal language (English) by convention, so logs for one structural 
 never fork by request language. See [Internationalization](Internationalization.en.md).
 
 The configured definitions flow through **every** structural failure — scalars, list
-elements, and the inner failures of nested binders, which inherit them.
+elements, out-of-DTO arguments, and the inner failures of nested binders, which inherit
+them.
 
 To **branch** on a binder failure — mapping it to an HTTP status, say — compare the
 error's code symbolically, never against a string literal: use the code you configured,
@@ -483,7 +579,7 @@ time — so the documented entry matches what you actually emit. The same patter
 
 ## Configuring the default for the whole application
 
-`Bind.PropertiesOf(request)` binds with `RequestBinderOptions.Default`. That default is
+`Bind.Request(envelope)` binds with `RequestBinderOptions.Default`. That default is
 configurable **once, at application startup** — so a whole host (ASP.NET, a CLI, a
 worker) shares one naming policy and one set of structural-error definitions without
 threading options through every call, and without a DI container:
@@ -496,7 +592,7 @@ RequestBinderOptions.Default = new RequestBinderOptions(
     argumentInvalid:  RequestBindingError.DefaultArgumentInvalid.WithCode(ErrorCode.Create("ACME_ARGUMENT_INVALID")));
 
 // anywhere after that — no options threaded through:
-var bind = Bind.PropertiesOf(request).FailWith(PlaceBookingError.Invalid);
+RequestBinder bind = Bind.Request(PlaceBookingError.Invalid);
 ```
 
 The default is **frozen on first use**: the first bind reads it, and any later
@@ -531,7 +627,9 @@ public sealed record BookingRequest(int? MaxNights /* ... */);  // ✓ int?
 ```
 
 Declare every bound value-type property nullable, so an absent argument arrives
-as `null` and the binder can tell it apart from a real value.
+as `null` and the binder can tell it apart from a real value. The same holds for a
+value-type **argument**: pass an `int?` / `Guid?` to `From`, so absence is a real
+`null` rather than a defaulted value.
 
 ## Complete example
 
@@ -540,16 +638,16 @@ a cross-field rule enforced through `Create`.
 
 ```csharp
 public Outcome<PlaceBookingCommand> BindBooking(BookingRequest request) {
-    var bind = Bind.PropertiesOf(request)
-                   .FailWith(PlaceBookingError.Invalid);
+    RequestBinder bind = Bind.Request(PlaceBookingError.Invalid);
+    PropertySource<BookingRequest> body = bind.PropertiesOf(request);
 
-    RequiredField<EmailAddress>       email     = bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
-    RequiredField<string>             reference = bind.SimpleProperty(r => r.Reference).AsRequired();
-    RequiredField<Currency>           currency  = bind.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
-    OptionalValueField<int>           maxNights = bind.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
-    RequiredField<Stay>               stay      = bind.ComplexProperty(r => r.Stay).FailWith(PlaceBookingError.StayInvalid).AsRequired(BindStay);
-    RequiredField<IReadOnlyList<Tag>> tags      = bind.ListOfSimpleProperties(r => r.Tags).AsOptional(Tag.Parse);
-    RequiredField<IReadOnlyList<Guest>> guests  = bind.ListOfComplexProperties(r => r.Guests).FailWith(PlaceBookingError.GuestInvalid).AsRequired(BindGuest);
+    RequiredField<EmailAddress>         email     = body.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+    RequiredField<string>               reference = body.SimpleProperty(r => r.Reference).AsRequired();
+    RequiredField<Currency>             currency  = body.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
+    OptionalValueField<int>             maxNights = body.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
+    RequiredField<Stay>                 stay      = body.ComplexProperty(r => r.Stay).FailWith(PlaceBookingError.StayInvalid).AsRequired(BindStay);
+    RequiredField<IReadOnlyList<Tag>>   tags      = body.ListOfSimpleProperties(r => r.Tags).AsOptional(Tag.Parse);
+    RequiredField<IReadOnlyList<Guest>> guests    = body.ListOfComplexProperties(r => r.Guests).FailWith(PlaceBookingError.GuestInvalid).AsRequired(BindGuest);
 
     // Create: PlaceBookingCommand.Create enforces "check-out after check-in" and may still reject.
     return bind.Create(s => PlaceBookingCommand.Create(
@@ -563,7 +661,7 @@ public Outcome<PlaceBookingCommand> BindBooking(BookingRequest request) {
 }
 ```
 
-One structured error model runs from the wire to the command: a malformed field
+One structured error model runs from the wire to the command: a malformed input
 surfaces as the binder's envelope with indexed paths; a rejected all-valid
 combination surfaces as the command factory's own error. No exception is raised
 unless the code itself is wrong.
@@ -583,7 +681,8 @@ Check.That(outcome.Error!.InnerErrors.Select(e => e.Code.ToString()))
 ```
 
 Assert the *whole* set of collected failures, in order — that is what proves the
-collect-all behavior, not just that binding failed.
+collect-all behavior, not just that binding failed. For an out-of-DTO argument,
+assert its provenance too, through `RequestBindingError.ArgumentSourceKey`.
 
 ## Runnable examples
 
@@ -603,15 +702,18 @@ living documentation.
 Before approving a binding, verify that:
 
 - every DTO property is nullable, including value types (`int?`, not `int`);
-- each property is bound with the variant matching its contract — required,
+- each input is bound with the variant matching its contract — required,
   optional-with-fallback, or optional;
+- out-of-DTO arguments state their source, and a value-type argument is passed as a
+  nullable (`int?`, `Guid?`) so absence stays distinguishable;
 - converters fail by **returning** `Outcome.Failure`, never by throwing;
 - the terminal matches the assembler: `New` for a total constructor, `Create` for
   a validating factory returning `Outcome`;
 - every complex property and list declares its own envelope with `FailWith`;
 - an `IArgumentNameProvider` is configured when the wire keys differ from the C#
   property names;
-- tests assert the full, ordered set of collected errors and their argument paths.
+- tests assert the full, ordered set of collected errors and their argument paths
+  (and provenance, for arguments).
 
 ---
 

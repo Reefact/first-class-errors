@@ -8,11 +8,13 @@ namespace FirstClassErrors.RequestBinder.UnitTests;
 
 public sealed class ListBindingTests {
 
-    private static Outcome<Guest> BindGuest(RequestBinder<GuestDto> guest) {
+    private static Outcome<Guest> BindGuest(RequestBinder binder, GuestDto dto) {
+        PropertySource<GuestDto> guest = binder.PropertiesOf(dto);
+
         RequiredField<string>                firstName = guest.SimpleProperty(g => g.FirstName).AsRequired();
         OptionalReferenceField<EmailAddress> email     = guest.SimpleProperty(g => g.Email).AsOptionalReference(EmailAddress.Parse);
 
-        return guest.New(s => new Guest(s.Get(firstName), s.Get(email)));
+        return binder.New(s => new Guest(s.Get(firstName), s.Get(email)));
     }
 
     private static BookingRequest RequestWith(IReadOnlyList<string?>? tags = null, IReadOnlyList<GuestDto?>? guests = null) {
@@ -21,9 +23,10 @@ public sealed class ListBindingTests {
 
     [Fact(DisplayName = "A required list of simple properties binds every element, in order.")]
     public void RequiredSimpleListBinds() {
-        var bind = Bind.PropertiesOf(RequestWith(tags: ["vip", "late-checkout"])).FailWith(BookingEnvelopeError.CommandInvalid);
+        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        var body = bind.PropertiesOf(RequestWith(tags: ["vip", "late-checkout"]));
 
-        RequiredField<IReadOnlyList<Tag>> tags = bind.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
+        RequiredField<IReadOnlyList<Tag>> tags = body.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
 
         Outcome<IReadOnlyList<Tag>> outcome = bind.New(s => s.Get(tags));
         Check.That(outcome.GetResultOrThrow().Select(t => t.Value)).ContainsExactly("vip", "late-checkout");
@@ -31,9 +34,10 @@ public sealed class ListBindingTests {
 
     [Fact(DisplayName = "A required list that is missing records REQUEST_ARGUMENT_REQUIRED.")]
     public void RequiredSimpleListMissing() {
-        var bind = Bind.PropertiesOf(RequestWith(tags: null)).FailWith(BookingEnvelopeError.CommandInvalid);
+        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        var body = bind.PropertiesOf(RequestWith(tags: null));
 
-        bind.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
+        body.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
 
         Outcome<string> outcome = bind.New(_ => "never");
         Error required = outcome.Error!.InnerErrors.Single();
@@ -43,9 +47,10 @@ public sealed class ListBindingTests {
 
     [Fact(DisplayName = "A required list that is present but empty is valid: it binds an empty list and records nothing — required constrains presence, not element count.")]
     public void RequiredSimpleListPresentButEmptyBindsEmpty() {
-        var bind = Bind.PropertiesOf(RequestWith(tags: [])).FailWith(BookingEnvelopeError.CommandInvalid);
+        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        var body = bind.PropertiesOf(RequestWith(tags: []));
 
-        RequiredField<IReadOnlyList<Tag>> tags = bind.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
+        RequiredField<IReadOnlyList<Tag>> tags = body.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
 
         Outcome<IReadOnlyList<Tag>> outcome = bind.New(s => s.Get(tags));
         Check.That(outcome.IsSuccess).IsTrue();
@@ -54,9 +59,10 @@ public sealed class ListBindingTests {
 
     [Fact(DisplayName = "Every failing element of a list is collected, each under its indexed path — one bad element never hides the others.")]
     public void EveryFailingElementIsCollected() {
-        var bind = Bind.PropertiesOf(RequestWith(tags: ["ok", "not ok", null, "fine"])).FailWith(BookingEnvelopeError.CommandInvalid);
+        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        var body = bind.PropertiesOf(RequestWith(tags: ["ok", "not ok", null, "fine"]));
 
-        bind.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
+        body.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
 
         Outcome<string> outcome = bind.New(_ => "never");
         Check.That(outcome.Error!.InnerErrors).HasSize(2);
@@ -68,9 +74,10 @@ public sealed class ListBindingTests {
 
     [Fact(DisplayName = "An optional list that is absent binds an empty list — never null — and records nothing.")]
     public void OptionalListAbsentBindsEmpty() {
-        var bind = Bind.PropertiesOf(RequestWith(tags: null)).FailWith(BookingEnvelopeError.CommandInvalid);
+        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        var body = bind.PropertiesOf(RequestWith(tags: null));
 
-        RequiredField<IReadOnlyList<Tag>> tags = bind.ListOfSimpleProperties(r => r.Tags).AsOptional(Tag.Parse);
+        RequiredField<IReadOnlyList<Tag>> tags = body.ListOfSimpleProperties(r => r.Tags).AsOptional(Tag.Parse);
 
         Outcome<IReadOnlyList<Tag>> outcome = bind.New(s => s.Get(tags));
         Check.That(outcome.IsSuccess).IsTrue();
@@ -79,11 +86,11 @@ public sealed class ListBindingTests {
 
     [Fact(DisplayName = "A required list of complex properties binds every element through its own nested binder.")]
     public void RequiredComplexListBinds() {
-        var bind = Bind.PropertiesOf(RequestWith(guests: [new GuestDto("Alice", "alice@example.org"), new GuestDto("Bob", null)]))
-                       .FailWith(BookingEnvelopeError.CommandInvalid);
+        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        var body = bind.PropertiesOf(RequestWith(guests: [new GuestDto("Alice", "alice@example.org"), new GuestDto("Bob", null)]));
 
         RequiredField<IReadOnlyList<Guest>> guests =
-            bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
+            body.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired<Guest>(BindGuest);
 
         Outcome<IReadOnlyList<Guest>> outcome = bind.New(s => s.Get(guests));
         Check.That(outcome.GetResultOrThrow().Select(g => g.FirstName)).ContainsExactly("Alice", "Bob");
@@ -92,10 +99,11 @@ public sealed class ListBindingTests {
 
     [Fact(DisplayName = "A required complex list that is present but empty is valid: it binds an empty list and records nothing.")]
     public void RequiredComplexListPresentButEmptyBindsEmpty() {
-        var bind = Bind.PropertiesOf(RequestWith(guests: [])).FailWith(BookingEnvelopeError.CommandInvalid);
+        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        var body = bind.PropertiesOf(RequestWith(guests: []));
 
         RequiredField<IReadOnlyList<Guest>> guests =
-            bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
+            body.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired<Guest>(BindGuest);
 
         Outcome<IReadOnlyList<Guest>> outcome = bind.New(s => s.Get(guests));
         Check.That(outcome.IsSuccess).IsTrue();
@@ -104,10 +112,10 @@ public sealed class ListBindingTests {
 
     [Fact(DisplayName = "Each failing element of a complex list records its own envelope, whose inner paths carry the indexed prefix.")]
     public void FailingComplexElementsRecordTheirEnvelopes() {
-        var bind = Bind.PropertiesOf(RequestWith(guests: [new GuestDto("Alice", null), new GuestDto(null, "nope"), new GuestDto(null, null)]))
-                       .FailWith(BookingEnvelopeError.CommandInvalid);
+        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        var body = bind.PropertiesOf(RequestWith(guests: [new GuestDto("Alice", null), new GuestDto(null, "nope"), new GuestDto(null, null)]));
 
-        bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
+        body.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired<Guest>(BindGuest);
 
         Outcome<string> outcome = bind.New(_ => "never");
         Check.That(outcome.Error!.InnerErrors).HasSize(2);
@@ -123,10 +131,10 @@ public sealed class ListBindingTests {
 
     [Fact(DisplayName = "A null element of a complex list records REQUEST_ARGUMENT_REQUIRED under its indexed path.")]
     public void NullComplexElementIsRequired() {
-        var bind = Bind.PropertiesOf(RequestWith(guests: [new GuestDto("Alice", null), null]))
-                       .FailWith(BookingEnvelopeError.CommandInvalid);
+        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        var body = bind.PropertiesOf(RequestWith(guests: [new GuestDto("Alice", null), null]));
 
-        bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
+        body.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired<Guest>(BindGuest);
 
         Outcome<string> outcome = bind.New(_ => "never");
         Error required = outcome.Error!.InnerErrors.Single();
@@ -136,10 +144,10 @@ public sealed class ListBindingTests {
 
     [Fact(DisplayName = "A null element does not hide the failing elements that follow it — each is still collected under its own indexed path.")]
     public void NullComplexElementDoesNotHideLaterFailures() {
-        var bind = Bind.PropertiesOf(RequestWith(guests: [null, new GuestDto(null, "nope")]))
-                       .FailWith(BookingEnvelopeError.CommandInvalid);
+        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        var body = bind.PropertiesOf(RequestWith(guests: [null, new GuestDto(null, "nope")]));
 
-        bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
+        body.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired<Guest>(BindGuest);
 
         Outcome<string> outcome = bind.New(_ => "never");
 
@@ -158,10 +166,11 @@ public sealed class ListBindingTests {
 
     [Fact(DisplayName = "An optional complex list that is absent binds an empty list and records nothing.")]
     public void OptionalComplexListAbsentBindsEmpty() {
-        var bind = Bind.PropertiesOf(RequestWith(guests: null)).FailWith(BookingEnvelopeError.CommandInvalid);
+        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        var body = bind.PropertiesOf(RequestWith(guests: null));
 
         RequiredField<IReadOnlyList<Guest>> guests =
-            bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsOptional(BindGuest);
+            body.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsOptional<Guest>(BindGuest);
 
         Outcome<IReadOnlyList<Guest>> outcome = bind.New(s => s.Get(guests));
         Check.That(outcome.IsSuccess).IsTrue();
@@ -170,11 +179,10 @@ public sealed class ListBindingTests {
 
     [Fact(DisplayName = "A custom argument-name provider renames the inner paths of complex-list elements: the element binder inherits the parent options.")]
     public void CustomNameProviderRenamesComplexListElementPaths() {
-        var bind = Bind.WithOptions(new RequestBinderOptions(new SnakeCaseNameProvider()))
-                       .PropertiesOf(new BookingRequest("a@b.c", "REF-1", null, null, null, null, Guests: [new GuestDto(null, "nope")]))
-                       .FailWith(BookingEnvelopeError.CommandInvalid);
+        var bind = Bind.WithOptions(new RequestBinderOptions(new SnakeCaseNameProvider())).Request(BookingEnvelopeError.CommandInvalid);
+        var body = bind.PropertiesOf(new BookingRequest("a@b.c", "REF-1", null, null, null, null, Guests: [new GuestDto(null, "nope")]));
 
-        bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
+        body.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired<Guest>(BindGuest);
 
         Outcome<string> outcome = bind.New(_ => "never");
         Error guestEnvelope = outcome.Error!.InnerErrors.Single(e => e.Code.ToString() == "TEST_GUEST_INVALID");

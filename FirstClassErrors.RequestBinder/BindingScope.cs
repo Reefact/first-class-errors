@@ -1,16 +1,16 @@
 namespace FirstClassErrors.RequestBinder;
 
 /// <summary>
-///     The reader handed to a build terminal's assembler (<see cref="RequestBinder{TRequest}.New{TCommand}" /> /
-///     <see cref="RequestBinder{TRequest}.Create{TCommand}" />): the <b>only</b> channel through which a bound value can
+///     The reader handed to a build terminal's assembler (<see cref="RequestBinder.New{TCommand}" /> /
+///     <see cref="RequestBinder.Create{TCommand}" />): the <b>only</b> channel through which a bound value can
 ///     be obtained from a field token (<see cref="RequiredField{TProperty}" /> and its optional siblings).
 /// </summary>
 /// <remarks>
 ///     <para>
 ///         <b>Safety by construction.</b> <see cref="BindingScope" /> is a <c>readonly ref struct</c>: it cannot be
 ///         captured, boxed, stored in a field, or returned, so it lives only for the duration of the assembler it is
-///         passed to. And a build terminal (<see cref="RequestBinder{TRequest}.New{TCommand}" /> /
-///         <see cref="RequestBinder{TRequest}.Create{TCommand}" />) creates one <b>only</b> on its success branch —
+///         passed to. And a build terminal (<see cref="RequestBinder.New{TCommand}" /> /
+///         <see cref="RequestBinder.Create{TCommand}" />) creates one <b>only</b> on its success branch —
 ///         after it has verified that not a single binding failure was recorded. A field token exposes no public value
 ///         member, so the one way to read a bound value is <c>Get</c> through this scope, and this scope only ever
 ///         exists where every binding is known to have succeeded. Reading a value before a build terminal runs, or

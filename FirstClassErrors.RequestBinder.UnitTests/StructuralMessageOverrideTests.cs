@@ -21,20 +21,21 @@ public sealed class StructuralMessageOverrideTests {
     }
 
     private static Error BindMissingEmail(RequestBinderOptions? options = null) {
-        RequestBinderEnvelopeStage<BookingRequest> start = options is null
-                                                               ? Bind.PropertiesOf(MissingEmail())
-                                                               : Bind.WithOptions(options).PropertiesOf(MissingEmail());
+        RequestBinder bind = options is null
+                                         ? Bind.Request(BookingEnvelopeError.CommandInvalid)
+                                         : Bind.WithOptions(options).Request(BookingEnvelopeError.CommandInvalid);
 
-        var bind = start.FailWith(BookingEnvelopeError.CommandInvalid);
-        bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+        var body = bind.PropertiesOf(MissingEmail());
+        body.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
         return bind.New(_ => "x").Error!.InnerErrors.Single();
     }
 
     private static Error BindInvalidEmail(RequestBinderOptions options) {
         var request = new BookingRequest("not-an-email", "REF-1", null, null, null, null, null);
-        var bind    = Bind.WithOptions(options).PropertiesOf(request).FailWith(BookingEnvelopeError.CommandInvalid);
-        bind.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+        var bind    = Bind.WithOptions(options).Request(BookingEnvelopeError.CommandInvalid);
+        var body    = bind.PropertiesOf(request);
+        body.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
         return bind.New(_ => "x").Error!.InnerErrors.Single();
     }

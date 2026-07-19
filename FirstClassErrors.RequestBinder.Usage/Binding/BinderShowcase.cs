@@ -40,9 +40,10 @@ public static class BinderShowcase {
     ///     and binds an empty list — a required list constrains presence, not element count.
     /// </summary>
     public static Outcome<IReadOnlyList<Tag>> BindTagsAsRequired(BookingRequest request) {
-        RequestBinder<BookingRequest> binder = Bind.PropertiesOf(request).FailWith(PlaceBookingError.CommandInvalid);
+        RequestBinder                     binder = Bind.Request(PlaceBookingError.CommandInvalid);
+        PropertySource<BookingRequest>    body   = binder.PropertiesOf(request);
 
-        RequiredField<IReadOnlyList<Tag>> tags = binder.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
+        RequiredField<IReadOnlyList<Tag>> tags = body.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
 
         return binder.New(s => s.Get(tags));
     }
@@ -53,10 +54,11 @@ public static class BinderShowcase {
     ///     still records under its (prefixed / indexed) path.
     /// </summary>
     public static Outcome<OptionalSections> BindOptionalSections(BookingRequest request) {
-        RequestBinder<BookingRequest> binder = Bind.PropertiesOf(request).FailWith(PlaceBookingError.CommandInvalid);
+        RequestBinder                   binder = Bind.Request(PlaceBookingError.CommandInvalid);
+        PropertySource<BookingRequest>  body   = binder.PropertiesOf(request);
 
-        OptionalReferenceField<Stay>        stay   = binder.ComplexProperty(r => r.Stay).FailWith(PlaceBookingError.StayInvalid).AsOptionalReference(BookingBinder.BindStay);
-        RequiredField<IReadOnlyList<Guest>> guests = binder.ListOfComplexProperties(r => r.Guests).FailWith(PlaceBookingError.GuestInvalid).AsOptional(BookingBinder.BindGuest);
+        OptionalReferenceField<Stay>        stay   = body.ComplexProperty(r => r.Stay).FailWith(PlaceBookingError.StayInvalid).AsOptionalReference(BookingBinder.BindStay);
+        RequiredField<IReadOnlyList<Guest>> guests = body.ListOfComplexProperties(r => r.Guests).FailWith(PlaceBookingError.GuestInvalid).AsOptional(BookingBinder.BindGuest);
 
         return binder.New(s => new OptionalSections(s.Get(stay), s.Get(guests)));
     }
@@ -67,12 +69,12 @@ public static class BinderShowcase {
     ///     <c>guest_email</c> — the key a snake_case client actually sent — rather than the C# property name.
     /// </summary>
     public static Outcome<EmailAddress> BindGuestEmailWithSnakeCaseNames(BookingRequest request) {
-        RequestBinder<BookingRequest> binder =
+        RequestBinder binder =
             Bind.WithOptions(new RequestBinderOptions(new SnakeCaseArgumentNames()))
-                .PropertiesOf(request)
-                .FailWith(PlaceBookingError.CommandInvalid);
+                .Request(PlaceBookingError.CommandInvalid);
+        PropertySource<BookingRequest> body = binder.PropertiesOf(request);
 
-        RequiredField<EmailAddress> email = binder.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+        RequiredField<EmailAddress> email = body.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
         return binder.New(s => s.Get(email));
     }
@@ -89,12 +91,10 @@ public static class BinderShowcase {
             HotelApiArgumentRequired,
             HotelApiArgumentInvalid);
 
-        RequestBinder<BookingRequest> binder =
-            Bind.WithOptions(options)
-                .PropertiesOf(request)
-                .FailWith(PlaceBookingError.CommandInvalid);
+        RequestBinder                  binder = Bind.WithOptions(options).Request(PlaceBookingError.CommandInvalid);
+        PropertySource<BookingRequest> body   = binder.PropertiesOf(request);
 
-        RequiredField<EmailAddress> email = binder.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+        RequiredField<EmailAddress> email = body.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
         return binder.New(s => s.Get(email));
     }
@@ -115,10 +115,11 @@ public static class BinderShowcase {
     ///     the fix. Returns <c>true</c> to confirm the guard tripped.
     /// </summary>
     public static bool NonNullableValueTypeGuardTrips() {
-        RequestBinder<NonNullableProbe> binder = Bind.PropertiesOf(new NonNullableProbe(0)).FailWith(PlaceBookingError.CommandInvalid);
+        RequestBinder                    binder = Bind.Request(PlaceBookingError.CommandInvalid);
+        PropertySource<NonNullableProbe> probe  = binder.PropertiesOf(new NonNullableProbe(0));
 
         try {
-            binder.SimpleProperty(p => p.Nights);
+            probe.SimpleProperty(p => p.Nights);
 
             return false;
         } catch (ArgumentException) {

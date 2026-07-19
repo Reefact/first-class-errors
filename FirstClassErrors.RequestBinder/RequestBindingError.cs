@@ -63,24 +63,39 @@ public static class RequestBindingError {
     public static ErrorCode DefaultArgumentInvalidCode => DefaultArgumentInvalid.Code;
 
     /// <summary>
+    ///     The context key under which every structural binding failure carries the failing argument's full path (for
+    ///     example <c>Guests[1].Email</c>). Exposed so an adapter can project the failing field into a structured error
+    ///     response (a per-field problem entry) rather than parsing it out of the message.
+    /// </summary>
+    public static ErrorContextKey<string> ArgumentPathKey => ErrCtxKey.RequestArgument;
+
+    /// <summary>
+    ///     The context key under which an <b>out-of-DTO</b> argument's failure carries its provenance (for example
+    ///     <c>route</c>, <c>query</c>, <c>header</c>). Absent for a DTO property, whose provenance is implicit. Exposed for
+    ///     the same projection reason as <see cref="ArgumentPathKey" />.
+    /// </summary>
+    public static ErrorContextKey<string> ArgumentSourceKey => ErrCtxKey.RequestArgumentSource;
+
+    /// <summary>
     ///     The argument at <paramref name="argumentPath" /> is required but was absent from the request.
     /// </summary>
     /// <param name="definition">The structural-error definition to raise — the binder's configured <see cref="RequestBinderOptions.ArgumentRequired" />, defaulting to <see cref="DefaultArgumentRequired" />.</param>
     /// <param name="argumentPath">The full path of the missing argument.</param>
+    /// <param name="source">The provenance of an out-of-DTO argument (for example <c>route</c>), recorded in the context when non-<c>null</c>; <c>null</c> for a DTO property.</param>
     /// <remarks>
     ///     Non-transient by nature: resubmitting the same request cannot succeed. The diagnostic message stays in the
     ///     library's internal language (English) by convention; only the public messages are localizable, through
     ///     <paramref name="definition" />.
     /// </remarks>
     [DocumentedBy(nameof(ArgumentRequiredDocumentation))]
-    internal static PrimaryPortError ArgumentRequired(BinderErrorDefinition definition, string argumentPath) {
+    internal static PrimaryPortError ArgumentRequired(BinderErrorDefinition definition, string argumentPath, string? source = null) {
         BindingMessage message = definition.GetMessage(argumentPath);
 
         return PrimaryPortError.Create(
                                    definition.Code,
                                    $"Argument '{argumentPath}' is required but was missing from the request.",
                                    Transience.NonTransient,
-                                   ctx => ctx.Add(ErrCtxKey.RequestArgument, argumentPath))
+                                   ctx => AddArgumentContext(ctx, argumentPath, source))
                                .WithPublicMessage(message.ShortMessage, message.DetailedMessage);
     }
 
@@ -95,9 +110,10 @@ public static class RequestBindingError {
     ///     <see cref="PrimaryPortError" /> — the two families a <see cref="PrimaryPortInnerErrors" /> accepts. Any
     ///     other family is a converter bug, reported by throwing (the binder's bug channel), never recorded.
     /// </param>
+    /// <param name="source">The provenance of an out-of-DTO argument (for example <c>route</c>), recorded in the context when non-<c>null</c>; <c>null</c> for a DTO property.</param>
     /// <exception cref="InvalidOperationException">Thrown when <paramref name="cause" /> belongs to another error family.</exception>
     [DocumentedBy(nameof(ArgumentInvalidDocumentation))]
-    internal static PrimaryPortError ArgumentInvalid(BinderErrorDefinition definition, string argumentPath, Error cause) {
+    internal static PrimaryPortError ArgumentInvalid(BinderErrorDefinition definition, string argumentPath, Error cause, string? source = null) {
         PrimaryPortInnerErrors innerErrors = new();
         switch (cause) {
             case DomainError domainError:
@@ -119,7 +135,7 @@ public static class RequestBindingError {
                                    definition.Code,
                                    $"Argument '{argumentPath}' is invalid.",
                                    innerErrors,
-                                   ctx => ctx.Add(ErrCtxKey.RequestArgument, argumentPath))
+                                   ctx => AddArgumentContext(ctx, argumentPath, source))
                                .WithPublicMessage(message.ShortMessage, message.DetailedMessage);
     }
 
@@ -199,6 +215,11 @@ public static class RequestBindingError {
         return DescribeArgumentInvalid(DefaultArgumentInvalid);
     }
 
+    private static void AddArgumentContext(ErrorContextBuilder ctx, string argumentPath, string? source) {
+        ctx.Add(ErrCtxKey.RequestArgument, argumentPath);
+        if (source is not null) { ctx.Add(ErrCtxKey.RequestArgumentSource, source); }
+    }
+
     /// <summary>A representative converter failure used only by the documentation example above.</summary>
     private static DomainError SampleCause() {
         return DomainError.Create(
@@ -217,6 +238,9 @@ public static class RequestBindingError {
 
         public static readonly ErrorContextKey<string> RequestArgument =
             ErrorContextKey.Create<string>("RequestArgument", "Full path of the request argument that failed to bind (e.g. 'Guests[1].FirstName').");
+
+        public static readonly ErrorContextKey<string> RequestArgumentSource =
+            ErrorContextKey.Create<string>("RequestArgumentSource", "Provenance of an out-of-DTO request argument that failed to bind (e.g. 'route', 'query', 'header'); absent for a DTO property.");
 
         #endregion
 

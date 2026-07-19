@@ -23,25 +23,26 @@ public static class BookingBinder {
     ///     with each argument's full (indexed, prefixed) path. Raises no exception on the invalid-input path.
     /// </summary>
     public static Outcome<PlaceBookingCommand> BindBooking(BookingRequest request) {
-        RequestBinder<BookingRequest> binder = Bind.PropertiesOf(request).FailWith(PlaceBookingError.CommandInvalid);
+        RequestBinder                  binder = Bind.Request(PlaceBookingError.CommandInvalid);
+        PropertySource<BookingRequest> body   = binder.PropertiesOf(request);
 
         // Scalars: required + converter, required + raw (presence only), optional + fallback.
-        RequiredField<EmailAddress> email     = binder.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
-        RequiredField<string>       reference = binder.SimpleProperty(r => r.Reference).AsRequired();
-        RequiredField<Currency>     currency  = binder.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
+        RequiredField<EmailAddress> email     = body.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+        RequiredField<string>       reference = body.SimpleProperty(r => r.Reference).AsRequired();
+        RequiredField<Currency>     currency  = body.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
 
         // Value-type scalars: a nullable value-type property bound over its underlying int; required, and optional
         // (a real Nullable<NightCount> when absent — never default(NightCount)).
-        RequiredField<NightCount>      nights    = binder.SimpleProperty(r => r.Nights).AsRequired(NightCount.From);
-        OptionalValueField<NightCount> maxNights = binder.SimpleProperty(r => r.MaxNights).AsOptionalValue(NightCount.From);
+        RequiredField<NightCount>      nights    = body.SimpleProperty(r => r.Nights).AsRequired(NightCount.From);
+        OptionalValueField<NightCount> maxNights = body.SimpleProperty(r => r.MaxNights).AsOptionalValue(NightCount.From);
 
         // Complex (nested) property: a required sub-object bound by a nested binder under its own envelope.
-        RequiredField<Stay> stay = binder.ComplexProperty(r => r.Stay).FailWith(PlaceBookingError.StayInvalid).AsRequired(BindStay);
+        RequiredField<Stay> stay = body.ComplexProperty(r => r.Stay).FailWith(PlaceBookingError.StayInvalid).AsRequired(BindStay);
 
         // Lists: of simple reference elements (optional), of value-type elements (required), of complex elements (required).
-        RequiredField<IReadOnlyList<Tag>>        tags  = binder.ListOfSimpleProperties(r => r.Tags).AsOptional(Tag.Parse);
-        RequiredField<IReadOnlyList<RoomNumber>> rooms = binder.ListOfSimpleProperties(r => r.RoomNumbers).AsRequired(RoomNumber.From);
-        RequiredField<IReadOnlyList<Guest>>      guests = binder.ListOfComplexProperties(r => r.Guests).FailWith(PlaceBookingError.GuestInvalid).AsRequired(BindGuest);
+        RequiredField<IReadOnlyList<Tag>>        tags   = body.ListOfSimpleProperties(r => r.Tags).AsOptional(Tag.Parse);
+        RequiredField<IReadOnlyList<RoomNumber>> rooms  = body.ListOfSimpleProperties(r => r.RoomNumbers).AsRequired(RoomNumber.From);
+        RequiredField<IReadOnlyList<Guest>>      guests = body.ListOfComplexProperties(r => r.Guests).FailWith(PlaceBookingError.GuestInvalid).AsRequired(BindGuest);
 
         // Total assembler: runs once, only when no failure was recorded.
         return binder.New(s => new PlaceBookingCommand(
@@ -61,11 +62,13 @@ public static class BookingBinder {
     ///     cross-field rule (check-out strictly after check-in) — which no single field can check — is enforced and
     ///     flattened. Each date is reported under a <c>Stay.</c>-prefixed path. Shared with <see cref="BinderShowcase" />.
     /// </summary>
-    internal static Outcome<Stay> BindStay(RequestBinder<StayDto> stay) {
+    internal static Outcome<Stay> BindStay(RequestBinder binder, StayDto dto) {
+        PropertySource<StayDto> stay = binder.PropertiesOf(dto);
+
         RequiredField<BookingDate> checkIn  = stay.SimpleProperty(s => s.CheckIn).AsRequired(BookingDate.Parse);
         RequiredField<BookingDate> checkOut = stay.SimpleProperty(s => s.CheckOut).AsRequired(BookingDate.Parse);
 
-        return stay.Create(s => Stay.Create(s.Get(checkIn), s.Get(checkOut)));
+        return binder.Create(s => Stay.Create(s.Get(checkIn), s.Get(checkOut)));
     }
 
     /// <summary>
@@ -73,11 +76,13 @@ public static class BookingBinder {
     ///     <c>New</c> terminal. Each field is reported under an indexed path such as <c>Guests[1].FirstName</c>. Shared
     ///     with <see cref="BinderShowcase" />.
     /// </summary>
-    internal static Outcome<Guest> BindGuest(RequestBinder<GuestDto> guest) {
+    internal static Outcome<Guest> BindGuest(RequestBinder binder, GuestDto dto) {
+        PropertySource<GuestDto> guest = binder.PropertiesOf(dto);
+
         RequiredField<string>                firstName = guest.SimpleProperty(g => g.FirstName).AsRequired();
         OptionalReferenceField<EmailAddress> email     = guest.SimpleProperty(g => g.Email).AsOptionalReference(EmailAddress.Parse);
 
-        return guest.New(s => new Guest(s.Get(firstName), s.Get(email)));
+        return binder.New(s => new Guest(s.Get(firstName), s.Get(email)));
     }
 
     #endregion

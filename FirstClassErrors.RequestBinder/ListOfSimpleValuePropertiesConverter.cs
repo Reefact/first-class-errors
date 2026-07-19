@@ -1,36 +1,37 @@
 namespace FirstClassErrors.RequestBinder;
 
 /// <summary>
-///     Binds a list request property whose elements are a nullable <b>value type</b> (e.g. <c>int?</c>), each converted
-///     by a value-object converter over the underlying non-nullable type. Each failing element is recorded
-///     individually, under its indexed path (<c>Quantities[2]</c>), so one bad element never hides the others.
+///     Binds a list input whose elements are a nullable <b>value type</b> (e.g. <c>int?</c>), each converted by a
+///     value-object converter over the underlying non-nullable type. Each failing element is recorded individually, under
+///     its indexed path (<c>Quantities[2]</c>), so one bad element never hides the others.
 /// </summary>
 /// <remarks>
-///     The value-type counterpart of <see cref="ListOfSimplePropertiesConverter{TRequest, TArgument}" />: because a
+///     The value-type counterpart of <see cref="ListOfSimplePropertiesConverter{TArgument}" />: because a
 ///     <c>Nullable&lt;TArgument&gt;</c> element and a reference-type element need different null handling, the value-type
 ///     path is a separate converter rather than a reuse of the reference one. It differs only in that a present element
 ///     is unwrapped (<c>element.Value</c>) before conversion.
 /// </remarks>
-/// <typeparam name="TRequest">The type of the request DTO.</typeparam>
-/// <typeparam name="TArgument">The underlying (non-nullable) value type of the DTO list elements.</typeparam>
-public sealed class ListOfSimpleValuePropertiesConverter<TRequest, TArgument> where TArgument : struct {
+/// <typeparam name="TArgument">The underlying (non-nullable) value type of the list elements.</typeparam>
+public sealed class ListOfSimpleValuePropertiesConverter<TArgument> where TArgument : struct {
 
     #region Fields declarations
 
-    private readonly RequestBinder<TRequest>  _binder;
-    private readonly string                   _argumentPath;
-    private readonly IEnumerable<TArgument?>? _values;
-    private readonly bool                     _isMissing;
+    private readonly RequestBinding            _binding;
+    private readonly string                    _argumentPath;
+    private readonly IEnumerable<TArgument?>?  _values;
+    private readonly bool                      _isMissing;
+    private readonly string?                   _source;
 
     #endregion
 
     #region Constructors declarations
 
-    internal ListOfSimpleValuePropertiesConverter(RequestBinder<TRequest> binder, string argumentPath, IEnumerable<TArgument?>? values, bool isMissing) {
-        _binder       = binder;
+    internal ListOfSimpleValuePropertiesConverter(RequestBinding binding, string argumentPath, IEnumerable<TArgument?>? values, bool isMissing, string? source) {
+        _binding      = binding;
         _argumentPath = argumentPath;
         _values       = values;
         _isMissing    = isMissing;
+        _source       = source;
     }
 
     #endregion
@@ -50,9 +51,9 @@ public sealed class ListOfSimpleValuePropertiesConverter<TRequest, TArgument> wh
         if (convertElement is null) { throw new ArgumentNullException(nameof(convertElement)); }
 
         if (_isMissing) {
-            _binder.RecordArgumentRequired(_argumentPath);
+            _binding.RecordArgumentRequired(_argumentPath, _source);
 
-            return new RequiredField<IReadOnlyList<TProperty>>(_binder, default!);
+            return new RequiredField<IReadOnlyList<TProperty>>(_binding, default!);
         }
 
         return ConvertElements(convertElement);
@@ -72,16 +73,16 @@ public sealed class ListOfSimpleValuePropertiesConverter<TRequest, TArgument> wh
         if (_isMissing) {
             IReadOnlyList<TProperty> empty = new List<TProperty>();
 
-            return new RequiredField<IReadOnlyList<TProperty>>(_binder, empty);
+            return new RequiredField<IReadOnlyList<TProperty>>(_binding, empty);
         }
 
         return ConvertElements(convertElement);
     }
 
     private RequiredField<IReadOnlyList<TProperty>> ConvertElements<TProperty>(Func<TArgument, Outcome<TProperty>> convertElement) where TProperty : notnull {
-        return _binder.ConvertEachElement<TArgument?, TProperty>(_argumentPath, _values!, (element, elementPath) => {
+        return _binding.ConvertEachElement<TArgument?, TProperty>(_argumentPath, _values!, _source, (element, elementPath) => {
             Outcome<TProperty> outcome = convertElement(element!.Value);
-            if (outcome.IsFailure) { _binder.RecordArgumentInvalid(elementPath, outcome.Error!); }
+            if (outcome.IsFailure) { _binding.RecordArgumentInvalid(elementPath, outcome.Error!, _source); }
 
             return outcome;
         });

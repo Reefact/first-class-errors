@@ -1,7 +1,7 @@
 namespace FirstClassErrors.RequestBinder;
 
 /// <summary>
-///     Assembles the bound command inside <see cref="RequestBinder{TRequest}.Create{TCommand}" />, reading each bound
+///     Assembles the bound command inside <see cref="RequestBinder.Create{TCommand}" />, reading each bound
 ///     value from the supplied <see cref="BindingScope" /> and returning an <see cref="Outcome{T}" /> — so the assembly
 ///     step itself may still fail, typically a validating factory (<c>Command.Create(...)</c>) enforcing a cross-field
 ///     rule (<c>CheckOut &gt; CheckIn</c>) that no single field could check on its own.

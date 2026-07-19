@@ -1,7 +1,7 @@
 namespace FirstClassErrors.RequestBinder;
 
 /// <summary>
-///     Assembles the bound command inside <see cref="RequestBinder{TRequest}.New{TCommand}" />, reading each bound value
+///     Assembles the bound command inside <see cref="RequestBinder.New{TCommand}" />, reading each bound value
 ///     from the supplied <see cref="BindingScope" /> — the only channel through which a bound value is reachable — and
 ///     returning the command directly (a total <c>new</c> that cannot fail). For a command produced by a validating
 ///     factory that returns an <see cref="Outcome{T}" />, use <see cref="ValidatingAssembler{TCommand}" /> instead.
