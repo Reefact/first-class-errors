@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0023-keep-expression-tree-selectors-for-the-v1-binder-api.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-07-19
 **Decision Makers:** Reefact
 
