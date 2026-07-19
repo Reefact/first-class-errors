@@ -2,128 +2,75 @@
 
 🌍 🇬🇧 [English](0015-cap-any-combine-at-arity-eight.md) · 🇫🇷 Français (ce fichier)
 
-**Statut :** Proposé
-**Date :** 2026-07-18
+**Statut :** Accepté
+**Date :** 2026-07-19
 **Décideurs :** Reefact
 
 ## Contexte
 
-`Dummies` compose des générateurs contraints en objets plus gros via
-`Any.Combine(parties..., compose)` : les parties sont générées, puis remises à une
-lambda constructeur fournie par l'appelant, de sorte qu'un objet-valeur ou un
-agrégat est assemblé sans réflexion et que le constructeur du domaine reste le seul
-gardien. Construire facilement de gros objets est un objectif explicite de la
-bibliothèque.
+Dummies compose des générateurs de types différents en objets plus larges au moyen de `Any.Combine`, en préservant la validation du domaine par les constructeurs sans recourir à la réflexion.
 
-C# n'a pas de générique variadique hétérogène : passer *N* parties de types
-différents en un seul appel exige une surcharge distincte par arité, chacune avec
-*N*+1 paramètres de type générique et *N*+1 paramètres de valeur. Jusqu'ici,
-`Combine` n'existait que pour deux et trois parties ; en composer davantage
-imposait l'imbrication (`Combine(Combine(a, b, …), c, …)`) ou le passage par des
-tuples, qui exposent tous deux un accès positionnel `Item1..ItemN` ou des lambdas
-imbriquées au site d'appel.
+C# ne dispose pas de génériques variadiques hétérogènes ; chaque arité supportée exige donc une surcharge publique distincte. Des arités trop faibles imposent des compositions imbriquées ou des tuples positionnels pour les constructeurs plus larges, tandis qu'une surface illimitée créerait une API et une documentation répétitives pour une valeur décroissante.
 
-Le dépôt exécute une analyse SonarCloud dont la règle S107 signale une méthode à
-plus de sept paramètres. Un `Combine` de sept parties a huit paramètres (sept
-générateurs plus le composeur) et de huit parties, neuf — les deux plus grandes
-surcharges franchissent donc ce seuil. La pratique établie du dépôt est de garder
-l'analyse propre, en supprimant une règle en ligne avec une justification là où une
-exception délibérée est faite.
-
-Un constructeur qui a besoin de beaucoup de parties est lui-même souvent un signal
-de conception — un objet-valeur intermédiaire manquant.
+Des constructeurs très larges peuvent également signaler l'absence de concepts intermédiaires dans le domaine.
 
 ## Décision
 
-`Any.Combine` offre des surcharges de deux jusqu'à huit parties et s'arrête là, en
-acceptant le *code smell* de nombre de paramètres et de génériques des deux plus
-grandes surcharges comme un compromis délibéré en faveur d'un site d'appel de
-composition plat et sans réflexion.
+`Any.Combine` fournit des surcharges hétérogènes plates de l'arité deux à l'arité huit et s'arrête volontairement à ce seuil.
 
 ## Justification
 
-* **Cela sert directement l'objectif « construire de gros objets ».** Un
-  `Combine(a, b, c, d, e, (…) => new Thing(…))` plat, avec des paramètres de lambda
-  nommés par l'appelant, se lit bien mieux que des `Combine` imbriqués ou un accès
-  tuple `Item1..ItemN`, et garde la composition sans réflexion — la raison d'être
-  même de `Combine`.
-* **Huit est le bon endroit pour le plafond.** Huit parties couvrent la quasi-
-  totalité des constructeurs DDD écrits à la main ; au-delà, l'objet est assez
-  complexe pour que des objets-valeurs intermédiaires soient la conception plus
-  saine, donc un plafond à huit pousse vers cette structure plutôt que de lisser des
-  constructeurs arbitrairement larges.
-* **Le smell est inhérent, pas accidentel.** Il n'existe pas de façon moins
-  « smell » de passer *N* parties de types différents en un seul appel ; le nombre
-  de paramètres et de génériques est le coût irréductible de la composition
-  hétérogène. Supprimer S107 avec une justification sur les deux plus grandes
-  surcharges enregistre ce compromis au niveau du code, et cet ADR enregistre
-  pourquoi il est acceptable.
-* **S'arrêter avant seize garde la surface bornée.** Égaler le plafond de seize
-  arguments de `Func` ajouterait des surcharges maintenues à la main et entièrement
-  documentées dont la valeur marginale est faible et dont le coût en boilerplate est
-  réel ; la demande au-delà de huit ne le justifie pas.
+Un appel plat avec des paramètres de lambda nommés est nettement plus lisible qu'une composition imbriquée ou l'accès positionnel à un tuple pour les tailles d'objets courantes dans le code métier.
 
-## Alternatives considérées
+Huit est un plafond pragmatique de confort, pas une propriété mathématique du DDD. Il couvre les cas visés de construction d'objets larges tout en maintenant une surface manuelle bornée et en laissant les constructeurs encore plus larges jouer leur rôle de signal de conception.
 
-### Ne garder que les arités deux et trois ; composer davantage par imbrication
+Les avertissements de nombre de paramètres sur les plus grandes surcharges constituent un compromis local explicite, pas un relâchement général des règles de qualité du dépôt.
 
-Considérée parce qu'elle n'ajoute aucune surface. Rejetée parce que l'imbrication
-force un accès tuple positionnel (`Item1..ItemN`) ou des lambdas imbriquées au site
-d'appel — illisible précisément là où la bibliothèque promet une construction facile
-de gros objets.
+Les signatures exactes, la documentation et les suppressions d'analyseurs sont des détails d'implémentation décrits dans la [référence d'implémentation des ADR](../specifications/adr-implementation-reference.fr.md#contrats-de-génération-de-dummies) et la référence d'API de Dummies.
 
-### Un builder fluide accumulant un tuple (`Combine(a).And(b).And(c)…`)
+## Alternatives envisagées
 
-Considérée comme moyen d'éviter une surcharge par arité. Rejetée parce que `.And`
-aurait lui-même besoin d'une surcharge par arité source, et que le tuple accumulé
-réexpose l'accès positionnel — elle échange une forme de boilerplate contre un site
-d'appel pire.
+### Conserver uniquement les plus petites surcharges
 
-### Étendre jusqu'à l'arité seize
+Envisagé pour minimiser la surface d'API. Rejeté parce que les compositions plus larges deviennent nettement moins lisibles avec des lambdas imbriquées ou des membres positionnels de tuples.
 
-Considérée par souci d'exhaustivité, pour égaler `Func`. Rejetée parce que les
-constructeurs de neuf à seize parties sont un *code smell* que la bibliothèque ne
-devrait pas lisser, et que chaque surcharge est une surface documentée et maintenue
-à la main pour une demande réelle négligeable.
+### Utiliser un builder fluent accumulant un tuple
 
-### Un tableau `params` de générateurs de même type
+Envisagé pour éviter une surcharge par arité. Rejeté parce que cela déplace la même complexité dans le builder et continue d'exposer une structure positionnelle au point d'appel.
 
-Considérée pour le cas homogène. Rejetée parce qu'elle ne fonctionne que si toutes
-les parties partagent un même type et qu'elle perd le typage par partie — elle ne
-sert pas le cas du constructeur hétérogène pour lequel `Combine` existe. Elle reste
-une option orthogonale, ajoutable plus tard sans toucher à cette décision.
+### Étendre jusqu'à l'arité maximale de `Func`
+
+Envisagé pour la complétude. Rejeté parce que le coût de maintenance et la normalisation de constructeurs extrêmement larges dépassent le gain marginal de confort.
+
+### Accepter uniquement des générateurs homogènes via `params`
+
+Envisagé car cette forme est naturellement variadique. Rejeté parce qu'elle ne couvre pas les paramètres de constructeur de types différents pour lesquels `Combine` existe.
 
 ## Conséquences
 
 ### Positives
 
-* Les gros objets-valeurs et agrégats se composent en un seul appel plat, lisible et
-  sans réflexion, avec des paramètres nommés par l'appelant.
-* Le plafond oriente doucement les constructeurs très larges vers des objets-valeurs
-  intermédiaires.
+* Les objets larges courants se composent en un appel lisible et sans réflexion.
+* L'API de confort reste volontairement bornée.
+* Les constructions extrêmement larges restent visibles comme problème potentiel de conception.
 
 ### Négatives
 
-* Cinq surcharges de plus sur la façade, maintenues à la main et entièrement
-  documentées.
-* Les deux plus grandes surcharges portent une suppression S107 en ligne — une
-  exception documentée et localisée à la règle du nombre de paramètres.
+* Plusieurs surcharges maintenues à la main font partie de la surface publique.
+* Les plus grandes surcharges exigent des suppressions localisées d'analyseurs.
+* Le plafond est heuristique et peut ne pas convenir à tous les domaines.
 
 ### Risques
 
-* **Pression sur le plafond** — un besoin réel de neuf parties ou plus pourrait
-  réapparaître. Atténué parce que c'est en soi un signal de conception ; le plafond
-  n'est réexaminé que si le besoin se révèle courant, et ajouter des arités
-  supérieures plus tard reste non-breaking.
+* Un besoin légitime récurrent au-delà de l'arité huit peut apparaître. Mesure : des arités supérieures peuvent être ajoutées de manière compatible par une nouvelle décision si des faits montrent que le plafond actuel est trop bas.
 
 ## Actions de suivi
 
-* Si un besoin de composition homogène (même type) apparaît, envisager un `Combine`
-  à base de `params` séparément — c'est orthogonal à cette décision.
-* Refléter le plafond d'arité dans la documentation utilisateur une fois la surface
-  stabilisée.
+* Rendre explicite la plage d'arités supportée dans la documentation de Dummies.
+* Étudier séparément une composition variadique homogène si un cas réel apparaît.
 
 ## Références
 
-* ADR-0011 — Héberger Dummies comme un paquet autonome dans ce dépôt.
-* Les suppressions S107 sur les surcharges `Combine` d'arité sept et huit.
+* [Référence d'implémentation des ADR — Contrats de génération de Dummies](../specifications/adr-implementation-reference.fr.md#contrats-de-génération-de-dummies)
+* [ADR-0011](0011-host-dummies-as-a-standalone-package.fr.md)
+* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.
