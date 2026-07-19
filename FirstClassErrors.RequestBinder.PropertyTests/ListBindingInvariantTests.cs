@@ -44,7 +44,10 @@ public sealed class ListBindingInvariantTests {
     public void ReorderingElementsReordersTheirErrorPathsAccordingly() {
         Prop.ForAll(BinderGen.Slots().ToArbitrary(),
                     slots => {
-                        (string? Raw, bool Fails)[] reversed = slots.Reverse().ToArray();
+                        // AsEnumerable() pins the LINQ Reverse (a reversed copy). A bare slots.Reverse() binds instead
+                        // to the void, in-place MemoryExtensions.Reverse(Span<T>) on the net472 floor, where
+                        // System.Memory is in the graph (see build/Net472TestFloor.props).
+                        (string? Raw, bool Fails)[] reversed = slots.AsEnumerable().Reverse().ToArray();
 
                         return FailingPaths(BindTokens(slots)).SetEquals(PositionsOfFailures(slots))
                             && FailingPaths(BindTokens(reversed)).SetEquals(PositionsOfFailures(reversed));

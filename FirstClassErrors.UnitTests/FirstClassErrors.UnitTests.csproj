@@ -1,7 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Adds the .NET Framework 4.7.2 support-floor leg (gated by EnableNet472Floor) and owns the target
+       frameworks; exercised by the `framework-floor` job in .github/workflows/ci.yml. -->
+  <Import Project="..\build\Net472TestFloor.props" />
+
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -30,6 +33,13 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+  </ItemGroup>
+
+  <!-- System.Text.Json is in-box on net10.0 but absent from net472. This test round-trips the GenDoc model
+       through it — a tooling-side contract the modern out-of-process worker relies on, never something a
+       net472 consumer does — so it is not part of the .NET Framework floor. It still runs on net10.0. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Compile Remove="DocumentationModelSerializationTests.cs" />
   </ItemGroup>
 
 </Project>
