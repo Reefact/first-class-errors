@@ -27,7 +27,7 @@ public sealed class OutcomeNonGenericTests {
     [Fact(DisplayName = "Outcome.Failure is a failed outcome exposing its error.")]
     public void OutcomeFailureIsAFailedOutcomeExposingItsError() {
         // Setup
-        DomainError error = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError error = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
 
         // Exercise
         Outcome outcome = Outcome.Failure(error);
@@ -57,7 +57,7 @@ public sealed class OutcomeNonGenericTests {
     [Fact(DisplayName = "ThrowIfFailure throws the associated exception when the outcome is a failure.")]
     public void ThrowIfFailureThrowsTheAssociatedExceptionWhenTheOutcomeIsAFailure() {
         // Setup
-        DomainError error   = ErrorFactory.Domain(Any.ErrorCode(), "boom");
+        DomainError error   = ErrorFactory.Domain(ErrorCodeFactory.Any(), "boom");
         Outcome     outcome = Outcome.Failure(error);
 
         // Exercise & verify
@@ -81,7 +81,7 @@ public sealed class OutcomeNonGenericTests {
     [Fact(DisplayName = "Then short-circuits and propagates the error when the outcome is a failure.")]
     public void ThenShortCircuitsAndPropagatesTheErrorWhenTheOutcomeIsAFailure() {
         // Setup
-        DomainError error   = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError error   = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
         Outcome     outcome = Outcome.Failure(error);
         bool        called  = false;
 
@@ -101,7 +101,7 @@ public sealed class OutcomeNonGenericTests {
     [Fact(DisplayName = "Then to a typed outcome propagates the error on a failure.")]
     public void ThenToATypedOutcomePropagatesTheErrorOnAFailure() {
         // Setup
-        DomainError error   = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError error   = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
         Outcome     outcome = Outcome.Failure(error);
 
         // Exercise
@@ -118,7 +118,7 @@ public sealed class OutcomeNonGenericTests {
         Outcome outcome = Outcome.Success;
 
         // Exercise
-        Outcome result = outcome.Recover(_ => Outcome.Failure(ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage())));
+        Outcome result = outcome.Recover(_ => Outcome.Failure(ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any())));
 
         // Verify
         Check.That(result).IsSameReferenceAs(outcome);
@@ -128,7 +128,7 @@ public sealed class OutcomeNonGenericTests {
     [Fact(DisplayName = "Recover replaces a failure with the fallback result.")]
     public void RecoverReplacesAFailureWithTheFallbackResult() {
         // Setup
-        DomainError error    = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError error    = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
         Outcome     outcome  = Outcome.Failure(error);
         Outcome     fallback = Outcome.Success;
 
@@ -155,7 +155,7 @@ public sealed class OutcomeNonGenericTests {
     [Fact(DisplayName = "Finally resolves the failure branch when the outcome is a failure.")]
     public void FinallyResolvesTheFailureBranchWhenTheOutcomeIsAFailure() {
         // Setup
-        DomainError error   = ErrorFactory.Domain(Any.ErrorCode(), "boom");
+        DomainError error   = ErrorFactory.Domain(ErrorCodeFactory.Any(), "boom");
         Outcome     outcome = Outcome.Failure(error);
 
         // Exercise
@@ -183,7 +183,7 @@ public sealed class OutcomeNonGenericTests {
     [Fact(DisplayName = "Finally with actions executes the failure branch when the outcome is a failure.")]
     public void FinallyWithActionsExecutesTheFailureBranchWhenTheOutcomeIsAFailure() {
         // Setup
-        DomainError error           = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError error           = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
         Outcome     outcome         = Outcome.Failure(error);
         bool        successExecuted = false;
         Error?      capturedError   = null;
@@ -241,7 +241,7 @@ public sealed class OutcomeNonGenericTests {
     [Fact(DisplayName = "Awaiting the asynchronous Then short-circuits and propagates the error on a failure.")]
     public async Task AwaitingTheAsynchronousThenShortCircuitsAndPropagatesTheErrorOnAFailure() {
         // Setup
-        DomainError error   = ErrorFactory.Domain(Any.ErrorCode(), Any.DiagnosticMessage());
+        DomainError error   = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
         Outcome     outcome = Outcome.Failure(error);
         bool        called  = false;
 

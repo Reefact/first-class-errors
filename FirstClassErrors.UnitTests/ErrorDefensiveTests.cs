@@ -32,7 +32,7 @@ public sealed class ErrorDefensiveTests : IDisposable {
     [Fact(DisplayName = "A null error code is replaced by the unspecified error code.")]
     public void ANullErrorCodeIsReplacedByTheUnspecifiedErrorCode() {
         // Exercise
-        DomainError error = DomainError.Create(null!, Any.DiagnosticMessage()).WithPublicMessage(Any.ShortMessage());
+        DomainError error = DomainError.Create(null!, DiagnosticMessageFactory.Any()).WithPublicMessage(ShortMessageFactory.Any());
 
         // Verify
         Check.That(error.Code).IsSameReferenceAs(ErrorCode.Unspecified);
@@ -41,7 +41,7 @@ public sealed class ErrorDefensiveTests : IDisposable {
     [Fact(DisplayName = "A null diagnostic message is replaced by a fallback sentinel.")]
     public void ANullDiagnosticMessageIsReplacedByAFallbackSentinel() {
         // Exercise
-        DomainError error = DomainError.Create(Any.ErrorCode(), null!).WithPublicMessage(Any.ShortMessage());
+        DomainError error = DomainError.Create(ErrorCodeFactory.Any(), null!).WithPublicMessage(ShortMessageFactory.Any());
 
         // Verify
         Check.That(error.DiagnosticMessage).IsEqualTo(Error.MissingDiagnosticMessage);
@@ -53,7 +53,7 @@ public sealed class ErrorDefensiveTests : IDisposable {
     [InlineData("      ")]
     public void AnEmptyOrWhitespaceDiagnosticMessageIsReplacedByAFallbackSentinel(string value) {
         // Exercise
-        DomainError error = DomainError.Create(Any.ErrorCode(), value).WithPublicMessage(Any.ShortMessage());
+        DomainError error = DomainError.Create(ErrorCodeFactory.Any(), value).WithPublicMessage(ShortMessageFactory.Any());
 
         // Verify
         Check.That(error.DiagnosticMessage).IsEqualTo(Error.MissingDiagnosticMessage);
@@ -62,7 +62,7 @@ public sealed class ErrorDefensiveTests : IDisposable {
     [Fact(DisplayName = "The diagnostic message is trimmed.")]
     public void TheDiagnosticMessageIsTrimmed() {
         // Exercise
-        DomainError error = DomainError.Create(Any.ErrorCode(), "  hello  ").WithPublicMessage(Any.ShortMessage());
+        DomainError error = DomainError.Create(ErrorCodeFactory.Any(), "  hello  ").WithPublicMessage(ShortMessageFactory.Any());
 
         // Verify
         Check.That(error.DiagnosticMessage).IsEqualTo("hello");
@@ -71,7 +71,7 @@ public sealed class ErrorDefensiveTests : IDisposable {
     [Fact(DisplayName = "A null short message is replaced by a fallback sentinel.")]
     public void ANullShortMessageIsReplacedByAFallbackSentinel() {
         // Exercise
-        DomainError error = DomainError.Create(Any.ErrorCode(), Any.DiagnosticMessage()).WithPublicMessage(null!);
+        DomainError error = DomainError.Create(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any()).WithPublicMessage(null!);
 
         // Verify
         Check.That(error.ShortMessage).IsEqualTo(Error.MissingShortMessage);
@@ -83,7 +83,7 @@ public sealed class ErrorDefensiveTests : IDisposable {
     [InlineData("      ")]
     public void AnEmptyOrWhitespaceShortMessageIsReplacedByAFallbackSentinel(string value) {
         // Exercise
-        DomainError error = DomainError.Create(Any.ErrorCode(), Any.DiagnosticMessage()).WithPublicMessage(value);
+        DomainError error = DomainError.Create(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any()).WithPublicMessage(value);
 
         // Verify
         Check.That(error.ShortMessage).IsEqualTo(Error.MissingShortMessage);
@@ -92,7 +92,7 @@ public sealed class ErrorDefensiveTests : IDisposable {
     [Fact(DisplayName = "A missing diagnostic message is recorded in the context under #MISSING_REQUIRED_MESSAGE.")]
     public void AMissingDiagnosticMessageIsRecordedInTheContext() {
         // Exercise
-        DomainError error = DomainError.Create(Any.ErrorCode(), null!).WithPublicMessage(Any.ShortMessage());
+        DomainError error = DomainError.Create(ErrorCodeFactory.Any(), null!).WithPublicMessage(ShortMessageFactory.Any());
 
         // Verify
         Check.That(error.Context.Values.ContainsKey(ErrorContextKey.MissingRequiredMessages)).IsTrue();
@@ -104,7 +104,7 @@ public sealed class ErrorDefensiveTests : IDisposable {
     [Fact(DisplayName = "Missing diagnostic and short messages are both recorded in the context.")]
     public void MissingDiagnosticAndShortMessagesAreBothRecordedInTheContext() {
         // Exercise
-        DomainError error = DomainError.Create(Any.ErrorCode(), null!).WithPublicMessage(null!);
+        DomainError error = DomainError.Create(ErrorCodeFactory.Any(), null!).WithPublicMessage(null!);
 
         // Verify
         IReadOnlyList<string> missing = (IReadOnlyList<string>)error.Context.Values[ErrorContextKey.MissingRequiredMessages]!;
@@ -114,7 +114,7 @@ public sealed class ErrorDefensiveTests : IDisposable {
     [Fact(DisplayName = "Present mandatory messages leave no #MISSING_REQUIRED_MESSAGE entry in the context.")]
     public void PresentMandatoryMessagesLeaveNoMissingEntryInTheContext() {
         // Exercise
-        DomainError error = DomainError.Create(Any.ErrorCode(), Any.DiagnosticMessage()).WithPublicMessage(Any.ShortMessage());
+        DomainError error = DomainError.Create(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any()).WithPublicMessage(ShortMessageFactory.Any());
 
         // Verify
         Check.That(error.Context.Values.ContainsKey(ErrorContextKey.MissingRequiredMessages)).IsFalse();
@@ -123,7 +123,7 @@ public sealed class ErrorDefensiveTests : IDisposable {
     [Fact(DisplayName = "The short message is trimmed.")]
     public void TheShortMessageIsTrimmed() {
         // Exercise
-        DomainError error = DomainError.Create(Any.ErrorCode(), Any.DiagnosticMessage()).WithPublicMessage("  short  ");
+        DomainError error = DomainError.Create(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any()).WithPublicMessage("  short  ");
 
         // Verify
         Check.That(error.ShortMessage).IsEqualTo("short");
@@ -132,7 +132,7 @@ public sealed class ErrorDefensiveTests : IDisposable {
     [Fact(DisplayName = "A null detailed message leaves the detailed message null.")]
     public void ANullDetailedMessageLeavesTheDetailedMessageNull() {
         // Exercise
-        DomainError error = DomainError.Create(Any.ErrorCode(), Any.DiagnosticMessage()).WithPublicMessage(Any.ShortMessage(), null);
+        DomainError error = DomainError.Create(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any()).WithPublicMessage(ShortMessageFactory.Any(), null);
 
         // Verify
         Check.That(error.DetailedMessage).IsNull();
@@ -144,7 +144,7 @@ public sealed class ErrorDefensiveTests : IDisposable {
     [InlineData("      ")]
     public void AnEmptyOrWhitespaceDetailedMessageLeavesTheDetailedMessageNull(string value) {
         // Exercise
-        DomainError error = DomainError.Create(Any.ErrorCode(), Any.DiagnosticMessage()).WithPublicMessage(Any.ShortMessage(), value);
+        DomainError error = DomainError.Create(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any()).WithPublicMessage(ShortMessageFactory.Any(), value);
 
         // Verify
         Check.That(error.DetailedMessage).IsNull();
@@ -153,7 +153,7 @@ public sealed class ErrorDefensiveTests : IDisposable {
     [Fact(DisplayName = "A detailed message is trimmed when provided.")]
     public void ADetailedMessageIsTrimmedWhenProvided() {
         // Exercise
-        DomainError error = DomainError.Create(Any.ErrorCode(), Any.DiagnosticMessage()).WithPublicMessage(Any.ShortMessage(), "  detailed  ");
+        DomainError error = DomainError.Create(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any()).WithPublicMessage(ShortMessageFactory.Any(), "  detailed  ");
 
         // Verify
         Check.That(error.DetailedMessage).IsEqualTo("detailed");
@@ -162,8 +162,8 @@ public sealed class ErrorDefensiveTests : IDisposable {
     [Fact(DisplayName = "A configure-context delegate that throws is captured into the context.")]
     public void AConfigureContextDelegateThatThrowsIsCapturedIntoTheContext() {
         // Exercise
-        DomainError error = DomainError.Create(Any.ErrorCode(), Any.DiagnosticMessage(), _ => throw new InvalidOperationException("boom"))
-                                       .WithPublicMessage(Any.ShortMessage());
+        DomainError error = DomainError.Create(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any(), _ => throw new InvalidOperationException("boom"))
+                                       .WithPublicMessage(ShortMessageFactory.Any());
 
         // Verify
         Check.That(error.Context.IsEmpty).IsFalse();
@@ -180,12 +180,12 @@ public sealed class ErrorDefensiveTests : IDisposable {
         ErrorContextKey<string> beforeKey = ErrorContextKey.Create<string>("BeforeFailure");
 
         // Exercise
-        DomainError error = DomainError.Create(Any.ErrorCode(), Any.DiagnosticMessage(), builder => {
+        DomainError error = DomainError.Create(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any(), builder => {
                                            builder.Add(beforeKey, "kept");
 
                                            throw new InvalidOperationException("boom");
                                        })
-                                       .WithPublicMessage(Any.ShortMessage());
+                                       .WithPublicMessage(ShortMessageFactory.Any());
 
         // Verify — the entry added before the failure survives alongside the captured exception.
         bool found = error.Context.TryGet(beforeKey, out string? kept);
@@ -200,7 +200,7 @@ public sealed class ErrorDefensiveTests : IDisposable {
         List<DomainError> innerErrors = new() {
             ErrorFactory.Domain(ErrorCode.Unspecified, "first")
         };
-        DomainError error = DomainError.Create(Any.ErrorCode(), Any.DiagnosticMessage(), innerErrors).WithPublicMessage(Any.ShortMessage());
+        DomainError error = DomainError.Create(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any(), innerErrors).WithPublicMessage(ShortMessageFactory.Any());
 
         // Exercise
         innerErrors.Add(ErrorFactory.Domain(ErrorCode.Unspecified, "second"));
@@ -219,7 +219,7 @@ public sealed class ErrorDefensiveTests : IDisposable {
         };
 
         // Exercise
-        DomainError error = DomainError.Create(Any.ErrorCode(), Any.DiagnosticMessage(), innerErrors).WithPublicMessage(Any.ShortMessage());
+        DomainError error = DomainError.Create(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any(), innerErrors).WithPublicMessage(ShortMessageFactory.Any());
 
         // Verify
         Check.That(error.InnerErrors).CountIs(2);
@@ -232,7 +232,7 @@ public sealed class ErrorDefensiveTests : IDisposable {
         List<DomainError> innerErrors = new() { null!, null! };
 
         // Exercise
-        DomainError error = DomainError.Create(Any.ErrorCode(), Any.DiagnosticMessage(), innerErrors).WithPublicMessage(Any.ShortMessage());
+        DomainError error = DomainError.Create(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any(), innerErrors).WithPublicMessage(ShortMessageFactory.Any());
 
         // Verify
         Check.That(error.InnerErrors).IsEmpty();
@@ -241,7 +241,7 @@ public sealed class ErrorDefensiveTests : IDisposable {
     [Fact(DisplayName = "The string representation combines the diagnostic message and the code.")]
     public void TheStringRepresentationCombinesTheDiagnosticMessageAndTheCode() {
         // Exercise
-        DomainError error = DomainError.Create(ErrorCode.Unspecified, "boom").WithPublicMessage(Any.ShortMessage());
+        DomainError error = DomainError.Create(ErrorCode.Unspecified, "boom").WithPublicMessage(ShortMessageFactory.Any());
 
         // Verify
         Check.That(error.ToString()).IsEqualTo("boom (#UNSPECIFIED)");

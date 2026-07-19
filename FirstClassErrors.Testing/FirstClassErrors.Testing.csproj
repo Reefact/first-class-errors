@@ -53,7 +53,23 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
+    <!-- Dummies backs the arbitrary-value factories (ADR-0026). It is not yet on NuGet (ADR-0011), so
+         reference it privately and embed its assembly in this package (see the pack target below);
+         switch to a NuGet PackageReference once Dummies is published. -->
+    <ProjectReference Include="..\Dummies\Dummies.csproj" PrivateAssets="all" />
   </ItemGroup>
+
+  <!-- While Dummies is unpublished, carry Dummies.dll inside this package's lib/ so a consumer restores it
+       transparently. PrivateAssets=all above emits no Dummies <dependency>, so the embedded copy is the
+       only one. Remove this whole block when Dummies moves to a NuGet PackageReference (ADR-0026 follow-up). -->
+  <PropertyGroup>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeDummiesInPackage</TargetsForTfmSpecificBuildOutput>
+  </PropertyGroup>
+  <Target Name="IncludeDummiesInPackage">
+    <ItemGroup>
+      <BuildOutputInPackage Include="$(OutputPath)Dummies.dll" />
+    </ItemGroup>
+  </Target>
 
   <ItemGroup>
     <!-- Embed an SPDX SBOM (software bill of materials) inside the package at pack time

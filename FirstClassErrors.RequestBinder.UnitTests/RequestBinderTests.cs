@@ -27,8 +27,8 @@ public sealed class RequestBinderTests {
     private static Outcome<Stay> AssembleStay(BookingDate checkIn, BookingDate checkOut) {
         return checkOut.Value > checkIn.Value
                    ? Outcome<Stay>.Success(new Stay(checkIn, checkOut))
-                   : Outcome<Stay>.Failure(DomainError.Create(CheckOutNotAfterCheckIn, Any.DiagnosticMessage())
-                                                      .WithPublicMessage(Any.ShortMessage()));
+                   : Outcome<Stay>.Failure(DomainError.Create(CheckOutNotAfterCheckIn, DiagnosticMessageFactory.Any())
+                                                      .WithPublicMessage(ShortMessageFactory.Any()));
     }
 
     [Fact(DisplayName = "New assembles the command exactly once when every property bound.")]

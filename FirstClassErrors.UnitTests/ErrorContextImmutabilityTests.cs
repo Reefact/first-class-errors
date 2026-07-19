@@ -33,8 +33,8 @@ public sealed class ErrorContextImmutabilityTests : IDisposable {
     public void TheContextValuesAreReadOnlyAndCannotBeMutated() {
         // Setup
         ErrorContextKey<string> key = ErrorContextKey.Create<string>("K");
-        ErrorContext context = DomainError.Create(Any.ErrorCode(), Any.DiagnosticMessage(),
-                                                  ctx => ctx.Add(key, Any.String())).WithPublicMessage(Any.ShortMessage()).Context;
+        ErrorContext context = DomainError.Create(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any(),
+                                                  ctx => ctx.Add(key, Dummies.Any.String().NonEmpty().Generate())).WithPublicMessage(ShortMessageFactory.Any()).Context;
 
         // Exercise & verify
         Check.ThatCode(() => ((IDictionary<ErrorContextKey, object?>)context.Values).Clear())
@@ -45,8 +45,8 @@ public sealed class ErrorContextImmutabilityTests : IDisposable {
     public void AnEntryWhoseStoredValueIsNullIsPresentButReportedAsNotFound() {
         // Setup
         ErrorContextKey<string> key = ErrorContextKey.Create<string>("K");
-        ErrorContext context = DomainError.Create(Any.ErrorCode(), Any.DiagnosticMessage(),
-                                                  ctx => ctx.Add(key, null)).WithPublicMessage(Any.ShortMessage()).Context;
+        ErrorContext context = DomainError.Create(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any(),
+                                                  ctx => ctx.Add(key, null)).WithPublicMessage(ShortMessageFactory.Any()).Context;
 
         // Exercise
         bool found = context.TryGet(key, out _);

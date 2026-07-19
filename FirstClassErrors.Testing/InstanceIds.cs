@@ -61,13 +61,13 @@ public static class InstanceIds {
     /// </summary>
     /// <remarks>
     ///     Each error created within the scope gets its own fresh arbitrary id (as in production, several errors do not
-    ///     collide), drawn from <see cref="Any" />'s source rather than <see cref="System.Guid.NewGuid" />. Run the test
-    ///     inside <c>Any.Reproducibly(...)</c> to make the sequence reproducible and reported on failure. To pin a single
-    ///     fixed id instead, use <see cref="UseFixed" />.
+    ///     collide), drawn from Dummies' ambient random context rather than <see cref="System.Guid.NewGuid" />. Run the
+    ///     test inside <c>Dummies.Any.Reproducibly(...)</c> to make the sequence reproducible and reported on failure. To
+    ///     pin a single fixed id instead, use <see cref="UseFixed" />.
     /// </remarks>
     /// <returns>A scope that restores the default (random) identifier when disposed.</returns>
     public static IDisposable UseAny() {
-        return Use(() => ArbitrarySource.Guid());
+        return Use(() => Dummies.Any.Guid().Generate());
     }
 
 }

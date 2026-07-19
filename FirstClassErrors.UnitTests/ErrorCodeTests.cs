@@ -79,7 +79,7 @@ public class ErrorCodeTests {
     [Fact(DisplayName = "An error code compared to null is not equal.")]
     public void ErrorCodeComparedToNullIsNotEqual() {
         // Setup
-        ErrorCode? errorCode = Any.ErrorCode();
+        ErrorCode? errorCode = ErrorCodeFactory.Any();
 
         // Exercise
         bool result = errorCode.Equals(null);
