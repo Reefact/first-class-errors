@@ -1,17 +1,16 @@
 namespace FirstClassErrors.RequestBinder;
 
 /// <summary>
-///     Binds a list request property whose elements are each bound by a nested binder. Every failing element
-///     records its own envelope, whose inner errors carry the full, indexed argument paths
-///     (<c>Guests[1].FirstName</c>) — so one bad element never hides the others.
+///     Binds a list property whose elements are each bound by a nested binder. Every failing element records its own
+///     envelope, whose inner errors carry the full, indexed argument paths (<c>Guests[1].FirstName</c>) — so one bad
+///     element never hides the others.
 /// </summary>
-/// <typeparam name="TRequest">The type of the request DTO.</typeparam>
 /// <typeparam name="TArgument">The element type of the DTO list.</typeparam>
-public sealed class ListOfComplexPropertiesConverter<TRequest, TArgument> {
+public sealed class ListOfComplexPropertiesConverter<TArgument> {
 
     #region Fields declarations
 
-    private readonly RequestBinder<TRequest>                        _binder;
+    private readonly RequestBinding                                 _binding;
     private readonly string                                         _argumentPath;
     private readonly IEnumerable<TArgument?>?                       _values;
     private readonly bool                                           _isMissing;
@@ -21,12 +20,12 @@ public sealed class ListOfComplexPropertiesConverter<TRequest, TArgument> {
 
     #region Constructors declarations
 
-    internal ListOfComplexPropertiesConverter(RequestBinder<TRequest>                        binder,
+    internal ListOfComplexPropertiesConverter(RequestBinding                                 binding,
                                               string                                         argumentPath,
                                               IEnumerable<TArgument?>?                       values,
                                               bool                                           isMissing,
                                               Func<PrimaryPortInnerErrors, PrimaryPortError> envelope) {
-        _binder       = binder;
+        _binding      = binding;
         _argumentPath = argumentPath;
         _values       = values;
         _isMissing    = isMissing;
@@ -42,16 +41,16 @@ public sealed class ListOfComplexPropertiesConverter<TRequest, TArgument> {
     ///     under its indexed path.
     /// </summary>
     /// <typeparam name="TProperty">The type each element's nested binding produces.</typeparam>
-    /// <param name="bindElement">The nested binding function applied to each element (typically a method group).</param>
+    /// <param name="bindElement">The nested binding function, receiving the child binder and the element DTO (typically a method group).</param>
     /// <returns>The bound field token.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="bindElement" /> is <c>null</c>.</exception>
-    public RequiredField<IReadOnlyList<TProperty>> AsRequired<TProperty>(Func<RequestBinder<TArgument>, Outcome<TProperty>> bindElement) where TProperty : notnull {
+    public RequiredField<IReadOnlyList<TProperty>> AsRequired<TProperty>(Func<RequestBinder, TArgument, Outcome<TProperty>> bindElement) where TProperty : notnull {
         if (bindElement is null) { throw new ArgumentNullException(nameof(bindElement)); }
 
         if (_isMissing) {
-            _binder.RecordArgumentRequired(_argumentPath);
+            _binding.RecordArgumentRequired(_argumentPath);
 
-            return new RequiredField<IReadOnlyList<TProperty>>(_binder, default!);
+            return new RequiredField<IReadOnlyList<TProperty>>(_binding, default!);
         }
 
         return BindElements(bindElement);
@@ -62,27 +61,27 @@ public sealed class ListOfComplexPropertiesConverter<TRequest, TArgument> {
     ///     failing element of a present list still records its envelope under its indexed path.
     /// </summary>
     /// <typeparam name="TProperty">The type each element's nested binding produces.</typeparam>
-    /// <param name="bindElement">The nested binding function applied to each element (typically a method group).</param>
+    /// <param name="bindElement">The nested binding function, receiving the child binder and the element DTO (typically a method group).</param>
     /// <returns>The bound field token.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="bindElement" /> is <c>null</c>.</exception>
-    public RequiredField<IReadOnlyList<TProperty>> AsOptional<TProperty>(Func<RequestBinder<TArgument>, Outcome<TProperty>> bindElement) where TProperty : notnull {
+    public RequiredField<IReadOnlyList<TProperty>> AsOptional<TProperty>(Func<RequestBinder, TArgument, Outcome<TProperty>> bindElement) where TProperty : notnull {
         if (bindElement is null) { throw new ArgumentNullException(nameof(bindElement)); }
 
         if (_isMissing) {
             IReadOnlyList<TProperty> empty = new List<TProperty>();
 
-            return new RequiredField<IReadOnlyList<TProperty>>(_binder, empty);
+            return new RequiredField<IReadOnlyList<TProperty>>(_binding, empty);
         }
 
         return BindElements(bindElement);
     }
 
-    private RequiredField<IReadOnlyList<TProperty>> BindElements<TProperty>(Func<RequestBinder<TArgument>, Outcome<TProperty>> bindElement) where TProperty : notnull {
-        return _binder.ConvertEachElement<TArgument?, TProperty>(_argumentPath, _values!, (element, elementPath) => {
-            RequestBinder<TArgument> nested  = new(element!, _envelope, _binder.Options, elementPath);
-            Outcome<TProperty>       outcome = bindElement(nested);
+    private RequiredField<IReadOnlyList<TProperty>> BindElements<TProperty>(Func<RequestBinder, TArgument, Outcome<TProperty>> bindElement) where TProperty : notnull {
+        return _binding.ConvertEachElement<TArgument?, TProperty>(_argumentPath, _values!, source: null, (element, elementPath) => {
+            RequestBinding     nested  = new(_envelope, _binding.Options, elementPath);
+            Outcome<TProperty> outcome = bindElement(new RequestBinder(nested), element!);
             if (outcome.IsFailure) {
-                _binder.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, elementPath, _binder.Options.ArgumentInvalid));
+                _binding.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, elementPath, _binding.Options.ArgumentInvalid));
             }
 
             return outcome;

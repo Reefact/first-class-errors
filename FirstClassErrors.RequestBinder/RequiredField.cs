@@ -4,7 +4,7 @@ namespace FirstClassErrors.RequestBinder;
 ///     A token standing for a bound required property (or an optional property with a fallback). It carries no public
 ///     value: the bound value is reachable only through
 ///     <see cref="BindingScope.Get{TProperty}(RequiredField{TProperty})" />, inside a build terminal
-///     (<see cref="RequestBinder{TRequest}.New{TCommand}" /> / <see cref="RequestBinder{TRequest}.Create{TCommand}" />)
+///     (<see cref="RequestBinder.New{TCommand}" /> / <see cref="RequestBinder.Create{TCommand}" />)
 ///     — where every binding is known to have succeeded.
 /// </summary>
 /// <remarks>

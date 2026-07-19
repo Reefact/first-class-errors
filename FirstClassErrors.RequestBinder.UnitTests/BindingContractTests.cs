@@ -29,9 +29,10 @@ public sealed class BindingContractTests {
 
     [Fact(DisplayName = "A converter may fail with a PrimaryPortError: it is wrapped like a domain failure.")]
     public void ConverterMayFailWithAPrimaryPortError() {
-        var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
+        RequestBinder          bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(Request());
 
-        bind.SimpleProperty(r => r.GuestEmail).AsRequired(_ => Outcome<EmailAddress>.Failure(
+        body.SimpleProperty(r => r.GuestEmail).AsRequired(_ => Outcome<EmailAddress>.Failure(
             PrimaryPortError.Create(ErrorCode.Create("TEST_PORT_LEVEL_REJECTION"), Any.DiagnosticMessage(), Any.Transience())
                             .WithPublicMessage(Any.ShortMessage())));
 
@@ -43,7 +44,8 @@ public sealed class BindingContractTests {
 
     [Fact(DisplayName = "A converter failing with any other error family is a contract violation, reported by throwing.")]
     public void ConverterFailingWithAnotherFamilyIsABug() {
-        var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
+        RequestBinder          bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(Request());
 
         InfrastructureError foreignFamily =
             InfrastructureError.Create(Any.ErrorCode(), Any.DiagnosticMessage(),
@@ -51,7 +53,7 @@ public sealed class BindingContractTests {
                                .WithPublicMessage(Any.ShortMessage());
 
         InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
-            () => { bind.SimpleProperty(r => r.GuestEmail).AsRequired(_ => Outcome<EmailAddress>.Failure(foreignFamily)); });
+            () => { body.SimpleProperty(r => r.GuestEmail).AsRequired(_ => Outcome<EmailAddress>.Failure(foreignFamily)); });
         // The bug-channel exception must locate the bug: which argument, and which unsupported family.
         Check.That(exception.Message).Contains("GuestEmail");
         Check.That(exception.Message).Contains("InfrastructureError");
@@ -63,10 +65,11 @@ public sealed class BindingContractTests {
 
     [Fact(DisplayName = "A nested binding that fails without building its envelope is wrapped, so the argument path survives.")]
     public void BareNestedFailureIsWrapped() {
-        var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
+        RequestBinder          bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(Request());
 
-        bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid)
-            .AsRequired(_ => Outcome<Stay>.Failure(BookingDomainError.DateInvalid("raw")));
+        body.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid)
+            .AsRequired<Stay>((_, _) => Outcome<Stay>.Failure(BookingDomainError.DateInvalid("raw")));
 
         Outcome<string> outcome = bind.New(_ => "never");
         Error wrapped = outcome.Error!.InnerErrors.Single();
@@ -77,10 +80,11 @@ public sealed class BindingContractTests {
 
     [Fact(DisplayName = "A list element whose nested binding fails without building its envelope is wrapped under its indexed path.")]
     public void BareNestedElementFailureIsWrapped() {
-        var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
+        RequestBinder          bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(Request());
 
-        bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid)
-            .AsRequired(_ => Outcome<Guest>.Failure(BookingDomainError.EmailInvalid("raw")));
+        body.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid)
+            .AsRequired<Guest>((_, _) => Outcome<Guest>.Failure(BookingDomainError.EmailInvalid("raw")));
 
         Outcome<string> outcome = bind.New(_ => "never");
         Error wrapped = outcome.Error!.InnerErrors.Single();
@@ -96,10 +100,11 @@ public sealed class BindingContractTests {
 
     [Fact(DisplayName = "A required nested binding that fails with a bare PrimaryPortError leaf (not its build-terminal envelope) is wrapped, so the path survives.")]
     public void BareNestedPrimaryPortErrorLeafIsWrapped() {
-        var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
+        RequestBinder          bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(Request());
 
-        bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid)
-            .AsRequired(_ => Outcome<Stay>.Failure(LeafPortError()));
+        body.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid)
+            .AsRequired<Stay>((_, _) => Outcome<Stay>.Failure(LeafPortError()));
 
         Outcome<string> outcome = bind.New(_ => "never");
         Error wrapped = outcome.Error!.InnerErrors.Single();
@@ -112,10 +117,11 @@ public sealed class BindingContractTests {
 
     [Fact(DisplayName = "An optional nested binding that fails with a bare PrimaryPortError leaf is wrapped under the path too.")]
     public void BareOptionalNestedPrimaryPortErrorLeafIsWrapped() {
-        var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
+        RequestBinder          bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(Request());
 
-        bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid)
-            .AsOptionalReference(_ => Outcome<Stay>.Failure(LeafPortError()));
+        body.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid)
+            .AsOptionalReference<Stay>((_, _) => Outcome<Stay>.Failure(LeafPortError()));
 
         Outcome<string> outcome = bind.New(_ => "never");
         Error wrapped = outcome.Error!.InnerErrors.Single();
@@ -126,10 +132,11 @@ public sealed class BindingContractTests {
 
     [Fact(DisplayName = "A list element whose nested binding fails with a bare PrimaryPortError leaf is wrapped under its indexed path.")]
     public void BareNestedElementPrimaryPortErrorLeafIsWrapped() {
-        var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
+        RequestBinder          bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(Request());
 
-        bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid)
-            .AsRequired(_ => Outcome<Guest>.Failure(LeafPortError()));
+        body.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid)
+            .AsRequired<Guest>((_, _) => Outcome<Guest>.Failure(LeafPortError()));
 
         Outcome<string> outcome = bind.New(_ => "never");
         Error wrapped = outcome.Error!.InnerErrors.Single();
@@ -144,11 +151,11 @@ public sealed class BindingContractTests {
 
     [Fact(DisplayName = "A required list of complex properties that is missing records REQUEST_ARGUMENT_REQUIRED; its envelope is never invoked.")]
     public void RequiredComplexListMissing() {
-        var bind = Bind.PropertiesOf(new BookingRequest("a@b.c", null, null, null, null, null, Guests: null))
-                       .FailWith(BookingEnvelopeError.CommandInvalid);
+        RequestBinder          bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(new BookingRequest("a@b.c", null, null, null, null, null, Guests: null));
 
-        bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid)
-            .AsRequired(g => g.New(_ => new Guest("never", null)));
+        body.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid)
+            .AsRequired<Guest>((g, _) => g.New(_ => new Guest("never", null)));
 
         Outcome<string> outcome = bind.New(_ => "never");
         Error required = outcome.Error!.InnerErrors.Single();
@@ -158,10 +165,10 @@ public sealed class BindingContractTests {
 
     [Fact(DisplayName = "A null element that is the first failing element of a simple list is collected in order, like any other.")]
     public void NullElementAsFirstFailureOfASimpleList() {
-        var bind = Bind.PropertiesOf(new BookingRequest("a@b.c", null, null, null, null, Tags: ["ok", null, "not ok"], null))
-                       .FailWith(BookingEnvelopeError.CommandInvalid);
+        RequestBinder          bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(new BookingRequest("a@b.c", null, null, null, null, Tags: ["ok", null, "not ok"], null));
 
-        bind.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
+        body.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
 
         Outcome<string> outcome = bind.New(_ => "never");
         Check.That(outcome.Error!.InnerErrors.Select(e => e.Code.ToString()))
@@ -172,12 +179,13 @@ public sealed class BindingContractTests {
 
     [Fact(DisplayName = "An optional list of complex properties that is present still collects its failing elements.")]
     public void OptionalComplexListPresentCollectsFailures() {
-        var bind = Bind.PropertiesOf(new BookingRequest("a@b.c", null, null, null, null, null, Guests: [new GuestDto(null, null)]))
-                       .FailWith(BookingEnvelopeError.CommandInvalid);
+        RequestBinder          bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(new BookingRequest("a@b.c", null, null, null, null, null, Guests: [new GuestDto(null, null)]));
 
-        bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid)
-            .AsOptional(g => {
-                RequiredField<string> firstName = g.SimpleProperty(x => x.FirstName).AsRequired();
+        body.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid)
+            .AsOptional<Guest>((g, dto) => {
+                PropertySource<GuestDto> guest     = g.PropertiesOf(dto);
+                RequiredField<string>    firstName = guest.SimpleProperty(x => x.FirstName).AsRequired();
 
                 return g.New(s => new Guest(s.Get(firstName), null));
             });
@@ -239,15 +247,16 @@ public sealed class BindingContractTests {
 
     [Fact(DisplayName = "Selecting a non-nullable value-type property is rejected: a missing value would be indistinguishable from its default.")]
     public void NonNullableValueTypePropertyIsRejected() {
-        var bind = Bind.PropertiesOf(new ValueTypeRequest(0, null)).FailWith(BookingEnvelopeError.CommandInvalid);
+        RequestBinder           bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<ValueTypeRequest> body = bind.PropertiesOf(new ValueTypeRequest(0, null));
 
         // A non-nullable int cannot be null, so "missing" (deserialized to 0) is undetectable -> loud programming error.
-        ArgumentException exception = Assert.Throws<ArgumentException>(() => { bind.SimpleProperty(r => r.Count); });
+        ArgumentException exception = Assert.Throws<ArgumentException>(() => { body.SimpleProperty(r => r.Count); });
         Check.That(exception.Message).Contains("Count");
         Check.That(exception.Message).Contains("nullable");
 
         // A nullable value type is fine: an absent argument arrives as null and is detectable.
-        Check.ThatCode(() => bind.SimpleProperty(r => r.OptionalCount)).DoesNotThrow();
+        Check.ThatCode(() => body.SimpleProperty(r => r.OptionalCount)).DoesNotThrow();
     }
 
     #endregion
@@ -256,28 +265,35 @@ public sealed class BindingContractTests {
 
     [Fact(DisplayName = "Every entry point rejects a null collaborator with ArgumentNullException.")]
     public void GuardClauses() {
-        var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
+        RequestBinder          bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(Request());
 
-        Check.ThatCode(() => Bind.PropertiesOf<BookingRequest>(null!)).Throws<ArgumentNullException>();
-        Check.ThatCode(() => Bind.PropertiesOf(Request()).FailWith(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => bind.PropertiesOf<BookingRequest>(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => Bind.Request(null!)).Throws<ArgumentNullException>();
         Check.ThatCode(() => Bind.WithOptions(null!)).Throws<ArgumentNullException>();
         Check.ThatCode(() => bind.New<string>(null!)).Throws<ArgumentNullException>();
         Check.ThatCode(() => bind.Create<string>(null!)).Throws<ArgumentNullException>();
 
-        Check.ThatCode(() => bind.SimpleProperty(r => r.GuestEmail).AsRequired<EmailAddress>(null!)).Throws<ArgumentNullException>();
-        Check.ThatCode(() => bind.SimpleProperty(r => r.GuestEmail).AsOptional<EmailAddress>(null!, "x")).Throws<ArgumentNullException>();
-        Check.ThatCode(() => bind.SimpleProperty(r => r.GuestEmail).AsOptionalReference<EmailAddress>(null!)).Throws<ArgumentNullException>();
-        Check.ThatCode(() => bind.SimpleProperty(r => r.MaxNights).AsOptionalValue<int>(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => body.SimpleProperty(r => r.GuestEmail).AsRequired<EmailAddress>(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => body.SimpleProperty(r => r.GuestEmail).AsOptional<EmailAddress>(null!, "x")).Throws<ArgumentNullException>();
+        Check.ThatCode(() => body.SimpleProperty(r => r.GuestEmail).AsOptionalReference<EmailAddress>(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => body.SimpleProperty(r => r.MaxNights).AsOptionalValue<int>(null!)).Throws<ArgumentNullException>();
 
-        Check.ThatCode(() => bind.ComplexProperty(r => r.Stay).FailWith(null!)).Throws<ArgumentNullException>();
-        Check.ThatCode(() => bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsRequired<Stay>(null!)).Throws<ArgumentNullException>();
-        Check.ThatCode(() => bind.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptionalReference<Stay>(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => body.ComplexProperty(r => r.Stay).FailWith(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => body.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsRequired<Stay>(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => body.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptionalReference<Stay>(null!)).Throws<ArgumentNullException>();
 
-        Check.ThatCode(() => bind.ListOfSimpleProperties(r => r.Tags).AsRequired<Tag>(null!)).Throws<ArgumentNullException>();
-        Check.ThatCode(() => bind.ListOfSimpleProperties(r => r.Tags).AsOptional<Tag>(null!)).Throws<ArgumentNullException>();
-        Check.ThatCode(() => bind.ListOfComplexProperties(r => r.Guests).FailWith(null!)).Throws<ArgumentNullException>();
-        Check.ThatCode(() => bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired<Guest>(null!)).Throws<ArgumentNullException>();
-        Check.ThatCode(() => bind.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsOptional<Guest>(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => body.ListOfSimpleProperties(r => r.Tags).AsRequired<Tag>(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => body.ListOfSimpleProperties(r => r.Tags).AsOptional<Tag>(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => body.ListOfComplexProperties(r => r.Guests).FailWith(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => body.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired<Guest>(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => body.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsOptional<Guest>(null!)).Throws<ArgumentNullException>();
+
+        // Out-of-DTO argument sources:
+        Check.ThatCode(() => bind.Argument(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => bind.ArgumentList(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => bind.Argument("x").From<string>(null!, "v")).Throws<ArgumentNullException>();
+        Check.ThatCode(() => bind.ArgumentList("x").From<string>(null!, ["v"])).Throws<ArgumentNullException>();
 
         Check.ThatCode(() => new RequestBinderOptions(null!)).Throws<ArgumentNullException>();
         Check.ThatCode(() => RequestBinderOptions.Default.ArgumentNameProvider.GetArgumentNameFrom(null!)).Throws<ArgumentNullException>();
@@ -289,30 +305,32 @@ public sealed class BindingContractTests {
 
     [Fact(DisplayName = "The binding scope rejects a null field and a field owned by a different binder — on every Get overload, programming errors both.")]
     public void BindingScopeGuardsItsReads() {
-        var binderA = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
-        RequiredField<EmailAddress>          requiredOfA = binderA.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
-        OptionalReferenceField<EmailAddress> optRefOfA   = binderA.SimpleProperty(r => r.GuestEmail).AsOptionalReference(EmailAddress.Parse);
-        OptionalValueField<int>              optValOfA   = binderA.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
+        RequestBinder          binderA = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> bodyA   = binderA.PropertiesOf(Request());
+        RequiredField<EmailAddress>          requiredOfA = bodyA.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+        OptionalReferenceField<EmailAddress> optRefOfA   = bodyA.SimpleProperty(r => r.GuestEmail).AsOptionalReference(EmailAddress.Parse);
+        OptionalValueField<int>              optValOfA   = bodyA.SimpleProperty(r => r.MaxNights).AsOptionalValue(PositiveInt.Parse);
 
-        var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
 
         // A null field, on each of the three Get overloads (the assembler runs because `bind` recorded no failure):
-        Check.ThatCode(() => bind.New(s => s.Get((RequiredField<EmailAddress>)null!).Value)).Throws<ArgumentNullException>();
-        Check.ThatCode(() => bind.New(s => s.Get((OptionalReferenceField<EmailAddress>)null!) is null)).Throws<ArgumentNullException>();
-        Check.ThatCode(() => bind.New(s => s.Get((OptionalValueField<int>)null!).HasValue)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => bind.New(s => { s.Get((RequiredField<EmailAddress>)null!); return "x"; })).Throws<ArgumentNullException>();
+        Check.ThatCode(() => bind.New(s => { s.Get((OptionalReferenceField<EmailAddress>)null!); return "x"; })).Throws<ArgumentNullException>();
+        Check.ThatCode(() => bind.New(s => { s.Get((OptionalValueField<int>)null!); return "x"; })).Throws<ArgumentNullException>();
 
         // A field owned by a different binder is a cross-binder mix-up — rejected loudly on every overload, not read silently.
-        Check.ThatCode(() => bind.New(s => s.Get(requiredOfA).Value)).Throws<InvalidOperationException>();
-        Check.ThatCode(() => bind.New(s => s.Get(optRefOfA) is null)).Throws<InvalidOperationException>();
-        Check.ThatCode(() => bind.New(s => s.Get(optValOfA).HasValue)).Throws<InvalidOperationException>();
+        Check.ThatCode(() => bind.New(s => { s.Get(requiredOfA); return "x"; })).Throws<InvalidOperationException>();
+        Check.ThatCode(() => bind.New(s => { s.Get(optRefOfA); return "x"; })).Throws<InvalidOperationException>();
+        Check.ThatCode(() => bind.New(s => { s.Get(optValOfA); return "x"; })).Throws<InvalidOperationException>();
     }
 
     [Fact(DisplayName = "A cross-binder field read is rejected with a message naming the different-binder cause, not a blank exception.")]
     public void CrossBinderReadMessageNamesTheCause() {
-        var binderA = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
-        RequiredField<EmailAddress> requiredOfA = binderA.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
+        RequestBinder          binderA = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> bodyA   = binderA.PropertiesOf(Request());
+        RequiredField<EmailAddress>    requiredOfA = bodyA.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
-        var bind = Bind.PropertiesOf(Request()).FailWith(BookingEnvelopeError.CommandInvalid);
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
 
         InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
             () => { bind.New(s => s.Get(requiredOfA).Value); });

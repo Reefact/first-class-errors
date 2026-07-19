@@ -7,7 +7,7 @@ namespace FirstClassErrors.RequestBinder;
 /// </summary>
 /// <remarks>
 ///     Returned by the <c>AsOptionalReference</c> family. Inside a build terminal
-///     (<see cref="RequestBinder{TRequest}.New{TCommand}" /> / <see cref="RequestBinder{TRequest}.Create{TCommand}" />)
+///     (<see cref="RequestBinder.New{TCommand}" /> / <see cref="RequestBinder.Create{TCommand}" />)
 ///     a <c>null</c> read means exactly "the argument was absent": a present-but-invalid argument recorded a failure on
 ///     the binder, so the assembler never runs and that state is never observed.
 /// </remarks>

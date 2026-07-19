@@ -2,9 +2,9 @@ namespace FirstClassErrors.RequestBinder;
 
 /// <summary>
 ///     An options-configured request-binding entry point, produced by <see cref="Bind.WithOptions" />. It fixes the
-///     <see cref="RequestBinderOptions" /> once, before any binding begins, so a binder's naming policy can never
-///     change mid-binding. It carries no per-request state, so a single instance can be created once (for example at
-///     application setup) and reused for every request.
+///     <see cref="RequestBinderOptions" /> once, before any binding begins, so a binder's naming policy can never change
+///     mid-binding. It carries no per-request state, so a single instance can be created once (for example at application
+///     setup) and reused for every request.
 /// </summary>
 public sealed class ConfiguredBind {
 
@@ -23,17 +23,17 @@ public sealed class ConfiguredBind {
     #endregion
 
     /// <summary>
-    ///     Starts binding the properties of a request DTO with the configured options. Declare the failure envelope
-    ///     next, with <see cref="RequestBinderEnvelopeStage{TRequest}.FailWith" />.
+    ///     Starts binding a request with the configured options, declaring the failure envelope up front. Attach the
+    ///     inputs next, through <see cref="RequestBinder.PropertiesOf{TDto}" /> and <see cref="RequestBinder.Argument" />,
+    ///     and assemble the command or query with <see cref="RequestBinder.New{TCommand}" />.
     /// </summary>
-    /// <typeparam name="TRequest">The type of the request DTO.</typeparam>
-    /// <param name="request">The request DTO to bind.</param>
-    /// <returns>The stage on which the failure envelope is declared.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="request" /> is <c>null</c>.</exception>
-    public RequestBinderEnvelopeStage<TRequest> PropertiesOf<TRequest>(TRequest request) {
-        if (request is null) { throw new ArgumentNullException(nameof(request)); }
+    /// <param name="envelope">The envelope factory, receiving the collected failures.</param>
+    /// <returns>The request binder.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="envelope" /> is <c>null</c>.</exception>
+    public RequestBinder Request(Func<PrimaryPortInnerErrors, PrimaryPortError> envelope) {
+        if (envelope is null) { throw new ArgumentNullException(nameof(envelope)); }
 
-        return new RequestBinderEnvelopeStage<TRequest>(request, _options);
+        return new RequestBinder(new RequestBinding(envelope, _options, argumentPrefix: null));
     }
 
 }
