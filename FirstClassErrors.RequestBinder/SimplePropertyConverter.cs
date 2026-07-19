@@ -15,7 +15,7 @@ public sealed class SimplePropertyConverter<TArgument> {
     #region Fields declarations
 
     private readonly RequestBinding _binding;
-    private readonly string         _argumentPath;
+    private          object         _argumentPathOrProperty;
     private readonly TArgument?     _value;
     private readonly bool           _isMissing;
     private readonly string?        _source;
@@ -24,12 +24,21 @@ public sealed class SimplePropertyConverter<TArgument> {
 
     #region Constructors declarations
 
-    internal SimplePropertyConverter(RequestBinding binding, string argumentPath, TArgument? value, bool isMissing, string? source) {
-        _binding      = binding;
-        _argumentPath = argumentPath;
-        _value        = value;
-        _isMissing    = isMissing;
-        _source       = source;
+    /// <param name="binding">The binding failures are recorded into.</param>
+    /// <param name="argumentPathOrProperty">
+    ///     The resolved path (<see cref="string" />, an out-of-DTO argument) or the selected property
+    ///     (<see cref="System.Reflection.PropertyInfo" />), whose path is built only when a failure is recorded —
+    ///     see <see cref="ArgumentPaths" />.
+    /// </param>
+    /// <param name="value">The raw value.</param>
+    /// <param name="isMissing">Whether the input was absent.</param>
+    /// <param name="source">The provenance of an out-of-DTO argument; <c>null</c> for a DTO property.</param>
+    internal SimplePropertyConverter(RequestBinding binding, object argumentPathOrProperty, TArgument? value, bool isMissing, string? source) {
+        _binding                = binding;
+        _argumentPathOrProperty = argumentPathOrProperty;
+        _value                  = value;
+        _isMissing              = isMissing;
+        _source                 = source;
     }
 
     #endregion
@@ -56,7 +65,7 @@ public sealed class SimplePropertyConverter<TArgument> {
     /// <returns>The bound field token.</returns>
     public RequiredField<TArgument> AsRequired() {
         if (_isMissing) {
-            _binding.RecordArgumentRequired(_argumentPath, _source);
+            _binding.RecordArgumentRequired(ArgumentPath(), _source);
 
             return new RequiredField<TArgument>(_binding, default!);
         }
@@ -86,7 +95,7 @@ public sealed class SimplePropertyConverter<TArgument> {
         Outcome<TProperty> fallback = convert(rawFallback);
         if (fallback.IsFailure) {
             throw new InvalidOperationException(
-                $"The configured fallback of optional argument '{_argumentPath}' does not convert: {fallback.Error!.DiagnosticMessage}");
+                $"The configured fallback of optional argument '{ArgumentPath()}' does not convert: {fallback.Error!.DiagnosticMessage}");
         }
 
         return new RequiredField<TProperty>(_binding, fallback.GetResultOrThrow());
@@ -142,7 +151,7 @@ public sealed class SimplePropertyConverter<TArgument> {
     }
 
     private RequiredField<TProperty> RequiredMissing<TProperty>() {
-        _binding.RecordArgumentRequired(_argumentPath, _source);
+        _binding.RecordArgumentRequired(ArgumentPath(), _source);
 
         return new RequiredField<TProperty>(_binding, default!);
     }
@@ -158,7 +167,11 @@ public sealed class SimplePropertyConverter<TArgument> {
     }
 
     private void RecordInvalid(Error cause) {
-        _binding.RecordArgumentInvalid(_argumentPath, cause, _source);
+        _binding.RecordArgumentInvalid(ArgumentPath(), cause, _source);
+    }
+
+    private string ArgumentPath() {
+        return ArgumentPaths.Resolve(ref _argumentPathOrProperty, _binding);
     }
 
 }

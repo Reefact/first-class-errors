@@ -10,7 +10,7 @@ public sealed class ListOfComplexPropertiesEnvelopeStage<TArgument> {
     #region Fields declarations
 
     private readonly RequestBinding           _binding;
-    private readonly string                   _argumentPath;
+    private readonly object                   _argumentPathOrProperty;
     private readonly IEnumerable<TArgument?>? _values;
     private readonly bool                     _isMissing;
 
@@ -18,11 +18,15 @@ public sealed class ListOfComplexPropertiesEnvelopeStage<TArgument> {
 
     #region Constructors declarations
 
-    internal ListOfComplexPropertiesEnvelopeStage(RequestBinding binding, string argumentPath, IEnumerable<TArgument?>? values, bool isMissing) {
-        _binding      = binding;
-        _argumentPath = argumentPath;
-        _values       = values;
-        _isMissing    = isMissing;
+    /// <param name="binding">The binding failures are recorded into.</param>
+    /// <param name="argumentPathOrProperty">The resolved path or the selected property, deferred as in <see cref="ArgumentPaths" />.</param>
+    /// <param name="values">The list elements.</param>
+    /// <param name="isMissing">Whether the property was absent.</param>
+    internal ListOfComplexPropertiesEnvelopeStage(RequestBinding binding, object argumentPathOrProperty, IEnumerable<TArgument?>? values, bool isMissing) {
+        _binding                = binding;
+        _argumentPathOrProperty = argumentPathOrProperty;
+        _values                 = values;
+        _isMissing              = isMissing;
     }
 
     #endregion
@@ -37,7 +41,7 @@ public sealed class ListOfComplexPropertiesEnvelopeStage<TArgument> {
     public ListOfComplexPropertiesConverter<TArgument> FailWith(Func<PrimaryPortInnerErrors, PrimaryPortError> envelope) {
         if (envelope is null) { throw new ArgumentNullException(nameof(envelope)); }
 
-        return new ListOfComplexPropertiesConverter<TArgument>(_binding, _argumentPath, _values, _isMissing, envelope);
+        return new ListOfComplexPropertiesConverter<TArgument>(_binding, _argumentPathOrProperty, _values, _isMissing, envelope);
     }
 
 }

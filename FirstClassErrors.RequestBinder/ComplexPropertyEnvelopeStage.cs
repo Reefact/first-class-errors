@@ -10,7 +10,7 @@ public sealed class ComplexPropertyEnvelopeStage<TArgument> {
     #region Fields declarations
 
     private readonly RequestBinding _binding;
-    private readonly string         _argumentPath;
+    private readonly object         _argumentPathOrProperty;
     private readonly TArgument?     _value;
     private readonly bool           _isMissing;
 
@@ -18,11 +18,15 @@ public sealed class ComplexPropertyEnvelopeStage<TArgument> {
 
     #region Constructors declarations
 
-    internal ComplexPropertyEnvelopeStage(RequestBinding binding, string argumentPath, TArgument? value, bool isMissing) {
-        _binding      = binding;
-        _argumentPath = argumentPath;
-        _value        = value;
-        _isMissing    = isMissing;
+    /// <param name="binding">The binding failures are recorded into.</param>
+    /// <param name="argumentPathOrProperty">The resolved path or the selected property, deferred as in <see cref="ArgumentPaths" />.</param>
+    /// <param name="value">The nested DTO.</param>
+    /// <param name="isMissing">Whether the property was absent.</param>
+    internal ComplexPropertyEnvelopeStage(RequestBinding binding, object argumentPathOrProperty, TArgument? value, bool isMissing) {
+        _binding                = binding;
+        _argumentPathOrProperty = argumentPathOrProperty;
+        _value                  = value;
+        _isMissing              = isMissing;
     }
 
     #endregion
@@ -37,7 +41,7 @@ public sealed class ComplexPropertyEnvelopeStage<TArgument> {
     public ComplexPropertyConverter<TArgument> FailWith(Func<PrimaryPortInnerErrors, PrimaryPortError> envelope) {
         if (envelope is null) { throw new ArgumentNullException(nameof(envelope)); }
 
-        return new ComplexPropertyConverter<TArgument>(_binding, _argumentPath, _value, _isMissing, envelope);
+        return new ComplexPropertyConverter<TArgument>(_binding, _argumentPathOrProperty, _value, _isMissing, envelope);
     }
 
 }
