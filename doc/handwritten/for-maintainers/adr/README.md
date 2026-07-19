@@ -196,4 +196,3 @@ Optional supporting material:
 | [ADR-0020](0020-materialize-dummies-only-through-generate.md) | Materialize dummies only through Generate() | Accepted |
 | [ADR-0021](0021-bind-out-of-dto-arguments-as-peers-through-a-source-agnostic-entry.md) | Bind out-of-DTO arguments as peers through a source-agnostic untyped entry | Proposed |
 | [ADR-0022](0022-floor-the-library-on-net-framework-4-7-2.md) | Floor the library's .NET Framework support at 4.7.2 | Accepted |
-| [ADR-0023](0023-prune-the-exotic-width-numeric-generators.md) | Prune the exotic-width numeric generators (128-bit and Half) | Proposed |
