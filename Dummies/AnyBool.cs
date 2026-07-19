@@ -9,16 +9,6 @@ public sealed class AnyBool : IAny<bool>, IHasRandomSource, ICardinalityHint {
 
     #region Statics members declarations
 
-    /// <summary>
-    ///     Generates the value — an <see cref="AnyBool" /> can be used wherever a <see cref="bool" /> is expected.
-    ///     Each conversion draws a fresh value.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary value satisfying the generator's constraints.</returns>
-    public static implicit operator bool(AnyBool generator) {
-        return generator.Generate();
-    }
-
     internal static AnyBool Create(RandomSource source) {
         return new AnyBool(source, null, null);
     }

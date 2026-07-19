@@ -75,10 +75,10 @@ public sealed class AnyUnsignedIntegerTests {
 
     [Fact(DisplayName = "Unsigned integers convert implicitly to their value type.")]
     public void ImplicitConversions() {
-        byte   tiny = Any.Byte().Between(1, 10);
-        ushort mid  = Any.UInt16().NonZero();
-        uint   wide = Any.UInt32().Between(1u, 10u);
-        ulong  huge = Any.UInt64().Between(1UL, 10UL);
+        byte   tiny = Any.Byte().Between(1, 10).Generate();
+        ushort mid  = Any.UInt16().NonZero().Generate();
+        uint   wide = Any.UInt32().Between(1u, 10u).Generate();
+        ulong  huge = Any.UInt64().Between(1UL, 10UL).Generate();
 
         Check.That((int)tiny).IsGreaterOrEqualThan(1);
         Check.That((int)mid).IsStrictlyGreaterThan(0);

@@ -16,16 +16,6 @@ public sealed class AnySingle : IAny<float>, IHasRandomSource {
 
     #region Statics members declarations
 
-    /// <summary>
-    ///     Generates the value — an <see cref="AnySingle" /> can be used wherever a <see cref="float" /> is expected.
-    ///     Each conversion draws a fresh value.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary value satisfying the generator's constraints.</returns>
-    public static implicit operator float(AnySingle generator) {
-        return generator.Generate();
-    }
-
     internal static AnySingle Create(RandomSource source) {
         return new AnySingle(source, ContinuousIntervalSpec.Unconstrained("Single", value => V((float)value), value => (float)value, value => NextUp((float)value), -float.MaxValue, float.MaxValue));
     }

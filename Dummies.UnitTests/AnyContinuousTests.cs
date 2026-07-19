@@ -107,9 +107,9 @@ public sealed class AnyContinuousTests {
 
     [Fact(DisplayName = "Continuous generators convert implicitly to their value type.")]
     public void ImplicitConversions() {
-        double  d = Any.Double().Between(1d, 2d);
-        float   f = Any.Single().Between(1f, 2f);
-        decimal m = Any.Decimal().Between(1m, 2m);
+        double  d = Any.Double().Between(1d, 2d).Generate();
+        float   f = Any.Single().Between(1f, 2f).Generate();
+        decimal m = Any.Decimal().Between(1m, 2m).Generate();
 
         Check.That(d).IsGreaterOrEqualThan(1d);
         Check.That(f).IsGreaterOrEqualThan(1f);

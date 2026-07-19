@@ -35,7 +35,7 @@ public sealed class AnySetTypeTests {
         Check.That(conflict.Message).Contains("False()");
         Check.That(conflict.Message).Contains("True()");
 
-        bool value = Any.Bool().True();
+        bool value = Any.Bool().True().Generate();
         Check.That(value).IsTrue();
     }
 

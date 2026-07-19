@@ -20,16 +20,6 @@ public sealed class AnyDateOnly : IAny<DateOnly>, IHasRandomSource, ICardinality
 
     #region Statics members declarations
 
-    /// <summary>
-    ///     Generates the value — an <see cref="AnyDateOnly" /> can be used wherever a <see cref="DateOnly" /> is expected.
-    ///     Each conversion draws a fresh value.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary value satisfying the generator's constraints.</returns>
-    public static implicit operator DateOnly(AnyDateOnly generator) {
-        return generator.Generate();
-    }
-
     internal static AnyDateOnly Create(RandomSource source) {
         return new AnyDateOnly(source, OrdinalIntervalSpec.Unconstrained("DateOnly", ordinal => V(Val(ordinal)), Ord(DateOnly.MinValue), Ord(DateOnly.MaxValue)));
     }
