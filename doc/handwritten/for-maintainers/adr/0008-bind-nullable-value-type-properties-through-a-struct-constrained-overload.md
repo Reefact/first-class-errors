@@ -120,7 +120,7 @@ missing argument.
   reintroduce ambiguity; mitigated by this ADR and by regression tests that pin
   reference and string resolution to the original overload.
 
-### Follow-up Actions
+## Follow-up Actions
 
 * Keep the RequestBinder guide (EN and French) in sync with the value-type binding
   ergonomics.

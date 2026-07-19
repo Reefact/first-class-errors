@@ -126,7 +126,7 @@ est un argument manquant enregistré.
   manière à réintroduire de l'ambiguïté ; atténué par cette ADR et par des tests de régression
   qui épinglent la résolution des types référence et `string` sur la surcharge d'origine.
 
-### Actions de suivi
+## Actions de suivi
 
 * Garder le guide RequestBinder (EN et français) synchronisé avec l'ergonomie de binding de
   type valeur.
