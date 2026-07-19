@@ -8,123 +8,78 @@
 
 ## Context
 
-ADR-0009 established that `FirstClassErrors.GenDoc` documents its own failures as
-first-class errors, giving each a stable `GENDOC_`-prefixed code and a structured
-context. Those codes and context keys are emitted to callers at runtime and are
-the identities external consumers — CI pipelines, integrators, support — match on.
+ADR-0009 made GenDoc's own failures first-class errors with stable `GENDOC_`
+codes and typed context. Those identities are emitted by `fce` and can be matched
+by CI, integrations and support tooling.
 
-GenDoc has no NuGet package of its own: it ships bundled inside the `fce` tool,
-released on the `cli` train (`tools/packaging/pack.sh`). A change to GenDoc's own
-error catalog — a code renamed or removed, a context key dropped or retyped —
-is therefore a change to what the `cli` package emits, indistinguishable, from the
-outside, from any other compatibility change of that package.
-
-The library already ships the mechanics to treat a catalog as a versioned
-contract: `fce catalog update` records a baseline snapshot, `fce catalog diff`
-compares against it, and the comparison classifies each change as Breaking,
-Compatible, or Informational (a removed code or a removed/retyped context key is
-Breaking). Until now these were offered to consumers documenting their own errors,
-but never applied to GenDoc's own catalog: nothing recorded GenDoc's baseline, and
-nothing checked a change to it against the version the `cli` train was about to
-publish. The two trains follow semantic versioning, and the repository already
-enforces Conventional Commits, but neither mechanism connects a breaking change of
-the *error catalog* to the *version number* that ships it.
+GenDoc is bundled in the `cli` release train rather than published independently.
+A removed code or a removed or retyped context key is therefore a compatibility
+change to what that train emits. The repository already knows how to snapshot and
+diff an error catalog, but GenDoc's own catalog was not previously tied to the
+version that publishes it.
 
 ## Decision
 
-A breaking change to GenDoc's own error catalog, measured by `fce catalog diff`
-against a committed baseline, requires a major version bump of the `cli` train,
-enforced at release time.
+A breaking change to GenDoc's own error catalog, measured against the last released baseline, requires a major version bump of the `cli` release train and is enforced at release time.
 
 ## Rationale
 
-* **The failure surface is a published contract, so it must be versioned like
-  one.** ADR-0009 made GenDoc's codes stable identities that consumers depend on;
-  a stable identity that can silently disappear under a compatible-looking version
-  bump is not actually stable. Semantic versioning is the promise the `cli`
-  package already makes, and a removed or renamed code is exactly the kind of
-  break that promise exists to signal.
-* **Enforce at the release, not at the pull request.** A breaking change to an
-  error catalog is not wrong in itself — an intentional one is precisely what a
-  major version is for. Only shipping it *silently*, under a version that promises
-  compatibility, is the failure. Gating pull requests would fight normal
-  incremental development; gating the release targets the single point where the
-  compatibility promise is actually made, and leaves day-to-day work unblocked.
-* **Compare against the last release, not a moving target.** The baseline advances
-  only when a `cli` release publishes. Between releases it stays fixed, so the
-  diff always answers "what changed since the last thing actually shipped" —
-  which is the question the version number must answer — regardless of how many
-  pull requests landed in between.
-* **Reuse the existing contract mechanics, add no new judgement.** `fce catalog
-  diff`'s Breaking classification is already defined and tested; this decision
-  wires it to the release version rather than inventing a second notion of what
-  "breaking" means for the tool's own errors.
+Stable error identities are a published contract and must obey the same semantic
+versioning promise as the tool that emits them. The correct enforcement point is
+the release: a breaking change is legitimate during development, but publishing
+it under a compatible-looking version is not.
+
+The comparison must remain anchored to the last successful release rather than a
+moving development snapshot. The existing catalog diff classification remains
+the single definition of a breaking catalog change. Baseline lifecycle, workflow
+ordering and recovery mechanics are maintained in the
+[GenDoc catalog contract specification](../specifications/gendoc-catalog-contract.en.md).
 
 ## Alternatives Considered
 
-### Leave it to Conventional Commits and reviewer discipline
+### Rely on Conventional Commits and review
 
-Considered because the repository already requires a `!`/`BREAKING CHANGE:`
-marker on breaking commits, checked in CI. Rejected because that marker is
-authored by hand from the commit's intent, while a catalog break can be an
-unintended side effect (a refactor that drops a context key); nothing tied the
-marker to a mechanical measurement of the catalog, so a silent break could still
-ship under a minor bump.
+Considered because breaking-change markers already exist. Rejected because a
+catalog break can be an unintended effect that no author marked manually.
 
-### Gate the pull request instead of the release
+### Gate every pull request
 
-Considered because it surfaces the break earliest. Rejected because a breaking
-change is legitimate mid-development as long as the eventual release carries the
-major bump; blocking it per pull request would penalize normal iteration and
-force premature version decisions, while the release gate catches the same break
-at the only moment it actually matters.
+Considered for earlier feedback. Rejected because an intentional break is valid
+before release and should not force a premature version decision.
 
-### Publish GenDoc as its own package on its own train
+### Give GenDoc its own package and release train
 
-Considered because a dedicated train would let the catalog version independently.
-Rejected as disproportionate: GenDoc has no standalone consumer (it runs only
-inside `fce`), and ADR-0002's tooling model deliberately keeps it bundled; a new
-train would add release machinery for no consumer benefit.
+Considered for independent versioning. Rejected because GenDoc has no standalone
+consumer and already ships as an internal part of `fce`.
 
 ## Consequences
 
 ### Positive
 
-* A breaking change to GenDoc's own errors cannot ship under a non-major `cli`
-  version: the release fails until the version or the change is reconciled.
-* The catalog gains a committed baseline and a per-pull-request diff report, so
-  the pending compatibility impact is visible during review.
-* The living documentation the CI regenerates is backed by an explicit,
-  release-anchored contract rather than a best-effort snapshot.
+* A catalog break cannot ship under a non-major `cli` version.
+* Reviewers can see the pending compatibility diff before release.
+* Living documentation is anchored to an explicit released contract.
 
 ### Negative
 
-* Releasing the `cli` train now depends on a committed baseline and a diff step;
-  a maintainer must understand that accepting a breaking change means bumping the
-  major version (or reverting), not overriding the gate.
-* The baseline is refreshed by a direct push to `main` after a successful
-  release — one automated write outside the normal pull-request flow, scoped to
-  that moment.
+* The release depends on a committed baseline and a catalog diff.
+* Advancing the baseline after publication requires an automated write to `main`.
 
 ### Risks
 
-* A stale or hand-edited baseline could mis-measure a change. Mitigation: the
-  baseline is only ever written by `fce catalog update`, run by the release after
-  a real publish, so it always reflects the last shipped catalog.
+* A failed baseline update after a successful publish leaves a stale baseline.
+  Mitigation: the recovery procedure is explicit in the specification and must not
+  republish the already-released package.
 
 ## Follow-up Actions
 
-* None beyond the workflow wiring itself (`gendoc-docs.yml` and the `release.yml`
-  gate); the mechanism lives in the workflows and the `fce catalog` commands the
-  reference documentation already covers.
+* Keep workflow wiring and operational recovery aligned with the catalog contract
+  specification.
 
 ## References
 
-* ADR-0009 — GenDoc modeling its own failures as first-class errors, the codes
-  this contract versions.
-* ADR-0002 — the tooling runtime model that keeps GenDoc bundled in the `cli`
-  train rather than shipping standalone.
-* Issue [#167](https://github.com/Reefact/first-class-errors/issues/167) — the
-  request this decision answers.
-* [Catalog Versioning Reference](../../for-users/CatalogVersioningReference.en.md)
-  — the `fce catalog update`/`diff` mechanics reused here.
+* [GenDoc catalog contract specification](../specifications/gendoc-catalog-contract.en.md).
+* [Catalog Versioning Reference](../../for-users/CatalogVersioningReference.en.md).
+* ADR-0009 — first-class GenDoc failures.
+* ADR-0002 — bundled tooling release model.
+* Issue #167.
