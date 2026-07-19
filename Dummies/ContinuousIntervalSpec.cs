@@ -142,6 +142,33 @@ internal sealed class ContinuousIntervalSpec {
         return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _nextUp, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, excluded), applying);
     }
 
+    /// <summary>
+    ///     The number of distinct values the specification can produce — the allow-list size when one is set, <c>1</c>
+    ///     for a validated pin (<c>_min == _max</c>, a singleton domain), and <c>null</c> otherwise: a floating-point
+    ///     range is treated as a continuum (counting its representable values is a type-specific concern the shared
+    ///     engine does not carry), so it stays outside the eager cardinality perimeter and a distinct collection over
+    ///     it falls back to the bounded draw. Feeds <see cref="ICardinalityHint{T}" />.
+    /// </summary>
+    internal long? Cardinality {
+        get {
+            if (_effectiveAllowed is not null) { return _effectiveAllowed.Count; }
+            if (_min == _max) { return 1; }
+
+            return null;
+        }
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="value" /> is one the specification could produce — a member of the allow-list when
+    ///     one is set, otherwise inside the interval and not excluded. Non-finite inputs fall outside the bounds and
+    ///     so return <c>false</c>. Mirrors <see cref="Generate" />'s own domain.
+    /// </summary>
+    internal bool Contains(double value) {
+        if (_effectiveAllowed is not null) { return _effectiveAllowed.Contains(value); }
+
+        return value >= _min && value <= _max && !IsExcluded(value);
+    }
+
     /// <summary>Draws one value satisfying the whole specification.</summary>
     internal double Generate(Random random, int seed) {
         if (_effectiveAllowed is not null) {

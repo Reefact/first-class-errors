@@ -45,7 +45,8 @@ matter — and that is the point.
 - **Collections over any element generator**: `Any.ListOf(item)`, `ArrayOf`,
   `SequenceOf`, `SetOf` and `DictionaryOf`, constrained with
   `WithCount`/`NonEmpty`/`Distinct`/`Containing`. A distinct collection asked for more
-  elements than its element domain can produce fails fast, just like any other
+  distinct elements than its effective domain — the element generator plus any values
+  pinned outside it with `Containing` — can produce fails fast, just like any other
   conflict; `Any.PairOf`/`TripleOf` pair generators into value tuples.
 - **Optional values**: `.OrNull()` turns any generator into one that is `null` about
   half the time and otherwise a constrained value — the dummy for an optional field,

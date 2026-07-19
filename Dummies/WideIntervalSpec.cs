@@ -121,6 +121,33 @@ internal sealed class WideIntervalSpec {
         return Validated(new WideIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, excluded), applying);
     }
 
+    /// <summary>
+    ///     The number of distinct values the specification can produce, or <c>null</c> when the interval is full-width
+    ///     or wider than <see cref="long.MaxValue" /> (a range too vast to ever conflict with a collection count).
+    ///     Feeds <see cref="ICardinalityHint{T}" />, so a distinct collection over a narrow 128-bit range or allow-list
+    ///     can fail eagerly.
+    /// </summary>
+    internal long? Cardinality {
+        get {
+            if (_effectiveAllowed is not null) { return _effectiveAllowed.Count; }
+            if (IsFullWidth()) { return null; }
+
+            UInt128 count = _max - _min + 1 - (UInt128)_excludedInRange.Count;
+
+            return count <= (UInt128)long.MaxValue ? (long)count : null;
+        }
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="ordinal" /> is a value the specification could produce — the exact domain
+    ///     <see cref="GenerateOrdinal" /> draws from. Feeds <see cref="ICardinalityHint{T}" />.
+    /// </summary>
+    internal bool Contains(UInt128 ordinal) {
+        if (_effectiveAllowed is not null) { return _effectiveAllowed.Contains(ordinal); }
+
+        return ordinal >= _min && ordinal <= _max && !_excludedInRange.Contains(ordinal);
+    }
+
     /// <summary>Draws one ordinal satisfying the whole specification — built directly, never generate-then-retry.</summary>
     internal UInt128 GenerateOrdinal(Random random) {
         if (_effectiveAllowed is not null) {

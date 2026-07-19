@@ -28,7 +28,7 @@ namespace Dummies;
 ///         </code>
 ///     </example>
 /// </remarks>
-public sealed class AnyInt32 : IAny<int>, IHasRandomSource, ICardinalityHint {
+public sealed class AnyInt32 : IAny<int>, IHasRandomSource, ICardinalityHint<int> {
 
     #region Statics members declarations
 
@@ -68,7 +68,9 @@ public sealed class AnyInt32 : IAny<int>, IHasRandomSource, ICardinalityHint {
 
     RandomSource? IHasRandomSource.Source => _source;
 
-    long? ICardinalityHint.DistinctCardinality => _spec.Cardinality;
+    long? ICardinalityHint<int>.DistinctCardinality => _spec.Cardinality;
+
+    bool ICardinalityHint<int>.Contains(int value) => _spec.Contains(Ord(value));
 
     /// <summary>Requires a value strictly greater than zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>

@@ -2,8 +2,8 @@
 
 🌍 🇬🇧 [English](0013-gate-distinct-collections-by-cardinality-else-bounded-draw.md) · 🇫🇷 Français (ce fichier)
 
-**Statut :** Proposé
-**Date :** 2026-07-18
+**Statut :** Accepté
+**Date :** 2026-07-19
 **Décideurs :** Reefact
 
 ## Contexte
@@ -16,19 +16,29 @@ jamais générée puis filtrée, et jamais derrière une boucle de réessai.
 
 L'incrément « collections » ajoute les collections distinctes : `SetOf`,
 `ListOf(...).Distinct()` et consorts, ainsi que les clés d'un dictionnaire. Une
-collection distincte de *N* éléments n'est satisfaisable que si son générateur
-d'éléments peut produire au moins *N* valeurs distinctes, ce qui est une propriété
-du domaine de ce générateur.
+collection distincte de *N* éléments n'est satisfaisable que si *N* valeurs
+distinctes peuvent être assemblées depuis son **domaine effectif** : le domaine
+propre du générateur d'éléments, élargi par les valeurs fixées avec `Containing(...)`
+qui en sortent — chacune est une valeur que le générateur lui-même ne pourrait
+jamais tirer — et par les tirages opaques de `ContainingAny(...)`. La cardinalité du
+seul générateur d'éléments ne borne donc que les éléments qui doivent venir *de
+lui*, non la demande entière.
 
 Les générateurs d'éléments se répartissent en deux groupes. Certains tirent d'un
-domaine petit et dénombrable : un booléen a deux valeurs, une énumération a ses
-membres déclarés, un intervalle entier étroit ou un pool de caractères restreint a
-une taille fixe. D'autres tirent d'un domaine effectivement non borné ou
-simplement inconnaissable pour la collection : entiers non contraints, chaînes et
-identifiants, et — de façon décisive — toute implémentation étrangère de
-`IAny<T>` ou tout générateur dérivé (`As`, `Combine`), qui ne porte aucune
-information de domaine. `IAny<T>` est une interface publique : la bibliothèque ne
-peut donc pas supposer que tout générateur sache rapporter sa cardinalité.
+domaine que la bibliothèque sait compter **à bas coût** : les deux valeurs d'un
+booléen, les membres déclarés d'une énumération, un intervalle entier ou temporel
+étroit, un pool de caractères restreint, une liste blanche explicite (`OneOf`), ou
+un scalaire épinglé sur une seule valeur (`Zero`, `Between(x, x)`). D'autres tirent
+d'un domaine effectivement non borné, ou dénombrable seulement en principe à un
+coût que la bibliothèque refuse de payer : entiers non contraints, chaînes et
+identifiants, une **plage** flottante (finie en valeurs représentables, mais les
+compter relève d'une arithmétique de bits spécifique au type, disproportionnée pour
+l'usage « dummy » — un générateur décimal ou flottant n'est donc contrôlé que via
+une liste blanche ou un pin, jamais une plage plus large), et — de façon décisive —
+toute implémentation étrangère de `IAny<T>` ou tout générateur dérivé (`As`,
+`Combine`), qui ne porte aucune information de domaine. `IAny<T>` est une interface
+publique : la bibliothèque ne peut donc pas supposer que tout générateur sache
+rapporter sa cardinalité.
 
 Un comparateur d'égalité personnalisé ne peut que fusionner des valeurs distinctes
 en un nombre moindre de classes d'équivalence ; il ne peut jamais en créer de
@@ -57,11 +67,17 @@ petit.
   épuisement, il rapporte le manque réel via une `AnyGenerationException` nommant
   la graine — le canal d'échec qu'utilise déjà un rejet de fabrique — plutôt que de
   boucler.
-* **La borne annoncée reste correcte sous un comparateur.** Puisqu'un comparateur
-  ne fait que fusionner des valeurs, la cardinalité annoncée reste une borne
-  *supérieure* valide : le contrôle anticipé ne rejette donc jamais une demande qui
-  était en réalité satisfaisable ; un comparateur qui réduit le domaine sous le
-  nombre demandé est rattrapé par le tirage borné.
+* **Le contrôle anticipé ne compte que ce que le générateur doit fournir, et reste
+  correct sous un comparateur.** Il compare la cardinalité du générateur d'éléments
+  au nombre demandé *diminué* des valeurs fixées hors de son domaine et de chaque
+  tirage opaque de `ContainingAny(...)` — ainsi une valeur fixe que le générateur ne
+  peut produire élargit la demande au lieu d'entrer en conflit avec elle, et un
+  recouvrement improuvable est renvoyé au tirage borné plutôt que de devenir un faux
+  conflit. Puisqu'un comparateur ne fait que fusionner des valeurs, la cardinalité
+  annoncée reste une borne *supérieure* valide sur la contribution propre du
+  générateur : le contrôle ne rejette donc jamais une demande qui était en réalité
+  satisfaisable ; un comparateur qui réduit le domaine effectif sous le nombre
+  demandé est rattrapé par le tirage borné.
 * **Un seul principe, appliqué là où son information existe.** Répartir l'échec
   entre la déclaration (quand le domaine est dénombrable) et la génération (quand
   il ne l'est pas) n'est pas un affaiblissement du principe de conflit anticipé
@@ -140,5 +156,6 @@ principe de travail borné de la bibliothèque.
 ## Références
 
 * ADR-0011 — Héberger Dummies comme un paquet autonome dans ce dépôt.
-* Le moteur de collection distincte et la capacité de cardinalité, dans le projet
-  `Dummies` (`CollectionState`, `ICardinalityHint`).
+* Le moteur de collection distincte et sa capacité unifiée de cardinalité et
+  d'appartenance (une seule interface, pour qu'un générateur fini ne puisse pas sortir
+  du périmètre anticipé), dans le projet `Dummies` (`CollectionState`, `ICardinalityHint`).

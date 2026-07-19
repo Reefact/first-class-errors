@@ -16,7 +16,7 @@ namespace Dummies;
 ///     constraint: a reproducible test pins its reference time of days explicitly with <see cref="After" /> and
 ///     <see cref="Before" />.
 /// </summary>
-public sealed class AnyTimeOnly : IAny<TimeOnly>, IHasRandomSource, ICardinalityHint {
+public sealed class AnyTimeOnly : IAny<TimeOnly>, IHasRandomSource, ICardinalityHint<TimeOnly> {
 
     #region Statics members declarations
 
@@ -56,7 +56,9 @@ public sealed class AnyTimeOnly : IAny<TimeOnly>, IHasRandomSource, ICardinality
 
     RandomSource? IHasRandomSource.Source => _source;
 
-    long? ICardinalityHint.DistinctCardinality => _spec.Cardinality;
+    long? ICardinalityHint<TimeOnly>.DistinctCardinality => _spec.Cardinality;
+
+    bool ICardinalityHint<TimeOnly>.Contains(TimeOnly value) => _spec.Contains(Ord(value));
 
     /// <summary>Requires a time of day strictly after <paramref name="time" />.</summary>
     /// <param name="time">The exclusive lower bound.</param>

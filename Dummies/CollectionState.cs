@@ -16,10 +16,12 @@ namespace Dummies;
 /// </summary>
 /// <remarks>
 ///     Distinctness follows the two-layer contract the library commits to: when the element generator advertises a
-///     small <see cref="ICardinalityHint">cardinality</see> that a requested count would exceed, the conflict is
-///     caught at declaration time (<see cref="ConflictingAnyConstraintException" />); otherwise the count is drawn and
-///     the elements are filled by a bounded dedup-draw, and a genuine shortfall surfaces at generation as an
-///     <see cref="AnyGenerationException" /> naming the seed to replay.
+///     small <see cref="ICardinalityHint{T}">cardinality</see> that the requested count would exceed — counting only
+///     the elements that must be drawn from that generator, since values pinned with <c>Containing(...)</c> outside
+///     its domain (see <see cref="ICardinalityHint{T}" />) are supplied directly and extend the effective domain —
+///     the conflict is caught at declaration time (<see cref="ConflictingAnyConstraintException" />); otherwise the
+///     count is drawn and the elements are filled by a bounded dedup-draw, and a genuine shortfall surfaces at
+///     generation as an <see cref="AnyGenerationException" /> naming the seed to replay.
 /// </remarks>
 /// <typeparam name="T">The element type.</typeparam>
 internal sealed class CollectionState<T> {
@@ -166,15 +168,46 @@ internal sealed class CollectionState<T> {
         }
 
         if (_itemCardinality is long cardinality) {
-            int need = Math.Max(_count.Floor, required);
-            if (need > cardinality) {
-                throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {Elements(need)} required to be distinct exceed the {cardinality.ToString(CultureInfo.InvariantCulture)} distinct value(s) the element generator can produce.");
+            // Only the elements that must be drawn from the generator count against its cardinality: values pinned
+            // outside its domain occupy their own slots, and each opaque ContainingAny draw is credited as if it
+            // could land outside too (conservative — an unprovable overlap defers to the bounded draw rather than
+            // a false conflict). The subtractive form keeps the left side within int, so a near-long.MaxValue
+            // domain never overflows the comparison.
+            int need          = Math.Max(_count.Floor, required);
+            int fromGenerator = need - FixedOutsideCount() - _generatedContaining.Count;
+            if (fromGenerator > cardinality) {
+                throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {Elements(fromGenerator)} required to be distinct exceed the {cardinality.ToString(CultureInfo.InvariantCulture)} distinct value(s) the element generator can produce.");
             }
         }
     }
 
     private int? CardinalityCap() {
-        return _itemCardinality is long cardinality && cardinality <= int.MaxValue ? (int)cardinality : null;
+        // The effective ceiling is the generator's own cardinality plus the values pinned outside its domain, which
+        // fill their own slots without drawing on it — so a distinct collection over a small domain can still reach
+        // the size those extra values allow. Guard the cast: a domain wider than int cannot cap an int count anyway,
+        // and once the generator's cardinality is int-bounded the add stays within long.
+        if (_itemCardinality is not long cardinality || cardinality > int.MaxValue) { return null; }
+
+        long effective = cardinality + FixedOutsideCount();
+
+        return effective <= int.MaxValue ? (int)effective : null;
+    }
+
+    private int FixedOutsideCount() {
+        if (_fixedContaining.Count == 0) { return 0; }
+        // A fixed value the element generator could never produce extends the effective distinct domain; a value
+        // already inside it does not. The cardinality snapshot came from this same generator, so whenever the eager
+        // check runs it also answers membership (cardinality and membership are one interface). The null branch is a
+        // defensive fallback: treat every fixed value as outside, so the check can only defer to the bounded draw,
+        // never falsely reject.
+        if (_item is not ICardinalityHint<T> hint) { return _fixedContaining.Count; }
+
+        int outside = 0;
+        foreach (T value in _fixedContaining) {
+            if (!hint.Contains(value)) { outside++; }
+        }
+
+        return outside;
     }
 
     private T DrawFresh(IAny<T> generator, HashSet<T> seen, RandomSource source, int target) {

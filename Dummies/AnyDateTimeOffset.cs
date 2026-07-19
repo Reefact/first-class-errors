@@ -21,7 +21,7 @@ namespace Dummies;
 ///     past/future"): a reproducible test pins its reference instants explicitly with <see cref="After" /> and
 ///     <see cref="Before" />.
 /// </remarks>
-public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, ICardinalityHint {
+public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, ICardinalityHint<DateTimeOffset> {
 
     #region Statics members declarations
 
@@ -63,7 +63,9 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
 
     RandomSource? IHasRandomSource.Source => _source;
 
-    long? ICardinalityHint.DistinctCardinality => _spec.Cardinality;
+    long? ICardinalityHint<DateTimeOffset>.DistinctCardinality => _spec.Cardinality;
+
+    bool ICardinalityHint<DateTimeOffset>.Contains(DateTimeOffset value) => _spec.Contains(Ord(value));
 
     /// <summary>Requires an instant strictly after <paramref name="instant" />.</summary>
     /// <param name="instant">The exclusive lower bound.</param>

@@ -14,7 +14,7 @@ namespace Dummies;
 ///     sides; instances are immutable recipes, and each value is built to satisfy the constraints in one draw.
 ///     Available on the net8.0 target only, like the type itself.
 /// </summary>
-public sealed class AnyInt128 : IAny<Int128>, IHasRandomSource {
+public sealed class AnyInt128 : IAny<Int128>, IHasRandomSource, ICardinalityHint<Int128> {
 
     #region Statics members declarations
 
@@ -53,6 +53,10 @@ public sealed class AnyInt128 : IAny<Int128>, IHasRandomSource {
     }
 
     RandomSource? IHasRandomSource.Source => _source;
+
+    long? ICardinalityHint<Int128>.DistinctCardinality => _spec.Cardinality;
+
+    bool ICardinalityHint<Int128>.Contains(Int128 value) => _spec.Contains(Ord(value));
 
     /// <summary>Requires a value strictly greater than zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>

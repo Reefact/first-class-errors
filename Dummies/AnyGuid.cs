@@ -8,7 +8,7 @@ namespace Dummies;
 ///     <see cref="Empty" /> to pin the empty identifier. Contradictory constraints fail eagerly with a
 ///     <see cref="ConflictingAnyConstraintException" /> naming both sides.
 /// </summary>
-public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint {
+public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Guid> {
 
     #region Statics members declarations
 
@@ -66,7 +66,15 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint {
     RandomSource? IHasRandomSource.Source => _source;
 
     // Pinned to a single value, or bounded by an allow-list; otherwise the domain is effectively unbounded.
-    long? ICardinalityHint.DistinctCardinality => _pinned is not null ? 1 : _effectiveAllowed?.Count;
+    long? ICardinalityHint<Guid>.DistinctCardinality => _pinned is not null ? 1 : _effectiveAllowed?.Count;
+
+    // Mirrors Generate: the pin, then the allow-list, then the full space minus the exclusions.
+    bool ICardinalityHint<Guid>.Contains(Guid value) {
+        if (_pinned is Guid pinned) { return pinned == value; }
+        if (_effectiveAllowed is not null) { return _effectiveAllowed.Contains(value); }
+
+        return !_excluded.Contains(value);
+    }
 
     /// <summary>Requires an identifier different from <see cref="System.Guid.Empty" />.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
