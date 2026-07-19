@@ -17,7 +17,7 @@ public sealed class ComplexPropertyConverter<TArgument> {
     #region Fields declarations
 
     private readonly RequestBinding                                 _binding;
-    private readonly string                                         _argumentPath;
+    private          object                                         _argumentPathOrProperty;
     private readonly TArgument?                                     _value;
     private readonly bool                                           _isMissing;
     private readonly Func<PrimaryPortInnerErrors, PrimaryPortError> _envelope;
@@ -27,15 +27,15 @@ public sealed class ComplexPropertyConverter<TArgument> {
     #region Constructors declarations
 
     internal ComplexPropertyConverter(RequestBinding                                 binding,
-                                      string                                         argumentPath,
+                                      object                                         argumentPathOrProperty,
                                       TArgument?                                     value,
                                       bool                                           isMissing,
                                       Func<PrimaryPortInnerErrors, PrimaryPortError> envelope) {
-        _binding      = binding;
-        _argumentPath = argumentPath;
-        _value        = value;
-        _isMissing    = isMissing;
-        _envelope     = envelope;
+        _binding                = binding;
+        _argumentPathOrProperty = argumentPathOrProperty;
+        _value                  = value;
+        _isMissing              = isMissing;
+        _envelope               = envelope;
     }
 
     #endregion
@@ -52,7 +52,7 @@ public sealed class ComplexPropertyConverter<TArgument> {
         if (bindNested is null) { throw new ArgumentNullException(nameof(bindNested)); }
 
         if (_isMissing) {
-            _binding.RecordArgumentRequired(_argumentPath);
+            _binding.RecordArgumentRequired(ArgumentPath());
 
             return new RequiredField<TProperty>(_binding, default!);
         }
@@ -60,7 +60,7 @@ public sealed class ComplexPropertyConverter<TArgument> {
         RequestBinding     nested  = NestedBinding();
         Outcome<TProperty> outcome = bindNested(new RequestBinder(nested), _value!);
         if (outcome.IsFailure) {
-            _binding.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, _argumentPath, _binding.Options.ArgumentInvalid));
+            _binding.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, ArgumentPath(), _binding.Options.ArgumentInvalid));
 
             return new RequiredField<TProperty>(_binding, default!);
         }
@@ -86,7 +86,7 @@ public sealed class ComplexPropertyConverter<TArgument> {
         RequestBinding     nested  = NestedBinding();
         Outcome<TProperty> outcome = bindNested(new RequestBinder(nested), _value!);
         if (outcome.IsFailure) {
-            _binding.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, _argumentPath, _binding.Options.ArgumentInvalid));
+            _binding.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, ArgumentPath(), _binding.Options.ArgumentInvalid));
 
             return new OptionalReferenceField<TProperty>(_binding, value: null);
         }
@@ -95,7 +95,14 @@ public sealed class ComplexPropertyConverter<TArgument> {
     }
 
     private RequestBinding NestedBinding() {
-        return new RequestBinding(_envelope, _binding.Options, _argumentPath);
+        // The prefix is resolved eagerly here — never more than the one name the eager code always resolved — so a
+        // nested binding carries a plain string prefix; the per-property concats under it ("Stay.CheckIn") stay
+        // deferred inside the nested binding's own converters.
+        return new RequestBinding(_envelope, _binding.Options, ArgumentPath());
+    }
+
+    private string ArgumentPath() {
+        return ArgumentPaths.Resolve(ref _argumentPathOrProperty, _binding);
     }
 
 }
