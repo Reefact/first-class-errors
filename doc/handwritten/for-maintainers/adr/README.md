@@ -6,6 +6,12 @@ place; a decision is revisited by writing a **new** ADR that supersedes the old
 one, and the old one's status changes to *Superseded* with a link to its
 successor.
 
+[ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md)
+authorizes one bounded exception to this rule: a traceable editorial migration
+that moves implementation specifications out of existing ADRs without changing
+any decision, rationale, alternative, consequence, status, date, or attribution.
+It is not a precedent for changing accepted decisions in place.
+
 ## When is an ADR written?
 
 Every pull request is checked against this base — the moment new decisions enter
@@ -23,12 +29,13 @@ An ADR captures a **decision and the reasoning behind it** — not how that
 decision is implemented. Implementation mechanics (code, configuration, YAML,
 exact flags, XML or command snippets, guard-by-guard or step-by-step
 walkthroughs) live in the code and in the reference documentation the ADR links
-to — for example the [workflow reference](../workflows/README.md) — never in the
-ADR itself. In particular, **Rationale is argument, not a design document**: if
-a paragraph explains *how something is built* rather than *why the decision is
-right*, it belongs in the reference docs, and the ADR links to it. A useful
-test: if the implementation changed but the decision stood, the ADR should not
-need editing.
+to — for example the [workflow reference](../workflows/README.md) and the
+[ADR implementation reference](../specifications/adr-implementation-reference.md)
+— never in the ADR itself. In particular, **Rationale is argument, not a design
+document**: if a paragraph explains *how something is built* rather than *why the
+decision is right*, it belongs in the reference docs, and the ADR links to it. A
+useful test: if the implementation changed but the decision stood, the ADR
+should not need editing.
 
 ## File conventions
 
@@ -118,10 +125,12 @@ This section explains:
 It is **argument only**. It does **not** contain implementation detail — no
 code, configuration, YAML, exact flags, or XML/command snippets, and no
 guard-by-guard or step-by-step "how it is built". That is specification: link
-to where it actually lives (the code, or the [workflow
-reference](../workflows/README.md)) instead of pasting it here. Naming a
-guard's *role* and *why it exists* is argument and belongs here; documenting
-*how the guard is wired* is specification and does not.
+to where it actually lives (the code, the [workflow
+reference](../workflows/README.md), or the [ADR implementation
+reference](../specifications/adr-implementation-reference.md)) instead of
+pasting it here. Naming a guard's *role* and *why it exists* is argument and
+belongs here; documenting *how the guard is wired* is specification and does
+not.
 
 ### Alternatives Considered
 
@@ -197,3 +206,4 @@ Optional supporting material:
 | [ADR-0021](0021-bind-out-of-dto-arguments-as-peers-through-a-source-agnostic-entry.md) | Bind out-of-DTO arguments as peers through a source-agnostic untyped entry | Proposed |
 | [ADR-0022](0022-floor-the-library-on-net-framework-4-7-2.md) | Floor the library's .NET Framework support at 4.7.2 | Accepted |
 | [ADR-0023](0023-keep-expression-tree-selectors-for-the-v1-binder-api.md) | Keep expression-tree selectors for the v1 binder API | Accepted |
+| [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) | Allow a one-time editorial refactoring of accepted ADRs | Accepted |
