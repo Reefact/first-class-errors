@@ -188,7 +188,7 @@ Optional supporting material:
 | [ADR-0003](0003-unify-outcome-value-mapping-under-then.md) | Unify Outcome value mapping under Then | Accepted |
 | [ADR-0004](0004-check-every-pull-request-against-the-adr-base.md) | Check every pull request against the ADR base | Accepted |
 | [ADR-0005](0005-reserve-the-plain-factory-name-for-the-outcome-returning-variant.md) | Reserve the plain factory name for the Outcome-returning variant | Accepted |
-| [ADR-0006](0006-supply-arbitrary-test-values-from-a-seedable-source.md) | Supply arbitrary test values from a single seedable source | Accepted |
+| [ADR-0006](0006-supply-arbitrary-test-values-from-a-seedable-source.md) | Supply arbitrary test values from a single seedable source | Superseded |
 | [ADR-0007](0007-name-the-binder-terminals-new-and-create.md) | Name the binder terminals New and Create | Accepted |
 | [ADR-0008](0008-bind-nullable-value-type-properties-through-a-struct-constrained-overload.md) | Bind nullable value-type properties through a struct-constrained overload | Accepted |
 | [ADR-0009](0009-report-the-toolings-failures-as-first-class-errors.md) | Report the tooling's failures as first-class errors | Accepted |
@@ -208,3 +208,4 @@ Optional supporting material:
 | [ADR-0023](0023-keep-expression-tree-selectors-for-the-v1-binder-api.md) | Keep expression-tree selectors for the v1 binder API | Accepted |
 | [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) | Allow a one-time editorial refactoring of accepted ADRs | Accepted |
 | [ADR-0025](0025-generate-strings-from-a-home-grown-regular-subset.md) | Generate matching strings from a home-grown regular subset | Proposed |
+| [ADR-0026](0026-rebase-testing-arbitrary-values-on-dummies.md) | Rebase the testing package's arbitrary values on Dummies | Accepted |
