@@ -8,150 +8,72 @@
 
 ## Context
 
-The shipped libraries — `FirstClassErrors`, `FirstClassErrors.Testing` and
-`FirstClassErrors.RequestBinder` — target **`netstandard2.0`**. A `netstandard2.0`
-assembly is *consumable* by any runtime that implements the standard, and the
-standard names **.NET Framework 4.6.1** as its minimum on that platform.
+The shipped libraries target `netstandard2.0`, whose formal .NET Framework minimum is 4.6.1.
 
-That 4.6.1 minimum is retrofitted. `netstandard2.0` shipped after .NET Framework
-4.6.1, and support for it was added back: on 4.6.1 through 4.7.1 the `netstandard.dll`
-facade and a set of `System.*` shims are delivered as NuGet assets and require
-consumer-side binding redirects to load. **.NET Framework 4.7.2 is the first version
-that ships those facades in-box**, and Microsoft's own `netstandard2.0` support
-guidance recommends 4.7.2 or later.
+On .NET Framework versions before 4.7.2, `netstandard2.0` support relies on retrofitted facades, additional package assets, and consumer-side binding redirects. .NET Framework 4.7.2 is the first version that provides the relevant facades in-box and is the practical minimum recommended for reliable consumption.
 
-Servicing reinforces the same line. .NET Framework 4.6, 4.6.1 (and 4.5.2) reached
-end of support in April 2022; 4.6.2 is the oldest still serviced; and **4.8.1 is the
-last .NET Framework** — there will be no 4.9.
+The repository previously advertised .NET Framework 4.6.1 support without executing the libraries on that runtime. A compatibility promise that is not exercised cannot provide a trustworthy support boundary.
 
-Until now the product advertised, in `FirstClassErrors/README.nuget.md` and as an
-incidental line in the Rationale of [ADR-0002](0002-floor-the-tooling-runtime.md),
-that the library "runs on .NET Framework 4.6.1+". Nothing in CI ever loaded the
-assemblies on a .NET Framework runtime: `build-test` runs the suite on .NET 10 and
-the `floor` job runs only the *tooling* on the .NET 8 runtime. The compatibility
-claim was therefore never verified.
-
-The test stack is **xUnit v3**, whose lowest supported .NET Framework target is
-**`net472`**; there is no supported way to run these test projects on an earlier
-.NET Framework. CI already guards the two other runtime bounds of the product: the
-tooling's .NET 8 floor ([ADR-0002](0002-floor-the-tooling-runtime.md)) and, ahead of
-release, the next .NET preview (`canary.yml`).
+The current test stack can execute on .NET Framework 4.7.2 but not on earlier framework versions. The tooling runtime has a separate floor defined by ADR-0002.
 
 ## Decision
 
-The supported .NET Framework floor for the `netstandard2.0` libraries is **4.7.2**.
+The supported .NET Framework floor for the shipped `netstandard2.0` libraries is **4.7.2**.
 
 ## Rationale
 
-4.7.2 is the lowest .NET Framework version on which the library runs *without
-consumer-side plumbing*: it is the first to ship the `netstandard2.0` facades in-box,
-so the "runs almost everywhere" promise becomes true rather than conditional on
-binding redirects. It is therefore the honest floor, where 4.6.1 was the theoretical
-one.
+4.7.2 is the lowest version on which the libraries can be consumed without the fragile compatibility plumbing required by earlier framework versions.
 
-A support claim is only worth what verifies it. The 4.6.1 line was never exercised,
-which is a liability for a library whose entire purpose is production diagnosability.
-Flooring at 4.7.2 makes the claim *checkable on every pull request*, because 4.7.2 is
-also the lowest framework the test stack itself can run on — the same number closes
-both the support question and the verification question.
+It is also the lowest version the repository can exercise with its supported test stack. Aligning the documented floor with a continuously verified runtime turns an aspirational compatibility statement into an enforceable contract.
 
-4.6.x is the wrong place to anchor the guard. 4.6 and 4.6.1 are end-of-life, and the
-4.6.1–4.7.1 facade-and-binding-redirect fragility would make a red signal ambiguous —
-the library's fault, or the platform's? A floor exists to give an unambiguous signal,
-and only 4.7.2 provides one with the current stack.
+The decision intentionally chooses the practical and testable boundary rather than the theoretical `netstandard2.0` minimum. Lower versions would require a second test stack and environment-specific binding behavior for little continuing user value.
 
-Flooring the library at 4.7.2 mirrors the tooling floor at .NET 8: each supported
-runtime bound is proven by its own dedicated job, so the product states its supported
-runtimes precisely instead of by assertion. This decision **refines** the incidental
-"4.6.1" claim in [ADR-0002](0002-floor-the-tooling-runtime.md) without superseding it:
-that ADR's decision is the *tooling's* net8 floor, not the library's .NET Framework
-floor, which had no ADR of its own until now.
+This ADR refines the incidental .NET Framework 4.6.1 statement that previously appeared in ADR-0002; it does not supersede ADR-0002 because that decision concerns runnable tooling rather than the libraries.
+
+The exact Windows job, conditioned test targets, polyfills, project exclusions, and preview coverage are documented in the [ADR implementation reference](../specifications/adr-implementation-reference.md#tooling-runtime-floor) and the CI workflow reference.
 
 ## Alternatives Considered
 
-### Keep advertising .NET Framework 4.6.1+ (status quo)
+### Keep advertising .NET Framework 4.6.1
 
-Considered because it is the `netstandard2.0` minimum on paper and demands no change.
+Considered because it is the formal `netstandard2.0` minimum. Rejected because the claim was unverified and depends on fragile consumer-side plumbing on largely obsolete runtime versions.
 
-Rejected because it was never verified and cannot be verified cheaply: 4.6.1's
-`netstandard2.0` support is retrofitted and fragile, the versions concerned are
-largely end-of-life, and xUnit v3 cannot target below `net472`, so proving the claim
-would require a second test stack and consumer binding redirects for a runtime almost
-nobody should still deploy.
+### Floor at .NET Framework 4.6.2
 
-### Floor at 4.6.2 (the oldest serviced 4.6.x)
+Considered because it remains serviced longer than 4.6.1. Rejected because it has the same facade and binding-redirect constraints and cannot be verified with the supported test stack.
 
-Considered because 4.6.2, unlike 4.6/4.6.1, is still serviced, so it would keep the
-lowest still-supported number.
+### Test every modern .NET major as a blocking matrix
 
-Rejected because 4.6.2 predates the in-box facades: it carries the same
-binding-redirect fragility as 4.6.1, and it is still below the xUnit v3 floor, so it
-remains unverifiable with the current stack — the guard's signal would stay
-ambiguous.
-
-### Floor the libraries across the whole modern .NET matrix (net6/net8/… as blocking legs)
-
-Considered as the conventional "test on everything" answer for broad reassurance.
-
-Rejected because the library is a single `netstandard2.0` assembly and the modern
-runtimes are one CoreCLR family: the behavioural delta across majors, for
-zero-dependency value objects, is negligible; end-of-life majors should not be
-floored at all; and a per-major matrix re-introduces exactly the per-release treadmill
-that [ADR-0002](0002-floor-the-tooling-runtime.md) rejected. The single valuable
-boundary is .NET Framework versus modern .NET, which `net472` covers, while the latest
-runtime (`build-test`) and the next preview (`canary.yml`) already cover the modern
-end.
+Considered for broad reassurance. Rejected because the valuable compatibility boundary is .NET Framework versus modern .NET, while the latest runtime and preview can cover the modern end without creating a per-release treadmill.
 
 ## Consequences
 
 ### Positive
 
-* The advertised .NET Framework support is now **verified on every pull request** by a
-  dedicated Windows job, not merely claimed.
-* The floor is **frozen**: 4.8.1 is the last .NET Framework, so this guard never
-  chases a moving target and needs no per-release upkeep.
-* The product's supported-runtime story is symmetric and precise: a library
-  .NET Framework floor (4.7.2) and a tooling floor (.NET 8), each proven by its own
-  job, with the next preview watched ahead of release.
+* The .NET Framework support statement is continuously verified rather than merely asserted.
+* The practical floor avoids consumer-side binding-redirect fragility.
+* The library and tooling runtime boundaries are stated separately and precisely.
+* The .NET Framework floor is stable because the platform is no longer adding new major versions.
 
 ### Negative
 
-* Consumers pinned to .NET Framework 4.6.1–4.7.1 lose a claim of support they never
-  actually had verified; they must be on 4.7.2 or later. Accepted: 4.7.2 is the
-  practical `netstandard2.0` floor and the lower versions are largely end-of-life.
-* A small, test-only `IsExternalInit` polyfill and a `net472`-conditioned build path
-  are added to the affected test projects. The **shipped libraries are untouched** —
-  they use neither `init` nor records — so nothing in the product depends on the
-  polyfill.
+* Consumers on .NET Framework 4.6.1 through 4.7.1 are outside the supported range.
+* Dedicated Windows compatibility coverage and test-target plumbing must remain maintained.
 
 ### Risks
 
-* The `net472` leg runs on Windows only, so a .NET-Framework-specific regression is
-  invisible on the Linux legs until the Windows job runs. Mitigated by running the job
-  on every pull request.
-* `FirstClassErrors.RequestBinder.UnitTests` cannot join the floor because its
-  fixtures bind `DateOnly`, a .NET 6+ type absent from .NET Framework; RequestBinder is
-  floored through its property tests instead. Accepted: the excluded scenarios exercise
-  a type that cannot exist on `net472` in the first place.
+* Some Request Binder scenarios use modern-only types and cannot run on the framework floor. Mitigation: cover the shipped binder assembly through compatible test suites and keep exclusions explicit in the implementation reference.
+* A required floor job could be configured but not enforced by branch protection. Mitigation: maintain the job as a required status check when repository settings permit.
 
 ## Follow-up Actions
 
-* State 4.7.2+ in `FirstClassErrors/README.nuget.md` (done in this change).
-* Add the `framework-floor` job to `ci.yml` and the shared `build/Net472TestFloor.props`
-  that carries the gated `net472` leg (done in this change).
-* Make `framework-floor` a **required status check** in branch protection so it blocks
-  merges, matching the intent that the floor is enforced, not advisory.
-* Should a maintainer wish to reconcile the incidental "4.6.1" line in
-  [ADR-0002](0002-floor-the-tooling-runtime.md), add an erratum note there pointing to
-  this ADR; this ADR is the authority on the library's .NET Framework floor.
+* Keep the user-facing support statement at .NET Framework 4.7.2 or later.
+* Keep the framework-floor check required for merges.
 
 ## References
 
-* [ADR-0002](0002-floor-the-tooling-runtime.md) — the tooling runtime floor; the
-  sibling runtime-bound decision this ADR refines.
-* [ADR-0001](0001-lock-the-analyzer-roslyn-floor.md) — the analyzer's Roslyn floor,
-  the third supported-tooling bound.
-* `FirstClassErrors/README.nuget.md` — the user-facing support statement.
-* `build/Net472TestFloor.props`, the `framework-floor` job in
-  `.github/workflows/ci.yml`, and the library preview run in
-  `.github/workflows/canary.yml` — where this decision is enforced.
+* [ADR implementation reference — Tooling runtime floor](../specifications/adr-implementation-reference.md#tooling-runtime-floor)
+* [ADR-0002](0002-floor-the-tooling-runtime.md) — refined by this ADR for the library's .NET Framework floor.
+* [ADR-0001](0001-lock-the-analyzer-roslyn-floor.md)
+* `FirstClassErrors/README.nuget.md` and the CI workflow reference.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.

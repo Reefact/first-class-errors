@@ -2,139 +2,74 @@
 
 🌍 🇬🇧 [English](0008-bind-nullable-value-type-properties-through-a-struct-constrained-overload.md) · 🇫🇷 Français (ce fichier)
 
-**Statut :** Proposé
-**Date :** 2026-07-16
+**Statut :** Accepté
+**Date :** 2026-07-19
 **Décideurs :** Reefact
 
 ## Contexte
 
-* Le request binder sélectionne chaque propriété du DTO avec `SimpleProperty(r => r.X)` ou
-  `ListOfSimpleProperties(r => r.X)`, puis un convertisseur la lie — une fabrique de value
-  object `Func<TArgument, Outcome<TProperty>>`, typiquement un groupe de méthodes tel que
-  `EmailAddress.Parse`.
-* Le sélecteur d'origine est générique sur `TArgument`, avec un paramètre
-  `Expression<Func<TRequest, TArgument?>>` non contraint.
-* Lorsque la propriété du DTO est un type valeur nullable (`int?`), le sélecteur non
-  contraint infère `TArgument = Nullable<int>`, car pour un paramètre de type non contraint
-  le `?` est une annotation sans effet sur les types valeur. L'étape de conversion attend
-  alors `Func<Nullable<int>, Outcome<T>>`, si bien qu'un groupe de méthodes sur le type
-  sous-jacent (`int -> Outcome<T>`) ne correspond pas et l'appel échoue à compiler avec
-  **CS0411**.
-* Une propriété de type valeur non nullable est déjà rejetée au moment du binding (constat
-  de revue n°4, livré dans #141) : une telle propriété doit être déclarée nullable pour
-  qu'un argument manquant se distingue d'une valeur par défaut légitimement envoyée.
-* C# ne traite pas deux méthodes qui ne diffèrent que par une contrainte `class` versus
-  `struct` comme des signatures distinctes — une contrainte ne fait pas partie de la
-  signature (CS0111).
-* Sous une contrainte `where TArgument : struct`, `TArgument?` désigne le type construit
-  `Nullable<TArgument>`. C'est un type de paramètre différent du `TArgument` nu du sélecteur
-  non contraint et — étant un type construit — il est structurellement plus spécifique pour
-  la résolution de surcharge.
-* Un élément de liste `Nullable<TArgument>` peut indépendamment être `null` ; un
-  convertisseur sur le type sous-jacent non nullable ne peut pas représenter cet élément, et
-  le convertisseur de liste de référence déréférence les éléments sans déballer un
-  `Nullable`.
-* La bibliothèque est en pré-version, non publiée sur NuGet et sans consommateurs externes. Des
-  surcharges additives figées avant le gel de la v1 ne peuvent pas déplacer l'inférence sur
-  des sites d'appel de consommateurs qui n'existent pas encore ; les mêmes surcharges
-  ajoutées après que des consommateurs ont écrit des bindings de type valeur pourraient
-  changer la résolution sur ces sites.
+Le Request Binder permet de sélectionner une propriété de DTO puis de la convertir au moyen d'une factory de value object, souvent fournie sous forme de groupe de méthodes.
+
+Pour les propriétés de type valeur nullable, le sélecteur générique non contraint d'origine inférait `Nullable<T>` comme entrée du convertisseur. Une factory opérant sur le type valeur sous-jacent ne pouvait donc pas être liée comme groupe de méthodes, alors même que le DTO utilisait correctement une propriété nullable pour distinguer l'absence d'une valeur par défaut effectivement fournie.
+
+C# ne permet pas de surcharger des méthodes en ne changeant que les contraintes génériques, mais un sélecteur contraint à `struct` peut exposer `Nullable<T>` comme forme de paramètre distincte tout en conservant un convertisseur sur le type sous-jacent non nullable.
+
+Les listes de types valeur nullables exigent également une gestion explicite des éléments `null` avant conversion.
 
 ## Décision
 
-Le request binder lie une propriété de DTO de type valeur nullable au travers d'une surcharge
-de sélecteur dédiée `where TArgument : struct` dont le sélecteur porte `Nullable<TArgument>`
-et dont le convertisseur opère sur le type sous-jacent non nullable.
+Le Request Binder lie les propriétés de DTO et les éléments de liste de type valeur nullable au moyen de chemins de sélection dédiés `where TArgument : struct`, dont les convertisseurs opèrent sur le type valeur sous-jacent non nullable.
 
 ## Justification
 
-* Le paramètre `Nullable<TArgument>` de la surcharge contrainte à `struct` est un type
-  véritablement différent — et structurellement plus spécifique — que le `TArgument` nu de la
-  surcharge non contrainte, si bien que les deux coexistent sans CS0111 et que la surcharge
-  de type valeur l'emporte pour une propriété de type valeur nullable, tandis que les
-  propriétés de référence et de type `string` continuent de se résoudre vers la surcharge non
-  contrainte. L'échec CS0411 est supprimé au niveau du sélecteur plutôt que reporté sur le
-  consommateur sous la forme d'une lambda d'adaptation.
-* Faire remonter le type sous-jacent non nullable (`int`, et non `int?`) permet à une fabrique
-  de value object de lier sous forme de groupe de méthodes exactement comme elle le fait pour
-  une propriété de référence, gardant une même ergonomie fluide pour les deux sortes de
-  propriétés : la propriété reste déclarée nullable pour que l'absence demeure observable, et
-  le type sous-jacent est ce sur quoi le convertisseur opère concrètement.
-* Un convertisseur de liste dédié est requis plutôt qu'une réutilisation, parce qu'un élément
-  `Nullable` a besoin de sa propre gestion du `null` — un élément `null` est un argument
-  manquant enregistré sous son chemin indexé — et d'un déballage avant conversion, ni l'un ni
-  l'autre n'étant réalisés par le convertisseur de référence.
-* Décider avant le gel de la v1 fige la forme de l'API tant qu'elle est encore libre : les
-  surcharges sont additives maintenant, sans aucun site d'appel à perturber, alors que les
-  différer au-delà du gel ferait de la même addition un changement cassant à la source pour
-  les bindings de type valeur des consommateurs.
+Le chemin dédié rétablit la même ergonomie de groupe de méthodes que pour les propriétés de type référence, tout en préservant la distinction sémantique entre un argument absent et une valeur par défaut fournie.
+
+La surcharge doit se situer à la frontière du sélecteur, car c'est là que l'inférence de types de C# choisit sinon `Nullable<T>` et produit pour le consommateur une erreur de compilation peu explicite.
+
+Les éléments de liste de type valeur nullable ne peuvent pas réutiliser sans risque l'implémentation destinée aux références, puisqu'ils exigent une gestion propre de l'absence et un déballage avant conversion.
+
+Stabiliser cette API additive avant la première version stable évite d'introduire plus tard un risque de compatibilité source lié à la résolution des surcharges.
+
+Les signatures exactes, les types de convertisseurs, le comportement des éléments `null` et les exemples sont documentés dans la [référence d'implémentation des ADR](../specifications/adr-implementation-reference.fr.md#contrats-dimplémentation-du-request-binder) et la documentation utilisateur du Request Binder.
 
 ## Alternatives envisagées
 
-### Exiger des consommateurs qu'ils passent une lambda d'adaptation
+### Exiger une lambda adaptatrice à chaque appel
 
-Envisagée parce qu'elle ne nécessite aucune nouvelle API : `AsRequired(v => PositiveInt.From(v))`
-lie là où le groupe de méthodes nu ne le fait pas.
+Envisagé car cela ne nécessite aucune nouvelle API publique. Rejeté parce que cela expose au consommateur une erreur d'inférence peu intuitive et duplique dans le code applicatif une logique de déballage qui appartient au binder.
 
-Rejetée parce qu'elle dégrade silencieusement l'ergonomie du groupe de méthodes pour le cas
-courant du type valeur nullable, fait surgir une erreur de compilation CS0411 sans cause
-évidente, et duplique à chaque site d'appel le déballage que le binder peut effectuer une
-seule fois.
+### Utiliser un sélecteur unique pour les types référence et valeur
 
-### Un sélecteur unique unifiant types référence et types valeur
+Envisagé pour minimiser la surface. Rejeté parce que C# ne peut pas inférer le type valeur sous-jacent depuis une annotation nullable non contrainte tout en conservant le comportement des types référence.
 
-Envisagée parce qu'une seule surcharge est la surface la plus réduite.
+### Réutiliser le convertisseur de liste destiné aux références
 
-Rejetée parce que C# ne peut pas l'exprimer : un `TArgument?` non contraint ne peut pas à la
-fois inférer le type sous-jacent pour une propriété de type valeur et rester une référence
-pour une propriété de type référence, et une contrainte ne peut pas varier au sein d'une même
-méthode.
-
-### Réutiliser le convertisseur de liste de référence pour les listes de types valeur
-
-Envisagée parce que la logique de binding est par ailleurs identique.
-
-Rejetée parce qu'un élément `Nullable<T>` et un élément de référence nécessitent une gestion
-du `null` différente, et que le chemin de type valeur doit déballer chaque élément présent
-avant conversion ; fondre les deux dans un seul convertisseur masquerait qu'un élément `null`
-est un argument manquant enregistré.
+Envisagé car le flux de conversion est autrement similaire. Rejeté parce que les éléments de type valeur nullable exigent une gestion distincte des éléments manquants et un déballage.
 
 ## Conséquences
 
 ### Positives
 
-* Une propriété de DTO de type valeur nullable (`int?`, `bool?`, ...) et les listes de
-  celles-ci se lient via un groupe de méthodes sur le type sous-jacent, avec la même ergonomie
-  que les propriétés de référence.
-* Le correctif est additif et figé avant le gel de la v1, si bien qu'il ne devient jamais un
-  changement cassant à la source pour le binding de type valeur existant d'un consommateur.
-* Les propriétés de référence et de type `string` ne sont pas affectées : elles continuent de
-  se résoudre vers la surcharge d'origine.
+* Les propriétés de type valeur nullable se lient avec la même ergonomie de groupe de méthodes que les propriétés de type référence.
+* L'absence reste observable tandis que les convertisseurs reçoivent la valeur sous-jacente pertinente.
+* La forme publique est stabilisée avant le gel de l'API stable.
 
 ### Négatives
 
-* Deux surcharges de sélecteur publiques supplémentaires et un type de convertisseur public de
-  plus à documenter et à maintenir, doublant la surface de sélecteur de `SimpleProperty` et
-  `ListOfSimpleProperties`.
-* Le mécanisme — une contrainte `struct` transformant `TArgument?` en un `Nullable<TArgument>`
-  plus spécifique — est subtil ; un mainteneur peu familier de la règle de résolution de
-  surcharge peut ne pas voir immédiatement pourquoi les deux sélecteurs coexistent.
+* Le binder expose des sélecteurs et convertisseurs supplémentaires.
+* Le mécanisme de résolution des surcharges est subtil et nécessite des tests de régression.
 
 ### Risques
 
-* Une future troisième forme de sélecteur pourrait interagir avec les deux surcharges de
-  manière à réintroduire de l'ambiguïté ; atténué par cette ADR et par des tests de régression
-  qui épinglent la résolution des types référence et `string` sur la surcharge d'origine.
+* De futures formes de sélecteurs pourraient réintroduire une ambiguïté. Mesure : conserver une couverture de compilation ciblée pour les références, les chaînes, les valeurs scalaires et les listes.
 
-### Actions de suivi
+## Actions de suivi
 
-* Garder le guide RequestBinder (EN et français) synchronisé avec l'ergonomie de binding de
-  type valeur.
+* Maintenir la documentation bilingue du Request Binder alignée sur le comportement accepté.
 
 ## Références
 
-* ADR-0007 — nommer les terminaux du binder New et Create, la décision d'API publique sœur sur
-  le même binder.
-* Pull requests #126 et #141 — la fonctionnalité de request binder et le garde-fou de type
-  valeur non nullable que cette décision complète.
-* Issue #144 — le constat CS0411 que cette décision résout.
+* [Référence d'implémentation des ADR — Contrats d'implémentation du Request Binder](../specifications/adr-implementation-reference.fr.md#contrats-dimplémentation-du-request-binder)
+* [ADR-0007](0007-name-the-binder-terminals-new-and-create.fr.md)
+* Issue #144 et pull requests #126 et #141.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.

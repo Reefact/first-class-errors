@@ -8,133 +8,68 @@
 
 ## Contexte
 
-L'ADR-0009 a établi que `FirstClassErrors.GenDoc` documente ses propres échecs
-comme des erreurs de première classe, en donnant à chacun un code stable préfixé
-`GENDOC_` et un contexte structuré. Ces codes et ces clés de contexte sont émis
-aux appelants à l'exécution et constituent les identités sur lesquelles
-s'appuient les consommateurs externes — pipelines CI, intégrateurs, support.
+GenDoc expose des codes d'erreur first-class stables et un contexte typé que les consommateurs externes peuvent utiliser dans la CI, les intégrations et les outils de support.
 
-GenDoc n'a pas de package NuGet propre : il est embarqué dans l'outil `fce`,
-publié sur le train `cli` (`tools/packaging/pack.sh`). Un changement du catalogue
-d'erreurs propre à GenDoc — un code renommé ou supprimé, une clé de contexte
-retirée ou dont le type change — est donc un changement de ce qu'émet le package
-`cli`, indiscernable de l'extérieur de tout autre changement de compatibilité de
-ce package.
+GenDoc est livré dans le package en ligne de commande `fce` plutôt que sur un train de release indépendant. Supprimer ou modifier l'un de ses codes documentés ou de ses contrats de contexte constitue donc une modification de compatibilité du package `cli`.
 
-La bibliothèque livre déjà les mécanismes pour traiter un catalogue comme un
-contrat versionné : `fce catalog update` enregistre une baseline, `fce catalog
-diff` la compare, et la comparaison classe chaque changement en Cassant,
-Compatible ou Informationnel (un code supprimé ou une clé de contexte
-supprimée/retypée est Cassant). Jusqu'ici ces commandes étaient offertes aux
-consommateurs documentant leurs propres erreurs, mais jamais appliquées au
-catalogue de GenDoc lui-même : rien n'enregistrait la baseline de GenDoc, et rien
-ne vérifiait un changement au regard de la version que le train `cli` s'apprêtait
-à publier. Les deux trains suivent le versionnage sémantique, et le dépôt impose
-déjà les Conventional Commits, mais aucun de ces mécanismes ne relie un changement
-cassant du *catalogue d'erreurs* au *numéro de version* qui le publie.
+Le dépôt sait déjà prendre un instantané d'un catalogue et classifier ses changements, mais le propre catalogue d'erreurs de l'outil n'était pas relié à la version sémantique publiée par le processus de release.
 
 ## Décision
 
-Un changement cassant du catalogue d'erreurs propre à GenDoc, mesuré par `fce
-catalog diff` contre une baseline committée, exige un incrément de version majeure
-du train `cli`, imposé au moment de la publication.
+Une modification cassante du propre catalogue d'erreurs de GenDoc exige une version majeure du train de release `cli` et est contrôlée lors de la publication de cette release.
 
 ## Justification
 
-* **La surface d'échec est un contrat publié : elle doit être versionnée comme
-  tel.** L'ADR-0009 a fait des codes de GenDoc des identités stables dont
-  dépendent les consommateurs ; une identité stable qui peut disparaître en
-  silence sous un incrément de version d'apparence compatible n'est pas réellement
-  stable. Le versionnage sémantique est la promesse que le package `cli` fait
-  déjà, et un code supprimé ou renommé est exactement le genre de rupture que
-  cette promesse existe pour signaler.
-* **Imposer au release, pas à la pull request.** Un changement cassant du
-  catalogue n'est pas fautif en soi — un changement délibéré est précisément ce à
-  quoi sert une version majeure. Seule sa publication *silencieuse*, sous une
-  version qui promet la compatibilité, est le problème. Bloquer les pull requests
-  entraverait le développement incrémental normal ; imposer au release cible le
-  seul point où la promesse de compatibilité est réellement faite, et laisse le
-  travail quotidien libre.
-* **Comparer au dernier release, pas à une cible mouvante.** La baseline n'avance
-  que lorsqu'un release `cli` publie. Entre deux releases elle reste fixe, de
-  sorte que le diff répond toujours à « qu'est-ce qui a changé depuis la dernière
-  chose réellement publiée » — la question à laquelle le numéro de version doit
-  répondre — quel que soit le nombre de pull requests intercalées.
-* **Réutiliser les mécanismes de contrat existants, sans nouveau jugement.** La
-  classification Cassant de `fce catalog diff` est déjà définie et testée ; cette
-  décision la relie à la version du release plutôt que d'inventer une seconde
-  notion de ce qu'être « cassant » signifie pour les erreurs propres à l'outil.
+Le catalogue est un contrat publié, car les consommateurs dépendent d'identités d'erreur et de contextes stables. Une rupture du catalogue doit donc être signalée par la même promesse de versionnement sémantique que toute autre rupture observable.
+
+Le moment de la release est le bon point de contrôle. Une rupture peut être légitime pendant le développement ; l'erreur consiste à la publier sous une version qui promet la compatibilité.
+
+La comparaison doit rester ancrée sur le dernier catalogue effectivement livré plutôt que sur un instantané de développement mobile, afin que le numéro de version réponde à la question de ce qui a changé depuis la release précédente.
+
+Réutiliser la classification existante du diff de catalogue évite de créer une seconde définition concurrente de la compatibilité.
+
+L'emplacement exact de la baseline, le workflow de release, les commandes de mise à jour et la procédure de reprise sont documentés dans la [référence d'implémentation des ADR](../specifications/adr-implementation-reference.fr.md#compatibilité-du-catalogue-gendoc), la référence des workflows et la documentation du versionnement des catalogues.
 
 ## Alternatives envisagées
 
-### S'en remettre aux Conventional Commits et à la vigilance des relecteurs
+### S'appuyer sur les Conventional Commits et la discipline de revue
 
-Envisagée parce que le dépôt exige déjà un marqueur `!`/`BREAKING CHANGE:` sur les
-commits cassants, vérifié en CI. Rejetée parce que ce marqueur est rédigé à la
-main d'après l'intention du commit, alors qu'une rupture du catalogue peut être un
-effet de bord non voulu (un refactor qui supprime une clé de contexte) ; rien ne
-reliait le marqueur à une mesure mécanique du catalogue, de sorte qu'une rupture
-silencieuse pouvait encore être publiée sous un incrément mineur.
+Envisagé car le dépôt enregistre déjà les ruptures intentionnelles. Rejeté parce qu'une rupture accidentelle du catalogue peut survenir sans être identifiée par l'auteur du commit, tandis que le catalogue généré fournit une mesure mécanique.
 
-### Contrôler la pull request plutôt que le release
+### Bloquer chaque pull request
 
-Envisagée parce qu'elle fait apparaître la rupture au plus tôt. Rejetée parce
-qu'un changement cassant est légitime en cours de développement tant que le
-release final porte l'incrément majeur ; le bloquer par pull request pénaliserait
-l'itération normale et forcerait des décisions de version prématurées, alors que
-le contrôle au release attrape la même rupture au seul moment où elle compte.
+Envisagé pour remonter les ruptures plus tôt. Rejeté parce qu'une rupture du catalogue est valide pendant le développement dès lors que la release finale porte la bonne version majeure.
 
-### Publier GenDoc comme son propre package sur son propre train
+### Publier GenDoc sur un train de release indépendant
 
-Envisagée parce qu'un train dédié permettrait de versionner le catalogue
-indépendamment. Rejetée comme disproportionnée : GenDoc n'a pas de consommateur
-autonome (il ne tourne qu'à l'intérieur de `fce`), et le modèle d'outillage de
-l'ADR-0002 le garde délibérément embarqué ; un nouveau train ajouterait une
-machinerie de release sans bénéfice pour aucun consommateur.
+Envisagé pour donner au catalogue sa propre version. Rejeté parce que GenDoc n'a pas de consommateur autonome et est volontairement livré dans `fce` ; la machinerie supplémentaire de release n'apporterait pas de bénéfice utilisateur correspondant.
 
 ## Conséquences
 
 ### Positives
 
-* Un changement cassant des erreurs propres à GenDoc ne peut plus être publié sous
-  une version `cli` non majeure : le release échoue jusqu'à ce que la version ou
-  le changement soit réconcilié.
-* Le catalogue gagne une baseline committée et un rapport de diff par pull
-  request, de sorte que l'impact de compatibilité en attente est visible à la
-  relecture.
-* La documentation vivante que la CI régénère s'appuie sur un contrat explicite,
-  ancré au release, plutôt que sur un instantané au mieux.
+* Une rupture du catalogue GenDoc ne peut pas être livrée sous une version `cli` qui semble compatible.
+* Les relecteurs peuvent voir l'impact de compatibilité en attente avant la release.
+* Le catalogue généré devient un contrat explicite de release plutôt qu'un instantané au mieux.
 
 ### Négatives
 
-* Publier le train `cli` dépend désormais d'une baseline committée et d'une étape
-  de diff ; un mainteneur doit comprendre qu'accepter un changement cassant
-  signifie incrémenter la version majeure (ou revenir en arrière), pas contourner
-  le contrôle.
-* La baseline est rafraîchie par un push direct sur `main` après un release
-  réussi — une écriture automatisée hors du flux normal de pull request, limitée à
-  ce moment précis.
+* La release `cli` dépend désormais d'une baseline de catalogue valide et d'un contrôle de compatibilité.
+* Les mainteneurs doivent comprendre qu'accepter une rupture exige une version majeure ou l'abandon de la modification.
 
 ### Risques
 
-* Une baseline périmée ou éditée à la main pourrait mal mesurer un changement.
-  Mitigation : la baseline n'est jamais écrite que par `fce catalog update`,
-  exécuté par le release après une publication réelle, de sorte qu'elle reflète
-  toujours le dernier catalogue publié.
+* Une baseline obsolète ou avancée incorrectement pourrait mal classifier une release. Mesure : conserver les mises à jour de baseline dans la procédure contrôlée de release et documenter la reprise lorsque la publication et l'avancement de la baseline divergent.
 
 ## Actions de suivi
 
-* Aucune au-delà du câblage des workflows eux-mêmes (`gendoc-docs.yml` et le
-  contrôle dans `release.yml`) ; le mécanisme vit dans les workflows et les
-  commandes `fce catalog` que la documentation de référence couvre déjà.
+* Maintenir la procédure de release et son chemin de reprise dans la référence du workflow plutôt que dans cet ADR.
 
 ## Références
 
-* ADR-0009 — GenDoc modélisant ses propres échecs comme des erreurs de première
-  classe, les codes que ce contrat versionne.
-* ADR-0002 — le modèle de runtime de l'outillage qui garde GenDoc embarqué dans le
-  train `cli` plutôt que publié séparément.
-* Issue [#167](https://github.com/Reefact/first-class-errors/issues/167) — la
-  demande à laquelle cette décision répond.
-* [Référence du versionnage de catalogue](../../for-users/CatalogVersioningReference.fr.md)
-  — les mécanismes `fce catalog update`/`diff` réutilisés ici.
+* [Référence d'implémentation des ADR — Compatibilité du catalogue GenDoc](../specifications/adr-implementation-reference.fr.md#compatibilité-du-catalogue-gendoc)
+* [Référence de versionnement des catalogues](../../for-users/CatalogVersioningReference.fr.md)
+* [ADR-0009](0009-report-the-toolings-failures-as-first-class-errors.fr.md)
+* [ADR-0002](0002-floor-the-tooling-runtime.fr.md)
+* Issue #167.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.

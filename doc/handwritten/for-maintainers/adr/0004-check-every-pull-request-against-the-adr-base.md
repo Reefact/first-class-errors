@@ -8,129 +8,70 @@
 
 ## Context
 
-The repository records significant decisions as ADRs under `doc/handwritten/for-maintainers/adr/`, but
-nothing confronts a change with that base at the moment the change is made. A pull
-request is where new decisions enter the codebase: it can embark a decision that is
-never recorded, replace a decision an existing ADR holds without saying so, or
-contradict an accepted ADR unnoticed.
+Pull requests are where new architectural decisions enter the repository. A change can introduce an unrecorded decision, replace an existing one without acknowledgement, or conflict with an accepted ADR.
 
-Hard, mechanical invariants are already guarded elsewhere: the value-object `class`
-rule, the analyzer's Roslyn floor (ADR-0001), and the tooling runtime floor
-(ADR-0002) are enforced by unit tests and CI jobs that fail deterministically. What
-no test expresses is the softer question a reader of a diff must still ask: is there
-an architectural decision here, and does it fit what has already been decided?
+Mechanical invariants are already enforced by tests and CI. The remaining question — whether a diff contains or conflicts with an architectural decision — requires judgement and context rather than a deterministic rule.
 
-The repository's work is largely produced through Claude Code coding sessions, which
-load `CLAUDE.md` (and, when directed, `AGENTS.md`) as instructions and hold,
-in-session, the full diff, the ADR base, and the reasoning that produced the change.
-It is also open to contributors who do not use Claude Code. A GitHub Actions workflow
-can run a model on manual dispatch, as the `changelog` workflow already does. Such
-a model call has a per-request cost, and the model is referenced by a floating alias,
-so its verdict is not reproducible.
+The maintainer is the sole authority who merges pull requests and changes ADR statuses. Agents may analyse changes and draft proposed ADRs, but they do not accept, supersede, deprecate, or merge them.
 
-The maintainer (`Reefact`) is the sole authority who merges a pull request and who
-accepts an ADR; no agent merges, and an ADR is immutable once accepted (a decision is
-revisited by a superseding ADR).
+The repository supports both agent-assisted work and contributions that do not use an in-session agent. A model-based check is advisory and non-reproducible, so it must not become an autonomous merge gate.
 
 ## Decision
 
-Every pull request is checked against the ADR base as an advisory, non-blocking
-recommendation — automatically within a Claude Code coding session and on manual
-dispatch for contributors without Claude Code — with an agent drafting any ADR as
-`Proposed` and the maintainer alone accepting, superseding, or deprecating it.
+Every pull request is subject to an advisory review against the accepted ADR base, performed in-session when an agent owns the change or explicitly invoked by a contributor otherwise, with agents limited to drafting `Proposed` ADRs and the maintainer retaining sole decision authority.
 
 ## Rationale
 
-The check belongs at the pull request because that is where decisions enter the
-codebase; asking "should this be recorded?" while the context is fresh is what the
-ADR base needs and does not yet get.
+The review belongs at pull-request time because that is when the implementation context is freshest and when a decision can still be recorded or challenged before merge.
 
-It is advisory, never blocking, because the decisions it surfaces are matters of
-judgement, not conditions a machine settles: the hard invariants that *can* be
-settled mechanically are already gated by tests and CI, and gating a merge on a
-model's opinion would contradict the rule that the maintainer alone merges.
+The review remains advisory because architectural significance is a judgement call. Deterministic invariants should continue to be enforced mechanically, while the maintainer remains responsible for accepting the recommendation and for every status transition.
 
-The automatic path runs inside a Claude Code session because the agent there is the
-best-placed checker — it already holds the diff, the ADR base, and the reason the
-change was made, so the check adds little to work the session is already doing, with
-more context than any separate call could carry.
+Using the in-session agent when available avoids a lower-context duplicate analysis. An explicit fallback for other contributors preserves accessibility without turning a non-deterministic model verdict into an automatic gate.
 
-The manual workflow exists so a contributor without Claude Code is still covered;
-keeping it manual — like the sibling `changelog` workflow — gives that coverage
-without turning a non-reproducible LLM verdict into an autonomous gate on every pull
-request.
-
-An agent drafts and proposes; it never sets an ADR's status. This keeps the maintainer
-as the decision authority, consistent with "no agent merges" and with ADR immutability.
+The current agent instructions, checklist, and workflow mechanics are documented in `AGENTS.md`, `CLAUDE.md`, the [ADR implementation reference](../specifications/adr-implementation-reference.md#adr-pull-request-check), and the [`adr-check` workflow reference](../workflows/adr-check.en.md).
 
 ## Alternatives Considered
 
-### An automatic per-pull-request model check in CI
+### Run an automatic model check on every pull request
 
-Considered because it would cover every pull request — human- and agent-authored,
-Claude Code or not — deterministically and without anyone remembering to run it.
+Considered because it would maximize nominal coverage. Rejected because it would add cost, duplicate higher-context in-session analysis, and place a non-deterministic judgement on a near-mandatory CI surface.
 
-Rejected because an autonomous model call on every pull request carries a per-request
-cost, introduces a non-deterministic check on a near-mandatory surface, and duplicates
-— with less context — what a Claude Code session already performs; the coverage it
-would add is met instead by the session check plus the manual dispatch.
+### Encode each ADR as a machine-checkable invariant
 
-### Encode each ADR's invariant in a machine-checkable field
+Considered because deterministic checks are reliable. Rejected because only a subset of architectural decisions can be expressed mechanically; those that can already belong in tests or CI, while the ADR itself must remain a human decision record.
 
-Considered because a crisp, declared invariant would make conflict detection more
-reliable than reasoning over prose.
+### Rely on memory
 
-Rejected because the hard invariants that lend themselves to mechanical checking are
-already enforced by tests and CI, which do it better and deterministically; and adding
-a specification field to an ADR contradicts the principle that an ADR is a decision
-record, not a specification, eroding the human-readability that is the point of the
-format.
-
-### Rely on memory, with no check
-
-Considered because it is the zero-effort status quo.
-
-Rejected because it is exactly the gap the ADR base exists to close: decisions embarked
-in a pull request then go unrecorded, silently supersede an earlier one, or contradict
-an accepted ADR.
+Considered because it requires no process. Rejected because it leaves exactly the gap the ADR corpus is intended to close.
 
 ## Consequences
 
 ### Positive
 
-* The question "is there a decision to record?" is asked on every pull request, while
-  the context that produced the change is still fresh.
-* Drafting is cheap: the in-session agent already has everything it needs.
-* Nothing blocks a merge; the maintainer keeps sole authority over ADR status.
-* Contributors without Claude Code have a first-class fallback.
+* Architectural significance is considered before merge while the reasoning is still available.
+* Agents can draft records cheaply without acquiring decision authority.
+* Contributors without an in-session agent have an explicit fallback.
+* No model opinion blocks a maintainer from merging.
 
 ### Negative
 
-* The in-session check is best-effort: it is guidance the agent follows, not a hard
-  gate.
-* Coverage of a pull request opened without Claude Code depends on someone dispatching
-  the workflow.
-* The advisory verdict is non-deterministic — it uses a floating model alias — so it is
-  not reproducible.
+* Coverage is procedural rather than mechanically guaranteed.
+* The review is non-deterministic and may produce false positives or omissions.
+* A contributor can forget to invoke the fallback review.
 
 ### Risks
 
-* An agent skips the in-session check. Mitigation: the essentials are in `CLAUDE.md`
-  (reliably loaded), a checklist item sits on every pull request, and the manual
-  workflow is an independent path.
-* False alarms train the team to ignore the check. Mitigation: the prompt is biased
-  hard toward silence on routine changes.
+* The phrase "every pull request" could be interpreted as an automated guarantee. Mitigation: this ADR defines an obligation of process; the current workflow is manually invoked and does not itself prove universal execution.
+* Repeated low-value findings could cause the review to be ignored. Mitigation: keep prompts biased toward silence on routine implementation changes.
 
 ## Follow-up Actions
 
-* None blocking. If the in-session guidance proves unreliable in practice, add a
-  narrowly scoped, non-blocking Claude Code hook that runs the same check — not built
-  pre-emptively.
+* Revisit automated enforcement only if procedural coverage proves insufficient, and keep any future model-based check advisory unless a separate decision changes that rule.
 
 ## References
 
-* `AGENTS.md` — "Architecture decisions" (the agent procedure).
-* `CLAUDE.md` — the inlined per-session essentials.
-* [`adr-check` workflow reference](../workflows/adr-check.en.md).
-* [ADR-0001](0001-lock-the-analyzer-roslyn-floor.md), [ADR-0002](0002-floor-the-tooling-runtime.md)
-  — examples of the hard invariants this check deliberately leaves to tests and CI.
+* `AGENTS.md` — the agent procedure and status authority.
+* `CLAUDE.md` — the in-session guidance.
+* [ADR implementation reference — ADR pull-request check](../specifications/adr-implementation-reference.md#adr-pull-request-check)
+* [`adr-check` workflow reference](../workflows/adr-check.en.md)
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.

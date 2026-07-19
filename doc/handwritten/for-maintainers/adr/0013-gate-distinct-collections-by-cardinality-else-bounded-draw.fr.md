@@ -8,154 +8,70 @@
 
 ## Contexte
 
-`Dummies` porte un contrat fondateur : une contrainte exprime ce qu'une valeur
-doit satisfaire, des contraintes contradictoires échouent au moment où elles sont
-déclarées via une `ConflictingAnyConstraintException` nommant les deux côtés, et
-une valeur est construite pour satisfaire ses contraintes en une seule passe —
-jamais générée puis filtrée, et jamais derrière une boucle de réessai.
+Dummies traite les contraintes contradictoires comme des erreurs d'arrangement et évite les boucles de nouvelles tentatives cachées et non bornées.
 
-L'incrément « collections » ajoute les collections distinctes : `SetOf`,
-`ListOf(...).Distinct()` et consorts, ainsi que les clés d'un dictionnaire. Une
-collection distincte de *N* éléments n'est satisfaisable que si *N* valeurs
-distinctes peuvent être assemblées depuis son **domaine effectif** : le domaine
-propre du générateur d'éléments, élargi par les valeurs fixées avec `Containing(...)`
-qui en sortent — chacune est une valeur que le générateur lui-même ne pourrait
-jamais tirer — et par les tirages opaques de `ContainingAny(...)`. La cardinalité du
-seul générateur d'éléments ne borne donc que les éléments qui doivent venir *de
-lui*, non la demande entière.
+Une collection distincte de `N` éléments n'est satisfaisable que si au moins `N` valeurs distinctes peuvent être assemblées depuis son domaine effectif : le domaine propre du générateur d'éléments, élargi par les valeurs fixées en dehors de celui-ci et par les valeurs opaques fournies de l'extérieur que le générateur lui-même ne pourrait jamais tirer. La cardinalité propre du générateur ne borne donc que les éléments qui doivent venir de lui, non la demande entière.
 
-Les générateurs d'éléments se répartissent en deux groupes. Certains tirent d'un
-domaine que la bibliothèque sait compter **à bas coût** : les deux valeurs d'un
-booléen, les membres déclarés d'une énumération, un intervalle entier ou temporel
-étroit, un pool de caractères restreint, une liste blanche explicite (`OneOf`), ou
-un scalaire épinglé sur une seule valeur (`Zero`, `Between(x, x)`). D'autres tirent
-d'un domaine effectivement non borné, ou dénombrable seulement en principe à un
-coût que la bibliothèque refuse de payer : entiers non contraints, chaînes et
-identifiants, une **plage** flottante (finie en valeurs représentables, mais les
-compter relève d'une arithmétique de bits spécifique au type, disproportionnée pour
-l'usage « dummy » — un générateur décimal ou flottant n'est donc contrôlé que via
-une liste blanche ou un pin, jamais une plage plus large), et — de façon décisive —
-toute implémentation étrangère de `IAny<T>` ou tout générateur dérivé (`As`,
-`Combine`), qui ne porte aucune information de domaine. `IAny<T>` est une interface
-publique : la bibliothèque ne peut donc pas supposer que tout générateur sache
-rapporter sa cardinalité.
+Certains générateurs exposent un domaine que la bibliothèque sait compter à bas coût — un petit ensemble fixe, ou une valeur fixée sur l'un de ses membres. D'autres ne peuvent pas annoncer honnêtement la taille de leur domaine, soit parce que la compter est disproportionnément coûteux (une plage flottante, par exemple), soit parce qu'il est véritablement non borné ou inconnaissable, notamment les implémentations externes de `IAny<T>` et les générateurs composés.
 
-Un comparateur d'égalité personnalisé ne peut que fusionner des valeurs distinctes
-en un nombre moindre de classes d'équivalence ; il ne peut jamais en créer de
-nouvelles.
+Un comparateur d'égalité personnalisé peut réduire le nombre de classes d'équivalence effectives même lorsque le domaine nominal du générateur est plus grand.
 
 ## Décision
 
-Une collection distincte rejette, au moment de la déclaration, tout nombre
-d'éléments qui dépasse la cardinalité annoncée par le générateur d'éléments, et
-construit sinon ses éléments par un tirage dédupliquant borné qui échoue à la
-génération, avec une graine rejouable, si le domaine des éléments se révèle trop
-petit.
+Une collection distincte rejette immédiatement un nombre demandé supérieur à une cardinalité effective connue du domaine des éléments, et utilise sinon un tirage dédupliqué borné qui échoue explicitement et de manière reproductible lorsqu'il n'est pas possible d'obtenir assez de valeurs distinctes.
 
 ## Justification
 
-* **Échouer tôt partout où le domaine est connaissable.** Le conflit à la
-  déclaration est la signature de la bibliothèque : un nombre qui dépasse un
-  domaine d'éléments dénombrable est une contradiction dans l'`Arrange` du test, et
-  il doit se lire comme telle, nommée des deux côtés, exactement comme tout conflit
-  scalaire — non pas surgir plus tard sous forme d'un échec d'exécution
-  déroutant.
-* **Un tirage borné est la seule option honnête là où il ne l'est pas.** Comme la
-  cardinalité d'un générateur arbitraire est généralement inconnaissable, la seule
-  façon universelle d'obtenir *N* valeurs distinctes est de tirer et dédupliquer.
-  Garder ce tirage borné respecte le principe « pas de boucle de réessai » ; à
-  épuisement, il rapporte le manque réel via une `AnyGenerationException` nommant
-  la graine — le canal d'échec qu'utilise déjà un rejet de fabrique — plutôt que de
-  boucler.
-* **Le contrôle anticipé ne compte que ce que le générateur doit fournir, et reste
-  correct sous un comparateur.** Il compare la cardinalité du générateur d'éléments
-  au nombre demandé *diminué* des valeurs fixées hors de son domaine et de chaque
-  tirage opaque de `ContainingAny(...)` — ainsi une valeur fixe que le générateur ne
-  peut produire élargit la demande au lieu d'entrer en conflit avec elle, et un
-  recouvrement improuvable est renvoyé au tirage borné plutôt que de devenir un faux
-  conflit. Puisqu'un comparateur ne fait que fusionner des valeurs, la cardinalité
-  annoncée reste une borne *supérieure* valide sur la contribution propre du
-  générateur : le contrôle ne rejette donc jamais une demande qui était en réalité
-  satisfaisable ; un comparateur qui réduit le domaine effectif sous le nombre
-  demandé est rattrapé par le tirage borné.
-* **Un seul principe, appliqué là où son information existe.** Répartir l'échec
-  entre la déclaration (quand le domaine est dénombrable) et la génération (quand
-  il ne l'est pas) n'est pas un affaiblissement du principe de conflit anticipé
-  mais son extension fidèle au seul endroit où l'information nécessaire pour être
-  anticipé fait défaut.
+Lorsque la taille du domaine est connue, la contradiction est certaine et doit être signalée au moment de la déclaration, comme les autres validations de contraintes de Dummies.
 
-## Alternatives considérées
+Ne compter que la cardinalité propre du générateur rejetterait par anticipation des demandes en réalité satisfaisables une fois prises en compte les valeurs déjà couvertes ; le contrôle anticipé compare donc à la taille du domaine diminuée des valeurs déjà fixées ou fournies de façon opaque en dehors de lui, ce qui le garde correct : il ne rejette jamais une demande réellement satisfaisable, et un comparateur qui réduit le domaine effectif sous le nombre demandé reste rattrapé par le tirage borné.
 
-### Toujours échouer à la génération, en abandonnant le contrôle anticipé de cardinalité
+Lorsque la taille du domaine est inconnue, tirer puis dédupliquer est la seule stratégie générale disponible. Borner le travail garantit la terminaison et transforme une demande impossible ou pratiquement inaccessible en échec de génération diagnostiquable plutôt qu'en blocage.
 
-Considérée parce qu'un canal d'échec unique est plus simple à expliquer et à
-implémenter. Rejetée parce qu'elle jette le diagnostic signature de la
-bibliothèque précisément là où il est peu coûteux et certain — un ensemble de trois
-booléens, une énumération à qui l'on demande plus de membres qu'elle n'en déclare —
-transformant une contradiction évidente de l'`Arrange` en une surprise à
-l'exécution.
+La capacité de cardinalité reste optionnelle afin de ne pas imposer aux générateurs publics ou externes une information qu'ils ne peuvent pas connaître. Une réduction induite par le comparateur est alors prise en charge par la borne à la génération.
 
-### Faire de la cardinalité une partie de `IAny<T>`, pour trancher chaque demande tôt
+L'interface d'indication exacte, l'état de collection, le budget de tirage, le contenu de l'exception et la propagation de la seed sont documentés dans la [référence d'implémentation des ADR](../specifications/adr-implementation-reference.fr.md#contrats-de-génération-de-dummies) et la documentation utilisateur de Dummies.
 
-Considérée parce qu'une cardinalité obligatoire sur chaque générateur permettrait
-de trancher toute demande distincte à la déclaration. Rejetée parce que `IAny<T>`
-est un contrat public, avec des implémentations étrangères et des générateurs
-dérivés (`As`, `Combine`) incapables de rapporter honnêtement une borne ; la
-garantie serait inapplicable et souvent fausse, et elle imposerait à chaque
-implémenteur une valeur que la plupart ne peuvent pas fournir.
+## Alternatives envisagées
 
-### Tirer sans borne jusqu'à ce que *N* valeurs distinctes apparaissent
+### Toujours échouer à la génération
 
-Considérée parce qu'un tirage non borné se termine toujours quand la demande est
-satisfaisable. Rejetée parce qu'il ne se termine jamais quand la demande ne l'est
-*pas*, ce qui est exactement le cas que cette décision doit diagnostiquer : elle
-transformerait une demande impossible en blocage au lieu d'une erreur, brisant le
-principe de travail borné de la bibliothèque.
+Envisagé car un point d'échec unique est plus simple. Rejeté parce que cela supprime un diagnostic exact au moment de la déclaration pour les générateurs dont la taille du domaine est connue.
+
+### Exiger une cardinalité de chaque générateur
+
+Envisagé pour rendre chaque demande décidable immédiatement. Rejeté parce que de nombreux générateurs valides ne peuvent pas fournir une borne fiable et que l'interface publique accepte des implémentations externes.
+
+### Tirer sans borne
+
+Envisagé car une demande satisfaisable finirait par aboutir. Rejeté parce qu'une demande insatisfaisable pourrait boucler indéfiniment.
 
 ## Conséquences
 
 ### Positives
 
-* Le diagnostic signature à la déclaration atteint désormais les collections
-  distinctes partout où le domaine des éléments est dénombrable.
-* Les demandes sur des domaines inconnus ou réduits par un comparateur échouent
-  toujours de façon sûre et reproductible, avec une graine à rejouer, jamais en
-  blocage.
-* La capacité de cardinalité est interne et optionnelle : le contrat public
-  `IAny<T>` reste inchangé et les générateurs étrangers continuent de fonctionner
-  tels quels.
+* Les contradictions connues échouent tôt et clairement.
+* Les domaines inconnus échouent tout de même de manière sûre, reproductible et sans blocage.
+* Les générateurs externes restent compatibles sans implémenter de métadonnées de cardinalité.
 
 ### Négatives
 
-* Le moment de l'échec n'est pas uniforme : la même contradiction logique surgit à
-  la déclaration pour un domaine connu-petit et à la génération pour un domaine
-  inconnaissable, ce que l'utilisateur doit comprendre.
-* Le tirage borné s'exécute jusqu'à un budget choisi ; une demande poussée
-  pathologiquement près de la taille réelle d'un domaine inconnu pourrait en
-  principe échouer bien qu'elle fût satisfaisable — astronomiquement improbable pour
-  les collections de taille « dummy » que vise la bibliothèque.
+* Le moment de l'échec diffère entre domaines connus et inconnus.
+* Un tirage borné peut échouer pour un générateur théoriquement satisfaisable mais fortement biaisé.
 
 ### Risques
 
-* **Indice surestimé** — un générateur pourrait annoncer une cardinalité plus
-  grande que les valeurs distinctes qu'il produit réellement, de sorte que le
-  contrôle anticipé manque un vrai conflit. Atténué parce que l'indice est défini
-  comme une borne supérieure et que le tirage borné rattrape tout manque résiduel à
-  la génération.
-* **Mauvais réglage du budget** — un budget de tirage trop petit produirait des
-  échecs de génération fallacieux. Atténué en dimensionnant le budget sur une
-  cardinalité connue et en gardant un plancher généreux pour les domaines inconnus.
+* Un générateur peut annoncer une borne supérieure inexacte. Mesure : le tirage borné reste le filet de sécurité final.
+* Un budget mal calibré peut provoquer des échecs indus. Mesure : documenter le budget, tester des générateurs biaisés représentatifs et le réviser sur la base de faits plutôt que de présenter l'échec comme impossible.
 
 ## Actions de suivi
 
-* Documenter les deux canaux d'échec dans la documentation utilisateur une fois la
-  surface « collections » stabilisée.
-* Réexaminer le budget de tirage si un usage réel fait un jour apparaître un
-  épuisement fallacieux.
+* Documenter les deux canaux d'échec et la seed de rejeu dans le guide Dummies.
+* Réexaminer le budget si l'usage réel révèle des épuisements indus.
 
 ## Références
 
-* ADR-0011 — Héberger Dummies comme un paquet autonome dans ce dépôt.
-* Le moteur de collection distincte et sa capacité unifiée de cardinalité et
-  d'appartenance (une seule interface, pour qu'un générateur fini ne puisse pas sortir
-  du périmètre anticipé), dans le projet `Dummies` (`CollectionState`, `ICardinalityHint`).
+* [Référence d'implémentation des ADR — Contrats de génération de Dummies](../specifications/adr-implementation-reference.fr.md#contrats-de-génération-de-dummies)
+* [ADR-0011](0011-host-dummies-as-a-standalone-package.fr.md)
+* `CollectionState` et `ICardinalityHint` dans le projet `Dummies`.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.
