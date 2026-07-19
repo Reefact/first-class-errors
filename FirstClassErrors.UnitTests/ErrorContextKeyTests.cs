@@ -75,10 +75,13 @@ public class ErrorContextKeyTests : IDisposable {
     [InlineData("")]
     [InlineData(" ")]
     public void RegisteringKeyWithBlankNameIsRejected(string? name) {
-        // Exercise & verify
-        Check.ThatCode(() => ErrorContextKey.Create<string>(name!))
-             .Throws<ArgumentException>()
-             .WithMessage("Value cannot be null or whitespace. (Parameter 'name')");
+        // Exercise
+        ArgumentException exception = Assert.Throws<ArgumentException>(() => ErrorContextKey.Create<string>(name!));
+
+        // Verify the contract, not the framework-specific parameter-suffix formatting of
+        // ArgumentException.Message (same net472-floor rationale as ErrorCodeTests).
+        Check.That(exception.Message).Contains("Value cannot be null or whitespace.");
+        Check.That(exception.ParamName).IsEqualTo("name");
     }
 
     [Fact(DisplayName = "Re-declaring a key with the same name and type returns the registered instance.")]
