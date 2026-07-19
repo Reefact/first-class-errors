@@ -70,6 +70,50 @@ jobs:
           path: artifacts/coverage/**/coverage.opencover.xml
           if-no-files-found: error
 
+  # build-test above runs the suite on the LATEST .NET (10). This job proves the LIBRARY's OTHER supported
+  # runtime: that the netstandard2.0 assemblies (FirstClassErrors, FirstClassErrors.Testing,
+  # FirstClassErrors.RequestBinder) actually load and pass their tests on .NET Framework 4.7.2 — the support
+  # floor recorded in doc/handwritten/for-maintainers/adr/0022-floor-the-library-on-net-framework-4-7-2.md.
+  # netstandard2.0 is only a COMPILE contract; running on the real .NET Framework CLR (NLS globalization, the
+  # netstandard.dll facade, its reflection stack) is what proves the library behaves there — the ordinary net10
+  # build cannot. .NET Framework tests run on Windows only (there is no Mono on the Linux legs), and the net472
+  # inner build is gated behind EnableNet472Floor (build/Net472TestFloor.props) so it never touches build-test.
+  framework-floor:
+    name: Library on the .NET Framework 4.7.2 floor
+    runs-on: windows-latest
+    # Restore + build + test of three small projects; cap a hung run like the other jobs.
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      # global.json pins the .NET 10 SDK; that SDK compiles the net472 target. The .NET Framework runtime that
+      # RUNS net472 assemblies ships on the windows-latest image, and the net472 targeting pack for COMPILATION
+      # is supplied hermetically by the Microsoft.NETFramework.ReferenceAssemblies package — so no extra install.
+      - name: Setup .NET (build SDK)
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: '10.0.x'
+
+      # Only the three library test projects carry the net472 leg (EnableNet472Floor adds it): the tooling test
+      # projects (Roslyn / GenDoc / Cli) stay net10-only by design, and RequestBinder.UnitTests stays net10-only
+      # because its fixtures bind DateOnly, a .NET 6+ type absent from net472. RequestBinder is still floored here
+      # through its property tests. A per-project loop (not a solution-wide -f net472, which would force the TFM
+      # onto the net10-only projects and fail) keeps the net472 scope exactly these three.
+      - name: Test the netstandard2.0 libraries on .NET Framework 4.7.2
+        shell: bash
+        run: |
+          set -euo pipefail
+          for proj in \
+            FirstClassErrors.UnitTests \
+            FirstClassErrors.PropertyTests \
+            FirstClassErrors.RequestBinder.PropertyTests ; do
+            echo "::group::$proj (net472)"
+            dotnet test "$proj/$proj.csproj" -c Release -f net472 -p:EnableNet472Floor=true \
+              --logger "console;verbosity=normal"
+            echo "::endgroup::"
+          done
+
   # build-test above runs the whole suite on the LATEST .NET (10). This job proves the other end of the
   # supported range: that the fce tool and its worker, which ship targeting net8.0 (the floor — see
   # doc/handwritten/for-maintainers/adr/0002-floor-the-tooling-runtime.md), actually run on the .NET 8 RUNTIME. The net8 TFM

@@ -125,3 +125,37 @@ jobs:
             exit 1
           fi
           echo "ok: the net8 fce and worker documented a net8 target on the .NET ${newest} preview runtime"
+
+      # Beyond the tooling above, layer BEHAVIOURAL coverage of the netstandard2.0 LIBRARIES on the preview. The fce
+      # step already proves the library LOADS on the preview runtime (the worker reflects over a netstandard2.0 target
+      # there); this runs the libraries' own unit and property suites on it, so a runtime regression that breaks
+      # behaviour — not just loading — turns the scheduled run red before that major ships. The test projects target
+      # net10.0; only the `dotnet test` execution is wrapped in DOTNET_ROLL_FORWARD, so the net10 test host binds the
+      # highest installed major (the preview) while the build stays on the .NET 10 SDK. Best-effort and non-blocking
+      # like the rest of the canary. RequestBinder.UnitTests IS included here (unlike the net472 floor job): DateOnly,
+      # which its fixtures bind, exists on every modern .NET — it is only absent from .NET Framework.
+      - name: Test the libraries on the preview runtime
+        if: steps.preview.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Installed .NET runtimes:"
+          dotnet --list-runtimes
+          newest="$(dotnet --list-runtimes | sed -nE 's/^Microsoft\.NETCore\.App ([0-9]+)\..*/\1/p' | sort -n | tail -1)"
+          if [ "${newest:-0}" -le 10 ]; then
+            echo "::notice::no runtime newer than the .NET 10 build SDK is installed; skipping the library preview run"
+            exit 0
+          fi
+          for proj in \
+            FirstClassErrors.UnitTests \
+            FirstClassErrors.PropertyTests \
+            FirstClassErrors.RequestBinder.UnitTests \
+            FirstClassErrors.RequestBinder.PropertyTests ; do
+            echo "::group::$proj on the .NET ${newest} preview"
+            # Build on the .NET 10 SDK (no roll-forward), then run ONLY the test host under roll-forward so it binds
+            # the preview major. The env is scoped inline to the test call so it never touches build/evaluation.
+            dotnet build "$proj/$proj.csproj" -c Release
+            DOTNET_ROLL_FORWARD=LatestMajor DOTNET_ROLL_FORWARD_TO_PRERELEASE=1 \
+              dotnet test "$proj/$proj.csproj" -c Release --no-build --logger "console;verbosity=normal"
+            echo "::endgroup::"
+          done
