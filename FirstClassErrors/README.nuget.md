@@ -31,7 +31,7 @@ checked at build time and can be extracted into a living error catalog.
   separate install. They catch, at build time, what would otherwise surface late:
   duplicate error codes, unresolved `[DocumentedBy]` references, documented errors
   missing from the catalog, an unused `ToException()` result, and more.
-- **Zero runtime dependencies, .NET Standard 2.0.** Runs on .NET Framework 4.6.1+,
+- **Zero runtime dependencies, .NET Standard 2.0.** Runs on .NET Framework 4.7.2+,
   .NET Core 2.0+, .NET 5+ (and Mono / Xamarin / Unity). Nothing added to your
   dependency graph.
 
