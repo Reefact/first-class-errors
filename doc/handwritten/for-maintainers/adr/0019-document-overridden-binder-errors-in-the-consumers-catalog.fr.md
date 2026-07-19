@@ -8,125 +8,67 @@
 
 ## Contexte
 
-* L’ADR-0018 (qui a remplacé l’ADR-0016) a rendu les deux erreurs structurelles du binder
-  configurables comme un `BinderErrorDefinition` — code et messages publics ensemble — sur
-  `RequestBinderOptions`. Les deux ADR ont différé une question vers l’issue #140 : comment le
-  catalogue généré d’un consommateur fait apparaître les codes du binder — éventuellement
-  surchargés — sans dériver de ce qu’il émet au runtime.
-* Le générateur de documentation documente une erreur à partir d’une fabrique statique portant
-  `[DocumentedBy]` dans un type `[ProvidesErrorsFor]` : il exécute la méthode de documentation
-  nommée (la prose) et l’exemple qu’elle porte (une erreur vivante), en lisant le code, les
-  messages et le contexte sur l’erreur construite. Il découvre ces types en scannant les
-  projets opt-in de la solution ; il ne scanne pas les paquets référencés.
-* Le binder fabrique lui-même ses deux erreurs structurelles — leurs fabriques sont internes —
-  et documente déjà ses propres défauts dans le catalogue de son paquet.
-* Quand un consommateur surcharge une définition, il possède le code et les messages effectifs :
-  ils vivent dans son propre assembly (le `BinderErrorDefinition` injecté dans les options) et
-  sont de la configuration runtime, non découvrable statiquement depuis le binaire du binder.
-* La prose des erreurs structurelles du binder (titre, règle, diagnostics) est indépendante du
-  code : elle décrit le sens de « un argument requis manquait » quel que soit le code qui le
-  porte.
-* Le modèle d’erreurs codées de la bibliothèque documente une erreur là où elle est définie, via
-  `[ProvidesErrorsFor]` / `[DocumentedBy]`, et interdit de référencer une erreur par une chaîne
-  magique.
-* Un seul paquet livre aujourd’hui des codes documentés et émissibles
-  (`FirstClassErrors.RequestBinder`), et la bibliothèque est en pré-version sans consommateur
-  externe.
+L'ADR-0018 a rendu configurables les erreurs structurelles du Request Binder sous forme de définitions appartenant au consommateur et contenant les codes et messages effectifs.
+
+Le générateur de documentation découvre les erreurs documentées dans les projets consommateurs explicitement inclus, pas dans la configuration d'exécution de packages référencés. Le binaire d'un package ne peut exposer que ses valeurs par défaut, alors qu'un consommateur qui les remplace possède les valeurs réellement émises.
+
+Le sens des erreurs structurelles du binder est stable et appartient au package, mais leurs identités et messages effectifs peuvent appartenir au consommateur.
+
+Le modèle de catalogue du dépôt documente les erreurs là où elles sont définies et évite les liens non typés par chaînes de caractères entre une erreur et sa documentation.
 
 ## Décision
 
-Un consommateur fait apparaître ses erreurs structurelles de binder surchargées dans son propre
-catalogue généré en les documentant dans son propre type `[ProvidesErrorsFor]` — bâti à partir
-de seams publics du binder qui réutilisent la prose indépendante du code et construisent un
-exemple fidèle depuis la définition du consommateur — plutôt que par une découverte automatique
-des codes d’un paquet référencé par le générateur.
+Un consommateur qui remplace les définitions d'erreurs structurelles du Request Binder documente ces erreurs effectives dans son propre catalogue généré au moyen de points d'extension documentaires du binder vérifiés par le compilateur, plutôt que par découverte automatique des catalogues de packages référencés.
 
 ## Justification
 
-* Le consommateur possède les codes effectifs (ADR-0018) : les documenter dans son propre
-  catalogue — là où le modèle d’erreurs codées documente toute autre erreur possédée — garde une
-  règle unique plutôt qu’un chemin cross-paquet spécial.
-* Réutiliser la prose indépendante du code via des seams publics fait que le consommateur n’écrit
-  aucun texte de description et ne construit aucune erreur à la main : les faits mécaniques (code,
-  messages, transience, clé de contexte du chemin d’argument, câblage de l’erreur interne)
-  viennent du binder qui bâtit l’exemple comme à la liaison, si bien que l’entrée documentée ne
-  peut pas dériver de ce qui est émis — fermant le risque même que #140 nommait.
-* Le générateur n’a pas besoin de changer : le catalogue du consommateur est un type
-  `[ProvidesErrorsFor]` / `[DocumentedBy]` ordinaire dans un projet déjà scanné. Cela évite la
-  machinerie qu’exigerait une étape de découverte automatique — résoudre la clôture de références
-  d’un projet, un pré-check métadonnée pour écarter les assemblys non documentants, exécuter le
-  worker sur des binaires tiers, une garde de version de contrat de documentation et une
-  politique de collision de codes — et ses pièges de justesse, puisqu’un paquet référencé n’est
-  pas toujours émis sur la surface publique et que ses défauts sont faux pour un consommateur qui
-  les a surchargés.
-* Garder le lien entre une erreur et sa description dans le code, via `nameof` / `typeof`, le
-  laisse sous l’œil du compilateur — cohérent avec la position de la bibliothèque contre les
-  chaînes magiques — là où un lien exprimé en configuration de build les réintroduirait.
-* Avec un seul paquet à codes documentés et aucun consommateur, la petite glue par consommateur
-  est un prix acceptable, et la surface des options comme les seams de documentation sont arrêtés
-  avant de s’engager sur une découverte automatique.
+Le consommateur possède les codes et messages effectifs ; son propre catalogue est donc le seul emplacement capable de décrire fidèlement ce que l'application émet à l'exécution.
 
-## Alternatives considérées
+Les points d'extension fournis par le binder permettent au consommateur de réutiliser la prose stable et de créer des erreurs représentatives avec le comportement du package, sans recopier les descriptions ni reconstruire manuellement leur forme.
 
-### Découvrir automatiquement les codes documentés d’un paquet référencé
+Conserver l'entrée de catalogue dans le flux ordinaire `[ProvidesErrorsFor]` / `[DocumentedBy]` du consommateur évite un mécanisme spécial de découverte inter-packages, l'analyse de la fermeture des références, une politique de collisions et le risque de documenter des valeurs par défaut que l'application n'utilise plus.
 
-Considérée parce qu’elle est sans boilerplate : un consommateur référence le paquet et ses codes
-apparaissent dans son catalogue.
+Des liens exprimés en code et vérifiés par le compilateur préservent la position du dépôt contre les magic strings et restent refactorables par les outils habituels.
 
-Rejetée parce qu’elle est inutile et trompeuse. Le seul paquet qui livre des codes émissibles est
-`FirstClassErrors.RequestBinder`, dont le binaire ne porte que les défauts — l’auto-découverte ne
-pourrait donc jamais faire apparaître les surcharges d’un consommateur (ce que font ces seams), et
-pour un consommateur qui surcharge elle documenterait les codes par défaut qu’il n’émet plus. La
-restreindre à ce seul paquet n’y change rien : la limite est que les surcharges vivent dans
-l’assembly du consommateur, pas dans celui du paquet. Elle n’économiserait qu’une petite glue au
-consommateur zéro-config qui documente les défauts.
+Les membres publics exacts, les suppressions d'analyseurs et les exemples consommateurs sont documentés dans la [référence d'implémentation des ADR](../specifications/adr-implementation-reference.fr.md#surfaces-publiques-uniquement-destinées-à-la-documentation) et la documentation du Request Binder.
 
-### Un lien en configuration de build reliant une erreur à une méthode de description
+## Alternatives envisagées
 
-Considérée parce qu’elle sort le câblage de documentation du code vers la configuration du projet.
+### Découvrir automatiquement les codes documentés des packages référencés
 
-Rejetée parce qu’elle référencerait des membres par chaîne dans les fichiers projet —
-réintroduisant les chaînes magiques que le modèle d’erreurs codées existe pour éliminer, sans
-contrôle à la compilation, ni navigation, ni sûreté au renommage. Un attribut d’assembly
-compile-safe serait le repli si un lien déclaratif était un jour souhaité.
+Envisagé pour supprimer le glue consommateur pour les valeurs par défaut du package. Rejeté parce que les binaires référencés ne peuvent révéler les surcharges du consommateur et pourraient donc documenter des codes que l'application n'émet pas.
+
+### Relier la documentation via la configuration de build
+
+Envisagé pour conserver le câblage hors du code. Rejeté parce que les noms de membres deviendraient des chaînes non vérifiées, peu navigables et fragiles au refactoring.
 
 ## Conséquences
 
 ### Positives
 
-* La moitié « surcharge » de #140 est fermée : un consommateur documente exactement ce qu’il émet,
-  fidèle au runtime, avec la prose du binder et sans changer le générateur.
-* Le lien entre une erreur et sa documentation reste compile-safe et dans le code, cohérent avec
-  la position de la bibliothèque sur les chaînes magiques.
+* Un consommateur documente exactement les erreurs du binder qu'il émet.
+* La prose stable et la construction d'erreurs représentatives sont réutilisées plutôt que dupliquées.
+* Le générateur et son modèle de découverte restent inchangés.
+* Les liens documentaires restent vérifiés par le compilateur.
 
 ### Négatives
 
-* Un consommateur fait entrer les codes du binder dans son catalogue avec un petit type de glue
-  par erreur (un type `[ProvidesErrorsFor]` déléguant aux seams publics) ; il n’y a pas de
-  découverte automatique sans boilerplate.
-* Le binder gagne quatre membres publics (un seam de description et un d’exemple par erreur
-  structurelle). Les deux seams d’exemple renvoient une erreur sans `[DocumentedBy]` et sont
-  supprimés contre FCE009 comme helpers délibérément hors catalogue.
+* Les consommateurs ajoutent une petite quantité de glue explicite dans leur catalogue.
+* Le binder expose une surface publique limitée dont l'objectif principal est le support documentaire.
 
 ### Risques
 
-* Un consommateur pourrait appeler un seam d’exemple pour fabriquer une erreur structurelle hors
-  documentation. Il produit la même forme que ce que le binder émet et n’est injecté nulle part :
-  il est donc inerte — pas différent de bâtir n’importe quelle erreur via le `PrimaryPortError.Create`
-  public.
+* Les membres publics destinés à la documentation pourraient étendre inutilement l'API d'exécution. Mesure : conserver une surface minimale, stable et liée au contrat du catalogue ; réexaminer les alternatives par métadonnées ou côté générateur avant tout ajout.
+* Un consommateur pourrait appeler un point d'exemple hors documentation. Mesure : les exemples sont des valeurs d'erreur inertes et ne modifient pas le comportement du binder.
 
 ## Actions de suivi
 
-* Aucune. L’auto-découverte n’est pas nécessaire (voir Alternatives) : le seul paquet à codes
-  émissibles est couvert par ces seams.
+* Examiner tout futur membre public destiné à la documentation au regard de la règle de minimisation de la référence d'implémentation.
 
 ## Références
 
-* ADR-0018 — regrouper le code et les messages d’une erreur structurelle du binder dans une seule
-  définition ; l’appropriation sur laquelle cette décision s’appuie.
-* ADR-0016 — rendre configurables les codes d’erreur structurels du binder (remplacée) ; elle a
-  d’abord différé ce sujet vers #140.
-* Issue #140 — documenter les codes d’erreur des paquets FirstClassErrors référencés dans le
-  catalogue d’un consommateur.
-* FCE009 — `ErrorFactoryNotDocumented`, l’analyseur contre lequel les seams d’exemple sont
-  supprimés.
+* [Référence d'implémentation des ADR — Surfaces publiques uniquement destinées à la documentation](../specifications/adr-implementation-reference.fr.md#surfaces-publiques-uniquement-destinées-à-la-documentation)
+* [ADR-0018](0018-bundle-the-binders-structural-error-code-and-messages.fr.md)
+* [ADR-0016](0016-make-the-binders-structural-error-codes-configurable.fr.md) — origine remplacée de la question différée.
+* Issue #140 et analyseur FCE009.
+* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.
