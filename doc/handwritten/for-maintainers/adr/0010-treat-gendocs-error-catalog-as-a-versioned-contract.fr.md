@@ -72,4 +72,4 @@ Envisagé pour donner au catalogue sa propre version. Rejeté parce que GenDoc n
 * [ADR-0009](0009-report-the-toolings-failures-as-first-class-errors.fr.md)
 * [ADR-0002](0002-floor-the-tooling-runtime.fr.md)
 * Issue #167.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.

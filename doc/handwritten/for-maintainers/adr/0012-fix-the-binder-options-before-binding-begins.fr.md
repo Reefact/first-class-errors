@@ -72,4 +72,4 @@ Envisagé pour minimiser les changements. Rejeté parce que la documentation ne 
 * [ADR-0006](0006-supply-arbitrary-test-values-from-a-seedable-source.fr.md)
 * [ADR-0007](0007-name-the-binder-terminals-new-and-create.fr.md)
 * Issue #145 et pull request #126.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.

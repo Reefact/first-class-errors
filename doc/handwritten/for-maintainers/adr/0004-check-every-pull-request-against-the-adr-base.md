@@ -74,4 +74,4 @@ Considered because it requires no process. Rejected because it leaves exactly th
 * `CLAUDE.md` — the in-session guidance.
 * [ADR implementation reference — ADR pull-request check](../specifications/adr-implementation-reference.md#adr-pull-request-check)
 * [`adr-check` workflow reference](../workflows/adr-check.en.md)
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.

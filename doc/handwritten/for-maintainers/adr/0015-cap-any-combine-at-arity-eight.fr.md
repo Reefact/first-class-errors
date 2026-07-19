@@ -73,4 +73,4 @@ Envisagé car cette forme est naturellement variadique. Rejeté parce qu'elle ne
 
 * [Référence d'implémentation des ADR — Contrats de génération de Dummies](../specifications/adr-implementation-reference.fr.md#contrats-de-génération-de-dummies)
 * [ADR-0011](0011-host-dummies-as-a-standalone-package.fr.md)
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.

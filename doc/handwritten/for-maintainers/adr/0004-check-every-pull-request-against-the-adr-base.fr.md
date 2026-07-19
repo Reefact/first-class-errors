@@ -74,4 +74,4 @@ Envisagé car cela ne nécessite aucun processus. Rejeté parce que cela laisse 
 * `CLAUDE.md` — les instructions en session.
 * [Référence d'implémentation des ADR — Vérification ADR des pull requests](../specifications/adr-implementation-reference.fr.md#vérification-adr-des-pull-requests)
 * [Référence du workflow `adr-check`](../workflows/adr-check.fr.md)
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.

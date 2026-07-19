@@ -72,4 +72,4 @@ Envisagé car le flux de conversion est autrement similaire. Rejeté parce que l
 * [Référence d'implémentation des ADR — Contrats d'implémentation du Request Binder](../specifications/adr-implementation-reference.fr.md#contrats-dimplémentation-du-request-binder)
 * [ADR-0007](0007-name-the-binder-terminals-new-and-create.fr.md)
 * Issue #144 et pull requests #126 et #141.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.

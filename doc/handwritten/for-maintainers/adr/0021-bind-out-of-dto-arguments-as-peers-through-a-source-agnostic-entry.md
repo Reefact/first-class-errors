@@ -86,4 +86,4 @@ Considered to avoid a second context value. Rejected because path and origin ans
 * [ADR-0012](0012-fix-the-binder-options-before-binding-begins.md) — options remain fixed at the source-agnostic entry; illustrative API shape updated by this ADR.
 * [ADR-0017](0017-provide-a-configurable-application-wide-default-for-the-binder-options.md) — the default remains valid; illustrative API shape updated by this ADR.
 * Issue #148.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.

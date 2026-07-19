@@ -72,4 +72,4 @@ Considered because the conversion flow is otherwise similar. Rejected because nu
 * [ADR implementation reference — Request Binder implementation contracts](../specifications/adr-implementation-reference.md#request-binder-implementation-contracts)
 * [ADR-0007](0007-name-the-binder-terminals-new-and-create.md)
 * Issue #144 and pull requests #126 and #141.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.

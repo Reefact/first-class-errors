@@ -69,4 +69,4 @@ Envisagé comme stratégie classique de compatibilité. Rejeté parce qu'un buil
 * [Référence du workflow `ci`](../workflows/ci.fr.md)
 * [ADR-0001](0001-lock-the-analyzer-roslyn-floor.fr.md) — la décision correspondante pour l'hôte de l'analyseur.
 * [ADR-0022](0022-floor-the-library-on-net-framework-4-7-2.fr.md) — raffine le plancher .NET Framework de la bibliothèque et remplace la mention incidente de 4.6.1 auparavant présente dans cet ADR.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.

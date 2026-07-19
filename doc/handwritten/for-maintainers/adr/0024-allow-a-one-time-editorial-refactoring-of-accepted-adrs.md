@@ -1,6 +1,6 @@
-# ADR-0023 | Allow a one-time editorial refactoring of accepted ADRs
+# ADR-0024 | Allow a one-time editorial refactoring of accepted ADRs
 
-🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md)
+🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md)
 
 **Status:** Accepted
 **Date:** 2026-07-19

@@ -74,4 +74,4 @@ Envisagé car elle est sûre pour les tests et idiomatique lorsqu'un conteneur e
 * [ADR-0012](0012-fix-the-binder-options-before-binding-begins.fr.md) — cet ADR réexamine une alternative rejetée tout en préservant des options fixes par binder.
 * [ADR-0006](0006-supply-arbitrary-test-values-from-a-seedable-source.fr.md)
 * Issue #181.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.

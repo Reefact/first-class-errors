@@ -71,4 +71,4 @@ Envisagé pour conserver le câblage hors du code. Rejeté parce que les noms de
 * [ADR-0018](0018-bundle-the-binders-structural-error-code-and-messages.fr.md)
 * [ADR-0016](0016-make-the-binders-structural-error-codes-configurable.fr.md) — origine remplacée de la question différée.
 * Issue #140 et analyseur FCE009.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.

@@ -76,4 +76,4 @@ Envisagé pour une assurance large. Rejeté parce que la frontière de compatibi
 * [ADR-0002](0002-floor-the-tooling-runtime.fr.md) — raffiné par cet ADR pour le plancher .NET Framework de la bibliothèque.
 * [ADR-0001](0001-lock-the-analyzer-roslyn-floor.fr.md)
 * `FirstClassErrors/README.nuget.md` et la référence du workflow CI.
-* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.
+* [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.
