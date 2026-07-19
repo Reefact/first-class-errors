@@ -23,11 +23,16 @@ could never draw — and by the opaque draws of `ContainingAny(...)`. The elemen
 generator's cardinality alone therefore bounds only the elements that must come
 *from* it, not the whole request.
 
-Element generators fall into two groups. Some draw from a small, countable
-domain: a boolean has two values, an enum has its declared members, a narrow
-integer range or a restricted character pool has a fixed size. Others draw from a
-domain that is effectively unbounded or simply unknowable to the collection:
-unconstrained integers, strings and identifiers, and — decisively — any foreign
+Element generators fall into two groups. Some draw from a domain the library can
+count **cheaply**: a boolean's two values, an enum's declared members, a narrow
+integer or time range, a restricted character pool, an explicit allow-list
+(`OneOf`), or a scalar pinned to a single value (`Zero`, `Between(x, x)`). Others
+draw from a domain that is effectively unbounded, or countable only in principle
+at a cost the library declines to pay: unconstrained integers, strings and
+identifiers, a floating-point **range** (finite in representable values, but
+counting them is type-specific bit-arithmetic disproportionate to the dummy use
+case — so a decimal or floating-point generator is gated only through an
+allow-list or a pin, never a wider range), and — decisively — any foreign
 `IAny<T>` implementation or any derived generator (`As`, `Combine`), which carries
 no domain information at all. `IAny<T>` is a public interface, so the library
 cannot assume every generator can report its cardinality.

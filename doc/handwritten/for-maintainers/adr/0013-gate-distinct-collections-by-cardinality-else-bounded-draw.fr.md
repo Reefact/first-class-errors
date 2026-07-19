@@ -25,14 +25,20 @@ seul générateur d'éléments ne borne donc que les éléments qui doivent veni
 lui*, non la demande entière.
 
 Les générateurs d'éléments se répartissent en deux groupes. Certains tirent d'un
-domaine petit et dénombrable : un booléen a deux valeurs, une énumération a ses
-membres déclarés, un intervalle entier étroit ou un pool de caractères restreint a
-une taille fixe. D'autres tirent d'un domaine effectivement non borné ou
-simplement inconnaissable pour la collection : entiers non contraints, chaînes et
-identifiants, et — de façon décisive — toute implémentation étrangère de
-`IAny<T>` ou tout générateur dérivé (`As`, `Combine`), qui ne porte aucune
-information de domaine. `IAny<T>` est une interface publique : la bibliothèque ne
-peut donc pas supposer que tout générateur sache rapporter sa cardinalité.
+domaine que la bibliothèque sait compter **à bas coût** : les deux valeurs d'un
+booléen, les membres déclarés d'une énumération, un intervalle entier ou temporel
+étroit, un pool de caractères restreint, une liste blanche explicite (`OneOf`), ou
+un scalaire épinglé sur une seule valeur (`Zero`, `Between(x, x)`). D'autres tirent
+d'un domaine effectivement non borné, ou dénombrable seulement en principe à un
+coût que la bibliothèque refuse de payer : entiers non contraints, chaînes et
+identifiants, une **plage** flottante (finie en valeurs représentables, mais les
+compter relève d'une arithmétique de bits spécifique au type, disproportionnée pour
+l'usage « dummy » — un générateur décimal ou flottant n'est donc contrôlé que via
+une liste blanche ou un pin, jamais une plage plus large), et — de façon décisive —
+toute implémentation étrangère de `IAny<T>` ou tout générateur dérivé (`As`,
+`Combine`), qui ne porte aucune information de domaine. `IAny<T>` est une interface
+publique : la bibliothèque ne peut donc pas supposer que tout générateur sache
+rapporter sa cardinalité.
 
 Un comparateur d'égalité personnalisé ne peut que fusionner des valeurs distinctes
 en un nombre moindre de classes d'équivalence ; il ne peut jamais en créer de
