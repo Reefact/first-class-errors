@@ -19,7 +19,7 @@ namespace Dummies;
 ///     comparison operators do. Values supplied to <see cref="OneOf" /> are returned as given, Kind included. There is deliberately no clock-relative constraint (no "in the past/future"): a
 ///     reproducible test pins its reference instants explicitly with <see cref="After" /> and <see cref="Before" />.
 /// </remarks>
-public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource, ICardinalityHint {
+public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource, ICardinalityHint, IDomainMembership<DateTime> {
 
     #region Statics members declarations
 
@@ -62,6 +62,8 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource, ICardinality
     RandomSource? IHasRandomSource.Source => _source;
 
     long? ICardinalityHint.DistinctCardinality => _spec.Cardinality;
+
+    bool IDomainMembership<DateTime>.Contains(DateTime value) => _spec.Contains(Ord(value));
 
     /// <summary>Requires an instant strictly after <paramref name="instant" />.</summary>
     /// <param name="instant">The exclusive lower bound.</param>

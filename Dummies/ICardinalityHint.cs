@@ -14,6 +14,11 @@ namespace Dummies;
 ///     the bounded dedup-draw fallback, which surfaces a genuine shortfall as an <see cref="AnyGenerationException" />.
 ///     Because the bound ignores any custom <see cref="IEqualityComparer{T}" /> (which can only <i>merge</i> values,
 ///     never create new ones), it stays a sound upper bound under a comparer too.
+///     <para>
+///         A generator that advertises a finite cardinality here must also implement
+///         <see cref="IDomainMembership{T}" />, so a distinct collection can tell whether a value pinned with
+///         <c>Containing(...)</c> extends the domain or already sits inside it; the two capabilities travel together.
+///     </para>
 /// </remarks>
 internal interface ICardinalityHint {
 
