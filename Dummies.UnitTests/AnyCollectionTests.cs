@@ -147,6 +147,106 @@ public sealed class AnyCollectionTests {
         }
     }
 
+    [Fact(DisplayName = "Containing: a fixed value outside the element domain extends the effective cardinality (issue #188).")]
+    public void ContainingOutsideDomainExtendsCardinality() {
+        // The motivating case: {1, 2, 3} is satisfiable — 3 is supplied directly and lies outside the {1, 2} the
+        // generator can produce, so only two elements must be drawn from it.
+        for (int i = 0; i < SampleCount; i++) {
+            HashSet<int> set = Any.SetOf(Any.Int32().OneOf(1, 2)).Containing(3).WithCount(3);
+            Check.That(set).Contains(1, 2, 3);
+            Check.That(set.Count).IsEqualTo(3);
+        }
+
+        // The same reasoning holds for a distinct list, for dictionary-shaped keys, and for several out-of-domain
+        // values at once — the correction applies wherever a distinct collection is gated by cardinality.
+        for (int i = 0; i < SampleCount; i++) {
+            HashSet<int> list = new(Any.ListOf(Any.Int32().OneOf(1, 2)).Containing(3).WithCount(3).Distinct().Generate());
+            Check.That(list).Contains(1, 2, 3);
+
+            HashSet<int> quad = Any.SetOf(Any.Int32().OneOf(1, 2)).Containing(3).Containing(4).WithCount(4);
+            Check.That(quad).Contains(1, 2, 3, 4);
+            Check.That(quad.Count).IsEqualTo(4);
+        }
+    }
+
+    [Fact(DisplayName = "Containing: a value already inside the element domain does not inflate the cardinality, so an impossible count still conflicts.")]
+    public void ContainingInsideDomainDoesNotInflate() {
+        // 1 is already producible by the generator, so it adds no capacity: three distinct values over {1, 2} remain
+        // impossible and must still fail eagerly, naming the shortfall.
+        ConflictingAnyConstraintException conflict = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.SetOf(Any.Int32().OneOf(1, 2)).Containing(1).WithCount(3));
+        Check.That(conflict.Message).Contains("2 distinct value");
+
+        // Mixed: 1 is inside the domain, 5 is outside — effective capacity is 2 + 1 = 3. Four is over the top; three
+        // is exactly reachable as {1, 2, 5}.
+        Check.ThatCode(() => Any.SetOf(Any.Int32().OneOf(1, 2)).Containing(1).Containing(5).WithCount(4)).Throws<ConflictingAnyConstraintException>();
+        for (int i = 0; i < SampleCount; i++) {
+            HashSet<int> set = Any.SetOf(Any.Int32().OneOf(1, 2)).Containing(1).Containing(5).WithCount(3);
+            Check.That(set).Contains(1, 2, 5);
+        }
+    }
+
+    [Fact(DisplayName = "Containing: the effective cardinality is order-independent across Distinct, Containing and the count.")]
+    public void EffectiveCardinalityIsOrderIndependent() {
+        // Every ordering of the same three constraints reaches the same verdict — accepted, because 3 is outside the
+        // domain — since Distinct() re-runs the whole validation on the accumulated state.
+        for (int i = 0; i < SampleCount; i++) {
+            Check.That(new HashSet<int>(Any.ListOf(Any.Int32().OneOf(1, 2)).WithCount(3).Containing(3).Distinct().Generate())).Contains(1, 2, 3);
+            Check.That(new HashSet<int>(Any.ListOf(Any.Int32().OneOf(1, 2)).Distinct().Containing(3).WithCount(3).Generate())).Contains(1, 2, 3);
+            Check.That(new HashSet<int>(Any.ListOf(Any.Int32().OneOf(1, 2)).Containing(3).WithCount(3).Distinct().Generate())).Contains(1, 2, 3);
+        }
+
+        // And rejected whatever the order, because the contained value is inside the domain.
+        Check.ThatCode(() => Any.ListOf(Any.Int32().OneOf(1, 2)).WithCount(3).Containing(1).Distinct()).Throws<ConflictingAnyConstraintException>();
+        Check.ThatCode(() => Any.ListOf(Any.Int32().OneOf(1, 2)).Distinct().Containing(1).WithCount(3)).Throws<ConflictingAnyConstraintException>();
+        Check.ThatCode(() => Any.ListOf(Any.Int32().OneOf(1, 2)).Containing(1).WithCount(3).Distinct()).Throws<ConflictingAnyConstraintException>();
+    }
+
+    [Fact(DisplayName = "Containing: a near-maximum element cardinality plus an out-of-domain value does not overflow into a false conflict.")]
+    public void ContainingNearMaximumCardinalityDoesNotOverflow() {
+        // Between(0, long.MaxValue - 1) advertises long.MaxValue distinct values; the additive form base + extras
+        // would overflow to a negative and reject spuriously. The subtractive check stays correct.
+        for (int i = 0; i < SampleCount; i++) {
+            HashSet<long> set = Any.SetOf(Any.Int64().Between(0, long.MaxValue - 1)).Containing(-1L).WithCount(3);
+            Check.That(set).Contains(-1L);
+            Check.That(set.Count).IsEqualTo(3);
+        }
+    }
+
+    [Fact(DisplayName = "ContainingAny stays conservative: no eager false conflict, and an opaque shortfall surfaces at generation.")]
+    public void ContainingAnyDefersToGeneration() {
+        // The generator drawn from can yield a value outside the element domain, so the request cannot be proven
+        // impossible at declaration — a wide ContainingAny makes it genuinely satisfiable.
+        for (int i = 0; i < SampleCount; i++) {
+            HashSet<int> set = Any.SetOf(Any.Int32().OneOf(1, 2)).ContainingAny(Any.Int32().GreaterThan(100)).WithCount(3);
+            Check.That(set.Count).IsEqualTo(3);
+            Check.That(set).Contains(1, 2);
+        }
+
+        // When every source draws from the same two-value domain, three distinct values are impossible — but the
+        // overlap is opaque, so it is caught while drawing (a replayable AnyGenerationException) rather than as a
+        // false eager conflict.
+        Check.ThatCode(() => Any.SetOf(Any.Bool()).ContainingAny(Any.Bool()).ContainingAny(Any.Bool()).ContainingAny(Any.Bool()).Generate())
+             .Throws<AnyGenerationException>();
+    }
+
+    [Fact(DisplayName = "Containing under a merging comparer: an out-of-domain value is credited, and a comparer that merges it back is caught at generation.")]
+    public void ContainingUnderAMergingComparer() {
+        IEqualityComparer<int> modTen = new ModuloComparer(10);
+
+        // 15 is outside {1, 2, 3} and its residue class (5) is fresh too, so {1, 2, 3, 15} has four classes and
+        // generation succeeds.
+        for (int i = 0; i < SampleCount; i++) {
+            HashSet<int> set = Any.SetOf(Any.Int32().OneOf(1, 2, 3), modTen).Containing(15).WithCount(4);
+            Check.That(set.Count).IsEqualTo(4);
+        }
+
+        // 12 is outside {1, 2} by value, so it is still credited and the request is accepted eagerly — but 12 ≡ 2
+        // (mod 10) collapses it back into the domain, so three distinct-under-the-comparer values are impossible and
+        // the shortfall surfaces while drawing, never as a false eager conflict.
+        Check.ThatCode(() => Any.SetOf(Any.Int32().OneOf(1, 2), modTen).Containing(12).WithCount(3).Generate()).Throws<AnyGenerationException>();
+    }
+
     [Fact(DisplayName = "ArrayOf: produces an array of the requested size, distinct when asked.")]
     public void ArrayOfProducesArrays() {
         for (int i = 0; i < SampleCount; i++) {

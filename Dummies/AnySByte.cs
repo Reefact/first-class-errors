@@ -12,7 +12,7 @@ namespace Dummies;
 ///     contradictory constraints fail eagerly with a <see cref="ConflictingAnyConstraintException" /> naming both
 ///     sides; instances are immutable recipes, and each value is built to satisfy the constraints in one draw.
 /// </summary>
-public sealed class AnySByte : IAny<sbyte>, IHasRandomSource, ICardinalityHint {
+public sealed class AnySByte : IAny<sbyte>, IHasRandomSource, ICardinalityHint, IDomainMembership<sbyte> {
 
     #region Statics members declarations
 
@@ -53,6 +53,8 @@ public sealed class AnySByte : IAny<sbyte>, IHasRandomSource, ICardinalityHint {
     RandomSource? IHasRandomSource.Source => _source;
 
     long? ICardinalityHint.DistinctCardinality => _spec.Cardinality;
+
+    bool IDomainMembership<sbyte>.Contains(sbyte value) => _spec.Contains(Ord(value));
 
     /// <summary>Requires a value strictly greater than zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>

@@ -16,8 +16,12 @@ never behind a retry loop.
 
 The collection increment adds distinct collections: `SetOf`, `ListOf(...).Distinct()`
 and the like, and a dictionary's keys. A distinct collection of *N* elements is
-satisfiable only if its element generator can yield at least *N* distinct values,
-which is a property of that generator's domain.
+satisfiable only if *N* distinct values can be assembled from its **effective
+domain**: the element generator's own domain, widened by any values pinned with
+`Containing(...)` that fall outside it — each such value is one the generator itself
+could never draw — and by the opaque draws of `ContainingAny(...)`. The element
+generator's cardinality alone therefore bounds only the elements that must come
+*from* it, not the whole request.
 
 Element generators fall into two groups. Some draw from a small, countable
 domain: a boolean has two values, an enum has its declared members, a narrow
@@ -51,11 +55,16 @@ replayable seed, if the element domain proves too small.
   bounded honours the no-retry-loop principle; on exhaustion it reports the real
   shortfall as an `AnyGenerationException` naming the seed — the same failure
   channel a factory rejection already uses — rather than looping.
-* **The advertised bound stays sound under a comparer.** Since a comparer only
-  merges values, the advertised cardinality remains a valid *upper* bound, so the
-  eager check never rejects a request that was actually satisfiable; a comparer
-  that collapses the domain below the requested count is caught by the bounded
-  draw instead.
+* **The eager check counts only what the generator must supply, and stays sound
+  under a comparer.** It compares the element generator's cardinality against the
+  count *reduced by* the values pinned outside its domain and by each opaque
+  `ContainingAny(...)` draw — so a fixed value the generator cannot produce widens
+  the request instead of conflicting with it, and an unprovable overlap defers to
+  the bounded draw rather than becoming a false conflict. Because a comparer only
+  merges values, the advertised cardinality remains a valid *upper* bound on the
+  generator's own contribution, so the check never rejects a request that was
+  actually satisfiable; a comparer that collapses the effective domain below the
+  requested count is caught by the bounded draw instead.
 * **One principle, applied where its information exists.** Splitting the failure
   between declaration time (when the domain is countable) and generation time
   (when it is not) is not a dilution of the eager-conflict principle but its
@@ -129,5 +138,5 @@ bounded-work principle.
 ## References
 
 * ADR-0011 — Host Dummies as a standalone package in this repository.
-* The distinct-collection engine and the cardinality capability, in the `Dummies`
-  project (`CollectionState`, `ICardinalityHint`).
+* The distinct-collection engine and the cardinality/membership capabilities, in the
+  `Dummies` project (`CollectionState`, `ICardinalityHint`, `IDomainMembership`).

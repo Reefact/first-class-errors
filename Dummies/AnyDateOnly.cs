@@ -16,7 +16,7 @@ namespace Dummies;
 ///     constraint: a reproducible test pins its reference dates explicitly with <see cref="After" /> and
 ///     <see cref="Before" />.
 /// </summary>
-public sealed class AnyDateOnly : IAny<DateOnly>, IHasRandomSource, ICardinalityHint {
+public sealed class AnyDateOnly : IAny<DateOnly>, IHasRandomSource, ICardinalityHint, IDomainMembership<DateOnly> {
 
     #region Statics members declarations
 
@@ -57,6 +57,8 @@ public sealed class AnyDateOnly : IAny<DateOnly>, IHasRandomSource, ICardinality
     RandomSource? IHasRandomSource.Source => _source;
 
     long? ICardinalityHint.DistinctCardinality => _spec.Cardinality;
+
+    bool IDomainMembership<DateOnly>.Contains(DateOnly value) => _spec.Contains(Ord(value));
 
     /// <summary>Requires a date strictly after <paramref name="date" />.</summary>
     /// <param name="date">The exclusive lower bound.</param>
