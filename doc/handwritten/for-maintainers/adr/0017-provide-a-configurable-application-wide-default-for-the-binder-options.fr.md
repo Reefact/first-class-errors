@@ -8,128 +8,70 @@
 
 ## Contexte
 
-* `Bind.PropertiesOf(request)` lie avec `RequestBinderOptions.Default`. Lier avec des
-  options personnalisées exige sinon `Bind.WithOptions(options).PropertiesOf(...)` — faire
-  transiter le point d'entrée configuré par chaque appel, ou le résoudre depuis un
-  conteneur DI.
-* Un hôte sans conteneur DI — une CLI, un worker, un petit outil — n'a aucun moyen
-  host-agnostic de poser un défaut applicatif que le simple `Bind.PropertiesOf` ramasse.
-* L'ADR-0012 a fixé les options d'un binder à son point d'entrée (aucun changement une
-  fois la liaison commencée) et, parmi ses alternatives rejetées, a écarté « un défaut
-  ambiant à l'échelle du processus, configuré une fois (un `Configure` statique) » au
-  motif qu'il introduirait un état global mutable, fuirait entre les tests exécutés en
-  parallèle, et pourrait être configuré au mauvais moment.
-* `RequestBinderOptions` est une valeur immuable : une instance partagée ne porte aucun
-  état de settings mutable, donc le hasard classique — muter un objet de settings partagé
-  pendant qu'il est utilisé — ne s'y applique pas.
-* La convention .NET est partagée : `JsonConvert.DefaultSettings` de `Newtonsoft.Json` est
-  un global librement re-posable ; `JsonSerializerOptions` de `System.Text.Json` devient
-  immuable à la première utilisation (gelé) et se configure par-instance ou via DI.
-* La bibliothèque n'expose aucun autre état ambiant mutable : les points d'extension de
-  l'horloge, de l'identifiant d'instance et des valeurs arbitraires sont des défauts
-  immuables avec un override `AsyncLocal`, scoped, réservé aux tests (ADR-0006).
-* La bibliothèque est en pré-version, non publiée sur NuGet et sans consommateur externe.
+L'ADR-0012 a fixé les options d'un binder avant le début du binding et conservé un point d'entrée configuré explicite.
+
+Les applications sans conteneur d'injection de dépendances peuvent néanmoins avoir besoin d'une politique unique de nommage et d'erreurs structurelles à l'échelle de l'application tout en utilisant le point d'entrée de binding simple. Répéter ou transmettre manuellement un point d'entrée configuré à chaque appel reste possible mais moins pratique.
+
+Une valeur par défaut globale librement mutable introduirait une dérive à l'exécution et des interférences entre tests parallèles. `RequestBinderOptions` est lui-même immuable ; le risque restant est la réaffectation de la référence partagée après utilisation.
 
 ## Décision
 
-`RequestBinderOptions.Default` — les options avec lesquelles `Bind.PropertiesOf` lie —
-est un défaut applicatif posable, configuré une fois au démarrage de l'application et gelé
-à la première liaison qui le lit.
+`RequestBinderOptions.Default`, utilisé par le point d'entrée de binding simple, est configurable une seule fois pendant la composition de l'application puis devient immuable après sa première utilisation par un binding.
 
 ## Justification
 
-* Un défaut processus posable est le seul moyen host-agnostic pour que le simple
-  `Bind.PropertiesOf` ramasse une politique applicative sans conteneur DI, ce dont une CLI
-  ou un worker a besoin ; le point d'entrée favorable à la DI (`Bind.WithOptions`) reste
-  disponible là où un conteneur existe.
-* Le hasard contre lequel l'ADR-0012 se prémunissait — un défaut ambiant qui dérive à
-  l'exécution — est supprimé par le gel à la première utilisation : dès que la première
-  liaison le lit, une réaffectation lève, donc c'est un choix au moment de la composition
-  qui ne peut pas changer une fois les requêtes en vol. C'est la discipline de
-  `System.Text.Json` (immuable une fois utilisé), pas celle, librement mutable, de
-  `JsonConvert.DefaultSettings`.
-* Parce que `RequestBinderOptions` est immuable, un défaut partagé ne porte aucun état de
-  settings mutable, donc le piège classique des settings globaux ne s'applique pas ; le
-  seul état global est vers quelles options immuables pointe le défaut, fixé une fois.
-* Garder la configuration sur `RequestBinderOptions.Default` plutôt que sur une méthode de
-  `Bind` laisse le point d'entrée de liaison sans surface de configuration : un
-  développeur qui lie des requêtes ne voit que des verbes de liaison.
-* La préoccupation d'isolation des tests parallèles soulevée par l'ADR-0012 se limite aux
-  tests de la bibliothèque elle-même, et est satisfaite par un override scoped réservé aux
-  tests (un `AsyncLocal`) — le même patron que l'horloge (ADR-0006) — qui ne touche ni ne
-  gèle jamais le défaut de production.
-* Le statut de pré-version signifie que la surface est arrêtée maintenant, quand il n'y a
-  aucun consommateur à migrer.
+Une valeur par défaut configurable offre aux hôtes sans injection de dépendances un moyen agnostique d'établir une politique applicative unique, tout en préservant le chemin explicite `Bind.WithOptions` pour la configuration injectée ou propre à un appel.
 
-## Alternatives considérées
+Geler la référence lors de la première utilisation limite l'état global à la phase de démarrage et empêche la dérive d'exécution rejetée par l'ADR-0012. L'objet partagé étant lui-même immuable, les consommateurs ne peuvent pas modifier une instance de configuration déjà utilisée.
 
-### Garder les options au seul point d'entrée (le statu quo de l'ADR-0012)
+Un override local aux tests et limité à leur scope préserve l'isolation parallèle sans rendre la valeur de production librement réinitialisable.
 
-Considérée parce qu'elle est déjà livrée et n'a aucun état global.
+Cette décision réexamine volontairement une alternative rejetée par l'ADR-0012 avec des contraintes plus fortes ; elle ne modifie pas la décision de l'ADR-0012 selon laquelle chaque binder reçoit des options fixes avant le début du binding.
 
-Rejetée parce qu'elle n'offre aucun défaut applicatif host-agnostic : chaque point d'appel
-doit faire transiter le point d'entrée configuré, ou un conteneur DI doit le fournir —
-indisponible pour une CLI ou un worker qui veut configurer le binder une fois.
+La sémantique exacte du gel, le comportement d'exception, le seam de test et l'interaction avec les points d'entrée sont documentés dans la [référence d'implémentation des ADR](../specifications/adr-implementation-reference.fr.md#contrats-dimplémentation-du-request-binder) et la documentation du Request Binder.
 
-### Un défaut global librement re-posable (le modèle JsonConvert.DefaultSettings)
+## Alternatives envisagées
 
-Considérée parce que c'est le global posable le plus simple et une convention répandue.
+### Conserver uniquement les points d'entrée configurés explicitement
 
-Rejetée parce qu'un défaut réaffectable pendant que les requêtes sont en vol peut dériver,
-réintroduisant le hasard de configuration à l'exécution contre lequel l'ADR-0012
-prévenait. Le gel à la première utilisation garde l'ergonomie tout en supprimant la
-dérive.
+Envisagé car cela évite tout état global au processus. Rejeté parce que les hôtes sans conteneur devraient transmettre la configuration à chaque appel de binding, même lorsqu'elle est unique à l'échelle de l'application.
 
-### L'injection de dépendances seule (le modèle System.Text.Json / ASP.NET)
+### Utiliser une valeur par défaut globale librement réinitialisable
 
-Considérée parce que c'est l'idiome moderne là où un conteneur existe, et pleinement
-sûre vis-à-vis des tests.
+Envisagé car il s'agit du modèle global le plus simple. Rejeté parce qu'elle pourrait changer pendant le traitement des requêtes et rendrait l'isolation des tests dangereuse.
 
-Rejetée comme unique mécanisme parce qu'elle n'est pas host-agnostic : une CLI, un worker,
-ou tout hôte sans conteneur DI ne peut pas s'en servir pour que le simple
-`Bind.PropertiesOf` ramasse un défaut applicatif. Le point d'entrée injecté reste
-disponible ; cette décision ajoute le chemin sans conteneur.
+### Exiger l'injection de dépendances
+
+Envisagé car elle est sûre pour les tests et idiomatique lorsqu'un conteneur existe. Rejeté comme mécanisme unique parce que la bibliothèque est agnostique de l'hôte et prend en charge les CLI, workers et petits outils sans DI.
 
 ## Conséquences
 
 ### Positives
 
-* N'importe quel hôte — avec ou sans DI — configure la politique de nommage et les codes
-  structurels du binder une fois au démarrage, et le simple `Bind.PropertiesOf` les
-  utilise.
-* Le gel à la première utilisation empêche la dérive à l'exécution ; le seul global mutable
-  est une référence d'options immuables posée une fois.
-* La surface de `Bind` reste sans configuration ; un `Bind.WithOptions` par appel surcharge
-  quand même le défaut.
+* Les hôtes avec ou sans injection de dépendances peuvent configurer une politique applicative unique du binder.
+* La valeur par défaut ne peut plus dériver après le début du binding.
+* Les points d'entrée explicitement configurés restent disponibles et peuvent remplacer le défaut.
 
 ### Négatives
 
-* La bibliothèque gagne un état global de processus (le défaut posable) — le premier de la
-  bibliothèque, accepté délibérément pour l'ergonomie host-agnostic.
-* Les tests de la bibliothèque ont besoin d'un seam d'override scoped réservé aux tests pour
-  rester parallèle-safe ; le défaut de production n'est pas directement posable dans une
-  suite parallèle.
+* La bibliothèque accepte une référence de configuration globale au processus.
+* Lire le défaut trop tôt peut le figer avant la configuration applicative prévue.
+* Les tests nécessitent un override dédié et scoped plutôt qu'une réinitialisation de l'état de production.
 
 ### Risques
 
-* Un consommateur qui lit `RequestBinderOptions.Default` avant de le configurer le gèle et
-  ne peut alors plus le configurer ; atténué par le diagnostic du setter qui lève
-  (« configurez au démarrage, avant la première liaison ») et par la documentation.
+* Un ordre d'initialisation caché peut faire échouer la configuration si un autre composant lie avant elle. Mesure : documenter l'ordre de démarrage et échouer bruyamment en cas d'affectation tardive.
+* Les consommateurs peuvent utiliser le défaut global alors qu'une configuration explicite serait plus claire. Mesure : conserver `Bind.WithOptions` visible et le recommander pour les bibliothèques, les tests et les composition roots avec DI.
 
 ## Actions de suivi
 
-* Faire apparaître le seam d'override de test aux consommateurs via un paquet de test dédié
-  si une demande apparaît (il est actuellement interne, pour les tests de la bibliothèque).
+* N'exposer un seam de test aux consommateurs que si la demande justifie son ajout dans un package de test dédié.
+* Réexaminer le défaut global avant la version stable si l'usage réel montre que les points d'entrée configurés et réutilisables suffisent.
 
 ## Références
 
-* ADR-0012 — fixer les options du binder avant le début de la liaison ; cette décision
-  revisite le défaut ambiant à l'échelle du processus que l'ADR-0012 avait pesé puis
-  rejeté comme alternative, en l'adoptant avec des garde-fous. La décision propre à
-  l'ADR-0012 — les options d'un binder sont fixées à son point d'entrée — est inchangée,
-  donc l'ADR-0012 n'est pas supersédé.
-* ADR-0006 — fournir les valeurs de test arbitraires depuis une source unique réamorçable ;
-  le patron de seam de test `AsyncLocal` que cette décision réutilise pour ses tests.
-* Issue #181 — la demande que cette décision résout.
-* `JsonConvert.DefaultSettings` (Newtonsoft.Json) et `JsonSerializerOptions`
-  (System.Text.Json) — les deux conventions pesées.
+* [Référence d'implémentation des ADR — Contrats d'implémentation du Request Binder](../specifications/adr-implementation-reference.fr.md#contrats-dimplémentation-du-request-binder)
+* [ADR-0012](0012-fix-the-binder-options-before-binding-begins.fr.md) — cet ADR réexamine une alternative rejetée tout en préservant des options fixes par binder.
+* [ADR-0006](0006-supply-arbitrary-test-values-from-a-seedable-source.fr.md)
+* Issue #181.
+* [ADR-0023](0023-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.
