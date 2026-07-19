@@ -6,12 +6,12 @@ namespace FirstClassErrors.RequestBinder;
 ///     one bad element never hides the others.
 /// </summary>
 /// <typeparam name="TArgument">The raw element type of the list.</typeparam>
-public sealed class ListOfSimplePropertiesConverter<TArgument> {
+public sealed class ListOfSimplePropertiesConverter<TArgument> : IElementPathSource {
 
     #region Fields declarations
 
     private readonly RequestBinding            _binding;
-    private readonly string                    _argumentPath;
+    private          object                    _argumentPathOrProperty;
     private readonly IEnumerable<TArgument?>?  _values;
     private readonly bool                      _isMissing;
     private readonly string?                   _source;
@@ -20,15 +20,20 @@ public sealed class ListOfSimplePropertiesConverter<TArgument> {
 
     #region Constructors declarations
 
-    internal ListOfSimplePropertiesConverter(RequestBinding binding, string argumentPath, IEnumerable<TArgument?>? values, bool isMissing, string? source) {
-        _binding      = binding;
-        _argumentPath = argumentPath;
-        _values       = values;
-        _isMissing    = isMissing;
-        _source       = source;
+    internal ListOfSimplePropertiesConverter(RequestBinding binding, object argumentPathOrProperty, IEnumerable<TArgument?>? values, bool isMissing, string? source) {
+        _binding                = binding;
+        _argumentPathOrProperty = argumentPathOrProperty;
+        _values                 = values;
+        _isMissing              = isMissing;
+        _source                 = source;
     }
 
     #endregion
+
+    /// <inheritdoc />
+    string IElementPathSource.ElementPathAt(int index) {
+        return ElementPathAt(index);
+    }
 
     /// <summary>
     ///     Binds a required list: only an <b>absent</b> (<c>null</c>) list records <c>REQUEST_ARGUMENT_REQUIRED</c> —
@@ -44,7 +49,7 @@ public sealed class ListOfSimplePropertiesConverter<TArgument> {
         if (convertElement is null) { throw new ArgumentNullException(nameof(convertElement)); }
 
         if (_isMissing) {
-            _binding.RecordArgumentRequired(_argumentPath, _source);
+            _binding.RecordArgumentRequired(ArgumentPath(), _source);
 
             return new RequiredField<IReadOnlyList<TProperty>>(_binding, default!);
         }
@@ -73,12 +78,20 @@ public sealed class ListOfSimplePropertiesConverter<TArgument> {
     }
 
     private RequiredField<IReadOnlyList<TProperty>> ConvertElements<TProperty>(Func<TArgument, Outcome<TProperty>> convertElement) where TProperty : notnull {
-        return _binding.ConvertEachElement<TArgument?, TProperty>(_argumentPath, _values!, _source, (element, elementPath) => {
+        return _binding.ConvertEachElement<TArgument?, TProperty>(this, _values!, _source, (element, index) => {
             Outcome<TProperty> outcome = convertElement(element!);
-            if (outcome.IsFailure) { _binding.RecordArgumentInvalid(elementPath, outcome.Error!, _source); }
+            if (outcome.IsFailure) { _binding.RecordArgumentInvalid(ElementPathAt(index), outcome.Error!, _source); }
 
             return outcome;
         });
+    }
+
+    private string ElementPathAt(int index) {
+        return $"{ArgumentPath()}[{index}]";
+    }
+
+    private string ArgumentPath() {
+        return ArgumentPaths.Resolve(ref _argumentPathOrProperty, _binding);
     }
 
 }

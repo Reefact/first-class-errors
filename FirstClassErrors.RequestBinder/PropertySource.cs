@@ -45,9 +45,9 @@ public sealed class PropertySource<TDto> {
     ///     nullable (e.g. <c>int?</c>) for the binder to detect an absent argument.
     /// </exception>
     public SimplePropertyConverter<TArgument> SimpleProperty<TArgument>(Expression<Func<TDto, TArgument?>> selector) {
-        (string path, object? value) = ResolveArgument(selector);
+        (PropertyInfo property, TArgument? value) = ResolveArgument(selector);
 
-        return new SimplePropertyConverter<TArgument>(_binding, path, (TArgument?)value, value is null, source: null);
+        return new SimplePropertyConverter<TArgument>(_binding, property, value, value is null, source: null);
     }
 
     /// <summary>
@@ -65,9 +65,9 @@ public sealed class PropertySource<TDto> {
     /// <param name="selector">A direct property access on a nullable value-type property (e.g. <c>d =&gt; d.MaxNights</c>).</param>
     /// <returns>The converter stage offering <c>AsRequired</c> / <c>AsOptional</c> and their variants.</returns>
     public SimplePropertyConverter<TArgument> SimpleProperty<TArgument>(Expression<Func<TDto, TArgument?>> selector) where TArgument : struct {
-        (string path, object? value) = ResolveArgument(selector);
+        (PropertyInfo property, TArgument? value) = ResolveArgument(selector);
 
-        return new SimplePropertyConverter<TArgument>(_binding, path, value is null ? default : (TArgument)value, value is null, source: null);
+        return new SimplePropertyConverter<TArgument>(_binding, property, value.GetValueOrDefault(), !value.HasValue, source: null);
     }
 
     /// <summary>
@@ -78,9 +78,9 @@ public sealed class PropertySource<TDto> {
     /// <param name="selector">A direct property access on the DTO (e.g. <c>d =&gt; d.Stay</c>).</param>
     /// <returns>The stage on which the nested envelope is declared.</returns>
     public ComplexPropertyEnvelopeStage<TArgument> ComplexProperty<TArgument>(Expression<Func<TDto, TArgument?>> selector) {
-        (string path, object? value) = ResolveArgument(selector);
+        (PropertyInfo property, TArgument? value) = ResolveArgument(selector);
 
-        return new ComplexPropertyEnvelopeStage<TArgument>(_binding, path, (TArgument?)value, value is null);
+        return new ComplexPropertyEnvelopeStage<TArgument>(_binding, property, value, value is null);
     }
 
     /// <summary>
@@ -90,9 +90,9 @@ public sealed class PropertySource<TDto> {
     /// <param name="selector">A direct property access on the DTO (e.g. <c>d =&gt; d.Tags</c>).</param>
     /// <returns>The converter stage offering <c>AsRequired</c> / <c>AsOptional</c>.</returns>
     public ListOfSimplePropertiesConverter<TArgument> ListOfSimpleProperties<TArgument>(Expression<Func<TDto, IEnumerable<TArgument?>?>> selector) {
-        (string path, object? value) = ResolveArgument(selector);
+        (PropertyInfo property, IEnumerable<TArgument?>? value) = ResolveArgument(selector);
 
-        return new ListOfSimplePropertiesConverter<TArgument>(_binding, path, (IEnumerable<TArgument?>?)value, value is null, source: null);
+        return new ListOfSimplePropertiesConverter<TArgument>(_binding, property, value, value is null, source: null);
     }
 
     /// <summary>
@@ -108,9 +108,9 @@ public sealed class PropertySource<TDto> {
     /// <param name="selector">A direct property access on a list of nullable value types (e.g. <c>d =&gt; d.Quantities</c>).</param>
     /// <returns>The converter stage offering <c>AsRequired</c> / <c>AsOptional</c>.</returns>
     public ListOfSimpleValuePropertiesConverter<TArgument> ListOfSimpleProperties<TArgument>(Expression<Func<TDto, IEnumerable<TArgument?>?>> selector) where TArgument : struct {
-        (string path, object? value) = ResolveArgument(selector);
+        (PropertyInfo property, IEnumerable<TArgument?>? value) = ResolveArgument(selector);
 
-        return new ListOfSimpleValuePropertiesConverter<TArgument>(_binding, path, (IEnumerable<TArgument?>?)value, value is null, source: null);
+        return new ListOfSimpleValuePropertiesConverter<TArgument>(_binding, property, value, value is null, source: null);
     }
 
     /// <summary>
@@ -121,27 +121,23 @@ public sealed class PropertySource<TDto> {
     /// <param name="selector">A direct property access on the DTO (e.g. <c>d =&gt; d.Guests</c>).</param>
     /// <returns>The stage on which the per-element envelope is declared.</returns>
     public ListOfComplexPropertiesEnvelopeStage<TArgument> ListOfComplexProperties<TArgument>(Expression<Func<TDto, IEnumerable<TArgument?>?>> selector) {
-        (string path, object? value) = ResolveArgument(selector);
+        (PropertyInfo property, IEnumerable<TArgument?>? value) = ResolveArgument(selector);
 
-        return new ListOfComplexPropertiesEnvelopeStage<TArgument>(_binding, path, (IEnumerable<TArgument?>?)value, value is null);
+        return new ListOfComplexPropertiesEnvelopeStage<TArgument>(_binding, property, value, value is null);
     }
 
-    private (string Path, object? Value) ResolveArgument<TArgument>(Expression<Func<TDto, TArgument>> selector) {
+    /// <summary>
+    ///     Resolves the selected property and reads its value through a cached, compiled getter (see
+    ///     <see cref="PropertyGetters{TDto,TValue}" /> — the mis-declaration guard for a non-nullable value-type
+    ///     property lives there, still thrown eagerly on every call). The argument path is <b>not</b> built here:
+    ///     the converter stage carries the <see cref="PropertyInfo" /> and only materializes the path when one is
+    ///     first needed — a recorded failure, or a complex property's nested prefix — so an all-valid bind of
+    ///     scalar and list properties never pays for it.
+    /// </summary>
+    private (PropertyInfo Property, TArgument Value) ResolveArgument<TArgument>(Expression<Func<TDto, TArgument>> selector) {
         PropertyInfo property = PropertySelectors.GetProperty(selector);
 
-        // A non-nullable value-type property can never be null, so a missing argument (deserialized to default(T) —
-        // 0, false, ...) is indistinguishable from a legitimately-sent default: absence would be silently lost. The
-        // information does not exist at runtime, so reject the mis-declaration loudly (the binder's programming-error
-        // channel) — the DTO property must be declared nullable so that an absent argument arrives as null.
-        if (property.PropertyType.IsValueType && Nullable.GetUnderlyingType(property.PropertyType) is null) {
-            throw new ArgumentException(
-                $"The request property '{property.Name}' is a non-nullable value type ({property.PropertyType.Name}); a missing value would be indistinguishable from its default. Declare it as {property.PropertyType.Name}? so the binder can detect an absent argument.",
-                nameof(selector));
-        }
-
-        string path = _binding.PathOf(_binding.Options.ArgumentNameProvider.GetArgumentNameFrom(property));
-
-        return (path, property.GetValue(_dto));
+        return (property, PropertyGetters<TDto, TArgument>.For(property)(_dto));
     }
 
 }

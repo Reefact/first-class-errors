@@ -69,6 +69,9 @@ jobs:
       # *.verified.* are Verify snapshot oracles — generated test fixtures, not production source. Excluding them
       # keeps Sonar from analysing the emitted HTML/JS/Markdown as if it were hand-written code (and from counting
       # the near-identical snapshots as duplication).
+      # The Benchmarks project is a measurement harness, never shipped and never unit-tested: excluding it from
+      # COVERAGE (not from analysis) keeps the new-code coverage gate about the library, while its code still
+      # gets the SonarAnalyzer pass.
       - name: Begin analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -80,6 +83,7 @@ jobs:
           /d:sonar.host.url="https://sonarcloud.io"
           /d:sonar.cs.opencover.reportsPaths="artifacts/coverage/**/coverage.opencover.xml"
           /d:sonar.exclusions="**/*.verified.*"
+          /d:sonar.coverage.exclusions="FirstClassErrors.RequestBinder.Benchmarks/**"
 
       - name: Build
         # Disable the CI warning ratchet (Directory.Build.props) for the analysis build only. The scanner

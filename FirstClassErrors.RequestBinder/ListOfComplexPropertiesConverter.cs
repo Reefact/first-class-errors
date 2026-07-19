@@ -6,12 +6,12 @@ namespace FirstClassErrors.RequestBinder;
 ///     element never hides the others.
 /// </summary>
 /// <typeparam name="TArgument">The element type of the DTO list.</typeparam>
-public sealed class ListOfComplexPropertiesConverter<TArgument> {
+public sealed class ListOfComplexPropertiesConverter<TArgument> : IElementPathSource {
 
     #region Fields declarations
 
     private readonly RequestBinding                                 _binding;
-    private readonly string                                         _argumentPath;
+    private          object                                         _argumentPathOrProperty;
     private readonly IEnumerable<TArgument?>?                       _values;
     private readonly bool                                           _isMissing;
     private readonly Func<PrimaryPortInnerErrors, PrimaryPortError> _envelope;
@@ -21,18 +21,23 @@ public sealed class ListOfComplexPropertiesConverter<TArgument> {
     #region Constructors declarations
 
     internal ListOfComplexPropertiesConverter(RequestBinding                                 binding,
-                                              string                                         argumentPath,
+                                              object                                         argumentPathOrProperty,
                                               IEnumerable<TArgument?>?                       values,
                                               bool                                           isMissing,
                                               Func<PrimaryPortInnerErrors, PrimaryPortError> envelope) {
-        _binding      = binding;
-        _argumentPath = argumentPath;
-        _values       = values;
-        _isMissing    = isMissing;
-        _envelope     = envelope;
+        _binding                = binding;
+        _argumentPathOrProperty = argumentPathOrProperty;
+        _values                 = values;
+        _isMissing              = isMissing;
+        _envelope               = envelope;
     }
 
     #endregion
+
+    /// <inheritdoc />
+    string IElementPathSource.ElementPathAt(int index) {
+        return ElementPathAt(index);
+    }
 
     /// <summary>
     ///     Binds a required list: only an <b>absent</b> (<c>null</c>) list records <c>REQUEST_ARGUMENT_REQUIRED</c> —
@@ -48,7 +53,7 @@ public sealed class ListOfComplexPropertiesConverter<TArgument> {
         if (bindElement is null) { throw new ArgumentNullException(nameof(bindElement)); }
 
         if (_isMissing) {
-            _binding.RecordArgumentRequired(_argumentPath);
+            _binding.RecordArgumentRequired(ArgumentPath());
 
             return new RequiredField<IReadOnlyList<TProperty>>(_binding, default!);
         }
@@ -77,15 +82,26 @@ public sealed class ListOfComplexPropertiesConverter<TArgument> {
     }
 
     private RequiredField<IReadOnlyList<TProperty>> BindElements<TProperty>(Func<RequestBinder, TArgument, Outcome<TProperty>> bindElement) where TProperty : notnull {
-        return _binding.ConvertEachElement<TArgument?, TProperty>(_argumentPath, _values!, source: null, (element, elementPath) => {
-            RequestBinding     nested  = new(_envelope, _binding.Options, elementPath);
+        return _binding.ConvertEachElement<TArgument?, TProperty>(this, _values!, source: null, (element, index) => {
+            // The element's binding defers its own prefix ("Guests[2]") through this converter: it materializes
+            // only when a path inside the element is first needed — a recorded failure, a nested complex prefix,
+            // or an Argument name — never for an element whose properties all bind through simple converters.
+            RequestBinding     nested  = new(_envelope, _binding.Options, this, index);
             Outcome<TProperty> outcome = bindElement(new RequestBinder(nested), element!);
             if (outcome.IsFailure) {
-                _binding.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, elementPath, _binding.Options.ArgumentInvalid));
+                _binding.Record(NestedFailure.Group(outcome.Error!, nested.BuiltEnvelope, ElementPathAt(index), _binding.Options.ArgumentInvalid));
             }
 
             return outcome;
         });
+    }
+
+    private string ElementPathAt(int index) {
+        return $"{ArgumentPath()}[{index}]";
+    }
+
+    private string ArgumentPath() {
+        return ArgumentPaths.Resolve(ref _argumentPathOrProperty, _binding);
     }
 
 }
