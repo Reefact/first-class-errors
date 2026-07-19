@@ -270,6 +270,24 @@ public sealed class AnyCollectionTests {
         Check.ThatCode(() => Any.SetOf(Any.Double().OneOf(1d, 2d)).Containing(2d).WithCount(3)).Throws<ConflictingAnyConstraintException>();
     }
 
+    [Fact(DisplayName = "A validated pin is a singleton domain: a distinct collection asking for more than one conflicts eagerly.")]
+    public void SingletonScalarDomainsGateEagerly() {
+        // Zero()/Between(x, x) pins the domain to a single value; asking a distinct collection for two is a fully
+        // knowable contradiction, so it must fail at declaration, not only while drawing.
+        Check.ThatCode(() => Any.SetOf(Any.Decimal().Zero()).WithCount(2)).Throws<ConflictingAnyConstraintException>();
+        Check.ThatCode(() => Any.SetOf(Any.Double().Between(1d, 1d)).WithCount(2)).Throws<ConflictingAnyConstraintException>();
+        Check.ThatCode(() => Any.SetOf(Any.Single().Zero()).WithCount(2)).Throws<ConflictingAnyConstraintException>();
+
+        // The singleton still generates at count one, and an out-of-domain contained value extends it as usual.
+        for (int i = 0; i < SampleCount; i++) {
+            HashSet<decimal> one = Any.SetOf(Any.Decimal().Zero()).WithCount(1).Generate();
+            Check.That(one).ContainsExactly(0m);
+
+            HashSet<decimal> two = Any.SetOf(Any.Decimal().Zero()).Containing(5m).WithCount(2).Generate();
+            Check.That(two).Contains(0m, 5m);
+        }
+    }
+
     [Fact(DisplayName = "ArrayOf: produces an array of the requested size, distinct when asked.")]
     public void ArrayOfProducesArrays() {
         for (int i = 0; i < SampleCount; i++) {

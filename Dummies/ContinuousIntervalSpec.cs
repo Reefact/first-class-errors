@@ -143,12 +143,20 @@ internal sealed class ContinuousIntervalSpec {
     }
 
     /// <summary>
-    ///     The number of distinct values the specification can produce — the allow-list size when one is set, and
-    ///     <c>null</c> otherwise: a floating-point continuum is not a countable domain, so it stays outside the eager
-    ///     cardinality perimeter and a distinct collection over it falls back to the bounded draw. Feeds
-    ///     <see cref="ICardinalityHint{T}" />.
+    ///     The number of distinct values the specification can produce — the allow-list size when one is set, <c>1</c>
+    ///     for a validated pin (<c>_min == _max</c>, a singleton domain), and <c>null</c> otherwise: a floating-point
+    ///     range is treated as a continuum (counting its representable values is a type-specific concern the shared
+    ///     engine does not carry), so it stays outside the eager cardinality perimeter and a distinct collection over
+    ///     it falls back to the bounded draw. Feeds <see cref="ICardinalityHint{T}" />.
     /// </summary>
-    internal long? Cardinality => _effectiveAllowed?.Count;
+    internal long? Cardinality {
+        get {
+            if (_effectiveAllowed is not null) { return _effectiveAllowed.Count; }
+            if (_min == _max) { return 1; }
+
+            return null;
+        }
+    }
 
     /// <summary>
     ///     Whether <paramref name="value" /> is one the specification could produce — a member of the allow-list when
