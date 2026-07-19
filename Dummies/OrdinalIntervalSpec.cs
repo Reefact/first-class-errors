@@ -149,7 +149,7 @@ internal sealed class OrdinalIntervalSpec {
     /// <summary>
     ///     The number of distinct values the specification can produce, or <c>null</c> when that exceeds
     ///     <see cref="long.MaxValue" /> (a range too wide to ever conflict with a collection count). Feeds
-    ///     <see cref="ICardinalityHint" />, so a distinct collection over a narrow integer range can fail eagerly.
+    ///     <see cref="ICardinalityHint{T}" />, so a distinct collection over a narrow integer range can fail eagerly.
     /// </summary>
     internal long? Cardinality {
         get {
@@ -165,7 +165,7 @@ internal sealed class OrdinalIntervalSpec {
     /// <summary>
     ///     Whether <paramref name="ordinal" /> is a value the specification could produce — the exact domain
     ///     <see cref="GenerateOrdinal" /> draws from: a member of the allow-list when one is set, otherwise inside
-    ///     the interval and not excluded. Feeds <see cref="IDomainMembership{T}" />, so a distinct collection can tell
+    ///     the interval and not excluded. Feeds <see cref="ICardinalityHint{T}" />, so a distinct collection can tell
     ///     a contained value that extends the domain from one already inside it.
     /// </summary>
     internal bool Contains(ulong ordinal) {

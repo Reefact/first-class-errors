@@ -16,9 +16,9 @@ namespace Dummies;
 /// </summary>
 /// <remarks>
 ///     Distinctness follows the two-layer contract the library commits to: when the element generator advertises a
-///     small <see cref="ICardinalityHint">cardinality</see> that the requested count would exceed — counting only
+///     small <see cref="ICardinalityHint{T}">cardinality</see> that the requested count would exceed — counting only
 ///     the elements that must be drawn from that generator, since values pinned with <c>Containing(...)</c> outside
-///     its domain (see <see cref="IDomainMembership{T}" />) are supplied directly and extend the effective domain —
+///     its domain (see <see cref="ICardinalityHint{T}" />) are supplied directly and extend the effective domain —
 ///     the conflict is caught at declaration time (<see cref="ConflictingAnyConstraintException" />); otherwise the
 ///     count is drawn and the elements are filled by a bounded dedup-draw, and a genuine shortfall surfaces at
 ///     generation as an <see cref="AnyGenerationException" /> naming the seed to replay.
@@ -196,14 +196,15 @@ internal sealed class CollectionState<T> {
     private int FixedOutsideCount() {
         if (_fixedContaining.Count == 0) { return 0; }
         // A fixed value the element generator could never produce extends the effective distinct domain; a value
-        // already inside it does not. When the generator cannot answer membership (it advertises a cardinality but
-        // not a domain), stay conservative and treat every fixed value as outside: the eager check then never
-        // rejects a request that might be satisfiable, and a genuine shortfall is caught by the bounded draw.
-        if (_item is not IDomainMembership<T> membership) { return _fixedContaining.Count; }
+        // already inside it does not. The cardinality snapshot came from this same generator, so whenever the eager
+        // check runs it also answers membership (cardinality and membership are one interface). The null branch is a
+        // defensive fallback: treat every fixed value as outside, so the check can only defer to the bounded draw,
+        // never falsely reject.
+        if (_item is not ICardinalityHint<T> hint) { return _fixedContaining.Count; }
 
         int outside = 0;
         foreach (T value in _fixedContaining) {
-            if (!membership.Contains(value)) { outside++; }
+            if (!hint.Contains(value)) { outside++; }
         }
 
         return outside;

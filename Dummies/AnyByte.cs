@@ -12,7 +12,7 @@ namespace Dummies;
 ///     contradictory constraints fail eagerly with a <see cref="ConflictingAnyConstraintException" /> naming both
 ///     sides; instances are immutable recipes, and each value is built to satisfy the constraints in one draw.
 /// </summary>
-public sealed class AnyByte : IAny<byte>, IHasRandomSource, ICardinalityHint, IDomainMembership<byte> {
+public sealed class AnyByte : IAny<byte>, IHasRandomSource, ICardinalityHint<byte> {
 
     #region Statics members declarations
 
@@ -52,9 +52,9 @@ public sealed class AnyByte : IAny<byte>, IHasRandomSource, ICardinalityHint, ID
 
     RandomSource? IHasRandomSource.Source => _source;
 
-    long? ICardinalityHint.DistinctCardinality => _spec.Cardinality;
+    long? ICardinalityHint<byte>.DistinctCardinality => _spec.Cardinality;
 
-    bool IDomainMembership<byte>.Contains(byte value) => _spec.Contains(Ord(value));
+    bool ICardinalityHint<byte>.Contains(byte value) => _spec.Contains(Ord(value));
 
     /// <summary>Pins the value to exactly zero. Useful for symmetry with the other constraints when a test sweeps cases.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
