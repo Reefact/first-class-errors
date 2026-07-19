@@ -20,16 +20,6 @@ public sealed class AnyDictionary<TKey, TValue> : IAny<Dictionary<TKey, TValue>>
 
     #region Statics members declarations
 
-    /// <summary>
-    ///     Generates the value — an <see cref="AnyDictionary{TKey,TValue}" /> can be used wherever a
-    ///     <see cref="Dictionary{TKey,TValue}" /> is expected. Each conversion draws a fresh dictionary.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary dictionary satisfying the generator's constraints.</returns>
-    public static implicit operator Dictionary<TKey, TValue>(AnyDictionary<TKey, TValue> generator) {
-        return generator.Generate();
-    }
-
     private static string V(int value) {
         return value.ToString(CultureInfo.InvariantCulture);
     }

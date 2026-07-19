@@ -131,8 +131,8 @@ public abstract class AnyCollection<TItem, TResult, TSelf> : IAny<TResult>, IHas
     /// <summary>
     ///     Requires the collection to contain a value drawn from <paramref name="generator" /> at generation time —
     ///     useful to force a particular shape of element into an otherwise arbitrary collection. Named apart from
-    ///     <see cref="Containing" /> because a library generator both <i>is</i> an <see cref="IAny{T}" /> and converts
-    ///     implicitly to its value, which would make a single overloaded name ambiguous.
+    ///     <see cref="Containing" /> to keep the two cases legible: <see cref="Containing" /> pins a concrete value
+    ///     known now, whereas this method draws one from a generator when the collection is built.
     /// </summary>
     /// <param name="generator">The generator whose drawn value the collection must contain.</param>
     /// <returns>A new generator carrying the added constraint.</returns>

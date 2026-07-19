@@ -17,16 +17,6 @@ public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource {
 
     #region Statics members declarations
 
-    /// <summary>
-    ///     Generates the value — an <see cref="AnyDecimal" /> can be used wherever a <see cref="decimal" /> is
-    ///     expected. Each conversion draws a fresh value.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary value satisfying the generator's constraints.</returns>
-    public static implicit operator decimal(AnyDecimal generator) {
-        return generator.Generate();
-    }
-
     internal static AnyDecimal Create(RandomSource source) {
         return new AnyDecimal(source, DecimalIntervalSpec.Unconstrained("Decimal", V));
     }

@@ -12,16 +12,6 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinality
 
     #region Statics members declarations
 
-    /// <summary>
-    ///     Generates the value — an <see cref="AnyEnum{TEnum}" /> can be used wherever a
-    ///     <typeparamref name="TEnum" /> is expected. Each conversion draws a fresh value.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary value satisfying the generator's constraints.</returns>
-    public static implicit operator TEnum(AnyEnum<TEnum> generator) {
-        return generator.Generate();
-    }
-
     // The declared-members set of an enum type is a process constant; cached once per closed generic type
     // instead of reflecting on every Any.Enum<T>() call.
     private static readonly TEnum[] Declared = ((TEnum[])Enum.GetValues(typeof(TEnum))).Distinct().ToArray();

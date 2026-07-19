@@ -11,20 +11,6 @@ namespace Dummies;
 /// <typeparam name="T">The element type.</typeparam>
 public sealed class AnySet<T> : AnyCollection<T, HashSet<T>, AnySet<T>> {
 
-    #region Statics members declarations
-
-    /// <summary>
-    ///     Generates the value — an <see cref="AnySet{T}" /> can be used wherever a <see cref="HashSet{T}" /> is
-    ///     expected. Each conversion draws a fresh set.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary set satisfying the generator's constraints.</returns>
-    public static implicit operator HashSet<T>(AnySet<T> generator) {
-        return generator.Generate();
-    }
-
-    #endregion
-
     internal AnySet(RandomSource? source, CollectionState<T> state) : base(source, state) { }
 
     private protected override AnySet<T> With(CollectionState<T> state) {

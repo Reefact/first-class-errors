@@ -17,9 +17,12 @@ namespace Dummies;
 ///         fresh value each time.
 ///     </para>
 ///     <para>
-///         Generic inference flows through this interface — <c>Materialize(Any.String().NonEmpty())</c> infers
-///         <c>T = string</c> — whereas the implicit conversions the concrete generators offer are an ergonomic
-///         convenience only.
+///         <see cref="Generate" /> is the single operation that materializes a value: the concrete generators expose
+///         no implicit conversion to their generated type, so a value is produced only by an explicit
+///         <see cref="Generate" /> call — directly, or through the composition seams
+///         <see cref="AnyExtensions.As{TSource,TResult}" /> and <see cref="Any.Combine{T1,T2,TResult}" />, which call
+///         it internally. Generic inference likewise flows through this interface — <c>Materialize(Any.String().NonEmpty())</c>
+///         infers <c>T = string</c>.
 ///     </para>
 /// </remarks>
 /// <typeparam name="T">The type of the generated values.</typeparam>

@@ -86,9 +86,9 @@ public sealed class AnySignedIntegerTests {
 
     [Fact(DisplayName = "Signed integers convert implicitly to their value type.")]
     public void ImplicitConversions() {
-        sbyte small = Any.SByte().Positive();
-        short mid   = Any.Int16().Negative();
-        long  wide  = Any.Int64().Between(1L, 10L);
+        sbyte small = Any.SByte().Positive().Generate();
+        short mid   = Any.Int16().Negative().Generate();
+        long  wide  = Any.Int64().Between(1L, 10L).Generate();
 
         Check.That((int)small).IsStrictlyGreaterThan(0);
         Check.That((int)mid).IsStrictlyLessThan(0);

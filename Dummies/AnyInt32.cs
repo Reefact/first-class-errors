@@ -16,14 +16,14 @@ namespace Dummies;
 /// <remarks>
 ///     <para>
 ///         Instances are immutable recipes: every method returns a new generator, and the value is drawn only when
-///         <see cref="Generate" /> runs (or when the generator is implicitly converted to <see cref="int" />), from
+///         <see cref="Generate" /> runs, from
 ///         the random context the generator was created with. Values are <b>built to satisfy</b> the constraints in
 ///         one draw — the library never generates candidates and retries.
 ///     </para>
 ///     <example>
 ///         <code>
-///         int quantity = Any.Int32().Positive();
-///         int percentage = Any.Int32().Between(0, 100);
+///         int quantity = Any.Int32().Positive().Generate();
+///         int percentage = Any.Int32().Between(0, 100).Generate();
 ///         Any.Int32().GreaterThan(100).LessThan(10); // throws ConflictingAnyConstraintException
 ///         </code>
 ///     </example>
@@ -31,16 +31,6 @@ namespace Dummies;
 public sealed class AnyInt32 : IAny<int>, IHasRandomSource, ICardinalityHint {
 
     #region Statics members declarations
-
-    /// <summary>
-    ///     Generates the value — an <see cref="AnyInt32" /> can be used wherever an <see cref="int" /> is expected.
-    ///     Each conversion draws a fresh value.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary value satisfying the generator's constraints.</returns>
-    public static implicit operator int(AnyInt32 generator) {
-        return generator.Generate();
-    }
 
     internal static AnyInt32 Create(RandomSource source) {
         return new AnyInt32(source, OrdinalIntervalSpec.Unconstrained("Int32", ordinal => V(Val(ordinal)), Ord(int.MinValue), Ord(int.MaxValue)));

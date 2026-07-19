@@ -12,16 +12,6 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint {
 
     #region Statics members declarations
 
-    /// <summary>
-    ///     Generates the value — an <see cref="AnyChar" /> can be used wherever a <see cref="char" /> is expected.
-    ///     Each conversion draws a fresh value.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary value satisfying the generator's constraints.</returns>
-    public static implicit operator char(AnyChar generator) {
-        return generator.Generate();
-    }
-
     internal static AnyChar Create(RandomSource source) {
         return new AnyChar(source, null, null, null, null, null, null, []);
     }

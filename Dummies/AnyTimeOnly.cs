@@ -20,16 +20,6 @@ public sealed class AnyTimeOnly : IAny<TimeOnly>, IHasRandomSource, ICardinality
 
     #region Statics members declarations
 
-    /// <summary>
-    ///     Generates the value — an <see cref="AnyTimeOnly" /> can be used wherever a <see cref="TimeOnly" /> is expected.
-    ///     Each conversion draws a fresh value.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary value satisfying the generator's constraints.</returns>
-    public static implicit operator TimeOnly(AnyTimeOnly generator) {
-        return generator.Generate();
-    }
-
     internal static AnyTimeOnly Create(RandomSource source) {
         return new AnyTimeOnly(source, OrdinalIntervalSpec.Unconstrained("TimeOnly", ordinal => V(Val(ordinal)), Ord(TimeOnly.MinValue), Ord(TimeOnly.MaxValue)));
     }

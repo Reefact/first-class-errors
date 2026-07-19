@@ -8,10 +8,8 @@ namespace Dummies;
 ///     <see cref="Distinct()" /> to require pairwise-distinct elements.
 /// </summary>
 /// <remarks>
-///     Unlike the other collection generators, an <see cref="AnySequence{T}" /> exposes no implicit conversion:
-///     C# forbids a user-defined conversion whose target is an interface such as <see cref="IEnumerable{T}" />. Call
-///     <see cref="AnyCollection{TItem,TResult,TSelf}.Generate" />, or use the generator through
-///     <see cref="IAny{T}" />.
+///     Materialize the sequence with <see cref="AnyCollection{TItem,TResult,TSelf}.Generate" />, or use the generator
+///     through <see cref="IAny{T}" />.
 /// </remarks>
 /// <typeparam name="T">The element type.</typeparam>
 public sealed class AnySequence<T> : AnyCollection<T, IEnumerable<T>, AnySequence<T>> {

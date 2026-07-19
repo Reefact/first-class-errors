@@ -23,7 +23,7 @@ namespace Dummies;
 ///     <example>
 ///         <code>
 ///         // The reference format is the invariant; the exact value is irrelevant — so it is Any.
-///         string reference = Any.String().StartingWith("ORD-").WithLength(12);
+///         string reference = Any.String().StartingWith("ORD-").WithLength(12).Generate();
 ///
 ///         // Turn a constrained primitive into a value object, without reflection:
 ///         OrderReference order = Any.String().StartingWith("ORD-").WithLength(12)

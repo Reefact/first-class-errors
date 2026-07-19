@@ -18,16 +18,6 @@ public sealed class AnyUInt128 : IAny<UInt128>, IHasRandomSource {
 
     #region Statics members declarations
 
-    /// <summary>
-    ///     Generates the value — an <see cref="AnyUInt128" /> can be used wherever a <see cref="UInt128" /> is expected.
-    ///     Each conversion draws a fresh value.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary value satisfying the generator's constraints.</returns>
-    public static implicit operator UInt128(AnyUInt128 generator) {
-        return generator.Generate();
-    }
-
     internal static AnyUInt128 Create(RandomSource source) {
         return new AnyUInt128(source, WideIntervalSpec.Unconstrained("UInt128", ordinal => V(Val(ordinal)), Ord(UInt128.MinValue), Ord(UInt128.MaxValue)));
     }

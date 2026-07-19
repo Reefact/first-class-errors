@@ -16,16 +16,6 @@ public sealed class AnyUInt16 : IAny<ushort>, IHasRandomSource, ICardinalityHint
 
     #region Statics members declarations
 
-    /// <summary>
-    ///     Generates the value — an <see cref="AnyUInt16" /> can be used wherever a <see cref="ushort" /> is expected.
-    ///     Each conversion draws a fresh value.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary value satisfying the generator's constraints.</returns>
-    public static implicit operator ushort(AnyUInt16 generator) {
-        return generator.Generate();
-    }
-
     internal static AnyUInt16 Create(RandomSource source) {
         return new AnyUInt16(source, OrdinalIntervalSpec.Unconstrained("UInt16", ordinal => V(Val(ordinal)), Ord(ushort.MinValue), Ord(ushort.MaxValue)));
     }

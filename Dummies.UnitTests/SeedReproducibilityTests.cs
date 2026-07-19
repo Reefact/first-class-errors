@@ -16,24 +16,24 @@ public sealed class SeedReproducibilityTests {
     private static string Batch() {
         // Explicitly typed locals: string.Join(params object[]) would otherwise box the generators and
         // call their ToString() instead of triggering the implicit conversions.
-        int      full     = Any.Int32();
-        int      bounded  = Any.Int32().Between(1, 1000);
-        string   free     = Any.String();
-        string   capped   = Any.String().NonEmpty().WithMaxLength(50);
-        string   shaped   = Any.String().StartingWith("ORD-").WithLength(12);
-        long     wide     = Any.Int64();
-        ulong    unsigned = Any.UInt64();
-        double   real     = Any.Double().Between(0d, 1000d);
-        decimal  exact    = Any.Decimal().Between(0m, 1000m);
-        bool     flag     = Any.Bool();
-        Guid     id       = Any.Guid();
-        char     letter   = Any.Char();
-        TimeSpan span     = Any.TimeSpan();
-        DateTime instant  = Any.DateTime();
-        Int128   huge     = Any.Int128();
-        Half     tiny     = Any.Half();
-        List<int>    list = Any.ListOf(Any.Int32().Between(0, 9)).WithCount(4);
-        HashSet<int> set  = Any.SetOf(Any.Int32().Between(0, 99)).WithCount(3);
+        int      full     = Any.Int32().Generate();
+        int      bounded  = Any.Int32().Between(1, 1000).Generate();
+        string   free     = Any.String().Generate();
+        string   capped   = Any.String().NonEmpty().WithMaxLength(50).Generate();
+        string   shaped   = Any.String().StartingWith("ORD-").WithLength(12).Generate();
+        long     wide     = Any.Int64().Generate();
+        ulong    unsigned = Any.UInt64().Generate();
+        double   real     = Any.Double().Between(0d, 1000d).Generate();
+        decimal  exact    = Any.Decimal().Between(0m, 1000m).Generate();
+        bool     flag     = Any.Bool().Generate();
+        Guid     id       = Any.Guid().Generate();
+        char     letter   = Any.Char().Generate();
+        TimeSpan span     = Any.TimeSpan().Generate();
+        DateTime instant  = Any.DateTime().Generate();
+        Int128   huge     = Any.Int128().Generate();
+        Half     tiny     = Any.Half().Generate();
+        List<int>    list = Any.ListOf(Any.Int32().Between(0, 9)).WithCount(4).Generate();
+        HashSet<int> set  = Any.SetOf(Any.Int32().Between(0, 99)).WithCount(3).Generate();
         int?         maybe = Any.Int32().Between(0, 9).OrNull().Generate();
 
         return string.Join("|", full, bounded, free, capped, shaped,
@@ -50,8 +50,8 @@ public sealed class SeedReproducibilityTests {
         AnyContext any1 = Any.WithSeed(12345);
         AnyContext any2 = Any.WithSeed(12345);
 
-        string value1 = any1.String().NonEmpty();
-        string value2 = any2.String().NonEmpty();
+        string value1 = any1.String().NonEmpty().Generate();
+        string value2 = any2.String().NonEmpty().Generate();
 
         Check.That(value2).IsEqualTo(value1);
     }
@@ -78,12 +78,12 @@ public sealed class SeedReproducibilityTests {
     [Fact(DisplayName = "A context is isolated from the ambient source: interleaved ambient draws do not shift it.")]
     public void ContextIsIsolatedFromAmbientDraws() {
         AnyContext quiet = Any.WithSeed(31415);
-        string undisturbed = quiet.String().WithLength(10);
+        string undisturbed = quiet.String().WithLength(10).Generate();
 
         AnyContext interleaved = Any.WithSeed(31415);
         Any.String().Generate();
         Any.Int32().Generate();
-        string disturbed = interleaved.String().WithLength(10);
+        string disturbed = interleaved.String().WithLength(10).Generate();
 
         Check.That(disturbed).IsEqualTo(undisturbed);
     }
