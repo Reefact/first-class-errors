@@ -1,0 +1,50 @@
+<Project>
+
+  <!--
+    Shared MSBuild plumbing that lets a netstandard2.0-library test project ALSO run on the
+    .NET Framework 4.7.2 support floor (see doc/handwritten/for-maintainers/adr/0022-floor-the-library-on-net-framework-4-7-2.md).
+
+    A test project opts in with
+
+        <Import Project="..\build\Net472TestFloor.props" />
+
+    and drops its own <TargetFramework> — this file owns the target frameworks. Only projects that
+    exercise the netstandard2.0 libraries (FirstClassErrors, FirstClassErrors.Testing,
+    FirstClassErrors.RequestBinder) should import it; the tooling test projects stay net10.0-only.
+
+    The net472 inner build is GATED behind EnableNet472Floor so it never touches the ordinary build.
+    A plain `dotnet build` / `dotnet test` — the ci `build-test` matrix and the local inner loop — sees
+    only net10.0. The dedicated Windows `framework-floor` job in .github/workflows/ci.yml passes
+    -p:EnableNet472Floor=true to add the net472 inner build and runs it with `-f net472`; .NET Framework
+    tests only run on Windows (there is no Mono on the Linux legs).
+  -->
+
+  <PropertyGroup Condition="'$(EnableNet472Floor)' != 'true'">
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(EnableNet472Floor)' == 'true'">
+    <TargetFrameworks>net10.0;net472</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- net472 defaults C# to 7.3, which rejects <Nullable>enable</Nullable>. Pin the same latest compiler
+         the shipped netstandard2.0 projects use, so the floor bounds the BCL surface, not the C# syntax. -->
+    <LangVersion>latest</LangVersion>
+    <!-- xUnit.net v3 test projects must be executables on .NET Framework (the SDK does this implicitly for
+         modern TFMs; net472 does not). Scoped to net472 so the net10.0 inner build is unchanged. -->
+    <OutputType Condition="'$(TargetFramework)' == 'net472'">Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <!-- Reference assemblies so net472 COMPILES on any box without the 4.7.2 targeting pack installed (the
+         Linux legs, a bare Windows runner). Build-time only (PrivateAssets=all): never a runtime or package
+         dependency. The version is pinned centrally in Directory.Packages.props. -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="all" />
+    <!-- `init` accessors and records (used by a few test models) need IsExternalInit, which the net472 BCL
+         does not ship. This private polyfill lets existing test code compile unchanged; it is internal, so
+         each net472 test assembly carries its own with no conflict. The SHIPPED libraries use neither `init`
+         nor records, so this is a test-only concession and never part of the product. -->
+    <Compile Include="$(MSBuildThisFileDirectory)Net472TestFloor.IsExternalInit.cs" />
+  </ItemGroup>
+
+</Project>

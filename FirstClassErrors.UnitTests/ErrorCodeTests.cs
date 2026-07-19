@@ -31,10 +31,15 @@ public class ErrorCodeTests {
     [InlineData("")]
     [InlineData(" ")]
     public void CreatingErrorCodeWithBlankCodeIsRejected(string? code) {
-        // Exercise & verify
-        Check.ThatCode(() => ErrorCode.Create(code!))
-             .Throws<ArgumentException>()
-             .WithMessage("Error code cannot be null or whitespace. (Parameter 'code')");
+        // Exercise
+        ArgumentException exception = Assert.Throws<ArgumentException>(() => ErrorCode.Create(code!));
+
+        // Verify the contract — the message content and the offending parameter — not the
+        // ArgumentException.Message parameter-suffix formatting, which differs between .NET Framework
+        // ("...\nParameter name: code") and modern .NET ("... (Parameter 'code')"). The netstandard2.0
+        // library runs on both; see the framework-floor job in .github/workflows/ci.yml.
+        Check.That(exception.Message).Contains("Error code cannot be null or whitespace.");
+        Check.That(exception.ParamName).IsEqualTo("code");
     }
 
     [Fact(DisplayName = "Creating the same code twice is allowed and produces equal instances.")]
