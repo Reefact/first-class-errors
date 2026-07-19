@@ -16,16 +16,6 @@ public sealed class AnyUInt64 : IAny<ulong>, IHasRandomSource, ICardinalityHint 
 
     #region Statics members declarations
 
-    /// <summary>
-    ///     Generates the value — an <see cref="AnyUInt64" /> can be used wherever a <see cref="ulong" /> is expected.
-    ///     Each conversion draws a fresh value.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary value satisfying the generator's constraints.</returns>
-    public static implicit operator ulong(AnyUInt64 generator) {
-        return generator.Generate();
-    }
-
     internal static AnyUInt64 Create(RandomSource source) {
         return new AnyUInt64(source, OrdinalIntervalSpec.Unconstrained("UInt64", ordinal => V(Val(ordinal)), Ord(ulong.MinValue), Ord(ulong.MaxValue)));
     }

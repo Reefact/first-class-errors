@@ -39,13 +39,13 @@ public sealed class AnyCollectionTests {
     [Fact(DisplayName = "ListOf: the count family fixes, floors, caps and ranges the size.")]
     public void ListOfCountFamily() {
         for (int i = 0; i < SampleCount; i++) {
-            Check.That(((List<int>)Any.ListOf(Any.Int32()).WithCount(5)).Count).IsEqualTo(5);
-            Check.That(((List<int>)Any.ListOf(Any.Int32()).Empty()).Count).IsEqualTo(0);
-            Check.That(((List<int>)Any.ListOf(Any.Int32()).NonEmpty()).Count).IsStrictlyGreaterThan(0);
-            Check.That(((List<int>)Any.ListOf(Any.Int32()).WithMinCount(3)).Count).IsGreaterOrEqualThan(3);
-            Check.That(((List<int>)Any.ListOf(Any.Int32()).WithMaxCount(2)).Count).IsLessOrEqualThan(2);
+            Check.That(Any.ListOf(Any.Int32()).WithCount(5).Generate().Count).IsEqualTo(5);
+            Check.That(Any.ListOf(Any.Int32()).Empty().Generate().Count).IsEqualTo(0);
+            Check.That(Any.ListOf(Any.Int32()).NonEmpty().Generate().Count).IsStrictlyGreaterThan(0);
+            Check.That(Any.ListOf(Any.Int32()).WithMinCount(3).Generate().Count).IsGreaterOrEqualThan(3);
+            Check.That(Any.ListOf(Any.Int32()).WithMaxCount(2).Generate().Count).IsLessOrEqualThan(2);
 
-            int ranged = ((List<int>)Any.ListOf(Any.Int32()).WithCountBetween(4, 6)).Count;
+            int ranged = Any.ListOf(Any.Int32()).WithCountBetween(4, 6).Generate().Count;
             Check.That(ranged is >= 4 and <= 6).IsTrue();
         }
     }
@@ -71,7 +71,7 @@ public sealed class AnyCollectionTests {
     [Fact(DisplayName = "Distinct: a wide-domain distinct list holds only distinct elements.")]
     public void DistinctOverAWideDomain() {
         for (int i = 0; i < SampleCount; i++) {
-            List<int> list = Any.ListOf(Any.Int32().Between(1, 1000)).WithCount(20).Distinct();
+            List<int> list = Any.ListOf(Any.Int32().Between(1, 1000)).WithCount(20).Distinct().Generate();
             Check.That(list.Count).IsEqualTo(20);
             Check.That(new HashSet<int>(list).Count).IsEqualTo(20);
         }
@@ -102,7 +102,7 @@ public sealed class AnyCollectionTests {
     [Fact(DisplayName = "SetOf: elements are always distinct and drawn from the item generator.")]
     public void SetOfIsDistinct() {
         for (int i = 0; i < SampleCount; i++) {
-            HashSet<int> set = Any.SetOf(Any.Int32().Between(1, 500)).WithCount(10);
+            HashSet<int> set = Any.SetOf(Any.Int32().Between(1, 500)).WithCount(10).Generate();
             Check.That(set.Count).IsEqualTo(10);
             Check.That(set).ContainsOnlyElementsThatMatch(value => value is >= 1 and <= 500);
         }
@@ -113,7 +113,7 @@ public sealed class AnyCollectionTests {
         IEqualityComparer<int> modTen = new ModuloComparer(10);
 
         for (int i = 0; i < SampleCount; i++) {
-            HashSet<int> set = Any.SetOf(Any.Int32().Between(0, 999), modTen).WithCount(5);
+            HashSet<int> set = Any.SetOf(Any.Int32().Between(0, 999), modTen).WithCount(5).Generate();
             Check.That(set.Count).IsEqualTo(5);
             List<int> classes = set.Select(value => value % 10).ToList();
             Check.That(classes.Count).IsEqualTo(new HashSet<int>(classes).Count);
@@ -127,7 +127,7 @@ public sealed class AnyCollectionTests {
     [Fact(DisplayName = "Containing: a required value is present, and a distinct duplicate requirement conflicts.")]
     public void ContainingPlacesValues() {
         for (int i = 0; i < SampleCount; i++) {
-            List<int> list = Any.ListOf(Any.Int32().Between(1, 9)).WithCount(5).Containing(777);
+            List<int> list = Any.ListOf(Any.Int32().Between(1, 9)).WithCount(5).Containing(777).Generate();
             Check.That(list).Contains(777);
             Check.That(list.Count).IsEqualTo(5);
         }
@@ -142,7 +142,7 @@ public sealed class AnyCollectionTests {
     [Fact(DisplayName = "Containing: a value drawn from a generator is forced into the collection.")]
     public void ContainingFromAGenerator() {
         for (int i = 0; i < SampleCount; i++) {
-            List<int> list = Any.ListOf(Any.Int32().Between(1, 9)).NonEmpty().ContainingAny(Any.Int32().OneOf(4242));
+            List<int> list = Any.ListOf(Any.Int32().Between(1, 9)).NonEmpty().ContainingAny(Any.Int32().OneOf(4242)).Generate();
             Check.That(list).Contains(4242);
         }
     }
@@ -150,7 +150,7 @@ public sealed class AnyCollectionTests {
     [Fact(DisplayName = "ArrayOf: produces an array of the requested size, distinct when asked.")]
     public void ArrayOfProducesArrays() {
         for (int i = 0; i < SampleCount; i++) {
-            int[] array = Any.ArrayOf(Any.Int32().Between(1, 100)).WithCount(6).Distinct();
+            int[] array = Any.ArrayOf(Any.Int32().Between(1, 100)).WithCount(6).Distinct().Generate();
             Check.That(array.Length).IsEqualTo(6);
             Check.That(new HashSet<int>(array).Count).IsEqualTo(6);
         }
@@ -169,7 +169,7 @@ public sealed class AnyCollectionTests {
     [Fact(DisplayName = "DictionaryOf: builds unique-keyed dictionaries and gates the count by the key domain.")]
     public void DictionaryOfBehaves() {
         for (int i = 0; i < SampleCount; i++) {
-            Dictionary<int, string> dictionary = Any.DictionaryOf(Any.Int32().Between(1, 1000), Any.String().NonEmpty()).WithCount(8);
+            Dictionary<int, string> dictionary = Any.DictionaryOf(Any.Int32().Between(1, 1000), Any.String().NonEmpty()).WithCount(8).Generate();
             Check.That(dictionary.Count).IsEqualTo(8);
             Check.That(dictionary.Values).ContainsOnlyElementsThatMatch(value => value.Length > 0);
         }
@@ -194,13 +194,13 @@ public sealed class AnyCollectionTests {
 
     [Fact(DisplayName = "Collections are reproducible when their element generator draws from a seeded context.")]
     public void CollectionsAreReproducible() {
-        HashSet<int> first  = Any.SetOf(Any.WithSeed(4242).Int32()).WithCount(6);
-        HashSet<int> second = Any.SetOf(Any.WithSeed(4242).Int32()).WithCount(6);
+        HashSet<int> first  = Any.SetOf(Any.WithSeed(4242).Int32()).WithCount(6).Generate();
+        HashSet<int> second = Any.SetOf(Any.WithSeed(4242).Int32()).WithCount(6).Generate();
 
         Check.That(second.OrderBy(value => value)).ContainsExactly(first.OrderBy(value => value));
 
-        List<int> listOne = Any.ListOf(Any.WithSeed(7).Int32().Between(0, 99)).WithCount(5);
-        List<int> listTwo = Any.ListOf(Any.WithSeed(7).Int32().Between(0, 99)).WithCount(5);
+        List<int> listOne = Any.ListOf(Any.WithSeed(7).Int32().Between(0, 99)).WithCount(5).Generate();
+        List<int> listTwo = Any.ListOf(Any.WithSeed(7).Int32().Between(0, 99)).WithCount(5).Generate();
         Check.That(listTwo).ContainsExactly(listOne);
     }
 

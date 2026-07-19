@@ -16,7 +16,7 @@ namespace Dummies;
 /// <remarks>
 ///     <para>
 ///         Instances are immutable recipes: every method returns a new generator, and the value is drawn only when
-///         <see cref="Generate" /> runs (or when the generator is implicitly converted to <see cref="string" />),
+///         <see cref="Generate" /> runs,
 ///         from the random context the generator was created with. Strings are <b>built to satisfy</b> the
 ///         constraints — laid out as <c>prefix + filler + contained values + filler + suffix</c> — never generated
 ///         and filtered. That layout means fragments never overlap: the length budget they require is the plain sum
@@ -28,7 +28,7 @@ namespace Dummies;
 ///     </para>
 ///     <example>
 ///         <code>
-///         string code = Any.String().NonEmpty().WithMaxLength(50).StartingWith("ORD-");
+///         string code = Any.String().NonEmpty().WithMaxLength(50).StartingWith("ORD-").Generate();
 ///         Any.String().WithLength(3).StartingWith("ORD-");  // throws ConflictingAnyConstraintException
 ///         Any.String().Numeric().StartingWith("ORD-");      // throws ConflictingAnyConstraintException
 ///         </code>
@@ -37,16 +37,6 @@ namespace Dummies;
 public sealed class AnyString : IAny<string>, IHasRandomSource {
 
     #region Statics members declarations
-
-    /// <summary>
-    ///     Generates the value — an <see cref="AnyString" /> can be used wherever a <see cref="string" /> is expected.
-    ///     Each conversion draws a fresh value.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary string satisfying the generator's constraints.</returns>
-    public static implicit operator string(AnyString generator) {
-        return generator.Generate();
-    }
 
     private static string V(int value) {
         return value.ToString(CultureInfo.InvariantCulture);

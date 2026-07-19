@@ -23,16 +23,6 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource, ICardinality
 
     #region Statics members declarations
 
-    /// <summary>
-    ///     Generates the value — an <see cref="AnyDateTime" /> can be used wherever a <see cref="DateTime" /> is
-    ///     expected. Each conversion draws a fresh value.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary value satisfying the generator's constraints.</returns>
-    public static implicit operator DateTime(AnyDateTime generator) {
-        return generator.Generate();
-    }
-
     internal static AnyDateTime Create(RandomSource source) {
         return new AnyDateTime(source, OrdinalIntervalSpec.Unconstrained("DateTime", ordinal => V(Val(ordinal)), Ord(DateTime.MinValue), Ord(DateTime.MaxValue)));
     }
