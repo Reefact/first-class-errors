@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0020-materialize-dummies-only-through-generate.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-07-19
 **Decision Makers:** Reefact
 
