@@ -2,8 +2,8 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0011-host-dummies-as-a-standalone-package.fr.md)
 
-**Status:** Proposed
-**Date:** 2026-07-17
+**Status:** Accepted
+**Date:** 2026-07-19
 **Decision Makers:** Reefact
 
 ## Context
@@ -134,3 +134,4 @@ test-support package for errors would misplace its center of gravity.
 * ADR-0006 — Supply arbitrary test values from a single seedable source (the
   follow-up this decision realizes).
 * The architecture test guarding the boundary, in `Dummies.UnitTests`.
+* [Dummies generation specification](../specifications/dummies-generation.en.md).
