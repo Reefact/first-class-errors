@@ -35,7 +35,7 @@ public sealed class SeedReproducibilityTests {
         List<int>    list = Any.ListOf(Any.Int32().Between(0, 9)).WithCount(4).Generate();
         HashSet<int> set  = Any.SetOf(Any.Int32().Between(0, 99)).WithCount(3).Generate();
         int?         maybe = Any.Int32().Between(0, 9).OrNull().Generate();
-        string       coded = Any.StringMatching(@"[A-Z]{3}-\d{4}");
+        string       coded = Any.StringMatching(@"[A-Z]{3}-\d{4}").Generate();
 
         return string.Join("|", full, bounded, free, capped, shaped,
                            wide, unsigned, real, exact, flag, id, letter,

@@ -22,7 +22,7 @@ namespace Dummies;
 ///     </para>
 ///     <example>
 ///         <code>
-///         string reference = Any.StringMatching(@"^ORD-\d{8}$");
+///         string reference = Any.StringMatching(@"^ORD-\d{8}$").Generate();
 ///         IAny&lt;OrderReference&gt; any = Any.StringMatching(@"^ORD-\d{8}$").As(OrderReference.Create);
 ///         </code>
 ///     </example>
@@ -34,16 +34,6 @@ public sealed class AnyPattern : IAny<string>, IHasRandomSource {
     // A nested unbounded quantifier can, in principle, expand super-linearly; this ceiling turns that into a clear
     // AnyGenerationException instead of an out-of-memory. It is far above any realistic format-validation pattern.
     private const int GenerationLimit = 65536;
-
-    /// <summary>
-    ///     Generates the value — an <see cref="AnyPattern" /> can be used wherever a <see cref="string" /> is expected.
-    ///     Each conversion draws a fresh value.
-    /// </summary>
-    /// <param name="generator">The generator to draw from.</param>
-    /// <returns>An arbitrary string matching the pattern.</returns>
-    public static implicit operator string(AnyPattern generator) {
-        return generator.Generate();
-    }
 
     internal static AnyPattern FromPattern(RandomSource source, string pattern, bool ignoreCase) {
         return new AnyPattern(source, RegexParser.Parse(pattern, ignoreCase));

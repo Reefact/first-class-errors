@@ -95,7 +95,7 @@ public sealed class AnyPatternTests {
     [Fact(DisplayName = "A fixed-shape pattern yields exactly that shape.")]
     public void FixedShape() {
         for (int i = 0; i < SampleCount; i++) {
-            string reference = Any.StringMatching(@"^ORD-\d{8}$");
+            string reference = Any.StringMatching(@"^ORD-\d{8}$").Generate();
             Check.That(reference.Length).IsEqualTo(12);
             Check.That(reference).StartsWith("ORD-");
             Check.That(reference.Substring(4)).Matches("^[0-9]{8}$");
@@ -106,7 +106,7 @@ public sealed class AnyPatternTests {
     public void Alternation() {
         HashSet<string> seen = new();
         for (int i = 0; i < SampleCount; i++) {
-            string value = Any.StringMatching("(EUR|USD|GBP)");
+            string value = Any.StringMatching("(EUR|USD|GBP)").Generate();
             Check.That(value == "EUR" || value == "USD" || value == "GBP").IsTrue();
             seen.Add(value);
         }
@@ -117,9 +117,9 @@ public sealed class AnyPatternTests {
     [Fact(DisplayName = "Character classes, ranges and negation stay within their set.")]
     public void CharacterClasses() {
         for (int i = 0; i < SampleCount; i++) {
-            Check.That((string)Any.StringMatching("[A-Z]{3}")).Matches("^[A-Z]{3}$");
-            Check.That((string)Any.StringMatching("[^0-9]{4}")).Matches("^[^0-9]{4}$");
-            Check.That((string)Any.StringMatching(@"[\d]{5}")).Matches("^[0-9]{5}$");
+            Check.That(Any.StringMatching("[A-Z]{3}").Generate()).Matches("^[A-Z]{3}$");
+            Check.That(Any.StringMatching("[^0-9]{4}").Generate()).Matches("^[^0-9]{4}$");
+            Check.That(Any.StringMatching(@"[\d]{5}").Generate()).Matches("^[0-9]{5}$");
         }
     }
 
@@ -130,12 +130,12 @@ public sealed class AnyPatternTests {
         HashSet<int> openLengths = new();
 
         for (int i = 0; i < SampleCount; i++) {
-            int bounded = ((string)Any.StringMatching("a{2,4}")).Length;
+            int bounded = (Any.StringMatching("a{2,4}").Generate()).Length;
             Check.That(bounded is >= 2 and <= 4).IsTrue();
 
-            starLengths.Add(((string)Any.StringMatching("a*")).Length);
-            plusLengths.Add(((string)Any.StringMatching("a+")).Length);
-            openLengths.Add(((string)Any.StringMatching("a{2,}")).Length);
+            starLengths.Add((Any.StringMatching("a*").Generate()).Length);
+            plusLengths.Add((Any.StringMatching("a+").Generate()).Length);
+            openLengths.Add((Any.StringMatching("a{2,}").Generate()).Length);
         }
 
         Check.That(starLengths.Min()).IsEqualTo(0);
@@ -149,7 +149,7 @@ public sealed class AnyPatternTests {
     [Fact(DisplayName = "Anchors are no-ops: the whole generated string is the match.")]
     public void AnchorsAreNoOps() {
         for (int i = 0; i < SampleCount; i++) {
-            Check.That((string)Any.StringMatching("^abc$")).IsEqualTo("abc");
+            Check.That(Any.StringMatching("^abc$").Generate()).IsEqualTo("abc");
         }
     }
 
@@ -250,20 +250,20 @@ public sealed class AnyPatternTests {
 
     [Fact(DisplayName = "Escape sequences generate the real characters, not their letter.")]
     public void EscapesGenerateTheRealCharacters() {
-        Check.That((string)Any.StringMatching(@"\a")).IsEqualTo("\a");
-        Check.That((string)Any.StringMatching(@"\e")).IsEqualTo("\u001B");
-        Check.That((string)Any.StringMatching(@"\x41")).IsEqualTo("A");
-        Check.That((string)Any.StringMatching(@"\u0042")).IsEqualTo("B");
-        Check.That((string)Any.StringMatching(@"\cA")).IsEqualTo("\u0001");
-        Check.That((string)Any.StringMatching(@"\07")).IsEqualTo("\a");
-        Check.That((string)Any.StringMatching(@"\0")).IsEqualTo("\0");
+        Check.That(Any.StringMatching(@"\a").Generate()).IsEqualTo("\a");
+        Check.That(Any.StringMatching(@"\e").Generate()).IsEqualTo("\u001B");
+        Check.That(Any.StringMatching(@"\x41").Generate()).IsEqualTo("A");
+        Check.That(Any.StringMatching(@"\u0042").Generate()).IsEqualTo("B");
+        Check.That(Any.StringMatching(@"\cA").Generate()).IsEqualTo("\u0001");
+        Check.That(Any.StringMatching(@"\07").Generate()).IsEqualTo("\a");
+        Check.That(Any.StringMatching(@"\0").Generate()).IsEqualTo("\0");
     }
 
     [Fact(DisplayName = "A brace that is not a well-formed quantifier is a literal, exactly as in the real engine.")]
     public void BraceLiteralsGenerate() {
-        Check.That((string)Any.StringMatching(@"a{x}")).IsEqualTo("a{x}");
-        Check.That((string)Any.StringMatching(@"{abc}")).IsEqualTo("{abc}");
-        Check.That((string)Any.StringMatching(@"a{2,")).IsEqualTo("a{2,");
+        Check.That(Any.StringMatching(@"a{x}").Generate()).IsEqualTo("a{x}");
+        Check.That(Any.StringMatching(@"{abc}").Generate()).IsEqualTo("{abc}");
+        Check.That(Any.StringMatching(@"a{2,").Generate()).IsEqualTo("a{2,");
     }
 
     [Fact(DisplayName = "Nesting groups beyond the parser's depth ceiling fails cleanly instead of overflowing the stack.")]
