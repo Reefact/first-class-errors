@@ -45,7 +45,7 @@ jobs:
       DUMMIESCHECK_VERSION: 1.0.0-dummiescheck.${{ github.run_number }}.${{ github.run_attempt }}
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       # Three SDKs on purpose: 10.0.x is the SDK release.yml packs with, so the pack step produces the exact
       # artifact consumers receive; 8.0.x and 6.0.x bring the .NET 8 and .NET 6 RUNTIMES so each consumer leg
