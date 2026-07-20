@@ -1021,6 +1021,25 @@ La Phase 0 faite, c'est une bibliothèque qui peut promettre de façon crédible
 arbitraire mais valide, des conflits nommés à la ligne qui les a causés, et tout run rejouable depuis une
 graine rapportée — sur chaque cible pour laquelle elle est livrée.
 
+## 14. Suivi des issues
+
+Les recommandations de la §11 ont été ouvertes en issues GitHub le 2026-07-20, sur le gabarit d'issue
+Dummies du dépôt. Cette table est un **instantané figé** : l'état vivant de chaque issue (ouverte, fermée,
+en cours) vit dans le tracker, pas ici — ne pas maintenir de statut dans ce document.
+
+| Point §11 | Issue(s) | Phase (§12) |
+|---|---|---|
+| 1 — Corriger les défauts reproduits | [#206](https://github.com/Reefact/first-class-errors/issues/206) AnyDecimal moitié haute · [#207](https://github.com/Reefact/first-class-errors/issues/207) nudge Single/Half · [#208](https://github.com/Reefact/first-class-errors/issues/208) blocage U+FFFF · [#209](https://github.com/Reefact/first-class-errors/issues/209) groupes d'équilibrage · [#210](https://github.com/Reefact/first-class-errors/issues/210) bords regex mineurs | 0 |
+| 2 — Atteignabilité + suite transverse | [#213](https://github.com/Reefact/first-class-errors/issues/213) | 0 |
+| 3 — Gardes de parité | [#214](https://github.com/Reefact/first-class-errors/issues/214) | 0 |
+| 4 — Solder le contrat de déterminisme | [#216](https://github.com/Reefact/first-class-errors/issues/216) doc contrat + ADR · [#217](https://github.com/Reefact/first-class-errors/issues/217) ADR moteur ordinal · [#211](https://github.com/Reefact/first-class-errors/issues/211) rapport de graine · [#212](https://github.com/Reefact/first-class-errors/issues/212) message de saturation | 0 |
+| 5 — Exécuter sur les planchers | [#215](https://github.com/Reefact/first-class-errors/issues/215) | 0 |
+| 6 — Passe de documentation | [#218](https://github.com/Reefact/first-class-errors/issues/218) README + guide utilisateur · [#219](https://github.com/Reefact/first-class-errors/issues/219) ASCII imprimable & docs périmées | 0 |
+| 7 — Gardes d'ingénierie de release | [#221](https://github.com/Reefact/first-class-errors/issues/221) baseline API · [#222](https://github.com/Reefact/first-class-errors/issues/222) nommage Bool · [#220](https://github.com/Reefact/first-class-errors/issues/220) hygiène ADR | 0 |
+| 8 — Livrer les Indispensables | [#223](https://github.com/Reefact/first-class-errors/issues/223) Any.OneOf/ElementOf · [#224](https://github.com/Reefact/first-class-errors/issues/224) exclusions AnyString | 1 |
+| 9 — AnyDictionary | [#225](https://github.com/Reefact/first-class-errors/issues/225) | 1 |
+| 10 — Souhaitables guidés par la demande | [#226](https://github.com/Reefact/first-class-errors/issues/226) backlog | 2 |
+
 ---
 
 *Produit par un audit mené par agents (revue multi-agents avec vérification contradictoire ; tous les
