@@ -1,5 +1,8 @@
 # Dummies — Architecture & Design Audit
 
+🌍 **Languages:**  
+🇬🇧 English (this file) | 🇫🇷 [Français](./2026-07-20-dummies-architecture-and-design-audit.fr.md)
+
 **Date:** 2026-07-20
 **Audited revision:** `3bf89e3` (tip of `main` at audit time)
 **Scope:** the `Dummies` library only — `Dummies/`, `Dummies.UnitTests/`, its guard tooling
