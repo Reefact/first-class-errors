@@ -41,6 +41,7 @@ Every finding cites concrete evidence (`file:line`, type names, ADR ids, doc pag
 14. [Recommended Improvements](#14-recommended-improvements)
 15. [Suggested Roadmap](#15-suggested-roadmap)
 16. [Conclusion](#16-conclusion)
+17. [Issue tracking](#17-issue-tracking)
 
 ---
 ## 1. Executive Summary
@@ -769,3 +770,39 @@ Two closing observations for the maintainer. First, the restraint documented thr
 ---
 
 *Audit conducted 2026-07-20 against revision `3bf89e3` by an orchestrated multi-agent review (13 subsystem surveys, 26 per-ADR audits, corpus review, 3 gap analyses, build/test execution, adversarial verification of all critical/high findings, and a completeness-critic pass), synthesized and edited into this report. Every finding cites repository evidence; verification verdicts are reflected in the classifications.*
+
+---
+
+## 17. Issue tracking
+
+The §14 recommendations were opened as GitHub issues on 2026-07-20, following the format established by the Dummies audit (#206–#226). This table is a **static snapshot**: the live state of each issue (open, closed, in progress) lives in the issue tracker, not here — do not maintain status in this document. Out-of-scope rejections (§13.6) are deliberately not tracked: the audit recommends keeping them rejected.
+
+| §14 item | Issue(s) | Phase (§15) |
+|---|---|---|
+| C1 — Backfill the foundational ADRs | [#228](https://github.com/Reefact/first-class-errors/issues/228) | 1 |
+| C2 — Publish Dummies; unwind the embedded DLL | [#229](https://github.com/Reefact/first-class-errors/issues/229) | 1 |
+| C3 — Fix the storefront READMEs | [#230](https://github.com/Reefact/first-class-errors/issues/230) | 0 |
+| C4 — Fix the four confirmed drifts | [#231](https://github.com/Reefact/first-class-errors/issues/231) | 0 |
+| C5 — Error→ProblemDetails + AspNetCore adapter | [#232](https://github.com/Reefact/first-class-errors/issues/232) *(includes HV12 host helpers)* | 2 |
+| C6 — Discarded-Outcome analyzer | [#233](https://github.com/Reefact/first-class-errors/issues/233) | 0 |
+| HV1 — Documentation hubs + sample links | [#234](https://github.com/Reefact/first-class-errors/issues/234) | 0 |
+| HV2 — Error.ToLogModel + field schema | [#235](https://github.com/Reefact/first-class-errors/issues/235) | 2 |
+| HV3 — Outcome.Try | in flight: branch `claude/outcome-try-feature-z1u1n4` (with FCE019–FCE021) | 2 |
+| HV4 — Code-fix providers | [#236](https://github.com/Reefact/first-class-errors/issues/236) | 4 |
+| HV5 — fce lint | [#237](https://github.com/Reefact/first-class-errors/issues/237) | 4 |
+| HV6 — Analyzer trust hardening | [#238](https://github.com/Reefact/first-class-errors/issues/238) harness + consistency · [#239](https://github.com/Reefact/first-class-errors/issues/239) ErrorContextKey conflict | 1 |
+| HV7/8 — Bilingual policy + docs-sync checks | [#240](https://github.com/Reefact/first-class-errors/issues/240) | 0 |
+| HV9 — Workflow reference gaps | [#241](https://github.com/Reefact/first-class-errors/issues/241) | 0 |
+| HV10 — API symmetry · extensibility contract | [#242](https://github.com/Reefact/first-class-errors/issues/242) symmetry · [#243](https://github.com/Reefact/first-class-errors/issues/243) extensibility | 1 |
+| HV11 — Binder pre-v1 hardening | [#244](https://github.com/Reefact/first-class-errors/issues/244) | 1 |
+| HV13 — Analyzers for binder-only consumers | [#245](https://github.com/Reefact/first-class-errors/issues/245) | 1 |
+| HV14 — Documentation-contract version check | [#246](https://github.com/Reefact/first-class-errors/issues/246) | 4 |
+| HV15 — fce generate pruning (+ --service-name examples) | [#247](https://github.com/Reefact/first-class-errors/issues/247) | 0/4 |
+| HV16 — Widen the comparison page | [#248](https://github.com/Reefact/first-class-errors/issues/248) | 2 |
+| HV17 — Reproducibility adoption (+ ErrorAssertion) | [#249](https://github.com/Reefact/first-class-errors/issues/249) · Dummies landing docs: existing [#218](https://github.com/Reefact/first-class-errors/issues/218) | 4 |
+| HV18 — ADR-0025 status | existing [#220](https://github.com/Reefact/first-class-errors/issues/220) (Dummies audit) | 0 |
+| HV19 — Community-health surface | [#251](https://github.com/Reefact/first-class-errors/issues/251) | 0 |
+| HV20 — Reconcile the release record | [#250](https://github.com/Reefact/first-class-errors/issues/250) | 0/3 |
+| HV21 — Harden code_review.md | [#252](https://github.com/Reefact/first-class-errors/issues/252) | 0 |
+| M — Lockstep/IVT ADR | [#253](https://github.com/Reefact/first-class-errors/issues/253) | 1 |
+| Medium/Low backlog | [#254](https://github.com/Reefact/first-class-errors/issues/254) | 4 |
