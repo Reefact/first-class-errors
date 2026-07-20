@@ -954,6 +954,25 @@ With Phase 0 done, this is a library that can credibly promise what its README s
 valid, conflicts named at the line that caused them, and any run replayable from one reported seed
 — on every target it ships for.
 
+## 14. Issue tracking
+
+The §11 recommendations were opened as GitHub issues on 2026-07-20, mirroring the repository's Dummies
+issue template. This table is a **static snapshot**: the live state of each issue (open, closed, in
+progress) lives in the issue tracker, not here — do not maintain status in this document.
+
+| §11 item | Issue(s) | Phase (§12) |
+|---|---|---|
+| 1 — Fix the reproduced defects | [#206](https://github.com/Reefact/first-class-errors/issues/206) AnyDecimal upper half · [#207](https://github.com/Reefact/first-class-errors/issues/207) Single/Half nudge · [#208](https://github.com/Reefact/first-class-errors/issues/208) U+FFFF hang · [#209](https://github.com/Reefact/first-class-errors/issues/209) balancing groups · [#210](https://github.com/Reefact/first-class-errors/issues/210) minor regex edges | 0 |
+| 2 — Reachability + cross-engine suite | [#213](https://github.com/Reefact/first-class-errors/issues/213) | 0 |
+| 3 — Parity guards | [#214](https://github.com/Reefact/first-class-errors/issues/214) | 0 |
+| 4 — Close the determinism contract | [#216](https://github.com/Reefact/first-class-errors/issues/216) contract docs + ADR · [#217](https://github.com/Reefact/first-class-errors/issues/217) ordinal-engine ADR · [#211](https://github.com/Reefact/first-class-errors/issues/211) seed report · [#212](https://github.com/Reefact/first-class-errors/issues/212) exhaustion message | 0 |
+| 5 — Run on the floors | [#215](https://github.com/Reefact/first-class-errors/issues/215) | 0 |
+| 6 — Documentation pass | [#218](https://github.com/Reefact/first-class-errors/issues/218) README + user guide · [#219](https://github.com/Reefact/first-class-errors/issues/219) printable-ASCII & stale docs | 0 |
+| 7 — Release-engineering guards | [#221](https://github.com/Reefact/first-class-errors/issues/221) API baseline · [#222](https://github.com/Reefact/first-class-errors/issues/222) Bool naming · [#220](https://github.com/Reefact/first-class-errors/issues/220) ADR hygiene | 0 |
+| 8 — Ship the Must-Have features | [#223](https://github.com/Reefact/first-class-errors/issues/223) Any.OneOf/ElementOf · [#224](https://github.com/Reefact/first-class-errors/issues/224) AnyString exclusions | 1 |
+| 9 — AnyDictionary | [#225](https://github.com/Reefact/first-class-errors/issues/225) | 1 |
+| 10 — Demand-driven Nice-to-Haves | [#226](https://github.com/Reefact/first-class-errors/issues/226) backlog | 2 |
+
 ---
 
 *Produced by an agent-run audit (multi-agent review with adversarial verification; all reported
