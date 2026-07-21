@@ -42,7 +42,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: '10.0.x'
 
@@ -91,7 +91,7 @@ jobs:
       # RUNS net472 assemblies ships on the windows-latest image, and the net472 targeting pack for COMPILATION
       # is supplied hermetically by the Microsoft.NETFramework.ReferenceAssemblies package — so no extra install.
       - name: Setup .NET (build SDK)
-        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: '10.0.x'
 
@@ -132,7 +132,7 @@ jobs:
       # runs normally, and 8.0.x brings the .NET 8 runtime — the floor the tooling ships against — so the run
       # step below can execute the net8 binaries on it.
       - name: Setup .NET (floor runtime + build SDK)
-        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: |
             8.0.x
