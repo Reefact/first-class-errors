@@ -213,8 +213,8 @@ public sealed class AnyContext {
     ///     flip unless pinned with <c>True()</c> or <c>False()</c>.
     /// </summary>
     /// <returns>A generator to constrain fluently.</returns>
-    public AnyBool Bool() {
-        return AnyBool.Create(_source);
+    public AnyBoolean Boolean() {
+        return AnyBoolean.Create(_source);
     }
 
     /// <summary>

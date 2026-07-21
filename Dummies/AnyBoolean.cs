@@ -5,12 +5,12 @@ namespace Dummies;
 ///     mostly useful for symmetry when a test sweeps cases — and contradictory pins fail eagerly with a
 ///     <see cref="ConflictingAnyConstraintException" /> naming both sides, like every other generator.
 /// </summary>
-public sealed class AnyBool : IAny<bool>, IHasRandomSource, ICardinalityHint<bool> {
+public sealed class AnyBoolean : IAny<bool>, IHasRandomSource, ICardinalityHint<bool> {
 
     #region Statics members declarations
 
-    internal static AnyBool Create(RandomSource source) {
-        return new AnyBool(source, null, null);
+    internal static AnyBoolean Create(RandomSource source) {
+        return new AnyBoolean(source, null, null);
     }
 
     private static string V(bool value) {
@@ -27,7 +27,7 @@ public sealed class AnyBool : IAny<bool>, IHasRandomSource, ICardinalityHint<boo
 
     #endregion
 
-    private AnyBool(RandomSource source, bool? pinned, string? pinnedConstraint) {
+    private AnyBoolean(RandomSource source, bool? pinned, string? pinnedConstraint) {
         _source           = source;
         _pinned           = pinned;
         _pinnedConstraint = pinnedConstraint;
@@ -44,14 +44,14 @@ public sealed class AnyBool : IAny<bool>, IHasRandomSource, ICardinalityHint<boo
     /// <summary>Pins the value to <c>true</c>.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
-    public AnyBool True() {
+    public AnyBoolean True() {
         return Pin(true, "True()");
     }
 
     /// <summary>Pins the value to <c>false</c>.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
-    public AnyBool False() {
+    public AnyBoolean False() {
         return Pin(false, "False()");
     }
 
@@ -62,7 +62,7 @@ public sealed class AnyBool : IAny<bool>, IHasRandomSource, ICardinalityHint<boo
     /// <param name="value">The value the generated value must differ from.</param>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
-    public AnyBool DifferentFrom(bool value) {
+    public AnyBoolean DifferentFrom(bool value) {
         return Pin(!value, $"DifferentFrom({V(value)})");
     }
 
@@ -71,12 +71,12 @@ public sealed class AnyBool : IAny<bool>, IHasRandomSource, ICardinalityHint<boo
         return _pinned ?? _source.Current.Random.Next(2) == 0;
     }
 
-    private AnyBool Pin(bool value, string applying) {
+    private AnyBoolean Pin(bool value, string applying) {
         if (_pinnedConstraint is not null && _pinned != value) {
             throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_pinnedConstraint} already pins the value to {V(_pinned!.Value)}.");
         }
 
-        return new AnyBool(_source, value, applying);
+        return new AnyBoolean(_source, value, applying);
     }
 
 }

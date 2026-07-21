@@ -26,7 +26,7 @@ matter — and that is the point.
   `.Generate()`, across the .NET simple types: `String`, `Char`, every integer
   width (`SByte`/`Byte`/`Int16`/`UInt16`/`Int32`/`UInt32`/`Int64`/`UInt64`),
   `Double`/`Single`/`Decimal` (finite values only — never NaN or infinities),
-  `Bool`, `Guid`, `Enum<T>` (declared members only), `TimeSpan`, `DateTime` (UTC)
+  `Boolean`, `Guid`, `Enum<T>` (declared members only), `TimeSpan`, `DateTime` (UTC)
   and `DateTimeOffset`. On modern targets (`net8.0`) the surface extends to
   `DateOnly`, `TimeOnly`, `Int128`, `UInt128` and `Half`; the package also targets
   `netstandard2.0` for the widest reach.
