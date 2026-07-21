@@ -14,14 +14,15 @@ namespace Dummies;
 ///     <c>? * + {n} {n,} {n,m}</c> (a lazy <c>?</c> marker is accepted and ignored — it changes matching order, never
 ///     which strings match; possessive quantifiers do not exist in .NET and are rejected); alternation; grouping
 ///     (capturing, non-capturing and named — the name is validated as the real engine would, then ignored); the dot;
-///     and the anchors <c>^ $</c> at the start
-///     and end of the pattern or of a top-level alternation branch (no-ops there, since a whole matching string is
-///     generated; anywhere else they are refused, because the pattern could never be matched by a whole generated
-///     string). A brace that does not form a well-formed quantifier is a literal, as in the real engine, and groups
-///     may nest at most 256 levels deep. A well-formed but non-regular or out-of-scope construct — a lookaround, a
-///     backreference, a balancing group (it pops the capture stack, the backreference family), a Unicode category, a
-///     word boundary, an atomic group (its first-branch commit is not language-equivalent to plain alternation), a
-///     class subtraction — is refused with an
+///     and the anchors <c>^ $</c> at the start and end of the pattern or of a top-level alternation branch — including
+///     a run of them (<c>^^</c>, <c>$$</c>) or a quantified one (<c>^*</c>, <c>$?</c>), all no-ops there since a whole
+///     matching string is generated; anywhere else they are refused, because the pattern could never be matched by a
+///     whole generated string. A brace that does not form a well-formed quantifier is a literal, as in the real engine,
+///     and groups may nest at most 256 levels deep. A well-formed but non-regular or out-of-scope construct — a
+///     lookaround, a backreference, a balancing group (it pops the capture stack, the backreference family), a Unicode
+///     category, a word boundary, an atomic group (its first-branch commit is not language-equivalent to plain
+///     alternation), a class subtraction, or a negated class that excludes the whole printable-ASCII universe Dummies
+///     draws from — is refused with an
 ///     <see cref="UnsupportedRegexException" /> rather than silently mis-generated; a malformed pattern (including an
 ///     escape the real engine rejects) raises an <see cref="ArgumentException" />.
 /// </summary>
@@ -128,12 +129,15 @@ internal sealed class RegexParser {
         List<RegexNode> parts = new();
         while (!AtEnd && Peek() != '|' && Peek() != ')') {
             // Anchors are no-ops for a whole-string generator, but only where they are guaranteed to match:
-            // '^' at the start and '$' at the end of the pattern or of a top-level alternation branch. Anywhere
-            // else ('a^', '$a', inside a group) the pattern can never be matched by a whole generated string,
-            // so it is refused instead of silently mis-generated.
+            // '^' at the start and '$' at the end of the pattern or of a top-level alternation branch. A run of
+            // them ('^^', '$$') and a quantified one ('^*', '$?', '^{2}') are equally no-ops there — the real
+            // engine accepts and matches all of these — so they are consumed and ignored. Anywhere else ('a^',
+            // '$a', inside a group) the pattern can never be matched by a whole generated string, so it is
+            // refused instead of silently mis-generated.
             if (Peek() == '^') {
                 if (_depth > 0 || parts.Count > 0) { throw Unsupported("an anchor '^' away from the start of the pattern or of a top-level alternation branch", _index); }
                 _index++;
+                SkipAnchorQuantifier();
 
                 continue;
             }
@@ -141,7 +145,10 @@ internal sealed class RegexParser {
             if (Peek() == '$') {
                 int position = _index;
                 _index++;
-                if (_depth > 0 || (!AtEnd && Peek() != '|')) { throw Unsupported("an anchor '$' away from the end of the pattern or of a top-level alternation branch", position); }
+                SkipAnchorQuantifier();
+                // A '$' is a no-op only at the very end: what follows must be end-of-pattern, a branch bar, or
+                // another end-anchor '$'. Inside a group, or before anything else, it can never match a whole string.
+                if (_depth > 0 || (!AtEnd && Peek() != '|' && Peek() != '$')) { throw Unsupported("an anchor '$' away from the end of the pattern or of a top-level alternation branch", position); }
 
                 continue;
             }
@@ -150,6 +157,17 @@ internal sealed class RegexParser {
         }
 
         return parts.Count == 1 ? parts[0] : new RegexSequence(parts.ToArray());
+    }
+
+    /// <summary>
+    ///     Consumes a quantifier applied to a boundary anchor (<c>^*</c>, <c>$?</c>, <c>^{2,3}</c>, a lazy marker
+    ///     included) when one is present. Repeating a zero-width no-op leaves it a no-op — the real engine accepts and
+    ///     matches these — so the quantifier is read and discarded, never turned into a repeat node.
+    /// </summary>
+    private void SkipAnchorQuantifier() {
+        if (AtEnd) { return; }                     // an anchor at the very end carries no quantifier
+        if (TryReadQuantifier() is null) { return; }
+        if (!AtEnd && Peek() == '?') { _index++; } // a lazy marker on a no-op is immaterial
     }
 
     private RegexNode ParseQuantified() {
@@ -417,6 +435,7 @@ internal sealed class RegexParser {
     }
 
     private RegexNode ParseClass() {
+        int position = _index;
         _index++; // consume '['
         bool          negated = Eat('^');
         HashSet<char> set     = new();
@@ -431,9 +450,11 @@ internal sealed class RegexParser {
             }
 
             first = false;
-            // .NET's class subtraction ([a-z-[aeiou]]) removes a nested class; parsing the '-[' as members
-            // would close the class early and generate values outside it, so the construct is refused.
-            if (Peek() == '-' && PeekAt(1) == '[') { throw Unsupported("a character-class subtraction '[…-[…]]'", _index); }
+            // .NET's class subtraction ([a-z-[aeiou]]) removes a nested class; parsing the '-[' as members would
+            // close the class early and generate values outside it, so the construct is refused. But '-[' is
+            // subtraction only when a base member precedes it: the real engine reads a leading '-' (as in '[-[x]]')
+            // as an ordinary hyphen, so it is refused here only once the set already holds a member.
+            if (Peek() == '-' && PeekAt(1) == '[' && set.Count > 0) { throw Unsupported("a character-class subtraction '[…-[…]]'", _index); }
             if (Peek() == '\\' && IsClassShorthand(PeekAt(1))) {
                 _index++; // consume '\'
                 AddClassShorthand(set, Next());
@@ -442,6 +463,9 @@ internal sealed class RegexParser {
             }
 
             char low = ReadClassChar();
+            // A '-[' immediately after a member is subtraction as well ('[a-[x]]'): the real engine never reads it
+            // as a range whose upper bound is '[', so intercepting it here can never turn away a valid range.
+            if (!AtEnd && Peek() == '-' && PeekAt(1) == '[') { throw Unsupported("a character-class subtraction '[…-[…]]'", _index); }
             if (!AtEnd && Peek() == '-' && PeekAt(1) != ']' && PeekAt(1) != '\0') {
                 _index++; // consume '-'
                 char high = ReadClassChar();
@@ -456,7 +480,13 @@ internal sealed class RegexParser {
 
         if (_ignoreCase) { set = ExpandCase(set); }
         char[] choices = negated ? RegexAlphabet.Negate(set) : set.ToArray();
-        if (choices.Length == 0) { throw Malformed("character class matches no printable character"); }
+        // Only a negated class can end up empty — a plain class always holds the member it just read. Such a class
+        // is well-formed and regular (the real engine accepts it), but it excludes every character Dummies draws
+        // from, so it is refused as unsupported (a universe limit), not as malformed. Routing it through Malformed
+        // would claim the caller wrote a broken pattern for one the real engine compiles.
+        if (choices.Length == 0) {
+            throw new UnsupportedRegexException($"The regular expression pattern \"{_pattern}\" uses a negated character class that excludes every character Dummies can generate (printable ASCII U+0020 to U+007E) at position {position}, which Dummies cannot generate from. It draws values from printable ASCII; express the requirement with characters inside that range, or generate the value another way.");
+        }
 
         return new RegexCharacters(choices);
     }
