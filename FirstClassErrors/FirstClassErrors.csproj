@@ -1,5 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Committed public-API baseline + package validation (see build/PublicApiBaseline.props). -->
+  <Import Project="..\build\PublicApiBaseline.props" />
+
   <PropertyGroup>
     <!-- Build -->
     <TargetFramework>netstandard2.0</TargetFramework>

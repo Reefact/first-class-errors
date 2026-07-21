@@ -1,0 +1,99 @@
+#nullable enable
+FirstClassErrors.RequestBinder.ArgumentListSource
+FirstClassErrors.RequestBinder.ArgumentListSource.From<TArgument>(string! source, System.Collections.Generic.IEnumerable<TArgument?>? values) -> FirstClassErrors.RequestBinder.ListOfSimplePropertiesConverter<TArgument>!
+FirstClassErrors.RequestBinder.ArgumentListSource.From<TArgument>(string! source, System.Collections.Generic.IEnumerable<TArgument?>? values) -> FirstClassErrors.RequestBinder.ListOfSimpleValuePropertiesConverter<TArgument>!
+FirstClassErrors.RequestBinder.ArgumentSource
+FirstClassErrors.RequestBinder.ArgumentSource.From<TArgument>(string! source, TArgument? value) -> FirstClassErrors.RequestBinder.SimplePropertyConverter<TArgument>!
+FirstClassErrors.RequestBinder.ArgumentSourceExtensions
+FirstClassErrors.RequestBinder.Bind
+FirstClassErrors.RequestBinder.BinderErrorDefinition
+FirstClassErrors.RequestBinder.BinderErrorDefinition.BinderErrorDefinition(FirstClassErrors.ErrorCode! code, System.Func<string!, FirstClassErrors.RequestBinder.BindingMessage!>! message) -> void
+FirstClassErrors.RequestBinder.BinderErrorDefinition.Code.get -> FirstClassErrors.ErrorCode!
+FirstClassErrors.RequestBinder.BinderErrorDefinition.GetMessage(string! argumentPath) -> FirstClassErrors.RequestBinder.BindingMessage!
+FirstClassErrors.RequestBinder.BinderErrorDefinition.WithCode(FirstClassErrors.ErrorCode! code) -> FirstClassErrors.RequestBinder.BinderErrorDefinition!
+FirstClassErrors.RequestBinder.BinderErrorDefinition.WithMessage(System.Func<string!, FirstClassErrors.RequestBinder.BindingMessage!>! message) -> FirstClassErrors.RequestBinder.BinderErrorDefinition!
+FirstClassErrors.RequestBinder.BindingAssembler<TCommand>
+FirstClassErrors.RequestBinder.BindingMessage
+FirstClassErrors.RequestBinder.BindingMessage.BindingMessage(string! shortMessage, string? detailedMessage = null) -> void
+FirstClassErrors.RequestBinder.BindingMessage.DetailedMessage.get -> string?
+FirstClassErrors.RequestBinder.BindingMessage.ShortMessage.get -> string!
+FirstClassErrors.RequestBinder.BindingScope
+FirstClassErrors.RequestBinder.BindingScope.BindingScope() -> void
+FirstClassErrors.RequestBinder.BindingScope.Get<TProperty>(FirstClassErrors.RequestBinder.OptionalReferenceField<TProperty!>! field) -> TProperty?
+FirstClassErrors.RequestBinder.BindingScope.Get<TProperty>(FirstClassErrors.RequestBinder.OptionalValueField<TProperty>! field) -> TProperty?
+FirstClassErrors.RequestBinder.BindingScope.Get<TProperty>(FirstClassErrors.RequestBinder.RequiredField<TProperty>! field) -> TProperty
+FirstClassErrors.RequestBinder.ComplexPropertyConverter<TArgument>
+FirstClassErrors.RequestBinder.ComplexPropertyConverter<TArgument>.AsOptionalReference<TProperty>(System.Func<FirstClassErrors.RequestBinder.RequestBinder!, TArgument, FirstClassErrors.Outcome<TProperty!>!>! bindNested) -> FirstClassErrors.RequestBinder.OptionalReferenceField<TProperty!>!
+FirstClassErrors.RequestBinder.ComplexPropertyConverter<TArgument>.AsRequired<TProperty>(System.Func<FirstClassErrors.RequestBinder.RequestBinder!, TArgument, FirstClassErrors.Outcome<TProperty>!>! bindNested) -> FirstClassErrors.RequestBinder.RequiredField<TProperty>!
+FirstClassErrors.RequestBinder.ComplexPropertyEnvelopeStage<TArgument>
+FirstClassErrors.RequestBinder.ComplexPropertyEnvelopeStage<TArgument>.FailWith(System.Func<FirstClassErrors.PrimaryPortInnerErrors!, FirstClassErrors.PrimaryPortError!>! envelope) -> FirstClassErrors.RequestBinder.ComplexPropertyConverter<TArgument>!
+FirstClassErrors.RequestBinder.ConfiguredBind
+FirstClassErrors.RequestBinder.ConfiguredBind.Request(System.Func<FirstClassErrors.PrimaryPortInnerErrors!, FirstClassErrors.PrimaryPortError!>! envelope) -> FirstClassErrors.RequestBinder.RequestBinder!
+FirstClassErrors.RequestBinder.IArgumentNameProvider
+FirstClassErrors.RequestBinder.IArgumentNameProvider.GetArgumentNameFrom(System.Reflection.PropertyInfo! property) -> string!
+FirstClassErrors.RequestBinder.ListOfComplexPropertiesConverter<TArgument>
+FirstClassErrors.RequestBinder.ListOfComplexPropertiesConverter<TArgument>.AsOptional<TProperty>(System.Func<FirstClassErrors.RequestBinder.RequestBinder!, TArgument, FirstClassErrors.Outcome<TProperty>!>! bindElement) -> FirstClassErrors.RequestBinder.RequiredField<System.Collections.Generic.IReadOnlyList<TProperty>!>!
+FirstClassErrors.RequestBinder.ListOfComplexPropertiesConverter<TArgument>.AsRequired<TProperty>(System.Func<FirstClassErrors.RequestBinder.RequestBinder!, TArgument, FirstClassErrors.Outcome<TProperty>!>! bindElement) -> FirstClassErrors.RequestBinder.RequiredField<System.Collections.Generic.IReadOnlyList<TProperty>!>!
+FirstClassErrors.RequestBinder.ListOfComplexPropertiesEnvelopeStage<TArgument>
+FirstClassErrors.RequestBinder.ListOfComplexPropertiesEnvelopeStage<TArgument>.FailWith(System.Func<FirstClassErrors.PrimaryPortInnerErrors!, FirstClassErrors.PrimaryPortError!>! envelope) -> FirstClassErrors.RequestBinder.ListOfComplexPropertiesConverter<TArgument>!
+FirstClassErrors.RequestBinder.ListOfSimplePropertiesConverter<TArgument>
+FirstClassErrors.RequestBinder.ListOfSimplePropertiesConverter<TArgument>.AsOptional<TProperty>(System.Func<TArgument, FirstClassErrors.Outcome<TProperty>!>! convertElement) -> FirstClassErrors.RequestBinder.RequiredField<System.Collections.Generic.IReadOnlyList<TProperty>!>!
+FirstClassErrors.RequestBinder.ListOfSimplePropertiesConverter<TArgument>.AsRequired<TProperty>(System.Func<TArgument, FirstClassErrors.Outcome<TProperty>!>! convertElement) -> FirstClassErrors.RequestBinder.RequiredField<System.Collections.Generic.IReadOnlyList<TProperty>!>!
+FirstClassErrors.RequestBinder.ListOfSimpleValuePropertiesConverter<TArgument>
+FirstClassErrors.RequestBinder.ListOfSimpleValuePropertiesConverter<TArgument>.AsOptional<TProperty>(System.Func<TArgument, FirstClassErrors.Outcome<TProperty>!>! convertElement) -> FirstClassErrors.RequestBinder.RequiredField<System.Collections.Generic.IReadOnlyList<TProperty>!>!
+FirstClassErrors.RequestBinder.ListOfSimpleValuePropertiesConverter<TArgument>.AsRequired<TProperty>(System.Func<TArgument, FirstClassErrors.Outcome<TProperty>!>! convertElement) -> FirstClassErrors.RequestBinder.RequiredField<System.Collections.Generic.IReadOnlyList<TProperty>!>!
+FirstClassErrors.RequestBinder.OptionalReferenceField<TProperty>
+FirstClassErrors.RequestBinder.OptionalValueField<TProperty>
+FirstClassErrors.RequestBinder.PropertySource<TDto>
+FirstClassErrors.RequestBinder.PropertySource<TDto>.ComplexProperty<TArgument>(System.Linq.Expressions.Expression<System.Func<TDto, TArgument?>!>! selector) -> FirstClassErrors.RequestBinder.ComplexPropertyEnvelopeStage<TArgument>!
+FirstClassErrors.RequestBinder.PropertySource<TDto>.ListOfComplexProperties<TArgument>(System.Linq.Expressions.Expression<System.Func<TDto, System.Collections.Generic.IEnumerable<TArgument?>?>!>! selector) -> FirstClassErrors.RequestBinder.ListOfComplexPropertiesEnvelopeStage<TArgument>!
+FirstClassErrors.RequestBinder.PropertySource<TDto>.ListOfSimpleProperties<TArgument>(System.Linq.Expressions.Expression<System.Func<TDto, System.Collections.Generic.IEnumerable<TArgument?>?>!>! selector) -> FirstClassErrors.RequestBinder.ListOfSimplePropertiesConverter<TArgument>!
+FirstClassErrors.RequestBinder.PropertySource<TDto>.ListOfSimpleProperties<TArgument>(System.Linq.Expressions.Expression<System.Func<TDto, System.Collections.Generic.IEnumerable<TArgument?>?>!>! selector) -> FirstClassErrors.RequestBinder.ListOfSimpleValuePropertiesConverter<TArgument>!
+FirstClassErrors.RequestBinder.PropertySource<TDto>.SimpleProperty<TArgument>(System.Linq.Expressions.Expression<System.Func<TDto, TArgument?>!>! selector) -> FirstClassErrors.RequestBinder.SimplePropertyConverter<TArgument>!
+FirstClassErrors.RequestBinder.RequestBinder
+FirstClassErrors.RequestBinder.RequestBinder.Argument(string! name) -> FirstClassErrors.RequestBinder.ArgumentSource!
+FirstClassErrors.RequestBinder.RequestBinder.ArgumentList(string! name) -> FirstClassErrors.RequestBinder.ArgumentListSource!
+FirstClassErrors.RequestBinder.RequestBinder.Create<TCommand>(FirstClassErrors.RequestBinder.ValidatingAssembler<TCommand>! assemble) -> FirstClassErrors.Outcome<TCommand>!
+FirstClassErrors.RequestBinder.RequestBinder.New<TCommand>(FirstClassErrors.RequestBinder.BindingAssembler<TCommand>! assemble) -> FirstClassErrors.Outcome<TCommand>!
+FirstClassErrors.RequestBinder.RequestBinder.PropertiesOf<TDto>(TDto dto) -> FirstClassErrors.RequestBinder.PropertySource<TDto>!
+FirstClassErrors.RequestBinder.RequestBinderOptions
+FirstClassErrors.RequestBinder.RequestBinderOptions.ArgumentInvalid.get -> FirstClassErrors.RequestBinder.BinderErrorDefinition!
+FirstClassErrors.RequestBinder.RequestBinderOptions.ArgumentNameProvider.get -> FirstClassErrors.RequestBinder.IArgumentNameProvider!
+FirstClassErrors.RequestBinder.RequestBinderOptions.ArgumentRequired.get -> FirstClassErrors.RequestBinder.BinderErrorDefinition!
+FirstClassErrors.RequestBinder.RequestBinderOptions.RequestBinderOptions(FirstClassErrors.RequestBinder.IArgumentNameProvider! argumentNameProvider, FirstClassErrors.RequestBinder.BinderErrorDefinition? argumentRequired = null, FirstClassErrors.RequestBinder.BinderErrorDefinition? argumentInvalid = null) -> void
+FirstClassErrors.RequestBinder.RequestBindingError
+FirstClassErrors.RequestBinder.RequiredField<TProperty>
+FirstClassErrors.RequestBinder.SimplePropertyConverter<TArgument>
+FirstClassErrors.RequestBinder.SimplePropertyConverter<TArgument>.AsOptional<TProperty>(System.Func<TArgument, FirstClassErrors.Outcome<TProperty>!>! convert, TArgument rawFallback) -> FirstClassErrors.RequestBinder.RequiredField<TProperty>!
+FirstClassErrors.RequestBinder.SimplePropertyConverter<TArgument>.AsOptionalReference<TProperty>(System.Func<TArgument, FirstClassErrors.Outcome<TProperty!>!>! convert) -> FirstClassErrors.RequestBinder.OptionalReferenceField<TProperty!>!
+FirstClassErrors.RequestBinder.SimplePropertyConverter<TArgument>.AsOptionalValue<TProperty>(System.Func<TArgument, FirstClassErrors.Outcome<TProperty>!>! convert) -> FirstClassErrors.RequestBinder.OptionalValueField<TProperty>!
+FirstClassErrors.RequestBinder.SimplePropertyConverter<TArgument>.AsRequired() -> FirstClassErrors.RequestBinder.RequiredField<TArgument>!
+FirstClassErrors.RequestBinder.SimplePropertyConverter<TArgument>.AsRequired<TProperty>(System.Func<TArgument, FirstClassErrors.Outcome<TProperty>!>! convert) -> FirstClassErrors.RequestBinder.RequiredField<TProperty>!
+FirstClassErrors.RequestBinder.ValidatingAssembler<TCommand>
+static FirstClassErrors.RequestBinder.ArgumentSourceExtensions.FromBody<TArgument>(this FirstClassErrors.RequestBinder.ArgumentSource! argument, TArgument? value) -> FirstClassErrors.RequestBinder.SimplePropertyConverter<TArgument>!
+static FirstClassErrors.RequestBinder.ArgumentSourceExtensions.FromForm<TArgument>(this FirstClassErrors.RequestBinder.ArgumentListSource! argument, System.Collections.Generic.IEnumerable<TArgument?>? values) -> FirstClassErrors.RequestBinder.ListOfSimplePropertiesConverter<TArgument>!
+static FirstClassErrors.RequestBinder.ArgumentSourceExtensions.FromForm<TArgument>(this FirstClassErrors.RequestBinder.ArgumentListSource! argument, System.Collections.Generic.IEnumerable<TArgument?>? values) -> FirstClassErrors.RequestBinder.ListOfSimpleValuePropertiesConverter<TArgument>!
+static FirstClassErrors.RequestBinder.ArgumentSourceExtensions.FromForm<TArgument>(this FirstClassErrors.RequestBinder.ArgumentSource! argument, TArgument? value) -> FirstClassErrors.RequestBinder.SimplePropertyConverter<TArgument>!
+static FirstClassErrors.RequestBinder.ArgumentSourceExtensions.FromHeader<TArgument>(this FirstClassErrors.RequestBinder.ArgumentListSource! argument, System.Collections.Generic.IEnumerable<TArgument?>? values) -> FirstClassErrors.RequestBinder.ListOfSimplePropertiesConverter<TArgument>!
+static FirstClassErrors.RequestBinder.ArgumentSourceExtensions.FromHeader<TArgument>(this FirstClassErrors.RequestBinder.ArgumentListSource! argument, System.Collections.Generic.IEnumerable<TArgument?>? values) -> FirstClassErrors.RequestBinder.ListOfSimpleValuePropertiesConverter<TArgument>!
+static FirstClassErrors.RequestBinder.ArgumentSourceExtensions.FromHeader<TArgument>(this FirstClassErrors.RequestBinder.ArgumentSource! argument, TArgument? value) -> FirstClassErrors.RequestBinder.SimplePropertyConverter<TArgument>!
+static FirstClassErrors.RequestBinder.ArgumentSourceExtensions.FromQuery<TArgument>(this FirstClassErrors.RequestBinder.ArgumentListSource! argument, System.Collections.Generic.IEnumerable<TArgument?>? values) -> FirstClassErrors.RequestBinder.ListOfSimplePropertiesConverter<TArgument>!
+static FirstClassErrors.RequestBinder.ArgumentSourceExtensions.FromQuery<TArgument>(this FirstClassErrors.RequestBinder.ArgumentListSource! argument, System.Collections.Generic.IEnumerable<TArgument?>? values) -> FirstClassErrors.RequestBinder.ListOfSimpleValuePropertiesConverter<TArgument>!
+static FirstClassErrors.RequestBinder.ArgumentSourceExtensions.FromQuery<TArgument>(this FirstClassErrors.RequestBinder.ArgumentSource! argument, TArgument? value) -> FirstClassErrors.RequestBinder.SimplePropertyConverter<TArgument>!
+static FirstClassErrors.RequestBinder.ArgumentSourceExtensions.FromRoute<TArgument>(this FirstClassErrors.RequestBinder.ArgumentSource! argument, TArgument? value) -> FirstClassErrors.RequestBinder.SimplePropertyConverter<TArgument>!
+static FirstClassErrors.RequestBinder.Bind.Request(System.Func<FirstClassErrors.PrimaryPortInnerErrors!, FirstClassErrors.PrimaryPortError!>! envelope) -> FirstClassErrors.RequestBinder.RequestBinder!
+static FirstClassErrors.RequestBinder.Bind.WithOptions(FirstClassErrors.RequestBinder.RequestBinderOptions! options) -> FirstClassErrors.RequestBinder.ConfiguredBind!
+static FirstClassErrors.RequestBinder.RequestBinderOptions.Default.get -> FirstClassErrors.RequestBinder.RequestBinderOptions!
+static FirstClassErrors.RequestBinder.RequestBinderOptions.Default.set -> void
+static FirstClassErrors.RequestBinder.RequestBindingError.ArgumentPathKey.get -> FirstClassErrors.ErrorContextKey<string!>!
+static FirstClassErrors.RequestBinder.RequestBindingError.ArgumentSourceKey.get -> FirstClassErrors.ErrorContextKey<string!>!
+static FirstClassErrors.RequestBinder.RequestBindingError.DefaultArgumentInvalid.get -> FirstClassErrors.RequestBinder.BinderErrorDefinition!
+static FirstClassErrors.RequestBinder.RequestBindingError.DefaultArgumentInvalidCode.get -> FirstClassErrors.ErrorCode!
+static FirstClassErrors.RequestBinder.RequestBindingError.DefaultArgumentRequired.get -> FirstClassErrors.RequestBinder.BinderErrorDefinition!
+static FirstClassErrors.RequestBinder.RequestBindingError.DefaultArgumentRequiredCode.get -> FirstClassErrors.ErrorCode!
+static FirstClassErrors.RequestBinder.RequestBindingError.DescribeArgumentInvalid(FirstClassErrors.RequestBinder.BinderErrorDefinition! definition) -> FirstClassErrors.ErrorDocumentation!
+static FirstClassErrors.RequestBinder.RequestBindingError.DescribeArgumentRequired(FirstClassErrors.RequestBinder.BinderErrorDefinition! definition) -> FirstClassErrors.ErrorDocumentation!
+static FirstClassErrors.RequestBinder.RequestBindingError.SampleArgumentInvalid(FirstClassErrors.RequestBinder.BinderErrorDefinition! definition) -> FirstClassErrors.PrimaryPortError!
+static FirstClassErrors.RequestBinder.RequestBindingError.SampleArgumentRequired(FirstClassErrors.RequestBinder.BinderErrorDefinition! definition) -> FirstClassErrors.PrimaryPortError!
+virtual FirstClassErrors.RequestBinder.BindingAssembler<TCommand>.Invoke(FirstClassErrors.RequestBinder.BindingScope scope) -> TCommand
+virtual FirstClassErrors.RequestBinder.ValidatingAssembler<TCommand>.Invoke(FirstClassErrors.RequestBinder.BindingScope scope) -> FirstClassErrors.Outcome<TCommand>!
