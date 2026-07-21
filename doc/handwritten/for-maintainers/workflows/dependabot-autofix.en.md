@@ -10,108 +10,120 @@
 ## What it is for
 
 Dependabot pull requests sometimes go red for reasons that are quick to fix but
-tedious to diagnose: an over-long `bump …` commit header, a bumped analyzer that
-now emits a warning-as-error, a small API change a library made. This workflow is
-the **diagnostic companion** to [`dependabot-automerge`](dependabot-automerge.en.md):
-automerge decides *when* a green PR merges; this decides *why* a red one is red and
-*how* to fix it.
+tedious to chase: a bumped analyzer that now emits a warning-as-error, a small API
+change a library made, a branch that has fallen behind `main`. This workflow is the
+**repair** companion to [`dependabot-automerge`](dependabot-automerge.en.md):
+automerge decides *when* a green PR merges; this decides *why* a red one is red,
+**fixes it**, and pushes the fix.
 
 When a Dependabot PR's checks have run, it asks the model (Claude, via the same
 `curl` pattern as [`changelog`](changelog.en.md) and [`adr-check`](adr-check.en.md))
-for one of three verdicts — **healthy**, **fixable with a small low-risk change**,
-or **needs a human** — and posts a single comment. When the verdict is *fixable*,
-that comment carries a **ready-to-apply patch** and a convention-conforming commit
-message, so applying the fix is a copy-paste, not an investigation.
+for a verdict — **healthy**, **fixable with a small low-risk change**, or **needs a
+human** — and, when it is fixable, applies one of a fixed set of actions and pushes
+it.
 
-**It never applies, pushes, or merges anything.** Every verdict is advisory — a
-comment a human acts on, exactly like `adr-check`. This keeps it inside the
-repository's "no agent merges" rule and, more importantly, inside its supply-chain
-boundary (see *Handle with care*).
+**The auto-merge rule follows the risk of the fix:**
+
+| Fix | Action | Auto-merge |
+| --- | --- | --- |
+| Rewrite a commit header | `rewrite_commit_message` | **kept** (trivial) |
+| Retitle the pull request | `retitle_pr` | **kept** (trivial) |
+| Rebase onto `main` | `rebase` | **kept** (trivial) |
+| Change product/test code | `apply_patch` | **disabled** — a human reviews |
+
+A **trivial** fix changes only history or metadata, so the PR stays eligible to
+merge on its own once checks pass. A **code** fix changes file contents, so
+auto-merge is turned off and the AI-authored change waits for human review. The
+workflow decides trivial-vs-code **from the action it actually took**, never from
+the model's say-so, and it **never merges** anything itself.
 
 ## When it runs
 
 - On **`workflow_run: completed`** of every gating workflow a Dependabot PR passes
   through (`ci`, `sonar`, `analyzers`, `commit-lint`, `dummies`,
-  `dependency-review`, `codeql`). Any one completing re-runs the triage against the
-  head commit's **combined** check status, so the single comment refines itself as
-  the slower checks finish.
-- The job is gated to **Dependabot's own pull requests from a branch in this
-  repository** (`workflow_run.actor == 'dependabot[bot]'` and a non-fork head). A
-  human PR, or a fork, is ignored.
-
-### Why `workflow_run`, not `pull_request`
-
-A `pull_request` run *raised by Dependabot* is deliberately sandboxed by GitHub:
-it gets a **read-only** token and **no repository secrets** (only the separate
-Dependabot secrets store). It could neither read `ANTHROPIC_API_KEY` nor comment.
-`workflow_run` runs in the **base-branch context** after the checks finish: it has
-the repository secrets and a writable token — and it does **not** check out or
-execute the pull request's code. The bumped dependency's code already ran, in the
-read-only `ci` context; this triage only *reads* the result.
+  `dependency-review`, `codeql`). Any one completing re-runs it against the head
+  commit's **combined** check status.
+- Gated to **Dependabot's own pull requests from a branch in this repository**
+  (`workflow_run.actor == 'dependabot[bot]'`, non-fork head). Human and fork PRs are
+  ignored.
 
 ## How it runs
 
-One job, `triage`:
+One job, `autofix`:
 
-1. **Resolve the PR** from the `workflow_run` payload (falling back to
-   `gh pr list --head`).
-2. **Classify the combined check status** of the head commit from its check-runs:
-   *failing* (act now), *pending* (wait for the next completion), or *green*.
-3. On **green**, remove any stale triage comment (the PR recovered).
-4. On **failing**, [`collect-context.sh`](../../../../tools/dependabot-autofix/collect-context.sh)
-   assembles the PR diff, the failing check names, and the failing job logs —
-   **all through the GitHub API, nothing checked out** — and one Anthropic call
-   returns the verdict, an optional patch, and the comment body.
-5. [`upsert-comment.sh`](../../../../tools/dependabot-autofix/upsert-comment.sh) posts,
-   refreshes, or removes the **single** marked comment (`<!-- dependabot-autofix -->`).
+1. **Resolve the PR**, then **classify** the head commit's combined check status:
+   *failing* (act), *pending* (wait for the next completion), *green* (remove any
+   stale comment).
+2. On *failing*, [`collect-context.sh`](../../../../tools/dependabot-autofix/collect-context.sh)
+   gathers the PR diff, the failing check names, and the failing job logs — **all
+   through the API, nothing built** — and one Anthropic call returns a JSON verdict
+   (verdict, action, `explanation`, and any `patch` / `commit_message` / `pr_title`).
+3. When the verdict is **fixable**, a *second* checkout of the PR head branch (with
+   a push-capable token) lets [`apply-fix.sh`](../../../../tools/dependabot-autofix/apply-fix.sh)
+   perform the action and push it. A **code** fix then has auto-merge disabled.
+4. The workflow **composes the comment itself** from the verdict and the action it
+   actually took (so the comment never claims a fix that did not land) and upserts
+   the single marked comment (`<!-- dependabot-autofix -->`).
 
-Like `adr-check`, every external call is **best-effort**: a missing log, an API
-error, a refusal, a truncated or non-JSON reply each become a `::warning::` and a
-no-op, never a red check. The workflow is advisory; it must not manufacture a
-failure of its own.
+Everything is **best-effort and safe-by-omission**: a patch that does not apply, a
+rebase that conflicts, an API error, a non-JSON reply — each leaves the PR
+untouched and degrades to a *suggested-fix* or *needs-a-human* comment rather than
+pushing a broken change or failing red. A **loop guard** stops it acting twice on
+the same push: once the head commit's *committer* is `github-actions[bot]`, it waits
+for the next Dependabot push before acting again.
 
 ## Permissions & security
 
-Workflow default `contents: read`. The job widens to `checks: read` +
-`actions: read` (to read the check-runs and the failed runs' logs) and
-`pull-requests: write` (to manage its one comment) — and nothing else. It needs the
-**`ANTHROPIC_API_KEY` repository secret** (an Actions secret; `workflow_run` reads
-Actions secrets, so — unlike a `pull_request` Dependabot run — it does *not* need a
-Dependabot-scoped copy).
+Workflow default `contents: read`. The job widens to `contents: write` (push the
+fix; disable auto-merge), `pull-requests: write` (comment, retitle), and
+`checks: read` + `actions: read` (read the check-runs and failed logs).
+
+Two secrets:
+
+- **`ANTHROPIC_API_KEY`** (required) — an Actions secret; `workflow_run` reads
+  Actions secrets, so no Dependabot-scoped copy is needed. Absent → the workflow
+  warns and does nothing.
+- **`DEPENDABOT_AUTOFIX_TOKEN`** (recommended) — a fine-grained PAT or GitHub App
+  token with **contents: write** + **pull-requests: write** on this repo, used only
+  for the push. GitHub does **not** re-trigger workflows for a push made with the
+  default `GITHUB_TOKEN`; a dedicated token makes `ci` re-run on the fix, which a
+  *kept* auto-merge needs to proceed. Without it the fix is still pushed, but the
+  checks must be re-triggered by hand (e.g. close/reopen the PR).
+
+**The supply-chain boundary is deliberate.** The repair does only git operations —
+apply, reword, rebase, push — and **never builds the bumped dependency**. The write
+token and the API key therefore never meet freshly bumped third-party code; the
+pushed commit is validated by the ordinary `ci` run, in its own read-only Dependabot
+context.
 
 ## Handle with care
 
-- **It is advisory. It never applies the patch, pushes, or merges.** The patch in
-  the comment is for a human to apply and review. Do not "upgrade" this workflow to
-  push commits without reading the next point.
-- **The supply-chain boundary is the whole design.** This workflow never checks out
-  or builds the PR, so the writable token and the API key never come within reach
-  of a freshly bumped third-party package. An auto-apply variant would have to
-  build the bumped code to verify a fix, executing untrusted code *with* those
-  credentials — a real, deliberate trade-off, not a tweak. Decide it consciously
-  before changing the trigger to `pull_request_target` or adding a build step.
+- **Trivial keeps auto-merge; code disables it — and that split is enforced from
+  the action, not the model's claim.** Do not let `apply_patch` be treated as
+  trivial: a code change must always face human review.
+- **The push token choice is load-bearing.** With only `GITHUB_TOKEN`, a pushed fix
+  does not re-run `ci`, so a kept auto-merge will sit until the checks are
+  re-triggered. Set `DEPENDABOT_AUTOFIX_TOKEN` for the intended behaviour.
 - **It does nothing until it is on `main`.** `workflow_run` only fires for workflow
-  files on the repository's default branch. On a feature branch the workflow is
-  inert; it starts triaging once merged.
-- **It reads the checks; it does not re-run them.** Failures that are not
-  code-fixable — `sonar`/coverage that cannot read a secret on a Dependabot run,
-  a `dependency-review`/CodeQL policy block — are *diagnosed*, not fixed. Fixing
-  those is a repository-configuration or human-judgement matter.
-- **The actor + non-fork guard matters.** It keeps the elevated `pull-requests:
-  write` path off human and fork PRs.
-- **Required checks are still the real gate.** This posts a comment; it changes no
-  check status. What blocks a bad merge is branch protection on `main`.
+  files on the default branch.
+- **It never merges, and never *enables* auto-merge.** Enabling is
+  [`dependabot-automerge`](dependabot-automerge.en.md)'s job; this only *disables*
+  auto-merge on a code fix.
+- **It never changes a dependency version**, and failures that are not code-fixable
+  (`sonar`/coverage without a secret, a `dependency-review`/CodeQL policy block) are
+  *diagnosed*, not fixed.
+- **The loop guard and the actor/non-fork guard matter.** They keep it from acting
+  twice on one push and keep the write path off human and fork PRs.
 
 ## Related
 
 - [`dependabot-automerge`](dependabot-automerge.en.md) — enables auto-merge on a
-  green Dependabot patch/minor PR; this explains a red one.
-- [`commit-lint`](commit-lint.en.md) — now **exempts Dependabot-authored commits**,
-  so a long `bump …` header no longer fails the lint on its own; this workflow
-  handles the residual failures.
-- [`dependency-review`](dependency-review.en.md) — the PR-time vulnerability gate a
-  Dependabot PR also passes through; a block there is *needs a human*, never
-  auto-worked-around.
+  green Dependabot patch/minor PR; this repairs a red one (and disables auto-merge
+  when its fix is code).
+- [`commit-lint`](commit-lint.en.md) — exempts Dependabot-authored commits, so a
+  long `bump …` header no longer fails on its own; this handles the rest.
+- [`dependency-review`](dependency-review.en.md) — a block there is *needs a human*,
+  never auto-worked-around.
 - [`.github/dependabot.yml`](../../../../.github/dependabot.yml) — what Dependabot
-  updates and what it ignores.
+  updates and ignores.
 - Prompt: [`.github/dependabot-autofix-prompt.md`](../../../../.github/dependabot-autofix-prompt.md).
