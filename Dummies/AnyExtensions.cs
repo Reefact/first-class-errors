@@ -37,12 +37,13 @@ public static class AnyExtensions {
         if (generator is null) { throw new ArgumentNullException(nameof(generator)); }
         if (factory is null) { throw new ArgumentNullException(nameof(factory)); }
 
-        RandomSource? source = AnyDerivation.SourceOf(generator);
+        RandomSource? source       = AnyDerivation.SourceOf(generator);
+        bool          reproducible = AnyDerivation.IsReproducible(generator);
 
-        return new DerivedAny<TResult>(source, () => {
+        return new DerivedAny<TResult>(source, reproducible, () => {
             TSource value = generator.Generate();
 
-            return AnyDerivation.Invoke(() => factory(value), source, $"the factory passed to As(...) threw for the generated value {AnyDerivation.Display(value)}");
+            return AnyDerivation.Invoke(() => factory(value), source, reproducible, $"the factory passed to As(...) threw for the generated value {AnyDerivation.Display(value)}");
         });
     }
 

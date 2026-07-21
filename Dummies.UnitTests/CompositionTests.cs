@@ -136,6 +136,25 @@ public sealed class CompositionTests {
         Check.That(caught.Message).Not.Contains("Any.Reproducibly(");
     }
 
+    [Fact(DisplayName = "A composer failure over a Combine mixing a foreign operand qualifies the replay hint, though a library operand supplies a nameable source.")]
+    public void CombineOverMixedForeignAndLibraryQualifiesTheHint() {
+        // The foreign operand has no source, but Any.Int32()'s ambient source survives the ?? collapse, so a naive
+        // "non-null source means faithful" rule would over-promise. The composed value depends on the foreign draw, so
+        // the hint must be qualified even though a seed can still be named.
+        IAny<string> generator = Any.Combine<int, int, string>(
+            new ForeignInt(),
+            Any.Int32().Between(1, 3),
+            (first, second) => throw new InvalidOperationException($"rejected {first}/{second}"));
+
+        AnyGenerationException caught = Assert.Throws<AnyGenerationException>(
+            () => Any.Reproducibly(31415, () => generator.Generate(), _ => { }));
+
+        Check.That(caught.Seed).IsEqualTo(31415);
+        Check.That(caught.Message).Contains("Combine(...)");
+        Check.That(caught.Message).Contains("not reproducible from this seed alone");
+        Check.That(caught.Message).Not.Contains("The arbitrary values were seeded with");
+    }
+
     [Fact(DisplayName = "Combine composes four through eight parts, passing every constrained part to the lambda.")]
     public void CombineSupportsHigherArities() {
         IAny<int> part = Any.Int32().Between(1, 9);
@@ -201,5 +220,19 @@ public sealed class CompositionTests {
 
         Check.That(seen.Count).IsStrictlyGreaterThan(1);
     }
+
+    #region Nested types
+
+    private sealed class ForeignInt : IAny<int> {
+
+        // Foreign on purpose: implements IAny<int> but NOT IHasRandomSource, so it draws from no reported source and a
+        // Combine that includes it is not fully reproducible even when another operand carries one.
+        public int Generate() {
+            return 0;
+        }
+
+    }
+
+    #endregion
 
 }
