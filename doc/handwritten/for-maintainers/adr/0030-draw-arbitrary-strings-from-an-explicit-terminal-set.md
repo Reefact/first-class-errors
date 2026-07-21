@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0030-draw-arbitrary-strings-from-an-explicit-terminal-set.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-07-21
 **Decision Makers:** Reefact
 
