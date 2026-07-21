@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0032-draw-arbitrary-values-from-an-explicit-top-level-pool.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-07-21
 **Decision Makers:** Reefact
 
