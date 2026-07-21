@@ -209,3 +209,4 @@ Optional supporting material:
 | [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) | Allow a one-time editorial refactoring of accepted ADRs | Accepted |
 | [ADR-0025](0025-generate-strings-from-a-home-grown-regular-subset.md) | Generate matching strings from a home-grown regular subset | Proposed |
 | [ADR-0026](0026-rebase-testing-arbitrary-values-on-dummies.md) | Rebase the testing package's arbitrary values on Dummies | Accepted |
+| [ADR-0027](0027-repair-dependabot-pull-requests-within-a-risk-boundary.md) | Repair Dependabot pull requests within a risk boundary | Accepted |

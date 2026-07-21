@@ -1,0 +1,284 @@
+name: dependabot-autofix
+
+# Triage and repair for Dependabot pull requests. When a Dependabot PR's checks
+# have run, this workflow asks the model whether the PR is healthy, fixable with a
+# small low-risk change, or in need of a human — and, when it is fixable, APPLIES
+# the fix and pushes it, then posts one comment describing what it did.
+#
+# The auto-merge rule mirrors the risk of the fix:
+#   - a TRIVIAL fix (rewrite the commit header, retitle the PR, rebase onto main)
+#     changes only history/metadata, so auto-merge is LEFT ON — the PR can still
+#     merge on its own once the checks pass;
+#   - a CODE fix (`apply_patch`) changes file contents, so auto-merge is DISABLED —
+#     a human reviews the AI-authored change before it merges.
+# The workflow decides trivial-vs-code from the action it actually took, not from
+# the model's say-so.
+#
+# Why `workflow_run`, and how the push stays inside the supply-chain boundary:
+#   - A `pull_request` run raised by Dependabot gets a READ-ONLY token and NO
+#     repository secrets, so it could neither read `ANTHROPIC_API_KEY` nor push.
+#   - `workflow_run` runs in the BASE-branch context with the repository secrets and
+#     a writable token. The repair does ONLY git operations (apply / reword / rebase
+#     / push) — it never builds the bumped dependency, so the write token and the
+#     API key never meet freshly bumped third-party code. The pushed commit is
+#     validated by the ordinary `ci` run, in its own read-only Dependabot context.
+#   - GitHub does not re-trigger workflows for a push made with the default
+#     GITHUB_TOKEN. So the push uses `DEPENDABOT_AUTOFIX_TOKEN` when present (a
+#     fine-grained PAT / GitHub App token with contents + pull-requests write): that
+#     makes `ci` re-run on the fix, which a kept auto-merge needs. Without it the fix
+#     is still pushed, but the checks must be re-triggered by hand.
+# See doc/handwritten/for-maintainers/workflows/dependabot-autofix.en.md.
+
+on:
+  workflow_run:
+    # Every gating workflow a Dependabot PR passes through. Any completion re-runs
+    # the triage against the head commit's current, combined check status.
+    workflows:
+      - ci
+      - sonar
+      - analyzers
+      - commit-lint
+      - dummies
+      - dependency-review
+      - codeql
+    types:
+      - completed
+
+# One repair per pull request (keyed on its branch); a newer completion — a later
+# check finishing, or a fresh push — supersedes an in-flight run.
+concurrency:
+  group: dependabot-autofix-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+# Least privilege by default; the single job widens only what it needs.
+permissions:
+  contents: read
+
+jobs:
+  autofix:
+    name: Triage and repair the Dependabot pull request
+    runs-on: ubuntu-latest
+    # Read a few API endpoints, one Anthropic call, and some git operations; cap a
+    # hung run well below the 6-hour default.
+    timeout-minutes: 15
+    # Only Dependabot's own pull requests, from a branch in THIS repository (never a
+    # fork). `workflow_run.actor` is who raised the run that triggered us.
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.actor.login == 'dependabot[bot]' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    permissions:
+      contents: write         # push the fix; disable auto-merge on a code fix
+      pull-requests: write     # comment, retitle, toggle auto-merge
+      checks: read            # read the head commit's check-runs
+      actions: read           # read the failed runs' logs
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
+    steps:
+      - name: Checkout the base (scripts + prompt — never the pull request here)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Resolve the Dependabot pull request
+        id: pr
+        env:
+          PR_FROM_EVENT: ${{ github.event.workflow_run.pull_requests[0].number }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          num="${PR_FROM_EVENT:-}"
+          if [ -z "$num" ] || [ "$num" = "null" ]; then
+            num="$(gh pr list --repo "$GH_REPO" --head "$HEAD_BRANCH" --state open \
+              --json number --jq '.[0].number // empty' 2>/dev/null || true)"
+          fi
+          if [ -z "$num" ]; then
+            echo "No open pull request for ${HEAD_BRANCH}; nothing to do."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Handling pull request #${num} at ${HEAD_SHA}."
+          {
+            echo "number=${num}"
+            echo "sha=${HEAD_SHA}"
+            echo "branch=${HEAD_BRANCH}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Classify the combined check status
+        id: status
+        if: steps.pr.outputs.skip != 'true'
+        env:
+          SHA: ${{ steps.pr.outputs.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          runs="$(gh api "repos/${GH_REPO}/commits/${SHA}/check-runs" --paginate \
+            --jq '.check_runs[] | [.status, (.conclusion // "")] | @tsv' 2>/dev/null || true)"
+          inprogress=0
+          failing=0
+          while IFS=$'\t' read -r st cc; do
+            [ -z "${st:-}" ] && continue
+            if [ "$st" != "completed" ]; then
+              inprogress=$((inprogress + 1)); continue
+            fi
+            case "$cc" in
+              failure|timed_out|startup_failure|action_required) failing=$((failing + 1)) ;;
+              *) : ;;
+            esac
+          done <<EOF
+          ${runs}
+          EOF
+          if [ "$failing" -gt 0 ]; then state=failing
+          elif [ "$inprogress" -gt 0 ]; then state=pending
+          else state=green
+          fi
+          echo "checks: failing=${failing} in-progress=${inprogress} -> ${state}"
+          echo "state=${state}" >> "$GITHUB_OUTPUT"
+
+      - name: Remove a stale comment on a green pull request
+        if: steps.status.outputs.state == 'green'
+        run: tools/dependabot-autofix/upsert-comment.sh "${{ steps.pr.outputs.number }}" false /dev/null
+
+      - name: Ask Claude to triage the failing pull request
+        id: triage
+        if: steps.status.outputs.state == 'failing'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          SHA: ${{ steps.pr.outputs.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+            echo "::warning::ANTHROPIC_API_KEY is not set; cannot triage this Dependabot PR."
+            echo "The Dependabot triage needs the \`ANTHROPIC_API_KEY\` repository secret." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          tools/dependabot-autofix/collect-context.sh "$PR_NUMBER" "$SHA" > context.txt
+
+          # Build the request with jq so every untrusted block is JSON-escaped once.
+          # Prompt + context go in via --rawfile (a single >128 KiB --arg fails with
+          # E2BIG). thinking is disabled so the budget goes to the verdict + patch.
+          jq -n \
+            --arg model "claude-sonnet-5" \
+            --rawfile prompt .github/dependabot-autofix-prompt.md \
+            --rawfile context context.txt \
+            '{ model: $model, max_tokens: 3000, thinking: { type: "disabled" },
+               messages: [ { role: "user", content: ($prompt + "\n\n" + $context) } ] }' \
+            > payload.json
+
+          if ! curl -sS https://api.anthropic.com/v1/messages \
+              -H "x-api-key: $ANTHROPIC_API_KEY" \
+              -H "anthropic-version: 2023-06-01" \
+              -H "content-type: application/json" \
+              -d @payload.json > response.json; then
+            echo "::warning::Anthropic API call failed; skipping the triage for this run."
+            exit 0
+          fi
+          if jq -e '.type == "error"' response.json >/dev/null 2>&1; then
+            echo "::warning::Anthropic API returned an error; skipping the triage."
+            jq -r '.error.message // .' response.json; exit 0
+          fi
+          case "$(jq -r '.stop_reason // empty' response.json)" in
+            refusal)    echo "::warning::Model refused; skipping the triage.";             exit 0 ;;
+            max_tokens) echo "::warning::Model output was truncated (max_tokens); skipping."; exit 0 ;;
+          esac
+
+          # One JSON object as text; strip any stray code fence, then validate.
+          text="$(jq -r '[.content[] | select(.type=="text") | .text] | join("")' response.json)"
+          printf '%s' "$text" | sed '/^```/d' | jq -c '.' > verdict.json 2>/dev/null || true
+          if [ ! -s verdict.json ]; then
+            echo "::warning::Model output was not valid JSON; skipping the triage. Raw output:"
+            printf '%s\n' "$text"; exit 0
+          fi
+
+          v="$(jq -r '.verdict // "needs_human"' verdict.json)"
+          a="$(jq -r '.action  // "none"'       verdict.json)"
+          echo "Verdict: ${v} — action ${a} — category $(jq -r '.category // "other"' verdict.json)"
+          {
+            echo "ready=true"
+            echo "verdict=${v}"
+            echo "action=${a}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Checkout the pull request head to repair it
+        id: co_pr
+        if: steps.triage.outputs.ready == 'true' && steps.triage.outputs.verdict == 'fixable'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ steps.pr.outputs.branch }}
+          path: pr
+          fetch-depth: 0
+          # Push with the dedicated token when configured so `ci` re-runs on the fix;
+          # fall back to the workflow token (the push then needs a manual re-trigger).
+          token: ${{ secrets.DEPENDABOT_AUTOFIX_TOKEN || github.token }}
+
+      - name: Apply the fix and push it
+        id: apply
+        if: steps.triage.outputs.ready == 'true' && steps.triage.outputs.verdict == 'fixable'
+        run: |
+          tools/dependabot-autofix/apply-fix.sh \
+            "${{ steps.pr.outputs.number }}" \
+            "${{ steps.pr.outputs.branch }}" \
+            "${{ github.workspace }}/verdict.json" \
+            "${{ github.workspace }}/pr"
+
+      - name: Disable auto-merge on a code fix (keep it for a trivial one)
+        if: steps.apply.outputs.applied == 'true' && steps.apply.outputs.impact == 'code'
+        run: |
+          echo "Applied a code fix; disabling auto-merge so a human reviews it."
+          gh pr merge "${{ steps.pr.outputs.number }}" --repo "$GH_REPO" --disable-auto || true
+
+      - name: Compose and post the comment
+        if: steps.triage.outputs.ready == 'true'
+        env:
+          VERDICT: ${{ steps.triage.outputs.verdict }}
+          APPLIED: ${{ steps.apply.outputs.applied }}
+          IMPACT: ${{ steps.apply.outputs.impact }}
+          REASON: ${{ steps.apply.outputs.reason }}
+          SUMMARY: ${{ steps.apply.outputs.summary }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker='<!-- dependabot-autofix -->'
+          category="$(jq -r '.category // "other"' verdict.json)"
+          explanation="$(jq -r '.explanation // ""' verdict.json)"
+          doc='doc/handwritten/for-maintainers/workflows/dependabot-autofix.en.md'
+
+          # verdict "ok" (transient/unrelated failure): drop any stale comment.
+          if [ "$VERDICT" = "ok" ]; then
+            tools/dependabot-autofix/upsert-comment.sh "${{ steps.pr.outputs.number }}" false /dev/null
+            exit 0
+          fi
+
+          {
+            printf '%s\n\n' "$marker"
+            printf '### 🤖 Dependabot triage\n\n'
+            if [ "$VERDICT" = "fixable" ] && [ "${APPLIED:-}" = "true" ]; then
+              if [ "${IMPACT:-}" = "code" ]; then
+                printf '**🔧 Auto-fixed (code)** — %s. %s. **Auto-merge disabled** so a human reviews the change.\n\n' "$category" "${SUMMARY:-applied a patch}"
+              else
+                printf '**🔧 Auto-fixed (trivial)** — %s. %s. **Auto-merge kept.**\n\n' "$category" "${SUMMARY:-applied}"
+              fi
+              [ -n "$explanation" ] && printf '%s\n\n' "$explanation"
+            elif [ "$VERDICT" = "fixable" ]; then
+              # fixable but the change could not be applied automatically.
+              printf '**🧑 Suggested fix (not applied)** — %s: %s.\n\n' "$category" "${REASON:-could not apply automatically}"
+              [ -n "$explanation" ] && printf '%s\n\n' "$explanation"
+              patch="$(jq -r '.patch // ""' verdict.json)"
+              msg="$(jq -r '.commit_message // ""' verdict.json)"
+              if [ -n "$patch" ]; then
+                printf 'Apply it yourself:\n\n```diff\n%s\n```\n\n' "$patch"
+                [ -n "$msg" ] && printf 'Commit it as:\n\n```\n%s\n```\n\n' "$msg"
+              fi
+            else
+              printf '**🧑 Needs a human** — %s.\n\n' "$category"
+              [ -n "$explanation" ] && printf '%s\n\n' "$explanation"
+            fi
+            printf '_No dependency version was changed. See `%s`._\n' "$doc"
+          } > comment-body.md
+
+          tools/dependabot-autofix/upsert-comment.sh "${{ steps.pr.outputs.number }}" true comment-body.md

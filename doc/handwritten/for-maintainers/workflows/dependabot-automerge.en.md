@@ -54,6 +54,8 @@ Workflow default `contents: read`; the job widens to `contents: write` and
 
 ## Related
 
+- [`dependabot-autofix`](dependabot-autofix.en.md) — the diagnostic companion:
+  when a Dependabot PR stays red, it triages why and comments a ready-to-apply fix.
 - [`.github/dependabot.yml`](../../../../.github/dependabot.yml) — what Dependabot
   updates and what it ignores (e.g. the frozen `Microsoft.CodeAnalysis.*`; see
   [`analyzers`](analyzers.en.md)).
