@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0027-repair-dependabot-pull-requests-within-a-risk-boundary.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-07-21
 **Decision Makers:** Reefact
 
