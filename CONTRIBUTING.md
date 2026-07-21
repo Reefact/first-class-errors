@@ -17,6 +17,47 @@ library produces. This guide defines how commits are written here.
 See [`CLAUDE.md`](CLAUDE.md) for the project layout and the broader change
 guidelines.
 
+## Public API baseline
+
+The shipping libraries — `FirstClassErrors`, `FirstClassErrors.Testing`,
+`FirstClassErrors.RequestBinder` (the `lib` train) and `Dummies` (the `dum`
+train) — carry a committed public-API baseline, so every change to their public
+surface is a reviewed diff and an accidental breaking change (a removed overload,
+a narrowed return type, a renamed member) cannot ship silently under a version
+number that promises compatibility. Two guards, wired once in
+[`build/PublicApiBaseline.props`](build/PublicApiBaseline.props):
+
+* **`Microsoft.CodeAnalysis.PublicApiAnalyzers`** tracks the surface in committed
+  `PublicAPI.Shipped.txt` / `PublicAPI.Unshipped.txt` files under each project's
+  `PublicAPI/<target-framework>/` folder. An undeclared public symbol raises
+  `RS0016`; a declared symbol that no longer exists raises `RS0017`. Both are
+  warnings locally and errors in CI (the warnings-as-errors ratchet), so a
+  surface change fails the build until the same change updates the baseline.
+* **Package validation** (`EnablePackageValidation`) runs ApiCompat during
+  `dotnet pack`. With no baseline version set it performs the same-package
+  cross-target-framework check (it proves `Dummies`' net8.0 surface never drops
+  API a netstandard2.0 consumer sees). To additionally gate against a published
+  version, set `PackageValidationBaselineVersion`; `0.1.0-preview.1` is the first
+  such baseline available for the `lib` train.
+
+**Accepting an intended surface change.** Update the baseline in the same commit:
+
+* **In an IDE**: apply the *"Add to public API"* code fix on the `RS0016`
+  diagnostic.
+* **From the CLI**: `dotnet format analyzers <project> --diagnostics RS0016`
+  appends the new entries to `PublicAPI.Unshipped.txt`; for a **removal**, delete
+  the matching line by hand.
+* **Multi-target (`Dummies`)**: each framework has its own baseline under
+  `PublicAPI/<tfm>/`, and `dotnet format` rewrites only one framework's file per
+  run — update `net8.0` and `netstandard2.0` separately when a change touches both.
+* **At release**: promote the accumulated `PublicAPI.Unshipped.txt` entries into
+  `PublicAPI.Shipped.txt` (the *"mark shipped"* fix, or by hand).
+
+`RS0026`/`RS0027` (the "optional parameters across overloads" design rules) are
+disabled deliberately: they fire on the library's central fluent APIs
+(`Outcome.Then`/`Recover`/`Finally`/`Try`, `Any.Reproducibly`), where enforcing
+them would demand a breaking redesign — a separate decision, not a baseline chore.
+
 ## Enabling the commit-message hook
 
 A `commit-msg` hook checks every message against the convention below before it
