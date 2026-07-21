@@ -55,9 +55,11 @@ Un seul job, `Conventional commits` :
   La boucle saute tout commit dont l'**auteur** est `dependabot[bot]` — un marqueur
   qu'un commit humain ne porte jamais — au lieu de faire échouer les PR de
   dépendances de routine. Cela vit dans le workflow, pas dans le script partagé, car
-  seule la CI voit l'auteur d'un commit. Si
-  [`dependabot-autofix`](dependabot-autofix.fr.md) propose de réécrire un tel
-  en-tête, l'appliquer change l'auteur, et la réécriture est lintée normalement.
+  seule la CI voit l'auteur d'un commit. Quand
+  [`dependabot-autofix`](dependabot-autofix.fr.md) réécrit un tel en-tête, il
+  *amende* le commit en gardant Dependabot comme auteur : l'exemption s'applique donc
+  toujours — la réécriture est de toute façon écrite pour être conforme. Un correctif
+  de code qu'il ajoute est un nouveau commit écrit par le bot, linté normalement.
 - **`fetch-depth: 0` est requis.** Un checkout superficiel ne contiendrait pas la
   plage de commits de la PR ; le lint passerait alors silencieusement sur rien.
 - **Ce check n'aide que s'il est *required*.** Comme les autres checks de

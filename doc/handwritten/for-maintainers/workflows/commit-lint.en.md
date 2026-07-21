@@ -54,9 +54,11 @@ One job, `Conventional commits`:
   name alone can overrun 72 characters) and cannot amend them. The loop skips any
   commit whose **author** is `dependabot[bot]` — a marker a human commit never
   carries — rather than fail routine dependency PRs. This lives in the workflow,
-  not the shared script, because only CI can see a commit's author. If
-  [`dependabot-autofix`](dependabot-autofix.en.md) proposes rewriting such a header,
-  applying it changes the author, and the rewrite is linted normally.
+  not the shared script, because only CI can see a commit's author. When
+  [`dependabot-autofix`](dependabot-autofix.en.md) rewrites such a header it *amends*
+  the commit, keeping Dependabot as the author, so the exemption still applies — the
+  rewrite is written to conform anyway. A code fix it adds is a new commit authored
+  by the bot, which is linted normally.
 - **`fetch-depth: 0` is required.** A shallow checkout would not contain the
   PR's commit range, so the lint would silently pass over nothing.
 - **This check only helps if it is required.** As with the other quality checks,
