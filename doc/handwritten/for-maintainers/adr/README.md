@@ -214,3 +214,4 @@ Optional supporting material:
 | [ADR-0029](0029-complete-the-outcome-try-async-surface-with-token-less-overloads.md) | Complete the Outcome.Try async surface with token-less overloads | Accepted |
 | [ADR-0030](0030-draw-arbitrary-strings-from-an-explicit-terminal-set.md) | Draw arbitrary strings from an explicit, terminal value set | Accepted |
 | [ADR-0031](0031-name-any-factories-after-their-clr-type.md) | Name Any's scalar factories after their CLR type | Accepted |
+| [ADR-0032](0032-draw-arbitrary-values-from-an-explicit-top-level-pool.md) | Draw arbitrary values from an explicit, top-level choice pool | Proposed |

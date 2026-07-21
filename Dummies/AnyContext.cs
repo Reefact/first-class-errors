@@ -295,4 +295,50 @@ public sealed class AnyContext {
     }
 #endif
 
+    /// <summary>
+    ///     Draws an arbitrary value from an explicit pool of caller-supplied <paramref name="values" /> drawing from
+    ///     this context — same surface as <see cref="Any.OneOf{T}(T[])" />, deterministic under this context's seed.
+    /// </summary>
+    /// <param name="values">The pool the generated value is drawn from; duplicates are ignored.</param>
+    /// <typeparam name="T">The type of the pooled values.</typeparam>
+    /// <returns>A terminal generator drawing uniformly from <paramref name="values" />.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="values" /> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="values" /> is empty or contains a <c>null</c> element.</exception>
+    public AnyOneOf<T> OneOf<T>(params T[] values) {
+        if (values is null) { throw new ArgumentNullException(nameof(values)); }
+
+        return AnyOneOf<T>.FromPool(_source, values);
+    }
+
+    /// <summary>
+    ///     Draws an arbitrary value from an explicit pool held as a list drawing from this context — same surface as
+    ///     <see cref="Any.ElementOf{T}(IReadOnlyList{T})" />, deterministic under this context's seed.
+    /// </summary>
+    /// <param name="values">The pool the generated value is drawn from; duplicates are ignored.</param>
+    /// <typeparam name="T">The type of the pooled values.</typeparam>
+    /// <returns>A terminal generator drawing uniformly from <paramref name="values" />.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="values" /> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="values" /> is empty or contains a <c>null</c> element.</exception>
+    public AnyOneOf<T> ElementOf<T>(IReadOnlyList<T> values) {
+        if (values is null) { throw new ArgumentNullException(nameof(values)); }
+
+        return AnyOneOf<T>.FromPool(_source, values);
+    }
+
+    /// <summary>
+    ///     Draws an arbitrary value from an explicit pool held as a sequence drawing from this context — same surface
+    ///     as <see cref="Any.ElementOf{T}(IEnumerable{T})" />, deterministic under this context's seed. The sequence is
+    ///     materialized once.
+    /// </summary>
+    /// <param name="values">The pool the generated value is drawn from; duplicates are ignored.</param>
+    /// <typeparam name="T">The type of the pooled values.</typeparam>
+    /// <returns>A terminal generator drawing uniformly from <paramref name="values" />.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="values" /> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="values" /> is empty or contains a <c>null</c> element.</exception>
+    public AnyOneOf<T> ElementOf<T>(IEnumerable<T> values) {
+        if (values is null) { throw new ArgumentNullException(nameof(values)); }
+
+        return AnyOneOf<T>.FromPool(_source, values as IReadOnlyList<T> ?? values.ToArray());
+    }
+
 }
