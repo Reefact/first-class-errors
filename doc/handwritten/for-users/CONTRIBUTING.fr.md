@@ -18,6 +18,53 @@ commits sont écrits ici.
 Voir [`CLAUDE.md`](../../../CLAUDE.md) pour l’organisation du projet et les lignes
 directrices plus larges concernant les changements.
 
+## Base de référence de l’API publique
+
+Les bibliothèques publiées — `FirstClassErrors`, `FirstClassErrors.Testing`,
+`FirstClassErrors.RequestBinder` (le train `lib`) et `Dummies` (le train `dum`) —
+portent une base de référence d’API publique versionnée, de sorte que chaque
+changement de leur surface publique soit un diff relu et qu’un changement cassant
+accidentel (une surcharge retirée, un type de retour rétréci, un membre renommé) ne
+puisse pas être publié silencieusement sous un numéro de version qui promet la
+compatibilité. Deux garde-fous, câblés une seule fois dans
+[`build/PublicApiBaseline.props`](../../../build/PublicApiBaseline.props) :
+
+* **`Microsoft.CodeAnalysis.PublicApiAnalyzers`** suit la surface dans des fichiers
+  `PublicAPI.Shipped.txt` / `PublicAPI.Unshipped.txt` versionnés, sous le dossier
+  `PublicAPI/<framework-cible>/` de chaque projet. Un symbole public non déclaré
+  lève `RS0016` ; un symbole déclaré qui n’existe plus lève `RS0017`. Les deux sont
+  des avertissements en local et des erreurs en CI (le cliquet
+  « avertissements = erreurs »), de sorte qu’un changement de surface fait échouer la
+  compilation tant que le même changement ne met pas à jour la base de référence.
+* **La validation de package** (`EnablePackageValidation`) exécute ApiCompat lors du
+  `dotnet pack`. Sans version de référence définie, elle effectue le contrôle
+  inter-frameworks au sein du même package (elle prouve que la surface net8.0 de
+  `Dummies` ne retire jamais une API qu’un consommateur netstandard2.0 voit). Pour
+  verrouiller en plus par rapport à une version publiée, définissez
+  `PackageValidationBaselineVersion` ; `0.1.0-preview.1` est la première base de
+  référence disponible pour le train `lib`.
+
+**Accepter un changement de surface intentionnel.** Mettez à jour la base de
+référence dans le même commit :
+
+* **Dans un IDE** : appliquez le correctif *« Add to public API »* sur le diagnostic
+  `RS0016`.
+* **En ligne de commande** : `dotnet format analyzers <projet> --diagnostics RS0016`
+  ajoute les nouvelles entrées à `PublicAPI.Unshipped.txt` ; pour une **suppression**,
+  effacez la ligne correspondante à la main.
+* **Multi-cible (`Dummies`)** : chaque framework a sa propre base sous
+  `PublicAPI/<tfm>/`, et `dotnet format` ne réécrit qu’un seul fichier de framework
+  par exécution — mettez à jour `net8.0` et `netstandard2.0` séparément lorsqu’un
+  changement touche les deux.
+* **À la publication** : promouvez les entrées accumulées de `PublicAPI.Unshipped.txt`
+  vers `PublicAPI.Shipped.txt` (le correctif *« mark shipped »*, ou à la main).
+
+`RS0026`/`RS0027` (les règles de conception « paramètres optionnels répartis sur
+plusieurs surcharges ») sont désactivées délibérément : elles se déclenchent sur les
+API fluentes centrales de la bibliothèque (`Outcome.Then`/`Recover`/`Finally`/`Try`,
+`Any.Reproducibly`), où les faire respecter exigerait une refonte cassante — une
+décision distincte, pas une corvée de base de référence.
+
 ## Activer le hook de message de commit
 
 Un hook `commit-msg` vérifie chaque message par rapport à la convention ci-dessous

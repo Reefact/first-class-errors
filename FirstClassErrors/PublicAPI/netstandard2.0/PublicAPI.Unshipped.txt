@@ -1,0 +1,287 @@
+#nullable enable
+abstract FirstClassErrors.Error.ToException() -> FirstClassErrors.DiagnosableException!
+const FirstClassErrors.Error.MissingDiagnosticMessage = "#MISSING_DIAGNOSTIC_MESSAGE" -> string!
+const FirstClassErrors.Error.MissingShortMessage = "#MISSING_SHORT_MESSAGE" -> string!
+const FirstClassErrors.GenDoc.Rendering.RenderLayouts.Single = "single" -> string!
+const FirstClassErrors.GenDoc.Rendering.RenderLayouts.Split = "split" -> string!
+FirstClassErrors.DescribeError
+FirstClassErrors.DiagnosableException
+FirstClassErrors.DiagnosableException.DiagnosableException(FirstClassErrors.Error! error) -> void
+FirstClassErrors.DiagnosableException.DiagnosableException(FirstClassErrors.Error! error, System.Exception! innerException) -> void
+FirstClassErrors.DiagnosableException.Error.get -> FirstClassErrors.Error!
+FirstClassErrors.DocumentedByAttribute
+FirstClassErrors.DocumentedByAttribute.DocumentedByAttribute(string! documentationMethodName) -> void
+FirstClassErrors.DocumentedByAttribute.MethodName.get -> string!
+FirstClassErrors.DomainError
+FirstClassErrors.DomainException
+FirstClassErrors.DomainException.DomainException(FirstClassErrors.DomainError! error) -> void
+FirstClassErrors.Error
+FirstClassErrors.Error.Code.get -> FirstClassErrors.ErrorCode!
+FirstClassErrors.Error.Context.get -> FirstClassErrors.ErrorContext!
+FirstClassErrors.Error.DetailedMessage.get -> string?
+FirstClassErrors.Error.DiagnosticMessage.get -> string!
+FirstClassErrors.Error.Error(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, string! shortMessage, string? detailedMessage, FirstClassErrors.Error! innerError, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> void
+FirstClassErrors.Error.Error(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, string! shortMessage, string? detailedMessage, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> void
+FirstClassErrors.Error.Error(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, string! shortMessage, string? detailedMessage, System.Collections.Generic.IEnumerable<FirstClassErrors.Error!>! innerErrors, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> void
+FirstClassErrors.Error.InnerErrors.get -> System.Collections.Generic.IReadOnlyList<FirstClassErrors.Error!>!
+FirstClassErrors.Error.InstanceId.get -> System.Guid
+FirstClassErrors.Error.OccurredAt.get -> System.DateTimeOffset
+FirstClassErrors.Error.ShortMessage.get -> string!
+FirstClassErrors.ErrorCode
+FirstClassErrors.ErrorCode.Equals(FirstClassErrors.ErrorCode? other) -> bool
+FirstClassErrors.ErrorContext
+FirstClassErrors.ErrorContext.IsEmpty.get -> bool
+FirstClassErrors.ErrorContext.ToNameDictionary() -> System.Collections.Generic.IReadOnlyDictionary<string!, object?>!
+FirstClassErrors.ErrorContext.TryGet<T>(FirstClassErrors.ErrorContextKey<T>! key, out T? value) -> bool
+FirstClassErrors.ErrorContext.Values.get -> System.Collections.Generic.IReadOnlyDictionary<FirstClassErrors.ErrorContextKey!, object?>!
+FirstClassErrors.ErrorContextBuilder
+FirstClassErrors.ErrorContextBuilder.Add<T>(FirstClassErrors.ErrorContextKey<T>! key, T? value) -> FirstClassErrors.ErrorContextBuilder!
+FirstClassErrors.ErrorContextBuilder.ErrorContextBuilder() -> void
+FirstClassErrors.ErrorContextEntryDocumentation
+FirstClassErrors.ErrorContextEntryDocumentation.Description.get -> string?
+FirstClassErrors.ErrorContextEntryDocumentation.Description.set -> void
+FirstClassErrors.ErrorContextEntryDocumentation.ErrorContextEntryDocumentation() -> void
+FirstClassErrors.ErrorContextEntryDocumentation.ExampleValues.get -> System.Collections.Generic.IReadOnlyList<string?>!
+FirstClassErrors.ErrorContextEntryDocumentation.ExampleValues.set -> void
+FirstClassErrors.ErrorContextEntryDocumentation.Key.get -> string?
+FirstClassErrors.ErrorContextEntryDocumentation.Key.set -> void
+FirstClassErrors.ErrorContextEntryDocumentation.ValueType.get -> string?
+FirstClassErrors.ErrorContextEntryDocumentation.ValueType.set -> void
+FirstClassErrors.ErrorContextKey
+FirstClassErrors.ErrorContextKey.Description.get -> string?
+FirstClassErrors.ErrorContextKey.Equals(FirstClassErrors.ErrorContextKey? other) -> bool
+FirstClassErrors.ErrorContextKey.Name.get -> string!
+FirstClassErrors.ErrorContextKey.ValueType.get -> System.Type!
+FirstClassErrors.ErrorContextKey<T>
+FirstClassErrors.ErrorDescription
+FirstClassErrors.ErrorDescription.DetailedMessage.get -> string?
+FirstClassErrors.ErrorDescription.DiagnosticMessage.get -> string!
+FirstClassErrors.ErrorDescription.ErrorDescription(string! shortMessage, string! diagnosticMessage, string? detailedMessage = null) -> void
+FirstClassErrors.ErrorDescription.ShortMessage.get -> string!
+FirstClassErrors.ErrorDiagnostic
+FirstClassErrors.ErrorDiagnostic.AnalysisHint.get -> string!
+FirstClassErrors.ErrorDiagnostic.ErrorDiagnostic(string! possibleCause, FirstClassErrors.ErrorOrigin origin, string! analysisHint) -> void
+FirstClassErrors.ErrorDiagnostic.Origin.get -> FirstClassErrors.ErrorOrigin
+FirstClassErrors.ErrorDiagnostic.PossibleCause.get -> string!
+FirstClassErrors.ErrorDocumentation
+FirstClassErrors.ErrorDocumentation.BusinessRule.get -> string?
+FirstClassErrors.ErrorDocumentation.BusinessRule.set -> void
+FirstClassErrors.ErrorDocumentation.Code.get -> string?
+FirstClassErrors.ErrorDocumentation.Code.set -> void
+FirstClassErrors.ErrorDocumentation.Context.get -> System.Collections.Generic.IReadOnlyCollection<FirstClassErrors.ErrorContextEntryDocumentation!>!
+FirstClassErrors.ErrorDocumentation.Context.set -> void
+FirstClassErrors.ErrorDocumentation.Diagnostics.get -> System.Collections.Generic.IReadOnlyList<FirstClassErrors.ErrorDiagnostic!>!
+FirstClassErrors.ErrorDocumentation.Diagnostics.set -> void
+FirstClassErrors.ErrorDocumentation.ErrorDocumentation() -> void
+FirstClassErrors.ErrorDocumentation.Examples.get -> System.Collections.Generic.IReadOnlyList<FirstClassErrors.ErrorDescription!>!
+FirstClassErrors.ErrorDocumentation.Examples.set -> void
+FirstClassErrors.ErrorDocumentation.Explanation.get -> string?
+FirstClassErrors.ErrorDocumentation.Explanation.set -> void
+FirstClassErrors.ErrorDocumentation.Source.get -> string?
+FirstClassErrors.ErrorDocumentation.Source.set -> void
+FirstClassErrors.ErrorDocumentation.SourceDescription.get -> string?
+FirstClassErrors.ErrorDocumentation.SourceDescription.set -> void
+FirstClassErrors.ErrorDocumentation.Title.get -> string?
+FirstClassErrors.ErrorDocumentation.Title.set -> void
+FirstClassErrors.ErrorDocumentationException
+FirstClassErrors.ErrorOrigin
+FirstClassErrors.ErrorOrigin.External = 1 -> FirstClassErrors.ErrorOrigin
+FirstClassErrors.ErrorOrigin.Internal = 0 -> FirstClassErrors.ErrorOrigin
+FirstClassErrors.ErrorOrigin.InternalOrExternal = 2 -> FirstClassErrors.ErrorOrigin
+FirstClassErrors.GenDoc.AssemblyErrorDocumentationReader
+FirstClassErrors.GenDoc.ErrorDocumentationExtractionFailure
+FirstClassErrors.GenDoc.ErrorDocumentationExtractionFailure.ErrorDocumentationExtractionFailure(string! typeName, string? memberName, string! message, string? exceptionDetail) -> void
+FirstClassErrors.GenDoc.ErrorDocumentationExtractionFailure.ExceptionDetail.get -> string?
+FirstClassErrors.GenDoc.ErrorDocumentationExtractionFailure.MemberName.get -> string?
+FirstClassErrors.GenDoc.ErrorDocumentationExtractionFailure.Message.get -> string!
+FirstClassErrors.GenDoc.ErrorDocumentationExtractionFailure.TypeName.get -> string!
+FirstClassErrors.GenDoc.ErrorDocumentationExtractionResult
+FirstClassErrors.GenDoc.ErrorDocumentationExtractionResult.Documentation.get -> System.Collections.Generic.IReadOnlyList<FirstClassErrors.ErrorDocumentation!>!
+FirstClassErrors.GenDoc.ErrorDocumentationExtractionResult.ErrorDocumentationExtractionResult(System.Collections.Generic.IReadOnlyList<FirstClassErrors.ErrorDocumentation!>! documentation, System.Collections.Generic.IReadOnlyList<FirstClassErrors.GenDoc.ErrorDocumentationExtractionFailure!>! failures) -> void
+FirstClassErrors.GenDoc.ErrorDocumentationExtractionResult.Failures.get -> System.Collections.Generic.IReadOnlyList<FirstClassErrors.GenDoc.ErrorDocumentationExtractionFailure!>!
+FirstClassErrors.GenDoc.ErrorDocumentationExtractionResult.HasFailures.get -> bool
+FirstClassErrors.GenDoc.Rendering.IErrorDocumentationRenderer
+FirstClassErrors.GenDoc.Rendering.IErrorDocumentationRenderer.Format.get -> string!
+FirstClassErrors.GenDoc.Rendering.IErrorDocumentationRenderer.Render(System.Collections.Generic.IEnumerable<FirstClassErrors.ErrorDocumentation!>! catalog, FirstClassErrors.GenDoc.Rendering.RenderRequest! request) -> System.Collections.Generic.IReadOnlyList<FirstClassErrors.GenDoc.Rendering.RenderedDocument!>!
+FirstClassErrors.GenDoc.Rendering.IErrorDocumentationRenderer.SupportedLayouts.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
+FirstClassErrors.GenDoc.Rendering.LayoutNotSupportedException
+FirstClassErrors.GenDoc.Rendering.LayoutNotSupportedException.Format.get -> string!
+FirstClassErrors.GenDoc.Rendering.LayoutNotSupportedException.LayoutNotSupportedException(string! format, string! requestedLayout, System.Collections.Generic.IEnumerable<string!>! supportedLayouts) -> void
+FirstClassErrors.GenDoc.Rendering.LayoutNotSupportedException.RequestedLayout.get -> string!
+FirstClassErrors.GenDoc.Rendering.LayoutNotSupportedException.SupportedLayouts.get -> System.Collections.Generic.IReadOnlyList<string!>!
+FirstClassErrors.GenDoc.Rendering.RenderedDocument
+FirstClassErrors.GenDoc.Rendering.RenderedDocument.Content.get -> string!
+FirstClassErrors.GenDoc.Rendering.RenderedDocument.RelativePath.get -> string!
+FirstClassErrors.GenDoc.Rendering.RenderedDocument.RenderedDocument(string! relativePath, string! content) -> void
+FirstClassErrors.GenDoc.Rendering.RenderLayouts
+FirstClassErrors.GenDoc.Rendering.RenderRequest
+FirstClassErrors.GenDoc.Rendering.RenderRequest.Culture.get -> System.Globalization.CultureInfo!
+FirstClassErrors.GenDoc.Rendering.RenderRequest.Layout.get -> string!
+FirstClassErrors.GenDoc.Rendering.RenderRequest.RenderRequest(string! layout) -> void
+FirstClassErrors.GenDoc.Rendering.RenderRequest.RenderRequest(string! layout, System.Globalization.CultureInfo! culture) -> void
+FirstClassErrors.GenDoc.Rendering.RenderRequest.RenderRequest(string! layout, System.Globalization.CultureInfo! culture, string? serviceName) -> void
+FirstClassErrors.GenDoc.Rendering.RenderRequest.ServiceName.get -> string?
+FirstClassErrors.GenDoc.Rendering.ServiceNameRequiredException
+FirstClassErrors.GenDoc.Rendering.ServiceNameRequiredException.Format.get -> string!
+FirstClassErrors.GenDoc.Rendering.ServiceNameRequiredException.ServiceNameRequiredException(string! format) -> void
+FirstClassErrors.IErrorDescriptionStage
+FirstClassErrors.IErrorDescriptionStage.WithDescription(string! description) -> FirstClassErrors.IErrorRuleStage!
+FirstClassErrors.IErrorDiagnosticsStage
+FirstClassErrors.IErrorDiagnosticsStage.WithDiagnostic(string! cause, FirstClassErrors.ErrorOrigin type, string! analysisLead) -> FirstClassErrors.IErrorExamplesOrDiagnosticsStage!
+FirstClassErrors.IErrorDiagnosticsStage.WithDiagnostics(params FirstClassErrors.ErrorDiagnostic![]! diagnostics) -> FirstClassErrors.IErrorExamplesStage!
+FirstClassErrors.IErrorDiagnosticsStage.WithoutDiagnostic() -> FirstClassErrors.IErrorExamplesStage!
+FirstClassErrors.IErrorExamplesOrDiagnosticsStage
+FirstClassErrors.IErrorExamplesOrDiagnosticsStage.AndDiagnostic(string! cause, FirstClassErrors.ErrorOrigin type, string! analysisLead) -> FirstClassErrors.IErrorExamplesOrDiagnosticsStage!
+FirstClassErrors.IErrorExamplesOrDiagnosticsStage.WithExamples<TError>(params System.Func<TError!>![]! exampleFactories) -> FirstClassErrors.ErrorDocumentation!
+FirstClassErrors.IErrorExamplesStage
+FirstClassErrors.IErrorExamplesStage.WithExamples<TError>(params System.Func<TError!>![]! exampleFactories) -> FirstClassErrors.ErrorDocumentation!
+FirstClassErrors.IErrorRuleStage
+FirstClassErrors.IErrorRuleStage.WithoutRule() -> FirstClassErrors.IErrorDiagnosticsStage!
+FirstClassErrors.IErrorRuleStage.WithRule(string! rule) -> FirstClassErrors.IErrorDiagnosticsStage!
+FirstClassErrors.IErrorTitleStage
+FirstClassErrors.IErrorTitleStage.WithTitle(string! title) -> FirstClassErrors.IErrorDescriptionStage!
+FirstClassErrors.InfrastructureError
+FirstClassErrors.InfrastructureError.Direction.get -> FirstClassErrors.InteractionDirection
+FirstClassErrors.InfrastructureError.Transience.get -> FirstClassErrors.Transience
+FirstClassErrors.InfrastructureException
+FirstClassErrors.InfrastructureException.InfrastructureException(FirstClassErrors.InfrastructureError! error) -> void
+FirstClassErrors.InteractionDirection
+FirstClassErrors.InteractionDirection.Incoming = 1 -> FirstClassErrors.InteractionDirection
+FirstClassErrors.InteractionDirection.Outgoing = 2 -> FirstClassErrors.InteractionDirection
+FirstClassErrors.InteractionDirection.Unknown = 0 -> FirstClassErrors.InteractionDirection
+FirstClassErrors.Outcome
+FirstClassErrors.Outcome.Error.get -> FirstClassErrors.Error?
+FirstClassErrors.Outcome.Finally(System.Action! onSuccess, System.Action<FirstClassErrors.Error!>! onFailure) -> void
+FirstClassErrors.Outcome.Finally(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! onSuccess, System.Func<FirstClassErrors.Error!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! onFailure, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+FirstClassErrors.Outcome.Finally<TResult>(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<TResult>!>! onSuccess, System.Func<FirstClassErrors.Error!, System.Threading.CancellationToken, System.Threading.Tasks.Task<TResult>!>! onFailure, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResult>!
+FirstClassErrors.Outcome.Finally<TResult>(System.Func<TResult>! onSuccess, System.Func<FirstClassErrors.Error!, TResult>! onFailure) -> TResult
+FirstClassErrors.Outcome.IsFailure.get -> bool
+FirstClassErrors.Outcome.IsSuccess.get -> bool
+FirstClassErrors.Outcome.Recover(System.Func<FirstClassErrors.Error!, FirstClassErrors.Outcome!>! fallback) -> FirstClassErrors.Outcome!
+FirstClassErrors.Outcome.Recover(System.Func<FirstClassErrors.Error!, System.Threading.CancellationToken, System.Threading.Tasks.Task<FirstClassErrors.Outcome!>!>! fallback, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome!>!
+FirstClassErrors.Outcome.Then(System.Func<FirstClassErrors.Outcome!>! next) -> FirstClassErrors.Outcome!
+FirstClassErrors.Outcome.Then(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<FirstClassErrors.Outcome!>!>! next, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome!>!
+FirstClassErrors.Outcome.Then<TResult>(System.Func<FirstClassErrors.Outcome<TResult>!>! next) -> FirstClassErrors.Outcome<TResult>!
+FirstClassErrors.Outcome.Then<TResult>(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<FirstClassErrors.Outcome<TResult>!>!>! next, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome<TResult>!>!
+FirstClassErrors.Outcome.ThrowIfFailure() -> void
+FirstClassErrors.Outcome<T>
+FirstClassErrors.Outcome<T>.Error.get -> FirstClassErrors.Error?
+FirstClassErrors.Outcome<T>.Finally(System.Action<T>! onSuccess, System.Action<FirstClassErrors.Error!>! onFailure) -> void
+FirstClassErrors.Outcome<T>.Finally(System.Func<T, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! onSuccess, System.Func<FirstClassErrors.Error!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! onFailure, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+FirstClassErrors.Outcome<T>.Finally<TResult>(System.Func<T, System.Threading.CancellationToken, System.Threading.Tasks.Task<TResult>!>! onSuccess, System.Func<FirstClassErrors.Error!, System.Threading.CancellationToken, System.Threading.Tasks.Task<TResult>!>! onFailure, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResult>!
+FirstClassErrors.Outcome<T>.Finally<TResult>(System.Func<T, TResult>! onSuccess, System.Func<FirstClassErrors.Error!, TResult>! onFailure) -> TResult
+FirstClassErrors.Outcome<T>.GetResultOrThrow() -> T
+FirstClassErrors.Outcome<T>.IsFailure.get -> bool
+FirstClassErrors.Outcome<T>.IsSuccess.get -> bool
+FirstClassErrors.Outcome<T>.Recover(System.Func<FirstClassErrors.Error!, FirstClassErrors.Outcome<T>!>! fallback) -> FirstClassErrors.Outcome<T>!
+FirstClassErrors.Outcome<T>.Recover(System.Func<FirstClassErrors.Error!, System.Threading.CancellationToken, System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>!>! fallback, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>!
+FirstClassErrors.Outcome<T>.Recover(System.Func<FirstClassErrors.Error!, System.Threading.CancellationToken, System.Threading.Tasks.Task<T>!>! fallback, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>!
+FirstClassErrors.Outcome<T>.Recover(System.Func<FirstClassErrors.Error!, T>! fallback) -> FirstClassErrors.Outcome<T>!
+FirstClassErrors.Outcome<T>.Then(System.Func<T, FirstClassErrors.Outcome!>! next) -> FirstClassErrors.Outcome!
+FirstClassErrors.Outcome<T>.Then(System.Func<T, System.Threading.CancellationToken, System.Threading.Tasks.Task<FirstClassErrors.Outcome!>!>! next, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome!>!
+FirstClassErrors.Outcome<T>.Then<TResult>(System.Func<T, FirstClassErrors.Outcome<TResult>!>! next) -> FirstClassErrors.Outcome<TResult>!
+FirstClassErrors.Outcome<T>.Then<TResult>(System.Func<T, System.Threading.CancellationToken, System.Threading.Tasks.Task<FirstClassErrors.Outcome<TResult>!>!>! next, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome<TResult>!>!
+FirstClassErrors.Outcome<T>.Then<TResult>(System.Func<T, System.Threading.CancellationToken, System.Threading.Tasks.Task<TResult>!>! convert, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome<TResult>!>!
+FirstClassErrors.Outcome<T>.Then<TResult>(System.Func<T, TResult>! convert) -> FirstClassErrors.Outcome<TResult>!
+FirstClassErrors.Outcome<T>.ThrowIfFailure() -> void
+FirstClassErrors.OutcomeTaskExtensions
+FirstClassErrors.PrimaryPortError
+FirstClassErrors.PrimaryPortException
+FirstClassErrors.PrimaryPortException.PrimaryPortException(FirstClassErrors.PrimaryPortError! error) -> void
+FirstClassErrors.PrimaryPortInnerErrors
+FirstClassErrors.PrimaryPortInnerErrors.Add(FirstClassErrors.DomainError! error) -> FirstClassErrors.PrimaryPortInnerErrors!
+FirstClassErrors.PrimaryPortInnerErrors.Add(FirstClassErrors.PrimaryPortError! error) -> FirstClassErrors.PrimaryPortInnerErrors!
+FirstClassErrors.PrimaryPortInnerErrors.ComputeTransience() -> FirstClassErrors.Transience
+FirstClassErrors.PrimaryPortInnerErrors.PrimaryPortInnerErrors() -> void
+FirstClassErrors.ProvidesErrorsForAttribute
+FirstClassErrors.ProvidesErrorsForAttribute.Description.get -> string?
+FirstClassErrors.ProvidesErrorsForAttribute.Description.set -> void
+FirstClassErrors.ProvidesErrorsForAttribute.DescriptionResourceType.get -> System.Type?
+FirstClassErrors.ProvidesErrorsForAttribute.DescriptionResourceType.set -> void
+FirstClassErrors.ProvidesErrorsForAttribute.ProvidesErrorsForAttribute(string! source) -> void
+FirstClassErrors.ProvidesErrorsForAttribute.Source.get -> string!
+FirstClassErrors.PublicMessageStage<TError>
+FirstClassErrors.PublicMessageStage<TError>.WithPublicMessage(string! shortMessage, string? detailedMessage = null) -> TError!
+FirstClassErrors.SecondaryPortError
+FirstClassErrors.SecondaryPortException
+FirstClassErrors.SecondaryPortException.SecondaryPortException(FirstClassErrors.SecondaryPortError! error) -> void
+FirstClassErrors.SecondaryPortInnerErrors
+FirstClassErrors.SecondaryPortInnerErrors.Add(FirstClassErrors.DomainError! error) -> FirstClassErrors.SecondaryPortInnerErrors!
+FirstClassErrors.SecondaryPortInnerErrors.Add(FirstClassErrors.SecondaryPortError! error) -> FirstClassErrors.SecondaryPortInnerErrors!
+FirstClassErrors.SecondaryPortInnerErrors.ComputeTransience() -> FirstClassErrors.Transience
+FirstClassErrors.SecondaryPortInnerErrors.SecondaryPortInnerErrors() -> void
+FirstClassErrors.Transience
+FirstClassErrors.Transience.NonTransient = 1 -> FirstClassErrors.Transience
+FirstClassErrors.Transience.Transient = 2 -> FirstClassErrors.Transience
+FirstClassErrors.Transience.Unknown = 0 -> FirstClassErrors.Transience
+override FirstClassErrors.DomainError.ToException() -> FirstClassErrors.DiagnosableException!
+override FirstClassErrors.Error.ToString() -> string!
+override FirstClassErrors.ErrorCode.Equals(object? obj) -> bool
+override FirstClassErrors.ErrorCode.GetHashCode() -> int
+override FirstClassErrors.ErrorCode.ToString() -> string!
+override FirstClassErrors.ErrorContextKey.Equals(object? obj) -> bool
+override FirstClassErrors.ErrorContextKey.GetHashCode() -> int
+override FirstClassErrors.ErrorContextKey.ToString() -> string!
+override FirstClassErrors.ErrorDocumentation.ToString() -> string!
+override FirstClassErrors.GenDoc.ErrorDocumentationExtractionFailure.ToString() -> string!
+override FirstClassErrors.InfrastructureError.ToException() -> FirstClassErrors.DiagnosableException!
+override FirstClassErrors.PrimaryPortError.ToException() -> FirstClassErrors.DiagnosableException!
+override FirstClassErrors.PrimaryPortInnerErrors.ToString() -> string!
+override FirstClassErrors.SecondaryPortError.ToException() -> FirstClassErrors.DiagnosableException!
+override FirstClassErrors.SecondaryPortInnerErrors.ToString() -> string!
+static FirstClassErrors.DescribeError.WithTitle(string! title) -> FirstClassErrors.IErrorDescriptionStage!
+static FirstClassErrors.DomainError.Create(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, FirstClassErrors.DomainError! innerError, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> FirstClassErrors.PublicMessageStage<FirstClassErrors.DomainError!>!
+static FirstClassErrors.DomainError.Create(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> FirstClassErrors.PublicMessageStage<FirstClassErrors.DomainError!>!
+static FirstClassErrors.DomainError.Create(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, System.Collections.Generic.IEnumerable<FirstClassErrors.DomainError!>! innerErrors, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> FirstClassErrors.PublicMessageStage<FirstClassErrors.DomainError!>!
+static FirstClassErrors.ErrorCode.Create(string! code) -> FirstClassErrors.ErrorCode!
+static FirstClassErrors.ErrorCode.implicit operator string!(FirstClassErrors.ErrorCode! errorCode) -> string!
+static FirstClassErrors.ErrorCode.operator !=(FirstClassErrors.ErrorCode? left, FirstClassErrors.ErrorCode? right) -> bool
+static FirstClassErrors.ErrorCode.operator ==(FirstClassErrors.ErrorCode? left, FirstClassErrors.ErrorCode? right) -> bool
+static FirstClassErrors.ErrorContext.Empty.get -> FirstClassErrors.ErrorContext!
+static FirstClassErrors.ErrorContextKey.Create<T>(string! name, string? description = null) -> FirstClassErrors.ErrorContextKey<T>!
+static FirstClassErrors.ErrorContextKey.Create<T>(string! name, System.Func<string?>! descriptionProvider) -> FirstClassErrors.ErrorContextKey<T>!
+static FirstClassErrors.ErrorContextKey.GetRegisteredKeys() -> System.Collections.Generic.IReadOnlyCollection<FirstClassErrors.ErrorContextKey!>!
+static FirstClassErrors.ErrorContextKey.operator !=(FirstClassErrors.ErrorContextKey? left, FirstClassErrors.ErrorContextKey? right) -> bool
+static FirstClassErrors.ErrorContextKey.operator ==(FirstClassErrors.ErrorContextKey? left, FirstClassErrors.ErrorContextKey? right) -> bool
+static FirstClassErrors.GenDoc.AssemblyErrorDocumentationReader.GetErrorDocumentationFrom(System.Reflection.Assembly! assembly) -> FirstClassErrors.GenDoc.ErrorDocumentationExtractionResult!
+static FirstClassErrors.InfrastructureError.Create(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, FirstClassErrors.InteractionDirection direction, FirstClassErrors.Transience transience, FirstClassErrors.Error! innerError, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> FirstClassErrors.PublicMessageStage<FirstClassErrors.InfrastructureError!>!
+static FirstClassErrors.InfrastructureError.Create(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, FirstClassErrors.InteractionDirection direction, FirstClassErrors.Transience transience, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> FirstClassErrors.PublicMessageStage<FirstClassErrors.InfrastructureError!>!
+static FirstClassErrors.InfrastructureError.Create(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, FirstClassErrors.InteractionDirection direction, FirstClassErrors.Transience transience, System.Collections.Generic.IEnumerable<FirstClassErrors.Error!>! innerErrors, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> FirstClassErrors.PublicMessageStage<FirstClassErrors.InfrastructureError!>!
+static FirstClassErrors.Outcome.Failure(FirstClassErrors.Error! error) -> FirstClassErrors.Outcome!
+static FirstClassErrors.Outcome.Try<T, TException>(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<T>!>! operation, System.Func<TException!, FirstClassErrors.Error!>! onError, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>!
+static FirstClassErrors.Outcome.Try<T, TException>(System.Func<System.Threading.Tasks.Task<T>!>! operation, System.Func<TException!, FirstClassErrors.Error!>! onError) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>!
+static FirstClassErrors.Outcome.Try<T, TException>(System.Func<T>! operation, System.Func<TException!, FirstClassErrors.Error!>! onError) -> FirstClassErrors.Outcome<T>!
+static FirstClassErrors.Outcome.Try<TException>(System.Action! operation, System.Func<TException!, FirstClassErrors.Error!>! onError) -> FirstClassErrors.Outcome!
+static FirstClassErrors.Outcome.Try<TException>(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! operation, System.Func<TException!, FirstClassErrors.Error!>! onError, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome!>!
+static FirstClassErrors.Outcome.Try<TException>(System.Func<System.Threading.Tasks.Task!>! operation, System.Func<TException!, FirstClassErrors.Error!>! onError) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome!>!
+static FirstClassErrors.Outcome<T>.Failure(FirstClassErrors.Error! error) -> FirstClassErrors.Outcome<T>!
+static FirstClassErrors.Outcome<T>.Success(T result) -> FirstClassErrors.Outcome<T>!
+static FirstClassErrors.OutcomeTaskExtensions.Finally(this System.Threading.Tasks.Task<FirstClassErrors.Outcome!>! task, System.Action! onSuccess, System.Action<FirstClassErrors.Error!>! onFailure) -> System.Threading.Tasks.Task!
+static FirstClassErrors.OutcomeTaskExtensions.Finally(this System.Threading.Tasks.Task<FirstClassErrors.Outcome!>! task, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! onSuccess, System.Func<FirstClassErrors.Error!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! onFailure, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+static FirstClassErrors.OutcomeTaskExtensions.Finally<T, TResult>(this System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>! task, System.Func<T, System.Threading.CancellationToken, System.Threading.Tasks.Task<TResult>!>! onSuccess, System.Func<FirstClassErrors.Error!, System.Threading.CancellationToken, System.Threading.Tasks.Task<TResult>!>! onFailure, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResult>!
+static FirstClassErrors.OutcomeTaskExtensions.Finally<T, TResult>(this System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>! task, System.Func<T, TResult>! onSuccess, System.Func<FirstClassErrors.Error!, TResult>! onFailure) -> System.Threading.Tasks.Task<TResult>!
+static FirstClassErrors.OutcomeTaskExtensions.Finally<T>(this System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>! task, System.Action<T>! onSuccess, System.Action<FirstClassErrors.Error!>! onFailure) -> System.Threading.Tasks.Task!
+static FirstClassErrors.OutcomeTaskExtensions.Finally<T>(this System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>! task, System.Func<T, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! onSuccess, System.Func<FirstClassErrors.Error!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! onFailure, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+static FirstClassErrors.OutcomeTaskExtensions.Finally<TResult>(this System.Threading.Tasks.Task<FirstClassErrors.Outcome!>! task, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<TResult>!>! onSuccess, System.Func<FirstClassErrors.Error!, System.Threading.CancellationToken, System.Threading.Tasks.Task<TResult>!>! onFailure, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResult>!
+static FirstClassErrors.OutcomeTaskExtensions.Finally<TResult>(this System.Threading.Tasks.Task<FirstClassErrors.Outcome!>! task, System.Func<TResult>! onSuccess, System.Func<FirstClassErrors.Error!, TResult>! onFailure) -> System.Threading.Tasks.Task<TResult>!
+static FirstClassErrors.OutcomeTaskExtensions.Recover(this System.Threading.Tasks.Task<FirstClassErrors.Outcome!>! task, System.Func<FirstClassErrors.Error!, FirstClassErrors.Outcome!>! fallback) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome!>!
+static FirstClassErrors.OutcomeTaskExtensions.Recover(this System.Threading.Tasks.Task<FirstClassErrors.Outcome!>! task, System.Func<FirstClassErrors.Error!, System.Threading.CancellationToken, System.Threading.Tasks.Task<FirstClassErrors.Outcome!>!>! fallback, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome!>!
+static FirstClassErrors.OutcomeTaskExtensions.Recover<T>(this System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>! task, System.Func<FirstClassErrors.Error!, FirstClassErrors.Outcome<T>!>! fallback) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>!
+static FirstClassErrors.OutcomeTaskExtensions.Recover<T>(this System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>! task, System.Func<FirstClassErrors.Error!, System.Threading.CancellationToken, System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>!>! fallback, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>!
+static FirstClassErrors.OutcomeTaskExtensions.Recover<T>(this System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>! task, System.Func<FirstClassErrors.Error!, System.Threading.CancellationToken, System.Threading.Tasks.Task<T>!>! fallback, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>!
+static FirstClassErrors.OutcomeTaskExtensions.Recover<T>(this System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>! task, System.Func<FirstClassErrors.Error!, T>! fallback) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>!
+static FirstClassErrors.OutcomeTaskExtensions.Then(this System.Threading.Tasks.Task<FirstClassErrors.Outcome!>! task, System.Func<FirstClassErrors.Outcome!>! next) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome!>!
+static FirstClassErrors.OutcomeTaskExtensions.Then(this System.Threading.Tasks.Task<FirstClassErrors.Outcome!>! task, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<FirstClassErrors.Outcome!>!>! next, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome!>!
+static FirstClassErrors.OutcomeTaskExtensions.Then<T, TResult>(this System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>! task, System.Func<T, FirstClassErrors.Outcome<TResult>!>! next) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome<TResult>!>!
+static FirstClassErrors.OutcomeTaskExtensions.Then<T, TResult>(this System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>! task, System.Func<T, System.Threading.CancellationToken, System.Threading.Tasks.Task<FirstClassErrors.Outcome<TResult>!>!>! next, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome<TResult>!>!
+static FirstClassErrors.OutcomeTaskExtensions.Then<T, TResult>(this System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>! task, System.Func<T, System.Threading.CancellationToken, System.Threading.Tasks.Task<TResult>!>! convert, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome<TResult>!>!
+static FirstClassErrors.OutcomeTaskExtensions.Then<T, TResult>(this System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>! task, System.Func<T, TResult>! convert) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome<TResult>!>!
+static FirstClassErrors.OutcomeTaskExtensions.Then<T>(this System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>! task, System.Func<T, FirstClassErrors.Outcome!>! next) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome!>!
+static FirstClassErrors.OutcomeTaskExtensions.Then<T>(this System.Threading.Tasks.Task<FirstClassErrors.Outcome<T>!>! task, System.Func<T, System.Threading.CancellationToken, System.Threading.Tasks.Task<FirstClassErrors.Outcome!>!>! next, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome!>!
+static FirstClassErrors.OutcomeTaskExtensions.Then<TResult>(this System.Threading.Tasks.Task<FirstClassErrors.Outcome!>! task, System.Func<FirstClassErrors.Outcome<TResult>!>! next) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome<TResult>!>!
+static FirstClassErrors.OutcomeTaskExtensions.Then<TResult>(this System.Threading.Tasks.Task<FirstClassErrors.Outcome!>! task, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<FirstClassErrors.Outcome<TResult>!>!>! next, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<FirstClassErrors.Outcome<TResult>!>!
+static FirstClassErrors.PrimaryPortError.Create(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, FirstClassErrors.PrimaryPortInnerErrors! innerErrors, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> FirstClassErrors.PublicMessageStage<FirstClassErrors.PrimaryPortError!>!
+static FirstClassErrors.PrimaryPortError.Create(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, FirstClassErrors.Transience transience, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> FirstClassErrors.PublicMessageStage<FirstClassErrors.PrimaryPortError!>!
+static FirstClassErrors.SecondaryPortError.Create(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, FirstClassErrors.SecondaryPortInnerErrors! innerErrors, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> FirstClassErrors.PublicMessageStage<FirstClassErrors.SecondaryPortError!>!
+static FirstClassErrors.SecondaryPortError.Create(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, FirstClassErrors.Transience transience, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> FirstClassErrors.PublicMessageStage<FirstClassErrors.SecondaryPortError!>!
+static readonly FirstClassErrors.Outcome.Success -> FirstClassErrors.Outcome!

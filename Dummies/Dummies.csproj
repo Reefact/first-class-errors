@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Committed public-API baseline + package validation (see build/PublicApiBaseline.props).
+       The per-TFM subfolders track the two divergent surfaces (net8.0 carries the modern generators). -->
+  <Import Project="..\build\PublicApiBaseline.props" />
+
   <PropertyGroup>
     <!-- Build. netstandard2.0 keeps the widest reach; the net8.0 leg additionally carries the modern
          types that do not exist downlevel (DateOnly, TimeOnly, Int128, UInt128, Half). -->

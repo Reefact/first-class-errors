@@ -1,0 +1,75 @@
+<Project>
+
+  <!--
+    Shared MSBuild plumbing that puts a committed public-API baseline and package-level breaking-change
+    detection on every NuGet package this repository ships. See CONTRIBUTING.md ("Public API baseline")
+    for the contributor workflow and doc/handwritten/for-maintainers/adr/ for the pre-1.0 rationale.
+
+    A packable library opts in with
+
+        <Import Project="..\build\PublicApiBaseline.props" />
+
+    Only the SHIPPING libraries import it — FirstClassErrors, FirstClassErrors.Testing,
+    FirstClassErrors.RequestBinder (the `lib` train) and Dummies (the `dum` train). Tools, workers, the CLI
+    and every test project stay out: PublicApiAnalyzers would otherwise flag their entire public surface as
+    undeclared, and they carry no compatibility promise.
+
+    Two complementary guards, neither of which the reflection-based parity tests can replace (those prove the
+    Any/AnyContext mirror stays COMPLETE; they are blind to a removed overload or a narrowed return type):
+
+      1. Microsoft.CodeAnalysis.PublicApiAnalyzers — every public-surface change becomes a reviewed diff in a
+         committed PublicAPI.*.txt file. An undeclared public symbol raises RS0016; a declared symbol that no
+         longer exists raises RS0017. Both are warnings locally (the inner loop stays friendly, per
+         Directory.Build.props) and ERRORS in CI (the warnings-as-errors ratchet promotes them), so a surface
+         change cannot merge until the same change updates the baseline file.
+
+      2. EnablePackageValidation — `dotnet pack` runs ApiCompat over the produced package. With no
+         PackageValidationBaselineVersion set (the default here) it performs the same-package cross-target
+         check: for a multi-targeted package it proves no API a lower-TFM consumer sees disappears on a
+         higher TFM. It is inert for the single-TFM lib projects until a baseline version is turned on
+         (see CONTRIBUTING.md — lib-v0.1.0-preview.1 is available as the first such baseline).
+  -->
+
+  <ItemGroup>
+    <!-- Build-time only (PrivateAssets=all): the analyzer runs during our build and is never a dependency of
+         the shipped package. Version pinned centrally in Directory.Packages.props, alongside the other
+         Microsoft.CodeAnalysis.* 5.6.0 packages. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!--
+    Per-target-framework baseline files. The analyzer matches AdditionalFiles by file NAME
+    (PublicAPI.Shipped.txt / PublicAPI.Unshipped.txt), so a per-TFM subfolder keeps each compilation reading
+    its own surface. This is what lets Dummies track its two divergent surfaces (the net8.0 leg carries the
+    modern generators — DateOnly, TimeOnly, Int128, UInt128, Half — that do not exist on netstandard2.0);
+    the single-TFM lib projects simply have one netstandard2.0 subfolder. Condition guards the outer,
+    TFM-less evaluation of a multi-targeting project (where $(TargetFramework) is empty).
+  -->
+  <ItemGroup Condition="'$(TargetFramework)' != ''">
+    <AdditionalFiles Include="$(MSBuildProjectDirectory)\PublicAPI\$(TargetFramework)\PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="$(MSBuildProjectDirectory)\PublicAPI\$(TargetFramework)\PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- Fail `dotnet pack` on an unintended breaking change. Baseline-less today (cross-TFM check only);
+         set PackageValidationBaselineVersion to gate against a published version once the surface stabilises. -->
+    <EnablePackageValidation>true</EnablePackageValidation>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!--
+      Scope: this baseline exists to catch ACCIDENTAL breaking changes (a removed overload, a narrowed
+      return type, a renamed member) via RS0016/RS0017 and package validation. RS0026/RS0027 are a different
+      thing: opinionated API-DESIGN rules ("do not spread optional parameters across overloads"). They fire
+      pervasively on the library's deliberate, central fluent surfaces — Outcome.Then/Recover/Finally/Try/
+      Create/Error and Dummies' Any.Reproducibly — every one of which carries an optional callback across a
+      family of overloads by design (and shipped that way in lib-v0.1.0-preview.1). Enforcing them here would
+      demand a breaking redesign of the signature APIs, which is out of scope for installing a baseline and is
+      the maintainer's call (it overlaps the pre-v1 Outcome API-symmetry review). Disabled deliberately; the
+      finding is surfaced for @reefact rather than acted on silently. Re-enable per project if that decision
+      is taken.
+    -->
+    <NoWarn>$(NoWarn);RS0026;RS0027</NoWarn>
+  </PropertyGroup>
+
+</Project>

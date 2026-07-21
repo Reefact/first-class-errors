@@ -1,0 +1,41 @@
+#nullable enable
+FirstClassErrors.Testing.Clock
+FirstClassErrors.Testing.DetailedMessageFactory
+FirstClassErrors.Testing.DiagnosticMessageFactory
+FirstClassErrors.Testing.ErrorAssertion
+FirstClassErrors.Testing.ErrorAssertion.Subject.get -> FirstClassErrors.Error!
+FirstClassErrors.Testing.ErrorAssertion.WithCode(FirstClassErrors.ErrorCode! expectedCode) -> FirstClassErrors.Testing.ErrorAssertion!
+FirstClassErrors.Testing.ErrorAssertion.WithCode(string! expectedCode) -> FirstClassErrors.Testing.ErrorAssertion!
+FirstClassErrors.Testing.ErrorAssertion.WithContextEntry(string! key) -> FirstClassErrors.Testing.ErrorAssertion!
+FirstClassErrors.Testing.ErrorAssertion.WithContextEntry(string! key, object? expectedValue) -> FirstClassErrors.Testing.ErrorAssertion!
+FirstClassErrors.Testing.ErrorAssertion.WithDiagnosticMessage(string! expected) -> FirstClassErrors.Testing.ErrorAssertion!
+FirstClassErrors.Testing.ErrorAssertion.WithShortMessage(string! expected) -> FirstClassErrors.Testing.ErrorAssertion!
+FirstClassErrors.Testing.ErrorCodeFactory
+FirstClassErrors.Testing.ErrorOriginFactory
+FirstClassErrors.Testing.IClock
+FirstClassErrors.Testing.IClock.UtcNow.get -> System.DateTimeOffset
+FirstClassErrors.Testing.InstanceIds
+FirstClassErrors.Testing.InteractionDirectionFactory
+FirstClassErrors.Testing.OutcomeAssertionException
+FirstClassErrors.Testing.OutcomeAssertionException.OutcomeAssertionException(string! message) -> void
+FirstClassErrors.Testing.OutcomeAssertions
+FirstClassErrors.Testing.ShortMessageFactory
+FirstClassErrors.Testing.TransienceFactory
+static FirstClassErrors.Testing.Clock.Use(FirstClassErrors.Testing.IClock! clock) -> System.IDisposable!
+static FirstClassErrors.Testing.Clock.UseAny() -> System.IDisposable!
+static FirstClassErrors.Testing.Clock.UseFixed(System.DateTimeOffset instant) -> System.IDisposable!
+static FirstClassErrors.Testing.DetailedMessageFactory.Any() -> string!
+static FirstClassErrors.Testing.DiagnosticMessageFactory.Any() -> string!
+static FirstClassErrors.Testing.ErrorCodeFactory.Any() -> FirstClassErrors.ErrorCode!
+static FirstClassErrors.Testing.ErrorOriginFactory.Any() -> FirstClassErrors.ErrorOrigin
+static FirstClassErrors.Testing.InstanceIds.Use(System.Func<System.Guid>! next) -> System.IDisposable!
+static FirstClassErrors.Testing.InstanceIds.UseAny() -> System.IDisposable!
+static FirstClassErrors.Testing.InstanceIds.UseFixed(System.Guid id) -> System.IDisposable!
+static FirstClassErrors.Testing.InstanceIds.UseSequential() -> System.IDisposable!
+static FirstClassErrors.Testing.InteractionDirectionFactory.Any() -> FirstClassErrors.InteractionDirection
+static FirstClassErrors.Testing.OutcomeAssertions.ShouldFail(this FirstClassErrors.Outcome! outcome) -> FirstClassErrors.Testing.ErrorAssertion!
+static FirstClassErrors.Testing.OutcomeAssertions.ShouldFail<T>(this FirstClassErrors.Outcome<T>! outcome) -> FirstClassErrors.Testing.ErrorAssertion!
+static FirstClassErrors.Testing.OutcomeAssertions.ShouldSucceed(this FirstClassErrors.Outcome! outcome) -> void
+static FirstClassErrors.Testing.OutcomeAssertions.ShouldSucceed<T>(this FirstClassErrors.Outcome<T>! outcome) -> T
+static FirstClassErrors.Testing.ShortMessageFactory.Any() -> string!
+static FirstClassErrors.Testing.TransienceFactory.Any() -> FirstClassErrors.Transience
