@@ -140,6 +140,57 @@ result.Finally(
 
 `Finally` is terminal: use it to consume or translate an outcome, not as a hidden intermediate step in a long chain.
 
+## Entering the outcome flow from throwing code
+
+`Try` is the inverse of `ThrowIfFailure()` and `GetResultOrThrow()`: instead of leaving the outcome flow by throwing, it *enters* it by running a throwing operation and capturing the throw as a failure through a mandatory mapper. It is a **narrow, sharp tool**, not the default way to reach the outcome flow — most of the time one of the cases below applies and `Try` is the wrong choice. Four analyzers back these boundaries: [FCE019](analyzers/FCE019.en.md), [FCE021](analyzers/FCE021.en.md) and [FCE022](analyzers/FCE022.en.md) are on by default; [FCE020](analyzers/FCE020.en.md) is opt-in.
+
+### When `Try` is the wrong tool
+
+**A non-throwing `TryXxx` already exists.** Most parsing and conversion in the BCL has a `bool TryParse(..., out T)` / `TryCreate` counterpart. Use it and map the `false`: there is no exception to catch, so `Try` only adds cost and noise. [FCE021](analyzers/FCE021.en.md) warns on this whenever the counterpart exists for your target framework (suppress it where a look-alike `TryXxx` is not a true inverse).
+
+```csharp
+// Don't: catch what you can avoid throwing.
+Outcome<int> port = Outcome.Try<int, FormatException>(() => int.Parse(raw), PortErrors.Malformed);
+
+// Do: the non-throwing path is already there.
+Outcome<int> port = int.TryParse(raw, out int value)
+    ? Outcome<int>.Success(value)
+    : Outcome<int>.Failure(PortErrors.Malformed(raw));
+```
+
+**The failure is a protocol result, not (only) a throw.** An HTTP call or a database command signals failure through a status code, a provider error number, a response body — data you already hold. Wrapping it in `Try` throws that away: a 404, a 402 and a timeout collapse into one error, and the timeout even slips out as the `OperationCanceledException` that `Try` lets through. These deserve a dedicated adapter that inspects the result, not a caught throw.
+
+**You reach for `System.Exception`.** That swallows bugs — a null dereference, an invalid state — into anticipated errors, the one thing `Outcome` is documented not to represent. Catch the single type the operation is documented to throw.
+
+### When `Try` fits
+
+What is left is real but narrow: **a throwing call you do not own and cannot give a `TryXxx`, that has none available** for your target framework, where one exception type denotes the anticipated failure. Two things land you here — an older framework (`MailAddress.TryCreate` is .NET 5+, `DateOnly.TryParse` is .NET 6+, so on the netstandard2.0 / .NET Framework floor the primitive is throw-only), or a third-party library that never shipped a `TryXxx`. If it were your own code, you would add the non-throwing form instead of catching.
+
+```csharp
+public static Outcome<Certificate> Load(byte[] der) {
+    return Outcome.Try<Certificate, CryptographicException>(
+        () => new Certificate(der),
+        exception => CertificateErrors.Unreadable(exception));
+}
+```
+
+`JsonDocument.Parse` outside an HTTP flow (a config file, a queue message), `XDocument.Parse`, and a third-party `Parse`/`Decode` that only throws are the other honest fits. (Prefer `JsonDocument.Parse` over `JsonSerializer.Deserialize<T>` here: the latter returns `null` for the JSON literal `null`, which becomes an `ArgumentNullException` from `Success` rather than the `JsonException` you catch.)
+
+### The rules `Try` always follows
+
+- **The mapper is mandatory.** The library never converts an exception to an error automatically: that would yield errors without a stable code (what [FCE005](analyzers/FCE005.en.md) discourages), and the mapper is where you extract only what is safe rather than leaking the raw message (FCE017/FCE018).
+- **Only the named type is caught**; anything else propagates, because an `Outcome` models an anticipated failure, not an unexpected crash.
+- **`OperationCanceledException` always propagates**, even when the caught type is `Exception`: a cancellation is not a failure. Binding `TException` to a cancellation type therefore produces a catch that can never run — a silent dead catch that [FCE022](analyzers/FCE022.en.md) flags.
+
+A side-effecting operation returns a non-generic `Outcome`, and both forms have an asynchronous overload that threads a cancellation token:
+
+```csharp
+Outcome<Config> config = await Outcome.Try<Config, JsonException>(
+    (ct) => LoadConfigAsync(path, ct),
+    exception => ConfigErrors.Malformed(path, exception),
+    cancellationToken);
+```
+
 ## Leaving the outcome flow
 
 Two methods convert a failure back into exception flow.
@@ -234,6 +285,7 @@ Before approving an `Outcome` flow, verify that:
 - factories remain the single source of error construction;
 - each composition step uses `Then`, returning a value to map or an `Outcome` to chain a step that may fail;
 - recovery is intentional and does not silently discard useful failures;
+- throwing code is brought into the flow through `Try` with a mandatory mapper, only where the exception is the whole failure signal;
 - exception conversion occurs only at a clear boundary;
 - a fluent chain is genuinely clearer than explicit branching;
 - cancellation tokens are propagated through asynchronous operations.

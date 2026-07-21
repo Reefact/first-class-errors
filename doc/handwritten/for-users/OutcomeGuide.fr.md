@@ -140,6 +140,57 @@ result.Finally(
 
 `Finally` est terminal : utilisez-le pour consommer ou traduire un outcome, pas comme une étape intermédiaire cachée dans une longue chaîne.
 
+## Entrer dans le flux Outcome depuis du code qui lève
+
+`Try` est l'inverse de `ThrowIfFailure()` et `GetResultOrThrow()` : au lieu de sortir du flux Outcome en levant, elle y *entre* en exécutant une opération susceptible de lever et en capturant la levée comme un échec via un mapper obligatoire. C'est un **outil étroit et tranchant**, pas la façon par défaut d'atteindre le flux Outcome — la plupart du temps, l'un des cas ci-dessous s'applique et `Try` est le mauvais choix. Quatre analyzers épaulent ces frontières : [FCE019](analyzers/FCE019.fr.md), [FCE021](analyzers/FCE021.fr.md) et [FCE022](analyzers/FCE022.fr.md) sont activés par défaut ; [FCE020](analyzers/FCE020.fr.md) est opt-in.
+
+### Quand `Try` est le mauvais outil
+
+**Un `TryXxx` non-levant existe déjà.** La plupart des parsings et conversions de la BCL ont un équivalent `bool TryParse(..., out T)` / `TryCreate`. Utilisez-le et mappez le `false` : il n'y a aucune exception à attraper, donc `Try` n'ajoute que du coût et du bruit. [FCE021](analyzers/FCE021.fr.md) émet un warning là-dessus dès que la contrepartie existe pour votre framework cible (supprimez-le là où un `TryXxx` sosie n'est pas un vrai inverse).
+
+```csharp
+// À éviter : attraper ce que vous pouvez éviter de lever.
+Outcome<int> port = Outcome.Try<int, FormatException>(() => int.Parse(raw), PortErrors.Malformed);
+
+// À faire : le chemin non-levant est déjà là.
+Outcome<int> port = int.TryParse(raw, out int value)
+    ? Outcome<int>.Success(value)
+    : Outcome<int>.Failure(PortErrors.Malformed(raw));
+```
+
+**L'échec est un résultat de protocole, pas (seulement) une levée.** Un appel HTTP ou une commande base de données signale l'échec via un code de statut, un numéro d'erreur du provider, un corps de réponse — des données que vous avez déjà en main. Les envelopper dans `Try` jette tout cela : un 404, un 402 et un timeout s'effondrent en une seule erreur, et le timeout s'échappe même sous la forme de l'`OperationCanceledException` que `Try` laisse passer. Ces cas méritent un adaptateur dédié qui inspecte le résultat, pas une levée attrapée.
+
+**Vous dégainez `System.Exception`.** Cela avale les bugs — un déréférencement null, un état invalide — en erreurs anticipées, la seule chose qu'un `Outcome` est documenté pour ne pas représenter. Attrapez le seul type que l'opération est documentée pour lever.
+
+### Quand `Try` convient
+
+Ce qui reste est réel mais étroit : **un appel que vous ne possédez pas et auquel vous ne pouvez pas ajouter de `TryXxx`, qui n'en a aucun de disponible** pour votre framework cible, où un seul type d'exception dénote l'échec anticipé. Deux choses vous y amènent — un framework ancien (`MailAddress.TryCreate` est .NET 5+, `DateOnly.TryParse` est .NET 6+, donc sur le plancher netstandard2.0 / .NET Framework la primitive est levante-seulement), ou une lib tierce qui n'a jamais livré de `TryXxx`. Si c'était votre propre code, vous ajouteriez la forme non-levante au lieu d'attraper.
+
+```csharp
+public static Outcome<Certificate> Load(byte[] der) {
+    return Outcome.Try<Certificate, CryptographicException>(
+        () => new Certificate(der),
+        exception => CertificateErrors.Unreadable(exception));
+}
+```
+
+`JsonDocument.Parse` hors d'un flux HTTP (un fichier de config, un message de file), `XDocument.Parse`, et un `Parse`/`Decode` tiers qui ne fait que lever sont les autres cas honnêtes. (Préférez `JsonDocument.Parse` à `JsonSerializer.Deserialize<T>` ici : ce dernier retourne `null` pour le littéral JSON `null`, ce qui devient une `ArgumentNullException` depuis `Success` plutôt que la `JsonException` que vous attrapez.)
+
+### Les règles que `Try` respecte toujours
+
+- **Le mapper est obligatoire.** La bibliothèque ne convertit jamais une exception en erreur automatiquement : cela produirait des erreurs sans code stable (ce que [FCE005](analyzers/FCE005.fr.md) décourage), et le mapper est l'endroit où extraire uniquement ce qui est sûr plutôt que de déverser le message brut (FCE017/FCE018).
+- **Seul le type nommé est attrapé** ; tout le reste se propage, car un `Outcome` modélise un échec anticipé, pas un crash inattendu.
+- **`OperationCanceledException` se propage toujours**, même lorsque le type attrapé est `Exception` : une annulation n'est pas un échec. Lier `TException` à un type d'annulation produit donc un catch qui ne peut jamais s'exécuter — un catch mort silencieux que [FCE022](analyzers/FCE022.fr.md) signale.
+
+Une opération à effet de bord renvoie un `Outcome` non générique, et les deux formes disposent d'une surcharge asynchrone qui propage un token d'annulation :
+
+```csharp
+Outcome<Config> config = await Outcome.Try<Config, JsonException>(
+    (ct) => LoadConfigAsync(path, ct),
+    exception => ConfigErrors.Malformed(path, exception),
+    cancellationToken);
+```
+
 ## Sortir du flux Outcome
 
 Deux méthodes reconvertissent un échec en flux par exception.
@@ -234,6 +285,7 @@ Avant de valider un flux `Outcome`, vérifiez que :
 - les factories restent la source unique de construction des erreurs ;
 - chaque étape de composition utilise `Then`, en renvoyant une valeur pour transformer ou un `Outcome` pour chaîner une étape susceptible d’échouer ;
 - la récupération est intentionnelle et ne supprime pas silencieusement des erreurs utiles ;
+- le code qui lève est ramené dans le flux via `Try` avec un mapper obligatoire, uniquement là où l’exception est tout le signal d’échec ;
 - la conversion en exception n’a lieu qu’à une frontière claire ;
 - une chaîne fluide est réellement plus lisible qu’un branchement explicite ;
 - les tokens d’annulation sont propagés dans les opérations asynchrones.

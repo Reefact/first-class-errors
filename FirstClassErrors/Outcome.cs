@@ -41,6 +41,315 @@ public sealed class Outcome {
         return new Outcome(error);
     }
 
+    /// <summary>
+    ///     Runs a value-producing operation that may throw, catching a single exception type and turning it into a failed
+    ///     <see cref="Outcome{T}" /> through the supplied mapper.
+    /// </summary>
+    /// <typeparam name="T">The type of the value produced on success.</typeparam>
+    /// <typeparam name="TException">The single exception type to catch and map; any other exception propagates.</typeparam>
+    /// <param name="operation">The operation to run.</param>
+    /// <param name="onError">
+    ///     Maps a caught <typeparamref name="TException" /> to the <see cref="Error" /> that describes the failure. It is
+    ///     mandatory: the library never converts an exception to an error automatically, because an automatic conversion
+    ///     would yield errors without a stable <see cref="ErrorCode" /> — the very thing the FCE005 analyzer discourages.
+    ///     This mapper is the natural place to extract only what is safe from the exception rather than leaking its raw
+    ///     message (see the FCE017/FCE018 analyzers on sensitive and oversized context data).
+    /// </param>
+    /// <returns>
+    ///     A successful <see cref="Outcome{T}" /> carrying the operation's result, or a failed one carrying the mapped
+    ///     error when <paramref name="operation" /> threw a <typeparamref name="TException" />.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if <paramref name="operation" /> or <paramref name="onError" /> is <c>null</c>; if
+    ///     <paramref name="operation" /> returns a <c>null</c> result (which <see cref="Outcome{T}.Success" /> rejects as
+    ///     a contract violation rather than mapping it); or if a caught exception is mapped by <paramref name="onError" />
+    ///     to a <c>null</c> error (the mapped value flows through <see cref="Outcome{T}.Failure" />, which rejects
+    ///     <c>null</c>).
+    /// </exception>
+    /// <remarks>
+    ///     <para>
+    ///         <c>Try</c> brings throwing code <b>into</b> the outcome flow — the inverse of
+    ///         <see cref="Outcome{T}.GetResultOrThrow" /> and <see cref="Error.ToException" />, which leave it. It is a
+    ///         narrow tool: when the operation already has a non-throwing counterpart (a <c>bool TryParse(..., out T)</c>
+    ///         or <c>TryCreate</c>), prefer that and map its <c>false</c> result — there is no exception to catch. Reach
+    ///         for <c>Try</c> only for a throwing primitive that has <b>no</b> such variant available, a case a
+    ///         .NET Standard 2.0 consumer meets more often than a modern one. The FCE019 and FCE020 analyzers flag the
+    ///         common misuses.
+    ///     </para>
+    ///     <para>
+    ///         Only <typeparamref name="TException" /> is caught. Any other exception propagates unchanged: an
+    ///         <see cref="Outcome{T}" /> models an <i>anticipated</i> failure, not an unexpected runtime crash, so an
+    ///         exception you did not name is never silently turned into a value.
+    ///     </para>
+    ///     <para>
+    ///         <see cref="OperationCanceledException" /> always propagates, even when it is assignable to
+    ///         <typeparamref name="TException" /> (for instance when <typeparamref name="TException" /> is
+    ///         <see cref="Exception" />): a cancellation is not a failure to capture as an error. Binding
+    ///         <typeparamref name="TException" /> to <see cref="OperationCanceledException" /> (or its
+    ///         <c>TaskCanceledException</c> subtype) is therefore pointless — the catch is unreachable and
+    ///         <paramref name="onError" /> never runs; do not model cancellation as a <c>Try</c> failure.
+    ///     </para>
+    ///     <para>
+    ///         <c>Try</c> is intended for operations where the thrown exception is the whole failure signal. It is
+    ///         deliberately <b>not</b> meant for protocols whose failures are carried by a status or result code rather than
+    ///         by an exception (HTTP responses, database provider codes); those deserve a dedicated adapter that inspects
+    ///         the result instead of catching a throw.
+    ///     </para>
+    /// </remarks>
+    public static Outcome<T> Try<T, TException>(Func<T> operation, Func<TException, Error> onError)
+        where T : notnull
+        where TException : Exception {
+        if (operation is null) { throw new ArgumentNullException(nameof(operation)); }
+        if (onError is null) { throw new ArgumentNullException(nameof(onError)); }
+
+        T result;
+        try {
+            result = operation();
+        } catch (TException exception) when (exception is not OperationCanceledException) {
+            return Outcome<T>.Failure(onError(exception));
+        }
+
+        // Success runs after the catch on purpose: it rejects a null result, and a null result is a contract
+        // violation of the operation, not an anticipated failure. Calling it here lets that ArgumentNullException
+        // surface instead of being mapped by onError when TException is broad enough to catch it.
+        return Outcome<T>.Success(result);
+    }
+
+    /// <summary>
+    ///     Runs a side-effecting operation that may throw, catching a single exception type and turning it into a failed
+    ///     <see cref="Outcome" /> through the supplied mapper.
+    /// </summary>
+    /// <typeparam name="TException">The single exception type to catch and map; any other exception propagates.</typeparam>
+    /// <param name="operation">The operation to run.</param>
+    /// <param name="onError">
+    ///     Maps a caught <typeparamref name="TException" /> to the <see cref="Error" /> that describes the failure. See the
+    ///     value-returning overload for the doctrine on why this mapper is mandatory.
+    /// </param>
+    /// <returns>
+    ///     <see cref="Success" /> when <paramref name="operation" /> completed, or a failed <see cref="Outcome" /> carrying
+    ///     the mapped error when it threw a <typeparamref name="TException" />.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if <paramref name="operation" /> or <paramref name="onError" /> is <c>null</c>, or if a caught exception
+    ///     is mapped by <paramref name="onError" /> to a <c>null</c> error.
+    /// </exception>
+    /// <remarks>
+    ///     Behaves like the value-returning overload: only <typeparamref name="TException" /> is caught, and
+    ///     <see cref="OperationCanceledException" /> always propagates rather than being captured as an error.
+    /// </remarks>
+    public static Outcome Try<TException>(Action operation, Func<TException, Error> onError)
+        where TException : Exception {
+        if (operation is null) { throw new ArgumentNullException(nameof(operation)); }
+        if (onError is null) { throw new ArgumentNullException(nameof(onError)); }
+
+        try {
+            operation();
+
+            return Success;
+        } catch (TException exception) when (exception is not OperationCanceledException) {
+            return Failure(onError(exception));
+        }
+    }
+
+    /// <summary>
+    ///     Runs an asynchronous value-producing operation that may throw, catching a single exception type and turning it
+    ///     into a failed <see cref="Outcome{T}" /> through the supplied mapper.
+    /// </summary>
+    /// <typeparam name="T">The type of the value produced on success.</typeparam>
+    /// <typeparam name="TException">The single exception type to catch and map; any other exception propagates.</typeparam>
+    /// <param name="operation">The asynchronous operation to run.</param>
+    /// <param name="onError">
+    ///     Maps a caught <typeparamref name="TException" /> to the <see cref="Error" /> that describes the failure. See the
+    ///     synchronous value-returning overload for the doctrine on why this mapper is mandatory.
+    /// </param>
+    /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
+    /// <returns>
+    ///     A <see cref="Task{TResult}" /> resolving to a successful <see cref="Outcome{T}" /> carrying the operation's
+    ///     result, or to a failed one carrying the mapped error when <paramref name="operation" /> threw a
+    ///     <typeparamref name="TException" />.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if <paramref name="operation" /> or <paramref name="onError" /> is <c>null</c>; if
+    ///     <paramref name="operation" /> resolves to a <c>null</c> result (which <see cref="Outcome{T}.Success" /> rejects
+    ///     as a contract violation rather than mapping it); or if a caught exception is mapped by <paramref name="onError" />
+    ///     to a <c>null</c> error.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown if <paramref name="operation" /> returns a <c>null</c> task — a contract violation that surfaces rather
+    ///     than being mapped, even when <typeparamref name="TException" /> is broad enough to catch it.
+    /// </exception>
+    /// <remarks>
+    ///     Behaves like the synchronous value-returning overload: only <typeparamref name="TException" /> is caught, and
+    ///     <see cref="OperationCanceledException" /> always propagates. A cancellation raised through
+    ///     <paramref name="cancellationToken" /> therefore surfaces to the awaiter rather than becoming a failed outcome.
+    ///     The operation signals failure through the returned <see cref="Task{TResult}" />; a <c>null</c> task, like a
+    ///     <c>null</c> result, is a contract violation and always surfaces rather than being mapped.
+    /// </remarks>
+    public static async Task<Outcome<T>> Try<T, TException>(Func<CancellationToken, Task<T>> operation,
+                                                            Func<TException, Error>          onError,
+                                                            CancellationToken                cancellationToken = default)
+        where T : notnull
+        where TException : Exception {
+        if (operation is null) { throw new ArgumentNullException(nameof(operation)); }
+        if (onError is null) { throw new ArgumentNullException(nameof(onError)); }
+
+        Task<T> task;
+        try {
+            task = operation(cancellationToken);
+        } catch (TException exception) when (exception is not OperationCanceledException) {
+            return Outcome<T>.Failure(onError(exception));
+        }
+
+        // A null task and a null result are both contract violations of the operation, not anticipated failures, so
+        // both surface rather than being mapped: the null-task guard and Success both sit outside the region that maps
+        // the operation's exceptions. Invoking the operation stays inside the try, so a synchronous throw is still caught.
+        Task<T> awaited = AsyncCallbackGuard.EnsureTask(task);
+
+        T result;
+        try {
+            result = await awaited.ConfigureAwait(false);
+        } catch (TException exception) when (exception is not OperationCanceledException) {
+            return Outcome<T>.Failure(onError(exception));
+        }
+
+        return Outcome<T>.Success(result);
+    }
+
+    /// <summary>
+    ///     Runs an asynchronous side-effecting operation that may throw, catching a single exception type and turning it
+    ///     into a failed <see cref="Outcome" /> through the supplied mapper.
+    /// </summary>
+    /// <typeparam name="TException">The single exception type to catch and map; any other exception propagates.</typeparam>
+    /// <param name="operation">The asynchronous operation to run.</param>
+    /// <param name="onError">
+    ///     Maps a caught <typeparamref name="TException" /> to the <see cref="Error" /> that describes the failure. See the
+    ///     synchronous value-returning overload for the doctrine on why this mapper is mandatory.
+    /// </param>
+    /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
+    /// <returns>
+    ///     A <see cref="Task{TResult}" /> resolving to <see cref="Success" /> when <paramref name="operation" /> completed,
+    ///     or to a failed <see cref="Outcome" /> carrying the mapped error when it threw a
+    ///     <typeparamref name="TException" />.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if <paramref name="operation" /> or <paramref name="onError" /> is <c>null</c>, or if a caught exception
+    ///     is mapped by <paramref name="onError" /> to a <c>null</c> error.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown if <paramref name="operation" /> returns a <c>null</c> task — a contract violation that surfaces rather
+    ///     than being mapped, even when <typeparamref name="TException" /> is broad enough to catch it.
+    /// </exception>
+    /// <remarks>
+    ///     Behaves like the synchronous value-returning overload: only <typeparamref name="TException" /> is caught, and
+    ///     <see cref="OperationCanceledException" /> always propagates rather than being captured as an error. A
+    ///     <c>null</c> task is a contract violation and always surfaces rather than being mapped.
+    /// </remarks>
+    public static async Task<Outcome> Try<TException>(Func<CancellationToken, Task> operation,
+                                                      Func<TException, Error>       onError,
+                                                      CancellationToken             cancellationToken = default)
+        where TException : Exception {
+        if (operation is null) { throw new ArgumentNullException(nameof(operation)); }
+        if (onError is null) { throw new ArgumentNullException(nameof(onError)); }
+
+        Task task;
+        try {
+            task = operation(cancellationToken);
+        } catch (TException exception) when (exception is not OperationCanceledException) {
+            return Failure(onError(exception));
+        }
+
+        // A null task is a contract violation, not an anticipated failure, so it surfaces rather than being mapped: the
+        // guard sits outside the region that maps the operation's exceptions. Invoking the operation stays inside the
+        // try, so a synchronous throw is still caught.
+        Task awaited = AsyncCallbackGuard.EnsureTask(task);
+
+        try {
+            await awaited.ConfigureAwait(false);
+        } catch (TException exception) when (exception is not OperationCanceledException) {
+            return Failure(onError(exception));
+        }
+
+        return Success;
+    }
+
+    /// <summary>
+    ///     Runs an asynchronous value-producing operation that may throw, catching a single exception type and turning it
+    ///     into a failed <see cref="Outcome{T}" /> through the supplied mapper. This token-less overload exists so an
+    ///     <c>async</c> lambda that observes no cancellation token binds here — as a <see cref="Task{TResult}" />-returning
+    ///     delegate — instead of to a synchronous overload where an async lambda could bind as <c>async void</c> and let
+    ///     its post-<c>await</c> exception escape unobserved.
+    /// </summary>
+    /// <typeparam name="T">The type of the value produced on success.</typeparam>
+    /// <typeparam name="TException">The single exception type to catch and map; any other exception propagates.</typeparam>
+    /// <param name="operation">The asynchronous operation to run.</param>
+    /// <param name="onError">
+    ///     Maps a caught <typeparamref name="TException" /> to the <see cref="Error" /> that describes the failure. See the
+    ///     synchronous value-returning overload for the doctrine on why this mapper is mandatory.
+    /// </param>
+    /// <returns>
+    ///     A <see cref="Task{TResult}" /> resolving to a successful <see cref="Outcome{T}" /> carrying the operation's
+    ///     result, or to a failed one carrying the mapped error when <paramref name="operation" /> threw a
+    ///     <typeparamref name="TException" />.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if <paramref name="operation" /> or <paramref name="onError" /> is <c>null</c>; if
+    ///     <paramref name="operation" /> resolves to a <c>null</c> result; or if a caught exception is mapped by
+    ///     <paramref name="onError" /> to a <c>null</c> error.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown if <paramref name="operation" /> returns a <c>null</c> task — a contract violation that surfaces rather
+    ///     than being mapped.
+    /// </exception>
+    /// <remarks>
+    ///     Equivalent to the cancellation-aware overload invoked with a default <see cref="CancellationToken" />.
+    /// </remarks>
+    public static async Task<Outcome<T>> Try<T, TException>(Func<Task<T>> operation, Func<TException, Error> onError)
+        where T : notnull
+        where TException : Exception {
+        if (operation is null) { throw new ArgumentNullException(nameof(operation)); }
+        if (onError is null) { throw new ArgumentNullException(nameof(onError)); }
+
+        return await Try<T, TException>(_ => operation(), onError).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Runs an asynchronous side-effecting operation that may throw, catching a single exception type and turning it
+    ///     into a failed <see cref="Outcome" /> through the supplied mapper. This token-less overload exists so an
+    ///     <c>async</c> lambda that observes no cancellation token binds here — as a <see cref="Task" />-returning
+    ///     delegate — instead of to the synchronous <see cref="Action" /> overload, where it would bind as <c>async
+    ///     void</c> and let its post-<c>await</c> exception escape unobserved. It likewise awaits a fire-and-forget
+    ///     <c>() => ReturnsTask()</c> that the <see cref="Action" /> overload would silently drop.
+    /// </summary>
+    /// <typeparam name="TException">The single exception type to catch and map; any other exception propagates.</typeparam>
+    /// <param name="operation">The asynchronous operation to run.</param>
+    /// <param name="onError">
+    ///     Maps a caught <typeparamref name="TException" /> to the <see cref="Error" /> that describes the failure. See the
+    ///     synchronous value-returning overload for the doctrine on why this mapper is mandatory.
+    /// </param>
+    /// <returns>
+    ///     A <see cref="Task{TResult}" /> resolving to <see cref="Success" /> when <paramref name="operation" /> completed,
+    ///     or to a failed <see cref="Outcome" /> carrying the mapped error when it threw a
+    ///     <typeparamref name="TException" />.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if <paramref name="operation" /> or <paramref name="onError" /> is <c>null</c>, or if a caught exception
+    ///     is mapped by <paramref name="onError" /> to a <c>null</c> error.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown if <paramref name="operation" /> returns a <c>null</c> task — a contract violation that surfaces rather
+    ///     than being mapped.
+    /// </exception>
+    /// <remarks>
+    ///     Equivalent to the cancellation-aware overload invoked with a default <see cref="CancellationToken" />.
+    /// </remarks>
+    public static async Task<Outcome> Try<TException>(Func<Task> operation, Func<TException, Error> onError)
+        where TException : Exception {
+        if (operation is null) { throw new ArgumentNullException(nameof(operation)); }
+        if (onError is null) { throw new ArgumentNullException(nameof(onError)); }
+
+        return await Try<TException>(_ => operation(), onError).ConfigureAwait(false);
+    }
+
     #endregion
 
     #region Constructors declarations
