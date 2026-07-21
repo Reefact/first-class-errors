@@ -45,6 +45,10 @@ public sealed class AnyPatternTests {
     [InlineData(@"(?:foo|bar)-\d+")]
     [InlineData(@"(?<year>\d{4})-(?<month>\d{2})")]
     [InlineData(@"(?'tag'\d{2})")]
+    [InlineData(@"(?<1>x)")]          // explicitly-numbered group: a valid capture NUMBER, not an invalid name
+    [InlineData(@"(?'2'y)")]          // ...same, quote form
+    [InlineData(@"(?<10>ab)")]        // a multi-digit group number stays valid
+    [InlineData(@"(?<a1>xy)")]        // a named group whose name merely contains digits stays valid
     [InlineData(@"^a$|^b$")]
     [InlineData(@"[\d]{3}")]
     [InlineData(@"[-a-z]{2}")]
@@ -222,6 +226,27 @@ public sealed class AnyPatternTests {
         Check.ThatCode(() => Any.WithSeed(1).StringMatching(new Regex("^A B$", RegexOptions.IgnorePatternWhitespace))).Throws<ArgumentException>();
     }
 
+    [Fact(DisplayName = "A balancing group is refused as unsupported — both syntaxes, target defined or not.")]
+    public void BalancingGroupsAreRefused() {
+        // A balancing group '(?<-name>…)' / '(?<name1-name2>…)' pops the capture stack — the backreference family,
+        // which is non-regular. Its language is not that of a plain named group: '(?<a>y)?(?<-a>x)' matches only
+        // "yx" (the '-a' pop forces the optional 'a' group to have fired), yet lowering '(?<-a>x)' to an ordinary
+        // named group would emit "x". It is refused instead of mis-generated. .NET accepts these two target-defined
+        // patterns, so the refusal is a genuine "we decline what a plain walk cannot honour", not an echo of .NET.
+        Check.ThatCode(() => Any.StringMatching(@"(?<a>y)?(?<-a>x)")).Throws<UnsupportedRegexException>();
+        Check.ThatCode(() => Any.StringMatching(@"(?<a>y)?(?'-a'x)")).Throws<UnsupportedRegexException>(); // quote form
+
+        // The '-' is refused even when the target group is undefined — where the real engine instead reports a
+        // malformed pattern. Distinguishing the two would need a table of captured groups the generator does not
+        // keep; the divergence is only in the error kind (both reject, neither mis-generates) and is accepted.
+        Check.ThatCode(() => Any.StringMatching(@"(?<-a>x)")).Throws<UnsupportedRegexException>();
+        Check.ThatCode(() => Any.StringMatching(@"(?'-a'x)")).Throws<UnsupportedRegexException>();          // quote form
+        Check.ThatCode(() => Any.StringMatching(@"(?<x-y>z)")).Throws<UnsupportedRegexException>();         // name1-name2 form
+
+        UnsupportedRegexException caught = Assert.Throws<UnsupportedRegexException>(() => Any.StringMatching(@"(?<a>y)?(?<-a>x)"));
+        Check.That(caught.Message).Contains("balancing group");
+    }
+
     [Fact(DisplayName = "Malformed patterns raise ArgumentException; a null pattern raises ArgumentNullException.")]
     public void MalformedPatternsAreRejected() {
         Check.ThatCode(() => Any.StringMatching(@"[a-")).Throws<ArgumentException>();
@@ -246,6 +271,22 @@ public sealed class AnyPatternTests {
         Check.ThatCode(() => Any.StringMatching(@"\c1")).Throws<ArgumentException>();      // \c expects a letter
         Check.ThatCode(() => Any.StringMatching(@"{2}")).Throws<ArgumentException>();      // quantifier following nothing
         Check.ThatCode(() => Any.StringMatching(@"(?<>a)")).Throws<ArgumentException>();   // empty group name
+    }
+
+    [Fact(DisplayName = "An invalid group name is rejected as malformed, matching the real engine — both syntaxes.")]
+    public void InvalidGroupNamesAreRejected() {
+        // A name opening with a digit is an explicit capture NUMBER, which the real engine accepts only as a positive
+        // integer with no leading zero. '0' (reserved for the whole match), a leading zero, and a digit-then-letter
+        // name are all rejected — here as they are there.
+        Check.ThatCode(() => Any.StringMatching(@"(?<1a>x)")).Throws<ArgumentException>();  // digit then letter
+        Check.ThatCode(() => Any.StringMatching(@"(?<0>x)")).Throws<ArgumentException>();   // group 0 is reserved
+        Check.ThatCode(() => Any.StringMatching(@"(?<01>x)")).Throws<ArgumentException>();  // leading zero
+        Check.ThatCode(() => Any.StringMatching(@"(?'0'x)")).Throws<ArgumentException>();   // quote form, reserved
+
+        // A non-numeric name must be word characters (letter, digit or underscore); a space or a dot is malformed.
+        Check.ThatCode(() => Any.StringMatching(@"(?<a b>x)")).Throws<ArgumentException>();
+        Check.ThatCode(() => Any.StringMatching(@"(?'a b'x)")).Throws<ArgumentException>(); // quote form
+        Check.ThatCode(() => Any.StringMatching(@"(?<a.b>x)")).Throws<ArgumentException>();
     }
 
     [Fact(DisplayName = "Escape sequences generate the real characters, not their letter.")]

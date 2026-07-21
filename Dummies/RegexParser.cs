@@ -13,13 +13,15 @@ namespace Dummies;
 ///     <c>\d \D \w \W \s \S</c>; character classes with ranges and negation; the quantifiers
 ///     <c>? * + {n} {n,} {n,m}</c> (a lazy <c>?</c> marker is accepted and ignored — it changes matching order, never
 ///     which strings match; possessive quantifiers do not exist in .NET and are rejected); alternation; grouping
-///     (capturing, non-capturing and named — the name is ignored); the dot; and the anchors <c>^ $</c> at the start
+///     (capturing, non-capturing and named — the name is validated as the real engine would, then ignored); the dot;
+///     and the anchors <c>^ $</c> at the start
 ///     and end of the pattern or of a top-level alternation branch (no-ops there, since a whole matching string is
 ///     generated; anywhere else they are refused, because the pattern could never be matched by a whole generated
 ///     string). A brace that does not form a well-formed quantifier is a literal, as in the real engine, and groups
 ///     may nest at most 256 levels deep. A well-formed but non-regular or out-of-scope construct — a lookaround, a
-///     backreference, a Unicode category, a word boundary, an atomic group (its first-branch commit is not
-///     language-equivalent to plain alternation), a class subtraction — is refused with an
+///     backreference, a balancing group (it pops the capture stack, the backreference family), a Unicode category, a
+///     word boundary, an atomic group (its first-branch commit is not language-equivalent to plain alternation), a
+///     class subtraction — is refused with an
 ///     <see cref="UnsupportedRegexException" /> rather than silently mis-generated; a malformed pattern (including an
 ///     escape the real engine rejects) raises an <see cref="ArgumentException" />.
 /// </summary>
@@ -272,12 +274,12 @@ internal sealed class RegexParser {
                 case '#': throw Unsupported("an inline comment '(?#…)'", position);
                 case '<':
                     if (PeekAt(1) is '=' or '!') { throw Unsupported("a lookbehind '(?<=…)' or '(?<!…)'", position); }
-                    _index++;           // consume '<'
-                    SkipGroupName('>'); // named group: the name is irrelevant to generation
+                    _index++;                     // consume '<'
+                    SkipGroupName('>', position);  // named group: the name never shapes generation, but it is validated
                     break;
                 case '\'':
                     _index++; // consume '\''
-                    SkipGroupName('\'');
+                    SkipGroupName('\'', position);
                     break;
                 default: throw Unsupported($"a group option '(?{Peek()}…)'", position);
             }
@@ -292,11 +294,60 @@ internal sealed class RegexParser {
         return inner;
     }
 
-    private void SkipGroupName(char terminator) {
+    /// <summary>
+    ///     Consumes a named-group name up to its <paramref name="terminator" /> (<c>&gt;</c> for
+    ///     <c>(?&lt;name&gt;…)</c>, a quote for <c>(?'name'…)</c>) and validates it as the real engine would, so
+    ///     "accepted by Dummies" stays aligned with "accepted by .NET". The name never shapes generation, but two
+    ///     well-formed .NET constructs must not slip through as ordinary named groups:
+    ///     <list type="bullet">
+    ///         <item>
+    ///             a <b>balancing group</b> <c>(?&lt;name1-name2&gt;…)</c> / <c>(?&lt;-name2&gt;…)</c> — the
+    ///             <c>-</c> pops the capture stack (the same family as a backreference), so it is non-regular and
+    ///             refused with an <see cref="UnsupportedRegexException" />. This fires <b>even when the target group
+    ///             is undefined</b> — where the real engine instead reports a malformed pattern — because telling the
+    ///             two apart would need a table of captured groups, which this generator deliberately does not keep.
+    ///             The divergence is only in the error <i>kind</i>: both reject the pattern, neither mis-generates.
+    ///         </item>
+    ///         <item>
+    ///             an <b>invalid name</b> — a name opening with a digit is an explicit capture <i>number</i>, valid
+    ///             only as a positive integer with no leading zero (<c>1</c>, <c>10</c>; not <c>0</c>, <c>01</c> or
+    ///             <c>1a</c>); any other name must be word characters. Anything else raises an
+    ///             <see cref="ArgumentException" />, mirroring the real engine.
+    ///         </item>
+    ///     </list>
+    /// </summary>
+    private void SkipGroupName(char terminator, int position) {
         int start = _index;
         while (!AtEnd && Peek() != terminator) { _index++; }
         if (_index == start) { throw Malformed("a group name must not be empty"); }
+        string name = _pattern.Substring(start, _index - start);
         if (!Eat(terminator)) { throw Malformed($"unterminated group name (expected '{terminator}')"); }
+        ValidateGroupName(name, position);
+    }
+
+    private void ValidateGroupName(string name, int position) {
+        // A '-' marks a balancing group; it manipulates the capture stack (the backreference family), so it is
+        // non-regular and refused here even when its target is undefined (see SkipGroupName for why the divergence
+        // from the real engine's malformed-pattern verdict on that case is accepted).
+        if (name.IndexOf('-') >= 0) { throw Unsupported("a balancing group '(?<name1-name2>…)'", position); }
+
+        // A name opening with a digit is an explicit capture number: the real engine accepts it only as a positive
+        // integer with no leading zero, so '0', '01' and '1a' are refused while '1' and '10' pass.
+        if (name[0] is >= '0' and <= '9') {
+            bool validNumber = name[0] != '0';
+            foreach (char character in name) {
+                if (character is < '0' or > '9') { validNumber = false; }
+            }
+
+            if (!validNumber) { throw Malformed($"a group name starting with a digit must be a group number with no leading zero, but '{name}' is not"); }
+
+            return;
+        }
+
+        // Any other name must be word characters (letter, digit or underscore), exactly as the real engine requires.
+        foreach (char character in name) {
+            if (!char.IsLetterOrDigit(character) && character != '_') { throw Malformed($"the group name '{name}' contains '{character}', which is not a letter, digit or underscore"); }
+        }
     }
 
     private RegexNode ParseEscape() {
