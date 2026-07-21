@@ -11,8 +11,9 @@ namespace Dummies.UnitTests;
 /// <summary>
 ///     Locks the factory-naming rule recorded in ADR-0031: every parameterless, type-named scalar factory
 ///     on <see cref="Any" /> is named after the CLR type it produces — which is also the name of its
-///     <c>Any{ClrType}</c> builder — and is mirrored on <see cref="AnyContext" />. This is the guard that
-///     would have caught the <c>Bool</c>/<c>AnyBool</c> deviation before release.
+///     <c>Any{ClrType}</c> builder. This is the guard that would have caught the <c>Bool</c>/<c>AnyBool</c>
+///     deviation before release. The <see cref="Any" />↔<see cref="AnyContext" /> mirror itself is guarded
+///     separately by <c>SurfaceParityTests</c>.
 /// </summary>
 public sealed class FactoryNamingConventionTests {
 
@@ -49,18 +50,6 @@ public sealed class FactoryNamingConventionTests {
                  .That(factory.Name).IsEqualTo(clrName);
             Check.WithCustomMessage($"The builder for {clrName} is named '{builder.Name}'; it must be 'Any{clrName}' to match the CLR type.")
                  .That(builder.Name).IsEqualTo("Any" + clrName);
-        }
-    }
-
-    [Fact(DisplayName = "Every type-named scalar factory on Any is mirrored on AnyContext with the same name and return type.")]
-    public void ScalarFactoriesAreMirroredOnAnyContext() {
-        foreach (MethodInfo factory in ScalarFactories()) {
-            MethodInfo? mirror = typeof(AnyContext).GetMethod(factory.Name, BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null);
-
-            Check.WithCustomMessage($"Any.{factory.Name}() has no parameterless AnyContext.{factory.Name}() counterpart; the seeded-context surface must mirror the ambient one.")
-                 .That(mirror).IsNotNull();
-            Check.WithCustomMessage($"AnyContext.{factory.Name}() returns {mirror!.ReturnType.Name}, not {factory.ReturnType.Name}.")
-                 .That(mirror.ReturnType).IsEqualTo(factory.ReturnType);
         }
     }
 

@@ -127,7 +127,7 @@ public sealed class SurfaceParityTests {
         yield return [typeof(AnyDateTimeOffset), InstantAlgebra];
 
         // The remaining scalar builders each carry their own deliberate set.
-        yield return [typeof(AnyBool), new[] { "True", "False", "DifferentFrom" }];
+        yield return [typeof(AnyBoolean), new[] { "True", "False", "DifferentFrom" }];
         yield return [typeof(AnyGuid), new[] { "NonEmpty", "Empty", "OneOf", "Except", "DifferentFrom" }];
         yield return [typeof(AnyEnum<DayOfWeek>), new[] { "OneOf", "Except", "DifferentFrom" }];
         yield return [typeof(AnyChar), new[] { "Alpha", "AlphaNumeric", "Numeric", "UpperCase", "LowerCase", "OneOf", "Except", "DifferentFrom" }];
