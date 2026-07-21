@@ -29,7 +29,9 @@ matter — and that is the point.
   `Boolean`, `Guid`, `Enum<T>` (declared members only), `TimeSpan`, `DateTime` (UTC)
   and `DateTimeOffset`. On modern targets (`net8.0`) the surface extends to
   `DateOnly`, `TimeOnly`, `Int128`, `UInt128` and `Half`; the package also targets
-  `netstandard2.0` for the widest reach.
+  `netstandard2.0` and runs on **.NET Framework 4.7.2+**, .NET Core 2.0+ and .NET 5+
+  for the widest reach — with the .NET Framework 4.7.2 floor exercised in CI, not
+  merely advertised.
 - **Strings from a regex**: `Any.StringMatching(pattern)` generates arbitrary strings
   that match a regular expression — the dummy for a format-validated value object.
   Home-grown (zero dependencies) over the regular subset of the pattern language; a
