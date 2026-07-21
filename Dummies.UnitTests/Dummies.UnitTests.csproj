@@ -1,7 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Adds the .NET Framework 4.7.2 support-floor leg (gated by EnableNet472Floor) and owns the target
+       frameworks; exercised by the `framework-floor` job in .github/workflows/ci.yml. This carries Dummies'
+       OWN contract suite onto the floor, running it against the netstandard2.0 asset that .NET Framework
+       consumers load — until now that asset was only exercised transitively (ADR-0022; issue #215). -->
+  <Import Project="..\build\Net472TestFloor.props" />
+
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -30,6 +35,18 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+  </ItemGroup>
+
+  <!-- Three suites are saturated with .NET 8+ surface and cannot compile on the net472 floor: the modern
+       generators (DateOnly/TimeOnly/Int128/UInt128/Half), absent from the netstandard2.0 asset, and the
+       Math.BitIncrement / MathF / BitConverter.Half helpers (netstandard2.1+, absent from net472) used to build
+       their adjacent-value fixtures. They guard modern-.NET reachability and continuous-nudge behavior on
+       net10; on the floor the netstandard2.0 behavioral contract is exercised by the rest of the suite. The
+       other files' isolated net8-only draws are conditioned with `#if NET8_0_OR_GREATER` in-source. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Compile Remove="AnyModernTypeTests.cs" />
+    <Compile Remove="CrossEngineReachabilityTests.cs" />
+    <Compile Remove="ContinuousExclusionNudgeTests.cs" />
   </ItemGroup>
 
 </Project>
