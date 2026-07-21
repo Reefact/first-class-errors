@@ -90,3 +90,26 @@ jobs:
           cat netstandard.log
           grep -q 'ASSET=.NETStandard,Version=v2.0' netstandard.log
           grep -q 'RESULT=PASS' netstandard.log
+
+      - name: Cross-TFM seed equality (net8.0 asset vs netstandard2.0 asset)
+        # Each leg above printed a SEEDBATCH= line: the SAME fixed seed drawn from the COMMON surface, each on its
+        # OWN runtime from the asset that consumer TFM forced. The two packaged assets must produce an identical
+        # seeded sequence — new Random(seed) keeps the legacy algorithm on modern .NET so they SHOULD agree, but
+        # nothing else asserts it and Random reserves the right to differ across framework versions (issue #215).
+        # Compare byte-for-byte; the empty-guard fails closed so a missing/renamed banner can never pass silently.
+        working-directory: tools/dummies-check
+        run: |
+          set -euo pipefail
+          net8_seq="$(sed -n 's/^SEEDBATCH=//p' net8.log)"
+          netstd_seq="$(sed -n 's/^SEEDBATCH=//p' netstandard.log)"
+          echo "net8.0 asset        : ${net8_seq}"
+          echo "netstandard2.0 asset: ${netstd_seq}"
+          if [ -z "$net8_seq" ] || [ -z "$netstd_seq" ]; then
+            echo "FAIL: a SEEDBATCH banner was missing (net8.0='${net8_seq}', netstandard2.0='${netstd_seq}')"
+            exit 1
+          fi
+          if [ "$net8_seq" != "$netstd_seq" ]; then
+            echo "FAIL: cross-TFM seed divergence — the two packaged assets produced different seeded sequences"
+            exit 1
+          fi
+          echo "PASS: both assets produced an identical seeded sequence"
