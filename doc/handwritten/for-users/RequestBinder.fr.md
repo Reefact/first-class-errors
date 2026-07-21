@@ -44,6 +44,8 @@ unique qui les porte toutes.
 dotnet add package FirstClassErrors.RequestBinder
 ```
 
+> **Pas encore sur nuget.org.** `FirstClassErrors.RequestBinder` n'est pas encore publié — la commande ci-dessus fonctionnera une fois qu'il sera disponible.
+
 Il cible **.NET Standard 2.0** et voyage sur le même train de release que
 `FirstClassErrors`, à la même version — les deux se résolvent donc toujours
 ensemble.
