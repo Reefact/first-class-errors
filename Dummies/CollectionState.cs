@@ -244,11 +244,8 @@ internal sealed class CollectionState<T> {
     }
 
     private static AnyGenerationException Exhausted(RandomSource source, int reached, int target, string what) {
-        int?   seed    = source.Current.Seed;
-        string message = $"Could not generate a distinct collection of {Elements(target)}: {what} produced only {reached} distinct value(s) before the draw budget was exhausted. Loosen the count or widen the element generator's domain.";
-        if (seed is not null) {
-            message += $" The arbitrary values were seeded with {seed}; reproduce this run with Any.Reproducibly({seed}, ...).";
-        }
+        int    seed    = source.Current.Seed;
+        string message = $"Could not generate a distinct collection of {Elements(target)}: {what} produced only {reached} distinct value(s) before the draw budget was exhausted. Loosen the count or widen the element generator's domain. {source.ReplayHint(seed)}";
 
         return new AnyGenerationException(message, seed);
     }
