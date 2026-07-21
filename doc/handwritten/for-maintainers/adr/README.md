@@ -210,3 +210,5 @@ Optional supporting material:
 | [ADR-0025](0025-generate-strings-from-a-home-grown-regular-subset.md) | Generate matching strings from a home-grown regular subset | Proposed |
 | [ADR-0026](0026-rebase-testing-arbitrary-values-on-dummies.md) | Rebase the testing package's arbitrary values on Dummies | Accepted |
 | [ADR-0027](0027-repair-dependabot-pull-requests-within-a-risk-boundary.md) | Repair Dependabot pull requests within a risk boundary | Accepted |
+| [ADR-0028](0028-bridge-throwing-code-into-outcomes-through-a-guarded-try.md) | Bridge throwing code into outcomes through a guarded Try | Accepted |
+| [ADR-0029](0029-complete-the-outcome-try-async-surface-with-token-less-overloads.md) | Complete the Outcome.Try async surface with token-less overloads | Accepted |
