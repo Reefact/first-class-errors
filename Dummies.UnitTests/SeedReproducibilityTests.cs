@@ -30,8 +30,10 @@ public sealed class SeedReproducibilityTests {
         char     letter   = Any.Char().Generate();
         TimeSpan span     = Any.TimeSpan().Generate();
         DateTime instant  = Any.DateTime().Generate();
+#if NET8_0_OR_GREATER
         Int128   huge     = Any.Int128().Generate();
         Half     tiny     = Any.Half().Generate();
+#endif
         List<int>    list = Any.ListOf(Any.Int32().Between(0, 9)).WithCount(4).Generate();
         HashSet<int> set  = Any.SetOf(Any.Int32().Between(0, 99)).WithCount(3).Generate();
         int?         maybe = Any.Int32().Between(0, 9).OrNull().Generate();
@@ -39,7 +41,10 @@ public sealed class SeedReproducibilityTests {
 
         return string.Join("|", full, bounded, free, capped, shaped,
                            wide, unsigned, real, exact, flag, id, letter,
-                           span.Ticks, instant.Ticks, huge, tiny,
+                           span.Ticks, instant.Ticks,
+#if NET8_0_OR_GREATER
+                           huge, tiny,
+#endif
                            string.Join("-", list), string.Join("-", set.OrderBy(value => value)),
                            maybe?.ToString() ?? "null", coded);
     }

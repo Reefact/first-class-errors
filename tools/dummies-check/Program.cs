@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using System.Text.RegularExpressions;
 
 using Dummies;
 
@@ -37,6 +38,13 @@ internal static class Program {
     // asset, absent on the netstandard2.0 asset — the exact conditional surface the acceptance criteria name.
     private static readonly string[] ModernEntryPoints = { "DateOnly", "TimeOnly", "Int128", "UInt128", "Half" };
 
+    // Fixed seed for the cross-TFM golden sequence. SeedBatch draws from the COMMON surface under this seed, and
+    // Main prints the result as the SEEDBATCH banner. dummies.yml compares that banner byte-for-byte between the
+    // net8.0 and netstandard2.0 legs: new Random(seed) keeps the legacy algorithm on modern .NET, so the two
+    // packaged assets SHOULD agree seed-for-seed — but nothing else asserts it, and Random reserves the right to
+    // differ across framework versions. This turns that silent assumption into a checked contract (issue #215).
+    private const int CrossTfmSeed = 20260719;
+
     private static int Main() {
         Assembly dummies      = typeof(Any).Assembly;
         string   assetMoniker = dummies.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName ?? "(none)";
@@ -46,6 +54,11 @@ internal static class Program {
         Console.WriteLine($"CONSUMER_TFM={ConsumerTfm}");
         Console.WriteLine($"ASSET={assetMoniker}");
         Console.WriteLine($"RUNTIME={RuntimeInformation.FrameworkDescription}");
+
+        // The seeded common-surface batch for THIS asset, on one grep-safe line (every draw renders to printable
+        // ASCII). dummies.yml diffs it against the other leg's banner to prove cross-asset seed equality. Emitted
+        // here with the other identifying banners, before the checks run; a leg that no-oped would omit it.
+        Console.WriteLine($"SEEDBATCH={SeedBatch(Any.WithSeed(CrossTfmSeed))}");
 
         List<string> failures = new();
 
@@ -111,10 +124,34 @@ internal static class Program {
         HashSet<int> set = Any.SetOf(Any.Int32().Between(0, 99)).WithCount(3).Generate();
         Require(failures, set.Count == 3, $"SetOf(...).WithCount(3) produced {set.Count} elements");
 
+        // issue #215: exercise the common generators the packaged-asset guard never touched, so a break on either
+        // asset (a packaging or conditional-compilation regression) surfaces here — OrNull, array/sequence,
+        // pair/triple, StringMatching and enum draws. These also ride the SEEDBATCH cross-asset comparison below.
+        int? maybeDiscount = Any.Int32().Between(0, 100).OrNull().Generate();
+        Require(failures, maybeDiscount is null or (>= 0 and <= 100), $"Int32().Between(0,100).OrNull() produced {maybeDiscount}");
+
+        int[] trio = Any.ArrayOf(Any.Int32().Between(0, 9)).WithCount(3).Generate();
+        Require(failures, trio.Length == 3 && trio.All(value => value is >= 0 and <= 9), $"ArrayOf(...).WithCount(3) produced [{string.Join(",", trio)}]");
+
+        List<int> couple = Any.SequenceOf(Any.Int32().Between(0, 9)).WithCount(2).Generate().ToList();
+        Require(failures, couple.Count == 2 && couple.All(value => value is >= 0 and <= 9), $"SequenceOf(...).WithCount(2) produced {couple.Count} elements");
+
+        (int, string) pair = Any.PairOf(Any.Int32().Between(1, 9), Any.String().NonEmpty().WithMaxLength(4)).Generate();
+        Require(failures, pair.Item1 is >= 1 and <= 9 && pair.Item2.Length is >= 1 and <= 4, $"PairOf(...) produced ({pair.Item1},{pair.Item2})");
+
+        (bool, int, char) triple = Any.TripleOf(Any.Boolean(), Any.Int32().Between(0, 9), Any.Char()).Generate();
+        Require(failures, triple.Item2 is >= 0 and <= 9, $"TripleOf(...) produced ({triple.Item1},{triple.Item2},{triple.Item3})");
+
+        string code = Any.StringMatching("[A-Z]{3}-[0-9]{4}").Generate();
+        Require(failures, Regex.IsMatch(code, "^[A-Z]{3}-[0-9]{4}$"), $"StringMatching('[A-Z]{{3}}-[0-9]{{4}}') produced '{code}'");
+
+        Suit suit = Any.Enum<Suit>().Generate();
+        Require(failures, System.Enum.IsDefined(typeof(Suit), suit), $"Enum<Suit>() produced {suit}");
+
         // Seeded reproducibility: two contexts with the same seed replay an identical mixed sequence, and a
         // different seed diverges. This is the library's crown-jewel guarantee — verified here on each asset.
-        string first  = SeedBatch(Any.WithSeed(20260719));
-        string second = SeedBatch(Any.WithSeed(20260719));
+        string first  = SeedBatch(Any.WithSeed(CrossTfmSeed));
+        string second = SeedBatch(Any.WithSeed(CrossTfmSeed));
         Require(failures, first == second, "same-seed contexts diverged");
 
         string other = SeedBatch(Any.WithSeed(987654321));
@@ -123,6 +160,8 @@ internal static class Program {
 
     // Draws a fixed mixed sequence from the COMMON surface only (no modern types), so it compiles and runs
     // on both assets. Rendered with InvariantCulture to match the library's own culture-invariant rendering.
+    // Every part renders to printable ASCII (unconstrained Char/String draw ASCII letters and digits; the
+    // pattern and enum are ASCII by construction), so the joined line is safe to emit as a one-line banner.
     private static string SeedBatch(AnyContext any) {
         List<string> parts = new() {
             any.Int32().Generate().ToString(CultureInfo.InvariantCulture),
@@ -139,11 +178,32 @@ internal static class Program {
             any.DateTime().Generate().Ticks.ToString(CultureInfo.InvariantCulture)
         };
 
+        // issue #215: broaden the compared batch beyond scalars — OrNull, array/sequence, pair/triple,
+        // StringMatching and enum draws. Collections and tuples inherit THIS seeded context through their
+        // operand (which carries the source), so every added draw is still reproducible and cross-asset stable.
+        parts.Add(any.Int32().Between(0, 100).OrNull().Generate() is int discount ? discount.ToString(CultureInfo.InvariantCulture) : "null");
+        parts.Add(any.String().NonEmpty().WithMaxLength(8).OrNull().Generate() ?? "null");
+        parts.Add(string.Join(",", Any.ArrayOf(any.Int32().Between(0, 9)).WithCount(3).Generate().Select(value => value.ToString(CultureInfo.InvariantCulture))));
+        parts.Add(string.Join(",", Any.SequenceOf(any.Int32().Between(0, 9)).WithCount(2).Generate().Select(value => value.ToString(CultureInfo.InvariantCulture))));
+
+        (int, char) pair = Any.PairOf(any.Int32().Between(1, 9), any.Char()).Generate();
+        parts.Add($"({pair.Item1.ToString(CultureInfo.InvariantCulture)},{pair.Item2})");
+
+        (bool, int, char) triple = Any.TripleOf(any.Boolean(), any.Int32().Between(0, 9), any.Char()).Generate();
+        parts.Add($"({triple.Item1},{triple.Item2.ToString(CultureInfo.InvariantCulture)},{triple.Item3})");
+
+        parts.Add(any.StringMatching("[A-Z]{3}-[0-9]{4}").Generate());
+        parts.Add(any.Enum<Suit>().Generate().ToString());
+
         return string.Join("|", parts);
     }
 
     private static void Require(List<string> failures, bool condition, string message) {
         if (!condition) { failures.Add(message); }
     }
+
+    // A small closed enum for the enum-draw coverage (issue #215). Members render to stable, culture-independent
+    // names, keeping the enum part of the SEEDBATCH banner comparable across the two asset legs.
+    private enum Suit { Clubs, Diamonds, Hearts, Spades }
 
 }
