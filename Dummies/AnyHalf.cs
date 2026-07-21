@@ -193,9 +193,7 @@ public sealed class AnyHalf : IAny<Half>, IHasRandomSource, ICardinalityHint<Hal
 
     /// <inheritdoc />
     public Half Generate() {
-        SeededRandom current = _source.Current;
-
-        return (Half)_spec.Generate(current.Random, current.Seed);
+        return (Half)_spec.Generate(_source);
     }
 
 }

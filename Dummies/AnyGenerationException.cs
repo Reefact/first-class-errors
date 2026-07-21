@@ -37,9 +37,11 @@ public sealed class AnyGenerationException : AnyException {
     }
 
     /// <summary>
-    ///     The seed of the random context the failing generation drew from, when it is known — pass it to
-    ///     <c>Any.Reproducibly(seed, ...)</c> to replay the run. <c>null</c> when the failing generator does not draw
-    ///     from one of the library's random contexts.
+    ///     The seed of the random context the failing generation drew from, when it is known. Under the ambient context
+    ///     (<c>Any.Reproducibly(...)</c>) pass it to <c>Any.Reproducibly(seed, ...)</c> to replay the run; a value drawn
+    ///     from an <c>Any.WithSeed(seed)</c> context already replays deterministically on its own. The failure message
+    ///     states which of the two applies. <c>null</c> when the failing generator does not draw from one of the
+    ///     library's random contexts.
     /// </summary>
     public int? Seed { get; }
 

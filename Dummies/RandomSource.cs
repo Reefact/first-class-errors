@@ -12,6 +12,14 @@ internal abstract class RandomSource {
     /// <summary>The seeded pseudo-random generator to draw from right now.</summary>
     internal abstract SeededRandom Current { get; }
 
+    /// <summary>
+    ///     The reproduction guidance to append to a generation-failure message, phrased for this kind of source. The
+    ///     ambient source points at <c>Any.Reproducibly(seed, ...)</c>; a fixed <c>Any.WithSeed(...)</c> context replays
+    ///     deterministically on its own, so pinning the ambient source would not apply — naming the wrong instruction is
+    ///     exactly the misleading diagnostic this method exists to avoid.
+    /// </summary>
+    internal abstract string ReplayHint(int seed);
+
 }
 
 /// <summary>A pseudo-random generator that remembers the seed it was created from.</summary>
@@ -70,6 +78,10 @@ internal sealed class AmbientRandomSource : RandomSource {
         }
     }
 
+    internal override string ReplayHint(int seed) {
+        return $"The arbitrary values were seeded with {seed}; reproduce this run with Any.Reproducibly({seed}, ...).";
+    }
+
     #region Nested types
 
     private sealed class SeedScope : IDisposable {
@@ -108,6 +120,10 @@ internal sealed class FixedRandomSource : RandomSource {
     }
 
     internal override SeededRandom Current => _random;
+
+    internal override string ReplayHint(int seed) {
+        return $"The arbitrary values were drawn from Any.WithSeed({seed}), which already replays deterministically.";
+    }
 
 }
 
