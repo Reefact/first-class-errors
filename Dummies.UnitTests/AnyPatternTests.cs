@@ -274,4 +274,18 @@ public sealed class AnyPatternTests {
         Check.That(caught.Message).Contains("nested");
     }
 
+    [Theory(DisplayName = "A class range ending at U+FFFF terminates promptly and yields a member, instead of hanging.")]
+    [InlineData(@"[\u0020-\uFFFF]")]  // \uFFFF escape: drives the range's upper bound to the top of the char space...
+    [InlineData("[ -\uFFFF]")]        // ...and a literal U+FFFF member does the same; both once wrapped the 16-bit loop.
+    public async Task ClassRangeEndingAtMaxCharTerminates(string pattern) {
+        // Generate off-thread and race a deadline: a loop that wraps a 16-bit char past U+FFFF loses the race and
+        // fails the test instead of hanging the whole suite (mirrors the AnyGuid carry-wraparound guard).
+        Task<string> run   = Task.Run(() => Any.StringMatching(pattern).Generate());
+        Task         first = await Task.WhenAny(run, Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+        Check.That(first == run).IsTrue();
+
+        // The generated value is a genuine member of the class — the real .NET engine is the oracle.
+        AssertMatches(await run, pattern);
+    }
+
 }

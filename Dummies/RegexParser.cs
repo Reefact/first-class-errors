@@ -395,7 +395,9 @@ internal sealed class RegexParser {
                 _index++; // consume '-'
                 char high = ReadClassChar();
                 if (high < low) { throw Malformed($"character class range '{low}-{high}' is out of order"); }
-                for (char character = low; character <= high; character++) { set.Add(character); }
+                // Iterate an int, not a char: a class range may legitimately end at U+FFFF (reachable via a
+                // literal or the \uFFFF escape), and incrementing a 16-bit char past it wraps to 0x0000 and never ends.
+                for (int code = low; code <= high; code++) { set.Add((char)code); }
             } else {
                 set.Add(low);
             }

@@ -65,7 +65,9 @@ internal static class RegexAlphabet {
 
     private static char[] Range(char low, char high) {
         List<char> characters = new(high - low + 1);
-        for (char character = low; character <= high; character++) { characters.Add(character); }
+        // Iterate an int, not a char: a high of U+FFFF would wrap a 16-bit char back to 0x0000 and loop forever.
+        // Every current caller passes a bounded high, so this is defense in depth against a future wide range.
+        for (int code = low; code <= high; code++) { characters.Add((char)code); }
 
         return characters.ToArray();
     }
