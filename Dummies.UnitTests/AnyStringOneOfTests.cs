@@ -132,4 +132,26 @@ public sealed class AnyStringOneOfTests {
         Check.ThatCode(() => Any.String().OneOf("a", null!)).Throws<ArgumentException>();
     }
 
+    [Fact(DisplayName = "OneOf accepts a sequence, drawing only from its values.")]
+    public void AcceptsASequence() {
+        IEnumerable<string> vendors = new List<string> { "Apple", "Microsoft", "Google" };
+
+        HashSet<string> seen = new(Samples(Any.String().OneOf(vendors)));
+
+        Check.That(seen).IsOnlyMadeOf("Apple", "Microsoft", "Google");
+        Check.That(seen.Count).IsStrictlyGreaterThan(1);
+    }
+
+    [Fact(DisplayName = "The sequence overload validates null, empty and null elements like the params one.")]
+    public void SequenceOverloadValidates() {
+        Check.ThatCode(() => Any.String().OneOf((IEnumerable<string>)null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => Any.String().OneOf(Enumerable.Empty<string>())).Throws<ArgumentException>();
+        Check.ThatCode(() => Any.String().OneOf(new List<string> { "a", null! })).Throws<ArgumentException>();
+    }
+
+    [Fact(DisplayName = "The sequence overload is terminal too: it conflicts after another constraint.")]
+    public void SequenceOverloadIsTerminal() {
+        Check.ThatCode(() => Any.String().NonEmpty().OneOf(new List<string> { "a", "b" })).Throws<ConflictingAnyConstraintException>();
+    }
+
 }
