@@ -8,9 +8,10 @@ namespace Dummies;
 
 /// <summary>
 ///     The carrier of a single generation: the seeded random generator to draw from, and the buffer the nodes write
-///     into. <see cref="Append" /> enforces a hard length ceiling so a nested unbounded quantifier
-///     (<c>(a+)+</c> and the like) can never expand without bound — the value is built directly, never generated then
-///     retried, but the buffer is still guarded.
+///     into. <see cref="Append" /> enforces a hard length ceiling so no pattern can expand the buffer without bound —
+///     whether through a nested unbounded quantifier (<c>(a+)+</c> and the like) or through bounded quantifiers whose
+///     product is very large (<c>(a{1000}){1000}</c>). The value is built directly, never generated then retried, but
+///     the buffer is still guarded.
 /// </summary>
 internal sealed class RegexGenerationContext {
 
@@ -30,7 +31,7 @@ internal sealed class RegexGenerationContext {
 
     internal void Append(char character) {
         if (_builder.Length >= _limit) {
-            throw new AnyGenerationException($"The pattern produced a string longer than the {_limit}-character generation limit; a nested unbounded quantifier is expanding without bound.");
+            throw new AnyGenerationException($"The pattern produced a string longer than the {_limit}-character generation limit. This ceiling guards against runaway expansion; a pattern can reach it either through a nested unbounded quantifier (such as \"(a+)+\") or through bounded quantifiers whose product is very large (such as \"(a{{1000}}){{1000}}\").");
         }
 
         _builder.Append(character);

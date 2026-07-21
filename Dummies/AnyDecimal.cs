@@ -162,9 +162,7 @@ public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource, ICardinalityHi
 
     /// <inheritdoc />
     public decimal Generate() {
-        SeededRandom current = _source.Current;
-
-        return _spec.Generate(current.Random, current.Seed);
+        return _spec.Generate(_source);
     }
 
 }
