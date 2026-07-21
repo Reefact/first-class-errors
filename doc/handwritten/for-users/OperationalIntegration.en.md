@@ -44,6 +44,8 @@ For ambiguous declarations, project discovery, and worker behavior, see [Archite
 
 Install the CLI, build, then generate from the existing binaries:
 
+> **Not yet on nuget.org.** The `fce` CLI (`FirstClassErrors.Cli`) is not published yet — the install commands on this page (here and in the CI example below) will work once it ships.
+
 ```bash
 dotnet tool install --global FirstClassErrors.Cli
 dotnet build MyApp.sln -c Release

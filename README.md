@@ -118,11 +118,15 @@ To bind incoming requests into typed commands or queries at the primary-adapter 
 dotnet add package FirstClassErrors.RequestBinder
 ```
 
+> **Not yet on nuget.org.** `FirstClassErrors.RequestBinder` is not published yet — the command above will work once it ships.
+
 To generate documentation, install the CLI:
 
 ```bash
 dotnet tool install --global FirstClassErrors.Cli
 ```
+
+> **Not yet on nuget.org.** `FirstClassErrors.Cli` is not published yet — the command above will work once it ships.
 
 Then follow the [Getting Started guide](doc/handwritten/for-users/GettingStarted.en.md) to create and generate your first documented error.
 

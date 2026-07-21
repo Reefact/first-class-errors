@@ -42,6 +42,8 @@ single envelope error carrying all of them.
 dotnet add package FirstClassErrors.RequestBinder
 ```
 
+> **Not yet on nuget.org.** `FirstClassErrors.RequestBinder` is not published yet — the command above will work once it ships.
+
 It targets **.NET Standard 2.0** and ships on the same release train as
 `FirstClassErrors`, at the same version — so the two always resolve together.
 

@@ -44,6 +44,8 @@ Pour les déclarations ambiguës, la découverte de projets et le fonctionnement
 
 Installez le CLI, compilez, puis générez depuis les binaires existants :
 
+> **Pas encore sur nuget.org.** Le CLI `fce` (`FirstClassErrors.Cli`) n'est pas encore publié — les commandes d'installation de cette page (ici et dans l'exemple CI ci-dessous) fonctionneront une fois qu'il sera disponible.
+
 ```bash
 dotnet tool install --global FirstClassErrors.Cli
 dotnet build MyApp.sln -c Release

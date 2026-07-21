@@ -27,6 +27,8 @@ Install the documentation CLI once on your machine:
 dotnet tool install --global FirstClassErrors.Cli
 ```
 
+> **Not yet on nuget.org.** `FirstClassErrors.Cli` is not published yet — the command above will work once it ships.
+
 ## 2. Opt the project into documentation generation
 
 Add this property directly to the project file that contains your errors:
