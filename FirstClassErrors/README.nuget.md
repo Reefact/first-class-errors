@@ -73,6 +73,8 @@ The documentation generator ships as a .NET tool,
 [`FirstClassErrors.Cli`](https://www.nuget.org/packages/FirstClassErrors.Cli), so a
 pipeline can produce the error catalog as a build artifact:
 
+> **Not yet on nuget.org.** `FirstClassErrors.Cli` is not published yet — the commands below will work once it ships.
+
     dotnet tool install --global FirstClassErrors.Cli
     dotnet build MyApp.sln -c Release
     fce generate --solution MyApp.sln --no-build \
