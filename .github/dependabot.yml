@@ -26,3 +26,11 @@ updates:
     open-pull-requests-limit: 10
     commit-message:
       prefix: "ci"
+    # codeql-action ships init/analyze/upload-sarif as separate actions that MUST run the same version: the
+    # analyze step aborts on a database created by a different version ("Loaded a configuration file for
+    # version 'X', but running version 'Y'"), so a lone init or analyze bump leaves codeql.yml mismatched and
+    # fails the "CodeQL analyze (C#)" job. Group them into one pull request so every step moves in lockstep.
+    groups:
+      codeql-action:
+        patterns:
+          - "github/codeql-action*"
