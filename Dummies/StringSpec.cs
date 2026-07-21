@@ -84,6 +84,16 @@ internal sealed class StringSpec {
         _casingConstraint = casingConstraint;
     }
 
+    /// <summary>
+    ///     Whether no constraint has been declared yet — the pristine state a generator from <see cref="Any.String" />
+    ///     starts in, before any fluent constraint narrows it. Used to keep a terminal constraint (<c>OneOf</c>) from
+    ///     being combined with the shaping ones.
+    /// </summary>
+    internal bool IsUnconstrained =>
+        _exactLength is null && _minLength == 0 && _maxLength is null &&
+        _prefix is null && _suffix is null && _fragments.Count == 0 &&
+        _charset is null && _casing is null;
+
     /// <summary>Fixes the exact length; declared once per generator.</summary>
     internal StringSpec WithExactLength(int length, string applying) {
         if (_exactConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_exactConstraint} is already defined."); }
