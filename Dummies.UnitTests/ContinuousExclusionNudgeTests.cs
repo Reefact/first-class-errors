@@ -71,7 +71,7 @@ public sealed class ContinuousExclusionNudgeTests {
         }
     }
 
-    [Fact(DisplayName = "A range whose every representable value is excluded fails with a seeded AnyGenerationException, not by budget exhaustion.")]
+    [Fact(DisplayName = "A range whose every representable value is excluded fails with a seeded AnyGenerationException whose replay hint points at Any.WithSeed, not the inapplicable Any.Reproducibly.")]
     public void ExhaustedRangeThrowsSeededGenerationException() {
         Half min = (Half)1f;
         Half max = (Half)1.001f;   // exactly two representable Half values in [min, max]
@@ -81,7 +81,10 @@ public sealed class ContinuousExclusionNudgeTests {
 
         Check.That(thrown.Seed).IsEqualTo(207);
         Check.That(thrown.Message).Contains("207");
-        Check.That(thrown.Message).Contains("Any.Reproducibly(");
+        // The draw came from Any.WithSeed(207) — a fixed context that replays by itself — so the hint must name it,
+        // not the ambient Any.Reproducibly(...) instruction, which would not reproduce this run.
+        Check.That(thrown.Message).Contains("Any.WithSeed(207)");
+        Check.That(thrown.Message).Not.Contains("Any.Reproducibly(");
     }
 
     [Fact(DisplayName = "The nudge stays reproducible: the same seed yields the same value across runs.")]

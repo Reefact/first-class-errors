@@ -186,9 +186,7 @@ public sealed class AnySingle : IAny<float>, IHasRandomSource, ICardinalityHint<
 
     /// <inheritdoc />
     public float Generate() {
-        SeededRandom current = _source.Current;
-
-        return (float)_spec.Generate(current.Random, current.Seed);
+        return (float)_spec.Generate(_source);
     }
 
 }

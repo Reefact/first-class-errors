@@ -134,7 +134,10 @@ internal sealed class DecimalIntervalSpec {
     }
 
     /// <summary>Draws one value satisfying the whole specification.</summary>
-    internal decimal Generate(Random random, int seed) {
+    internal decimal Generate(RandomSource source) {
+        SeededRandom current = source.Current;
+        Random       random  = current.Random;
+
         if (_effectiveAllowed is not null) {
             return _effectiveAllowed[random.Next(_effectiveAllowed.Count)];
         }
@@ -165,8 +168,8 @@ internal sealed class DecimalIntervalSpec {
             decimal next = Clamped(candidate + SmallestStep);
             if (next == candidate || budget-- == 0) {
                 throw new AnyGenerationException(
-                    $"Generation failed: no {_typeName} value near the drawn candidate satisfies the exclusions. The arbitrary values were seeded with {seed}; reproduce this run with Any.Reproducibly({seed}, ...).",
-                    seed,
+                    $"Generation failed: no {_typeName} value near the drawn candidate satisfies the exclusions. {source.ReplayHint(current.Seed)}",
+                    current.Seed,
                     new InvalidOperationException("The exclusion nudge could not leave the excluded point within the allowed range."));
             }
 

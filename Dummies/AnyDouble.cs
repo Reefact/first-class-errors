@@ -175,9 +175,7 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource, ICardinalityHint
 
     /// <inheritdoc />
     public double Generate() {
-        SeededRandom current = _source.Current;
-
-        return _spec.Generate(current.Random, current.Seed);
+        return _spec.Generate(_source);
     }
 
 }

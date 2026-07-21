@@ -104,6 +104,38 @@ public sealed class CompositionTests {
         Check.That(caught.InnerException).IsInstanceOf<InvalidOperationException>();
     }
 
+    [Fact(DisplayName = "A composer failure over ambient generators reports the Any.Reproducibly replay hint.")]
+    public void CombineOverAmbientGeneratorsReportsReproduciblyHint() {
+        IAny<string> generator = Any.Combine<int, int, string>(
+            Any.Int32().Between(1, 3),
+            Any.Int32().Between(4, 6),
+            (first, second) => throw new InvalidOperationException($"rejected {first}/{second}"));
+
+        AnyGenerationException caught = Assert.Throws<AnyGenerationException>(
+            () => Any.Reproducibly(31415, () => generator.Generate(), _ => { }));
+
+        Check.That(caught.Seed).IsEqualTo(31415);
+        Check.That(caught.Message).Contains("Any.Reproducibly(31415");
+        Check.That(caught.Message).Not.Contains("Any.WithSeed(");
+    }
+
+    [Fact(DisplayName = "A composer failure over an Any.WithSeed(...) context reports the WithSeed replay hint, not the inapplicable Any.Reproducibly instruction.")]
+    public void CombineOverFixedContextReportsWithSeedHint() {
+        AnyContext seeded = Any.WithSeed(4242);
+
+        IAny<string> generator = Any.Combine<int, int, string>(
+            seeded.Int32().Between(1, 3),
+            seeded.Int32().Between(4, 6),
+            (first, second) => throw new InvalidOperationException($"rejected {first}/{second}"));
+
+        AnyGenerationException caught = Assert.Throws<AnyGenerationException>(() => generator.Generate());
+
+        Check.That(caught.Seed).IsEqualTo(4242);
+        Check.That(caught.Message).Contains("Combine(...)");
+        Check.That(caught.Message).Contains("Any.WithSeed(4242)");
+        Check.That(caught.Message).Not.Contains("Any.Reproducibly(");
+    }
+
     [Fact(DisplayName = "Combine composes four through eight parts, passing every constrained part to the lambda.")]
     public void CombineSupportsHigherArities() {
         IAny<int> part = Any.Int32().Between(1, 9);

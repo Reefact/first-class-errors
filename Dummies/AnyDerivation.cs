@@ -64,8 +64,8 @@ internal static class AnyDerivation {
         } catch (Exception exception) {
             int?   seed    = source?.Current.Seed;
             string message = $"Generation failed: {failure} ({exception.GetType().Name}: {exception.Message}).";
-            if (seed is not null) {
-                message += $" The arbitrary values were seeded with {seed}; reproduce this run with Any.Reproducibly({seed}, ...).";
+            if (source is not null) {
+                message += $" {source.ReplayHint(seed!.Value)}";
             }
 
             throw new AnyGenerationException(message, seed, exception);
