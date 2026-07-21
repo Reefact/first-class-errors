@@ -224,6 +224,23 @@ public sealed class AnyString : IAny<string>, IHasRandomSource {
         return new AnyStringOneOf(_source, values.Distinct(StringComparer.Ordinal).ToArray());
     }
 
+    /// <summary>
+    ///     Draws the string from an explicit, fixed set of <paramref name="values" /> — the
+    ///     <see cref="IEnumerable{T}" /> counterpart of <see cref="OneOf(string[])" />, for a set already held as a
+    ///     sequence (a list, a LINQ result, values loaded at test setup). Same terminal contract: the values are the
+    ///     whole specification, duplicates collapse, and the draw is uniform and reproducible under a seed.
+    /// </summary>
+    /// <param name="values">The values the generated string is drawn from; duplicates are ignored.</param>
+    /// <returns>A terminal generator drawing from <paramref name="values" />.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="values" /> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="values" /> is empty or contains a <c>null</c> element.</exception>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when a constraint is already declared: a terminal value set cannot be combined with another constraint.</exception>
+    public AnyStringOneOf OneOf(IEnumerable<string> values) {
+        if (values is null) { throw new ArgumentNullException(nameof(values)); }
+
+        return OneOf(values as string[] ?? values.ToArray());
+    }
+
     /// <inheritdoc />
     public string Generate() {
         return _spec.Generate(_source.Current.Random);
