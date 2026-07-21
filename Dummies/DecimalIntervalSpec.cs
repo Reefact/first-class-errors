@@ -141,8 +141,16 @@ internal sealed class DecimalIntervalSpec {
 
         if (_min == _max) { return _min; }
 
-        // A uniform-enough fraction in [0, 1): 93 random bits over the full decimal mantissa scale.
-        decimal fraction = new decimal(random.Next(), random.Next(), random.Next(), false, 28) / MaxFraction;
+        // A uniform fraction in [0, 1] over the full 96-bit mantissa scale. NextBytes fills all three
+        // limbs — including each limb's top bit, which three non-negative Random.Next() draws would pin
+        // to zero, capping the fraction near 0.5 and leaving the upper half of every range unreachable.
+        byte[] mantissa = new byte[12];
+        random.NextBytes(mantissa);
+        decimal fraction = new decimal(
+            BitConverter.ToInt32(mantissa, 0),
+            BitConverter.ToInt32(mantissa, 4),
+            BitConverter.ToInt32(mantissa, 8),
+            false, 28) / MaxFraction;
         // Sample around the midpoint so the span (max - min) never overflows on wide ranges.
         decimal mid       = _min / 2 + _max / 2;
         decimal half      = _max / 2 - _min / 2;
