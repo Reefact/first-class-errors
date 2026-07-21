@@ -81,7 +81,7 @@ jobs:
   framework-floor:
     name: Library on the .NET Framework 4.7.2 floor
     runs-on: windows-latest
-    # Restore + build + test of three small projects; cap a hung run like the other jobs.
+    # Restore + build + test of four small projects; cap a hung run like the other jobs.
     timeout-minutes: 15
     steps:
       - name: Checkout
@@ -95,11 +95,13 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      # Only the three library test projects carry the net472 leg (EnableNet472Floor adds it): the tooling test
+      # Only these library test projects carry the net472 leg (EnableNet472Floor adds it): the tooling test
       # projects (Roslyn / GenDoc / Cli) stay net10-only by design, and RequestBinder.UnitTests stays net10-only
       # because its fixtures bind DateOnly, a .NET 6+ type absent from net472. RequestBinder is still floored here
-      # through its property tests. A per-project loop (not a solution-wide -f net472, which would force the TFM
-      # onto the net10-only projects and fail) keeps the net472 scope exactly these three.
+      # through its property tests, and Dummies through its own contract suite (Dummies.UnitTests), running on the
+      # netstandard2.0 asset .NET Framework consumers load — its net8-only tests are conditioned out (issue #215).
+      # A per-project loop (not a solution-wide -f net472, which would force the TFM onto the net10-only projects
+      # and fail) keeps the net472 scope exactly these four.
       - name: Test the netstandard2.0 libraries on .NET Framework 4.7.2
         shell: bash
         run: |
@@ -107,7 +109,8 @@ jobs:
           for proj in \
             FirstClassErrors.UnitTests \
             FirstClassErrors.PropertyTests \
-            FirstClassErrors.RequestBinder.PropertyTests ; do
+            FirstClassErrors.RequestBinder.PropertyTests \
+            Dummies.UnitTests ; do
             echo "::group::$proj (net472)"
             dotnet test "$proj/$proj.csproj" -c Release -f net472 -p:EnableNet472Floor=true \
               --logger "console;verbosity=normal"

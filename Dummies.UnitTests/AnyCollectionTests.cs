@@ -257,7 +257,9 @@ public sealed class AnyCollectionTests {
         Check.ThatCode(() => Any.SetOf(Any.Decimal().OneOf(1m, 2m)).WithCount(3)).Throws<ConflictingAnyConstraintException>();
         Check.ThatCode(() => Any.SetOf(Any.Double().OneOf(1d, 2d)).WithCount(3)).Throws<ConflictingAnyConstraintException>();
         Check.ThatCode(() => Any.SetOf(Any.Single().OneOf(1f, 2f)).WithCount(3)).Throws<ConflictingAnyConstraintException>();
+#if NET8_0_OR_GREATER
         Check.ThatCode(() => Any.SetOf(Any.Int128().Between(1, 3)).WithCount(5)).Throws<ConflictingAnyConstraintException>();
+#endif
 
         // Membership travels with cardinality: an out-of-domain contained value extends the effective domain...
         for (int i = 0; i < SampleCount; i++) {
