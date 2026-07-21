@@ -443,13 +443,14 @@ public static class Any {
         if (second is null) { throw new ArgumentNullException(nameof(second)); }
         if (compose is null) { throw new ArgumentNullException(nameof(compose)); }
 
-        RandomSource? source = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second);
+        RandomSource? source       = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second);
+        bool          reproducible = AnyDerivation.IsReproducible(first) && AnyDerivation.IsReproducible(second);
 
-        return new DerivedAny<TResult>(source, () => {
+        return new DerivedAny<TResult>(source, reproducible, () => {
             T1 firstValue  = first.Generate();
             T2 secondValue = second.Generate();
 
-            return AnyDerivation.Invoke(() => compose(firstValue, secondValue), source, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)})");
+            return AnyDerivation.Invoke(() => compose(firstValue, secondValue), source, reproducible, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)})");
         });
     }
 
@@ -473,14 +474,15 @@ public static class Any {
         if (third is null) { throw new ArgumentNullException(nameof(third)); }
         if (compose is null) { throw new ArgumentNullException(nameof(compose)); }
 
-        RandomSource? source = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second) ?? AnyDerivation.SourceOf(third);
+        RandomSource? source       = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second) ?? AnyDerivation.SourceOf(third);
+        bool          reproducible = AnyDerivation.IsReproducible(first) && AnyDerivation.IsReproducible(second) && AnyDerivation.IsReproducible(third);
 
-        return new DerivedAny<TResult>(source, () => {
+        return new DerivedAny<TResult>(source, reproducible, () => {
             T1 firstValue  = first.Generate();
             T2 secondValue = second.Generate();
             T3 thirdValue  = third.Generate();
 
-            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue), source, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)})");
+            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue), source, reproducible, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)})");
         });
     }
 
@@ -506,15 +508,16 @@ public static class Any {
         if (fourth is null) { throw new ArgumentNullException(nameof(fourth)); }
         if (compose is null) { throw new ArgumentNullException(nameof(compose)); }
 
-        RandomSource? source = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second) ?? AnyDerivation.SourceOf(third) ?? AnyDerivation.SourceOf(fourth);
+        RandomSource? source       = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second) ?? AnyDerivation.SourceOf(third) ?? AnyDerivation.SourceOf(fourth);
+        bool          reproducible = AnyDerivation.IsReproducible(first) && AnyDerivation.IsReproducible(second) && AnyDerivation.IsReproducible(third) && AnyDerivation.IsReproducible(fourth);
 
-        return new DerivedAny<TResult>(source, () => {
+        return new DerivedAny<TResult>(source, reproducible, () => {
             T1 firstValue  = first.Generate();
             T2 secondValue = second.Generate();
             T3 thirdValue  = third.Generate();
             T4 fourthValue = fourth.Generate();
 
-            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue), source, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)})");
+            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue), source, reproducible, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)})");
         });
     }
 
@@ -543,16 +546,17 @@ public static class Any {
         if (fifth is null) { throw new ArgumentNullException(nameof(fifth)); }
         if (compose is null) { throw new ArgumentNullException(nameof(compose)); }
 
-        RandomSource? source = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second) ?? AnyDerivation.SourceOf(third) ?? AnyDerivation.SourceOf(fourth) ?? AnyDerivation.SourceOf(fifth);
+        RandomSource? source       = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second) ?? AnyDerivation.SourceOf(third) ?? AnyDerivation.SourceOf(fourth) ?? AnyDerivation.SourceOf(fifth);
+        bool          reproducible = AnyDerivation.IsReproducible(first) && AnyDerivation.IsReproducible(second) && AnyDerivation.IsReproducible(third) && AnyDerivation.IsReproducible(fourth) && AnyDerivation.IsReproducible(fifth);
 
-        return new DerivedAny<TResult>(source, () => {
+        return new DerivedAny<TResult>(source, reproducible, () => {
             T1 firstValue  = first.Generate();
             T2 secondValue = second.Generate();
             T3 thirdValue  = third.Generate();
             T4 fourthValue = fourth.Generate();
             T5 fifthValue  = fifth.Generate();
 
-            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue, fifthValue), source, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)}, {AnyDerivation.Display(fifthValue)})");
+            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue, fifthValue), source, reproducible, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)}, {AnyDerivation.Display(fifthValue)})");
         });
     }
 
@@ -584,9 +588,10 @@ public static class Any {
         if (sixth is null) { throw new ArgumentNullException(nameof(sixth)); }
         if (compose is null) { throw new ArgumentNullException(nameof(compose)); }
 
-        RandomSource? source = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second) ?? AnyDerivation.SourceOf(third) ?? AnyDerivation.SourceOf(fourth) ?? AnyDerivation.SourceOf(fifth) ?? AnyDerivation.SourceOf(sixth);
+        RandomSource? source       = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second) ?? AnyDerivation.SourceOf(third) ?? AnyDerivation.SourceOf(fourth) ?? AnyDerivation.SourceOf(fifth) ?? AnyDerivation.SourceOf(sixth);
+        bool          reproducible = AnyDerivation.IsReproducible(first) && AnyDerivation.IsReproducible(second) && AnyDerivation.IsReproducible(third) && AnyDerivation.IsReproducible(fourth) && AnyDerivation.IsReproducible(fifth) && AnyDerivation.IsReproducible(sixth);
 
-        return new DerivedAny<TResult>(source, () => {
+        return new DerivedAny<TResult>(source, reproducible, () => {
             T1 firstValue  = first.Generate();
             T2 secondValue = second.Generate();
             T3 thirdValue  = third.Generate();
@@ -594,7 +599,7 @@ public static class Any {
             T5 fifthValue  = fifth.Generate();
             T6 sixthValue  = sixth.Generate();
 
-            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue, fifthValue, sixthValue), source, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)}, {AnyDerivation.Display(fifthValue)}, {AnyDerivation.Display(sixthValue)})");
+            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue, fifthValue, sixthValue), source, reproducible, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)}, {AnyDerivation.Display(fifthValue)}, {AnyDerivation.Display(sixthValue)})");
         });
     }
 
@@ -631,9 +636,10 @@ public static class Any {
         if (seventh is null) { throw new ArgumentNullException(nameof(seventh)); }
         if (compose is null) { throw new ArgumentNullException(nameof(compose)); }
 
-        RandomSource? source = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second) ?? AnyDerivation.SourceOf(third) ?? AnyDerivation.SourceOf(fourth) ?? AnyDerivation.SourceOf(fifth) ?? AnyDerivation.SourceOf(sixth) ?? AnyDerivation.SourceOf(seventh);
+        RandomSource? source       = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second) ?? AnyDerivation.SourceOf(third) ?? AnyDerivation.SourceOf(fourth) ?? AnyDerivation.SourceOf(fifth) ?? AnyDerivation.SourceOf(sixth) ?? AnyDerivation.SourceOf(seventh);
+        bool          reproducible = AnyDerivation.IsReproducible(first) && AnyDerivation.IsReproducible(second) && AnyDerivation.IsReproducible(third) && AnyDerivation.IsReproducible(fourth) && AnyDerivation.IsReproducible(fifth) && AnyDerivation.IsReproducible(sixth) && AnyDerivation.IsReproducible(seventh);
 
-        return new DerivedAny<TResult>(source, () => {
+        return new DerivedAny<TResult>(source, reproducible, () => {
             T1 firstValue   = first.Generate();
             T2 secondValue  = second.Generate();
             T3 thirdValue   = third.Generate();
@@ -642,7 +648,7 @@ public static class Any {
             T6 sixthValue   = sixth.Generate();
             T7 seventhValue = seventh.Generate();
 
-            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue, fifthValue, sixthValue, seventhValue), source, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)}, {AnyDerivation.Display(fifthValue)}, {AnyDerivation.Display(sixthValue)}, {AnyDerivation.Display(seventhValue)})");
+            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue, fifthValue, sixthValue, seventhValue), source, reproducible, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)}, {AnyDerivation.Display(fifthValue)}, {AnyDerivation.Display(sixthValue)}, {AnyDerivation.Display(seventhValue)})");
         });
     }
 
@@ -683,9 +689,10 @@ public static class Any {
         if (eighth is null) { throw new ArgumentNullException(nameof(eighth)); }
         if (compose is null) { throw new ArgumentNullException(nameof(compose)); }
 
-        RandomSource? source = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second) ?? AnyDerivation.SourceOf(third) ?? AnyDerivation.SourceOf(fourth) ?? AnyDerivation.SourceOf(fifth) ?? AnyDerivation.SourceOf(sixth) ?? AnyDerivation.SourceOf(seventh) ?? AnyDerivation.SourceOf(eighth);
+        RandomSource? source       = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second) ?? AnyDerivation.SourceOf(third) ?? AnyDerivation.SourceOf(fourth) ?? AnyDerivation.SourceOf(fifth) ?? AnyDerivation.SourceOf(sixth) ?? AnyDerivation.SourceOf(seventh) ?? AnyDerivation.SourceOf(eighth);
+        bool          reproducible = AnyDerivation.IsReproducible(first) && AnyDerivation.IsReproducible(second) && AnyDerivation.IsReproducible(third) && AnyDerivation.IsReproducible(fourth) && AnyDerivation.IsReproducible(fifth) && AnyDerivation.IsReproducible(sixth) && AnyDerivation.IsReproducible(seventh) && AnyDerivation.IsReproducible(eighth);
 
-        return new DerivedAny<TResult>(source, () => {
+        return new DerivedAny<TResult>(source, reproducible, () => {
             T1 firstValue   = first.Generate();
             T2 secondValue  = second.Generate();
             T3 thirdValue   = third.Generate();
@@ -695,7 +702,7 @@ public static class Any {
             T7 seventhValue = seventh.Generate();
             T8 eighthValue  = eighth.Generate();
 
-            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue, fifthValue, sixthValue, seventhValue, eighthValue), source, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)}, {AnyDerivation.Display(fifthValue)}, {AnyDerivation.Display(sixthValue)}, {AnyDerivation.Display(seventhValue)}, {AnyDerivation.Display(eighthValue)})");
+            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue, fifthValue, sixthValue, seventhValue, eighthValue), source, reproducible, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)}, {AnyDerivation.Display(fifthValue)}, {AnyDerivation.Display(sixthValue)}, {AnyDerivation.Display(seventhValue)}, {AnyDerivation.Display(eighthValue)})");
         });
     }
 

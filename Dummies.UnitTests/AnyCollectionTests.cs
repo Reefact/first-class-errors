@@ -417,6 +417,21 @@ public sealed class AnyCollectionTests {
         Check.That(caught.Message).Not.Contains("not reproducible from this seed alone");
     }
 
+    [Fact(DisplayName = "Exhaustion over a Combine that mixes a foreign operand is qualified, even though a library operand supplies a non-null source.")]
+    public void ExhaustionOverACombineMixingAForeignOperandQualifiesTheHint() {
+        // Any.Combine keeps the library operand's non-null source (SourceOf(first) ?? SourceOf(second)), but the
+        // composed value follows the foreign draw, so the elements are not reproducible from the reported seed. The
+        // discriminator is full reproducibility, not merely a non-null source.
+        IAny<int> mixed = Any.Combine(new ForeignPair(), Any.Int32(), (foreign, _) => foreign);
+
+        AnyGenerationException caught = Assert.Throws<AnyGenerationException>(
+            () => Any.Reproducibly(777, () => Any.SetOf(mixed).WithCount(5).Generate(), _ => { }));
+
+        Check.That(caught.Seed).IsEqualTo(777);
+        Check.That(caught.Message).Contains("not reproducible from this seed alone");
+        Check.That(caught.Message).Not.Contains("The arbitrary values were seeded with");
+    }
+
     #region Nested types
 
     private sealed class ModuloComparer : IEqualityComparer<int> {

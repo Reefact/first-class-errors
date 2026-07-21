@@ -21,12 +21,12 @@ internal abstract class RandomSource {
     internal abstract string ReplayHint(int seed);
 
     /// <summary>
-    ///     The reproduction guidance for a distinct-collection failure whose count and layout this source seeded but
-    ///     whose elements are drawn from a generator that does not draw from this source — a foreign
-    ///     <see cref="IAny{T}" />, or a derivation built over one. It names the same replay mechanism as
-    ///     <see cref="ReplayHint" /> for the count and layout, but scopes the promise to them: the element sequence is
-    ///     not reproducible from this seed alone, so claiming a full replay would be the misleading diagnostic the seed
-    ///     reporting exists to avoid.
+    ///     The reproduction guidance for a failure whose seeded draws this source drove but whose result also depends on
+    ///     a generator that does not draw from this source — a foreign <see cref="IAny{T}" />, or a derivation built over
+    ///     one (including a <c>Combine</c> that mixes a foreign operand with a sourced one). It names the same replay
+    ///     mechanism as <see cref="ReplayHint" /> for the seeded part, but scopes the promise to it: the foreign values
+    ///     are not reproducible from this seed alone, so claiming a full replay would be the misleading diagnostic the
+    ///     seed reporting exists to avoid.
     /// </summary>
     internal abstract string PartialReplayHint(int seed);
 
@@ -93,7 +93,7 @@ internal sealed class AmbientRandomSource : RandomSource {
     }
 
     internal override string PartialReplayHint(int seed) {
-        return $"The collection's count and layout were seeded with {seed} (Any.Reproducibly({seed}, ...)), but its elements come from a generator that does not draw from this source, so the element sequence is not reproducible from this seed alone.";
+        return $"The seeded draws were made with {seed} (Any.Reproducibly({seed}, ...)), but some values come from a generator that does not draw from this source, so they are not reproducible from this seed alone.";
     }
 
     #region Nested types
@@ -140,7 +140,7 @@ internal sealed class FixedRandomSource : RandomSource {
     }
 
     internal override string PartialReplayHint(int seed) {
-        return $"The collection's count and layout were drawn from Any.WithSeed({seed}), but its elements come from a generator that does not draw from it, so the element sequence is not reproducible from this seed alone.";
+        return $"The seeded draws were made from Any.WithSeed({seed}), but some values come from a generator that does not draw from it, so they are not reproducible from this seed alone.";
     }
 
 }
@@ -154,6 +154,19 @@ internal sealed class FixedRandomSource : RandomSource {
 internal interface IHasRandomSource {
 
     RandomSource? Source { get; }
+
+}
+
+/// <summary>
+///     Implemented by derived generators (<c>As</c>, <c>Combine</c>) to report whether every operand they draw from is
+///     itself reproducible. A single source-less (foreign) operand makes the derived value unreproducible even when
+///     another operand supplies a non-null <see cref="IHasRandomSource.Source" /> for the replay hint to name — so a
+///     full-replay promise must be withheld. Generators that draw only from their own source do not implement this and
+///     are treated as reproducible whenever they carry a source.
+/// </summary>
+internal interface IReproducibilityHint {
+
+    bool DrawsOnlyFromSource { get; }
 
 }
 

@@ -33,9 +33,10 @@ public static class NullableExtensions {
         where T : struct {
         if (generator is null) { throw new ArgumentNullException(nameof(generator)); }
 
-        RandomSource? source = AnyDerivation.SourceOf(generator);
+        RandomSource? source       = AnyDerivation.SourceOf(generator);
+        bool          reproducible = AnyDerivation.IsReproducible(generator);
 
-        return new DerivedAny<T?>(source, () => {
+        return new DerivedAny<T?>(source, reproducible, () => {
             RandomSource working = source ?? AmbientRandomSource.Instance;
 
             return working.Current.Random.Next(2) == 0 ? (T?)null : generator.Generate();
@@ -68,9 +69,10 @@ public static class NullableReferenceExtensions {
         where T : class {
         if (generator is null) { throw new ArgumentNullException(nameof(generator)); }
 
-        RandomSource? source = AnyDerivation.SourceOf(generator);
+        RandomSource? source       = AnyDerivation.SourceOf(generator);
+        bool          reproducible = AnyDerivation.IsReproducible(generator);
 
-        return new DerivedAny<T?>(source, () => {
+        return new DerivedAny<T?>(source, reproducible, () => {
             RandomSource working = source ?? AmbientRandomSource.Instance;
 
             return working.Current.Random.Next(2) == 0 ? (T?)null : generator.Generate();
