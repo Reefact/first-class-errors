@@ -33,9 +33,18 @@ format does not need it.
 
 Other commands:
 
+- `fce catalog update` — create or refresh the committed catalog baseline (deliberately accept the current contract)
+- `fce catalog diff` — compare the catalog against the baseline and report the changes
 - `fce config init` — create an `fce.json` so options need not be repeated on every run
-- `fce config show` — print the resolved configuration
-- `fce renderer add|list|remove` — manage custom renderer libraries
+- `fce config show` — print the raw configuration file (no defaults merged in)
+- `fce config renderer add|remove|list` — manage custom renderer libraries
+
+`fce catalog update`/`diff` track your error catalog as a versioned contract, so a breaking
+change to your errors is caught in review rather than in production — see the
+catalog-versioning guides:
+[overview](https://github.com/Reefact/first-class-errors/blob/main/doc/handwritten/for-users/CatalogVersioning.en.md),
+[command reference](https://github.com/Reefact/first-class-errors/blob/main/doc/handwritten/for-users/CatalogVersioningReference.en.md),
+[CI/CD integration](https://github.com/Reefact/first-class-errors/blob/main/doc/handwritten/for-users/CatalogVersioningCI.en.md)
 
 Run `fce --help` or `fce generate --help` for the full option list.
 
