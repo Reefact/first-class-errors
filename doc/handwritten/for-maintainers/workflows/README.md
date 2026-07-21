@@ -89,6 +89,7 @@ here instead of being repeated on every page.
 | Workflow | Purpose |
 | --- | --- |
 | [`dependabot-automerge`](dependabot-automerge.en.md) | Enable auto-merge on Dependabot patch/minor updates; leave majors for a human. |
+| [`dependabot-autofix`](dependabot-autofix.en.md) | Advisory Claude triage of a failing Dependabot PR: verdict + a ready-to-apply patch as one comment. Never pushes or merges. |
 
 ## Related maintainer docs
 
