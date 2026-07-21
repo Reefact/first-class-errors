@@ -40,6 +40,14 @@ matter — and that is the point.
   currency code, a well-known name). A *terminal* generator, like `StringMatching`: the
   set is the whole specification, duplicates collapse, and the draw is uniform and
   reproducible under a seed.
+- **Any value from an explicit pool**: `Any.OneOf(eur, usd, gbp)` draws one value from a
+  caller-supplied set of arbitrary values or domain objects, and `Any.ElementOf(orders)`
+  does the same from a collection already held (a list, a LINQ result). This is the
+  seed-aware answer to "any of these" — replacing a hand-rolled
+  `pool[new Random().Next(...)]` that would ignore the seed and break `Reproducibly`.
+  Terminal and uniform like the string set: duplicates collapse under the default
+  comparer, the pool's distinct count gates distinct collections, and a `null` element is
+  refused — make the whole draw optional with `.OrNull()` instead.
 - **Domain vocabulary where it belongs**: dates constrain with
   `After`/`Before`/`Between`, quantities with `Positive`/`Between`/`NonZero`,
   identities with `NonEmpty`/`DifferentFrom` — and deliberately no clock-relative
