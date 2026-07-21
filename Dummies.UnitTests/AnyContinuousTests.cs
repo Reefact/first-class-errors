@@ -105,6 +105,33 @@ public sealed class AnyContinuousTests {
         Check.That(conflict.Message).Contains("GreaterThan(100)");
     }
 
+    [Fact(DisplayName = "Decimal: Between reaches both halves of a range, up to near the inclusive maximum.")]
+    public void DecimalBetweenReachesBothHalves() {
+        // Regression for #206: the fraction was built from three non-negative Random.Next() draws over
+        // the full 96-bit mantissa denominator, so each limb's top bit stayed zero, the fraction never
+        // crossed ~0.5, and every candidate fell in [min, mid). Seeded and deterministic — both halves,
+        // and a value near the inclusive maximum, must be observed.
+        const decimal min = 0m;
+        const decimal max = 100m;
+        const decimal mid = 50m;
+
+        AnyContext any = Any.WithSeed(20260721);
+
+        decimal lowest  = decimal.MaxValue;
+        decimal highest = decimal.MinValue;
+        for (int i = 0; i < 5000; i++) {
+            decimal value = any.Decimal().Between(min, max).Generate();
+            Check.That(value).IsGreaterOrEqualThan(min);
+            Check.That(value).IsLessOrEqualThan(max);
+            if (value < lowest) { lowest   = value; }
+            if (value > highest) { highest = value; }
+        }
+
+        Check.That(lowest).IsStrictlyLessThan(mid);     // the lower half stays covered
+        Check.That(highest).IsStrictlyGreaterThan(mid); // the upper half — unreachable before the fix
+        Check.That(highest).IsStrictlyGreaterThan(99m); // and up to near the inclusive maximum
+    }
+
     [Fact(DisplayName = "Continuous generators convert implicitly to their value type.")]
     public void ImplicitConversions() {
         double  d = Any.Double().Between(1d, 2d).Generate();
