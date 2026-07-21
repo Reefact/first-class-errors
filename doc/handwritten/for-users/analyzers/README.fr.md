@@ -44,6 +44,10 @@ Chaque règle a un identifiant stable `FCExxx`. Les erreurs sont des défauts du
 | [FCE016 UnusedToExceptionResult](FCE016.fr.md) | 🟠 Warning | activée | Error.ToException() est appelé comme instruction isolée, ou son résultat est explicitement ignoré avec `_ =`. |
 | [FCE017 SensitiveDataInErrorContext](FCE017.fr.md) | 🟠 Warning | opt-in | Le nom d'une ErrorContextKey désigne un secret, un identifiant d'authentification ou une donnée personnelle (mot de passe, token, secret, chaîne de connexion, carte bancaire, …). |
 | [FCE018 OversizedErrorContextValue](FCE018.fr.md) | 🔵 Info | opt-in | Le type de valeur d'une ErrorContextKey est un gros payload (tableau d'octets, Stream ou FileInfo) qui n'a pas sa place dans un contexte destiné aux logs. |
+| [FCE019 TryCatchesTooBroadly](FCE019.fr.md) | 🟠 Warning | activée | Outcome.Try attrape System.Exception, transformant des bugs inattendus en erreurs anticipées au lieu de la seule exception que l'opération est censée lever. |
+| [FCE020 TryCatchesRichProtocolException](FCE020.fr.md) | 🟠 Warning | opt-in | Outcome.Try attrape un échec de protocole (HttpRequestException, DbException, SocketException, …) dont la donnée de statut ou de résultat est perdue une fois réduite à une levée. |
+| [FCE021 PreferNonThrowingAlternativeToTry](FCE021.fr.md) | 🟠 Warning | activée | Outcome.Try enveloppe un appel qui a déjà une contrepartie non-levante TryXxx / TryCreate disponible pour le framework cible ; envisagez de mapper son résultat (conseil — à supprimer là où la contrepartie n'est pas un vrai inverse). |
+| [FCE022 TryCatchesCancellation](FCE022.fr.md) | 🟠 Warning | activée | Outcome.Try lie TException à OperationCanceledException (ou un sous-type) ; Try laisse toujours l'annulation se propager, donc le catch est inatteignable et le mapper ne s'exécute jamais. |
 
 ## Configuration
 

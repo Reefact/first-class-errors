@@ -190,4 +190,44 @@ internal static class Descriptors {
         description: "Error context should hold small, serializable facts that log cleanly. A key typed as a byte array, a Stream or a FileInfo carries a whole file or buffer into every log line and error-catalog entry, bloating output and often smuggling sensitive data along with it. Detection is based on the key's declared value type. Opt-in.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.OversizedErrorContextValue));
 
+    public static readonly DiagnosticDescriptor TryCatchesTooBroadly = new(
+        id: DiagnosticIds.TryCatchesTooBroadly,
+        title: "Outcome.Try catches a too-broad exception type",
+        messageFormat: "Outcome.Try catches '{0}'; catch the specific exception the operation is documented to throw, not a near-root type that also swallows bugs",
+        category: DiagnosticCategories.Usage,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Outcome.Try is meant to catch the single exception type that denotes an anticipated failure and let everything else propagate. Catching System.Exception turns unexpected bugs (a null dereference, an invalid state) into anticipated errors and defeats the purpose of Outcome. Name the specific exception instead; if a boundary genuinely must map every failure, do it explicitly rather than through Try.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.TryCatchesTooBroadly));
+
+    public static readonly DiagnosticDescriptor TryCatchesRichProtocolException = new(
+        id: DiagnosticIds.TryCatchesRichProtocolException,
+        title: "Outcome.Try catches a protocol failure that carries more than the exception",
+        messageFormat: "Outcome.Try catches '{0}', a protocol failure carrying status or result data beyond the exception; review whether a dedicated adapter should inspect the result and preserve that structured information",
+        category: DiagnosticCategories.Usage,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: false,
+        description: "HTTP, socket and database failures are not fully described by the exception: a status code, a provider error number or a response body carries the real signal, one exception type spans several distinct failures with different transience, and a request timeout surfaces as an OperationCanceledException that Try lets through. Outcome.Try can reduce all of that to 'it threw'; the mapper can still read the status off the caught exception, but needing to is a sign the failure wants a dedicated result-inspecting adapter. Advisory and opt-in.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.TryCatchesRichProtocolException));
+
+    public static readonly DiagnosticDescriptor TryCatchesCancellation = new(
+        id: DiagnosticIds.TryCatchesCancellation,
+        title: "Outcome.Try catches a cancellation type, making the catch unreachable",
+        messageFormat: "Outcome.Try catches '{0}', a cancellation type; Outcome.Try always lets cancellation propagate, so this catch is unreachable and the mapper never runs",
+        category: DiagnosticCategories.Usage,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Outcome.Try guards its catch with 'when (exception is not OperationCanceledException)' so a cancellation is never turned into an error — it always propagates. Binding TException to OperationCanceledException (or a subtype such as TaskCanceledException) therefore produces a catch that can never engage: the exception filter becomes a contradiction ('is an OperationCanceledException and is not one'), the mapper never runs, and no Outcome is produced. This is always a mistake, and it is silent (an always-false filter is not a compile error). Cancellation cannot be modelled as a Try failure: remove the cancellation handling from Try, or catch a specific non-cancellation exception.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.TryCatchesCancellation));
+
+    public static readonly DiagnosticDescriptor PreferNonThrowingAlternativeToTry = new(
+        id: DiagnosticIds.PreferNonThrowingAlternativeToTry,
+        title: "Outcome.Try wraps an operation that has a non-throwing alternative",
+        messageFormat: "Outcome.Try wraps '{0}'; a non-throwing '{1}' is available — consider mapping its result instead of catching",
+        category: DiagnosticCategories.Usage,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "When a wrapped call already has a non-throwing counterpart — a 'bool TryParse(..., out T)' or 'TryCreate' with a matching drop-in signature — there is usually no exception worth catching, so Outcome.Try adds cost and hides the cheaper path. It fires wherever such a counterpart resolves, regardless of where the wrapped type is declared. The rule is framework-aware: it fires only when the counterpart actually resolves, with a compatible signature, in the compilation being analyzed, so a target framework that lacks it (older .NET Standard / .NET Framework, where MailAddress.TryCreate or Convert.TryFromBase64String do not exist) is never flagged. It is an advisory (a suggestion, not an equivalence claim): a structurally-matching TryXxx may still normalize its input, diverge on culture, or report a different set of failures than the exception you catch (int.Parse also throws on overflow, which int.TryParse folds into false), and the TryXxx form has no exception to hand your mapper — so confirm it behaves identically before rewriting, and suppress the rule (SuppressMessage / #pragma) where it does not fit. Detection is limited to a single static call or a constructor in the lambda body, whose signature the counterpart must match exactly.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.PreferNonThrowingAlternativeToTry));
+
 }

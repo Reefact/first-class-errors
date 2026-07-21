@@ -31,5 +31,9 @@ internal static class DiagnosticIds {
     public const string UnusedToExceptionResult      = "FCE016";
     public const string SensitiveDataInErrorContext  = "FCE017";
     public const string OversizedErrorContextValue   = "FCE018";
+    public const string TryCatchesTooBroadly         = "FCE019";
+    public const string TryCatchesRichProtocolException = "FCE020";
+    public const string PreferNonThrowingAlternativeToTry = "FCE021";
+    public const string TryCatchesCancellation       = "FCE022";
 
 }

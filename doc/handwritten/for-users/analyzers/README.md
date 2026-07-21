@@ -44,6 +44,10 @@ Each rule has a stable id `FCExxx`. Errors are hard defects; warnings flag likel
 | [FCE016 UnusedToExceptionResult](FCE016.en.md) | 🟠 Warning | on | Error.ToException() is called as a standalone statement, or its result is explicitly discarded with `_ =`. |
 | [FCE017 SensitiveDataInErrorContext](FCE017.en.md) | 🟠 Warning | opt-in | An ErrorContextKey name denotes a secret, credential, or personal data (password, token, secret, connection string, credit card, ...). |
 | [FCE018 OversizedErrorContextValue](FCE018.en.md) | 🔵 Info | opt-in | An ErrorContextKey value type is a bulk payload (byte array, Stream, or FileInfo) that does not belong in a loggable context. |
+| [FCE019 TryCatchesTooBroadly](FCE019.en.md) | 🟠 Warning | on | Outcome.Try catches System.Exception, turning unexpected bugs into anticipated errors instead of the single exception the operation is expected to throw. |
+| [FCE020 TryCatchesRichProtocolException](FCE020.en.md) | 🟠 Warning | opt-in | Outcome.Try catches a protocol failure (HttpRequestException, DbException, SocketException, ...) whose status or result data is lost when reduced to a throw. |
+| [FCE021 PreferNonThrowingAlternativeToTry](FCE021.en.md) | 🟠 Warning | on | Outcome.Try wraps a call that already has a non-throwing TryXxx / TryCreate counterpart available for the target framework; consider mapping its result (advisory — suppress where the counterpart is not a true inverse). |
+| [FCE022 TryCatchesCancellation](FCE022.en.md) | 🟠 Warning | on | Outcome.Try binds TException to OperationCanceledException (or a subtype); Try always lets cancellation propagate, so the catch is unreachable and the mapper never runs. |
 
 ## Configuring
 

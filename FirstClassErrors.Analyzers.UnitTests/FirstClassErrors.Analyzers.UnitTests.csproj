@@ -20,6 +20,20 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="xunit.v3" />
+    <!-- The .NET Framework 4.7.2 reference assemblies, used ONLY as data: a framework-awareness test compiles an
+         analyzer snippet against them (not against the running runtime) to prove FCE021 stays silent where a TryXxx
+         does not exist for an older target framework. Build-time only; its path is surfaced to the test below. -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net472" GeneratePathProperty="true">
+      <PrivateAssets>all</PrivateAssets>
+      <ExcludeAssets>build;buildTransitive</ExcludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>Net472ReferenceAssemblies</_Parameter1>
+      <_Parameter2>$(PkgMicrosoft_NETFramework_ReferenceAssemblies_net472)/build/.NETFramework/v4.7.2</_Parameter2>
+    </AssemblyAttribute>
   </ItemGroup>
 
   <ItemGroup>

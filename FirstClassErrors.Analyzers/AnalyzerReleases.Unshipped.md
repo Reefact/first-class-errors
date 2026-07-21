@@ -23,3 +23,7 @@ FCE015  | FirstClassErrors.DocumentationContent| Disabled | DocumentationTitleTo
 FCE016  | FirstClassErrors.Usage               | Warning  | UnusedToExceptionResultAnalyzer
 FCE017  | FirstClassErrors.Usage               | Disabled | SensitiveDataInErrorContextAnalyzer
 FCE018  | FirstClassErrors.Usage               | Disabled | OversizedErrorContextValueAnalyzer
+FCE019  | FirstClassErrors.Usage               | Warning  | TryCatchesTooBroadlyAnalyzer
+FCE020  | FirstClassErrors.Usage               | Disabled | TryCatchesRichProtocolExceptionAnalyzer
+FCE021  | FirstClassErrors.Usage               | Warning  | PreferNonThrowingAlternativeToTryAnalyzer
+FCE022  | FirstClassErrors.Usage               | Warning  | TryCatchesCancellationAnalyzer
