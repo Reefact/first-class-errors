@@ -26,6 +26,18 @@ public sealed class AnyPatternTests {
         return "\"" + value.Replace("\t", "\\t").Replace("\n", "\\n").Replace("\r", "\\r") + "\"";
     }
 
+    // The oracle again, as a predicate: does the real .NET engine compile this pattern at all? Used to assert the
+    // rejection taxonomy — a pattern the engine accepts must never be reported as malformed (ArgumentException).
+    private static bool IsCompiledByTheRealEngine(string pattern) {
+        try {
+            _ = new Regex(pattern);
+
+            return true;
+        } catch (ArgumentException) {
+            return false;
+        }
+    }
+
     #endregion
 
     [Theory(DisplayName = "Every generated value is fully matched by the real .NET regex engine.")]
@@ -50,6 +62,14 @@ public sealed class AnyPatternTests {
     [InlineData(@"(?<10>ab)")]        // a multi-digit group number stays valid
     [InlineData(@"(?<a1>xy)")]        // a named group whose name merely contains digits stays valid
     [InlineData(@"^a$|^b$")]
+    [InlineData(@"^^abc")]            // a run of boundary anchors is a no-op, exactly as in the real engine
+    [InlineData(@"abc$$")]
+    [InlineData(@"^*abc")]            // a quantifier on a zero-width anchor is a no-op too
+    [InlineData(@"abc$*")]
+    [InlineData(@"^{2}xy")]
+    [InlineData(@"^?abc$?")]
+    [InlineData(@"[-[x]]")]           // a leading '-' is an ordinary hyphen, not a subtraction operator
+    [InlineData(@"[-[abc]]")]
     [InlineData(@"[\d]{3}")]
     [InlineData(@"[-a-z]{2}")]
     [InlineData(@"[a-z-]{2}")]
@@ -157,6 +177,73 @@ public sealed class AnyPatternTests {
         }
     }
 
+    [Fact(DisplayName = "Repeated and quantified boundary anchors are no-ops, consistently for '^' and '$'.")]
+    public void RepeatedAndQuantifiedAnchorsAreNoOps() {
+        // '^^abc' was already accepted while the symmetric 'abc$$' was refused — an avoidable asymmetry, now closed.
+        // Repeating or quantifying a zero-width boundary assertion never changes which strings match, so all of
+        // these are no-ops, exactly as the real engine treats them.
+        Check.That(Any.StringMatching(@"^^abc$$").Generate()).IsEqualTo("abc");
+        Check.That(Any.StringMatching(@"^*abc$*").Generate()).IsEqualTo("abc");
+        Check.That(Any.StringMatching(@"^{2}abc").Generate()).IsEqualTo("abc");
+        Check.That(Any.StringMatching(@"^?abc$?").Generate()).IsEqualTo("abc");
+    }
+
+    [Fact(DisplayName = "A pattern that overruns the generation ceiling fails with an honest message, naming no false cause.")]
+    public void OverLimitPatternFailsWithoutAFalseCause() {
+        // '(a{1000}){1000}' deterministically asks for 1,000,000 characters — every quantifier is bounded, there is
+        // no unbounded quantifier at all. The pattern parses fine (a resource ceiling is not a satisfiability
+        // conflict); generation is what overruns the limit, and the message must not blame a quantifier that is absent.
+        AnyPattern generator = Any.StringMatching(@"(a{1000}){1000}");
+
+        AnyGenerationException caught = Assert.Throws<AnyGenerationException>(() => generator.Generate());
+        Check.That(caught.Message).Contains("generation limit");
+        Check.That(caught.Message).Contains("bounded quantifiers");             // the real cause is offered
+        Check.That(caught.Message).Not.Contains("is expanding without bound");  // the old, false assertion is gone
+    }
+
+    [Fact(DisplayName = "A negated class that excludes the whole printable universe is refused as unsupported, not malformed.")]
+    public void NegatedClassExcludingTheUniverseIsUnsupported() {
+        // Well-formed and regular — the real engine accepts both — but no printable-ASCII character survives the
+        // negation, so Dummies cannot draw a value. That is a universe limit (unsupported), not a caller mistake
+        // (malformed): the pattern is not broken, Dummies simply does not reach outside printable ASCII.
+        Check.ThatCode(() => Any.StringMatching(@"[^\x20-\x7E]")).Throws<UnsupportedRegexException>();
+        Check.ThatCode(() => Any.StringMatching(@"[^\s\S]")).Throws<UnsupportedRegexException>();
+
+        UnsupportedRegexException caught = Assert.Throws<UnsupportedRegexException>(() => Any.StringMatching(@"[^\x20-\x7E]"));
+        Check.That(caught.Message).Contains("printable ASCII");
+    }
+
+    [Theory(DisplayName = "A pattern the real .NET engine accepts is never rejected as malformed — it generates, or is refused as unsupported.")]
+    [InlineData(@"^^abc")]
+    [InlineData(@"abc$$")]
+    [InlineData(@"^*abc")]
+    [InlineData(@"abc$*")]
+    [InlineData(@"^{2}xy")]
+    [InlineData(@"^?a$?")]
+    [InlineData(@"[-[x]]")]
+    [InlineData(@"[a-[x]]")]         // subtraction (member precedes): .NET-valid, refused as UNSUPPORTED, not malformed
+    [InlineData(@"[ab-[b]]")]
+    [InlineData(@"[^\x20-\x7E]")]    // negated-empty: .NET-valid, refused as UNSUPPORTED
+    [InlineData(@"[^\s\S]")]
+    [InlineData(@"(a{1000}){1000}")] // over-limit: .NET-valid, fails at generation time, never as malformed
+    public void PatternsAcceptedByTheRealEngineAreNeverMalformed(string pattern) {
+        // The advertised taxonomy (see RegexParser's summary): ArgumentException == "the real engine rejects this
+        // pattern as malformed". So a pattern the real engine COMPILES must never surface here as ArgumentException —
+        // Dummies must either generate a matching value, or refuse it as UnsupportedRegexException, or fail the
+        // generation itself. This guards the whole channel, not just the individual edges #210 corrected.
+        Assert.True(IsCompiledByTheRealEngine(pattern), $"test precondition: /{pattern}/ must be accepted by .NET");
+
+        try {
+            Any.WithSeed(1).StringMatching(pattern).Generate();
+        } catch (ArgumentException e) {
+            Assert.Fail($"/{pattern}/ is accepted by the real engine but Dummies rejected it as malformed: {e.Message}");
+        } catch (UnsupportedRegexException) {
+            // acceptable: refused as unsupported (a construct or universe Dummies declines), not as malformed
+        } catch (AnyGenerationException) {
+            // acceptable: a resource-limit overrun, not a verdict that the pattern is malformed
+        }
+    }
+
     [Fact(DisplayName = "A Regex with IgnoreCase generates either case.")]
     public void IgnoreCaseHonoured() {
         Regex           pattern = new("^[a-z]{5}$", RegexOptions.IgnoreCase);
@@ -218,8 +305,12 @@ public sealed class AnyPatternTests {
         Check.ThatCode(() => Any.StringMatching(@"x(^a)")).Throws<UnsupportedRegexException>();
         Check.ThatCode(() => Any.StringMatching(@"(a$)x")).Throws<UnsupportedRegexException>();
 
-        // .NET class subtraction removes a nested class; parsing '-[' as members would generate outside the set.
+        // .NET class subtraction removes a nested class; parsing '-[' as members would generate outside the set. It
+        // is subtraction only when a base member precedes the '-[' — after a range ('[a-z-[aeiou]]') or a single
+        // member ('[a-[x]]', '[ab-[b]]'). A leading '-[' is an ordinary hyphen and IS accepted (see the oracle theory).
         Check.ThatCode(() => Any.StringMatching(@"[a-z-[aeiou]]")).Throws<UnsupportedRegexException>();
+        Check.ThatCode(() => Any.StringMatching(@"[a-[x]]")).Throws<UnsupportedRegexException>();
+        Check.ThatCode(() => Any.StringMatching(@"[ab-[b]]")).Throws<UnsupportedRegexException>();
 
         // IgnorePatternWhitespace changes how the pattern text itself is read: "^A B$" matches "AB", not "A B".
         Check.ThatCode(() => Any.StringMatching(new Regex("^A B$", RegexOptions.IgnorePatternWhitespace))).Throws<ArgumentException>();
