@@ -80,14 +80,14 @@ public sealed class AnyCollectionTests {
     [Fact(DisplayName = "Distinct: a count beyond the element cardinality conflicts eagerly, naming the shortfall.")]
     public void DistinctCardinalityConflictsEagerly() {
         ConflictingAnyConstraintException fromBool = Assert.Throws<ConflictingAnyConstraintException>(
-            () => Any.SetOf(Any.Bool()).WithCount(3));
+            () => Any.SetOf(Any.Boolean()).WithCount(3));
         Check.That(fromBool.Message).Contains("2 distinct value");
 
         Check.ThatCode(() => Any.SetOf(Any.Enum<Suit>()).WithMinCount(5)).Throws<ConflictingAnyConstraintException>();
         Check.ThatCode(() => Any.SetOf(Any.Int32().Between(1, 3)).WithCount(5)).Throws<ConflictingAnyConstraintException>();
         Check.ThatCode(() => Any.ListOf(Any.Int32().Between(1, 3)).WithCount(5).Distinct()).Throws<ConflictingAnyConstraintException>();
         // Order-independent: turning distinct on after the count is set conflicts just the same.
-        Check.ThatCode(() => Any.ListOf(Any.Bool()).WithCount(3).Distinct()).Throws<ConflictingAnyConstraintException>();
+        Check.ThatCode(() => Any.ListOf(Any.Boolean()).WithCount(3).Distinct()).Throws<ConflictingAnyConstraintException>();
     }
 
     [Fact(DisplayName = "Distinct: an unknowable small domain cannot be detected early, so a shortfall surfaces at generation.")]
@@ -228,7 +228,7 @@ public sealed class AnyCollectionTests {
         // When every source draws from the same two-value domain, three distinct values are impossible — but the
         // overlap is opaque, so it is caught while drawing (a replayable AnyGenerationException) rather than as a
         // false eager conflict.
-        Check.ThatCode(() => Any.SetOf(Any.Bool()).ContainingAny(Any.Bool()).ContainingAny(Any.Bool()).ContainingAny(Any.Bool()).Generate())
+        Check.ThatCode(() => Any.SetOf(Any.Boolean()).ContainingAny(Any.Boolean()).ContainingAny(Any.Boolean()).ContainingAny(Any.Boolean()).Generate())
              .Throws<AnyGenerationException>();
     }
 
@@ -315,7 +315,7 @@ public sealed class AnyCollectionTests {
             Check.That(dictionary.Values).ContainsOnlyElementsThatMatch(value => value.Length > 0);
         }
 
-        Check.ThatCode(() => Any.DictionaryOf(Any.Bool(), Any.Int32()).WithCount(3)).Throws<ConflictingAnyConstraintException>();
+        Check.ThatCode(() => Any.DictionaryOf(Any.Boolean(), Any.Int32()).WithCount(3)).Throws<ConflictingAnyConstraintException>();
         Check.ThatCode(() => Any.DictionaryOf<int, int>(null!, Any.Int32())).Throws<ArgumentNullException>();
     }
 

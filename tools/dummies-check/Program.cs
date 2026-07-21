@@ -132,7 +132,7 @@ internal static class Program {
             any.UInt64().Generate().ToString(CultureInfo.InvariantCulture),
             any.Double().Between(0d, 1000d).Generate().ToString("R", CultureInfo.InvariantCulture),
             any.Decimal().Between(0m, 1000m).Generate().ToString(CultureInfo.InvariantCulture),
-            any.Bool().Generate().ToString(),
+            any.Boolean().Generate().ToString(),
             any.Guid().Generate().ToString(),
             any.Char().Generate().ToString(),
             any.TimeSpan().Generate().Ticks.ToString(CultureInfo.InvariantCulture),
