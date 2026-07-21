@@ -58,6 +58,9 @@ la PR.
 
 ## En rapport
 
+- [`dependabot-autofix`](dependabot-autofix.fr.md) — le compagnon de diagnostic :
+  quand une PR Dependabot reste rouge, il trie pourquoi et commente un correctif
+  prêt à appliquer.
 - [`.github/dependabot.yml`](../../../../.github/dependabot.yml) — ce que Dependabot met
   à jour et ce qu'il ignore (p. ex. les `Microsoft.CodeAnalysis.*` gelés ; voir
   [`analyzers`](analyzers.fr.md)).

@@ -93,6 +93,7 @@ documentées une seule fois ici plutôt que répétées sur chaque page.
 | Workflow | Rôle |
 | --- | --- |
 | [`dependabot-automerge`](dependabot-automerge.fr.md) | Active l'auto-merge sur les mises à jour patch/minor de Dependabot ; laisse les majeures à un humain. |
+| [`dependabot-autofix`](dependabot-autofix.fr.md) | Triage Claude consultatif d'une PR Dependabot en échec : verdict + un patch prêt à appliquer en un commentaire. Ne pousse ni ne merge jamais. |
 
 ## Docs mainteneur en rapport
 

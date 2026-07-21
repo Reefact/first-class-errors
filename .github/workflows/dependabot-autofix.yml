@@ -1,0 +1,233 @@
+name: dependabot-autofix
+
+# Advisory triage for Dependabot pull requests. When a Dependabot PR's checks have
+# run, this workflow asks the model whether the PR is healthy, fixable with a small
+# low-risk change, or in need of a human — and, when it is fixable, posts a single
+# comment with a ready-to-apply patch and a convention-conforming commit message.
+#
+# It is the diagnostic companion to `dependabot-automerge`: automerge decides *when*
+# a green PR merges; this decides *why* a red one is red and *how* to fix it. It
+# NEVER pushes, applies, or merges anything — every verdict is a comment a human
+# acts on. See doc/handwritten/for-maintainers/workflows/dependabot-autofix.en.md.
+#
+# Why `workflow_run` and not `pull_request`/`pull_request_target`:
+#   - A `pull_request` run raised by Dependabot gets a READ-ONLY token and NO
+#     repository secrets (only the Dependabot secrets store), so it could neither
+#     read `ANTHROPIC_API_KEY` nor comment.
+#   - `workflow_run` runs in the BASE-branch context after the checks complete: it
+#     has the repository secrets and a writable token, and — crucially — it does
+#     NOT check out or execute the pull request's code. The bumped dependency's
+#     code already ran in the read-only ci context; this triage only *reads* the
+#     result. That keeps a write-scoped token and the API key away from freshly
+#     bumped third-party code (a supply-chain boundary this repo takes seriously).
+
+on:
+  workflow_run:
+    # Every gating workflow a Dependabot PR passes through. Any completion re-runs
+    # the triage against the head commit's current, combined check status, so the
+    # single comment refines itself as the slower checks finish.
+    workflows:
+      - ci
+      - sonar
+      - analyzers
+      - commit-lint
+      - dummies
+      - dependency-review
+      - codeql
+    types:
+      - completed
+
+# One triage per pull request (keyed on its branch); a newer completion — a later
+# check finishing, or a fresh push — supersedes an in-flight run.
+concurrency:
+  group: dependabot-autofix-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+# Least privilege by default; the single job widens only what it needs.
+permissions:
+  contents: read
+
+jobs:
+  triage:
+    name: Triage the Dependabot pull request
+    runs-on: ubuntu-latest
+    # Read a handful of API endpoints + one Anthropic call; cap a hung run well
+    # below the 6-hour default.
+    timeout-minutes: 10
+    # Only Dependabot's own pull requests, and only from a branch in THIS
+    # repository (never a fork). `workflow_run.actor` is who raised the run that
+    # triggered us; for a Dependabot PR's checks that is dependabot[bot].
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.actor.login == 'dependabot[bot]' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    permissions:
+      contents: read          # read the scripts/prompt checked out from the base
+      checks: read            # read the head commit's check-runs
+      actions: read           # read the failed runs' logs
+      pull-requests: write     # post/update/remove the one triage comment
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
+    steps:
+      - name: Checkout (base branch — never the pull request)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Resolve the Dependabot pull request
+        id: pr
+        env:
+          # Untrusted branch text travels via the environment, never inlined into
+          # the script, and is only ever passed to gh as a --head argument.
+          PR_FROM_EVENT: ${{ github.event.workflow_run.pull_requests[0].number }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          num="${PR_FROM_EVENT:-}"
+          if [ -z "$num" ] || [ "$num" = "null" ]; then
+            num="$(gh pr list --repo "$GH_REPO" --head "$HEAD_BRANCH" --state open \
+              --json number --jq '.[0].number // empty' 2>/dev/null || true)"
+          fi
+          if [ -z "$num" ]; then
+            echo "No open pull request for ${HEAD_BRANCH}; nothing to triage."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Triaging pull request #${num} at ${HEAD_SHA}."
+          echo "number=${num}" >> "$GITHUB_OUTPUT"
+          echo "sha=${HEAD_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Classify the combined check status
+        id: status
+        if: steps.pr.outputs.skip != 'true'
+        env:
+          SHA: ${{ steps.pr.outputs.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Every check-run on the head commit, across all workflows and apps.
+          runs="$(gh api "repos/${GH_REPO}/commits/${SHA}/check-runs" --paginate \
+            --jq '.check_runs[] | [.status, (.conclusion // "")] | @tsv' 2>/dev/null || true)"
+          inprogress=0
+          failing=0
+          while IFS=$'\t' read -r st cc; do
+            [ -z "${st:-}" ] && continue
+            if [ "$st" != "completed" ]; then
+              inprogress=$((inprogress + 1))
+              continue
+            fi
+            case "$cc" in
+              failure|timed_out|startup_failure|action_required) failing=$((failing + 1)) ;;
+              *) : ;;
+            esac
+          done <<EOF
+          ${runs}
+          EOF
+          # Act on real failures as soon as they appear; only declare the PR green
+          # once nothing is still running; otherwise wait for the next completion.
+          if [ "$failing" -gt 0 ]; then
+            state=failing
+          elif [ "$inprogress" -gt 0 ]; then
+            state=pending
+          else
+            state=green
+          fi
+          echo "checks: failing=${failing} in-progress=${inprogress} -> ${state}"
+          echo "state=${state}" >> "$GITHUB_OUTPUT"
+
+      - name: Remove a stale triage comment on a green pull request
+        if: steps.status.outputs.state == 'green'
+        run: |
+          tools/dependabot-autofix/upsert-comment.sh "${{ steps.pr.outputs.number }}" false /dev/null
+
+      - name: Triage the failing pull request with Claude
+        id: triage
+        if: steps.status.outputs.state == 'failing'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          SHA: ${{ steps.pr.outputs.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+            echo "::warning::ANTHROPIC_API_KEY is not set; cannot triage this Dependabot PR."
+            echo "The Dependabot triage needs the \`ANTHROPIC_API_KEY\` repository secret." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          tools/dependabot-autofix/collect-context.sh "$PR_NUMBER" "$SHA" > context.txt
+
+          # Build the request with jq so every untrusted block (PR text, diff, logs)
+          # is JSON-escaped exactly once. The prompt and the context go in via
+          # --rawfile, NOT --arg: a single argument over ~128 KiB fails with E2BIG,
+          # and capped diff + logs can approach that. thinking is disabled so the
+          # whole budget goes to the verdict and patch.
+          jq -n \
+            --arg model "claude-sonnet-5" \
+            --rawfile prompt .github/dependabot-autofix-prompt.md \
+            --rawfile context context.txt \
+            '{
+               model: $model,
+               max_tokens: 3000,
+               thinking: { type: "disabled" },
+               messages: [
+                 { role: "user", content: ($prompt + "\n\n" + $context) }
+               ]
+             }' > payload.json
+
+          if ! curl -sS https://api.anthropic.com/v1/messages \
+              -H "x-api-key: $ANTHROPIC_API_KEY" \
+              -H "anthropic-version: 2023-06-01" \
+              -H "content-type: application/json" \
+              -d @payload.json > response.json; then
+            echo "::warning::Anthropic API call failed; skipping the triage for this run."
+            exit 0
+          fi
+
+          if jq -e '.type == "error"' response.json >/dev/null 2>&1; then
+            echo "::warning::Anthropic API returned an error; skipping the triage."
+            jq -r '.error.message // .' response.json
+            exit 0
+          fi
+          case "$(jq -r '.stop_reason // empty' response.json)" in
+            refusal)    echo "::warning::Model refused; skipping the triage.";             exit 0 ;;
+            max_tokens) echo "::warning::Model output was truncated (max_tokens); skipping."; exit 0 ;;
+          esac
+
+          # The model returns one JSON object as text. Strip any stray code fence,
+          # then validate; anything unparseable is a warning, not a failure.
+          text="$(jq -r '[.content[] | select(.type=="text") | .text] | join("")' response.json)"
+          verdict="$(printf '%s' "$text" | sed '/^```/d' | jq -c '.' 2>/dev/null || true)"
+          if [ -z "$verdict" ]; then
+            echo "::warning::Model output was not valid JSON; skipping the triage. Raw output:"
+            printf '%s\n' "$text"
+            exit 0
+          fi
+
+          v="$(printf '%s' "$verdict" | jq -r '.verdict // "needs_human"')"
+          report="$(printf '%s' "$verdict" | jq -r '.report // ""')"
+          echo "Verdict: ${v} — $(printf '%s' "$verdict" | jq -r '.category // "other"')"
+
+          # verdict "ok" means the failures are transient/unrelated: nothing to say,
+          # so drop any stale comment instead of posting noise. Otherwise post the
+          # advisory report as the single marked comment.
+          if [ "$v" = "ok" ] || [ -z "$report" ]; then
+            echo "needs=false" >> "$GITHUB_OUTPUT"
+          else
+            { printf '%s\n\n' '<!-- dependabot-autofix -->'; printf '%s\n' "$report"; } > comment-body.md
+            echo "needs=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - name: Post or refresh the triage comment
+        if: steps.triage.outputs.ready == 'true'
+        run: |
+          if [ "${{ steps.triage.outputs.needs }}" = "true" ]; then
+            tools/dependabot-autofix/upsert-comment.sh "${{ steps.pr.outputs.number }}" true comment-body.md
+          else
+            tools/dependabot-autofix/upsert-comment.sh "${{ steps.pr.outputs.number }}" false /dev/null
+          fi
