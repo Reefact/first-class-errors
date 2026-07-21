@@ -202,6 +202,45 @@ public sealed class AnyString : IAny<string>, IHasRandomSource {
         return new AnyString(_source, _spec.WithCasing(LetterCasing.Upper, "UpperCase()"));
     }
 
+    /// <summary>
+    ///     Draws the string from an explicit, fixed set of <paramref name="values" /> instead of shaping one — the
+    ///     dummy for a value whose domain is a closed list the test does not assert on (a currency code, a well-known
+    ///     name). This is a <b>terminal</b> constraint: the supplied values are the whole specification, so it does not
+    ///     combine with the shape, length or character constraints — declare it directly on <see cref="Any.String" />.
+    ///     Duplicate values are collapsed; the generated string is one of the distinct values, drawn uniformly and
+    ///     reproducibly under a seed.
+    /// </summary>
+    /// <param name="values">The values the generated string is drawn from; duplicates are ignored.</param>
+    /// <returns>A terminal generator drawing from <paramref name="values" />.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="values" /> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="values" /> is empty or contains a <c>null</c> element.</exception>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when a constraint is already declared: a terminal value set cannot be combined with another constraint.</exception>
+    public AnyStringOneOf OneOf(params string[] values) {
+        if (values is null) { throw new ArgumentNullException(nameof(values)); }
+        if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
+        if (values.Any(value => value is null)) { throw new ArgumentException("The values must not contain a null element; use OrNull() to make the whole generator nullable.", nameof(values)); }
+        if (!_spec.IsUnconstrained) { throw new ConflictingAnyConstraintException("Cannot apply OneOf(...) because it is a terminal specification: the supplied values are the whole specification and cannot be combined with the constraints already declared. Declare OneOf(...) directly on Any.String()."); }
+
+        return new AnyStringOneOf(_source, values.Distinct(StringComparer.Ordinal).ToArray());
+    }
+
+    /// <summary>
+    ///     Draws the string from an explicit, fixed set of <paramref name="values" /> — the
+    ///     <see cref="IEnumerable{T}" /> counterpart of <see cref="OneOf(string[])" />, for a set already held as a
+    ///     sequence (a list, a LINQ result, values loaded at test setup). Same terminal contract: the values are the
+    ///     whole specification, duplicates collapse, and the draw is uniform and reproducible under a seed.
+    /// </summary>
+    /// <param name="values">The values the generated string is drawn from; duplicates are ignored.</param>
+    /// <returns>A terminal generator drawing from <paramref name="values" />.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="values" /> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="values" /> is empty or contains a <c>null</c> element.</exception>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when a constraint is already declared: a terminal value set cannot be combined with another constraint.</exception>
+    public AnyStringOneOf OneOf(IEnumerable<string> values) {
+        if (values is null) { throw new ArgumentNullException(nameof(values)); }
+
+        return OneOf(values as string[] ?? values.ToArray());
+    }
+
     /// <inheritdoc />
     public string Generate() {
         return _spec.Generate(_source.Current.Random);
