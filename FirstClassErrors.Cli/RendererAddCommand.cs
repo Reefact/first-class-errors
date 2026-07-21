@@ -12,7 +12,7 @@ using Spectre.Console.Cli;
 
 namespace FirstClassErrors.Cli;
 
-/// <summary>Settings for <c>fce renderer add &lt;path&gt;</c>.</summary>
+/// <summary>Settings for <c>fce config renderer add &lt;path&gt;</c>.</summary>
 internal sealed class RendererReferenceSettings : ConfigScopedSettings {
 
     [CommandArgument(0, "<PATH>")]

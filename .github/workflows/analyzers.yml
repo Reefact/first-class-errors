@@ -106,3 +106,19 @@ jobs:
         # does not depend on the trailing diagnostic-id list, which is a Roslyn-version formatting detail.
         working-directory: tools/floor-check
         run: grep -qE 'FirstClassErrors\.Analyzers\.[A-Za-z]+Analyzer' build.log
+
+  readme-count:
+    name: Guard the advertised analyzer count
+    runs-on: ubuntu-latest
+    # Reads two tracked files with a POSIX shell; seconds. Cap a stuck runner.
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # Derive the count and FCExxx range from DiagnosticIds.cs (the source of
+      # truth) and fail if the package README's flagship "N Roslyn analyzers in
+      # the box (FCE001-FCENNN)" bullet disagrees — the claim that drifted to a
+      # stale 16 while the code shipped 22.
+      - name: Check the package README count against DiagnosticIds.cs
+        run: tools/analyzer-count-check/check-analyzer-count.sh

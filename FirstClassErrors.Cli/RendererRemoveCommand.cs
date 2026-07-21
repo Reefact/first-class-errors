@@ -16,7 +16,7 @@ internal sealed class RendererRemoveCommand : Command<RendererReferenceSettings>
         string path = ConfigurationStore.Resolve(settings.ConfigPath);
 
         if (!ConfigurationStore.Exists(path)) {
-            Console.Error.WriteLine($"error: no configuration at '{path}'. Run 'fce init' first.");
+            Console.Error.WriteLine($"error: no configuration at '{path}'. Run 'fce config init' first.");
 
             return 1;
         }

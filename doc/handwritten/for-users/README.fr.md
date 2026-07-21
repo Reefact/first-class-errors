@@ -118,11 +118,15 @@ Pour lier les requêtes entrantes en commandes ou requêtes typées à la fronti
 dotnet add package FirstClassErrors.RequestBinder
 ```
 
+> **Pas encore sur nuget.org.** `FirstClassErrors.RequestBinder` n'est pas encore publié — la commande ci-dessus fonctionnera une fois qu'il sera disponible.
+
 Pour générer la documentation, installez le CLI :
 
 ```bash
 dotnet tool install --global FirstClassErrors.Cli
 ```
+
+> **Pas encore sur nuget.org.** `FirstClassErrors.Cli` n'est pas encore publié — la commande ci-dessus fonctionnera une fois qu'il sera disponible.
 
 Suivez ensuite le guide [Premiers pas](GettingStarted.fr.md) pour créer et générer votre première erreur documentée.
 

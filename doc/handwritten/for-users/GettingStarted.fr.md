@@ -27,6 +27,8 @@ Installez une fois le CLI de documentation sur votre machine :
 dotnet tool install --global FirstClassErrors.Cli
 ```
 
+> **Pas encore sur nuget.org.** `FirstClassErrors.Cli` n'est pas encore publié — la commande ci-dessus fonctionnera une fois qu'il sera disponible.
+
 ## 2. Activer la génération pour le projet
 
 Ajoutez cette propriété directement dans le fichier du projet qui contient vos erreurs :

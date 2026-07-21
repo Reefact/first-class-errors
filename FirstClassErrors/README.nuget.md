@@ -27,7 +27,7 @@ checked at build time and can be extracted into a living error catalog.
   opt-in per project, multi-language) with the companion `fce` tool. Run it in CI so
   the catalog is published as a build artifact and never drifts from the deployed
   system. See *Generate the catalog in CI* below.
-- **16 Roslyn analyzers in the box (`FCE001`–`FCE016`).** Bundled in the package — no
+- **22 Roslyn analyzers in the box (`FCE001`–`FCE022`).** Bundled in the package — no
   separate install. They catch, at build time, what would otherwise surface late:
   duplicate error codes, unresolved `[DocumentedBy]` references, documented errors
   missing from the catalog, an unused `ToException()` result, and more.
@@ -72,6 +72,8 @@ Each release ships with signed build provenance (SLSA) and an embedded SBOM.
 The documentation generator ships as a .NET tool,
 [`FirstClassErrors.Cli`](https://www.nuget.org/packages/FirstClassErrors.Cli), so a
 pipeline can produce the error catalog as a build artifact:
+
+> **Not yet on nuget.org.** `FirstClassErrors.Cli` is not published yet — the commands below will work once it ships.
 
     dotnet tool install --global FirstClassErrors.Cli
     dotnet build MyApp.sln -c Release
