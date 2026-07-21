@@ -15,9 +15,10 @@ namespace Dummies;
 ///     </para>
 ///     <para>
 ///         Excluding a point from a continuum can only collide with a draw on a set of measure zero, but the engine
-///         still guarantees the constraint: a colliding draw is nudged to the neighbouring representable value, a
-///         bounded deterministic walk — not a retry loop. When the walk cannot stay within the bounds the generation
-///         fails with an <see cref="AnyGenerationException" /> naming the seed.
+///         still guarantees the constraint: a colliding draw is nudged to the nearest non-excluded representable
+///         value — a bounded deterministic walk along the type's own ladder, ascending then descending from the
+///         original draw, not a retry loop. When no representable value in range remains the generation fails with
+///         an <see cref="AnyGenerationException" /> naming the seed.
 ///     </para>
 /// </remarks>
 internal sealed class ContinuousIntervalSpec {
@@ -182,19 +183,37 @@ internal sealed class ContinuousIntervalSpec {
         double half      = _max / 2 - _min / 2;
         double candidate = Quantized(mid + (2 * random.NextDouble() - 1) * half);
 
-        // A draw colliding with an excluded point (a measure-zero event) is walked to the neighbouring
-        // representable value — deterministic and bounded, not a retry loop.
-        int budget = NudgeBudget;
-        while (IsExcluded(candidate)) {
-            double next = Quantized(NextUp(candidate));
-            if (next > _max || budget-- == 0) {
-                throw new AnyGenerationException(
-                    $"Generation failed: no {_typeName} value near the drawn candidate satisfies the exclusions. The arbitrary values were seeded with {seed}; reproduce this run with Any.Reproducibly({seed}, ...).",
-                    seed,
-                    new InvalidOperationException("The exclusion nudge walked out of the allowed range."));
-            }
+        // A draw colliding with an excluded point (a measure-zero event) is nudged to the nearest
+        // non-excluded representable neighbour: ascending first, then descending from the original draw
+        // when the ascending walk leaves the bounds. Both walks step with the type-aware ladder (_nextUp),
+        // so on the narrow types a step lands on the next value of their own type instead of stalling on a
+        // sub-ulp double step that re-quantizes to the same value.
+        double? free = NudgeToFree(candidate, ascending: true) ?? NudgeToFree(candidate, ascending: false);
+        if (free is null) {
+            throw new AnyGenerationException(
+                $"Generation failed: no {_typeName} value near the drawn candidate satisfies the exclusions. The arbitrary values were seeded with {seed}; reproduce this run with Any.Reproducibly({seed}, ...).",
+                seed,
+                new InvalidOperationException("No representable value in range remains after applying the exclusions."));
+        }
 
-            candidate = next;
+        return free.Value;
+    }
+
+    /// <summary>
+    ///     Walks from <paramref name="from" /> along the type's representable ladder — ascending or descending — to the
+    ///     nearest value the exclusions allow, staying within the bounds. Returns <c>null</c> when the walk reaches a
+    ///     bound before finding one, so the caller can try the opposite direction; a genuinely exhausted range is the
+    ///     case where both directions return <c>null</c>.
+    /// </summary>
+    private double? NudgeToFree(double from, bool ascending) {
+        double candidate = from;
+        int    budget    = NudgeBudget;
+        while (IsExcluded(candidate)) {
+            // The type-aware next-up / next-down: -_nextUp(-x) mirrors the ascending step onto the descending ladder.
+            double next = ascending ? _nextUp(candidate) : -_nextUp(-candidate);
+            if (next < _min || next > _max || budget-- == 0) { return null; }
+
+            candidate = Quantized(next);
         }
 
         return candidate;
