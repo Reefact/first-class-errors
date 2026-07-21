@@ -48,11 +48,14 @@ Dummies.AnyContext.DateTime() -> Dummies.AnyDateTime!
 Dummies.AnyContext.DateTimeOffset() -> Dummies.AnyDateTimeOffset!
 Dummies.AnyContext.Decimal() -> Dummies.AnyDecimal!
 Dummies.AnyContext.Double() -> Dummies.AnyDouble!
+Dummies.AnyContext.ElementOf<T>(System.Collections.Generic.IEnumerable<T>! values) -> Dummies.AnyOneOf<T>!
+Dummies.AnyContext.ElementOf<T>(System.Collections.Generic.IReadOnlyList<T>! values) -> Dummies.AnyOneOf<T>!
 Dummies.AnyContext.Enum<TEnum>() -> Dummies.AnyEnum<TEnum>!
 Dummies.AnyContext.Guid() -> Dummies.AnyGuid!
 Dummies.AnyContext.Int16() -> Dummies.AnyInt16!
 Dummies.AnyContext.Int32() -> Dummies.AnyInt32!
 Dummies.AnyContext.Int64() -> Dummies.AnyInt64!
+Dummies.AnyContext.OneOf<T>(params T[]! values) -> Dummies.AnyOneOf<T>!
 Dummies.AnyContext.SByte() -> Dummies.AnySByte!
 Dummies.AnyContext.Seed.get -> int
 Dummies.AnyContext.Single() -> Dummies.AnySingle!
@@ -184,6 +187,8 @@ Dummies.AnyInt64.Zero() -> Dummies.AnyInt64!
 Dummies.AnyList<T>
 Dummies.AnyList<T>.Distinct() -> Dummies.AnyList<T>!
 Dummies.AnyList<T>.Distinct(System.Collections.Generic.IEqualityComparer<T>! comparer) -> Dummies.AnyList<T>!
+Dummies.AnyOneOf<T>
+Dummies.AnyOneOf<T>.Generate() -> T
 Dummies.AnyPattern
 Dummies.AnyPattern.Generate() -> string!
 Dummies.AnySByte
@@ -312,12 +317,15 @@ static Dummies.Any.Decimal() -> Dummies.AnyDecimal!
 static Dummies.Any.DictionaryOf<TKey, TValue>(Dummies.IAny<TKey>! keys, Dummies.IAny<TValue>! values) -> Dummies.AnyDictionary<TKey, TValue>!
 static Dummies.Any.DictionaryOf<TKey, TValue>(Dummies.IAny<TKey>! keys, Dummies.IAny<TValue>! values, System.Collections.Generic.IEqualityComparer<TKey>! keyComparer) -> Dummies.AnyDictionary<TKey, TValue>!
 static Dummies.Any.Double() -> Dummies.AnyDouble!
+static Dummies.Any.ElementOf<T>(System.Collections.Generic.IEnumerable<T>! values) -> Dummies.AnyOneOf<T>!
+static Dummies.Any.ElementOf<T>(System.Collections.Generic.IReadOnlyList<T>! values) -> Dummies.AnyOneOf<T>!
 static Dummies.Any.Enum<TEnum>() -> Dummies.AnyEnum<TEnum>!
 static Dummies.Any.Guid() -> Dummies.AnyGuid!
 static Dummies.Any.Int16() -> Dummies.AnyInt16!
 static Dummies.Any.Int32() -> Dummies.AnyInt32!
 static Dummies.Any.Int64() -> Dummies.AnyInt64!
 static Dummies.Any.ListOf<T>(Dummies.IAny<T>! item) -> Dummies.AnyList<T>!
+static Dummies.Any.OneOf<T>(params T[]! values) -> Dummies.AnyOneOf<T>!
 static Dummies.Any.PairOf<T1, T2>(Dummies.IAny<T1>! first, Dummies.IAny<T2>! second) -> Dummies.IAny<(T1, T2)>!
 static Dummies.Any.Reproducibly(int seed, System.Action! body, System.Action<string!>? report = null) -> void
 static Dummies.Any.Reproducibly(int seed, System.Func<System.Threading.Tasks.Task!>! body, System.Action<string!>? report = null) -> System.Threading.Tasks.Task!
