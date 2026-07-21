@@ -154,10 +154,11 @@ internal sealed class DecimalIntervalSpec {
             BitConverter.ToInt32(mantissa, 4),
             BitConverter.ToInt32(mantissa, 8),
             false, 28) / MaxFraction;
-        // Sample around the midpoint so the span (max - min) never overflows on wide ranges.
-        decimal mid       = _min / 2 + _max / 2;
-        decimal half      = _max / 2 - _min / 2;
-        decimal candidate = Clamped(mid + (fraction * 2 - 1) * half);
+        // Interpolate as a convex combination: min*(1 - fraction) + max*fraction stays within [min, max] for
+        // fraction in [0, 1], and no intermediate ever leaves the decimal range. The earlier midpoint form
+        // (mid ± half) overflowed on the full domain — it is symmetric, so max/2 rounds up and half = max/2 - min/2
+        // doubles to just past decimal.MaxValue, throwing on an unconstrained Any.Decimal().Generate().
+        decimal candidate = Clamped(_min * (1m - fraction) + _max * fraction);
 
         // A draw colliding with an excluded point is walked by the smallest decimal step — deterministic and
         // bounded, not a retry loop. (At extreme magnitudes the step can vanish in rounding; the budget then
