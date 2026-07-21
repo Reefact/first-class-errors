@@ -25,7 +25,7 @@ public sealed class SeedReproducibilityTests {
         ulong    unsigned = Any.UInt64().Generate();
         double   real     = Any.Double().Between(0d, 1000d).Generate();
         decimal  exact    = Any.Decimal().Between(0m, 1000m).Generate();
-        bool     flag     = Any.Bool().Generate();
+        bool     flag     = Any.Boolean().Generate();
         Guid     id       = Any.Guid().Generate();
         char     letter   = Any.Char().Generate();
         TimeSpan span     = Any.TimeSpan().Generate();

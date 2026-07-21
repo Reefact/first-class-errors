@@ -235,8 +235,8 @@ public static class Any {
     ///     flip unless pinned with <c>True()</c> or <c>False()</c>.
     /// </summary>
     /// <returns>A generator to constrain fluently.</returns>
-    public static AnyBool Bool() {
-        return AnyBool.Create(AmbientRandomSource.Instance);
+    public static AnyBoolean Boolean() {
+        return AnyBoolean.Create(AmbientRandomSource.Instance);
     }
 
     /// <summary>

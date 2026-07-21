@@ -18,24 +18,24 @@ public sealed class AnySetTypeTests {
 
     }
 
-    [Fact(DisplayName = "Bool: unconstrained draws hit both values; pins pin; contradictory pins conflict.")]
-    public void BoolBehaves() {
+    [Fact(DisplayName = "Boolean: unconstrained draws hit both values; pins pin; contradictory pins conflict.")]
+    public void BooleanBehaves() {
         HashSet<bool> seen = new();
-        for (int i = 0; i < SampleCount; i++) { seen.Add(Any.Bool().Generate()); }
+        for (int i = 0; i < SampleCount; i++) { seen.Add(Any.Boolean().Generate()); }
         Check.That(seen.Count).IsEqualTo(2);
 
         for (int i = 0; i < SampleCount; i++) {
-            Check.That(Any.Bool().True().Generate()).IsTrue();
-            Check.That(Any.Bool().False().Generate()).IsFalse();
-            Check.That(Any.Bool().DifferentFrom(true).Generate()).IsFalse();
+            Check.That(Any.Boolean().True().Generate()).IsTrue();
+            Check.That(Any.Boolean().False().Generate()).IsFalse();
+            Check.That(Any.Boolean().DifferentFrom(true).Generate()).IsFalse();
         }
 
         ConflictingAnyConstraintException conflict = Assert.Throws<ConflictingAnyConstraintException>(
-            () => Any.Bool().True().False());
+            () => Any.Boolean().True().False());
         Check.That(conflict.Message).Contains("False()");
         Check.That(conflict.Message).Contains("True()");
 
-        bool value = Any.Bool().True().Generate();
+        bool value = Any.Boolean().True().Generate();
         Check.That(value).IsTrue();
     }
 
