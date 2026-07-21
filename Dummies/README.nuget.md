@@ -35,6 +35,11 @@ matter — and that is the point.
   Home-grown (zero dependencies) over the regular subset of the pattern language; a
   non-regular construct (a lookaround, a backreference) is refused with a clear error
   rather than a silently non-matching value.
+- **Strings from an explicit set**: `Any.String().OneOf("EUR", "USD", "GBP")` draws from
+  a fixed, closed list — the dummy for a value whose domain is a short enumeration (a
+  currency code, a well-known name). A *terminal* generator, like `StringMatching`: the
+  set is the whole specification, duplicates collapse, and the draw is uniform and
+  reproducible under a seed.
 - **Domain vocabulary where it belongs**: dates constrain with
   `After`/`Before`/`Between`, quantities with `Positive`/`Between`/`NonZero`,
   identities with `NonEmpty`/`DifferentFrom` — and deliberately no clock-relative
