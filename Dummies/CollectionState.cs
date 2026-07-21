@@ -215,7 +215,7 @@ internal sealed class CollectionState<T> {
         for (int collisions = 0;;) {
             T value = generator.Generate();
             if (!seen.Contains(value)) { return value; }
-            if (++collisions > budget) { throw Exhausted(source, seen.Count, target, "a ContainingAny(...) generator"); }
+            if (++collisions > budget) { throw Exhausted(source, seen.Count, target, "a ContainingAny(...) generator", generator); }
         }
     }
 
@@ -228,7 +228,7 @@ internal sealed class CollectionState<T> {
                 ordered.Add(value);
                 collisions = 0;
             } else if (++collisions > budget) {
-                throw Exhausted(source, ordered.Count, target, "the element generator");
+                throw Exhausted(source, ordered.Count, target, "the element generator", _item);
             }
         }
     }
@@ -243,9 +243,16 @@ internal sealed class CollectionState<T> {
         return (int)Math.Min(Math.Max(bounded, 10_000L), int.MaxValue);
     }
 
-    private static AnyGenerationException Exhausted(RandomSource source, int reached, int target, string what) {
-        int    seed    = source.Current.Seed;
-        string message = $"Could not generate a distinct collection of {Elements(target)}: {what} produced only {reached} distinct value(s) before the draw budget was exhausted. Loosen the count or widen the element generator's domain. {source.ReplayHint(seed)}";
+    private static AnyGenerationException Exhausted(RandomSource source, int reached, int target, string what, IAny<T> culprit) {
+        int seed = source.Current.Seed;
+        // The reported seed reproduces the count and layout, but it reproduces the elements only when the failing
+        // generator draws from that same source. A generator carrying no source of its own — a foreign IAny, or a
+        // derivation built over one (AnyDerivation.SourceOf is null in both cases) — ignores the seed, so promising a
+        // full replay of its elements would be false: qualify the hint to the count and layout instead.
+        string replay = AnyDerivation.SourceOf(culprit) is null
+                            ? source.PartialReplayHint(seed)
+                            : source.ReplayHint(seed);
+        string message = $"Could not generate a distinct collection of {Elements(target)}: {what} produced only {reached} distinct value(s) before the draw budget was exhausted. Loosen the count or widen the element generator's domain. {replay}";
 
         return new AnyGenerationException(message, seed);
     }

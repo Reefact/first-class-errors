@@ -20,6 +20,16 @@ internal abstract class RandomSource {
     /// </summary>
     internal abstract string ReplayHint(int seed);
 
+    /// <summary>
+    ///     The reproduction guidance for a distinct-collection failure whose count and layout this source seeded but
+    ///     whose elements are drawn from a generator that does not draw from this source — a foreign
+    ///     <see cref="IAny{T}" />, or a derivation built over one. It names the same replay mechanism as
+    ///     <see cref="ReplayHint" /> for the count and layout, but scopes the promise to them: the element sequence is
+    ///     not reproducible from this seed alone, so claiming a full replay would be the misleading diagnostic the seed
+    ///     reporting exists to avoid.
+    /// </summary>
+    internal abstract string PartialReplayHint(int seed);
+
 }
 
 /// <summary>A pseudo-random generator that remembers the seed it was created from.</summary>
@@ -82,6 +92,10 @@ internal sealed class AmbientRandomSource : RandomSource {
         return $"The arbitrary values were seeded with {seed}; reproduce this run with Any.Reproducibly({seed}, ...).";
     }
 
+    internal override string PartialReplayHint(int seed) {
+        return $"The collection's count and layout were seeded with {seed} (Any.Reproducibly({seed}, ...)), but its elements come from a generator that does not draw from this source, so the element sequence is not reproducible from this seed alone.";
+    }
+
     #region Nested types
 
     private sealed class SeedScope : IDisposable {
@@ -123,6 +137,10 @@ internal sealed class FixedRandomSource : RandomSource {
 
     internal override string ReplayHint(int seed) {
         return $"The arbitrary values were drawn from Any.WithSeed({seed}), which already replays deterministically.";
+    }
+
+    internal override string PartialReplayHint(int seed) {
+        return $"The collection's count and layout were drawn from Any.WithSeed({seed}), but its elements come from a generator that does not draw from it, so the element sequence is not reproducible from this seed alone.";
     }
 
 }

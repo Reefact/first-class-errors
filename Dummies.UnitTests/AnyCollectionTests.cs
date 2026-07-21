@@ -354,6 +354,69 @@ public sealed class AnyCollectionTests {
         Check.That(list).ContainsOnlyElementsThatMatch(reference => reference.Value.StartsWith("ORD-"));
     }
 
+    [Fact(DisplayName = "Exhaustion over a foreign element generator qualifies the replay hint instead of promising a full replay of the elements.")]
+    public void ExhaustionOverAForeignElementGeneratorQualifiesTheHint() {
+        // A foreign IAny carries no IHasRandomSource, so the collection falls back to the ambient source for its count
+        // and layout while the foreign generator's own draws ignore that seed. The reported seed therefore cannot
+        // replay the elements, and the message must not claim it can.
+        AnyGenerationException caught = Assert.Throws<AnyGenerationException>(
+            () => Any.Reproducibly(2026, () => Any.SetOf(new ForeignPair()).WithCount(5).Generate(), _ => { }));
+
+        Check.That(caught.Seed).IsEqualTo(2026);
+        Check.That(caught.Message).Contains("the element generator");
+        Check.That(caught.Message).Contains("not reproducible from this seed alone");
+        Check.That(caught.Message).Contains("Any.Reproducibly(2026");
+        // The faithful full-replay sentence must be gone — it is the false promise this fix removes.
+        Check.That(caught.Message).Not.Contains("The arbitrary values were seeded with");
+    }
+
+    [Fact(DisplayName = "A derivation built over a foreign generator is qualified too: the discriminator is a null source, not the IHasRandomSource type.")]
+    public void ExhaustionOverAnAsDerivedForeignGeneratorQualifiesTheHint() {
+        // DerivedAny (from As) implements IHasRandomSource but propagates a null source when its operand is foreign,
+        // so its elements are as unreproducible as the foreign generator's. Keying on the type rather than the null
+        // source would misclassify this as faithful and keep over-promising.
+        IAny<int> derivedOverForeign = new ForeignPair().As(value => value);
+
+        AnyGenerationException caught = Assert.Throws<AnyGenerationException>(
+            () => Any.SetOf(derivedOverForeign).WithCount(5).Generate());
+
+        Check.That(caught.Message).Contains("not reproducible from this seed alone");
+        Check.That(caught.Message).Not.Contains("The arbitrary values were seeded with");
+    }
+
+    [Fact(DisplayName = "A foreign ContainingAny generator is qualified at its own site, and a fixed source is named as Any.WithSeed rather than Any.Reproducibly.")]
+    public void ExhaustionOverAForeignContainingAnyQualifiesAndNamesTheFixedSource() {
+        // The collection's own elements come from a fixed Any.WithSeed(...) context (faithful), but the ContainingAny
+        // draw is foreign. The twin exhaustion site must qualify the hint for that specific generator — and, because
+        // the collection's source is fixed, name Any.WithSeed, never the inapplicable Any.Reproducibly.
+        AnyContext seeded = Any.WithSeed(4242);
+
+        AnyGenerationException caught = Assert.Throws<AnyGenerationException>(
+            () => Any.SetOf(seeded.Int32()).Containing(0).Containing(1).ContainingAny(new ForeignPair()).Generate());
+
+        Check.That(caught.Seed).IsEqualTo(4242);
+        Check.That(caught.Message).Contains("a ContainingAny(...) generator");
+        Check.That(caught.Message).Contains("Any.WithSeed(4242)");
+        Check.That(caught.Message).Contains("not reproducible from this seed alone");
+        Check.That(caught.Message).Not.Contains("Any.Reproducibly(");
+    }
+
+    [Fact(DisplayName = "Exhaustion over a library element generator keeps the faithful full-replay hint unchanged.")]
+    public void ExhaustionOverALibraryElementGeneratorKeepsTheFaithfulHint() {
+        // A comparer collapses the effective domain below the requested count, so a library generator — whose draws do
+        // follow the reported seed — exhausts the bounded draw. Its message must stay the faithful one: the fix only
+        // touches the genuinely-foreign case.
+        IEqualityComparer<int> modTen = new ModuloComparer(10);
+
+        AnyGenerationException caught = Assert.Throws<AnyGenerationException>(
+            () => Any.Reproducibly(1234, () => Any.SetOf(Any.Int32().Between(0, 999), modTen).WithCount(20).Generate(), _ => { }));
+
+        Check.That(caught.Seed).IsEqualTo(1234);
+        Check.That(caught.Message).Contains("The arbitrary values were seeded with 1234");
+        Check.That(caught.Message).Contains("Any.Reproducibly(1234");
+        Check.That(caught.Message).Not.Contains("not reproducible from this seed alone");
+    }
+
     #region Nested types
 
     private sealed class ModuloComparer : IEqualityComparer<int> {
@@ -370,6 +433,18 @@ public sealed class AnyCollectionTests {
 
         public int GetHashCode(int obj) {
             return obj % _modulus;
+        }
+
+    }
+
+    private sealed class ForeignPair : IAny<int> {
+
+        private int _n;
+
+        // Foreign on purpose: implements IAny<int> but NOT IHasRandomSource, so it does not draw from the collection's
+        // reported source. It yields only two distinct values (0 and 1), driving a distinct collection past its budget.
+        public int Generate() {
+            return _n++ % 2;
         }
 
     }
