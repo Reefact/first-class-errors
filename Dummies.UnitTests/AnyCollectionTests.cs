@@ -351,6 +351,19 @@ public sealed class AnyCollectionTests {
         Check.That(conflict.Message).Contains("2 distinct value");
     }
 
+    [Fact(DisplayName = "ContainingAnyKey: a key drawn from a generator is forced into the dictionary; null is rejected (issue #287).")]
+    public void DictionaryContainingAnyKeyForcesADrawnKey() {
+        // The drawn key (4242) lies outside the key generator's own {1..9} domain, so it is supplied directly and
+        // extends the effective cardinality — the ContainingAny path, now reaching dictionary keys.
+        for (int i = 0; i < SampleCount; i++) {
+            Dictionary<int, string> dictionary =
+                Any.DictionaryOf(Any.Int32().Between(1, 9), Any.String().NonEmpty()).NonEmpty().ContainingAnyKey(Any.Int32().OneOf(4242)).Generate();
+            Check.That(dictionary.ContainsKey(4242)).IsTrue();
+        }
+
+        Check.ThatCode(() => Any.DictionaryOf(Any.Int32(), Any.Int32()).ContainingAnyKey(null!)).Throws<ArgumentNullException>();
+    }
+
     [Fact(DisplayName = "PairOf and TripleOf assemble value tuples from constrained parts.")]
     public void PairAndTriple() {
         for (int i = 0; i < SampleCount; i++) {

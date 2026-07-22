@@ -95,6 +95,23 @@ public sealed class AnyDictionary<TKey, TValue> : IAny<Dictionary<TKey, TValue>>
         return With(_keys.WithContaining(key, $"ContainingKey({AnyDerivation.Display(key)})"));
     }
 
+    /// <summary>
+    ///     Requires the dictionary to contain an entry whose key is drawn from <paramref name="generator" /> at
+    ///     generation time — the key analogue of a collection's <c>ContainingAny</c>. Named apart from
+    ///     <see cref="ContainingKey" /> to keep the two cases legible: <see cref="ContainingKey" /> pins a concrete
+    ///     key known now, whereas this draws one from a generator when the dictionary is built. The drawn key takes
+    ///     one entry's room and its value is generated like any other.
+    /// </summary>
+    /// <param name="generator">The generator whose drawn key the dictionary must contain.</param>
+    /// <returns>A new generator carrying the added constraint.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="generator" /> is <c>null</c>.</exception>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    public AnyDictionary<TKey, TValue> ContainingAnyKey(IAny<TKey> generator) {
+        if (generator is null) { throw new ArgumentNullException(nameof(generator)); }
+
+        return With(_keys.WithContaining(generator, "ContainingAnyKey(<generator>)"));
+    }
+
     /// <inheritdoc />
     public Dictionary<TKey, TValue> Generate() {
         List<TKey>                 keys       = _keys.Materialize(_source ?? AmbientRandomSource.Instance);
