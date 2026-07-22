@@ -158,9 +158,8 @@ public sealed class AnyCollectionTests {
         }
 
         // The same reasoning holds for a distinct list and for several out-of-domain values at once. Dictionary keys
-        // run through the very same CollectionState path, so the correction reaches them too — but AnyDictionary has
-        // no Containing surface, so its keys are gated purely by count (see DictionaryOfBehaves) and cannot exercise
-        // the out-of-domain case directly.
+        // run through the very same CollectionState path, so the correction reaches them too, now exercised directly
+        // through AnyDictionary.ContainingKey (see DictionaryContainingKeyOutsideDomainExtendsCardinality).
         for (int i = 0; i < SampleCount; i++) {
             HashSet<int> list = new(Any.ListOf(Any.Int32().OneOf(1, 2)).Containing(3).WithCount(3).Distinct().Generate());
             Check.That(list).Contains(1, 2, 3);
@@ -319,6 +318,37 @@ public sealed class AnyCollectionTests {
 
         Check.ThatCode(() => Any.DictionaryOf(Any.Boolean(), Any.Int32()).WithCount(3)).Throws<ConflictingAnyConstraintException>();
         Check.ThatCode(() => Any.DictionaryOf<int, int>(null!, Any.Int32())).Throws<ArgumentNullException>();
+    }
+
+    [Fact(DisplayName = "ContainingKey: a key outside the key domain extends the effective cardinality (issue #225).")]
+    public void DictionaryContainingKeyOutsideDomainExtendsCardinality() {
+        // Mirrors ContainingOutsideDomainExtendsCardinality on the dictionary surface: {1, 2} is all the key
+        // generator can produce, and 3 is supplied directly from outside that domain, so a three-entry dictionary is
+        // satisfiable — the out-of-domain cardinality-credit path AnyDictionary could not exercise before.
+        for (int i = 0; i < SampleCount; i++) {
+            Dictionary<int, string> dictionary =
+                Any.DictionaryOf(Any.Int32().OneOf(1, 2), Any.String().NonEmpty()).ContainingKey(3).WithCount(3).Generate();
+            Check.That(dictionary.Keys).Contains(1, 2, 3);
+            Check.That(dictionary.Count).IsEqualTo(3);
+            Check.That(dictionary.Values).ContainsOnlyElementsThatMatch(value => value.Length > 0);
+        }
+    }
+
+    [Fact(DisplayName = "ContainingKey: a within-domain key is present, an out-of-capacity one still conflicts eagerly.")]
+    public void DictionaryContainingKeyInsideDomainDoesNotInflate() {
+        // A within-domain fixed key is present and adds no capacity of its own.
+        for (int i = 0; i < SampleCount; i++) {
+            Dictionary<int, string> dictionary =
+                Any.DictionaryOf(Any.Int32().Between(1, 9), Any.String().NonEmpty()).WithCount(5).ContainingKey(7).Generate();
+            Check.That(dictionary.ContainsKey(7)).IsTrue();
+            Check.That(dictionary.Count).IsEqualTo(5);
+        }
+
+        // 1 is already producible, so three distinct keys over {1, 2} remain impossible and still fail eagerly,
+        // naming the shortfall — exactly as ContainingInsideDomainDoesNotInflate asserts for a set.
+        ConflictingAnyConstraintException conflict = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.DictionaryOf(Any.Int32().OneOf(1, 2), Any.String().NonEmpty()).ContainingKey(1).WithCount(3));
+        Check.That(conflict.Message).Contains("2 distinct value");
     }
 
     [Fact(DisplayName = "PairOf and TripleOf assemble value tuples from constrained parts.")]
