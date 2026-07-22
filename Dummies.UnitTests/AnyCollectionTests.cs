@@ -364,6 +364,31 @@ public sealed class AnyCollectionTests {
         Check.ThatCode(() => Any.DictionaryOf(Any.Int32(), Any.Int32()).ContainingAnyKey(null!)).Throws<ArgumentNullException>();
     }
 
+    [Fact(DisplayName = "ContainingEntry: pins the value for a required key, extending cardinality out of domain (issue #288).")]
+    public void DictionaryContainingEntryPinsTheValue() {
+        for (int i = 0; i < SampleCount; i++) {
+            // Key 3 is outside the key domain {1, 2} (supplied directly, extends cardinality); value 99 is outside
+            // the value domain {1..9}, proving it is the pinned value rather than a generated one.
+            Dictionary<int, int> dictionary =
+                Any.DictionaryOf(Any.Int32().OneOf(1, 2), Any.Int32().Between(1, 9))
+                   .ContainingEntry(3, 99)
+                   .WithCount(3)
+                   .Generate();
+            Check.That(dictionary.Keys).Contains(1, 2, 3);
+            Check.That(dictionary[3]).IsEqualTo(99);
+            Check.That(dictionary.Count).IsEqualTo(3);
+        }
+    }
+
+    [Fact(DisplayName = "ContainingEntry: pinning the same key twice — or an entry and a ContainingKey — conflicts.")]
+    public void DictionaryContainingEntryDuplicateKeyConflicts() {
+        Check.ThatCode(() => Any.DictionaryOf(Any.Int32(), Any.Int32()).ContainingEntry(1, 10).ContainingEntry(1, 20))
+             .Throws<ConflictingAnyConstraintException>();
+
+        Check.ThatCode(() => Any.DictionaryOf(Any.Int32(), Any.Int32()).ContainingKey(1).ContainingEntry(1, 20))
+             .Throws<ConflictingAnyConstraintException>();
+    }
+
     [Fact(DisplayName = "PairOf and TripleOf assemble value tuples from constrained parts.")]
     public void PairAndTriple() {
         for (int i = 0; i < SampleCount; i++) {

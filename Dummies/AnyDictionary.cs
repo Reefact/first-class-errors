@@ -12,18 +12,29 @@ namespace Dummies;
 public sealed class AnyDictionary<TKey, TValue> : IAny<Dictionary<TKey, TValue>>, IHasRandomSource
     where TKey : notnull {
 
-    #region Fields declarations
+    #region Statics members declarations
 
-    private readonly CollectionState<TKey> _keys;
-    private readonly RandomSource?         _source;
-    private readonly IAny<TValue>          _values;
+    private static readonly IReadOnlyDictionary<TKey, TValue> NoPinnedValues = new Dictionary<TKey, TValue>();
 
     #endregion
 
-    internal AnyDictionary(RandomSource? source, CollectionState<TKey> keys, IAny<TValue> values) {
-        _source = source;
-        _keys   = keys;
-        _values = values;
+    #region Fields declarations
+
+    private readonly CollectionState<TKey>             _keys;
+    private readonly IReadOnlyDictionary<TKey, TValue> _pinnedValues;
+    private readonly RandomSource?                     _source;
+    private readonly IAny<TValue>                      _values;
+
+    #endregion
+
+    internal AnyDictionary(RandomSource? source, CollectionState<TKey> keys, IAny<TValue> values)
+        : this(source, keys, values, NoPinnedValues) { }
+
+    private AnyDictionary(RandomSource? source, CollectionState<TKey> keys, IAny<TValue> values, IReadOnlyDictionary<TKey, TValue> pinnedValues) {
+        _source       = source;
+        _keys         = keys;
+        _values       = values;
+        _pinnedValues = pinnedValues;
     }
 
     RandomSource? IHasRandomSource.Source => _source;
@@ -112,17 +123,40 @@ public sealed class AnyDictionary<TKey, TValue> : IAny<Dictionary<TKey, TValue>>
         return With(_keys.WithContaining(generator, "ContainingAnyKey(<generator>)"));
     }
 
+    /// <summary>
+    ///     Requires the dictionary to contain the entry <paramref name="key" /> → <paramref name="value" />: the key
+    ///     is forced in exactly as <see cref="ContainingKey" /> does (inheriting the out-of-domain cardinality
+    ///     credit), and its value is pinned to <paramref name="value" /> instead of being drawn from the value
+    ///     generator; the other entries stay arbitrary. Declaring two entries for the same key — or an entry and a
+    ///     <see cref="ContainingKey" /> for it — conflicts, since the keys must be distinct.
+    /// </summary>
+    /// <param name="key">The key the generated dictionary must contain.</param>
+    /// <param name="value">The value pinned to <paramref name="key" />.</param>
+    /// <returns>A new generator carrying the added constraint.</returns>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    public AnyDictionary<TKey, TValue> ContainingEntry(TKey key, TValue value) {
+        CollectionState<TKey> keys = _keys.WithContaining(key, $"ContainingEntry({AnyDerivation.Display(key)}, {AnyDerivation.Display(value)})");
+
+        Dictionary<TKey, TValue> pinned = new(_pinnedValues.Count + 1, _keys.Comparer);
+        foreach (KeyValuePair<TKey, TValue> entry in _pinnedValues) { pinned[entry.Key] = entry.Value; }
+        pinned[key] = value;
+
+        return new AnyDictionary<TKey, TValue>(_source, keys, _values, pinned);
+    }
+
     /// <inheritdoc />
     public Dictionary<TKey, TValue> Generate() {
         List<TKey>                 keys       = _keys.Materialize(_source ?? AmbientRandomSource.Instance);
         Dictionary<TKey, TValue>   dictionary = new(keys.Count, _keys.Comparer);
-        foreach (TKey key in keys) { dictionary[key] = _values.Generate(); }
+        foreach (TKey key in keys) {
+            dictionary[key] = _pinnedValues.ContainsKey(key) ? _pinnedValues[key] : _values.Generate();
+        }
 
         return dictionary;
     }
 
     private AnyDictionary<TKey, TValue> With(CollectionState<TKey> keys) {
-        return new AnyDictionary<TKey, TValue>(_source, keys, _values);
+        return new AnyDictionary<TKey, TValue>(_source, keys, _values, _pinnedValues);
     }
 
 }
