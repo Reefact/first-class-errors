@@ -215,3 +215,4 @@ Optional supporting material:
 | [ADR-0030](0030-draw-arbitrary-strings-from-an-explicit-terminal-set.md) | Draw arbitrary strings from an explicit, terminal value set | Accepted |
 | [ADR-0031](0031-name-any-factories-after-their-clr-type.md) | Name Any's scalar factories after their CLR type | Accepted |
 | [ADR-0032](0032-draw-arbitrary-values-from-an-explicit-top-level-pool.md) | Draw arbitrary values from an explicit, top-level choice pool | Accepted |
+| [ADR-0033](0033-meet-string-exclusions-with-a-bounded-redraw.md) | Meet string exclusions with a bounded redraw | Accepted |
