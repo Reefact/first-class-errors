@@ -50,6 +50,65 @@ merges a pull request. When it is genuinely unclear whether a change is
 significant enough, or whether it supersedes an existing ADR, say so in the pull
 request and let `@reefact` judge rather than guessing.
 
+## Tidying history before a pull request (acting agent)
+
+This governs the agent that *prepares* a branch for review, not the reviewer.
+This repository merges pull requests with a **merge commit**, so every commit a
+branch carries lands in `main`'s history — a messy branch is not squashed away
+on merge, it pollutes protected history for good. `CONTRIBUTING.md` already
+fixes the endpoint (autosquash placeholders squashed before merge, a conforming
+header on every commit, one intention per commit); this section makes the agent
+*reach* it **on its own initiative**, the way it runs the ADR check without
+being asked.
+
+At two moments, read the branch against a freshly fetched `origin/main`:
+**before opening a pull request**, and **after pushing further commits to an
+already-open one**.
+
+```
+git fetch origin
+git log --oneline origin/main..HEAD
+```
+
+Judge whether the history reads clean. Treat these as **messy**, worth proposing
+a cleanup for:
+
+- autosquash placeholders still pending — `fixup!`, `squash!`, `amend!` (CI
+  rejects them);
+- a commit that only fixes, rewords, or reverts an earlier commit of the *same*
+  branch — "wip", "typo", "address review", a commit and its own revert;
+- a header that fails the convention — run each through the repository's own
+  linter, `git log -1 --format=%B <sha> | tools/commit-lint/lint-commit-message.sh --ci -`;
+- one logical change scattered across commits that do not each stand alone, or
+  two unrelated intentions folded into one commit (CONTRIBUTING.md, "Commit
+  messages").
+
+When it reads clean, say so in one line and proceed. When it is messy,
+**propose** a concrete plan — which commits to squash, reword, drop, or reorder,
+and the resulting `git log --oneline` shape — and rewrite only after an explicit
+go-ahead. The endpoint is the maintainer's to approve: no agent rewrites a
+branch on its own authority any more than it merges one.
+
+Hard constraints on the rewrite itself (CONTRIBUTING.md, "Branches"):
+
+- Rewrite history **only while the branch is yours alone**. Once anyone may have
+  based work on it, a force-push discards that work — leave the history and say
+  why.
+- Publish with `git push --force-with-lease`, never a bare `--force`: the lease
+  refuses the push if the remote moved under you.
+- Never touch a commit already on `main`; `origin/main..HEAD` is the only range
+  you may rewrite.
+- This tidies history, not code. The diff against `origin/main` MUST be identical
+  before and after — prove it with `git range-diff origin/main <old-head> HEAD`
+  (only messages and grouping move, never the tree).
+
+For Claude Code the mechanics are packaged: the `/tidy-history` command runs the
+assessment and, on approval, the rewrite; a hook (`.claude/`, on pull-request
+creation and after each committing or pushing git command) flags the CI-fatal
+signals so the check is never skipped. Other agents apply the rule by hand.
+Either way the judgement — *is this messy?* — and the decision to rewrite stay
+here.
+
 ## Review guidelines (pull request reviews)
 
 READ THIS BEFORE REVIEWING. The full specification is in `code_review.md`; the
