@@ -192,6 +192,32 @@ public sealed class AnyString : IAny<string>, IHasRandomSource {
         return new AnyString(_source, _spec.WithCharset(CharacterSet.AlphaNumeric, "AlphaNumeric()"));
     }
 
+    /// <summary>
+    ///     Restricts the string to the characters of an explicit <paramref name="pool" /> — a custom alphabet, the
+    ///     general form of <see cref="Alpha" />/<see cref="Numeric" />/<see cref="AlphaNumeric" />. Use it to reach
+    ///     characters the named sets cannot, most notably non-ASCII text (accents, other scripts), without a
+    ///     <see cref="Any.StringMatching(string)" /> literal. Declared once per generator: it occupies the same
+    ///     character-family slot as the named sets, and because the pool is the whole character definition it cannot
+    ///     combine with <see cref="LowerCase" />/<see cref="UpperCase" /> — put only the casing you want in the pool.
+    ///     Any anchored fragment (prefix, suffix, contained value) must be drawn from the pool, otherwise the conflict
+    ///     is reported at declaration naming both sides. Duplicate characters collapse and each distinct character is
+    ///     equally likely. The pool is a sequence of UTF-16 code units, so a code point outside the Basic Multilingual
+    ///     Plane (an astral emoji) is two units and is not guaranteed to be drawn as an indivisible unit.
+    /// </summary>
+    /// <param name="pool">The characters the generated string is drawn from; duplicates are ignored.</param>
+    /// <returns>A new generator carrying the added constraint.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="pool" /> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="pool" /> is empty.</exception>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    public AnyString WithChars(string pool) {
+        if (pool is null) { throw new ArgumentNullException(nameof(pool)); }
+        if (pool.Length == 0) { throw new ArgumentException("The character pool must not be empty.", nameof(pool)); }
+
+        string distinct = new(pool.Distinct().ToArray());
+
+        return new AnyString(_source, _spec.WithCharPool(distinct, $"WithChars(\"{pool}\")"));
+    }
+
     /// <summary>Requires every alphabetic character to be lowercase. Declared once per generator.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
