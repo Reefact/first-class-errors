@@ -42,6 +42,10 @@ public sealed class AnyString : IAny<string>, IHasRandomSource {
         return value.ToString(CultureInfo.InvariantCulture);
     }
 
+    private static string Join(string[] values) {
+        return string.Join(", ", values.Select(value => $"\"{value}\""));
+    }
+
     private static string RequireText(string value, string parameterName) {
         if (value is null) { throw new ArgumentNullException(parameterName); }
         if (value.Length == 0) { throw new ArgumentException("The value must not be empty.", parameterName); }
@@ -203,6 +207,39 @@ public sealed class AnyString : IAny<string>, IHasRandomSource {
     }
 
     /// <summary>
+    ///     Requires the generated string to be none of the supplied <paramref name="values" />. May be declared several
+    ///     times; the exclusions accumulate. Unlike the shape constraints an exclusion is met by a <b>bounded</b> redraw
+    ///     of the constructed layout, so an exclusion tight enough to leave the shape unsatisfiable surfaces at
+    ///     <see cref="Generate" /> as a seed-bearing <see cref="AnyGenerationException" />, never as a declaration-time
+    ///     conflict. The empty string is a valid value to exclude; a <c>null</c> element is not.
+    /// </summary>
+    /// <param name="values">The values the generated string must differ from; duplicates are ignored.</param>
+    /// <returns>A new generator carrying the added constraint.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="values" /> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="values" /> is empty or contains a <c>null</c> element.</exception>
+    public AnyString Except(params string[] values) {
+        if (values is null) { throw new ArgumentNullException(nameof(values)); }
+        if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
+        if (values.Any(value => value is null)) { throw new ArgumentException("The values must not contain a null element.", nameof(values)); }
+
+        return new AnyString(_source, _spec.WithExcluded(values, $"Except({Join(values)})"));
+    }
+
+    /// <summary>
+    ///     Requires the generated string to differ from <paramref name="value" /> — typically an existing value the test
+    ///     already holds, to exercise an inequality path while preserving the declared shape. Semantically equivalent to
+    ///     <see cref="Except(string[])" />; the name carries the intent at the call site.
+    /// </summary>
+    /// <param name="value">The value the generated string must differ from.</param>
+    /// <returns>A new generator carrying the added constraint.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value" /> is <c>null</c>.</exception>
+    public AnyString DifferentFrom(string value) {
+        if (value is null) { throw new ArgumentNullException(nameof(value)); }
+
+        return new AnyString(_source, _spec.WithExcluded([value], $"DifferentFrom(\"{value}\")"));
+    }
+
+    /// <summary>
     ///     Draws the string from an explicit, fixed set of <paramref name="values" /> instead of shaping one — the
     ///     dummy for a value whose domain is a closed list the test does not assert on (a currency code, a well-known
     ///     name). This is a <b>terminal</b> constraint: the supplied values are the whole specification, so it does not
@@ -243,7 +280,7 @@ public sealed class AnyString : IAny<string>, IHasRandomSource {
 
     /// <inheritdoc />
     public string Generate() {
-        return _spec.Generate(_source.Current.Random);
+        return _spec.Generate(_source);
     }
 
 }

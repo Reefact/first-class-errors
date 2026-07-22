@@ -132,10 +132,13 @@ public sealed class SurfaceParityTests {
         yield return [typeof(AnyEnum<DayOfWeek>), new[] { "OneOf", "Except", "DifferentFrom" }];
         yield return [typeof(AnyChar), new[] { "Alpha", "AlphaNumeric", "Numeric", "UpperCase", "LowerCase", "OneOf", "Except", "DifferentFrom" }];
 
-        // AnyString is deliberately the only scalar builder with no exclusion constraints (no OneOf/Except/DifferentFrom).
+        // AnyString carries the exclusion pair Except/DifferentFrom (met by a bounded redraw, since strings are not
+        // ordinal-mapped). Its OneOf is terminal — it returns AnyStringOneOf, a different type, so it is not a
+        // self-returning constraint and does not appear in this fluent-method set.
         yield return [typeof(AnyString), new[] {
             "NonEmpty", "WithLength", "WithMinLength", "WithMaxLength", "WithLengthBetween",
-            "StartingWith", "EndingWith", "Containing", "Alpha", "AlphaNumeric", "Numeric", "UpperCase", "LowerCase"
+            "StartingWith", "EndingWith", "Containing", "Alpha", "AlphaNumeric", "Numeric", "UpperCase", "LowerCase",
+            "Except", "DifferentFrom"
         }];
 
 #if NET8_0_OR_GREATER

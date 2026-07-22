@@ -257,4 +257,67 @@ public sealed class AnyStringTests {
         Check.ThatCode(() => Any.String().Containing("")).Throws<ArgumentException>();
     }
 
+    [Fact(DisplayName = "DifferentFrom never returns the excluded value.")]
+    public void DifferentFromNeverReturnsTheExcludedValue() {
+        foreach (string value in Samples(Any.String().WithLength(1).Alpha().DifferentFrom("A"))) {
+            Check.That(value).IsNotEqualTo("A");
+        }
+    }
+
+    [Fact(DisplayName = "Except excludes each listed value.")]
+    public void ExceptExcludesEachListedValue() {
+        string[] forbidden = { "A", "B", "C" };
+        foreach (string value in Samples(Any.String().WithLength(1).Alpha().Except("A", "B", "C"))) {
+            Check.That(forbidden.Contains(value)).IsFalse();
+        }
+    }
+
+    [Fact(DisplayName = "An exclusion preserves the declared shape: only shape-matching survivors are drawn.")]
+    public void ExclusionPreservesTheDeclaredShape() {
+        foreach (string value in Samples(Any.String().StartingWith("ORD-").WithLength(5).DifferentFrom("ORD-A"))) {
+            Check.That(value).StartsWith("ORD-");
+            Check.That(value.Length).IsEqualTo(5);
+            Check.That(value).IsNotEqualTo("ORD-A");
+        }
+    }
+
+    [Fact(DisplayName = "Exclusions accumulate across several declarations.")]
+    public void ExclusionsAccumulateAcrossDeclarations() {
+        foreach (string value in Samples(Any.String().WithLength(1).Alpha().Except("A", "B").DifferentFrom("C"))) {
+            Check.That(value is "A" or "B" or "C").IsFalse();
+        }
+    }
+
+    [Fact(DisplayName = "An over-tight exclusion fails at generation with a bounded, seed-bearing AnyGenerationException.")]
+    public void OverTightExclusionThrowsSeedBearingGenerationException() {
+        string[] everyLetter = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".Select(letter => letter.ToString()).ToArray();
+
+        AnyGenerationException error = Assert.Throws<AnyGenerationException>(
+            () => Any.WithSeed(20260721).String().WithLength(1).Alpha().Except(everyLetter).Generate());
+
+        Check.That(error.Seed).IsEqualTo(20260721);
+        Check.That(error.Message).Contains("Any.WithSeed(20260721)");
+    }
+
+    [Fact(DisplayName = "A seeded exclusion is reproducible: the same seed yields the same value.")]
+    public void SeededExclusionIsReproducible() {
+        string first  = Any.WithSeed(4242).String().NonEmpty().Alpha().DifferentFrom("Q").Generate();
+        string second = Any.WithSeed(4242).String().NonEmpty().Alpha().DifferentFrom("Q").Generate();
+
+        Check.That(second).IsEqualTo(first);
+    }
+
+    [Fact(DisplayName = "OneOf cannot combine with an exclusion: it stays terminal.")]
+    public void OneOfCannotCombineWithAnExclusion() {
+        Check.ThatCode(() => Any.String().DifferentFrom("x").OneOf("a", "b")).Throws<ConflictingAnyConstraintException>();
+    }
+
+    [Fact(DisplayName = "Exclusion arguments are validated as arguments, not as conflicts.")]
+    public void ExclusionArgumentsAreValidated() {
+        Check.ThatCode(() => Any.String().DifferentFrom(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => Any.String().Except(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => Any.String().Except()).Throws<ArgumentException>();
+        Check.ThatCode(() => Any.String().Except("a", null!)).Throws<ArgumentException>();
+    }
+
 }

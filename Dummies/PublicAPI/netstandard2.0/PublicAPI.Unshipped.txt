@@ -227,7 +227,9 @@ Dummies.AnyString
 Dummies.AnyString.Alpha() -> Dummies.AnyString!
 Dummies.AnyString.AlphaNumeric() -> Dummies.AnyString!
 Dummies.AnyString.Containing(string! value) -> Dummies.AnyString!
+Dummies.AnyString.DifferentFrom(string! value) -> Dummies.AnyString!
 Dummies.AnyString.EndingWith(string! suffix) -> Dummies.AnyString!
+Dummies.AnyString.Except(params string![]! values) -> Dummies.AnyString!
 Dummies.AnyString.Generate() -> string!
 Dummies.AnyString.LowerCase() -> Dummies.AnyString!
 Dummies.AnyString.NonEmpty() -> Dummies.AnyString!
