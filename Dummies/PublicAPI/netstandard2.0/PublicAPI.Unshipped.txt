@@ -102,6 +102,7 @@ Dummies.AnyDecimal.Positive() -> Dummies.AnyDecimal!
 Dummies.AnyDecimal.Zero() -> Dummies.AnyDecimal!
 Dummies.AnyDictionary<TKey, TValue>
 Dummies.AnyDictionary<TKey, TValue>.ContainingAnyKey(Dummies.IAny<TKey>! generator) -> Dummies.AnyDictionary<TKey, TValue>!
+Dummies.AnyDictionary<TKey, TValue>.ContainingEntry(TKey key, TValue value) -> Dummies.AnyDictionary<TKey, TValue>!
 Dummies.AnyDictionary<TKey, TValue>.ContainingKey(TKey key) -> Dummies.AnyDictionary<TKey, TValue>!
 Dummies.AnyDictionary<TKey, TValue>.Empty() -> Dummies.AnyDictionary<TKey, TValue>!
 Dummies.AnyDictionary<TKey, TValue>.Generate() -> System.Collections.Generic.Dictionary<TKey, TValue>!
