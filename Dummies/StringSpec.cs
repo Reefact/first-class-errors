@@ -43,7 +43,7 @@ internal sealed class StringSpec {
 
     internal static readonly StringSpec Unconstrained = new(null, null, 0, null, null, null,
                                                             null, null, null, null, [],
-                                                            null, null, null, null, []);
+                                                            null, null, null, null, null, []);
 
     private static string V(int value) {
         return value.ToString(CultureInfo.InvariantCulture);
@@ -61,6 +61,7 @@ internal sealed class StringSpec {
     private readonly string?               _casingConstraint;
     private readonly CharacterSet?         _charset;
     private readonly string?               _charsetConstraint;
+    private readonly string?               _customPool;
     private readonly int?                  _exactLength;
     private readonly string?               _exactConstraint;
     private readonly IReadOnlyList<string> _excluded;
@@ -82,7 +83,7 @@ internal sealed class StringSpec {
                        string? prefix,      string? prefixConstraint,
                        string? suffix,      string? suffixConstraint,
                        IReadOnlyList<string> fragments,
-                       CharacterSet? charset, string? charsetConstraint,
+                       CharacterSet? charset, string? charsetConstraint, string? customPool,
                        LetterCasing? casing,  string? casingConstraint,
                        IReadOnlyList<string> excluded) {
         _exactLength      = exactLength;
@@ -99,6 +100,7 @@ internal sealed class StringSpec {
         _fragments        = fragments;
         _charset          = charset;
         _charsetConstraint = charsetConstraint;
+        _customPool       = customPool;
         _casing           = casing;
         _casingConstraint = casingConstraint;
     }
@@ -111,7 +113,7 @@ internal sealed class StringSpec {
     internal bool IsUnconstrained =>
         _exactLength is null && _minLength == 0 && _maxLength is null &&
         _prefix is null && _suffix is null && _fragments.Count == 0 &&
-        _charset is null && _casing is null && _excluded.Count == 0;
+        _charset is null && _casing is null && _excluded.Count == 0 && _customPool is null;
 
     /// <summary>Fixes the exact length; declared once per generator.</summary>
     internal StringSpec WithExactLength(int length, string applying) {
@@ -119,7 +121,7 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(length, applying, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
-                                   _charset, _charsetConstraint, _casing, _casingConstraint, _excluded);
+                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, _excluded);
 
         return candidate.Validated(applying);
     }
@@ -130,7 +132,7 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, length, applying, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
-                                   _charset, _charsetConstraint, _casing, _casingConstraint, _excluded);
+                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, _excluded);
 
         return candidate.Validated(applying);
     }
@@ -141,7 +143,7 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, length, applying,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
-                                   _charset, _charsetConstraint, _casing, _casingConstraint, _excluded);
+                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, _excluded);
 
         return candidate.Validated(applying);
     }
@@ -152,7 +154,7 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    prefix, applying, _suffix, _suffixConstraint, _fragments,
-                                   _charset, _charsetConstraint, _casing, _casingConstraint, _excluded);
+                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, _excluded);
 
         return candidate.Validated(applying);
     }
@@ -163,7 +165,7 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, suffix, applying, _fragments,
-                                   _charset, _charsetConstraint, _casing, _casingConstraint, _excluded);
+                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, _excluded);
 
         return candidate.Validated(applying);
     }
@@ -174,7 +176,7 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, fragments,
-                                   _charset, _charsetConstraint, _casing, _casingConstraint, _excluded);
+                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, _excluded);
 
         return candidate.Validated(applying);
     }
@@ -185,7 +187,24 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
-                                   charset, applying, _casing, _casingConstraint, _excluded);
+                                   charset, applying, _customPool, _casing, _casingConstraint, _excluded);
+
+        return candidate.Validated(applying);
+    }
+
+    /// <summary>
+    ///     Restricts the filler to an explicit character pool — the general form of the named character sets.
+    ///     Occupies the charset slot (declared once, and mutually exclusive with the named sets) and, because the
+    ///     pool is the whole character definition, cannot combine with a casing. The pool is expected to be
+    ///     distinct already.
+    /// </summary>
+    internal StringSpec WithCharPool(string pool, string applying) {
+        if (_charsetConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_charsetConstraint} is already defined."); }
+        if (_casingConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_casingConstraint} is already defined."); }
+
+        StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
+                                   _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
+                                   _charset, applying, pool, _casing, _casingConstraint, _excluded);
 
         return candidate.Validated(applying);
     }
@@ -193,10 +212,11 @@ internal sealed class StringSpec {
     /// <summary>Imposes a letter casing; declared once per generator.</summary>
     internal StringSpec WithCasing(LetterCasing casing, string applying) {
         if (_casingConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_casingConstraint} is already defined."); }
+        if (_customPool is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_charsetConstraint} is already defined."); }
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
-                                   _charset, _charsetConstraint, casing, applying, _excluded);
+                                   _charset, _charsetConstraint, _customPool, casing, applying, _excluded);
 
         return candidate.Validated(applying);
     }
@@ -210,7 +230,7 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
-                                   _charset, _charsetConstraint, _casing, _casingConstraint, excluded);
+                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, excluded);
 
         return candidate.Validated(applying);
     }
@@ -328,13 +348,11 @@ internal sealed class StringSpec {
 
     private void ValidateFragmentCharacters(string applying) {
         foreach ((string kind, string fragment) in Fragments()) {
-            if (_charset is CharacterSet charset) {
-                char? offending = FirstOutsideCharset(fragment, charset);
-                if (offending is char outside) {
-                    throw new ConflictingAnyConstraintException(applying == _charsetConstraint
-                                                                    ? $"Cannot apply {applying} because the {kind} \"{fragment}\" contains '{outside}', which it does not allow."
-                                                                    : $"Cannot apply {applying} because {_charsetConstraint} does not allow its character '{outside}'.");
-                }
+            char? offendingCharacter = FirstDisallowedCharacter(fragment);
+            if (offendingCharacter is char outside) {
+                throw new ConflictingAnyConstraintException(applying == _charsetConstraint
+                                                                ? $"Cannot apply {applying} because the {kind} \"{fragment}\" contains '{outside}', which it does not allow."
+                                                                : $"Cannot apply {applying} because {_charsetConstraint} does not allow its character '{outside}'.");
             }
 
             if (_casing is LetterCasing casing) {
@@ -371,6 +389,18 @@ internal sealed class StringSpec {
         return required;
     }
 
+    private char? FirstDisallowedCharacter(string fragment) {
+        if (_customPool is not null) {
+            foreach (char character in fragment) {
+                if (_customPool.IndexOf(character) < 0) { return character; }
+            }
+
+            return null;
+        }
+
+        return _charset is CharacterSet charset ? FirstOutsideCharset(fragment, charset) : null;
+    }
+
     private static char? FirstOutsideCharset(string fragment, CharacterSet charset) {
         foreach (char character in fragment) {
             bool allowed = charset switch {
@@ -395,6 +425,8 @@ internal sealed class StringSpec {
     }
 
     private string FillerPool() {
+        if (_customPool is not null) { return _customPool; }
+
         string letters = _casing switch {
             LetterCasing.Lower => CharacterPools.LowerLetters,
             LetterCasing.Upper => CharacterPools.UpperLetters,

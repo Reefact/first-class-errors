@@ -37,6 +37,11 @@ matter — and that is the point.
   Home-grown (zero dependencies) over the regular subset of the pattern language; a
   non-regular construct (a lookaround, a backreference) is refused with a clear error
   rather than a silently non-matching value.
+- **Custom alphabets**: `Any.String().WithChars("αβγδε")` restricts the string to an
+  explicit character pool — the general form of the built-in `Alpha`/`Numeric`/
+  `AlphaNumeric` sets, and the way to reach non-ASCII text (accents, other scripts)
+  without a `StringMatching` literal. Anchored fragments must be drawn from the pool, or
+  the conflict is reported at declaration.
 - **Strings from an explicit set**: `Any.String().OneOf("EUR", "USD", "GBP")` draws from
   a fixed, closed list — the dummy for a value whose domain is a short enumeration (a
   currency code, a well-known name). A *terminal* generator, like `StringMatching`: the

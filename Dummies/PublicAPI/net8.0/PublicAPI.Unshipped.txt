@@ -281,6 +281,7 @@ Dummies.AnyString.OneOf(params string![]! values) -> Dummies.AnyStringOneOf!
 Dummies.AnyString.OneOf(System.Collections.Generic.IEnumerable<string!>! values) -> Dummies.AnyStringOneOf!
 Dummies.AnyString.StartingWith(string! prefix) -> Dummies.AnyString!
 Dummies.AnyString.UpperCase() -> Dummies.AnyString!
+Dummies.AnyString.WithChars(string! pool) -> Dummies.AnyString!
 Dummies.AnyString.WithLength(int length) -> Dummies.AnyString!
 Dummies.AnyString.WithLengthBetween(int minimum, int maximum) -> Dummies.AnyString!
 Dummies.AnyString.WithMaxLength(int length) -> Dummies.AnyString!

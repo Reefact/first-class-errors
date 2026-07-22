@@ -137,7 +137,7 @@ public sealed class SurfaceParityTests {
         // self-returning constraint and does not appear in this fluent-method set.
         yield return [typeof(AnyString), new[] {
             "NonEmpty", "WithLength", "WithMinLength", "WithMaxLength", "WithLengthBetween",
-            "StartingWith", "EndingWith", "Containing", "Alpha", "AlphaNumeric", "Numeric", "UpperCase", "LowerCase",
+            "StartingWith", "EndingWith", "Containing", "Alpha", "AlphaNumeric", "Numeric", "WithChars", "UpperCase", "LowerCase",
             "Except", "DifferentFrom"
         }];
 
