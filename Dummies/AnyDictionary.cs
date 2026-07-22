@@ -1,9 +1,3 @@
-#region Usings declarations
-
-using System.Globalization;
-
-#endregion
-
 namespace Dummies;
 
 /// <summary>
@@ -17,20 +11,6 @@ namespace Dummies;
 /// <typeparam name="TValue">The value type.</typeparam>
 public sealed class AnyDictionary<TKey, TValue> : IAny<Dictionary<TKey, TValue>>, IHasRandomSource
     where TKey : notnull {
-
-    #region Statics members declarations
-
-    private static string V(int value) {
-        return value.ToString(CultureInfo.InvariantCulture);
-    }
-
-    private static int RequireNonNegative(int count, string parameterName) {
-        if (count < 0) { throw new ArgumentOutOfRangeException(parameterName, count, "The count must not be negative."); }
-
-        return count;
-    }
-
-    #endregion
 
     #region Fields declarations
 
@@ -52,14 +32,14 @@ public sealed class AnyDictionary<TKey, TValue> : IAny<Dictionary<TKey, TValue>>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDictionary<TKey, TValue> NonEmpty() {
-        return With(_keys.WithMinCount(1, "NonEmpty()"));
+        return With(CountConstraints.NonEmpty(_keys));
     }
 
     /// <summary>Fixes the dictionary to no entries.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDictionary<TKey, TValue> Empty() {
-        return With(_keys.WithExactCount(0, "Empty()"));
+        return With(CountConstraints.Empty(_keys));
     }
 
     /// <summary>Fixes the exact number of entries. Declared once per generator.</summary>
@@ -68,9 +48,7 @@ public sealed class AnyDictionary<TKey, TValue> : IAny<Dictionary<TKey, TValue>>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count" /> is negative.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDictionary<TKey, TValue> WithCount(int count) {
-        RequireNonNegative(count, nameof(count));
-
-        return With(_keys.WithExactCount(count, $"WithCount({V(count)})"));
+        return With(CountConstraints.WithCount(_keys, count));
     }
 
     /// <summary>Requires at least <paramref name="count" /> entries.</summary>
@@ -79,9 +57,7 @@ public sealed class AnyDictionary<TKey, TValue> : IAny<Dictionary<TKey, TValue>>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count" /> is negative.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDictionary<TKey, TValue> WithMinCount(int count) {
-        RequireNonNegative(count, nameof(count));
-
-        return With(_keys.WithMinCount(count, $"WithMinCount({V(count)})"));
+        return With(CountConstraints.WithMinCount(_keys, count));
     }
 
     /// <summary>Requires at most <paramref name="count" /> entries.</summary>
@@ -90,9 +66,7 @@ public sealed class AnyDictionary<TKey, TValue> : IAny<Dictionary<TKey, TValue>>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count" /> is negative.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDictionary<TKey, TValue> WithMaxCount(int count) {
-        RequireNonNegative(count, nameof(count));
-
-        return With(_keys.WithMaxCount(count, $"WithMaxCount({V(count)})"));
+        return With(CountConstraints.WithMaxCount(_keys, count));
     }
 
     /// <summary>Requires a number of entries within the inclusive range [<paramref name="minimum" />, <paramref name="maximum" />].</summary>
@@ -103,13 +77,7 @@ public sealed class AnyDictionary<TKey, TValue> : IAny<Dictionary<TKey, TValue>>
     /// <exception cref="ArgumentException">Thrown when <paramref name="minimum" /> is greater than <paramref name="maximum" />.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDictionary<TKey, TValue> WithCountBetween(int minimum, int maximum) {
-        RequireNonNegative(minimum, nameof(minimum));
-        RequireNonNegative(maximum, nameof(maximum));
-        if (minimum > maximum) { throw new ArgumentException($"The minimum ({V(minimum)}) must be less than or equal to the maximum ({V(maximum)}).", nameof(minimum)); }
-
-        string constraint = $"WithCountBetween({V(minimum)}, {V(maximum)})";
-
-        return With(_keys.WithMinCount(minimum, constraint).WithMaxCount(maximum, constraint));
+        return With(CountConstraints.WithCountBetween(_keys, minimum, maximum));
     }
 
     /// <summary>
