@@ -55,8 +55,12 @@ matter — and that is the point.
   identities with `NonEmpty`/`DifferentFrom` — and deliberately no clock-relative
   constraints: a reproducible test pins its reference instants explicitly.
 - **Values built to satisfy the constraints** — a scalar is constructed directly,
-  never generated-then-filtered. Only a *distinct* collection ever redraws, and only
-  to skip a duplicate: a **bounded** deduplicating draw, never an unbounded retry loop.
+  never generated-then-filtered. The one exception is excluding values from a string
+  (`Any.String().DifferentFrom(...)`/`Except(...)`): a string has no ordinal mapping to
+  build the exclusion into, so it is met by a **bounded** redraw — the same escape a
+  *distinct* collection uses to skip a duplicate, never an unbounded retry loop. An
+  exclusion tight enough to leave the shape unsatisfiable surfaces at generation as a
+  seed-bearing `AnyGenerationException`.
 - **Conflicting constraints fail fast** with a clear, actionable
   `ConflictingAnyConstraintException` at the moment the conflicting constraint is
   declared — for example `Any.String().WithLength(3).StartingWith("ORD-")`.

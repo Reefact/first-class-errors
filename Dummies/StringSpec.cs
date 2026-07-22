@@ -9,25 +9,41 @@ namespace Dummies;
 
 /// <summary>
 ///     The immutable specification behind <see cref="AnyString" />: length bounds, anchored fragments (prefix,
-///     suffix, contained values), a character set and a letter casing — each remembering the constraint that set it,
-///     so a conflict message can name both sides. Every mutation returns a new specification and cross-validates the
-///     whole eagerly: an <see cref="AnyString" /> that exists can always generate.
+///     suffix, contained values), a character set, a letter casing and excluded values — each remembering the
+///     constraint that set it, so a conflict message can name both sides. Every mutation returns a new specification
+///     and cross-validates the whole eagerly: an <see cref="AnyString" /> that exists can always generate — save for
+///     an exclusion tight enough to leave the shape unsatisfiable, the one failure deferred to generation (see remarks).
 /// </summary>
 /// <remarks>
-///     Fragments are laid out without overlap analysis: a generated string is
-///     <c>prefix + filler + contained values + filler + suffix</c>, so the length budget the fragments require is
-///     the plain sum of their lengths. A combination that only a cleverer overlapping layout could satisfy is
-///     reported as a conflict — a deliberate V1 simplification, kept explicit in the conflict messages.
+///     <para>
+///         Fragments are laid out without overlap analysis: a generated string is
+///         <c>prefix + filler + contained values + filler + suffix</c>, so the length budget the fragments require is
+///         the plain sum of their lengths. A combination that only a cleverer overlapping layout could satisfy is
+///         reported as a conflict — a deliberate V1 simplification, kept explicit in the conflict messages.
+///     </para>
+///     <para>
+///         Exclusions (<c>DifferentFrom</c>/<c>Except</c>) are the one constraint not met by construction: strings are
+///         not ordinal-mapped, so an excluded value is avoided by a <b>bounded</b> redraw of the constructive layout —
+///         expected collisions are ≈ 0 for any non-trivial shape, the same bounded escape a distinct collection uses to
+///         skip a duplicate. An exclusion tight enough to leave the shape unsatisfiable (for example excluding every
+///         character a single-character length allows) is therefore the one case that surfaces at generation, as a
+///         seed-bearing <see cref="AnyGenerationException" />, rather than eagerly at declaration.
+///     </para>
 /// </remarks>
 internal sealed class StringSpec {
 
     private const int DefaultLengthSpread = 16;
 
+    // Bounded escape for exclusions: even the tightest realistic satisfiable shape — a single free character in a
+    // ~60-value pool with all but one value excluded — is found with overwhelming probability well within this many
+    // draws, while a genuinely unsatisfiable exclusion fails fast. Mirrors the fixed floor of the collection dedup draw.
+    private const int ExclusionRedrawBudget = 10_000;
+
     #region Statics members declarations
 
     internal static readonly StringSpec Unconstrained = new(null, null, 0, null, null, null,
                                                             null, null, null, null, [],
-                                                            null, null, null, null);
+                                                            null, null, null, null, []);
 
     private static string V(int value) {
         return value.ToString(CultureInfo.InvariantCulture);
@@ -47,6 +63,7 @@ internal sealed class StringSpec {
     private readonly string?               _charsetConstraint;
     private readonly int?                  _exactLength;
     private readonly string?               _exactConstraint;
+    private readonly IReadOnlyList<string> _excluded;
     private readonly IReadOnlyList<string> _fragments;
     private readonly int?                  _maxLength;
     private readonly string?               _maxConstraint;
@@ -66,9 +83,11 @@ internal sealed class StringSpec {
                        string? suffix,      string? suffixConstraint,
                        IReadOnlyList<string> fragments,
                        CharacterSet? charset, string? charsetConstraint,
-                       LetterCasing? casing,  string? casingConstraint) {
+                       LetterCasing? casing,  string? casingConstraint,
+                       IReadOnlyList<string> excluded) {
         _exactLength      = exactLength;
         _exactConstraint  = exactConstraint;
+        _excluded         = excluded;
         _minLength        = minLength;
         _minConstraint    = minConstraint;
         _maxLength        = maxLength;
@@ -87,12 +106,12 @@ internal sealed class StringSpec {
     /// <summary>
     ///     Whether no constraint has been declared yet — the pristine state a generator from <see cref="Any.String" />
     ///     starts in, before any fluent constraint narrows it. Used to keep a terminal constraint (<c>OneOf</c>) from
-    ///     being combined with the shaping ones.
+    ///     being combined with the shaping ones (an exclusion counts as a declared constraint).
     /// </summary>
     internal bool IsUnconstrained =>
         _exactLength is null && _minLength == 0 && _maxLength is null &&
         _prefix is null && _suffix is null && _fragments.Count == 0 &&
-        _charset is null && _casing is null;
+        _charset is null && _casing is null && _excluded.Count == 0;
 
     /// <summary>Fixes the exact length; declared once per generator.</summary>
     internal StringSpec WithExactLength(int length, string applying) {
@@ -100,7 +119,7 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(length, applying, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
-                                   _charset, _charsetConstraint, _casing, _casingConstraint);
+                                   _charset, _charsetConstraint, _casing, _casingConstraint, _excluded);
 
         return candidate.Validated(applying);
     }
@@ -111,7 +130,7 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, length, applying, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
-                                   _charset, _charsetConstraint, _casing, _casingConstraint);
+                                   _charset, _charsetConstraint, _casing, _casingConstraint, _excluded);
 
         return candidate.Validated(applying);
     }
@@ -122,7 +141,7 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, length, applying,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
-                                   _charset, _charsetConstraint, _casing, _casingConstraint);
+                                   _charset, _charsetConstraint, _casing, _casingConstraint, _excluded);
 
         return candidate.Validated(applying);
     }
@@ -133,7 +152,7 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    prefix, applying, _suffix, _suffixConstraint, _fragments,
-                                   _charset, _charsetConstraint, _casing, _casingConstraint);
+                                   _charset, _charsetConstraint, _casing, _casingConstraint, _excluded);
 
         return candidate.Validated(applying);
     }
@@ -144,7 +163,7 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, suffix, applying, _fragments,
-                                   _charset, _charsetConstraint, _casing, _casingConstraint);
+                                   _charset, _charsetConstraint, _casing, _casingConstraint, _excluded);
 
         return candidate.Validated(applying);
     }
@@ -155,7 +174,7 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, fragments,
-                                   _charset, _charsetConstraint, _casing, _casingConstraint);
+                                   _charset, _charsetConstraint, _casing, _casingConstraint, _excluded);
 
         return candidate.Validated(applying);
     }
@@ -166,7 +185,7 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
-                                   charset, applying, _casing, _casingConstraint);
+                                   charset, applying, _casing, _casingConstraint, _excluded);
 
         return candidate.Validated(applying);
     }
@@ -177,13 +196,42 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
-                                   _charset, _charsetConstraint, casing, applying);
+                                   _charset, _charsetConstraint, casing, applying, _excluded);
 
         return candidate.Validated(applying);
     }
 
-    /// <summary>Builds one string satisfying the whole specification — laid out directly, never generate-then-retry.</summary>
-    internal string Generate(Random random) {
+    /// <summary>Adds values the generated string must avoid; may be declared several times, the exclusions accumulate.</summary>
+    internal StringSpec WithExcluded(IReadOnlyList<string> values, string applying) {
+        List<string> excluded = new(_excluded);
+        foreach (string value in values) {
+            if (!excluded.Contains(value, StringComparer.Ordinal)) { excluded.Add(value); }
+        }
+
+        StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
+                                   _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
+                                   _charset, _charsetConstraint, _casing, _casingConstraint, excluded);
+
+        return candidate.Validated(applying);
+    }
+
+    /// <summary>
+    ///     Builds one string satisfying the whole specification — laid out directly, never generate-then-retry. The one
+    ///     redraw is to skip an excluded value: a bounded escape (expected collisions ≈ 0 for any non-trivial shape); an
+    ///     exhausted budget means the exclusions leave the shape unsatisfiable, reported with the seed to replay.
+    /// </summary>
+    internal string Generate(RandomSource source) {
+        Random random = source.Current.Random;
+        if (_excluded.Count == 0) { return BuildCandidate(random); }
+
+        for (int collisions = 0;;) {
+            string candidate = BuildCandidate(random);
+            if (!_excluded.Contains(candidate, StringComparer.Ordinal)) { return candidate; }
+            if (++collisions >= ExclusionRedrawBudget) { throw Exhausted(source); }
+        }
+    }
+
+    private string BuildCandidate(Random random) {
         int required     = RequiredLength();
         int effectiveMin = Math.Max(_minLength, required);
         // Long arithmetic: a huge declared minimum must saturate instead of overflowing past int.MaxValue.
@@ -203,6 +251,23 @@ internal sealed class StringSpec {
         if (_suffix is not null) { builder.Append(_suffix); }
 
         return builder.ToString();
+    }
+
+    private AnyGenerationException Exhausted(RandomSource source) {
+        int seed = source.Current.Seed;
+        // A string generator draws only from its own source, so the seed replays the run fully — never the partial hint.
+        string replay = source.ReplayHint(seed);
+        string message =
+            $"Could not generate a string that satisfies the declared shape while excluding {DescribeExcluded()}: " +
+            $"no candidate survived {V(ExclusionRedrawBudget)} draws, so the exclusions leave the shape unsatisfiable " +
+            "(for example excluding every value a fixed short length allows). Loosen the exclusions or widen the shape. " +
+            replay;
+
+        return new AnyGenerationException(message, seed);
+    }
+
+    private string DescribeExcluded() {
+        return string.Join(", ", _excluded.Select(value => $"\"{value}\""));
     }
 
     private static void AppendFiller(StringBuilder builder, Random random, string pool, int count) {
