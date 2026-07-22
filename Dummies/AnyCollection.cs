@@ -1,9 +1,3 @@
-#region Usings declarations
-
-using System.Globalization;
-
-#endregion
-
 namespace Dummies;
 
 /// <summary>
@@ -25,20 +19,6 @@ namespace Dummies;
 public abstract class AnyCollection<TItem, TResult, TSelf> : IAny<TResult>, IHasRandomSource
     where TSelf : AnyCollection<TItem, TResult, TSelf> {
 
-    #region Statics members declarations
-
-    private static string V(int value) {
-        return value.ToString(CultureInfo.InvariantCulture);
-    }
-
-    private static int RequireNonNegative(int count, string parameterName) {
-        if (count < 0) { throw new ArgumentOutOfRangeException(parameterName, count, "The count must not be negative."); }
-
-        return count;
-    }
-
-    #endregion
-
     #region Fields declarations
 
     private protected readonly RandomSource?            SourceOrNull;
@@ -57,14 +37,14 @@ public abstract class AnyCollection<TItem, TResult, TSelf> : IAny<TResult>, IHas
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public TSelf NonEmpty() {
-        return With(State.WithMinCount(1, "NonEmpty()"));
+        return With(CountConstraints.NonEmpty(State));
     }
 
     /// <summary>Fixes the collection to no elements.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public TSelf Empty() {
-        return With(State.WithExactCount(0, "Empty()"));
+        return With(CountConstraints.Empty(State));
     }
 
     /// <summary>Fixes the exact number of elements. Declared once per generator.</summary>
@@ -73,9 +53,7 @@ public abstract class AnyCollection<TItem, TResult, TSelf> : IAny<TResult>, IHas
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count" /> is negative.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public TSelf WithCount(int count) {
-        RequireNonNegative(count, nameof(count));
-
-        return With(State.WithExactCount(count, $"WithCount({V(count)})"));
+        return With(CountConstraints.WithCount(State, count));
     }
 
     /// <summary>Requires at least <paramref name="count" /> elements.</summary>
@@ -84,9 +62,7 @@ public abstract class AnyCollection<TItem, TResult, TSelf> : IAny<TResult>, IHas
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count" /> is negative.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public TSelf WithMinCount(int count) {
-        RequireNonNegative(count, nameof(count));
-
-        return With(State.WithMinCount(count, $"WithMinCount({V(count)})"));
+        return With(CountConstraints.WithMinCount(State, count));
     }
 
     /// <summary>Requires at most <paramref name="count" /> elements.</summary>
@@ -95,9 +71,7 @@ public abstract class AnyCollection<TItem, TResult, TSelf> : IAny<TResult>, IHas
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count" /> is negative.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public TSelf WithMaxCount(int count) {
-        RequireNonNegative(count, nameof(count));
-
-        return With(State.WithMaxCount(count, $"WithMaxCount({V(count)})"));
+        return With(CountConstraints.WithMaxCount(State, count));
     }
 
     /// <summary>Requires a number of elements within the inclusive range [<paramref name="minimum" />, <paramref name="maximum" />].</summary>
@@ -108,13 +82,7 @@ public abstract class AnyCollection<TItem, TResult, TSelf> : IAny<TResult>, IHas
     /// <exception cref="ArgumentException">Thrown when <paramref name="minimum" /> is greater than <paramref name="maximum" />.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public TSelf WithCountBetween(int minimum, int maximum) {
-        RequireNonNegative(minimum, nameof(minimum));
-        RequireNonNegative(maximum, nameof(maximum));
-        if (minimum > maximum) { throw new ArgumentException($"The minimum ({V(minimum)}) must be less than or equal to the maximum ({V(maximum)}).", nameof(minimum)); }
-
-        string constraint = $"WithCountBetween({V(minimum)}, {V(maximum)})";
-
-        return With(State.WithMinCount(minimum, constraint).WithMaxCount(maximum, constraint));
+        return With(CountConstraints.WithCountBetween(State, minimum, maximum));
     }
 
     /// <summary>
