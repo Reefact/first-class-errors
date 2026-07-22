@@ -80,6 +80,21 @@ public sealed class AnyDictionary<TKey, TValue> : IAny<Dictionary<TKey, TValue>>
         return With(CountConstraints.WithCountBetween(_keys, minimum, maximum));
     }
 
+    /// <summary>
+    ///     Requires the dictionary to contain an entry for <paramref name="key" />. May be declared several times;
+    ///     each required key takes one entry's room and the required keys must be distinct. A key outside the key
+    ///     generator's domain extends the effective cardinality exactly as <see cref="AnySet{T}" />'s containment
+    ///     does, so an otherwise impossible entry count becomes reachable; the entry's value is generated like any
+    ///     other. Named <c>ContainingKey</c> rather than a bare <c>Containing</c> so the surface reads unambiguously
+    ///     on a dictionary, whose elements are key/value pairs.
+    /// </summary>
+    /// <param name="key">The key the generated dictionary must contain.</param>
+    /// <returns>A new generator carrying the added constraint.</returns>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    public AnyDictionary<TKey, TValue> ContainingKey(TKey key) {
+        return With(_keys.WithContaining(key, $"ContainingKey({AnyDerivation.Display(key)})"));
+    }
+
     /// <inheritdoc />
     public Dictionary<TKey, TValue> Generate() {
         List<TKey>                 keys       = _keys.Materialize(_source ?? AmbientRandomSource.Instance);
