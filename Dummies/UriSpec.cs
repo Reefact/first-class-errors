@@ -319,17 +319,27 @@ internal sealed class UriSpec {
             throw new ArgumentException($"\"{host}\" is not a valid host name.", parameterName);
         }
 
-        // Reject a host System.Uri would rewrite (a shorthand IPv4 such as "1" -> "0.0.0.1"): it would not round-trip,
-        // and shorthand parsing has historically differed across target frameworks — the same determinism hazard as an
-        // IDN host. A case-only difference is invariant and stays allowed.
-        string canonical;
-        try { canonical = new Uri("http://" + host + "/", UriKind.Absolute).Host; }
-        catch (FormatException) { throw new ArgumentException($"\"{host}\" is not a usable host name.", parameterName); }
-        if (!string.Equals(canonical, host, StringComparison.OrdinalIgnoreCase)) {
-            throw new ArgumentException($"The host \"{host}\" is not in canonical form: System.Uri would rewrite it to \"{canonical}\", which would not round-trip identically across target frameworks. Pass the canonical form (\"{canonical}\").", parameterName);
+        // A host of only digits and dots is interpreted as an IPv4 literal by System.Uri, and its shorthand forms
+        // ("1" -> "0.0.0.1") parse differently across target frameworks — the same determinism hazard as an IDN host.
+        // Reject any such host that is not already a canonical four-octet dotted-quad, with a framework-independent
+        // check (never through System.Uri, whose parsing is the very thing that differs).
+        if (host.All(character => character is >= '0' and <= '9' or '.') && !IsCanonicalIpv4(host)) {
+            throw new ArgumentException($"The host \"{host}\" looks like a shorthand IPv4 literal, which System.Uri parses differently across target frameworks. Pass a DNS host name, or a canonical dotted-quad such as \"1.2.3.4\".", parameterName);
         }
 
         return host;
+    }
+
+    private static bool IsCanonicalIpv4(string host) {
+        string[] parts = host.Split(new[] { '.' });
+        if (parts.Length != 4) { return false; }
+        foreach (string part in parts) {
+            if (part.Length is 0 or > 3) { return false; }
+            if (part.Length > 1 && part[0] == '0') { return false; } // a leading zero is a non-canonical (octal-ish) octet
+            if (!int.TryParse(part, NumberStyles.None, CultureInfo.InvariantCulture, out int octet) || octet > 255) { return false; }
+        }
+
+        return true;
     }
 
     internal static string RequireUserInfoPart(string value, string parameterName) {
