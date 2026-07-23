@@ -438,4 +438,11 @@ public sealed class AnyStringTests {
         Check.ThatCode(() => Any.String().WithChars("")).Throws<ArgumentException>();
     }
 
+    [Fact(DisplayName = "WithChars rejects a pool with an astral code point and points to OneOf.")]
+    public void WithCharsRejectsAstralPool() {
+        ArgumentException error = Assert.Throws<ArgumentException>(() => Any.String().WithChars("😀🎉"));
+
+        Check.That(error.Message).Contains("OneOf");
+    }
+
 }
