@@ -307,7 +307,7 @@ Avant de publier un renderer, vérifiez que :
 ---
 
 <div align="center">
-<a href="DocumentationExtractionReference.fr.md">← Référence de l’extraction et de la découverte des projets</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="Internationalisation.fr.md">Internationalisation →</a>
+<a href="DocumentationExtractionReference.fr.md">← Référence de l’extraction et de la découverte des projets</a> · <a href="README.fr.md#-documentation">↑ Table des matières</a> · <a href="Internationalisation.fr.md">Internationalisation →</a>
 </div>
 
 ---

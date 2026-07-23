@@ -239,7 +239,7 @@ Avant d’approuver un pipeline de livraison du catalogue, vérifiez que :
 ---
 
 <div align="center">
-<a href="ArbitraryTestValues.fr.md">← Valeurs de test arbitraires</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="LoggingIntegration.fr.md">Intégrer FirstClassErrors au logging structuré →</a>
+<a href="ArbitraryTestValues.fr.md">← Valeurs de test arbitraires</a> · <a href="README.fr.md#-documentation">↑ Table des matières</a> · <a href="LoggingIntegration.fr.md">Intégrer FirstClassErrors au logging structuré →</a>
 </div>
 
 ---

@@ -212,7 +212,7 @@ Pour le titre, la description, la règle, les diagnostics et les exemples stable
 ---
 
 <div align="center">
-<a href="WritingErrorsGuide.fr.md">← Écrire la documentation d’une erreur</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="UsagePatterns.fr.md">Cas d’usage →</a>
+<a href="WritingErrorsGuide.fr.md">← Écrire la documentation d’une erreur</a> · <a href="README.fr.md#-documentation">↑ Table des matières</a> · <a href="UsagePatterns.fr.md">Cas d’usage →</a>
 </div>
 
 ---

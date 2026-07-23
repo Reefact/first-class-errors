@@ -163,7 +163,7 @@ Un renommage reste cassant, car les consommateurs connaissent l'ancien code. Lor
 ---
 
 <div align="center">
-<a href="OperationalIntegration.fr.md">← CI/CD et intégration opérationnelle</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="CatalogVersioningReference.fr.md">Référence des commandes →</a>
+<a href="OperationalIntegration.fr.md">← CI/CD et intégration opérationnelle</a> · <a href="README.fr.md#-documentation">↑ Table des matières</a> · <a href="CatalogVersioningReference.fr.md">Référence des commandes →</a>
 </div>
 
 ---

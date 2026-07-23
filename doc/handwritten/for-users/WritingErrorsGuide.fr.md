@@ -218,7 +218,7 @@ Pour choisir les textes publics et internes portés à l’exécution, continuez
 ---
 
 <div align="center">
-<a href="ErrorContext.fr.md">← Guide du contexte d’erreur</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="WritingErrorMessages.fr.md">Écrire les messages d’une erreur →</a>
+<a href="ErrorContext.fr.md">← Guide du contexte d’erreur</a> · <a href="README.fr.md#-documentation">↑ Table des matières</a> · <a href="WritingErrorMessages.fr.md">Écrire les messages d’une erreur →</a>
 </div>
 
 ---

@@ -160,7 +160,7 @@ public void A_missing_order_error_is_fully_deterministic() {
 
 ## Arbitrary occurrence data
 
-When a test needs `OccurredAt` and `InstanceId` to be stable but does not assert their exact values, freeze them to an *arbitrary* value with `Clock.UseAny()` and `InstanceIds.UseAny()` rather than `UseFixed`; both take an optional seed for reproducibility. They belong to the broader `Any` factory for values a test does not assert on — see [Arbitrary Test Values](ArbitraryTestValues.en.md).
+When a test needs `OccurredAt` and `InstanceId` to be stable but does not assert their exact values, freeze them to an *arbitrary* value with `Clock.UseAny()` and `InstanceIds.UseAny()` rather than `UseFixed`; both are parameterless, and a test that needs those arbitrary values to be reproducible wraps its body in `Dummies.Any.Reproducibly(...)`. They belong to the broader `Any` factory for values a test does not assert on — see [Arbitrary Test Values](ArbitraryTestValues.en.md).
 
 ## Scope and parallel tests
 

@@ -280,7 +280,7 @@ Lorsque des erreurs attendues manquent, parcourez le pipeline dans l’ordre —
 ---
 
 <div align="center">
-<a href="ArchitectureOfTheDocumentationPipeline.fr.md">← Architecture du pipeline de documentation</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="WritingACustomRenderer.fr.md">Écrire son propre renderer →</a>
+<a href="ArchitectureOfTheDocumentationPipeline.fr.md">← Architecture du pipeline de documentation</a> · <a href="README.fr.md#-documentation">↑ Table des matières</a> · <a href="WritingACustomRenderer.fr.md">Écrire son propre renderer →</a>
 </div>
 
 ---

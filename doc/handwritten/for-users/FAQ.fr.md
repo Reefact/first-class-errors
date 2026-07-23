@@ -130,7 +130,7 @@ Voir [Taxonomie et composition des erreurs](ErrorTaxonomy.fr.md).
 ---
 
 <div align="center">
-<a href="Internationalisation.fr.md">← Internationalisation</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a>
+<a href="Internationalisation.fr.md">← Internationalisation</a> · <a href="README.fr.md#-documentation">↑ Table des matières</a>
 </div>
 
 ---

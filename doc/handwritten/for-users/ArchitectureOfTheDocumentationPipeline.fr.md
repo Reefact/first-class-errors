@@ -184,7 +184,7 @@ Le code reste la source de vérité ; le pipeline rend cette connaissance transp
 ---
 
 <div align="center">
-<a href="CatalogVersioning.fr.md">← Versionnage du catalogue</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="DocumentationExtractionReference.fr.md">Référence de l’extraction et de la découverte des projets →</a>
+<a href="CatalogVersioning.fr.md">← Versionnage du catalogue</a> · <a href="README.fr.md#-documentation">↑ Table des matières</a> · <a href="DocumentationExtractionReference.fr.md">Référence de l’extraction et de la découverte des projets →</a>
 </div>
 
 ---

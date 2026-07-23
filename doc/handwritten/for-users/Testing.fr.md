@@ -166,7 +166,7 @@ Avant d’approuver un test d’erreur, vérifiez que :
 ---
 
 <div align="center">
-<a href="BestPractices.fr.md">← Bonnes pratiques</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="DeterministicTesting.fr.md">Tests d’erreur déterministes →</a>
+<a href="BestPractices.fr.md">← Bonnes pratiques</a> · <a href="README.fr.md#-documentation">↑ Table des matières</a> · <a href="DeterministicTesting.fr.md">Tests d’erreur déterministes →</a>
 </div>
 
 ---

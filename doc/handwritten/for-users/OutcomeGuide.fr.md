@@ -293,7 +293,7 @@ Avant de valider un flux `Outcome`, vérifiez que :
 ---
 
 <div align="center">
-<a href="UsagePatterns.fr.md">← Patterns d’utilisation</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="BestPractices.fr.md">Bonnes pratiques →</a>
+<a href="UsagePatterns.fr.md">← Patterns d’utilisation</a> · <a href="README.fr.md#-documentation">↑ Table des matières</a> · <a href="BestPractices.fr.md">Bonnes pratiques →</a>
 </div>
 
 ---

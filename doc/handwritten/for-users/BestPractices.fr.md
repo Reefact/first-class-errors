@@ -111,7 +111,7 @@ Avant de merger une modification liée aux erreurs, vérifiez que :
 ---
 
 <div align="center">
-<a href="UsagePatterns.fr.md">← Cas d’usage</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="Testing.fr.md">Guide des tests →</a>
+<a href="UsagePatterns.fr.md">← Cas d’usage</a> · <a href="README.fr.md#-documentation">↑ Table des matières</a> · <a href="Testing.fr.md">Guide des tests →</a>
 </div>
 
 ---
