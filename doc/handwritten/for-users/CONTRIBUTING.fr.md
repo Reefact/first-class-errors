@@ -308,7 +308,9 @@ l’un des suivants :
 |---|---|
 | `core` | `FirstClassErrors` — la bibliothèque d’exécution (`Error`, `Outcome`, `ErrorCode`, `ErrorContextKey`, …) |
 | `analyzers` | `FirstClassErrors.Analyzers` — les analyzers Roslyn et leurs diagnostics `FCExxx` |
+| `binder` | `FirstClassErrors.RequestBinder` — le request binder pour la frontière de l’adaptateur primaire |
 | `cli` | `FirstClassErrors.Cli` — l’outil en ligne de commande |
+| `dummies` | `Dummies` — le générateur autonome de valeurs de test arbitraires |
 | `gendoc` | `FirstClassErrors.GenDoc` et son worker — le générateur de documentation |
 | `testing` | `FirstClassErrors.Testing` — le package de support aux tests |
 
@@ -316,13 +318,22 @@ Cette liste vit ici, dans le dépôt, là où un outil peut la vérifier. Un sco
 être un nom de fichier ni un nom de classe : ceux-ci bougent ; la zone qu’ils habitent,
 non. `fix(core):`, jamais `fix(ErrorCode.cs):`.
 
-Le scope est optionnel ici parce que les deux packages publiés (`FirstClassErrors` et
-`FirstClassErrors.Testing`) partagent une seule version pilotée par tag : le scope ne porte
-aucun poids de versioning, seulement de la lisibilité. Ce qui n’appartient pas à un
-composant ne prend **aucun** scope — l’infrastructure du dépôt (la solution,
-`Directory.Build.props`, les workflows, `.gitignore`, `CLAUDE.md`), la documentation à
-l’échelle du dépôt, les ADR, et les exemples de `FirstClassErrors.Usage` : `ci: …`,
-`docs: …`.
+Le scope porte le dossier de release. L’outillage répartit les commits en **trains de
+release** selon le scope — `tools/trains.sh` est la source de vérité unique — et chaque train
+publie indépendamment : `lib` (scopes `core`, `analyzers`, `testing`, `binder` →
+`FirstClassErrors`, `FirstClassErrors.Testing` et `FirstClassErrors.RequestBinder`), `cli`
+(scopes `cli`, `gendoc` → l’outil `fce`) et `dum` (scope `dummies` → `Dummies`). Le scope
+d’un commit décide dans les release notes et le changelog de quel train il atterrit ; voir
+[Ajouter un train de release](../for-maintainers/AddingAReleaseTrain.fr.md).
+
+À cause de cela, un changement visible par l’utilisateur **doit** porter un scope : un `feat:`
+ou `fix:` sans scope ne correspond à aucun train et est **silencieusement écarté de toutes les
+release notes et de tous les changelogs**, de sorte que le changement disparaîtrait du dossier
+de release. Seul ce qui n’appartient réellement à aucun composant reste sans scope —
+l’infrastructure du dépôt (la solution, `Directory.Build.props`, les workflows, `.gitignore`,
+`CLAUDE.md`), la documentation à l’échelle du dépôt, les ADR, et les exemples de
+`FirstClassErrors.Usage` — et ceux-ci emploient de toute façon des types qui ne pilotent pas
+la version : `ci: …`, `docs: …`, `chore: …`.
 
 Lorsqu’un changement atomique traverse plusieurs composants, le commit DOIT porter tous
 leurs scopes, séparés par des virgules sans espace et classés par ordre alphabétique.
@@ -524,11 +535,11 @@ un ADR sous `doc/handwritten/for-maintainers/adr/`, ou une mise à jour de ce gu
 Il s’applique à partir de son adoption, à chaque commit créé après. L’historique antérieur
 n’est pas réécrit.
 
-L’application repose aujourd’hui sur la relecture de pull request, qui refuse un message non
-conforme et laisse l’auteur le corriger avant le merge. Le dépôt verrouillera la règle à son
-tour : un hook `commit-msg` qui refuse le message à l’écriture, doublé d’une vérification CI,
-puisqu’un hook local peut être contourné. Les commits de merge, générés par GitHub, en sont
-exemptés.
+L’application est en couches. Un hook `commit-msg` (versionné sous `.githooks/`, activé une
+fois par clone) refuse un message non conforme à l’écriture, et — parce qu’un hook local peut
+être contourné — une vérification CI rejoue la même validation sur chaque pull request, de
+sorte qu’un hook contourné est tout de même rattrapé avant le merge. Les commits de merge,
+générés par GitHub, en sont exemptés.
 
 ### Crédits
 
