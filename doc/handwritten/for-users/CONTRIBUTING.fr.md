@@ -301,8 +301,8 @@ n’importe lequel de ces types produit un `MAJOR`.
 
 #### Scope
 
-Le scope PEUT être fourni. Lorsqu’il est présent, il DOIT être en minuscules et DOIT être
-l’un des suivants :
+Le scope PEUT être fourni, et il est **requis** sur `feat` et `fix` (voir plus bas). Lorsqu’il
+est présent, il DOIT être en minuscules et DOIT être l’un des suivants :
 
 | Scope | Couvre |
 |---|---|
@@ -326,14 +326,16 @@ publie indépendamment : `lib` (scopes `core`, `analyzers`, `testing`, `binder` 
 d’un commit décide dans les release notes et le changelog de quel train il atterrit ; voir
 [Ajouter un train de release](../for-maintainers/AddingAReleaseTrain.fr.md).
 
-À cause de cela, un changement visible par l’utilisateur **doit** porter un scope : un `feat:`
-ou `fix:` sans scope ne correspond à aucun train et est **silencieusement écarté de toutes les
-release notes et de tous les changelogs**, de sorte que le changement disparaîtrait du dossier
-de release. Seul ce qui n’appartient réellement à aucun composant reste sans scope —
-l’infrastructure du dépôt (la solution, `Directory.Build.props`, les workflows, `.gitignore`,
-`CLAUDE.md`), la documentation à l’échelle du dépôt, les ADR, et les exemples de
-`FirstClassErrors.Usage` — et ceux-ci emploient de toute façon des types qui ne pilotent pas
-la version : `ci: …`, `docs: …`, `chore: …`.
+À cause de cela, **`commit-lint` exige un scope sur les deux types qui pilotent la version,
+`feat` et `fix`**, et rejette un commit sans scope au hook `commit-msg` et en CI
+([ADR-0034](../for-maintainers/adr/0034-require-a-scope-on-the-version-driving-commit-types.fr.md)) :
+il ne correspondrait à aucun train et serait **silencieusement écarté de toutes les release
+notes et de tous les changelogs**, disparaissant du dossier de release. Tout autre type garde
+le scope optionnel — ce qui n’appartient réellement à aucun composant reste sans scope
+(l’infrastructure du dépôt : la solution, `Directory.Build.props`, les workflows, `.gitignore`,
+`CLAUDE.md` ; la documentation à l’échelle du dépôt ; les ADR ; les exemples de
+`FirstClassErrors.Usage`), et ceux-ci emploient de toute façon des types qui ne pilotent pas la
+version : `ci: …`, `docs: …`, `chore: …`.
 
 Lorsqu’un changement atomique traverse plusieurs composants, le commit DOIT porter tous
 leurs scopes, séparés par des virgules sans espace et classés par ordre alphabétique.

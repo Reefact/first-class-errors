@@ -290,7 +290,8 @@ by any of these types produces a `MAJOR`.
 
 #### Scope
 
-The scope MAY be provided. When present it MUST be lowercase and MUST be one of:
+The scope MAY be provided, and is **required** on `feat` and `fix` (see below).
+When present it MUST be lowercase and MUST be one of:
 
 | Scope | Covers |
 |---|---|
@@ -315,13 +316,16 @@ and `dum` (scope `dummies` → `Dummies`). A commit's scope decides which train'
 release notes and changelog it lands in; see
 [Adding a release train](doc/handwritten/for-maintainers/AddingAReleaseTrain.en.md).
 
-Because of that, a user-facing change **must** carry a scope: an unscoped `feat:`
-or `fix:` matches no train and is **silently dropped from every release note and
-changelog**, so the change would vanish from the release record. Only what
-genuinely belongs to no component stays unscoped — repository infrastructure (the
-solution, `Directory.Build.props`, the workflows, `.gitignore`, `CLAUDE.md`),
-repository-wide documentation, ADRs, and the `FirstClassErrors.Usage` samples —
-and those use non-version-driving types anyway: `ci: …`, `docs: …`, `chore: …`.
+Because of that, **`commit-lint` requires a scope on the two version-driving
+types, `feat` and `fix`**, and rejects an unscoped one at the `commit-msg` hook
+and in CI ([ADR-0034](doc/handwritten/for-maintainers/adr/0034-require-a-scope-on-the-version-driving-commit-types.md)):
+it would match no train and be **silently dropped from every release note and
+changelog**, vanishing from the release record. Every other type keeps the scope
+optional — what genuinely belongs to no component stays unscoped (repository
+infrastructure: the solution, `Directory.Build.props`, the workflows,
+`.gitignore`, `CLAUDE.md`; repository-wide documentation; ADRs; the
+`FirstClassErrors.Usage` samples), and those use non-version-driving types
+anyway: `ci: …`, `docs: …`, `chore: …`.
 
 When one atomic change crosses several components, the commit MUST carry all
 their scopes, comma-separated with no space and ordered alphabetically. The
