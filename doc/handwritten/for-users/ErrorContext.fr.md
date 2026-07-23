@@ -173,7 +173,7 @@ Si la réponse est oui aux six questions, c’est une excellente candidate.
 ---
 
 <div align="center">
-<a href="CoreConcepts.fr.md">← Concepts fondamentaux</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="WritingErrorsGuide.fr.md">Guide d’écriture des erreurs →</a>
+<a href="CoreConcepts.fr.md">← Concepts fondamentaux</a> · <a href="README.fr.md#-documentation">↑ Table des matières</a> · <a href="WritingErrorsGuide.fr.md">Guide d’écriture des erreurs →</a>
 </div>
 
 ---

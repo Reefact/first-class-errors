@@ -265,7 +265,7 @@ Avant d’approuver une intégration de logging, vérifiez que :
 ---
 
 <div align="center">
-<a href="OperationalIntegration.fr.md">← Générer et publier le catalogue</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="CatalogVersioning.fr.md">Versionnage du catalogue →</a>
+<a href="OperationalIntegration.fr.md">← Générer et publier le catalogue</a> · <a href="README.fr.md#-documentation">↑ Table des matières</a> · <a href="CatalogVersioning.fr.md">Versionnage du catalogue →</a>
 </div>
 
 ---

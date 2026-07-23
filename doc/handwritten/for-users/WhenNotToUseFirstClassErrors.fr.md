@@ -73,7 +73,7 @@ L’objectif de cette bibliothèque n’est pas de rendre toutes les exceptions 
 ---
 
 <div align="center">
-<a href="DesignPrinciples.fr.md">← Principes de conception</a> · <a href="README.fr.md#-étapes-suivantes">↑ Table des matières</a> · <a href="CoreConcepts.fr.md">Concepts clés →</a>
+<a href="DesignPrinciples.fr.md">← Principes de conception</a> · <a href="README.fr.md#-documentation">↑ Table des matières</a> · <a href="CoreConcepts.fr.md">Concepts clés →</a>
 </div>
 
 ---
