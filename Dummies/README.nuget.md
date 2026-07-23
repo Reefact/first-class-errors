@@ -58,6 +58,15 @@ matter — and that is the point.
   Terminal and uniform like the string set: duplicates collapse under the default
   comparer, the pool's distinct count gates distinct collections, and a `null` element is
   refused — make the whole draw optional with `.OrNull()` instead.
+- **URIs by family**: `Any.Uri()` yields an arbitrary yet valid `System.Uri` — an
+  absolute web (`http`/`https`), WebSocket (`ws`/`wss`), FTP or mailto URI, or a relative
+  reference. Narrow it to a family and each returns a builder exposing only that family's
+  valid components, so an impossible combination cannot even be written (`Mailto()` has no
+  `WithPort`, `WebSocket()` no `WithUserInfo`):
+  `Any.Uri().Web().UsingHttps().WithHost("api.example.com")`. Every part is drawn from
+  ASCII-unreserved characters, so a value is valid by construction and reproducible across
+  frameworks; internationalized (IDN) hosts and the `file` scheme stay out of the default
+  draw to keep that determinism.
 - **Domain vocabulary where it belongs**: dates constrain with
   `After`/`Before`/`Between`, quantities with `Positive`/`Between`/`NonZero`,
   identities with `NonEmpty`/`DifferentFrom` — and deliberately no clock-relative

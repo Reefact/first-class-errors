@@ -66,6 +66,7 @@ Dummies.AnyContext.TimeSpan() -> Dummies.AnyTimeSpan!
 Dummies.AnyContext.UInt16() -> Dummies.AnyUInt16!
 Dummies.AnyContext.UInt32() -> Dummies.AnyUInt32!
 Dummies.AnyContext.UInt64() -> Dummies.AnyUInt64!
+Dummies.AnyContext.Uri() -> Dummies.AnyUri!
 Dummies.AnyDateTime
 Dummies.AnyDateTime.After(System.DateTime instant) -> Dummies.AnyDateTime!
 Dummies.AnyDateTime.AfterOrEqualTo(System.DateTime instant) -> Dummies.AnyDateTime!
@@ -134,6 +135,16 @@ Dummies.AnyException
 Dummies.AnyException.AnyException(string! message) -> void
 Dummies.AnyException.AnyException(string! message, System.Exception! innerException) -> void
 Dummies.AnyExtensions
+Dummies.AnyFtpUri
+Dummies.AnyFtpUri.Generate() -> System.Uri!
+Dummies.AnyFtpUri.WithHost(string! host) -> Dummies.AnyFtpUri!
+Dummies.AnyFtpUri.WithoutPath() -> Dummies.AnyFtpUri!
+Dummies.AnyFtpUri.WithPathSegments(int count) -> Dummies.AnyFtpUri!
+Dummies.AnyFtpUri.WithPort() -> Dummies.AnyFtpUri!
+Dummies.AnyFtpUri.WithPort(int port) -> Dummies.AnyFtpUri!
+Dummies.AnyFtpUri.WithUserInfo() -> Dummies.AnyFtpUri!
+Dummies.AnyFtpUri.WithUserInfo(string! user) -> Dummies.AnyFtpUri!
+Dummies.AnyFtpUri.WithUserInfo(string! user, string! password) -> Dummies.AnyFtpUri!
 Dummies.AnyGenerationException
 Dummies.AnyGenerationException.AnyGenerationException(string! message) -> void
 Dummies.AnyGenerationException.AnyGenerationException(string! message, System.Exception! innerException) -> void
@@ -190,10 +201,21 @@ Dummies.AnyInt64.Zero() -> Dummies.AnyInt64!
 Dummies.AnyList<T>
 Dummies.AnyList<T>.Distinct() -> Dummies.AnyList<T>!
 Dummies.AnyList<T>.Distinct(System.Collections.Generic.IEqualityComparer<T>! comparer) -> Dummies.AnyList<T>!
+Dummies.AnyMailtoUri
+Dummies.AnyMailtoUri.Generate() -> System.Uri!
+Dummies.AnyMailtoUri.WithDomain(string! domain) -> Dummies.AnyMailtoUri!
+Dummies.AnyMailtoUri.WithHeaders() -> Dummies.AnyMailtoUri!
+Dummies.AnyMailtoUri.WithLocalPart(string! localPart) -> Dummies.AnyMailtoUri!
 Dummies.AnyOneOf<T>
 Dummies.AnyOneOf<T>.Generate() -> T
 Dummies.AnyPattern
 Dummies.AnyPattern.Generate() -> string!
+Dummies.AnyRelativeUri
+Dummies.AnyRelativeUri.Generate() -> System.Uri!
+Dummies.AnyRelativeUri.Rooted() -> Dummies.AnyRelativeUri!
+Dummies.AnyRelativeUri.WithFragment() -> Dummies.AnyRelativeUri!
+Dummies.AnyRelativeUri.WithPathSegments(int count) -> Dummies.AnyRelativeUri!
+Dummies.AnyRelativeUri.WithQuery() -> Dummies.AnyRelativeUri!
 Dummies.AnySByte
 Dummies.AnySByte.Between(sbyte minimum, sbyte maximum) -> Dummies.AnySByte!
 Dummies.AnySByte.DifferentFrom(sbyte value) -> Dummies.AnySByte!
@@ -298,6 +320,37 @@ Dummies.AnyUInt64.LessThanOrEqualTo(ulong value) -> Dummies.AnyUInt64!
 Dummies.AnyUInt64.NonZero() -> Dummies.AnyUInt64!
 Dummies.AnyUInt64.OneOf(params ulong[]! values) -> Dummies.AnyUInt64!
 Dummies.AnyUInt64.Zero() -> Dummies.AnyUInt64!
+Dummies.AnyUri
+Dummies.AnyUri.Ftp() -> Dummies.AnyFtpUri!
+Dummies.AnyUri.Generate() -> System.Uri!
+Dummies.AnyUri.Mailto() -> Dummies.AnyMailtoUri!
+Dummies.AnyUri.Relative() -> Dummies.AnyRelativeUri!
+Dummies.AnyUri.Web() -> Dummies.AnyWebUri!
+Dummies.AnyUri.WebSocket() -> Dummies.AnyWebSocketUri!
+Dummies.AnyWebSocketUri
+Dummies.AnyWebSocketUri.Generate() -> System.Uri!
+Dummies.AnyWebSocketUri.UsingWs() -> Dummies.AnyWebSocketUri!
+Dummies.AnyWebSocketUri.UsingWss() -> Dummies.AnyWebSocketUri!
+Dummies.AnyWebSocketUri.WithHost(string! host) -> Dummies.AnyWebSocketUri!
+Dummies.AnyWebSocketUri.WithoutPath() -> Dummies.AnyWebSocketUri!
+Dummies.AnyWebSocketUri.WithPathSegments(int count) -> Dummies.AnyWebSocketUri!
+Dummies.AnyWebSocketUri.WithPort() -> Dummies.AnyWebSocketUri!
+Dummies.AnyWebSocketUri.WithPort(int port) -> Dummies.AnyWebSocketUri!
+Dummies.AnyWebSocketUri.WithQuery() -> Dummies.AnyWebSocketUri!
+Dummies.AnyWebUri
+Dummies.AnyWebUri.Generate() -> System.Uri!
+Dummies.AnyWebUri.UsingHttp() -> Dummies.AnyWebUri!
+Dummies.AnyWebUri.UsingHttps() -> Dummies.AnyWebUri!
+Dummies.AnyWebUri.WithFragment() -> Dummies.AnyWebUri!
+Dummies.AnyWebUri.WithHost(string! host) -> Dummies.AnyWebUri!
+Dummies.AnyWebUri.WithoutPath() -> Dummies.AnyWebUri!
+Dummies.AnyWebUri.WithPathSegments(int count) -> Dummies.AnyWebUri!
+Dummies.AnyWebUri.WithPort() -> Dummies.AnyWebUri!
+Dummies.AnyWebUri.WithPort(int port) -> Dummies.AnyWebUri!
+Dummies.AnyWebUri.WithQuery() -> Dummies.AnyWebUri!
+Dummies.AnyWebUri.WithUserInfo() -> Dummies.AnyWebUri!
+Dummies.AnyWebUri.WithUserInfo(string! user) -> Dummies.AnyWebUri!
+Dummies.AnyWebUri.WithUserInfo(string! user, string! password) -> Dummies.AnyWebUri!
 Dummies.ConflictingAnyConstraintException
 Dummies.ConflictingAnyConstraintException.ConflictingAnyConstraintException(string! message) -> void
 Dummies.IAny<T>
@@ -350,6 +403,7 @@ static Dummies.Any.TripleOf<T1, T2, T3>(Dummies.IAny<T1>! first, Dummies.IAny<T2
 static Dummies.Any.UInt16() -> Dummies.AnyUInt16!
 static Dummies.Any.UInt32() -> Dummies.AnyUInt32!
 static Dummies.Any.UInt64() -> Dummies.AnyUInt64!
+static Dummies.Any.Uri() -> Dummies.AnyUri!
 static Dummies.Any.WithSeed(int seed) -> Dummies.AnyContext!
 static Dummies.AnyExtensions.As<TSource, TResult>(this Dummies.IAny<TSource>! generator, System.Func<TSource, TResult>! factory) -> Dummies.IAny<TResult>!
 static Dummies.NullableExtensions.OrNull<T>(this Dummies.IAny<T>! generator) -> Dummies.IAny<T?>!

@@ -83,6 +83,15 @@ public sealed class AnyContext {
     }
 
     /// <summary>
+    ///     Starts an arbitrary <see cref="System.Uri" /> generator drawing from this context — same fluent surface as
+    ///     <see cref="Any.Uri" />, deterministic under this context's seed.
+    /// </summary>
+    /// <returns>A URI generator to narrow fluently.</returns>
+    public AnyUri Uri() {
+        return new AnyUri(_source, UriSpec.Unconstrained);
+    }
+
+    /// <summary>
     ///     Starts an arbitrary <see cref="int" /> generator drawing from this context — same fluent surface as
     ///     <see cref="Any.Int32" />, deterministic under this context's seed.
     /// </summary>
