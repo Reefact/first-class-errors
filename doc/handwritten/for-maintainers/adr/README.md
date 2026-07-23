@@ -216,3 +216,4 @@ Optional supporting material:
 | [ADR-0031](0031-name-any-factories-after-their-clr-type.md) | Name Any's scalar factories after their CLR type | Accepted |
 | [ADR-0032](0032-draw-arbitrary-values-from-an-explicit-top-level-pool.md) | Draw arbitrary values from an explicit, top-level choice pool | Accepted |
 | [ADR-0033](0033-meet-string-exclusions-with-a-bounded-redraw.md) | Meet string exclusions with a bounded redraw | Accepted |
+| [ADR-0034](0034-require-a-scope-on-the-version-driving-commit-types.md) | Require a scope on the version-driving commit types | Accepted |
