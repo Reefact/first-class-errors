@@ -320,4 +320,129 @@ public sealed class AnyStringTests {
         Check.ThatCode(() => Any.String().Except("a", null!)).Throws<ArgumentException>();
     }
 
+    [Fact(DisplayName = "WithChars draws every character from the supplied pool.")]
+    public void WithCharsDrawsFromThePool() {
+        const string pool = "0123456789ABCDEF";
+        foreach (string value in Samples(Any.String().WithChars(pool).NonEmpty())) {
+            Check.That(value.All(character => pool.IndexOf(character) >= 0)).IsTrue();
+        }
+    }
+
+    [Fact(DisplayName = "WithChars reaches every character in the pool.")]
+    public void WithCharsReachesEveryCharacter() {
+        const string  pool = "ACGT";
+        HashSet<char> seen = new();
+        foreach (string value in Samples(Any.String().WithChars(pool).WithLength(8))) {
+            foreach (char character in value) { seen.Add(character); }
+        }
+
+        Check.That(pool.All(character => seen.Contains(character))).IsTrue();
+    }
+
+    [Fact(DisplayName = "WithChars reaches non-ASCII characters a named charset cannot.")]
+    public void WithCharsReachesNonAscii() {
+        const string pool = "àâäéèêëîïôùûüç";
+        foreach (string value in Samples(Any.String().WithChars(pool).NonEmpty())) {
+            Check.That(value.All(character => pool.IndexOf(character) >= 0)).IsTrue();
+        }
+    }
+
+    [Fact(DisplayName = "WithChars honours an exact length.")]
+    public void WithCharsHonoursExactLength() {
+        foreach (string value in Samples(Any.String().WithChars("xyz").WithLength(7))) {
+            Check.That(value.Length).IsEqualTo(7);
+        }
+    }
+
+    [Fact(DisplayName = "WithChars collapses duplicate characters in the pool.")]
+    public void WithCharsCollapsesDuplicates() {
+        foreach (string value in Samples(Any.String().WithChars("aaabbb").WithLength(4))) {
+            Check.That(value.All(character => character is 'a' or 'b')).IsTrue();
+        }
+    }
+
+    [Fact(DisplayName = "WithChars combines with an exclusion over its own pool.")]
+    public void WithCharsCombinesWithExclusion() {
+        foreach (string value in Samples(Any.String().WithChars("ab").WithLength(1).DifferentFrom("a"))) {
+            Check.That(value).IsEqualTo("b");
+        }
+    }
+
+    [Fact(DisplayName = "A seeded WithChars draw is reproducible: the same seed yields the same value.")]
+    public void SeededWithCharsIsReproducible() {
+        string first  = Any.WithSeed(4242).String().WithChars("αβγδεζ").WithLength(5).Generate();
+        string second = Any.WithSeed(4242).String().WithChars("αβγδεζ").WithLength(5).Generate();
+
+        Check.That(second).IsEqualTo(first);
+    }
+
+    [Fact(DisplayName = "WithChars then a named charset conflicts: one character family per generator.")]
+    public void WithCharsThenNamedCharsetConflicts() {
+        ConflictingAnyConstraintException conflict = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.String().WithChars("abc").Numeric());
+
+        Check.That(conflict.Message).Contains("Numeric()");
+        Check.That(conflict.Message).Contains("WithChars(\"abc\")");
+    }
+
+    [Fact(DisplayName = "A named charset then WithChars conflicts: order does not matter.")]
+    public void NamedCharsetThenWithCharsConflicts() {
+        ConflictingAnyConstraintException conflict = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.String().Alpha().WithChars("абвгд"));
+
+        Check.That(conflict.Message).Contains("WithChars(\"абвгд\")");
+        Check.That(conflict.Message).Contains("Alpha()");
+    }
+
+    [Fact(DisplayName = "WithChars then a casing conflicts: the pool is the whole character definition.")]
+    public void WithCharsThenCasingConflicts() {
+        ConflictingAnyConstraintException conflict = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.String().WithChars("abc").LowerCase());
+
+        Check.That(conflict.Message).Contains("LowerCase()");
+        Check.That(conflict.Message).Contains("WithChars(\"abc\")");
+    }
+
+    [Fact(DisplayName = "A casing then WithChars conflicts: order does not matter.")]
+    public void CasingThenWithCharsConflicts() {
+        ConflictingAnyConstraintException conflict = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.String().UpperCase().WithChars("abc"));
+
+        Check.That(conflict.Message).Contains("WithChars(\"abc\")");
+        Check.That(conflict.Message).Contains("UpperCase()");
+    }
+
+    [Fact(DisplayName = "A WithChars pool cannot anchor a prefix with an outside character.")]
+    public void WithCharsPrefixOutsidePoolConflicts() {
+        ConflictingAnyConstraintException conflict = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.String().WithChars("0123456789").StartingWith("ID-"));
+
+        Check.That(conflict.Message).Contains("StartingWith(\"ID-\")");
+        Check.That(conflict.Message).Contains("WithChars(\"0123456789\")");
+        Check.That(conflict.Message).Contains("'I'");
+    }
+
+    [Fact(DisplayName = "Declaring WithChars after an incompatible fragment conflicts too: order does not matter.")]
+    public void WithCharsAfterIncompatibleFragmentConflicts() {
+        ConflictingAnyConstraintException conflict = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.String().StartingWith("ID-").WithChars("0123456789"));
+
+        Check.That(conflict.Message).Contains("WithChars(\"0123456789\")");
+        Check.That(conflict.Message).Contains("ID-");
+        Check.That(conflict.Message).Contains("'I'");
+    }
+
+    [Fact(DisplayName = "WithChars arguments are validated as arguments, not as conflicts.")]
+    public void WithCharsArgumentsAreValidated() {
+        Check.ThatCode(() => Any.String().WithChars(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => Any.String().WithChars("")).Throws<ArgumentException>();
+    }
+
+    [Fact(DisplayName = "WithChars rejects a pool with an astral code point and points to OneOf.")]
+    public void WithCharsRejectsAstralPool() {
+        ArgumentException error = Assert.Throws<ArgumentException>(() => Any.String().WithChars("😀🎉"));
+
+        Check.That(error.Message).Contains("OneOf");
+    }
+
 }
