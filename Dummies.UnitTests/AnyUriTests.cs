@@ -124,7 +124,7 @@ public sealed class AnyUriTests {
     [Fact(DisplayName = "WithPathSegments renders exactly that many segments.")]
     public void WithPathSegmentsRendersThatManySegments() {
         foreach (Uri value in Sample(Seeded(context => context.Uri().Web().WithHost("h.test").WithPathSegments(3)))) {
-            Check.That(value.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries).Length).IsEqualTo(3);
+            Check.That(value.AbsolutePath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries).Length).IsEqualTo(3);
         }
     }
 
