@@ -96,7 +96,17 @@ else
 
   # canonical shape: <type>[(<scope>[,<scope>...])][!]: <lowercase description>
   if printf '%s' "$subject" | grep -Eq "^(${TYPES})(\((${SCOPES})(,(${SCOPES}))*\))?!?: [a-z]"; then
-    :
+    # Well-formed header. The two version-driving types must ALSO carry a scope:
+    # the release tooling (tools/trains.sh) partitions commits into trains by
+    # scope, so an unscoped feat/fix matches no train and is silently dropped
+    # from the release notes and the changelog. See CONTRIBUTING.md -> "Scope".
+    case "$subject" in
+      feat:*|feat!:*|fix:*|fix!:*)
+        vtype="${subject%%[:!(]*}"
+        err "a '${vtype}' commit must carry a scope, e.g. '${vtype}(core): …' — the release tooling routes commits to trains by scope, and an unscoped ${vtype} is silently dropped from the release notes and the changelog"
+        ;;
+      *) ;; # already scoped, or a non-version-driving type: nothing to require
+    esac
   else
     # --- targeted diagnostics so the author knows exactly what to fix ---
     if ! printf '%s' "$subject" | grep -Eq '^[^:]+: .'; then
