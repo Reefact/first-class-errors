@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0037-vary-the-datetimeoffset-offset-dimension.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-07-26
 **Decision Makers:** Reefact
 

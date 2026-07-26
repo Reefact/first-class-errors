@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 [English](0036-draw-lattice-constrained-scalars-on-the-grid.md) · 🇫🇷 Français (ce fichier)
 
-**Statut :** Proposé
+**Statut :** Accepté
 **Date :** 2026-07-26
 **Décideurs :** Reefact
 
