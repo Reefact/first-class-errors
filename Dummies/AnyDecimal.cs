@@ -123,6 +123,22 @@ public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource, ICardinalityHi
         return new AnyDecimal(_source, _spec.WithMinimum(minimum, constraint).WithMaximum(maximum, constraint));
     }
 
+    /// <summary>
+    ///     Requires the value to be expressible in <paramref name="scale" /> decimal places — a multiple of
+    ///     10^-<paramref name="scale" /> (a valid amount in cents is <c>WithScale(2)</c>), drawn directly on that grid.
+    ///     A value lattice, not a representation contract: the drawn value lies on the grid but is not padded with
+    ///     trailing zeros. Declared once per generator.
+    /// </summary>
+    /// <param name="scale">The number of decimal places; in the inclusive range [0, 28].</param>
+    /// <returns>A new generator carrying the added constraint.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="scale" /> is outside the range [0, 28].</exception>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    public AnyDecimal WithScale(int scale) {
+        if (scale < 0 || scale > 28) { throw new ArgumentOutOfRangeException(nameof(scale), scale, "The scale must be in the inclusive range [0, 28]."); }
+
+        return new AnyDecimal(_source, _spec.WithScale(scale, $"WithScale({scale.ToString(CultureInfo.InvariantCulture)})"));
+    }
+
     /// <summary>Requires the value to be one of the supplied values. Declared once per generator.</summary>
     /// <param name="values">The allowed values; duplicates are ignored.</param>
     /// <returns>A new generator carrying the added constraint.</returns>

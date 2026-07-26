@@ -106,6 +106,24 @@ public sealed class AnyTimeOnly : IAny<TimeOnly>, IHasRandomSource, ICardinality
         return new AnyTimeOnly(_source, _spec.WithMinimum(Ord(start), constraint).WithMaximum(Ord(end), constraint));
     }
 
+    /// <summary>
+    ///     Requires the time of day to fall on a lattice of <paramref name="granularity" /> from
+    ///     <see cref="TimeOnly.MinValue" /> — a round time of day (a whole second, a quarter-hour), built on the grid
+    ///     rather than snapped after the fact, so tick-precision values never surprise a serialization round-trip.
+    ///     Declared once per generator.
+    /// </summary>
+    /// <param name="granularity">The lattice step; must be strictly positive. A granularity of one tick adds no constraint.</param>
+    /// <returns>A new generator carrying the added constraint.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="granularity" /> is not strictly positive.</exception>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    public AnyTimeOnly WithGranularity(TimeSpan granularity) {
+        if (granularity <= TimeSpan.Zero) { throw new ArgumentOutOfRangeException(nameof(granularity), granularity, "The granularity must be strictly positive."); }
+
+        string rendered = granularity.ToString("c", CultureInfo.InvariantCulture);
+
+        return new AnyTimeOnly(_source, _spec.WithStep((ulong)granularity.Ticks, Ord(TimeOnly.MinValue), $"WithGranularity({rendered})"));
+    }
+
     /// <summary>Requires the time of day to be one of the supplied values. Declared once per generator.</summary>
     /// <param name="values">The allowed values; duplicates are ignored.</param>
     /// <returns>A new generator carrying the added constraint.</returns>

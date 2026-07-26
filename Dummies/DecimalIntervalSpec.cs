@@ -4,10 +4,14 @@ namespace Dummies;
 ///     The immutable engine behind <see cref="AnyDecimal" /> — the same algebra as
 ///     <see cref="ContinuousIntervalSpec" /> in <see cref="decimal" /> arithmetic. <see cref="decimal" /> has no
 ///     next-representable-value ladder, so exclusive bounds are expressed as an inclusive bound plus a point
-///     exclusion, and a colliding draw is nudged by the smallest decimal increment within a bounded budget.
+///     exclusion, and a colliding draw is nudged by the smallest decimal increment within a bounded budget. An
+///     optional <b>scale lattice</b> (set by <c>WithScale</c>) restricts the domain to the multiples of
+///     <c>10^-scale</c> — every value expressible in <c>scale</c> decimal places — by snapping the drawn candidate to
+///     the grid, still in one constructive draw.
 /// </summary>
 internal sealed class DecimalIntervalSpec {
 
+    private const int NoScale     = -1;
     private const int NudgeBudget = 128;
 
     private static readonly decimal SmallestStep = 0.0000000000000000000000000001m;
@@ -16,7 +20,15 @@ internal sealed class DecimalIntervalSpec {
     #region Statics members declarations
 
     internal static DecimalIntervalSpec Unconstrained(string typeName, Func<decimal, string> render) {
-        return new DecimalIntervalSpec(typeName, render, decimal.MinValue, null, decimal.MaxValue, null, null, null, []);
+        return new DecimalIntervalSpec(typeName, render, decimal.MinValue, null, decimal.MaxValue, null, null, null, [], NoScale, null);
+    }
+
+    /// <summary>Ten raised to <paramref name="power" /> as an exact <see cref="decimal" /> (<paramref name="power" /> in <c>[0, 28]</c>).</summary>
+    private static decimal Pow10(int power) {
+        decimal result = 1m;
+        for (int i = 0; i < power; i++) { result *= 10m; }
+
+        return result;
     }
 
     #endregion
@@ -25,13 +37,20 @@ internal sealed class DecimalIntervalSpec {
 
     private readonly IReadOnlyList<decimal>? _allowed;
     private readonly string?                 _allowedConstraint;
+    private readonly decimal                 _ceiledMin;
     private readonly List<decimal>?          _effectiveAllowed;
     private readonly IReadOnlyList<decimal>  _excluded;
+    private readonly int                     _excludedOnLattice;
+    private readonly decimal                 _flooredMax;
+    private readonly bool                    _latticeHasPoint;
     private readonly decimal                 _max;
     private readonly string?                 _maxConstraint;
     private readonly decimal                 _min;
     private readonly string?                 _minConstraint;
     private readonly Func<decimal, string>   _render;
+    private readonly int                     _scale;
+    private readonly string?                 _scaleConstraint;
+    private readonly decimal                 _step;
     private readonly string                  _typeName;
 
     #endregion
@@ -40,7 +59,8 @@ internal sealed class DecimalIntervalSpec {
                                 decimal min,      string? minConstraint,
                                 decimal max,      string? maxConstraint,
                                 IReadOnlyList<decimal>? allowed, string? allowedConstraint,
-                                IReadOnlyList<decimal>  excluded) {
+                                IReadOnlyList<decimal>  excluded,
+                                int     scale,    string? scaleConstraint) {
         _typeName          = typeName;
         _render            = render;
         _min               = min;
@@ -50,8 +70,24 @@ internal sealed class DecimalIntervalSpec {
         _allowed           = allowed;
         _allowedConstraint = allowedConstraint;
         _excluded          = excluded;
+        _scale             = scale;
+        _scaleConstraint   = scaleConstraint;
+        // Lattice-derived state, materialized once — "constrain once, draw many".
+        if (scale >= 0) {
+            _step            = 1m / Pow10(scale);
+            _ceiledMin       = CeilToGrid(min, scale, _step);
+            _flooredMax      = FloorToGrid(max, scale, _step);
+            _latticeHasPoint = _ceiledMin <= _flooredMax;
+            _excludedOnLattice = excluded.Count(value => value >= min && value <= max && IsOnGrid(value, scale));
+        } else {
+            _step              = 0m;
+            _ceiledMin         = min;
+            _flooredMax        = max;
+            _latticeHasPoint   = true;
+            _excludedOnLattice = 0;
+        }
         // Materialized once here — "constrain once, draw many": Generate never refilters the allow-list.
-        _effectiveAllowed  = allowed?.Where(value => value >= min && value <= max && !IsExcluded(value)).ToList();
+        _effectiveAllowed = allowed?.Where(value => value >= min && value <= max && !IsExcluded(value) && (scale < 0 || IsOnGrid(value, scale))).ToList();
     }
 
     /// <summary>Tightens the lower bound; a looser bound than the current one is a no-op.</summary>
@@ -64,7 +100,7 @@ internal sealed class DecimalIntervalSpec {
             throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_maxConstraint} already requires values less than or equal to {_render(_max)}.");
         }
 
-        return Validated(new DecimalIntervalSpec(_typeName, _render, minimum, applying, _max, _maxConstraint, _allowed, _allowedConstraint, _excluded), applying);
+        return Validated(new DecimalIntervalSpec(_typeName, _render, minimum, applying, _max, _maxConstraint, _allowed, _allowedConstraint, _excluded, _scale, _scaleConstraint), applying);
     }
 
     /// <summary>Tightens the upper bound; a looser bound than the current one is a no-op.</summary>
@@ -77,7 +113,7 @@ internal sealed class DecimalIntervalSpec {
             throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_minConstraint} already requires values greater than or equal to {_render(_min)}.");
         }
 
-        return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, maximum, applying, _allowed, _allowedConstraint, _excluded), applying);
+        return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, maximum, applying, _allowed, _allowedConstraint, _excluded, _scale, _scaleConstraint), applying);
     }
 
     /// <summary>Tightens the lower bound to strictly above <paramref name="bound" /> — the inclusive bound plus a point exclusion.</summary>
@@ -96,7 +132,7 @@ internal sealed class DecimalIntervalSpec {
 
         decimal[] distinct = values.Distinct().ToArray();
 
-        return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, _max, _maxConstraint, distinct, applying, _excluded), applying);
+        return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, _max, _maxConstraint, distinct, applying, _excluded, _scale, _scaleConstraint), applying);
     }
 
     /// <summary>Adds values the generator must never produce.</summary>
@@ -104,19 +140,39 @@ internal sealed class DecimalIntervalSpec {
         List<decimal> excluded = new(_excluded);
         excluded.AddRange(values);
 
-        return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, excluded), applying);
+        return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, excluded, _scale, _scaleConstraint), applying);
     }
 
     /// <summary>
-    ///     The number of distinct values the specification can produce — the allow-list size when one is set, <c>1</c>
-    ///     for a validated pin (<c>_min == _max</c>, a singleton domain), and <c>null</c> otherwise: a wider
-    ///     <see cref="decimal" /> interval is a countable domain in theory but astronomically large, so it stays
-    ///     outside the eager cardinality perimeter and a distinct collection over it falls back to the bounded draw.
-    ///     Feeds <see cref="ICardinalityHint{T}" />.
+    ///     Restricts the domain to the multiples of <c>10^-scale</c> — the values expressible in <paramref name="scale" />
+    ///     decimal places. A value lattice, not a representation contract: the drawn value lies on the grid, but its
+    ///     rendered form is not padded with trailing zeros. Declared once per generator.
+    /// </summary>
+    internal DecimalIntervalSpec WithScale(int scale, string applying) {
+        if (_scale >= 0) {
+            if (_scale == scale) { return this; }
+
+            throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_scaleConstraint} is already defined.");
+        }
+
+        return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, _excluded, scale, applying), applying);
+    }
+
+    /// <summary>
+    ///     The number of distinct values the specification can produce — the allow-list size when one is set; the number
+    ///     of non-excluded grid points when a scale lattice is set and that count fits a <see cref="long" />; <c>1</c>
+    ///     for a validated pin; and <c>null</c> otherwise (a wider <see cref="decimal" /> interval is a countable but
+    ///     astronomically large domain, so it stays outside the eager cardinality perimeter and a distinct collection
+    ///     over it falls back to the bounded draw). Feeds <see cref="ICardinalityHint{T}" />.
     /// </summary>
     internal long? Cardinality {
         get {
             if (_effectiveAllowed is not null) { return _effectiveAllowed.Count; }
+            if (_scale >= 0) {
+                long? points = LatticePointCount();
+
+                return points is null ? null : Math.Max(0, points.Value - _excludedOnLattice);
+            }
             if (_min == _max) { return 1; }
 
             return null;
@@ -125,10 +181,12 @@ internal sealed class DecimalIntervalSpec {
 
     /// <summary>
     ///     Whether <paramref name="value" /> is one the specification could produce — a member of the allow-list when
-    ///     one is set, otherwise inside the interval and not excluded. Mirrors <see cref="Generate" />'s own domain.
+    ///     one is set, otherwise on the grid (when a scale lattice is set), inside the interval and not excluded.
+    ///     Mirrors <see cref="Generate" />'s own domain.
     /// </summary>
     internal bool Contains(decimal value) {
         if (_effectiveAllowed is not null) { return _effectiveAllowed.Contains(value); }
+        if (_scale >= 0 && !IsOnGrid(value, _scale)) { return false; }
 
         return value >= _min && value <= _max && !IsExcluded(value);
     }
@@ -160,6 +218,24 @@ internal sealed class DecimalIntervalSpec {
         // doubles to just past decimal.MaxValue, throwing on an unconstrained Any.Decimal().Generate().
         decimal candidate = Clamped(_min * (1m - fraction) + _max * fraction);
 
+        if (_scale >= 0) {
+            // Snap the draw onto the grid, then pull it inside the reachable grid window. A snapped point that
+            // collides with an exclusion is walked one grid step at a time — ascending first, then descending —
+            // a deterministic, bounded walk, not a retry loop.
+            decimal snapped = Math.Round(candidate, _scale, MidpointRounding.ToEven);
+            if (snapped < _ceiledMin) { snapped      = _ceiledMin; } else if (snapped > _flooredMax) { snapped = _flooredMax; }
+
+            decimal? free = NudgeOnGrid(snapped, true) ?? NudgeOnGrid(snapped, false);
+            if (free is null) {
+                throw new AnyGenerationException(
+                    $"Generation failed: no {_typeName} value near the drawn candidate satisfies the exclusions. {source.ReplayHint(current.Seed)}",
+                    current.Seed,
+                    new InvalidOperationException("The grid nudge could not leave the excluded point within the allowed range."));
+            }
+
+            return free.Value;
+        }
+
         // A draw colliding with an excluded point is walked by the smallest decimal step — deterministic and
         // bounded, not a retry loop. (At extreme magnitudes the step can vanish in rounding; the budget then
         // fails the generation loudly instead of looping.)
@@ -177,6 +253,58 @@ internal sealed class DecimalIntervalSpec {
         }
 
         return candidate;
+    }
+
+    /// <summary>
+    ///     Walks from <paramref name="from" /> along the grid — ascending or descending by one step — to the nearest
+    ///     value the exclusions allow, staying within the reachable grid window. Returns <c>null</c> when the walk
+    ///     reaches the window edge before finding one, so the caller can try the opposite direction.
+    /// </summary>
+    private decimal? NudgeOnGrid(decimal from, bool ascending) {
+        decimal candidate = from;
+        int     budget    = NudgeBudget;
+        while (IsExcluded(candidate)) {
+            decimal next = ascending ? candidate + _step : candidate - _step;
+            if (next < _ceiledMin || next > _flooredMax || budget-- == 0) { return null; }
+
+            candidate = next;
+        }
+
+        return candidate;
+    }
+
+    /// <summary>The number of grid points in <c>[min, max]</c>, or <c>null</c> when that exceeds <see cref="long.MaxValue" />.</summary>
+    private long? LatticePointCount() {
+        if (!_latticeHasPoint) { return 0; }
+
+        decimal maxCountable = _step * long.MaxValue; // _step is at most 1, so this never overflows
+        // The span itself can exceed the decimal range (an unconstrained WithScale spans MinValue..MaxValue). Only a
+        // straddling range risks that; when either half alone already outruns the countable span there are too many
+        // points, so short-circuit before forming a difference that would throw.
+        if (_ceiledMin < 0m && _flooredMax > 0m && (_flooredMax > maxCountable || -_ceiledMin > maxCountable)) { return null; }
+
+        decimal span = _flooredMax - _ceiledMin;
+        if (span > maxCountable) { return null; }
+
+        return (long)(span / _step) + 1;
+    }
+
+    private static bool IsOnGrid(decimal value, int scale) {
+        return Math.Round(value, scale, MidpointRounding.ToEven) == value;
+    }
+
+    /// <summary>The smallest grid point at or above <paramref name="value" />.</summary>
+    private static decimal CeilToGrid(decimal value, int scale, decimal step) {
+        decimal rounded = Math.Round(value, scale, MidpointRounding.ToEven);
+
+        return rounded >= value ? rounded : rounded + step;
+    }
+
+    /// <summary>The largest grid point at or below <paramref name="value" />.</summary>
+    private static decimal FloorToGrid(decimal value, int scale, decimal step) {
+        decimal rounded = Math.Round(value, scale, MidpointRounding.ToEven);
+
+        return rounded <= value ? rounded : rounded - step;
     }
 
     private decimal Clamped(decimal value) {
@@ -202,6 +330,13 @@ internal sealed class DecimalIntervalSpec {
 
     private bool IsSatisfiable() {
         if (_effectiveAllowed is not null) { return _effectiveAllowed.Count > 0; }
+        if (_scale >= 0) {
+            if (!_latticeHasPoint) { return false; }
+
+            long? points = LatticePointCount();
+
+            return points is null || points.Value > _excludedOnLattice;
+        }
         if (_min < _max) { return true; }
 
         return !IsExcluded(_min);
@@ -214,6 +349,10 @@ internal sealed class DecimalIntervalSpec {
             }
 
             return $"none of the values {_allowedConstraint} allows satisfies the constraints already defined";
+        }
+
+        if (_scale >= 0) {
+            return $"no {_typeName} value {_scaleConstraint} allows remains between {_render(_min)} and {_render(_max)}";
         }
 
         string pinning = _minConstraint ?? _maxConstraint ?? "the declared bounds";

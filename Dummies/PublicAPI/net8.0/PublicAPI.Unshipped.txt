@@ -17,6 +17,7 @@ Dummies.AnyByte.GreaterThan(byte value) -> Dummies.AnyByte!
 Dummies.AnyByte.GreaterThanOrEqualTo(byte value) -> Dummies.AnyByte!
 Dummies.AnyByte.LessThan(byte value) -> Dummies.AnyByte!
 Dummies.AnyByte.LessThanOrEqualTo(byte value) -> Dummies.AnyByte!
+Dummies.AnyByte.MultipleOf(byte value) -> Dummies.AnyByte!
 Dummies.AnyByte.NonZero() -> Dummies.AnyByte!
 Dummies.AnyByte.OneOf(params byte[]! values) -> Dummies.AnyByte!
 Dummies.AnyByte.Zero() -> Dummies.AnyByte!
@@ -92,6 +93,7 @@ Dummies.AnyDateTime.DifferentFrom(System.DateTime value) -> Dummies.AnyDateTime!
 Dummies.AnyDateTime.Except(params System.DateTime[]! values) -> Dummies.AnyDateTime!
 Dummies.AnyDateTime.Generate() -> System.DateTime
 Dummies.AnyDateTime.OneOf(params System.DateTime[]! values) -> Dummies.AnyDateTime!
+Dummies.AnyDateTime.WithGranularity(System.TimeSpan granularity) -> Dummies.AnyDateTime!
 Dummies.AnyDateTimeOffset
 Dummies.AnyDateTimeOffset.After(System.DateTimeOffset instant) -> Dummies.AnyDateTimeOffset!
 Dummies.AnyDateTimeOffset.AfterOrEqualTo(System.DateTimeOffset instant) -> Dummies.AnyDateTimeOffset!
@@ -102,6 +104,7 @@ Dummies.AnyDateTimeOffset.DifferentFrom(System.DateTimeOffset value) -> Dummies.
 Dummies.AnyDateTimeOffset.Except(params System.DateTimeOffset[]! values) -> Dummies.AnyDateTimeOffset!
 Dummies.AnyDateTimeOffset.Generate() -> System.DateTimeOffset
 Dummies.AnyDateTimeOffset.OneOf(params System.DateTimeOffset[]! values) -> Dummies.AnyDateTimeOffset!
+Dummies.AnyDateTimeOffset.WithGranularity(System.TimeSpan granularity) -> Dummies.AnyDateTimeOffset!
 Dummies.AnyDecimal
 Dummies.AnyDecimal.Between(decimal minimum, decimal maximum) -> Dummies.AnyDecimal!
 Dummies.AnyDecimal.DifferentFrom(decimal value) -> Dummies.AnyDecimal!
@@ -115,6 +118,7 @@ Dummies.AnyDecimal.Negative() -> Dummies.AnyDecimal!
 Dummies.AnyDecimal.NonZero() -> Dummies.AnyDecimal!
 Dummies.AnyDecimal.OneOf(params decimal[]! values) -> Dummies.AnyDecimal!
 Dummies.AnyDecimal.Positive() -> Dummies.AnyDecimal!
+Dummies.AnyDecimal.WithScale(int scale) -> Dummies.AnyDecimal!
 Dummies.AnyDecimal.Zero() -> Dummies.AnyDecimal!
 Dummies.AnyDictionary<TKey, TValue>
 Dummies.AnyDictionary<TKey, TValue>.ContainingAnyKey(Dummies.IAny<TKey>! generator) -> Dummies.AnyDictionary<TKey, TValue>!
@@ -194,6 +198,7 @@ Dummies.AnyInt128.GreaterThan(System.Int128 value) -> Dummies.AnyInt128!
 Dummies.AnyInt128.GreaterThanOrEqualTo(System.Int128 value) -> Dummies.AnyInt128!
 Dummies.AnyInt128.LessThan(System.Int128 value) -> Dummies.AnyInt128!
 Dummies.AnyInt128.LessThanOrEqualTo(System.Int128 value) -> Dummies.AnyInt128!
+Dummies.AnyInt128.MultipleOf(System.Int128 value) -> Dummies.AnyInt128!
 Dummies.AnyInt128.Negative() -> Dummies.AnyInt128!
 Dummies.AnyInt128.NonZero() -> Dummies.AnyInt128!
 Dummies.AnyInt128.OneOf(params System.Int128[]! values) -> Dummies.AnyInt128!
@@ -208,6 +213,7 @@ Dummies.AnyInt16.GreaterThan(short value) -> Dummies.AnyInt16!
 Dummies.AnyInt16.GreaterThanOrEqualTo(short value) -> Dummies.AnyInt16!
 Dummies.AnyInt16.LessThan(short value) -> Dummies.AnyInt16!
 Dummies.AnyInt16.LessThanOrEqualTo(short value) -> Dummies.AnyInt16!
+Dummies.AnyInt16.MultipleOf(short value) -> Dummies.AnyInt16!
 Dummies.AnyInt16.Negative() -> Dummies.AnyInt16!
 Dummies.AnyInt16.NonZero() -> Dummies.AnyInt16!
 Dummies.AnyInt16.OneOf(params short[]! values) -> Dummies.AnyInt16!
@@ -222,6 +228,7 @@ Dummies.AnyInt32.GreaterThan(int value) -> Dummies.AnyInt32!
 Dummies.AnyInt32.GreaterThanOrEqualTo(int value) -> Dummies.AnyInt32!
 Dummies.AnyInt32.LessThan(int value) -> Dummies.AnyInt32!
 Dummies.AnyInt32.LessThanOrEqualTo(int value) -> Dummies.AnyInt32!
+Dummies.AnyInt32.MultipleOf(int value) -> Dummies.AnyInt32!
 Dummies.AnyInt32.Negative() -> Dummies.AnyInt32!
 Dummies.AnyInt32.NonZero() -> Dummies.AnyInt32!
 Dummies.AnyInt32.OneOf(params int[]! values) -> Dummies.AnyInt32!
@@ -236,6 +243,7 @@ Dummies.AnyInt64.GreaterThan(long value) -> Dummies.AnyInt64!
 Dummies.AnyInt64.GreaterThanOrEqualTo(long value) -> Dummies.AnyInt64!
 Dummies.AnyInt64.LessThan(long value) -> Dummies.AnyInt64!
 Dummies.AnyInt64.LessThanOrEqualTo(long value) -> Dummies.AnyInt64!
+Dummies.AnyInt64.MultipleOf(long value) -> Dummies.AnyInt64!
 Dummies.AnyInt64.Negative() -> Dummies.AnyInt64!
 Dummies.AnyInt64.NonZero() -> Dummies.AnyInt64!
 Dummies.AnyInt64.OneOf(params long[]! values) -> Dummies.AnyInt64!
@@ -268,6 +276,7 @@ Dummies.AnySByte.GreaterThan(sbyte value) -> Dummies.AnySByte!
 Dummies.AnySByte.GreaterThanOrEqualTo(sbyte value) -> Dummies.AnySByte!
 Dummies.AnySByte.LessThan(sbyte value) -> Dummies.AnySByte!
 Dummies.AnySByte.LessThanOrEqualTo(sbyte value) -> Dummies.AnySByte!
+Dummies.AnySByte.MultipleOf(sbyte value) -> Dummies.AnySByte!
 Dummies.AnySByte.Negative() -> Dummies.AnySByte!
 Dummies.AnySByte.NonZero() -> Dummies.AnySByte!
 Dummies.AnySByte.OneOf(params sbyte[]! values) -> Dummies.AnySByte!
@@ -323,6 +332,7 @@ Dummies.AnyTimeOnly.DifferentFrom(System.TimeOnly value) -> Dummies.AnyTimeOnly!
 Dummies.AnyTimeOnly.Except(params System.TimeOnly[]! values) -> Dummies.AnyTimeOnly!
 Dummies.AnyTimeOnly.Generate() -> System.TimeOnly
 Dummies.AnyTimeOnly.OneOf(params System.TimeOnly[]! values) -> Dummies.AnyTimeOnly!
+Dummies.AnyTimeOnly.WithGranularity(System.TimeSpan granularity) -> Dummies.AnyTimeOnly!
 Dummies.AnyTimeSpan
 Dummies.AnyTimeSpan.Between(System.TimeSpan minimum, System.TimeSpan maximum) -> Dummies.AnyTimeSpan!
 Dummies.AnyTimeSpan.DifferentFrom(System.TimeSpan value) -> Dummies.AnyTimeSpan!
@@ -336,6 +346,7 @@ Dummies.AnyTimeSpan.Negative() -> Dummies.AnyTimeSpan!
 Dummies.AnyTimeSpan.NonZero() -> Dummies.AnyTimeSpan!
 Dummies.AnyTimeSpan.OneOf(params System.TimeSpan[]! values) -> Dummies.AnyTimeSpan!
 Dummies.AnyTimeSpan.Positive() -> Dummies.AnyTimeSpan!
+Dummies.AnyTimeSpan.WithGranularity(System.TimeSpan granularity) -> Dummies.AnyTimeSpan!
 Dummies.AnyTimeSpan.Zero() -> Dummies.AnyTimeSpan!
 Dummies.AnyUInt128
 Dummies.AnyUInt128.Between(System.UInt128 minimum, System.UInt128 maximum) -> Dummies.AnyUInt128!
@@ -346,6 +357,7 @@ Dummies.AnyUInt128.GreaterThan(System.UInt128 value) -> Dummies.AnyUInt128!
 Dummies.AnyUInt128.GreaterThanOrEqualTo(System.UInt128 value) -> Dummies.AnyUInt128!
 Dummies.AnyUInt128.LessThan(System.UInt128 value) -> Dummies.AnyUInt128!
 Dummies.AnyUInt128.LessThanOrEqualTo(System.UInt128 value) -> Dummies.AnyUInt128!
+Dummies.AnyUInt128.MultipleOf(System.UInt128 value) -> Dummies.AnyUInt128!
 Dummies.AnyUInt128.NonZero() -> Dummies.AnyUInt128!
 Dummies.AnyUInt128.OneOf(params System.UInt128[]! values) -> Dummies.AnyUInt128!
 Dummies.AnyUInt128.Zero() -> Dummies.AnyUInt128!
@@ -358,6 +370,7 @@ Dummies.AnyUInt16.GreaterThan(ushort value) -> Dummies.AnyUInt16!
 Dummies.AnyUInt16.GreaterThanOrEqualTo(ushort value) -> Dummies.AnyUInt16!
 Dummies.AnyUInt16.LessThan(ushort value) -> Dummies.AnyUInt16!
 Dummies.AnyUInt16.LessThanOrEqualTo(ushort value) -> Dummies.AnyUInt16!
+Dummies.AnyUInt16.MultipleOf(ushort value) -> Dummies.AnyUInt16!
 Dummies.AnyUInt16.NonZero() -> Dummies.AnyUInt16!
 Dummies.AnyUInt16.OneOf(params ushort[]! values) -> Dummies.AnyUInt16!
 Dummies.AnyUInt16.Zero() -> Dummies.AnyUInt16!
@@ -370,6 +383,7 @@ Dummies.AnyUInt32.GreaterThan(uint value) -> Dummies.AnyUInt32!
 Dummies.AnyUInt32.GreaterThanOrEqualTo(uint value) -> Dummies.AnyUInt32!
 Dummies.AnyUInt32.LessThan(uint value) -> Dummies.AnyUInt32!
 Dummies.AnyUInt32.LessThanOrEqualTo(uint value) -> Dummies.AnyUInt32!
+Dummies.AnyUInt32.MultipleOf(uint value) -> Dummies.AnyUInt32!
 Dummies.AnyUInt32.NonZero() -> Dummies.AnyUInt32!
 Dummies.AnyUInt32.OneOf(params uint[]! values) -> Dummies.AnyUInt32!
 Dummies.AnyUInt32.Zero() -> Dummies.AnyUInt32!
@@ -382,6 +396,7 @@ Dummies.AnyUInt64.GreaterThan(ulong value) -> Dummies.AnyUInt64!
 Dummies.AnyUInt64.GreaterThanOrEqualTo(ulong value) -> Dummies.AnyUInt64!
 Dummies.AnyUInt64.LessThan(ulong value) -> Dummies.AnyUInt64!
 Dummies.AnyUInt64.LessThanOrEqualTo(ulong value) -> Dummies.AnyUInt64!
+Dummies.AnyUInt64.MultipleOf(ulong value) -> Dummies.AnyUInt64!
 Dummies.AnyUInt64.NonZero() -> Dummies.AnyUInt64!
 Dummies.AnyUInt64.OneOf(params ulong[]! values) -> Dummies.AnyUInt64!
 Dummies.AnyUInt64.Zero() -> Dummies.AnyUInt64!
