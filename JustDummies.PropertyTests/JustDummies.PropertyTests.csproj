@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Adds the .NET Framework 4.7.2 support-floor leg (gated by EnableNet472Floor) and owns the target
+       frameworks; exercised by the `framework-floor` job in .github/workflows/ci.yml. Like its sibling
+       JustDummies.UnitTests, this project carries JustDummies onto the floor, so the generator invariants
+       are proven against the netstandard2.0 asset that .NET Framework consumers actually load. -->
+  <Import Project="..\build\Net472TestFloor.props" />
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <!-- FsCheck drives the property-based (fuzzing-style) tests. The bare `using FsCheck;` in each test file
+         is also what OpenSSF Scorecard's Fuzzing check looks for to credit C# property-based testing. -->
+    <PackageReference Include="FsCheck" />
+    <PackageReference Include="JetBrains.Annotations" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- JustDummies only: like JustDummies.UnitTests, this test project deliberately references no
+         FirstClassErrors project, so the standalone boundary of the library under test stays visible. -->
+    <ProjectReference Include="..\JustDummies\JustDummies.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <!-- Saturated with .NET 8+ surface and therefore not compilable on the net472 floor: the modern generators
+       (DateOnly/TimeOnly/Int128/UInt128/Half) are absent from the netstandard2.0 asset. Their invariants are
+       net10-only by construction; the rest of the suite proves the netstandard2.0 contract on the floor. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Compile Remove="ModernTypeInvariantProperties.cs" />
+  </ItemGroup>
+
+</Project>
