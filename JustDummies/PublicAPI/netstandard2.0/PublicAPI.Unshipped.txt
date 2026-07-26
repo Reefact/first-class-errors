@@ -133,6 +133,7 @@ JustDummies.AnyDouble.OneOf(params double[]! values) -> JustDummies.AnyDouble!
 JustDummies.AnyDouble.Positive() -> JustDummies.AnyDouble!
 JustDummies.AnyDouble.Zero() -> JustDummies.AnyDouble!
 JustDummies.AnyEnum<TEnum>
+JustDummies.AnyEnum<TEnum>.AllowingCombinations() -> JustDummies.AnyEnum<TEnum>!
 JustDummies.AnyEnum<TEnum>.DifferentFrom(TEnum value) -> JustDummies.AnyEnum<TEnum>!
 JustDummies.AnyEnum<TEnum>.Except(params TEnum[]! values) -> JustDummies.AnyEnum<TEnum>!
 JustDummies.AnyEnum<TEnum>.Generate() -> TEnum
