@@ -185,15 +185,13 @@ pourrait être attribué avec confiance.
 
 ## Actions de suivi
 
-* Publier la frontière sous forme de guide mainteneur, afin qu'un contributeur ajoutant
-  une contrainte ou corrigeant un défaut puisse placer son test sans re-dériver cette
-  décision.
 * Réexaminer la formulation « property test » de l'ADR-0025, que l'audit a signalée comme
   inexacte, maintenant qu'une propriété d'aller-retour existe. Seul `@reefact` peut
   amender ou remplacer un ADR accepté.
 
 ## Références
 
+* [Écrire les tests de JustDummies](../WritingJustDummiesTests.fr.md) — comment cette frontière s'applique au moment d'ajouter un test
 * [ADR-0025](0025-generate-strings-from-a-home-grown-regular-subset.fr.md) — le sous-ensemble régulier dont cette suite prouve l'aller-retour
 * [ADR-0035](0035-enforce-structural-any-conflicts-at-compile-time.fr.md) — conflits structurels contre conflits dépendants de la valeur, qui décident de la façon dont une propriété doit se ramifier
 * [ADR-0036](0036-draw-lattice-constrained-scalars-on-the-grid.fr.md) — les contraintes de treillis, dont l'invariant de grille est quantifié par la suite par propriétés

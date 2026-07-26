@@ -32,6 +32,14 @@ edit in [`tools/trains.sh`](../../../tools/trains.sh) and the static edits GitHu
 tooling force (tag trigger, choice options, commit-lint scopes, packing). Also in
 [French](AddingAReleaseTrain.fr.md).
 
+### [Writing JustDummies tests](WritingJustDummiesTests.en.md)
+
+Where a new test for `JustDummies` belongs — the example suite or the property
+suite — and how to write it so it proves something. One question decides it:
+does the assertion have an input space? The boundary itself is recorded in
+[ADR-0040](adr/0040-split-the-justdummies-test-bed-between-example-and-property-suites.md);
+this page applies it. Also in [French](WritingJustDummiesTests.fr.md).
+
 ### [Architecture Decision Records](adr/README.md)
 
 Dated records of significant decisions — their context, the option chosen, and
