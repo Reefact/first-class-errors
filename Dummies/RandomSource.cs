@@ -14,9 +14,11 @@ internal abstract class RandomSource {
 
     /// <summary>
     ///     The reproduction guidance to append to a generation-failure message, phrased for this kind of source. The
-    ///     ambient source points at <c>Any.Reproducibly(seed, ...)</c>; a fixed <c>Any.WithSeed(...)</c> context replays
-    ///     deterministically on its own, so pinning the ambient source would not apply — naming the wrong instruction is
-    ///     exactly the misleading diagnostic this method exists to avoid.
+    ///     ambient source points at <c>Any.Reproducibly(seed, ...)</c> — or at whatever instruction the opener of the
+    ///     current <see cref="Any.UseSeed(int, string)" /> scope supplied, since a run pinned by a test-framework
+    ///     adapter is replayed by changing what the adapter reads, not by adding a call the test never had; a fixed
+    ///     <c>Any.WithSeed(...)</c> context replays deterministically on its own, so pinning the ambient source would
+    ///     not apply — naming the wrong instruction is exactly the misleading diagnostic this method exists to avoid.
     /// </summary>
     internal abstract string ReplayHint(int seed);
 
@@ -48,7 +50,7 @@ internal sealed class SeededRandom {
 /// <summary>
 ///     The default random context behind the static <see cref="Any" /> entry points. The state is stored in an
 ///     <see cref="AsyncLocal{T}" />, so it flows with the current execution context and never leaks across tests
-///     running in parallel. Outside an <see cref="UseSeed" /> scope it lazily seeds itself with a fresh seed — every
+///     running in parallel. Outside an <see cref="UseSeed(int)" /> scope it lazily seeds itself with a fresh seed — every
 ///     run differs, which surfaces a test that secretly depends on a value — and that seed is remembered, so a
 ///     generation failure can still report it. Inside a scope (how <c>Any.Reproducibly(...)</c> pins a run) it is
 ///     deterministic.
@@ -59,15 +61,19 @@ internal sealed class AmbientRandomSource : RandomSource {
 
     internal static readonly AmbientRandomSource Instance = new();
 
-    private static readonly AsyncLocal<SeededRandom?> State = new();
+    private static readonly AsyncLocal<AmbientState?> State = new();
 
     internal static int NewSeed() {
         return Guid.NewGuid().GetHashCode();
     }
 
     internal static IDisposable UseSeed(int seed) {
-        SeededRandom? previous = State.Value;
-        State.Value = new SeededRandom(seed);
+        return UseSeed(seed, null);
+    }
+
+    internal static IDisposable UseSeed(int seed, string? replayInstruction) {
+        AmbientState? previous = State.Value;
+        State.Value = new AmbientState(new SeededRandom(seed), replayInstruction);
 
         return new SeedScope(previous);
     }
@@ -78,32 +84,54 @@ internal sealed class AmbientRandomSource : RandomSource {
 
     internal override SeededRandom Current {
         get {
-            SeededRandom? current = State.Value;
+            AmbientState? current = State.Value;
             if (current is null) {
-                current     = new SeededRandom(NewSeed());
+                current     = new AmbientState(new SeededRandom(NewSeed()), null);
                 State.Value = current;
             }
 
-            return current;
+            return current.Random;
         }
     }
 
     internal override string ReplayHint(int seed) {
-        return $"The arbitrary values were seeded with {seed}; reproduce this run with Any.Reproducibly({seed}, ...).";
+        return $"The arbitrary values were seeded with {seed}; reproduce this run with {ReplayInstruction(seed)}.";
     }
 
     internal override string PartialReplayHint(int seed) {
-        return $"The seeded draws were made with {seed} (Any.Reproducibly({seed}, ...)), but some values come from a generator that does not draw from this source, so they are not reproducible from this seed alone.";
+        return $"The seeded draws were made with {seed} ({ReplayInstruction(seed)}), but some values come from a generator that does not draw from this source, so they are not reproducible from this seed alone.";
+    }
+
+    /// <summary>
+    ///     What the reader must write to replay the current run: the instruction the opener of the scope supplied, or
+    ///     the delegate runner when nothing was supplied. Read from the scope rather than fixed on the source, because
+    ///     the ambient source is pinned by several mechanisms and each is replayed differently.
+    /// </summary>
+    private static string ReplayInstruction(int seed) {
+        return State.Value?.ReplayInstruction ?? $"Any.Reproducibly({seed}, ...)";
     }
 
     #region Nested types
 
+    /// <summary>The ambient state a seed scope installs: the seeded generator, and how to replay the run that uses it.</summary>
+    private sealed class AmbientState {
+
+        internal AmbientState(SeededRandom random, string? replayInstruction) {
+            Random            = random;
+            ReplayInstruction = replayInstruction;
+        }
+
+        internal SeededRandom Random            { get; }
+        internal string?      ReplayInstruction { get; }
+
+    }
+
     private sealed class SeedScope : IDisposable {
 
-        private readonly SeededRandom? _previous;
+        private readonly AmbientState? _previous;
         private          bool          _disposed;
 
-        internal SeedScope(SeededRandom? previous) {
+        internal SeedScope(AmbientState? previous) {
             _previous = previous;
         }
 

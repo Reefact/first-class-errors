@@ -47,10 +47,12 @@ case "$scope" in
     projects='FirstClassErrors.Cli/FirstClassErrors.Cli.csproj'
     ;;
   dum)
-    # Dummies, the standalone arbitrary-test-value library. Deliberately independent of everything else in
-    # this repository (ADR-0011): it references no FirstClassErrors project, so it releases on its own
-    # train and its package must declare no FirstClassErrors dependency -- asserted below.
-    projects='Dummies/Dummies.csproj'
+    # Dummies, the standalone arbitrary-test-value library, and its xUnit v3 companion. Deliberately
+    # independent of everything else in this repository (ADR-0011): neither references a FirstClassErrors
+    # project, so they release on their own train and their packages must declare no FirstClassErrors
+    # dependency -- asserted below. Dummies.Xunit rides this train because it versions with the library it
+    # adapts (ADR-0036); if Dummies ever moves to its own repository, that pairing is worth revisiting.
+    projects='Dummies/Dummies.csproj Dummies.Xunit/Dummies.Xunit.csproj'
     ;;
   *)
     echo "error: unknown scope '$scope' (expected 'lib', 'cli' or 'dum')" >&2
