@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0025-generate-strings-from-a-home-grown-regular-subset.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-07-18
 **Decision Makers:** Reefact
 
