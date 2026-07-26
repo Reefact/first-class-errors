@@ -24,16 +24,24 @@ internal static class OrdinalMapping {
 
 /// <summary>
 ///     The shared immutable engine behind every discrete interval-shaped generator (integers, <c>TimeSpan</c>,
-///     <c>DateTime</c>, ...): an inclusive interval of <b>ordinals</b>, an optional allow-list (<c>OneOf</c>), and an
-///     exclusion list — each bound remembering the constraint that set it, so a conflict message can name both
-///     sides. Every mutation returns a new specification and validates satisfiability eagerly: a generator that
-///     exists can always generate, in one draw, with no retry.
+///     <c>DateTime</c>, ...): an inclusive interval of <b>ordinals</b>, an optional allow-list (<c>OneOf</c>), an
+///     exclusion list, and an optional <b>lattice</b> (a step and an anchor, set by <c>MultipleOf</c> / a temporal
+///     granularity) restricting the domain to values spaced a fixed distance apart — each bound remembering the
+///     constraint that set it, so a conflict message can name both sides. Every mutation returns a new specification
+///     and validates satisfiability eagerly: a generator that exists can always generate, in one draw, with no retry.
 /// </summary>
 /// <remarks>
 ///     The engine is domain-agnostic: each public generator supplies its type's display name (for "no Int64 value
 ///     satisfies it" messages), a renderer turning an ordinal back into a displayable value, and the ordinal bounds
 ///     of its domain. The conflict logic therefore lives once, and a fix to a message or an edge case reaches every
 ///     discrete type at the same time.
+///     <para>
+///         The lattice works because the ordinal map is affine: consecutive multiples of a step in value space stay a
+///         constant step apart in ordinal space. The valid ordinals are therefore an arithmetic progression through a
+///         known lattice ordinal (the anchor — the ordinal of the value <c>0</c>, itself a multiple of every step),
+///         found by striding from the first lattice point at or above the minimum. Sampling stays inside the drawn
+///         window, so the wraparound at the ordinal-space edge is never crossed.
+///     </para>
 /// </remarks>
 internal sealed class OrdinalIntervalSpec {
 
@@ -41,7 +49,36 @@ internal sealed class OrdinalIntervalSpec {
 
     internal static OrdinalIntervalSpec Unconstrained(string typeName, Func<ulong, string> render, ulong domainMin, ulong domainMax) {
         return new OrdinalIntervalSpec(typeName, render, domainMin, domainMax,
-                                       domainMin, null, domainMax, null, null, null, []);
+                                       domainMin, null, domainMax, null, null, null, [],
+                                       1UL, 0UL, null);
+    }
+
+    /// <summary>Whether <paramref name="ordinal" /> sits on the lattice anchored at <paramref name="anchor" /> with the given step.</summary>
+    private static bool IsOnLattice(ulong ordinal, ulong anchor, ulong step) {
+        ulong delta = ordinal >= anchor ? ordinal - anchor : anchor - ordinal;
+
+        return delta % step == 0UL;
+    }
+
+    /// <summary>
+    ///     The smallest lattice ordinal at or above <paramref name="min" />, staying within <c>[min, max]</c>. Returns
+    ///     <c>false</c> when none exists (the stride steps past <paramref name="max" />, or the domain top overflows).
+    /// </summary>
+    private static bool TryFirstLatticePoint(ulong min, ulong max, ulong anchor, ulong step, out ulong first) {
+        if (min >= anchor) {
+            ulong ahead = (min - anchor) % step;
+            if (ahead == 0UL) {
+                first = min;
+            } else {
+                first = min + (step - ahead);
+                if (first < min) { first = 0UL; return false; } // wrapped past the top of the ordinal domain
+            }
+        } else {
+            // The nearest lattice point at or above min is min plus its distance up to the anchor's phase.
+            first = min + (anchor - min) % step;
+        }
+
+        return first <= max;
     }
 
     #endregion
@@ -50,16 +87,22 @@ internal sealed class OrdinalIntervalSpec {
 
     private readonly IReadOnlyList<ulong>? _allowed;
     private readonly string?               _allowedConstraint;
+    private readonly ulong                 _anchor;
     private readonly ulong                 _domainMax;
-    private readonly List<ulong>?          _effectiveAllowed;
-    private readonly List<ulong>           _excludedInRange;
     private readonly ulong                 _domainMin;
+    private readonly List<ulong>?          _effectiveAllowed;
     private readonly IReadOnlyList<ulong>  _excluded;
+    private readonly List<ulong>           _excludedInRange;
+    private readonly List<ulong>           _excludedOnLattice;
+    private readonly ulong                 _latticeFirst;
+    private readonly bool                  _latticeHasPoint;
     private readonly ulong                 _max;
     private readonly string?               _maxConstraint;
     private readonly ulong                 _min;
     private readonly string?               _minConstraint;
     private readonly Func<ulong, string>   _render;
+    private readonly ulong                 _step;
+    private readonly string?               _stepConstraint;
     private readonly string                _typeName;
 
     #endregion
@@ -68,7 +111,8 @@ internal sealed class OrdinalIntervalSpec {
                                 ulong  min,     string? minConstraint,
                                 ulong  max,     string? maxConstraint,
                                 IReadOnlyList<ulong>? allowed, string? allowedConstraint,
-                                IReadOnlyList<ulong>  excluded) {
+                                IReadOnlyList<ulong>  excluded,
+                                ulong  step,    ulong anchor, string? stepConstraint) {
         _typeName          = typeName;
         _render            = render;
         _domainMin         = domainMin;
@@ -80,12 +124,25 @@ internal sealed class OrdinalIntervalSpec {
         _allowed           = allowed;
         _allowedConstraint = allowedConstraint;
         _excluded          = excluded;
+        _step              = step;
+        _anchor            = anchor;
+        _stepConstraint    = stepConstraint;
         // Materialized once here — "constrain once, draw many": GenerateOrdinal never refilters or resorts.
         _excludedInRange = excluded.Where(value => value >= min && value <= max).Distinct().ToList();
         _excludedInRange.Sort();
+        // Lattice-derived state, kept alongside so the hot path is a straight index-and-stride.
+        if (step > 1UL) {
+            _latticeHasPoint   = TryFirstLatticePoint(min, max, anchor, step, out _latticeFirst);
+            _excludedOnLattice = _excludedInRange.Where(value => IsOnLattice(value, anchor, step)).ToList(); // stays sorted: filtered from a sorted list
+        } else {
+            _latticeHasPoint   = true;
+            _latticeFirst      = min;
+            _excludedOnLattice = _excludedInRange;
+        }
+
         if (allowed is not null) {
             HashSet<ulong> forbidden = new(excluded);
-            _effectiveAllowed = allowed.Where(value => value >= min && value <= max && !forbidden.Contains(value)).ToList();
+            _effectiveAllowed = allowed.Where(value => value >= min && value <= max && !forbidden.Contains(value) && (step <= 1UL || IsOnLattice(value, anchor, step))).ToList();
         }
     }
 
@@ -99,7 +156,7 @@ internal sealed class OrdinalIntervalSpec {
             throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_maxConstraint} already requires values less than or equal to {_render(_max)}.");
         }
 
-        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, minimum, applying, _max, _maxConstraint, _allowed, _allowedConstraint, _excluded), applying);
+        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, minimum, applying, _max, _maxConstraint, _allowed, _allowedConstraint, _excluded, _step, _anchor, _stepConstraint), applying);
     }
 
     /// <summary>Tightens the lower bound to strictly above <paramref name="bound" /> — the exclusive form of <see cref="WithMinimum" />.</summary>
@@ -119,7 +176,7 @@ internal sealed class OrdinalIntervalSpec {
             throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_minConstraint} already requires values greater than or equal to {_render(_min)}.");
         }
 
-        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, maximum, applying, _allowed, _allowedConstraint, _excluded), applying);
+        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, maximum, applying, _allowed, _allowedConstraint, _excluded, _step, _anchor, _stepConstraint), applying);
     }
 
     /// <summary>Tightens the upper bound to strictly below <paramref name="bound" /> — the exclusive form of <see cref="WithMaximum" />.</summary>
@@ -135,7 +192,7 @@ internal sealed class OrdinalIntervalSpec {
 
         ulong[] distinct = ordinals.Distinct().ToArray();
 
-        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, distinct, applying, _excluded), applying);
+        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, distinct, applying, _excluded, _step, _anchor, _stepConstraint), applying);
     }
 
     /// <summary>Adds values the generator must never produce.</summary>
@@ -143,7 +200,24 @@ internal sealed class OrdinalIntervalSpec {
         List<ulong> excluded = new(_excluded);
         excluded.AddRange(ordinals);
 
-        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, excluded), applying);
+        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, excluded, _step, _anchor, _stepConstraint), applying);
+    }
+
+    /// <summary>
+    ///     Restricts the domain to a lattice: values a multiple of <paramref name="step" /> away from
+    ///     <paramref name="anchor" /> — a known lattice ordinal, the ordinal of the value <c>0</c>. Declared once per
+    ///     generator (a second, different lattice conflicts rather than silently intersecting).
+    /// </summary>
+    internal OrdinalIntervalSpec WithStep(ulong step, ulong anchor, string applying) {
+        if (step <= 1UL) { return this; } // every value is a multiple of one: a no-op, not a constraint
+
+        if (_step > 1UL) {
+            if (_step == step && _anchor == anchor) { return this; }
+
+            throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_stepConstraint} is already defined.");
+        }
+
+        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, _excluded, step, anchor, applying), applying);
     }
 
     /// <summary>
@@ -154,6 +228,13 @@ internal sealed class OrdinalIntervalSpec {
     internal long? Cardinality {
         get {
             if (_effectiveAllowed is not null) { return _effectiveAllowed.Count; }
+            if (_step > 1UL) {
+                if (!_latticeHasPoint) { return 0; }
+
+                ulong onLattice = (_max - _latticeFirst) / _step + 1UL - (ulong)_excludedOnLattice.Count;
+
+                return onLattice <= long.MaxValue ? (long)onLattice : null;
+            }
             if (IsFullWidth()) { return null; }
 
             ulong count = _max - _min + 1UL - (ulong)_excludedInRange.Count;
@@ -164,12 +245,13 @@ internal sealed class OrdinalIntervalSpec {
 
     /// <summary>
     ///     Whether <paramref name="ordinal" /> is a value the specification could produce — the exact domain
-    ///     <see cref="GenerateOrdinal" /> draws from: a member of the allow-list when one is set, otherwise inside
-    ///     the interval and not excluded. Feeds <see cref="ICardinalityHint{T}" />, so a distinct collection can tell
-    ///     a contained value that extends the domain from one already inside it.
+    ///     <see cref="GenerateOrdinal" /> draws from: a member of the allow-list when one is set, otherwise on the
+    ///     lattice (when one is set), inside the interval and not excluded. Feeds <see cref="ICardinalityHint{T}" />,
+    ///     so a distinct collection can tell a contained value that extends the domain from one already inside it.
     /// </summary>
     internal bool Contains(ulong ordinal) {
         if (_effectiveAllowed is not null) { return _effectiveAllowed.Contains(ordinal); }
+        if (_step > 1UL && !IsOnLattice(ordinal, _anchor, _step)) { return false; }
 
         return ordinal >= _min && ordinal <= _max && !_excludedInRange.Contains(ordinal);
     }
@@ -178,6 +260,20 @@ internal sealed class OrdinalIntervalSpec {
     internal ulong GenerateOrdinal(Random random) {
         if (_effectiveAllowed is not null) {
             return _effectiveAllowed[random.Next(_effectiveAllowed.Count)];
+        }
+
+        if (_step > 1UL) {
+            // The lattice caps the count below 2^64 (a step of two already halves the domain), so the
+            // full-width special case below never applies here. Draw an index over the surviving lattice
+            // points, then shift past any excluded lattice point at or below the drawn ordinal.
+            ulong latticeCount = (_max - _latticeFirst) / _step + 1UL;
+            ulong validCount   = latticeCount - (ulong)_excludedOnLattice.Count;
+            ulong ordinal      = _latticeFirst + (random.NextUInt64() % validCount) * _step;
+            foreach (ulong value in _excludedOnLattice) {
+                if (ordinal >= value) { ordinal += _step; }
+            }
+
+            return ordinal;
         }
 
         List<ulong> excluded = _excludedInRange;
@@ -191,8 +287,8 @@ internal sealed class OrdinalIntervalSpec {
             return candidate;
         }
 
-        ulong validCount       = _max - _min + 1 - (ulong)excluded.Count;
-        ulong candidateOrdinal = _min + random.NextUInt64() % validCount;
+        ulong validCountInRange = _max - _min + 1 - (ulong)excluded.Count;
+        ulong candidateOrdinal  = _min + random.NextUInt64() % validCountInRange;
         // Map the drawn index onto the k-th non-excluded ordinal of the interval: every excluded ordinal at
         // or below the candidate shifts it up by one. Sorted ascending, so a single pass suffices.
         foreach (ulong value in excluded) {
@@ -214,6 +310,11 @@ internal sealed class OrdinalIntervalSpec {
 
     private bool IsSatisfiable() {
         if (_effectiveAllowed is not null) { return _effectiveAllowed.Count > 0; }
+        if (_step > 1UL) {
+            if (!_latticeHasPoint) { return false; }
+
+            return (_max - _latticeFirst) / _step + 1UL > (ulong)_excludedOnLattice.Count;
+        }
         if (IsFullWidth()) { return true; }
 
         return _max - _min + 1 - (ulong)_excludedInRange.Count > 0;
@@ -226,6 +327,10 @@ internal sealed class OrdinalIntervalSpec {
             }
 
             return $"none of the values {_allowedConstraint} allows satisfies the constraints already defined";
+        }
+
+        if (_step > 1UL) {
+            return $"no {_typeName} value {_stepConstraint} allows remains between {_render(_min)} and {_render(_max)}";
         }
 
         if (_min == _max) {

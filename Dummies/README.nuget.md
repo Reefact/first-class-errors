@@ -71,6 +71,16 @@ matter — and that is the point.
   `After`/`Before`/`Between`, quantities with `Positive`/`Between`/`NonZero`,
   identities with `NonEmpty`/`DifferentFrom` — and deliberately no clock-relative
   constraints: a reproducible test pins its reference instants explicitly.
+- **Values on a grid**: a quantity that must be a whole number of some unit takes
+  `MultipleOf` — `Any.Int32().Between(0, 100_000).MultipleOf(100)` for an amount in whole
+  euros held as cents — drawn *on* the grid so the declared range keeps its meaning,
+  instead of an `As(x => x * 100)` projection that silently distorts it. `Decimal` takes
+  `WithScale(n)`, a value expressible in `n` decimal places (`WithScale(2)` for a currency
+  amount) — a *value* lattice (a multiple of `10⁻ⁿ`), not a padded representation. The
+  temporal generators take `WithGranularity(TimeSpan)` — a round instant or duration
+  (`WithGranularity(TimeSpan.FromMinutes(15))`) — so tick-precision values never surprise a
+  serialization round-trip. Each is built in one draw, composes with the bounds and
+  exclusions, and conflicts eagerly when the range holds no grid point.
 - **Values built to satisfy the constraints** — a scalar is constructed directly,
   never generated-then-filtered. The one exception is excluding values from a string
   (`Any.String().DifferentFrom(...)`/`Except(...)`): a string has no ordinal mapping to
