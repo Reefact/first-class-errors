@@ -402,6 +402,63 @@ public static class Any {
     }
 
     /// <summary>
+    ///     Pins the ambient random context to <paramref name="seed" /> until the returned handle is disposed — the
+    ///     scope form of <see cref="Reproducibly(int, Action, Action{String})" />, for a caller that cannot wrap the
+    ///     code it pins in a delegate. A test-framework adapter is the case this exists for: it observes a test through
+    ///     hooks that run before and after it, so it opens the scope in one and disposes it in the other.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         Inside a test body, prefer <see cref="Reproducibly(Action, Action{String})" />: it also reports the seed
+    ///         when the body fails, which this handle does not — whoever opens the scope owns telling the reader which
+    ///         seed to replay. Prefer <see cref="WithSeed" /> when an explicit generator object fits better than an
+    ///         ambient scope.
+    ///     </para>
+    ///     <para>
+    ///         Like the ambient context itself, the scope flows with the current execution context, so it never leaks
+    ///         across tests running in parallel. Scopes nest: disposing restores whatever was pinned before, and
+    ///         disposing twice is harmless. Failing to dispose leaves the seed pinned for whatever runs next in the
+    ///         same execution context.
+    ///     </para>
+    /// </remarks>
+    /// <param name="seed">The seed pinning the ambient context's value sequence.</param>
+    /// <returns>A handle that restores the previous ambient context when disposed.</returns>
+    public static IDisposable UseSeed(int seed) {
+        return AmbientRandomSource.UseSeed(seed);
+    }
+
+    /// <summary>
+    ///     Pins the ambient random context to <paramref name="seed" /> and names, through
+    ///     <paramref name="replayInstruction" />, what a reader must write to replay this run — the form a
+    ///     test-framework adapter uses. A generation failure appends a reproduction guidance naming the mechanism that
+    ///     actually replays the run; the default names <c>Any.Reproducibly(seed, ...)</c>, which is the wrong
+    ///     instruction for a run pinned from outside the test body, where replaying means changing what the adapter
+    ///     reads instead.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         The instruction is quoted verbatim into the guidance, so pass what the reader must write — an attribute
+    ///         with its seed argument, a runner setting — not a sentence about it. It is not validated beyond being
+    ///         non-blank: a badly phrased instruction degrades the very diagnostic it is meant to improve.
+    ///     </para>
+    ///     <para>
+    ///         Everything else matches <see cref="UseSeed(int)" />: the scope flows with the execution context, nests,
+    ///         and restores the previous ambient context when disposed.
+    ///     </para>
+    /// </remarks>
+    /// <param name="seed">The seed pinning the ambient context's value sequence.</param>
+    /// <param name="replayInstruction">What a reader must write to replay this run, quoted verbatim into generation-failure guidance.</param>
+    /// <returns>A handle that restores the previous ambient context when disposed.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="replayInstruction" /> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="replayInstruction" /> is empty or white space.</exception>
+    public static IDisposable UseSeed(int seed, string replayInstruction) {
+        if (replayInstruction is null) { throw new ArgumentNullException(nameof(replayInstruction)); }
+        if (replayInstruction.Trim().Length == 0) { throw new ArgumentException("The replay instruction must name what a reader writes to replay the run; pass a non-blank instruction, or use the overload without one to name Any.Reproducibly(seed, ...).", nameof(replayInstruction)); }
+
+        return AmbientRandomSource.UseSeed(seed, replayInstruction);
+    }
+
+    /// <summary>
     ///     Runs <paramref name="body" /> with the ambient random context pinned to a fresh seed and, if the body
     ///     throws, reports that seed before letting the exception propagate. This is how a test that draws on
     ///     <see cref="Any" /> stays reproducible: the values still vary between runs (which surfaces accidental
