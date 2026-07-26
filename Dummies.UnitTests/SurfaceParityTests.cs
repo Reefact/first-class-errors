@@ -140,6 +140,13 @@ public sealed class SurfaceParityTests {
         "Between", "OneOf", "Except", "DifferentFrom", "WithGranularity"
     ];
 
+    // AnyDateTimeOffset additionally exposes the offset dimension (WithOffset/WithOffsetBetween) — the only instant
+    // type carrying a second, offset dimension on top of the instant.
+    private static readonly string[] InstantWithGranularityAndOffsetAlgebra = [
+        "After", "AfterOrEqualTo", "Before", "BeforeOrEqualTo",
+        "Between", "OneOf", "Except", "DifferentFrom", "WithGranularity", "WithOffset", "WithOffsetBetween"
+    ];
+
     public static IEnumerable<object[]> Builders() {
         // Signed integers carry MultipleOf; the binary floats do not; Decimal carries WithScale; TimeSpan (a signed
         // magnitude) carries WithGranularity — the lattice constraint is what forks the former shared signed family.
@@ -158,7 +165,7 @@ public sealed class SurfaceParityTests {
         yield return [typeof(AnyUInt64), UnsignedIntegerAlgebra];
 
         yield return [typeof(AnyDateTime), InstantWithGranularityAlgebra];
-        yield return [typeof(AnyDateTimeOffset), InstantWithGranularityAlgebra];
+        yield return [typeof(AnyDateTimeOffset), InstantWithGranularityAndOffsetAlgebra];
 
         // The remaining scalar builders each carry their own deliberate set.
         yield return [typeof(AnyBoolean), new[] { "True", "False", "DifferentFrom" }];

@@ -105,6 +105,8 @@ Dummies.AnyDateTimeOffset.Except(params System.DateTimeOffset[]! values) -> Dumm
 Dummies.AnyDateTimeOffset.Generate() -> System.DateTimeOffset
 Dummies.AnyDateTimeOffset.OneOf(params System.DateTimeOffset[]! values) -> Dummies.AnyDateTimeOffset!
 Dummies.AnyDateTimeOffset.WithGranularity(System.TimeSpan granularity) -> Dummies.AnyDateTimeOffset!
+Dummies.AnyDateTimeOffset.WithOffset(System.TimeSpan offset) -> Dummies.AnyDateTimeOffset!
+Dummies.AnyDateTimeOffset.WithOffsetBetween(System.TimeSpan minimum, System.TimeSpan maximum) -> Dummies.AnyDateTimeOffset!
 Dummies.AnyDecimal
 Dummies.AnyDecimal.Between(decimal minimum, decimal maximum) -> Dummies.AnyDecimal!
 Dummies.AnyDecimal.DifferentFrom(decimal value) -> Dummies.AnyDecimal!

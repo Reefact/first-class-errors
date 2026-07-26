@@ -219,3 +219,4 @@ Optional supporting material:
 | [ADR-0034](0034-require-a-scope-on-the-version-driving-commit-types.md) | Require a scope on the version-driving commit types | Accepted |
 | [ADR-0035](0035-enforce-structural-any-conflicts-at-compile-time.md) | Enforce structural Any conflicts at compile time, value-dependent ones at run time | Accepted |
 | [ADR-0036](0036-draw-lattice-constrained-scalars-on-the-grid.md) | Draw lattice-constrained scalars on the grid | Proposed |
+| [ADR-0037](0037-vary-the-datetimeoffset-offset-dimension.md) | Vary the DateTimeOffset offset dimension | Proposed |
