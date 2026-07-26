@@ -34,6 +34,15 @@ La checklist pour ajouter un nouveau paquet versionné indépendamment : l'uniqu
 imposés par GitHub et la tooling (trigger de tag, options de choix, scopes du
 commit-lint, packaging). Aussi en [anglais](AddingAReleaseTrain.en.md).
 
+### [Écrire les tests de JustDummies](WritingJustDummiesTests.fr.md)
+
+Où placer un nouveau test pour `JustDummies` — suite par l'exemple ou suite par
+propriétés — et comment l'écrire pour qu'il prouve quelque chose. Une seule
+question tranche : l'assertion a-t-elle un espace d'entrée ? La frontière
+elle-même est enregistrée dans
+[l'ADR-0040](adr/0040-split-the-justdummies-test-bed-between-example-and-property-suites.fr.md) ;
+cette page l'applique. Aussi en [anglais](WritingJustDummiesTests.en.md).
+
 ### [Registres de décision d'architecture (ADR)](adr/README.md)
 
 Des enregistrements datés des décisions importantes — leur contexte, l'option

@@ -13,6 +13,10 @@ library produces. This guide defines how commits are written here.
 * Build: `dotnet build FirstClassErrors.sln`
 * Test: `dotnet test FirstClassErrors.sln`
 * Analyzer tests, when touching analyzers: `dotnet test FirstClassErrors.Analyzers.UnitTests`
+* `JustDummies` tests are split across two suites — properties for invariants that
+  hold for every constraint argument, examples for specific named cases. See
+  [Writing JustDummies tests](doc/handwritten/for-maintainers/WritingJustDummiesTests.en.md)
+  before adding one.
 
 See [`CLAUDE.md`](CLAUDE.md) for the project layout and the broader change
 guidelines.
