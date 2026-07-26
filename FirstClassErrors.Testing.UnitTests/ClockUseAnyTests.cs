@@ -31,15 +31,15 @@ public sealed class ClockUseAnyTests {
         }
     }
 
-    [Fact(DisplayName = "Inside Dummies.Any.Reproducibly, Clock.UseAny picks the same instant for a given seed.")]
+    [Fact(DisplayName = "Inside JustDummies.Any.Reproducibly, Clock.UseAny picks the same instant for a given seed.")]
     public void UseAnyIsReproducibleUnderAReproduciblyScope() {
         DateTimeOffset first  = default;
         DateTimeOffset second = default;
 
-        Dummies.Any.Reproducibly(42, () => {
+        JustDummies.Any.Reproducibly(42, () => {
             using (Clock.UseAny()) { first = AnError().OccurredAt; }
         });
-        Dummies.Any.Reproducibly(42, () => {
+        JustDummies.Any.Reproducibly(42, () => {
             using (Clock.UseAny()) { second = AnError().OccurredAt; }
         });
 

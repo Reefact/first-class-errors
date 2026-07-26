@@ -8,7 +8,7 @@
 
 ## Contexte
 
-Dummies compose des générateurs de types différents en objets plus larges au moyen de `Any.Combine`, en préservant la validation du domaine par les constructeurs sans recourir à la réflexion.
+JustDummies compose des générateurs de types différents en objets plus larges au moyen de `Any.Combine`, en préservant la validation du domaine par les constructeurs sans recourir à la réflexion.
 
 C# ne dispose pas de génériques variadiques hétérogènes ; chaque arité supportée exige donc une surcharge publique distincte. Des arités trop faibles imposent des compositions imbriquées ou des tuples positionnels pour les constructeurs plus larges, tandis qu'une surface illimitée créerait une API et une documentation répétitives pour une valeur décroissante.
 
@@ -26,7 +26,7 @@ Huit est un plafond pragmatique de confort, pas une propriété mathématique du
 
 Les avertissements de nombre de paramètres sur les plus grandes surcharges constituent un compromis local explicite, pas un relâchement général des règles de qualité du dépôt.
 
-Les signatures exactes, la documentation et les suppressions d'analyseurs sont des détails d'implémentation décrits dans la [référence d'implémentation des ADR](../specifications/adr-implementation-reference.fr.md#contrats-de-génération-de-dummies) et la référence d'API de Dummies.
+Les signatures exactes, la documentation et les suppressions d'analyseurs sont des détails d'implémentation décrits dans la [référence d'implémentation des ADR](../specifications/adr-implementation-reference.fr.md#contrats-de-génération-de-dummies) et la référence d'API de JustDummies.
 
 ## Alternatives envisagées
 
@@ -66,11 +66,11 @@ Envisagé car cette forme est naturellement variadique. Rejeté parce qu'elle ne
 
 ## Actions de suivi
 
-* Rendre explicite la plage d'arités supportée dans la documentation de Dummies.
+* Rendre explicite la plage d'arités supportée dans la documentation de JustDummies.
 * Étudier séparément une composition variadique homogène si un cas réel apparaît.
 
 ## Références
 
-* [Référence d'implémentation des ADR — Contrats de génération de Dummies](../specifications/adr-implementation-reference.fr.md#contrats-de-génération-de-dummies)
+* [Référence d'implémentation des ADR — Contrats de génération de JustDummies](../specifications/adr-implementation-reference.fr.md#contrats-de-génération-de-dummies)
 * [ADR-0011](0011-host-dummies-as-a-standalone-package.fr.md)
 * [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.

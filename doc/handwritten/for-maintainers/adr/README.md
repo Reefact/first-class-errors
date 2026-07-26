@@ -193,7 +193,7 @@ Optional supporting material:
 | [ADR-0008](0008-bind-nullable-value-type-properties-through-a-struct-constrained-overload.md) | Bind nullable value-type properties through a struct-constrained overload | Accepted |
 | [ADR-0009](0009-report-the-toolings-failures-as-first-class-errors.md) | Report the tooling's failures as first-class errors | Accepted |
 | [ADR-0010](0010-treat-gendocs-error-catalog-as-a-versioned-contract.md) | Treat GenDoc's error catalog as a versioned contract | Accepted |
-| [ADR-0011](0011-host-dummies-as-a-standalone-package.md) | Host Dummies as a standalone package in this repository | Accepted |
+| [ADR-0011](0011-host-dummies-as-a-standalone-package.md) | Host JustDummies as a standalone package in this repository | Accepted |
 | [ADR-0012](0012-fix-the-binder-options-before-binding-begins.md) | Fix the binder options before binding begins | Accepted |
 | [ADR-0013](0013-gate-distinct-collections-by-cardinality-else-bounded-draw.md) | Gate distinct collections by cardinality, otherwise by a bounded draw | Accepted |
 | [ADR-0014](0014-bind-a-required-list-by-presence-not-cardinality.md) | Bind a required list by presence, not cardinality | Accepted |
@@ -208,7 +208,7 @@ Optional supporting material:
 | [ADR-0023](0023-keep-expression-tree-selectors-for-the-v1-binder-api.md) | Keep expression-tree selectors for the v1 binder API | Accepted |
 | [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) | Allow a one-time editorial refactoring of accepted ADRs | Accepted |
 | [ADR-0025](0025-generate-strings-from-a-home-grown-regular-subset.md) | Generate matching strings from a home-grown regular subset | Accepted |
-| [ADR-0026](0026-rebase-testing-arbitrary-values-on-dummies.md) | Rebase the testing package's arbitrary values on Dummies | Accepted |
+| [ADR-0026](0026-rebase-testing-arbitrary-values-on-dummies.md) | Rebase the testing package's arbitrary values on JustDummies | Accepted |
 | [ADR-0027](0027-repair-dependabot-pull-requests-within-a-risk-boundary.md) | Repair Dependabot pull requests within a risk boundary | Accepted |
 | [ADR-0028](0028-bridge-throwing-code-into-outcomes-through-a-guarded-try.md) | Bridge throwing code into outcomes through a guarded Try | Accepted |
 | [ADR-0029](0029-complete-the-outcome-try-async-surface-with-token-less-overloads.md) | Complete the Outcome.Try async surface with token-less overloads | Accepted |
@@ -221,4 +221,4 @@ Optional supporting material:
 | [ADR-0036](0036-draw-lattice-constrained-scalars-on-the-grid.md) | Draw lattice-constrained scalars on the grid | Accepted |
 | [ADR-0037](0037-vary-the-datetimeoffset-offset-dimension.md) | Vary the DateTimeOffset offset dimension | Accepted |
 | [ADR-0038](0038-open-the-ambient-seed-scope-to-adapters.md) | Open the ambient seed scope to test-framework adapters | Accepted |
-| [ADR-0039](0039-adapt-dummies-to-xunit-v3-through-a-companion-package.md) | Adapt Dummies to xUnit v3 through a companion package | Accepted |
+| [ADR-0039](0039-adapt-dummies-to-xunit-v3-through-a-companion-package.md) | Adapt JustDummies to xUnit v3 through a companion package | Accepted |

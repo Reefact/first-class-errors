@@ -160,7 +160,7 @@ public void Une_erreur_de_commande_absente_est_totalement_deterministe() {
 
 ## Données d’occurrence arbitraires
 
-Lorsqu’un test a besoin que `OccurredAt` et `InstanceId` soient stables sans asserter leurs valeurs exactes, figez-les sur une valeur *arbitraire* avec `Clock.UseAny()` et `InstanceIds.UseAny()` plutôt que `UseFixed` ; les deux sont sans paramètre, et un test qui a besoin que ces valeurs arbitraires soient reproductibles enveloppe son corps dans `Dummies.Any.Reproducibly(...)`. Ils appartiennent à la factory `Any`, plus large, dédiée aux valeurs qu’un test n’assertit pas — voir [Valeurs de test arbitraires](ArbitraryTestValues.fr.md).
+Lorsqu’un test a besoin que `OccurredAt` et `InstanceId` soient stables sans asserter leurs valeurs exactes, figez-les sur une valeur *arbitraire* avec `Clock.UseAny()` et `InstanceIds.UseAny()` plutôt que `UseFixed` ; les deux sont sans paramètre, et un test qui a besoin que ces valeurs arbitraires soient reproductibles enveloppe son corps dans `JustDummies.Any.Reproducibly(...)`. Ils appartiennent à la factory `Any`, plus large, dédiée aux valeurs qu’un test n’assertit pas — voir [Valeurs de test arbitraires](ArbitraryTestValues.fr.md).
 
 ## Portée et tests parallèles
 

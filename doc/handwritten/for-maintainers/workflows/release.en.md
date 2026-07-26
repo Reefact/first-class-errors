@@ -26,7 +26,7 @@ skipping the publish steps.
 - On **push of a train-prefixed version tag** — each release train versions and
   publishes independently on its own prefix: `lib-v*.*.*` (FirstClassErrors +
   FirstClassErrors.Testing + FirstClassErrors.RequestBinder, lockstep),
-  `cli-v*.*.*` (the `fce` .NET tool), `dum-v*.*.*` (Dummies). E.g.
+  `cli-v*.*.*` (the `fce` .NET tool), `dum-v*.*.*` (JustDummies). E.g.
   `lib-v1.2.3`, `cli-v1.2.3-beta.1`. A tag push publishes. The train mapping
   lives in [`tools/trains.sh`](../../../../tools/trains.sh); the full wiring is
   the [Adding a release train](../AddingAReleaseTrain.en.md) runbook.

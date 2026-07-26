@@ -8,7 +8,7 @@
 
 ## Contexte
 
-Dummies traite les contraintes contradictoires comme des erreurs d'arrangement et évite les boucles de nouvelles tentatives cachées et non bornées.
+JustDummies traite les contraintes contradictoires comme des erreurs d'arrangement et évite les boucles de nouvelles tentatives cachées et non bornées.
 
 Une collection distincte de `N` éléments n'est satisfaisable que si au moins `N` valeurs distinctes peuvent être assemblées depuis son domaine effectif : le domaine propre du générateur d'éléments, élargi par les valeurs fixées en dehors de celui-ci et par les valeurs opaques fournies de l'extérieur que le générateur lui-même ne pourrait jamais tirer. La cardinalité propre du générateur ne borne donc que les éléments qui doivent venir de lui, non la demande entière.
 
@@ -22,7 +22,7 @@ Une collection distincte rejette immédiatement un nombre demandé supérieur à
 
 ## Justification
 
-Lorsque la taille du domaine est connue, la contradiction est certaine et doit être signalée au moment de la déclaration, comme les autres validations de contraintes de Dummies.
+Lorsque la taille du domaine est connue, la contradiction est certaine et doit être signalée au moment de la déclaration, comme les autres validations de contraintes de JustDummies.
 
 Ne compter que la cardinalité propre du générateur rejetterait par anticipation des demandes en réalité satisfaisables une fois prises en compte les valeurs déjà couvertes ; le contrôle anticipé compare donc à la taille du domaine diminuée des valeurs déjà fixées ou fournies de façon opaque en dehors de lui, ce qui le garde correct : il ne rejette jamais une demande réellement satisfaisable, et un comparateur qui réduit le domaine effectif sous le nombre demandé reste rattrapé par le tirage borné.
 
@@ -30,7 +30,7 @@ Lorsque la taille du domaine est inconnue, tirer puis dédupliquer est la seule 
 
 La capacité de cardinalité reste optionnelle afin de ne pas imposer aux générateurs publics ou externes une information qu'ils ne peuvent pas connaître. Une réduction induite par le comparateur est alors prise en charge par la borne à la génération.
 
-L'interface d'indication exacte, l'état de collection, le budget de tirage, le contenu de l'exception et la propagation de la seed sont documentés dans la [référence d'implémentation des ADR](../specifications/adr-implementation-reference.fr.md#contrats-de-génération-de-dummies) et la documentation utilisateur de Dummies.
+L'interface d'indication exacte, l'état de collection, le budget de tirage, le contenu de l'exception et la propagation de la seed sont documentés dans la [référence d'implémentation des ADR](../specifications/adr-implementation-reference.fr.md#contrats-de-génération-de-dummies) et la documentation utilisateur de JustDummies.
 
 ## Alternatives envisagées
 
@@ -66,12 +66,12 @@ Envisagé car une demande satisfaisable finirait par aboutir. Rejeté parce qu'u
 
 ## Actions de suivi
 
-* Documenter les deux canaux d'échec et la seed de rejeu dans le guide Dummies.
+* Documenter les deux canaux d'échec et la seed de rejeu dans le guide JustDummies.
 * Réexaminer le budget si l'usage réel révèle des épuisements indus.
 
 ## Références
 
-* [Référence d'implémentation des ADR — Contrats de génération de Dummies](../specifications/adr-implementation-reference.fr.md#contrats-de-génération-de-dummies)
+* [Référence d'implémentation des ADR — Contrats de génération de JustDummies](../specifications/adr-implementation-reference.fr.md#contrats-de-génération-de-dummies)
 * [ADR-0011](0011-host-dummies-as-a-standalone-package.fr.md)
-* `CollectionState` et `ICardinalityHint` dans le projet `Dummies`.
+* `CollectionState` et `ICardinalityHint` dans le projet `JustDummies`.
 * [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.

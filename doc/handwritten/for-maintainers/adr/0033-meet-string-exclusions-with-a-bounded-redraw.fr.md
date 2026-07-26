@@ -8,7 +8,7 @@
 
 ## Contexte
 
-Dummies construit un scalaire directement pour satisfaire ses contraintes — jamais généré-puis-filtré — et détecte les contradictions au moment de la déclaration, de sorte qu'un générateur scalaire qui existe peut toujours générer. Il évite aussi les boucles de nouvelles tentatives cachées et non bornées.
+JustDummies construit un scalaire directement pour satisfaire ses contraintes — jamais généré-puis-filtré — et détecte les contradictions au moment de la déclaration, de sorte qu'un générateur scalaire qui existe peut toujours générer. Il évite aussi les boucles de nouvelles tentatives cachées et non bornées.
 
 Tous les builders scalaires sauf un exposent un trio d'exclusion (`OneOf`/`Except`/`DifferentFrom`). Pour les types à projection ordinale (entiers, types temporels, `char`, `Guid`), une exclusion est intégrée à la construction : le tirage est projeté sur le k-ième ordinal non exclu du domaine en une passe, et le fait que les exclusions laissent le domaine non vide se compte à bas coût à la déclaration.
 
@@ -30,7 +30,7 @@ L'échec est différé plutôt qu'anticipé parce que la satisfaisabilité d'une
 
 Accepter cet écart est justifié car les alternatives sont pires : laisser le manque garde le builder le plus utilisé comme le seul scalaire incapable d'exclure et renvoie les utilisateurs vers des boucles de nouvelles tentatives qui cassent le seed, tandis qu'imposer un verdict anticipé exige une procédure de décision que le domaine n'admet pas à bas coût. Le coût — un unique cas, cerné et documenté, où un générateur de chaîne qui existe peut malgré tout échouer — est le compromis déjà accepté pour les collections distinctes, et les collisions attendues sont ≈ 0 pour toute forme non triviale, de sorte que le chemin rapide constructif est préservé en pratique.
 
-Le budget de nouveau tirage, le contenu de l'exception et la propagation de la seed relèvent de l'implémentation, documentés dans le code `Dummies` (`StringSpec`) et la documentation utilisateur de Dummies — pas ici.
+Le budget de nouveau tirage, le contenu de l'exception et la propagation de la seed relèvent de l'implémentation, documentés dans le code `JustDummies` (`StringSpec`) et la documentation utilisateur de JustDummies — pas ici.
 
 ## Alternatives envisagées
 
@@ -66,11 +66,11 @@ Envisagé parce que construire la chaîne pour esquiver l'ensemble exclu gardera
 ### Risques
 
 * Un budget mal calibré pourrait faire échouer une forme théoriquement satisfaisable mais extrêmement serrée. Mesure : documenter le budget et le réviser sur la base de faits, plutôt que de présenter l'échec comme impossible (la posture de l'ADR-0013).
-* Les utilisateurs pourraient s'attendre à ce que l'exclusion de chaîne soit constructive comme pour les builders numériques. Mesure : énoncer explicitement le nouveau tirage et son échec différé dans la documentation du builder et le readme de Dummies.
+* Les utilisateurs pourraient s'attendre à ce que l'exclusion de chaîne soit constructive comme pour les builders numériques. Mesure : énoncer explicitement le nouveau tirage et son échec différé dans la documentation du builder et le readme de JustDummies.
 
 ## Actions de suivi
 
-* Documenter le nouveau tirage et l'échec différé portant la seed dans le readme de Dummies et la documentation du builder (fait dans la pull request d'implémentation).
+* Documenter le nouveau tirage et l'échec différé portant la seed dans le readme de JustDummies et la documentation du builder (fait dans la pull request d'implémentation).
 * Réexaminer le budget si l'usage réel révèle des épuisements indus.
 * Envisager l'évitement conscient de la spec seulement si les faits montrent que le tirage borné est insuffisant.
 
@@ -79,5 +79,5 @@ Envisagé parce que construire la chaîne pour esquiver l'ensemble exclu gardera
 * [ADR-0013](0013-gate-distinct-collections-by-cardinality-else-bounded-draw.fr.md) — le canal frère « tirage borné avec échec différé ».
 * [ADR-0030](0030-draw-arbitrary-strings-from-an-explicit-terminal-set.fr.md) — `AnyString.OneOf` reste terminal et ne se combine pas avec les exclusions.
 * [ADR-0020](0020-materialize-dummies-only-through-generate.fr.md) — les dummies se matérialisent uniquement via `Generate()`.
-* `StringSpec` et `AnyString` dans le projet `Dummies` ; le readme NuGet de Dummies.
+* `StringSpec` et `AnyString` dans le projet `JustDummies` ; le readme NuGet de JustDummies.
 * Issue [#224](https://github.com/Reefact/first-class-errors/issues/224).

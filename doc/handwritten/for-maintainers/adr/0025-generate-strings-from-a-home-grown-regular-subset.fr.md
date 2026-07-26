@@ -8,7 +8,7 @@
 
 ## Contexte
 
-`Dummies` permet à un test de fournir des valeurs arbitraires mais valides. Une règle de validité très courante est
+`JustDummies` permet à un test de fournir des valeurs arbitraires mais valides. Une règle de validité très courante est
 une **expression régulière** de format : un objet-valeur valide son entrée contre un motif (une référence de
 commande, un SKU, un code devise), et un test a besoin d'une valeur qui passe cette validation sans réécrire le
 format à la main. `Any.StringMatching(motif)` répond à ce besoin — générer une chaîne que le motif matche.
@@ -115,6 +115,6 @@ via `As`, `OrNull`, `Combine` et les générateurs de collections — tous défi
 
 ## Références
 
-* ADR-0011 — Héberger Dummies comme un paquet autonome dans ce dépôt (la frontière zéro-dépendance).
+* ADR-0011 — Héberger JustDummies comme un paquet autonome dans ce dépôt (la frontière zéro-dépendance).
 * Le parseur de regex, l'arbre de nœuds et le générateur, ainsi que le property test contre
-  `System.Text.RegularExpressions`, dans le projet `Dummies` et ses tests.
+  `System.Text.RegularExpressions`, dans le projet `JustDummies` et ses tests.

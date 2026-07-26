@@ -56,21 +56,21 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
-    <!-- Dummies backs the arbitrary-value factories (ADR-0026). It is not yet on NuGet (ADR-0011), so
+    <!-- JustDummies backs the arbitrary-value factories (ADR-0026). It is not yet on NuGet (ADR-0011), so
          reference it privately and embed its assembly in this package (see the pack target below);
-         switch to a NuGet PackageReference once Dummies is published. -->
-    <ProjectReference Include="..\Dummies\Dummies.csproj" PrivateAssets="all" />
+         switch to a NuGet PackageReference once JustDummies is published. -->
+    <ProjectReference Include="..\JustDummies\JustDummies.csproj" PrivateAssets="all" />
   </ItemGroup>
 
-  <!-- While Dummies is unpublished, carry Dummies.dll inside this package's lib/ so a consumer restores it
-       transparently. PrivateAssets=all above emits no Dummies <dependency>, so the embedded copy is the
-       only one. Remove this whole block when Dummies moves to a NuGet PackageReference (ADR-0026 follow-up). -->
+  <!-- While JustDummies is unpublished, carry JustDummies.dll inside this package's lib/ so a consumer restores it
+       transparently. PrivateAssets=all above emits no JustDummies <dependency>, so the embedded copy is the
+       only one. Remove this whole block when JustDummies moves to a NuGet PackageReference (ADR-0026 follow-up). -->
   <PropertyGroup>
-    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeDummiesInPackage</TargetsForTfmSpecificBuildOutput>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeJustDummiesInPackage</TargetsForTfmSpecificBuildOutput>
   </PropertyGroup>
-  <Target Name="IncludeDummiesInPackage">
+  <Target Name="IncludeJustDummiesInPackage">
     <ItemGroup>
-      <BuildOutputInPackage Include="$(OutputPath)Dummies.dll" />
+      <BuildOutputInPackage Include="$(OutputPath)JustDummies.dll" />
     </ItemGroup>
   </Target>
 

@@ -8,7 +8,7 @@
 
 ## Context
 
-Dummies builds a scalar directly to satisfy its constraints — never generated-then-filtered — detects contradictions eagerly at declaration, and avoids hidden unbounded retry loops. A scalar generator that exists can always generate, in one draw. The ordinal-mapped types (the integers, the temporals) draw the k-th non-excluded value of the domain in one pass over an order-preserving, affine ordinal space; `decimal` draws a candidate and nudges it within a bounded budget.
+JustDummies builds a scalar directly to satisfy its constraints — never generated-then-filtered — detects contradictions eagerly at declaration, and avoids hidden unbounded retry loops. A scalar generator that exists can always generate, in one draw. The ordinal-mapped types (the integers, the temporals) draw the k-th non-excluded value of the domain in one pass over an order-preserving, affine ordinal space; `decimal` draws a candidate and nudges it within a bounded budget.
 
 A recurring dummy need is a value that must lie on a regular grid: a multiple of a unit (an amount in whole cents, a quantity in dozens), a `decimal` expressible in a fixed number of places (a currency amount), or a round instant (a whole second, a quarter-hour, a whole day). These are invariants of the code under test — a value object or contract precondition the value must satisfy — not what the test asserts.
 
@@ -28,7 +28,7 @@ Drawing on the grid keeps the library's single-draw, no-retry invariant: the aff
 
 The lattice is withheld from the binary floats because a base-ten grid is not exactly representable there; offering it would hand back off-grid values under a promise the type cannot keep. It is declared once — a second, different grid conflicts rather than silently intersecting — mirroring the "declared once" rule the allow-list already uses and sparing a least-common-multiple combination the demand does not justify. Surfacing one engine capability as `MultipleOf` on integers and `WithGranularity` on temporals is what lets a single dimension serve both families, so a fix to the grid logic reaches every type at once.
 
-The step arithmetic, the decimal snap-and-nudge, and the conflict-message wording are implementation, documented in the `Dummies` code (`OrdinalIntervalSpec`, `WideIntervalSpec`, `DecimalIntervalSpec`) and the Dummies user documentation — not here.
+The step arithmetic, the decimal snap-and-nudge, and the conflict-message wording are implementation, documented in the `JustDummies` code (`OrdinalIntervalSpec`, `WideIntervalSpec`, `DecimalIntervalSpec`) and the JustDummies user documentation — not here.
 
 ## Alternatives Considered
 
@@ -72,7 +72,7 @@ Considered because "multiple of 4 and of 6" is mathematically "multiple of 12", 
 
 ## Follow-up Actions
 
-* Document `MultipleOf`/`WithScale`/`WithGranularity` in the Dummies readme and the builder documentation (done in the implementing pull request).
+* Document `MultipleOf`/`WithScale`/`WithGranularity` in the JustDummies readme and the builder documentation (done in the implementing pull request).
 * Ship the `WholeSeconds()`/`WholeDays()` temporal sugar only if demand appears; the general `WithGranularity(TimeSpan)` covers it in the meantime.
 * Revisit least-common-multiple combination of repeated lattices only if real usage shows the "declared once" rule is too strict.
 
@@ -81,4 +81,4 @@ Considered because "multiple of 4 and of 6" is mathematically "multiple of 12", 
 * Issue [#226](https://github.com/Reefact/first-class-errors/issues/226) — the demand-driven backlog that lists `MultipleOf`/`WithScale` and temporal granularity.
 * [ADR-0013](0013-gate-distinct-collections-by-cardinality-else-bounded-draw.md) — the cardinality hint a lattice feeds, and the bounded-draw sibling.
 * [ADR-0020](0020-materialize-dummies-only-through-generate.md) — dummies materialize only through `Generate()`.
-* `OrdinalIntervalSpec`, `WideIntervalSpec`, `DecimalIntervalSpec` and the affected builders in the `Dummies` project; the Dummies NuGet readme.
+* `OrdinalIntervalSpec`, `WideIntervalSpec`, `DecimalIntervalSpec` and the affected builders in the `JustDummies` project; the JustDummies NuGet readme.

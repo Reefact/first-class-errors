@@ -5,7 +5,7 @@ on:
     # Publish on a train-prefixed semantic-version tag. The trains version independently:
     #   lib-v1.2.3  -> FirstClassErrors + FirstClassErrors.Testing + FirstClassErrors.RequestBinder
     #   cli-v1.2.3  -> FirstClassErrors.Cli (the fce .NET tool)
-    #   dum-v1.2.3  -> Dummies (the standalone arbitrary-test-value library)
+    #   dum-v1.2.3  -> JustDummies (the standalone arbitrary-test-value library)
     tags:
       - 'lib-v*.*.*'
       - 'cli-v*.*.*'
@@ -190,7 +190,7 @@ jobs:
           echo "ok: GenDoc's error catalog has a breaking change since $PREVIOUS_TAG, matched by the major version bump ($PREVIOUS_MAJOR -> $NEW_MAJOR)."
 
       # Pack only the train this release targets (lib -> FirstClassErrors + .Testing + .RequestBinder;
-      # cli -> the fce tool; dum -> Dummies), so a lib release never republishes the CLI and vice versa.
+      # cli -> the fce tool; dum -> JustDummies), so a lib release never republishes the CLI and vice versa.
       # The analyzer is bundled inside the main package and the GenDoc worker inside the CLI tool; the
       # samples are not published.
       # GenerateSBOM activates Microsoft.Sbom.Targets in each packable project: each package embeds its SPDX

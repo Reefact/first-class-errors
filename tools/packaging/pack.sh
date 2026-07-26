@@ -17,7 +17,7 @@
 #             and released independently:
 #               lib  -> FirstClassErrors + FirstClassErrors.Testing + FirstClassErrors.RequestBinder (lockstep)
 #               cli  -> FirstClassErrors.Cli (the `fce` .NET tool)
-#               dum  -> Dummies (the standalone arbitrary-test-value library)
+#               dum  -> JustDummies (the standalone arbitrary-test-value library)
 
 set -eu
 
@@ -47,12 +47,12 @@ case "$scope" in
     projects='FirstClassErrors.Cli/FirstClassErrors.Cli.csproj'
     ;;
   dum)
-    # Dummies, the standalone arbitrary-test-value library, and its xUnit v3 companion. Deliberately
+    # JustDummies, the standalone arbitrary-test-value library, and its xUnit v3 companion. Deliberately
     # independent of everything else in this repository (ADR-0011): neither references a FirstClassErrors
     # project, so they release on their own train and their packages must declare no FirstClassErrors
-    # dependency -- asserted below. Dummies.Xunit rides this train because it versions with the library it
-    # adapts (ADR-0036); if Dummies ever moves to its own repository, that pairing is worth revisiting.
-    projects='Dummies/Dummies.csproj Dummies.Xunit/Dummies.Xunit.csproj'
+    # dependency -- asserted below. JustDummies.Xunit rides this train because it versions with the library it
+    # adapts (ADR-0036); if JustDummies ever moves to its own repository, that pairing is worth revisiting.
+    projects='JustDummies/JustDummies.csproj JustDummies.Xunit/JustDummies.Xunit.csproj'
     ;;
   *)
     echo "error: unknown scope '$scope' (expected 'lib', 'cli' or 'dum')" >&2
@@ -98,17 +98,17 @@ EOF
   echo "ok: every lib-train package pins its FirstClassErrors dependency to the co-published $version"
 fi
 
-# Standalone guard for the dum train. Dummies' whole identity is that it depends on nothing (ADR-0011):
+# Standalone guard for the dum train. JustDummies' whole identity is that it depends on nothing (ADR-0011):
 # an architecture test asserts it at build time, and this asserts it on the shipped artifact itself -- a
 # FirstClassErrors dependency sneaking into the nuspec must fail the pack, not surface on nuget.org.
 if [ "$scope" = "dum" ]; then
-  for package in artifacts/Dummies.*.nupkg; do
+  for package in artifacts/JustDummies.*.nupkg; do
     # Fail CLOSED, like the cli guard: an unmatched glob or an unreadable nuspec must not pass as
     # "standalone" -- read the nuspec first (unzip fails loudly on both), then reject any
     # FirstClassErrors dependency found in it.
     nuspec="$(unzip -p "$package" '*.nuspec')" || { echo "error: cannot read the nuspec from $package" >&2; exit 1; }
     if printf '%s\n' "$nuspec" | grep -q '<dependency [^>]*id="FirstClassErrors'; then
-      echo "error: $package declares a FirstClassErrors dependency; Dummies is standalone (ADR-0011)" >&2
+      echo "error: $package declares a FirstClassErrors dependency; JustDummies is standalone (ADR-0011)" >&2
       exit 1
     fi
     echo "ok: $package is standalone (no FirstClassErrors dependency)"

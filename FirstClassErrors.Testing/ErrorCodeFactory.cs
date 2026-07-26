@@ -1,6 +1,6 @@
 #region Usings declarations
 
-using Dummies;
+using JustDummies;
 
 #endregion
 
@@ -10,8 +10,8 @@ namespace FirstClassErrors.Testing;
 ///     Supplies an arbitrary, valid <see cref="ErrorCode" /> for the parts of a test that need <i>some</i> code but
 ///     never assert on it — an explicit <c>ErrorCodeFactory.Any()</c> call reads as "this code is arbitrary" where a hand-picked
 ///     literal reads as "this matters". The value is shaped like <c>ANY_CODE_7F3A9C</c> so it is recognizable as
-///     arbitrary in a failure message, and it is drawn from Dummies' ambient random context: wrap the test in
-///     <c>Dummies.Any.Reproducibly(...)</c> to make the chosen code reproducible and reported on failure.
+///     arbitrary in a failure message, and it is drawn from JustDummies' ambient random context: wrap the test in
+///     <c>JustDummies.Any.Reproducibly(...)</c> to make the chosen code reproducible and reported on failure.
 /// </summary>
 public static class ErrorCodeFactory {
 
@@ -21,7 +21,7 @@ public static class ErrorCodeFactory {
     /// </summary>
     /// <returns>An arbitrary error code.</returns>
     public static ErrorCode Any() {
-        return Dummies.Any.StringMatching("ANY_CODE_[A-Z0-9]{6}").As(ErrorCode.Create).Generate();
+        return JustDummies.Any.StringMatching("ANY_CODE_[A-Z0-9]{6}").As(ErrorCode.Create).Generate();
     }
 
 }

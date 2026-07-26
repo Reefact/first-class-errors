@@ -15,7 +15,7 @@ publishes on its own tag prefix. Today there are three:
 | --- | --- | --- | --- | --- |
 | `lib` | `lib-v*` | `core`, `analyzers`, `testing`, `binder` | FirstClassErrors + FirstClassErrors.Testing + FirstClassErrors.RequestBinder | `CHANGELOG.md` |
 | `cli` | `cli-v*` | `cli`, `gendoc` | FirstClassErrors.Cli (the `fce` tool) | `FirstClassErrors.Cli/CHANGELOG.md` |
-| `dum` | `dum-v*` | `dummies` | Dummies (the standalone test-value library) | `Dummies/CHANGELOG.md` |
+| `dum` | `dum-v*` | `justdummies` | JustDummies (the standalone test-value library) | `JustDummies/CHANGELOG.md` |
 
 The train → (prefix, scopes, package, changelog file) mapping lives in **one place**,
 [`tools/trains.sh`](../../../tools/trains.sh), which the release-notes generator, the

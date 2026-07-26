@@ -7,10 +7,10 @@ A large part of a test's `Arrange` is usually values the test never checks — a
 
 Two sources cover this, and both draw from the same ambient random source:
 
-- **[`Dummies`](https://github.com/Reefact/first-class-errors)** — a fluent generator of arbitrary primitives (`Dummies.Any.Int32()`, `Dummies.Any.String()`, ...). A `Dummies.Any.*` call returns a *recipe*; call `.Generate()` to draw the value.
+- **[`JustDummies`](https://github.com/Reefact/first-class-errors)** — a fluent generator of arbitrary primitives (`JustDummies.Any.Int32()`, `JustDummies.Any.String()`, ...). A `JustDummies.Any.*` call returns a *recipe*; call `.Generate()` to draw the value.
 - **Domain factories** in **`FirstClassErrors.Testing`** — `ErrorCodeFactory.Any()`, `DiagnosticMessageFactory.Any()`, and peers — for the error vocabulary a raw primitive cannot express. Each returns the value directly.
 
-Because both flow through the same source, a single `Dummies.Any.Reproducibly(...)` makes a whole test replayable, and — like the clock and instance-id overrides — the source is scoped, context-local, and safe under parallel tests. For freezing values a test *does* assert on, see [Deterministic Error Tests](DeterministicTesting.en.md).
+Because both flow through the same source, a single `JustDummies.Any.Reproducibly(...)` makes a whole test replayable, and — like the clock and instance-id overrides — the source is scoped, context-local, and safe under parallel tests. For freezing values a test *does* assert on, see [Deterministic Error Tests](DeterministicTesting.en.md).
 
 ## Supply an arbitrary value
 
@@ -47,52 +47,52 @@ For the parts of an error a test needs but never asserts on, `FirstClassErrors.T
 | `TransienceFactory.Any()` / `InteractionDirectionFactory.Any()` | a *meaningful* value — never the `Unknown` sentinel |
 | `ErrorOriginFactory.Any()` | any `ErrorOrigin`; all its values are meaningful, so there is no sentinel to exclude |
 
-A factory returns the value directly — the common case needs no `.Generate()`. Use the meaningful-enum factories (`TransienceFactory`, `InteractionDirectionFactory`) when the test needs a value that actually drives behavior; reach for a plain `Dummies.Any.Enum<TEnum>()` draw only when any member — a sentinel included — will do.
+A factory returns the value directly — the common case needs no `.Generate()`. Use the meaningful-enum factories (`TransienceFactory`, `InteractionDirectionFactory`) when the test needs a value that actually drives behavior; reach for a plain `JustDummies.Any.Enum<TEnum>()` draw only when any member — a sentinel included — will do.
 
-## Primitives: Dummies
+## Primitives: JustDummies
 
-For arbitrary primitives, use **`Dummies`** directly. A `Dummies.Any.*` call returns a *generator* — an immutable recipe — and `.Generate()` draws one value from it:
+For arbitrary primitives, use **`JustDummies`** directly. A `JustDummies.Any.*` call returns a *generator* — an immutable recipe — and `.Generate()` draws one value from it:
 
 ```csharp
-int    quantity  = Dummies.Any.Int32().Generate();
-string reference = Dummies.Any.String().NonEmpty().Generate();
-Guid   id        = Dummies.Any.Guid().Generate();
+int    quantity  = JustDummies.Any.Int32().Generate();
+string reference = JustDummies.Any.String().NonEmpty().Generate();
+Guid   id        = JustDummies.Any.Guid().Generate();
 ```
 
-Constraints chained on the generator express what the surrounding code *requires* of the value — a length, a range, a prefix — never what the test asserts. The full generator surface (constraints, collections, composition through `As`/`Combine`, `.OrNull()`) is documented with `Dummies` itself.
+Constraints chained on the generator express what the surrounding code *requires* of the value — a length, a range, a prefix — never what the test asserts. The full generator surface (constraints, collections, composition through `As`/`Combine`, `.OrNull()`) is documented with `JustDummies` itself.
 
-The guarantees stop at type validity. A generator does not target a domain precondition — `Dummies.Any.Int32()` may be negative, `Dummies.Any.String()` is not a well-formed email — so a value object with a stricter contract is built by turning a constrained primitive into it: `Dummies.Any.String().StartingWith("ORD-").WithLength(12).As(OrderReference.Create).Generate()`.
+The guarantees stop at type validity. A generator does not target a domain precondition — `JustDummies.Any.Int32()` may be negative, `JustDummies.Any.String()` is not a well-formed email — so a value object with a stricter contract is built by turning a constrained primitive into it: `JustDummies.Any.String().StartingWith("ORD-").WithLength(12).As(OrderReference.Create).Generate()`.
 
 ## Reproduce a failing run
 
 The source is unseeded by default, so the values differ between runs. That is deliberate: a test that passes only for one particular value is relying on something it never states, and varying the value surfaces that coupling.
 
-When a run matters enough to reproduce, wrap the test body in `Dummies.Any.Reproducibly`. It pins a fresh seed for the run and, if the body throws, **reports that seed** before the failure propagates — so a red test tells you exactly how to replay it:
+When a run matters enough to reproduce, wrap the test body in `JustDummies.Any.Reproducibly`. It pins a fresh seed for the run and, if the body throws, **reports that seed** before the failure propagates — so a red test tells you exactly how to replay it:
 
 ```csharp
 [Fact]
 public void Some_value_sensitive_test() =>
-    Dummies.Any.Reproducibly(() => {
-        // ... arrange with the factories and Dummies.Any, act, assert ...
+    JustDummies.Any.Reproducibly(() => {
+        // ... arrange with the factories and JustDummies.Any, act, assert ...
     });
 ```
 
 On failure the seed is written to `Console.Error` by default; pass your framework's writer (for example xUnit's `ITestOutputHelper.WriteLine`) to route it there instead. Replay the run by handing the reported seed back:
 
 ```csharp
-Dummies.Any.Reproducibly(1234, () => {
+JustDummies.Any.Reproducibly(1234, () => {
     // ... the same body ...
 });
 ```
 
-Reproducing a run needs the same sequence of draws, so a body whose order depends on non-deterministic external state is not fully replayable from the seed alone. There is also an asynchronous overload, `Dummies.Any.Reproducibly(Func<Task>)`, for `async` test bodies. Because the factories, the primitives, and the clock and id seams below all draw from the same ambient source, one `Reproducibly` scope replays them together.
+Reproducing a run needs the same sequence of draws, so a body whose order depends on non-deterministic external state is not fully replayable from the seed alone. There is also an asynchronous overload, `JustDummies.Any.Reproducibly(Func<Task>)`, for `async` test bodies. Because the factories, the primitives, and the clock and id seams below all draw from the same ambient source, one `Reproducibly` scope replays them together.
 
 ### Pinning the seed without a body to wrap
 
 `Reproducibly` needs a delegate. A caller that observes a test from the outside — a test-framework adapter running code *before* and *after* the test method — has no such delegate, so it pins the ambient source with a scope it opens and disposes itself:
 
 ```csharp
-IDisposable scope = Dummies.Any.UseSeed(1234);
+IDisposable scope = JustDummies.Any.UseSeed(1234);
 // ... the test runs ...
 scope.Dispose();
 ```
@@ -102,19 +102,19 @@ The scope flows with the execution context and nests exactly like `Reproducibly`
 That ownership extends to the replay snippet. When a generator itself fails, the `AnyGenerationException` message names how to replay the run — by default `Any.Reproducibly(1234, ...)`, which is the wrong instruction for a test that contains no such call. A caller that pins the seed from outside says so, and its instruction is quoted verbatim instead:
 
 ```csharp
-Dummies.Any.UseSeed(1234, "[Reproducible(Seed = 1234)]");
+JustDummies.Any.UseSeed(1234, "[Reproducible(Seed = 1234)]");
 ```
 
 Inside a test body, prefer `Reproducibly`: it reports the seed for you. Reach for `UseSeed` only when there is no body to wrap.
 
 ### On xUnit v3: `[Reproducible]`
 
-The `Dummies.Xunit` companion package does the wrapping for you. Mark a test, a class, or the whole assembly, and its arbitrary values are drawn from a pinned seed reported **only when the test fails**:
+The `JustDummies.Xunit` companion package does the wrapping for you. Mark a test, a class, or the whole assembly, and its arbitrary values are drawn from a pinned seed reported **only when the test fails**:
 
 ```csharp
 [Fact, Reproducible]
 public void Some_value_sensitive_test() {
-    // ... arrange with the factories and Dummies.Any, act, assert ...
+    // ... arrange with the factories and JustDummies.Any, act, assert ...
 }
 ```
 
@@ -138,11 +138,11 @@ using (InstanceIds.UseAny()) {
 }
 ```
 
-Both draw from the same ambient source as `Dummies.Any`, so running them inside `Dummies.Any.Reproducibly` makes their instant and ids reproducible too. To pin a *specific* instant or id instead, use `UseFixed` — see [Deterministic Error Tests](DeterministicTesting.en.md).
+Both draw from the same ambient source as `JustDummies.Any`, so running them inside `JustDummies.Any.Reproducibly` makes their instant and ids reproducible too. To pin a *specific* instant or id instead, use `UseFixed` — see [Deterministic Error Tests](DeterministicTesting.en.md).
 
 ## Scope and parallel tests
 
-`Dummies.Any.Reproducibly`, `Clock.UseAny`, and `InstanceIds.UseAny` all take effect only for the run or `using` block they wrap, and the arbitrary source is restored when it exits. That source is stored in an `AsyncLocal`, so it follows the test's own execution flow and never leaks into other tests running at the same time.
+`JustDummies.Any.Reproducibly`, `Clock.UseAny`, and `InstanceIds.UseAny` all take effect only for the run or `using` block they wrap, and the arbitrary source is restored when it exits. That source is stored in an `AsyncLocal`, so it follows the test's own execution flow and never leaks into other tests running at the same time.
 
 ## Review checklist
 
@@ -150,8 +150,8 @@ Before reaching for an arbitrary value, verify that:
 
 - the value does **not** change the functional path the test exercises — it must not feed a branch, a validation, a serialization, or an ordering, even indirectly;
 - the value is genuinely not checked by the test — otherwise use a literal;
-- a meaningful-enum factory (`TransienceFactory`, `InteractionDirectionFactory`) is used when the test needs a meaningful value, rather than a plain `Dummies.Any.Enum<TEnum>()` draw;
-- a value-sensitive test is wrapped in `Dummies.Any.Reproducibly` so a failing run reports the seed to replay;
+- a meaningful-enum factory (`TransienceFactory`, `InteractionDirectionFactory`) is used when the test needs a meaningful value, rather than a plain `JustDummies.Any.Enum<TEnum>()` draw;
+- a value-sensitive test is wrapped in `JustDummies.Any.Reproducibly` so a failing run reports the seed to replay;
 - `Clock.UseAny` / `InstanceIds.UseAny` are used for stable-but-irrelevant occurrence data, and `UseFixed` when the exact value is asserted.
 
 ---

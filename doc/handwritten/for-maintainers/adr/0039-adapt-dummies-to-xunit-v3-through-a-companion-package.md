@@ -1,4 +1,4 @@
-# ADR-0039 | Adapt Dummies to xUnit v3 through a companion package
+# ADR-0039 | Adapt JustDummies to xUnit v3 through a companion package
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0039-adapt-dummies-to-xunit-v3-through-a-companion-package.fr.md)
 
@@ -9,7 +9,7 @@
 ## Context
 
 A test that draws arbitrary values is reproducible only if a seed is pinned and
-reported. `Dummies` supplies that through a runner that pins a seed for the
+reported. `JustDummies` supplies that through a runner that pins a seed for the
 duration of a delegate and reports it when the delegate throws, so every
 value-sensitive test must wrap its body in that delegate. The ceremony is
 re-derived by hand in every consumer.
@@ -17,9 +17,9 @@ re-derived by hand in every consumer.
 An adapter that removes it was anticipated and then lost. ADR-0006's follow-ups
 called for an optional test-framework adapter "so the seed is surfaced
 automatically, without wrapping each body"; ADR-0026 rebased the value engine
-onto `Dummies` and did not carry that follow-up forward. The capability is
+onto `JustDummies` and did not carry that follow-up forward. The capability is
 therefore anticipated by one accepted ADR and replaced by nothing. The
-2026-07-20 `Dummies` architecture and design audit asks for an explicit yes or no
+2026-07-20 `JustDummies` architecture and design audit asks for an explicit yes or no
 on it rather than continued silence, and places the decision in the first stable
 cycle.
 
@@ -28,7 +28,7 @@ a test, and surface that seed to the developer **only when the test fails**. A
 seed reported on every run is noise; a seed never reported leaves a failure
 unreproducible.
 
-`Dummies`' identity is that it depends on nothing beyond the standard library
+`JustDummies`' identity is that it depends on nothing beyond the standard library
 (ADR-0011), a boundary an architecture test asserts over its own assembly. It
 therefore cannot reference a test framework, so any adapter is a separate,
 companion package — the arrangement `FirstClassErrors.Testing` already
@@ -61,15 +61,15 @@ decision, so users of any other framework lose no capability — they keep the
 form that exists today.
 
 ADR-0038 opens the ambient seed scope as a public handle, so an adapter needs no
-privileged access to `Dummies` and adding an adapter for another framework later
+privileged access to `JustDummies` and adding an adapter for another framework later
 requires no change to it.
 
-`Dummies` is published on the `dum` release train, which currently carries a
+`JustDummies` is published on the `dum` release train, which currently carries a
 single package. The library is expected to move to its own repository in time.
 
 ## Decision
 
-`Dummies` gains a companion package that pins and reports the seed automatically
+`JustDummies` gains a companion package that pins and reports the seed automatically
 for xUnit v3 tests, and targets no other test framework.
 
 ## Rationale
@@ -92,7 +92,7 @@ for xUnit v3 tests, and targets no other test framework.
   for the adapter withholds no capability from users of the others; it withholds
   only the convenience.
 * **A companion package is forced by the library's identity.** The zero-dependency
-  boundary makes a test-framework reference impossible inside `Dummies`, and the
+  boundary makes a test-framework reference impossible inside `JustDummies`, and the
   repository already ships a companion package for exactly this reason.
 * **The choice is dogfooded.** The repository's own suites run on xUnit v3, so
   the adapter is used where it is maintained rather than shipped untried.
@@ -156,7 +156,7 @@ those surfaces have neither a common shape nor a common vocabulary.
 * The convenience reaches xUnit v3 users only; every other framework keeps the
   delegate runner.
 * The package's supported-framework floor is the test framework's, which is above
-  the floor `Dummies` itself keeps — so the two cannot share one target list.
+  the floor `JustDummies` itself keeps — so the two cannot share one target list.
 
 ### Risks
 
@@ -171,7 +171,7 @@ those surfaces have neither a common shape nor a common vocabulary.
 ## Follow-up Actions
 
 * Publish the package on the existing `dum` train initially, so it versions with
-  `Dummies`. **When `Dummies` moves to its own repository, revisit whether the
+  `JustDummies`. **When `JustDummies` moves to its own repository, revisit whether the
   companion package needs a train of its own** — a shared train is only
   appropriate while the two ship from the same place and cadence.
 * Document the adapter in the user guide and the package readme, in English and
@@ -186,10 +186,10 @@ those surfaces have neither a common shape nor a common vocabulary.
   handle this package is the first consumer of.
 * ADR-0006 — Supply arbitrary test values from a single seedable source: the
   follow-up that anticipated this adapter.
-* ADR-0011 — Host Dummies as a standalone package: the zero-dependency boundary
+* ADR-0011 — Host JustDummies as a standalone package: the zero-dependency boundary
   that forces a companion package.
-* ADR-0026 — Rebase the testing package's arbitrary values on Dummies: the rebase
+* ADR-0026 — Rebase the testing package's arbitrary values on JustDummies: the rebase
   in which the anticipated follow-up was dropped.
 * `doc/handwritten/for-maintainers/audit/2026-07-20-dummies-architecture-and-design-audit.md`
   — the audit asking for an explicit decision.
-* Issue #226 — the Dummies nice-to-have backlog where the adapter is tracked.
+* Issue #226 — the JustDummies nice-to-have backlog where the adapter is tracked.

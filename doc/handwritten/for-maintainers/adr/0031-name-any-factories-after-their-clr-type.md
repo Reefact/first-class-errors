@@ -8,7 +8,7 @@
 
 ## Context
 
-* `Dummies` exposes a static entry point `Any` whose parameterless factories each start a
+* `JustDummies` exposes a static entry point `Any` whose parameterless factories each start a
   generator for one .NET simple type — `Any.Int32()`, `Any.SByte()`, `Any.Single()`,
   `Any.UInt64()`, `Any.String()`, `Any.Guid()`, `Any.DateTime()`, … — and each returns a
   builder type named `Any{Name}` (`Any.Int32()` returns `AnyInt32`). `AnyContext` mirrors
@@ -24,9 +24,9 @@
   `BitConverter.ToInt32` / `ToBoolean` — never `ToBool`, `ToFloat`, or `ToInt`.
 * One factory deviated: `Any.Bool()`, returning `AnyBool`, produced a `System.Boolean`, whose
   CLR name is `Boolean`. It was the single member of the scalar surface not named after its
-  CLR type. The 2026-07-20 Dummies architecture & design audit surfaced it (§8.2, §8.4) and
+  CLR type. The 2026-07-20 JustDummies architecture & design audit surfaced it (§8.2, §8.4) and
   recommended the choice be settled deliberately and recorded before release.
-* `Dummies` is pre-release: no `dum-v*` tag, no external NuGet consumers, an empty *Unreleased*
+* `JustDummies` is pre-release: no `dum-v*` tag, no external NuGet consumers, an empty *Unreleased*
   changelog. Renaming a public factory and a public builder type is a breaking change once
   consumers depend on it, and costs nothing before the first publication.
 * The repository records naming decisions of this class as ADRs — ADR-0005 reserves the plain
@@ -115,9 +115,9 @@ the pre-release window makes a single clean name available at no cost.
 ## Follow-up Actions
 
 * Rename `Any.Bool()` / `AnyContext.Bool()` / `AnyBool` to `Boolean` / `AnyBoolean`, and update
-  the tests, the `dummies-check` packaged-asset probe, and the package README *(done in this
+  the tests, the `justdummies-check` packaged-asset probe, and the package README *(done in this
   change)*.
-* Add the factory-naming parity guard to `Dummies.UnitTests` *(done in this change)*.
+* Add the factory-naming parity guard to `JustDummies.UnitTests` *(done in this change)*.
 
 ## References
 
@@ -126,5 +126,5 @@ the pre-release window makes a single clean name available at no cost.
 * ADR-0007 — name the binder terminals New and Create; naming-decision precedent.
 * ADR-0020 — materialize dummies only through Generate(); shares the pre-1.0 "cheapest moment to
   decide" framing.
-* 2026-07-20 Dummies architecture & design audit, §8.2 and §8.4 — surfaced the deviation.
+* 2026-07-20 JustDummies architecture & design audit, §8.2 and §8.4 — surfaced the deviation.
 * Issue #222.

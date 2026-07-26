@@ -55,11 +55,11 @@ The generated error catalog is treated as a versioned compatibility artifact. Re
 
 The baseline is updated only by the release process after a successful compatible release. Workflow steps, commands, artifact paths, and recovery procedures are maintained in the workflow reference. In particular, maintainers must account for the failure mode where publication succeeds but the subsequent baseline update does not.
 
-## Dummies generation contracts
+## JustDummies generation contracts
 
 Related decisions: [ADR-0006](../adr/0006-supply-arbitrary-test-values-from-a-seedable-source.md), [ADR-0011](../adr/0011-host-dummies-as-a-standalone-package.md), [ADR-0013](../adr/0013-gate-distinct-collections-by-cardinality-else-bounded-draw.md), [ADR-0015](../adr/0015-cap-any-combine-at-arity-eight.md), [ADR-0020](../adr/0020-materialize-dummies-only-through-generate.md).
 
-Dummies is shipped as a standalone package with no dependency on the FirstClassErrors runtime package. Generation is unseeded by default; reproducible generation is selected explicitly and exposes the seed needed to replay failures.
+JustDummies is shipped as a standalone package with no dependency on the FirstClassErrors runtime package. Generation is unseeded by default; reproducible generation is selected explicitly and exposes the seed needed to replay failures.
 
 Distinct collection generation first compares the requested count against the element generator's cardinality hint, when `ICardinalityHint` can provide one, net of any values pinned outside that domain via `Containing(...)` and any opaque draws requested via `ContainingAny(...)` — both widen what the generator itself must still supply rather than counting against it. A floating-point or decimal range is not treated as cheaply countable, since enumerating its representable values is type-specific bit-arithmetic disproportionate to the dummy use case, so such a generator only participates in the eager check when pinned to an explicit allow-list or a single value (`OneOf`, `Zero`, `Between(x, x)`), never through a wider range. When cardinality is unknown, generation uses a bounded draw and fails explicitly rather than looping forever. The bound is a safety mechanism, not a proof that every foreign or biased generator will succeed whenever enough distinct values theoretically exist. `CollectionState` and `ICardinalityHint` unify cardinality and membership behind one interface, so a generator with a finite domain cannot drift out of the eager perimeter through a comparer.
 

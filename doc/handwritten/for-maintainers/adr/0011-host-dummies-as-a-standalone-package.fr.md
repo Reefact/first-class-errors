@@ -1,4 +1,4 @@
-# ADR-0011 | Héberger Dummies comme package autonome dans ce dépôt
+# ADR-0011 | Héberger JustDummies comme package autonome dans ce dépôt
 
 🌍 🇬🇧 [English](0011-host-dummies-as-a-standalone-package.md) · 🇫🇷 Français (ce fichier)
 
@@ -10,7 +10,7 @@
 
 Le moteur générique de valeurs arbitraires anticipé par l'ADR-0006 sert les tests orientés domaine en général, pas spécifiquement la gestion des erreurs.
 
-Une bibliothèque autonome nommée `Dummies` fournit désormais des générateurs typés portant leurs contraintes, sans connaissance de FirstClassErrors. Son public visé dépasse les consommateurs du package principal de ce dépôt.
+Une bibliothèque autonome nommée `JustDummies` fournit désormais des générateurs typés portant leurs contraintes, sans connaissance de FirstClassErrors. Son public visé dépasse les consommateurs du package principal de ce dépôt.
 
 L'identité d'un package est coûteuse à renommer après adoption, tandis que ce dépôt fournit déjà la CI, l'empaquetage, les releases, le SBOM, SourceLink et la gouvernance nécessaires à une publication sûre.
 
@@ -18,7 +18,7 @@ L'API de la bibliothèque est appelée à évoluer rapidement pendant ses premi�
 
 ## Décision
 
-`Dummies` est livré comme package NuGet indépendant nommé `Dummies`, hébergé dans ce dépôt sous la forme d'un projet autonome qui ne doit référencer aucun projet FirstClassErrors.
+`JustDummies` est livré comme package NuGet indépendant nommé `JustDummies`, hébergé dans ce dépôt sous la forme d'un projet autonome qui ne doit référencer aucun projet FirstClassErrors.
 
 ## Justification
 
@@ -48,7 +48,7 @@ Envisagé parce qu'elle est déjà publiée. Rejeté parce que cela couplerait u
 
 ### Positives
 
-* Dummies possède une identité de package et un public indépendants dès sa première release.
+* JustDummies possède une identité de package et un public indépendants dès sa première release.
 * L'infrastructure de livraison est réutilisée plutôt que dupliquée.
 * La frontière de dépendance est vérifiable et une future extraction reste peu coûteuse.
 
@@ -65,11 +65,11 @@ Envisagé parce qu'elle est déjà publiée. Rejeté parce que cela couplerait u
 ## Actions de suivi
 
 * Réexaminer l'extraction vers un dépôt séparé lorsque le package développe sa propre gouvernance ou une pression de release indépendante.
-* Décider séparément si FirstClassErrors.Testing doit consommer Dummies en interne.
+* Décider séparément si FirstClassErrors.Testing doit consommer JustDummies en interne.
 
 ## Références
 
-* [Référence d'implémentation des ADR — Contrats de génération de Dummies](../specifications/adr-implementation-reference.fr.md#contrats-de-génération-de-dummies)
+* [Référence d'implémentation des ADR — Contrats de génération de JustDummies](../specifications/adr-implementation-reference.fr.md#contrats-de-génération-de-dummies)
 * [ADR-0006](0006-supply-arbitrary-test-values-from-a-seedable-source.fr.md)
-* Tests d'architecture dans `Dummies.UnitTests`.
+* Tests d'architecture dans `JustDummies.UnitTests`.
 * [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.

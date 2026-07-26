@@ -42,7 +42,7 @@ jamais rien lui-même.
 ## Quand il s'exécute
 
 - Sur **`workflow_run: completed`** de chaque workflow-barrage qu'une PR Dependabot
-  traverse (`ci`, `sonar`, `analyzers`, `commit-lint`, `dummies`,
+  traverse (`ci`, `sonar`, `analyzers`, `commit-lint`, `justdummies`,
   `dependency-review`, `codeql`). Chacun qui se termine le relance sur l'état
   **combiné** des checks du commit de tête.
 - Restreint aux **pull requests de Dependabot issues d'une branche de ce dépôt**

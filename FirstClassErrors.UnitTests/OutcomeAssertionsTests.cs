@@ -68,7 +68,7 @@ public sealed class OutcomeAssertionsTests : IDisposable {
 
     [Fact(DisplayName = "ShouldFail on a successful outcome throws.")]
     public void ShouldFailOnSuccessThrows() {
-        Outcome<int> outcome = Outcome<int>.Success(Dummies.Any.Int32().Generate());
+        Outcome<int> outcome = Outcome<int>.Success(JustDummies.Any.Int32().Generate());
 
         Assert.Throws<OutcomeAssertionException>(() => outcome.ShouldFail());
     }

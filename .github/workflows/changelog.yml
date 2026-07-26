@@ -7,7 +7,7 @@ name: Draft changelog
 # before merging. The trains version independently and keep separate changelogs:
 #   lib -> CHANGELOG.md                     (FirstClassErrors + FirstClassErrors.Testing + FirstClassErrors.RequestBinder)
 #   cli -> FirstClassErrors.Cli/CHANGELOG.md (the fce .NET tool)
-#   dum -> Dummies/CHANGELOG.md             (the standalone Dummies library)
+#   dum -> JustDummies/CHANGELOG.md             (the standalone JustDummies library)
 on:
   workflow_dispatch:
     inputs:

@@ -1,12 +1,12 @@
-# Dummies — Architecture & Design Audit
+# JustDummies — Architecture & Design Audit
 
 🌍 **Languages:**  
 🇬🇧 English (this file) | 🇫🇷 [Français](./2026-07-20-dummies-architecture-and-design-audit.fr.md)
 
 **Date:** 2026-07-20
 **Audited revision:** `3bf89e3` (tip of `main` at audit time)
-**Scope:** the `Dummies` library only — `Dummies/`, `Dummies.UnitTests/`, its guard tooling
-(`tools/dummies-check/`, `.github/workflows/dummies.yml`), its documentation, and the ADRs that govern it.
+**Scope:** the `JustDummies` library only — `JustDummies/`, `JustDummies.UnitTests/`, its guard tooling
+(`tools/justdummies-check/`, `.github/workflows/justdummies.yml`), its documentation, and the ADRs that govern it.
 **Status:** advisory. Per the repository's own convention (ADR-0004), this audit produces
 recommendations, never blockers; every proposed ADR change is a draft for `@reefact` to accept or reject.
 
@@ -15,7 +15,7 @@ recommendations, never blockers; every proposed ADR change is a draft for `@reef
 for both intrinsic quality and implementation compliance; findings were adversarially verified against
 the code, and the three behavioral defects reported below were **independently reproduced at runtime**
 against the built library. The full unit-test suite was executed: **222/222 pass** (`dotnet test
-Dummies.UnitTests`, net10.0 runner). Judgments are calibrated against the library's stated goals —
+JustDummies.UnitTests`, net10.0 runner). Judgments are calibrated against the library's stated goals —
 readable tests, expressive test data, opt-in determinism, a fluent discoverable API, simplicity — and
 deliberately *not* against the goals of property-based-testing or fuzzing frameworks, which this
 library explicitly is not.
@@ -24,7 +24,7 @@ library explicitly is not.
 
 ## 1. Executive Summary
 
-Dummies is a young library built to an unusually high standard. Its central architectural idea — map
+JustDummies is a young library built to an unusually high standard. Its central architectural idea — map
 every discrete type into a shared 64-bit ordinal space so that one engine owns bounds, exclusions,
 conflict detection, and sampling for thirteen builders at once — is elegant and correctly executed.
 Its error-message discipline (every conflicting constraint names *both* sides, every generation
@@ -52,7 +52,7 @@ whole declared domain is reachable, or that a declared-satisfiable spec actually
 the precise blind spot in an otherwise well-designed suite, and closing it matters more than any
 individual fix.
 
-One framing fact softens all of this considerably: **Dummies has never been released.** There is no
+One framing fact softens all of this considerably: **JustDummies has never been released.** There is no
 `dum-v*` tag; the changelog holds only an empty *Unreleased* section. Every defect above can be fixed,
 and every contract decided, with zero compatibility cost. This audit's headline recommendation is to
 treat the pre-1.0 window the way ADR-0020 did — as the cheapest moment to decide — and close the
@@ -63,7 +63,7 @@ the fourteen cloned numeric builders carry **no parity guard** (and documentatio
 begun); the **determinism contract has documentation gaps** (concurrent draws inside one seeded scope
 silently void replayability; cross-version seed stability is neither promised nor disclaimed; the
 contract's ADR anchoring was lost when ADR-0006 was superseded); the **netstandard2.0 leg is never
-executed by Dummies' own test suite** (only transitively, via FirstClassErrors' floor job); and there
+executed by JustDummies' own test suite** (only transitively, via FirstClassErrors' floor job); and there
 is **no user-facing reference of the constraint surface** — the repository README does not even
 mention the package. The feature-gap analysis (§10) finds the type coverage genuinely complete for
 the library's philosophy; the two absences that qualify as surprising are a *top-level* choice
@@ -177,13 +177,13 @@ not change the assessment that the ADR-0025 approach was sound and honestly argu
 
 The zero-dependency, error-agnostic boundary is enforced three ways: a `.csproj` comment stating the
 rule, an intent-based architecture test that fails on any non-BCL assembly reference
-(`ArchitectureTests.cs:27-37`), and the `dummies-check` packaged-asset guard — a real consumer
+(`ArchitectureTests.cs:27-37`), and the `justdummies-check` packaged-asset guard — a real consumer
 program, run in CI against the *packed artifact* per target framework, that proves the net8.0 asset
 carries the modern generators, the netstandard2.0 asset does not, constraints and conflicts behave,
-and same-seed contexts replay (`tools/dummies-check/Program.cs`). Packaging itself is
+and same-seed contexts replay (`tools/justdummies-check/Program.cs`). Packaging itself is
 production-grade: SourceLink with embedded untracked sources, deterministic CI builds, snupkg
 symbols, an SPDX SBOM embedded at pack time, provenance-attested release assets
-(`Directory.Build.props:10-23`, `Dummies.csproj:60-66`, `release.yml`). The ADR base recording all
+(`Directory.Build.props:10-23`, `JustDummies.csproj:60-66`, `release.yml`). The ADR base recording all
 of this is discussed in §5 — it is a strength in itself.
 
 ### 3.8 The API philosophy is coherent and documented where users look
@@ -340,11 +340,11 @@ parity tests, *not* a generic base class) is in §9.2.
 
 ### 4.4 Documentation reaches neither the discoverer nor the power user
 
-* The **repository README never mentions Dummies** (verified: zero occurrences), while the package
+* The **repository README never mentions JustDummies** (verified: zero occurrences), while the package
   README points to the repository for "full documentation". A NuGet discoverer lands on a front
-  page about a different library; the closest thing to a Dummies guide
+  page about a different library; the closest thing to a JustDummies guide
   (`ArbitraryTestValues.en.md`) is a FirstClassErrors.Testing integration guide that defers back to
-  "documented with Dummies itself" — a circular reference.
+  "documented with JustDummies itself" — a circular reference.
 * **No user-facing reference documents the per-builder constraint surface.** Where does a user
   learn that `Except`/`OneOf`/`DifferentFrom` exist on numerics, that `WithLengthBetween` exists,
   that `ContainingAny` differs from `Containing`, or which regex dialect `StringMatching` supports?
@@ -364,33 +364,33 @@ inapplicable seed for fixed-context and mixed-source compositions; cross-version
 seed-sequence stability is neither promised nor disclaimed; and the whole contract lost its ADR
 anchor when ADR-0006 was superseded.
 
-### 4.6 The netstandard2.0 leg is never executed by Dummies' own suite
+### 4.6 The netstandard2.0 leg is never executed by JustDummies' own suite
 
-`Dummies.UnitTests` targets net10.0 only. The netstandard2.0 assembly — the one .NET Framework
+`JustDummies.UnitTests` targets net10.0 only. The netstandard2.0 assembly — the one .NET Framework
 consumers will load — is exercised only *transitively*: the FirstClassErrors floor job
-(`ci.yml:98-115`) runs `FirstClassErrors.UnitTests` on net472, which arranges with `Dummies.Any`
-via project reference and the Testing factories, so Dummies does load and generate on the real
+(`ci.yml:98-115`) runs `FirstClassErrors.UnitTests` on net472, which arranges with `JustDummies.Any`
+via project reference and the Testing factories, so JustDummies does load and generate on the real
 .NET Framework CLR — but its own 222-test contract suite (regex oracle, conflict detection,
 distinctness gating, seed reproducibility) never runs there, and same-seed-same-values across the
 two packaged assets is asserted nowhere. The repository already owns the exact machinery needed
 (`build/Net472TestFloor.props`, used by `FirstClassErrors.UnitTests`); extending it to
-`Dummies.UnitTests` (with the net8-only tests conditioned out) is mechanical. See ADR-0022
+`JustDummies.UnitTests` (with the net8-only tests conditioned out) is mechanical. See ADR-0022
 compliance, §6.
 
 ### 4.7 Release-engineering guardrails not yet installed
 
 No public-API baseline (`Microsoft.CodeAnalysis.PublicApiAnalyzers`), no
-`EnablePackageValidation`/ApiCompat. The changelog commits Dummies to semantic versioning while the
+`EnablePackageValidation`/ApiCompat. The changelog commits JustDummies to semantic versioning while the
 audit itself demonstrates the API surface is hand-mirrored and already drifting in documentation;
 breaking-change detection against a shipped baseline is the complementary mechanism parity tests
 cannot replace (a removed overload or narrowed return type passes a mirror test). Pre-first-release
 is the cheapest moment to install both. One stale comment found here: `Directory.Build.props:3-9`
-says the repository ships "FirstClassErrors and FirstClassErrors.Testing" — it omits Dummies, the
+says the repository ships "FirstClassErrors and FirstClassErrors.Testing" — it omits JustDummies, the
 very package those pack-time properties now also govern.
 
 ## 5. ADR Review
 
-Eighteen of the twenty-six ADRs do not concern Dummies (they name the analyzers, the request
+Eighteen of the twenty-six ADRs do not concern JustDummies (they name the analyzers, the request
 binder, GenDoc/CLI tooling, the Outcome API, or repository process). Eight apply, and their quality
 was reviewed individually. The overall standard is high enough to say plainly: this ADR base is a
 model of the form. Decisions carry honest constraints, genuinely-considered alternatives, priced
@@ -404,7 +404,7 @@ weighed, and its follow-ups (extract the engine when a second consumer appears; 
 adapter) were honored or consciously deferred. Its collision-risk analysis of the unseeded default
 is exactly the right depth. **Issue:** its supersession created a gap — see "structural gaps" below.
 
-### ADR-0011 — Host Dummies as a standalone package *(Accepted)*
+### ADR-0011 — Host JustDummies as a standalone package *(Accepted)*
 
 **Quality: good.** The name/identity/boundary reasoning is sound and the no-reference rule is
 machine-checked. Two precision nits. First, the *enforced* invariant is stronger than the *recorded*
@@ -413,7 +413,7 @@ ADR-0025 leans on a "zero-dependency identity … the boundary is machine-checke
 ADR-0011's decision text only forbids referencing *FirstClassErrors projects*. The
 zero-*third-party*-dependency rule, load-bearing for ADR-0025's whole argument, is written down
 nowhere as a decision. Second, the alternatives never weigh the risks of the ultra-generic NuGet ID
-`Dummies` (squat/collision/searchability) — a package identity the ADR itself calls costly to
+`JustDummies` (squat/collision/searchability) — a package identity the ADR itself calls costly to
 rename. Neither nit changes the decision; both deserve a line in the record.
 
 ### ADR-0013 — Gate distinct collections by cardinality, else bounded draw *(Accepted)*
@@ -425,7 +425,7 @@ provably mirrored in the code (`CollectionState.Validate`/`CardinalityCap`/`Fixe
 The risks section even anticipates budget mistuning and instructs "revise based on evidence rather
 than describing failure as impossible." **Issue (shared with ADR-0015):** it defers "the exact hint
 interface, collection state, draw budget, exception payload, and seed propagation" to the
-implementation reference — but the reference's Dummies section
+implementation reference — but the reference's JustDummies section
 (`adr-implementation-reference.md:58-68`) records none of those specifics (no budget numbers, no
 exception payload, no seed-propagation rule). The pointer promises more than the destination holds;
 either enrich the reference or soften the pointer.
@@ -447,11 +447,11 @@ reasoning pattern and its risk framing). No changes recommended.
 ### ADR-0022 — Floor the library's .NET Framework support at 4.7.2 *(Accepted)*
 
 **Quality: sound policy; scope wording aged.** "A compatibility promise that is not exercised
-cannot provide a trustworthy support boundary" is the right principle. But the ADR predates Dummies
-and speaks of "the shipped `netstandard2.0` libraries" without naming them; whether Dummies is
+cannot provide a trustworthy support boundary" is the right principle. But the ADR predates JustDummies
+and speaks of "the shipped `netstandard2.0` libraries" without naming them; whether JustDummies is
 inside its scope is now a matter of inference, and the floor job does not include it (§6). When the
 maintainer next touches this area, a one-line clarification of covered packages would close the
-ambiguity — or the Dummies-specific floor decision can ride the new determinism ADR proposed below.
+ambiguity — or the JustDummies-specific floor decision can ride the new determinism ADR proposed below.
 
 ### ADR-0025 — Generate matching strings from a home-grown regular subset *(Proposed)*
 
@@ -470,7 +470,7 @@ property test" against the real engine; what exists is a fixed-seed, fixed-corpu
 the unit-test project — excellent, but not property-based; the text should say what the safety net
 is.
 
-### ADR-0026 — Rebase the testing package's arbitrary values on Dummies *(Accepted)*
+### ADR-0026 — Rebase the testing package's arbitrary values on JustDummies *(Accepted)*
 
 **Quality: a thorough consolidation record** — six real alternatives, the one-seed-story rationale,
 honest interim-packaging risk. **Two precision drifts:** (1) the decision text says each factory
@@ -478,19 +478,19 @@ exposes "an `IAny<T>` generator through a distinct method where composition is n
 exposes any such method today (verified: zero `IAny` occurrences in `FirstClassErrors.Testing`
 sources). Defensible YAGNI, but the text reads as a decided API shape, and a compliance check a
 year from now cannot tell deliberate deferral from unfinished migration. (2) Its risk clause says
-the double-assembly hazard exists "precisely because Dummies types appear in Testing's public API"
-— today none do; the premise is misstated (the hazard is real for other reasons while Dummies ships
+the double-assembly hazard exists "precisely because JustDummies types appear in Testing's public API"
+— today none do; the premise is misstated (the hazard is real for other reasons while JustDummies ships
 inside the artifact). Since accepted ADRs are never edited in place, both belong as a short note in
 the implementation reference.
 
 ### Structural gaps in the base (Create-recommendations)
 
-1. **Dummies' determinism contract has no accepted ADR.** The `AsyncLocal` ambient source, opt-in
+1. **JustDummies' determinism contract has no accepted ADR.** The `AsyncLocal` ambient source, opt-in
    `Reproducibly`, lazy pinning, seed-on-failure reporting — the crown-jewel guarantee — was decided
    in ADR-0006, which is now Superseded *and* was scoped to FirstClassErrors.Testing; ADR-0026's
-   decision is about rebasing Testing, not about Dummies' own contract. A future maintainer asking
+   decision is about rebasing Testing, not about JustDummies' own contract. A future maintainer asking
    "why `AsyncLocal` and not a parameter? why is raced `System.Random` acceptable?" finds the
-   reasoning only in a superseded record. **Recommend drafting one Proposed ADR** ("Dummies supplies
+   reasoning only in a superseded record. **Recommend drafting one Proposed ADR** ("JustDummies supplies
    arbitrary values from an ambient, seedable, execution-context-local source with opt-in
    reproducibility") carrying ADR-0006's rationale forward and settling, in the same document, the
    open edges this audit surfaced: single-logical-flow concurrency semantics, the closed
@@ -506,12 +506,12 @@ the implementation reference.
 
 | ADR | Status | Compliance of the implementation |
 |---|---|---|
-| 0006 (historical) | Superseded | **Compliant and exceeded.** The inherited seeding contract (context-local, opt-in determinism, seed reporting) is implemented faithfully; Dummies adds the isolated `AnyContext` the original ADR only anticipated. |
+| 0006 (historical) | Superseded | **Compliant and exceeded.** The inherited seeding contract (context-local, opt-in determinism, seed reporting) is implemented faithfully; JustDummies adds the isolated `AnyContext` the original ADR only anticipated. |
 | 0011 | Accepted | **Compliant.** No FirstClassErrors reference; boundary machine-checked (`ArchitectureTests`); standalone identity, release train, and docs in place. Note: enforcement is *stronger* than the recorded decision (§5). |
 | 0013 | Accepted | **Compliant, verified in detail** — eager gate net of outside-domain `Containing` credits, conservative `ContainingAny` accounting, overflow-safe arithmetic, bounded budget, both failure channels. **One minor deviation:** the exhaustion message *unconditionally* promises `Any.Reproducibly({seed}, …)` replay (`CollectionState.cs:246-254`; the `seed is not null` guard is dead code — the seed can never be null there). For a **foreign** element generator whose draws ignore the ambient source, that promise is false; the ADR says failures are "explicit and reproducible". Qualify the message when the element generator carries no library source. |
 | 0015 | Accepted | **Compliant exactly** — arities 2–8, no more; suppressions localized with ADR-referencing justifications (`Any.cs:622-623`); ceiling documented on the arity-8 overload. |
 | 0020 | Accepted | **Fully compliant.** No implicit conversions anywhere; `Generate()` is the sole materialization; builders verified immutable (every fluent method returns a new instance). Residue: three test DisplayNames and one comment still *describe* the removed conversions (§4.3). |
-| 0022 | Accepted | **Partial for Dummies.** The netstandard2.0 asset is loaded and driven on net472 only transitively through FirstClassErrors' floor job; Dummies' own suite never runs there, and the package README states no .NET Framework floor at all (FirstClassErrors' README does). Close before first publication (§11 item 5). |
+| 0022 | Accepted | **Partial for JustDummies.** The netstandard2.0 asset is loaded and driven on net472 only transitively through FirstClassErrors' floor job; JustDummies' own suite never runs there, and the package README states no .NET Framework floor at all (FirstClassErrors' README does). Close before first publication (§11 item 5). |
 | 0025 | Proposed | **Compliant on every major clause** (home-grown parser, first-class rejection, terminal generator, zero dependencies, printable-ASCII *default* universe, bounded unbounded-quantifier spread). The §4.1(c)/(d) defects are quality bugs *within* the decided scope, not deviations — with the caveat that (d) breaks the rejection *promise* the ADR records. One taxonomy edge: a well-formed negated class outside the printable universe raises `ArgumentException` ("malformed") instead of `UnsupportedRegexException`. |
 | 0026 | Accepted | **Compliant on every executed clause** — single engine, single seed scope, `Testing.Any` removed, factories shipped, clock/ids on the ambient context, docs updated EN/FR. The unimplemented "distinct `IAny<T>` method" half and the misstated risk premise are recorded in §5. |
 
@@ -563,7 +563,7 @@ internal code. If the seam is ever to open, an `ISeedableAny` in a minor release
 shape; nothing needs deciding now except the documentation.
 
 **For maintainers**, adding one new scalar type touches 6–9 files (builder, `Any`, `AnyContext`,
-tests, user docs EN/FR, package README, `dummies-check` if net8-only, possibly a spec engine). The
+tests, user docs EN/FR, package README, `justdummies-check` if net8-only, possibly a spec engine). The
 process is mechanical but real, and only partially guarded (§9.2).
 
 ### 7.3 The determinism machinery — deep dive
@@ -758,7 +758,7 @@ seeded loop over `Between(lo, hi)` must observe values in both halves and hit bo
 cheap, deterministic under `WithSeed`); a generation-limit test for `AnyPattern` (currently
 untested); dedicated tests for the documented-but-untested contracts (empty enum, `AnyException`
 base catchability, `DictionaryOf` key-comparer flow); and the cross-TFM same-seed assertion in
-`dummies-check` (extend `SeedBatch` with a golden sequence compared across the net8.0 and net6.0
+`justdummies-check` (extend `SeedBatch` with a golden sequence compared across the net8.0 and net6.0
 consumer legs, and extend the smoke to cover `OrNull`/`SequenceOf`/`PairOf`/`StringMatching`/enum
 draws, which the packaged-asset guard currently never touches).
 
@@ -776,7 +776,7 @@ Method: every proposal was screened against (i) the library's philosophy (constr
 invariants; no realistic-fake-data, no object graphs, no clock coupling), (ii) the composition
 test — *can `As`/`Combine`/`StringMatching` already express this in one readable line?* — and
 (iii) the full cost of a new builder (builder + `Any` + `AnyContext` + parity data + tests + docs
-EN/FR + package README + possibly `dummies-check`). The bar for **Must Have** is the mandate's:
+EN/FR + package README + possibly `justdummies-check`). The bar for **Must Have** is the mandate's:
 absence genuinely surprising. The library's composition-first design keeps this list short — most
 BCL types are already one `As` away, which is the design working as intended.
 
@@ -841,8 +841,8 @@ free via proposal 1.)
 * **`GenerateMany(int)` terminal** — sugar for "N values without `ListOf` ceremony"; a *named
   method* returning `IReadOnlyList<T>`, so it stays inside ADR-0020's letter and spirit.
 * **A test-framework seed adapter** (`[ReproducibleFact]`) — anticipated by ADR-0006's follow-ups,
-  dropped in the rebase, replaced by nothing. Zero-dependency Dummies cannot reference xUnit, so
-  this is a *companion package* decision (`Dummies.Xunit`) — worth an explicit yes/no ADR rather
+  dropped in the rebase, replaced by nothing. Zero-dependency JustDummies cannot reference xUnit, so
+  this is a *companion package* decision (`JustDummies.Xunit`) — worth an explicit yes/no ADR rather
   than silence, because every consumer currently re-derives the `Reproducibly`-wrapping habit
   by hand.
 
@@ -896,12 +896,12 @@ In priority order; items 1–7 are the recommended pre-release gate.
    cross-version stability policy sentence; the foreign-generator qualification in the exhaustion
    message (dead null-guard removed). Draft the **determinism ADR** and the **ordinal-engine ADR**
    (§5, structural gaps) as `Proposed` for `@reefact`.
-5. **Run Dummies on its floors**: import `build/Net472TestFloor.props` into `Dummies.UnitTests`
+5. **Run JustDummies on its floors**: import `build/Net472TestFloor.props` into `JustDummies.UnitTests`
    (net8-only tests conditioned out), add it to the ci.yml floor loop; add the cross-TFM golden-
-   sequence assertion to `dummies-check`; state the .NET Framework floor in the package README
+   sequence assertion to `justdummies-check`; state the .NET Framework floor in the package README
    (ADR-0022 follow-up).
-6. **Documentation pass**: surface Dummies in the repository README (packages table + TOC); write
-   the Dummies user guide with the per-builder constraint reference and the `StringMatching`
+6. **Documentation pass**: surface JustDummies in the repository README (packages table + TOC); write
+   the JustDummies user guide with the per-builder constraint reference and the `StringMatching`
    dialect (closing ADR-0025's follow-up); correct the three "printable ASCII" sites (§4.2);
    advertise the empty-by-default behavior in the package README; fix the stale
    comments/DisplayNames (§4.3) and the `Directory.Build.props` header.
@@ -927,7 +927,7 @@ table is empty except items explicitly deferred by recorded decision.
 **Phase 1 — first stable cycle (completeness within the philosophy).** Item 8 (the two Must-Haves,
 which are additive and low-risk), item 9, the user-guide recipe section (blobs, paths, Version,
 Uri-via-Combine — turning Optional-list types into documentation instead of surface), and the
-`Dummies.Xunit` companion-package decision (yes or no, as an ADR).
+`JustDummies.Xunit` companion-package decision (yes or no, as an ADR).
 
 **Phase 2 — demand-driven growth.** Nice-to-Haves as real requests arrive (`Uri` and `WithChars`
 first, on current evidence), each addition carrying its parity-matrix entry, tests, and EN/FR docs
@@ -936,7 +936,7 @@ what keeps this library what it is.
 
 ## 13. Conclusion
 
-Dummies is what a focused library looks like when the authors know exactly what it is for and —
+JustDummies is what a focused library looks like when the authors know exactly what it is for and —
 just as importantly — what it is not for. The ordinal-space engine, the constraint-provenance
 diagnostics, the bounded-escape discipline, and the ADR trail are all better than the norm for this
 category, and the composition-first design keeps the future feature surface honest: most "missing
@@ -956,7 +956,7 @@ valid, conflicts named at the line that caused them, and any run replayable from
 
 ## 14. Issue tracking
 
-The §11 recommendations were opened as GitHub issues on 2026-07-20, mirroring the repository's Dummies
+The §11 recommendations were opened as GitHub issues on 2026-07-20, mirroring the repository's JustDummies
 issue template. This table is a **static snapshot**: the live state of each issue (open, closed, in
 progress) lives in the issue tracker, not here — do not maintain status in this document.
 

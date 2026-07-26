@@ -10,7 +10,7 @@
         <Import Project="..\build\PublicApiBaseline.props" />
 
     Only the SHIPPING libraries import it — FirstClassErrors, FirstClassErrors.Testing,
-    FirstClassErrors.RequestBinder (the `lib` train) and Dummies (the `dum` train). Tools, workers, the CLI
+    FirstClassErrors.RequestBinder (the `lib` train) and JustDummies (the `dum` train). Tools, workers, the CLI
     and every test project stay out: PublicApiAnalyzers would otherwise flag their entire public surface as
     undeclared, and they carry no compatibility promise.
 
@@ -40,7 +40,7 @@
   <!--
     Per-target-framework baseline files. The analyzer matches AdditionalFiles by file NAME
     (PublicAPI.Shipped.txt / PublicAPI.Unshipped.txt), so a per-TFM subfolder keeps each compilation reading
-    its own surface. This is what lets Dummies track its two divergent surfaces (the net8.0 leg carries the
+    its own surface. This is what lets JustDummies track its two divergent surfaces (the net8.0 leg carries the
     modern generators — DateOnly, TimeOnly, Int128, UInt128, Half — that do not exist on netstandard2.0);
     the single-TFM lib projects simply have one netstandard2.0 subfolder. Condition guards the outer,
     TFM-less evaluation of a multi-targeting project (where $(TargetFramework) is empty).
@@ -62,7 +62,7 @@
       return type, a renamed member) via RS0016/RS0017 and package validation. RS0026/RS0027 are a different
       thing: opinionated API-DESIGN rules ("do not spread optional parameters across overloads"). They fire
       pervasively on the library's deliberate, central fluent surfaces — Outcome.Then/Recover/Finally/Try/
-      Create/Error and Dummies' Any.Reproducibly — every one of which carries an optional callback across a
+      Create/Error and JustDummies' Any.Reproducibly — every one of which carries an optional callback across a
       family of overloads by design (and shipped that way in lib-v0.1.0-preview.1). Enforcing them here would
       demand a breaking redesign of the signature APIs, which is out of scope for installing a baseline and is
       the maintainer's call (it overlaps the pre-v1 Outcome API-symmetry review). Disabled deliberately; the
