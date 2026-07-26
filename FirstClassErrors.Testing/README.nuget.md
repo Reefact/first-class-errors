@@ -15,8 +15,8 @@ Testing helpers for **FirstClassErrors** — so your tests about errors and outc
   for snapshot and equality assertions.
 - **Arbitrary-value factories** (`ErrorCodeFactory.Any()`, `DiagnosticMessageFactory.Any()`,
   ...) for the error inputs a test needs but never asserts on, built on the companion
-  **Dummies** generator library (use `Dummies.Any.*` for arbitrary primitives). Wrap a
-  value-sensitive test in `Dummies.Any.Reproducibly(...)` and a failing run reports the seed
+  **JustDummies** generator library (use `JustDummies.Any.*` for arbitrary primitives). Wrap a
+  value-sensitive test in `JustDummies.Any.Reproducibly(...)` and a failing run reports the seed
   to replay; `Clock.UseAny()` / `InstanceIds.UseAny()` draw from the same source.
 
 Overrides are scoped (`using`), context-local (safe under parallel tests), and never

@@ -16,7 +16,7 @@ aujourd'hui :
 | --- | --- | --- | --- | --- |
 | `lib` | `lib-v*` | `core`, `analyzers`, `testing`, `binder` | FirstClassErrors + FirstClassErrors.Testing + FirstClassErrors.RequestBinder | `CHANGELOG.md` |
 | `cli` | `cli-v*` | `cli`, `gendoc` | FirstClassErrors.Cli (l'outil `fce`) | `FirstClassErrors.Cli/CHANGELOG.md` |
-| `dum` | `dum-v*` | `dummies` | Dummies (la bibliothèque autonome de valeurs de test) | `Dummies/CHANGELOG.md` |
+| `dum` | `dum-v*` | `justdummies` | JustDummies (la bibliothèque autonome de valeurs de test) | `JustDummies/CHANGELOG.md` |
 
 Le mapping train → (préfixe, scopes, paquet, fichier changelog) vit à **un seul
 endroit**, [`tools/trains.sh`](../../../tools/trains.sh), que le générateur de notes de

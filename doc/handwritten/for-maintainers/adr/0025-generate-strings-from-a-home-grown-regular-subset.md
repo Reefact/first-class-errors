@@ -8,7 +8,7 @@
 
 ## Context
 
-`Dummies` lets a test supply arbitrary yet valid values. A very common validity rule is a format
+`JustDummies` lets a test supply arbitrary yet valid values. A very common validity rule is a format
 **regular expression**: a value object validates its input against a pattern (an order reference, a SKU, a
 currency code), and a test needs a value that passes that validation without duplicating the format by hand.
 `Any.StringMatching(pattern)` fills that need — generate a string the pattern matches.
@@ -106,6 +106,6 @@ of contradictory combinations entirely and keeps the surface small, while compos
 
 ## References
 
-* ADR-0011 — Host Dummies as a standalone package in this repository (the zero-dependency boundary).
+* ADR-0011 — Host JustDummies as a standalone package in this repository (the zero-dependency boundary).
 * The regex parser, node tree and generator, and the property test against `System.Text.RegularExpressions`, in
-  the `Dummies` project and its tests.
+  the `JustDummies` project and its tests.

@@ -1,4 +1,4 @@
-# ADR-0011 | Host Dummies as a standalone package in this repository
+# ADR-0011 | Host JustDummies as a standalone package in this repository
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0011-host-dummies-as-a-standalone-package.fr.md)
 
@@ -10,7 +10,7 @@
 
 The generic arbitrary-value engine anticipated by ADR-0006 serves domain-driven testing in general rather than error handling specifically.
 
-A standalone library named `Dummies` now provides typed, constraint-carrying generators without knowledge of FirstClassErrors. Its intended audience extends beyond consumers of this repository's main package.
+A standalone library named `JustDummies` now provides typed, constraint-carrying generators without knowledge of FirstClassErrors. Its intended audience extends beyond consumers of this repository's main package.
 
 A package identity is costly to rename after adoption, while this repository already provides the CI, packaging, release, SBOM, SourceLink, and governance infrastructure needed to ship a package safely.
 
@@ -18,7 +18,7 @@ The library's API is expected to evolve quickly during its first iterations, and
 
 ## Decision
 
-`Dummies` ships as an independent NuGet package named `Dummies`, hosted in this repository as a standalone project that must not reference any FirstClassErrors project.
+`JustDummies` ships as an independent NuGet package named `JustDummies`, hosted in this repository as a standalone project that must not reference any FirstClassErrors project.
 
 ## Rationale
 
@@ -48,7 +48,7 @@ Considered because it already ships. Rejected because it would couple a generic 
 
 ### Positive
 
-* Dummies has an independent package identity and audience from its first release.
+* JustDummies has an independent package identity and audience from its first release.
 * Delivery infrastructure is reused rather than duplicated.
 * The dependency boundary is machine-checkable and future extraction remains inexpensive.
 
@@ -65,11 +65,11 @@ Considered because it already ships. Rejected because it would couple a generic 
 ## Follow-up Actions
 
 * Revisit repository extraction when the package develops independent governance or release pressure.
-* Decide separately whether FirstClassErrors.Testing should consume Dummies internally.
+* Decide separately whether FirstClassErrors.Testing should consume JustDummies internally.
 
 ## References
 
-* [ADR implementation reference — Dummies generation contracts](../specifications/adr-implementation-reference.md#dummies-generation-contracts)
+* [ADR implementation reference — JustDummies generation contracts](../specifications/adr-implementation-reference.md#dummies-generation-contracts)
 * [ADR-0006](0006-supply-arbitrary-test-values-from-a-seedable-source.md)
-* Architecture tests in `Dummies.UnitTests`.
+* Architecture tests in `JustDummies.UnitTests`.
 * [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.

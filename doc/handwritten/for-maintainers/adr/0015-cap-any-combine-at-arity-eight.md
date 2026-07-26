@@ -8,7 +8,7 @@
 
 ## Context
 
-Dummies composes differently typed generators into larger objects through `Any.Combine`, preserving constructor-based domain validation without reflection.
+JustDummies composes differently typed generators into larger objects through `Any.Combine`, preserving constructor-based domain validation without reflection.
 
 C# has no heterogeneous variadic generics, so each supported arity requires a distinct public overload. Low arities alone force nested composition or positional tuples for larger constructors, while an unlimited surface would create repetitive API and documentation with diminishing value.
 
@@ -26,7 +26,7 @@ Eight is a pragmatic convenience ceiling rather than a mathematical property of 
 
 The unavoidable parameter-count warnings on the largest overloads are an explicit local trade-off, not a general relaxation of the repository's code-quality rules.
 
-Exact signatures, documentation, and analyzer suppressions are implementation details recorded in the [ADR implementation reference](../specifications/adr-implementation-reference.md#dummies-generation-contracts) and the Dummies API reference.
+Exact signatures, documentation, and analyzer suppressions are implementation details recorded in the [ADR implementation reference](../specifications/adr-implementation-reference.md#dummies-generation-contracts) and the JustDummies API reference.
 
 ## Alternatives Considered
 
@@ -66,11 +66,11 @@ Considered because it is naturally variadic. Rejected because it does not serve 
 
 ## Follow-up Actions
 
-* Keep the supported arity range explicit in the Dummies documentation.
+* Keep the supported arity range explicit in the JustDummies documentation.
 * Consider homogeneous variadic composition separately if a real use case emerges.
 
 ## References
 
-* [ADR implementation reference — Dummies generation contracts](../specifications/adr-implementation-reference.md#dummies-generation-contracts)
+* [ADR implementation reference — JustDummies generation contracts](../specifications/adr-implementation-reference.md#dummies-generation-contracts)
 * [ADR-0011](0011-host-dummies-as-a-standalone-package.md)
 * [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.

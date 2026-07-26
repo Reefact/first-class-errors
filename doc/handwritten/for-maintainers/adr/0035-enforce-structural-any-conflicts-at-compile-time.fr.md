@@ -8,7 +8,7 @@
 
 ## Contexte
 
-* Chaque générateur du point d'entrée `Any` de `Dummies` — et son miroir `AnyContext` — a été jusqu'ici un
+* Chaque générateur du point d'entrée `Any` de `JustDummies` — et son miroir `AnyContext` — a été jusqu'ici un
   **builder plat** : un type unique expose toutes les méthodes de contrainte, les méthodes s'enchaînent dans
   n'importe quel ordre, et une combinaison incompatible est signalée à l'**exécution** par une
   `ConflictingAnyConstraintException` dont le message nomme les deux côtés (« Cannot apply X because Y is already
@@ -33,7 +33,7 @@
   chacun n'exposant que les composants de sa forme, transforme une erreur de catégorie en du code qui ne compile
   pas, là où un unique `AnyUri` plat exposant tous les composants ne pourrait rejeter la même erreur qu'à
   l'exécution.
-* `Dummies` est en pré-publication : aucun tag `dum-v*`, aucun consommateur externe, une section *Unreleased* de
+* `JustDummies` est en pré-publication : aucun tag `dum-v*`, aucun consommateur externe, une section *Unreleased* de
   changelog vide. La forme de sa surface de générateurs publique peut encore être fixée sans coût de migration.
 * Le dépôt consigne sous forme d'ADR les décisions qui façonnent la surface publique `Any` — ADR-0020
   (matérialiser uniquement via `Generate()`), ADR-0031 (nommer les fabriques d'après leur type CLR), ADR-0006
@@ -153,4 +153,4 @@ structurelle qu'ils peuvent porter.
 * ADR-0006 — fournir les valeurs arbitraires depuis une seule source graine ; la graine portée par
   `AnyGenerationException` sur le chemin d'exécution.
 * PR #295 — ajouter la famille `Any.Uri()`, la première progression typée.
-* Issue #226 — le backlog Nice-to-Have de Dummies qui a motivé `Any.Uri()`.
+* Issue #226 — le backlog Nice-to-Have de JustDummies qui a motivé `Any.Uri()`.

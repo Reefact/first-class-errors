@@ -8,7 +8,7 @@
 
 ## Context
 
-`Dummies` draws every arbitrary value from a random source. The static `Any`
+`JustDummies` draws every arbitrary value from a random source. The static `Any`
 entry points draw from an **ambient** source that flows with the execution
 context, so it never leaks across tests running in parallel. Determinism over
 that ambient source is opt-in, and today only two public paths reach it:
@@ -46,17 +46,17 @@ recorded in ADR-0006 and used by the testing package's clock and instance-id
 seams: the override is opened by a `Use…` call and closed by disposing what it
 returns.
 
-`Dummies` is pre-1.0 and not yet published to NuGet (ADR-0011), so its public
+`JustDummies` is pre-1.0 and not yet published to NuGet (ADR-0011), so its public
 surface can still grow without a compatibility ceremony. The library's identity
 is that it depends on nothing beyond the standard library, a boundary an
 architecture test asserts over its own assembly.
 
 The alternative access path — granting a named companion package access to
-`Dummies`' internals — is available: the library declares no such grant today.
+`JustDummies`' internals — is available: the library declares no such grant today.
 
 ## Decision
 
-`Dummies` exposes the ambient seed scope as a public, disposable handle whose
+`JustDummies` exposes the ambient seed scope as a public, disposable handle whose
 opener may supply the replay snippet that generation-failure diagnostics will
 name.
 
@@ -70,7 +70,7 @@ name.
 * **Public, rather than an internals grant, is what keeps every adapter
   possible.** An internals grant privileges one named companion and forecloses
   the others: a third-party adapter, or a first-party one for another framework,
-  would each need their own grant and their own change to `Dummies`. A public
+  would each need their own grant and their own change to `JustDummies`. A public
   handle makes "adapt another framework later" an additive decision that touches
   nothing here — which is precisely the property that lets the xUnit decision be
   taken narrowly, without deciding the rest.
@@ -91,12 +91,12 @@ name.
 
 ## Alternatives Considered
 
-### Grant the companion package access to Dummies' internals
+### Grant the companion package access to JustDummies' internals
 
 Considered because it adds no public surface at all: the adapter would use the
 existing internal handle unchanged. Rejected because it privileges one named
 companion — every other adapter, first-party or third-party, would need its own
-grant and therefore its own change to `Dummies` — and because it couples the two
+grant and therefore its own change to `JustDummies` — and because it couples the two
 packages' assembly identities for a capability that is not, in itself, private.
 
 ### Expose the scope without a replay snippet
@@ -124,7 +124,7 @@ does not invoke it.
 
 ### Positive
 
-* Any test framework can be adapted without privileged access to `Dummies` and
+* Any test framework can be adapted without privileged access to `JustDummies` and
   without a further change to it, so each additional adapter is an independent,
   additive decision.
 * A run whose seed an adapter pinned reports a replay snippet that matches
@@ -139,7 +139,7 @@ does not invoke it.
   isolated context. The documentation must keep the three distinct and say which
   one a reader wants.
 * The replay snippet is supplied by the caller and cannot be validated by
-  `Dummies`, so a badly phrased one degrades the diagnostic it was meant to
+  `JustDummies`, so a badly phrased one degrades the diagnostic it was meant to
   improve.
 
 ### Risks
@@ -165,10 +165,10 @@ does not invoke it.
 * ADR-0006 — Supply arbitrary test values from a single seedable source: the
   disposable-scope idiom this addition reuses, and the follow-up anticipating a
   test-framework adapter.
-* ADR-0011 — Host Dummies as a standalone package: the zero-dependency identity
+* ADR-0011 — Host JustDummies as a standalone package: the zero-dependency identity
   and the pre-1.0 latitude this decision relies on.
-* ADR-0026 — Rebase the testing package's arbitrary values on Dummies: the single
+* ADR-0026 — Rebase the testing package's arbitrary values on JustDummies: the single
   seed story this ambient source now carries.
-* ADR-0039 — Adapt Dummies to xUnit v3 through a companion package: the first
+* ADR-0039 — Adapt JustDummies to xUnit v3 through a companion package: the first
   consumer of this handle.
-* Issue #226 — the Dummies nice-to-have backlog where the adapter is tracked.
+* Issue #226 — the JustDummies nice-to-have backlog where the adapter is tracked.

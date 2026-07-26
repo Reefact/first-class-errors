@@ -27,7 +27,7 @@ l'attestation incluse tout en sautant les étapes de publication.
   release se versionne et se publie indépendamment sur son propre préfixe :
   `lib-v*.*.*` (FirstClassErrors + FirstClassErrors.Testing +
   FirstClassErrors.RequestBinder, en lockstep), `cli-v*.*.*` (l'outil .NET
-  `fce`), `dum-v*.*.*` (Dummies). P. ex. `lib-v1.2.3`, `cli-v1.2.3-beta.1`. Un
+  `fce`), `dum-v*.*.*` (JustDummies). P. ex. `lib-v1.2.3`, `cli-v1.2.3-beta.1`. Un
   push de tag publie. Le mapping des trains vit dans
   [`tools/trains.sh`](../../../../tools/trains.sh) ; le câblage complet est le
   runbook [Ajouter un train de release](../AddingAReleaseTrain.fr.md).

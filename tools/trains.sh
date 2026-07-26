@@ -24,7 +24,7 @@ trains_rows() {
   cat <<'ROWS'
 lib|lib-v|core,analyzers,testing,binder|CHANGELOG.md|FirstClassErrors, FirstClassErrors.Testing and FirstClassErrors.RequestBinder
 cli|cli-v|cli,gendoc|FirstClassErrors.Cli/CHANGELOG.md|FirstClassErrors.Cli (the fce .NET tool)
-dum|dum-v|dummies|Dummies/CHANGELOG.md|Dummies
+dum|dum-v|justdummies|JustDummies/CHANGELOG.md|JustDummies
 ROWS
 }
 

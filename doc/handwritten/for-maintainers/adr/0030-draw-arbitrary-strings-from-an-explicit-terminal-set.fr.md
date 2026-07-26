@@ -8,7 +8,7 @@
 
 ## Contexte
 
-`Dummies` fournit des valeurs arbitraires mais valides, avec des contraintes qui expriment ce que le code environnant
+`JustDummies` fournit des valeurs arbitraires mais valides, avec des contraintes qui expriment ce que le code environnant
 exige d'une valeur. Un besoin récurrent est une valeur dont le domaine est une **liste fixe et fermée** que le test
 n'assère pas — un code devise tiré d'une petite table, un libellé de statut, le nom d'une entreprise connue. La
 bibliothèque génère des formes **structurelles** (une longueur, une famille de caractères, un motif régulier) ; elle
@@ -122,7 +122,7 @@ conception, qui a sa place hors de la bibliothèque.
 
 ## Actions de suivi
 
-* Documenter le générateur dans le README du paquet `Dummies` (fait) et dans la documentation utilisateur lors de la
+* Documenter le générateur dans le README du paquet `JustDummies` (fait) et dans la documentation utilisateur lors de la
   prochaine révision de la surface des chaînes.
 * Garder exact le non-objectif « pas de fausses données réalistes » du README : `OneOf` tire dans des valeurs
   fournies par l'appelant et ne livre aucun jeu de données.
@@ -134,7 +134,7 @@ conception, qui a sa place hors de la bibliothèque.
 * ADR-0013 — Borner les collections distinctes par la cardinalité, sinon par un tirage borné (le contrat
   `ICardinalityHint`).
 * ADR-0006 — Fournir des valeurs de test arbitraires depuis une source unique seedable (la reproductibilité).
-* ADR-0011 — Héberger Dummies comme un paquet autonome dans ce dépôt (la frontière zéro-dépendance, sans jeu de
+* ADR-0011 — Héberger JustDummies comme un paquet autonome dans ce dépôt (la frontière zéro-dépendance, sans jeu de
   données).
-* Le type `AnyStringOneOf`, la méthode `AnyString.OneOf` et leurs tests dans le projet `Dummies` et
-  `Dummies.UnitTests`.
+* Le type `AnyStringOneOf`, la méthode `AnyString.OneOf` et leurs tests dans le projet `JustDummies` et
+  `JustDummies.UnitTests`.

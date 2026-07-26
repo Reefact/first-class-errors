@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Adds the .NET Framework 4.7.2 support-floor leg (gated by EnableNet472Floor) and owns the target
+       frameworks; exercised by the `framework-floor` job in .github/workflows/ci.yml. This carries JustDummies'
+       OWN contract suite onto the floor, running it against the netstandard2.0 asset that .NET Framework
+       consumers load — until now that asset was only exercised transitively (ADR-0022; issue #215). -->
+  <Import Project="..\build\Net472TestFloor.props" />
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="JetBrains.Annotations" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NFluent" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- JustDummies only: this test project deliberately references no FirstClassErrors project, so the
+         standalone boundary of the library under test stays visible in its own test bed. -->
+    <ProjectReference Include="..\JustDummies\JustDummies.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <!-- Three suites are saturated with .NET 8+ surface and cannot compile on the net472 floor: the modern
+       generators (DateOnly/TimeOnly/Int128/UInt128/Half), absent from the netstandard2.0 asset, and the
+       Math.BitIncrement / MathF / BitConverter.Half helpers (netstandard2.1+, absent from net472) used to build
+       their adjacent-value fixtures. They guard modern-.NET reachability and continuous-nudge behavior on
+       net10; on the floor the netstandard2.0 behavioral contract is exercised by the rest of the suite. The
+       other files' isolated net8-only draws are conditioned with `#if NET8_0_OR_GREATER` in-source. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Compile Remove="AnyModernTypeTests.cs" />
+    <Compile Remove="CrossEngineReachabilityTests.cs" />
+    <Compile Remove="ContinuousExclusionNudgeTests.cs" />
+  </ItemGroup>
+
+</Project>

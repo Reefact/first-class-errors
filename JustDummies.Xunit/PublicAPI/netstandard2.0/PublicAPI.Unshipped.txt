@@ -1,0 +1,7 @@
+#nullable enable
+JustDummies.Xunit.ReproducibleAttribute
+JustDummies.Xunit.ReproducibleAttribute.ReproducibleAttribute() -> void
+JustDummies.Xunit.ReproducibleAttribute.Seed.get -> int
+JustDummies.Xunit.ReproducibleAttribute.Seed.set -> void
+override JustDummies.Xunit.ReproducibleAttribute.After(System.Reflection.MethodInfo! methodUnderTest, Xunit.v3.IXunitTest! test) -> void
+override JustDummies.Xunit.ReproducibleAttribute.Before(System.Reflection.MethodInfo! methodUnderTest, Xunit.v3.IXunitTest! test) -> void

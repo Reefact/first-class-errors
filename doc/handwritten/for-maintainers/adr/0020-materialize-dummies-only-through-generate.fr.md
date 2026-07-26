@@ -8,7 +8,7 @@
 
 ## Contexte
 
-`Dummies` est une DSL fluide de générateurs typés porteurs de contraintes. Chaque
+`JustDummies` est une DSL fluide de générateurs typés porteurs de contraintes. Chaque
 générateur implémente `IAny<T>`, dont l'unique membre `Generate()` tire une valeur
 satisfaisant les contraintes déclarées ; les points de composition `As` et
 `Combine` construisent des générateurs plus larges et matérialisent leurs parties
@@ -45,7 +45,7 @@ bibliothèque (issue #190) :
   qu'utilisent les points de composition. C'est l'idiome dominant dans la suite de
   tests.
 
-Deux contraintes bornent le calendrier. `Dummies` est un package autonome
+Deux contraintes bornent le calendrier. `JustDummies` est un package autonome
 pré-1.0 dont l'API évoluera le plus dans ses premières itérations, et il n'est
 référencé que par son propre projet de test (ADR-0011) ; retirer une surface
 d'opérateurs publique est donc peu coûteux maintenant et deviendrait un
@@ -54,7 +54,7 @@ le contrat de ces conversions soit décidé et consigné avant ce `1.0`.
 
 ## Décision
 
-Les générateurs concrets de `Dummies` n'exposent aucune conversion implicite vers
+Les générateurs concrets de `JustDummies` n'exposent aucune conversion implicite vers
 leur type généré : une valeur n'est matérialisée que par `Generate()`, appelé
 directement ou par les points de composition `As` et `Combine` qui l'appellent en
 interne.
@@ -153,8 +153,8 @@ même la surprise de l'affectation à effet de bord sur les types qui les garden
 
 * Issue #190 — Définir et documenter le contrat des conversions implicites de
   générateurs.
-* ADR-0011 — Héberger Dummies comme package autonome (churn pré-1.0,
+* ADR-0011 — Héberger JustDummies comme package autonome (churn pré-1.0,
   auto-consommé).
 * ADR-0006 — Fournir des valeurs de test arbitraires depuis une source unique à
   graine.
-* `Dummies/IAny.cs` — le contrat `Generate()` par lequel passent ces générateurs.
+* `JustDummies/IAny.cs` — le contrat `Generate()` par lequel passent ces générateurs.

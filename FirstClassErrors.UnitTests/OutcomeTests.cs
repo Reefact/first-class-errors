@@ -16,7 +16,7 @@ public sealed class OutcomeTests {
     [Fact(DisplayName = "A successful outcome is marked as success.")]
     public void SuccessfulOutcomeIsMarkedAsSuccess() {
         // Exercise
-        Outcome<string> outcome = Outcome<string>.Success(Dummies.Any.String().NonEmpty().Generate());
+        Outcome<string> outcome = Outcome<string>.Success(JustDummies.Any.String().NonEmpty().Generate());
 
         // Verify
         Check.That(outcome.IsSuccess).IsTrue();
@@ -131,7 +131,7 @@ public sealed class OutcomeTests {
     [Fact(DisplayName = "ThrowIfFailure does nothing when the outcome is a success.")]
     public void ThrowIfFailureDoesNothingWhenTheOutcomeIsASuccess() {
         // Setup
-        Outcome<string> outcome = Outcome<string>.Success(Dummies.Any.String().NonEmpty().Generate());
+        Outcome<string> outcome = Outcome<string>.Success(JustDummies.Any.String().NonEmpty().Generate());
 
         // Exercise & verify
         Check.ThatCode(() => outcome.ThrowIfFailure()).DoesNotThrow();

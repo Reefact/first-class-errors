@@ -10,7 +10,7 @@ namespace FirstClassErrors.Testing.UnitTests;
 
 /// <summary>
 ///     Contract tests for the meaningful-enum factories: they must never yield the <c>Unknown</c> sentinel, which is
-///     the whole reason they exist next to a plain <c>Dummies.Any.Enum&lt;T&gt;()</c> draw.
+///     the whole reason they exist next to a plain <c>JustDummies.Any.Enum&lt;T&gt;()</c> draw.
 /// </summary>
 public sealed class MeaningfulEnumFactoryTests {
 

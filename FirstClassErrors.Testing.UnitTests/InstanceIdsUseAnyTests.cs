@@ -31,20 +31,20 @@ public sealed class InstanceIdsUseAnyTests {
         }
     }
 
-    [Fact(DisplayName = "Inside Dummies.Any.Reproducibly, InstanceIds.UseAny reproduces the same id sequence for a given seed.")]
+    [Fact(DisplayName = "Inside JustDummies.Any.Reproducibly, InstanceIds.UseAny reproduces the same id sequence for a given seed.")]
     public void UseAnyIsReproducibleUnderAReproduciblyScope() {
         Guid firstRunA  = Guid.Empty;
         Guid firstRunB  = Guid.Empty;
         Guid secondRunA = Guid.Empty;
         Guid secondRunB = Guid.Empty;
 
-        Dummies.Any.Reproducibly(7, () => {
+        JustDummies.Any.Reproducibly(7, () => {
             using (InstanceIds.UseAny()) {
                 firstRunA = AnError().InstanceId;
                 firstRunB = AnError().InstanceId;
             }
         });
-        Dummies.Any.Reproducibly(7, () => {
+        JustDummies.Any.Reproducibly(7, () => {
             using (InstanceIds.UseAny()) {
                 secondRunA = AnError().InstanceId;
                 secondRunB = AnError().InstanceId;

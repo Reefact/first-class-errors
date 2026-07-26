@@ -45,9 +45,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirstClassErrors.RequestBin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirstClassErrors.RequestBinder.UnitTests", "FirstClassErrors.RequestBinder.UnitTests\FirstClassErrors.RequestBinder.UnitTests.csproj", "{75EA57DD-0128-4EB9-ADBE-567BFF602A93}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dummies", "Dummies\Dummies.csproj", "{F2C739E7-6F2E-4256-9C87-9D6F1168DF4A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustDummies", "JustDummies\JustDummies.csproj", "{F2C739E7-6F2E-4256-9C87-9D6F1168DF4A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dummies.UnitTests", "Dummies.UnitTests\Dummies.UnitTests.csproj", "{BC4F2BE8-55C9-4AA4-90FA-699EC83A8985}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustDummies.UnitTests", "JustDummies.UnitTests\JustDummies.UnitTests.csproj", "{BC4F2BE8-55C9-4AA4-90FA-699EC83A8985}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirstClassErrors.RequestBinder.PropertyTests", "FirstClassErrors.RequestBinder.PropertyTests\FirstClassErrors.RequestBinder.PropertyTests.csproj", "{1FC2C501-8842-4ABE-845E-000ED6575DD6}"
 EndProject
@@ -59,9 +59,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirstClassErrors.RequestBin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirstClassErrors.Testing.UnitTests", "FirstClassErrors.Testing.UnitTests\FirstClassErrors.Testing.UnitTests.csproj", "{74E68697-7C00-401C-84A9-7BF8DAFD9D34}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dummies.Xunit", "Dummies.Xunit\Dummies.Xunit.csproj", "{BF67DBAE-EBE1-45CE-86E5-B2E9E3D4EF6B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustDummies.Xunit", "JustDummies.Xunit\JustDummies.Xunit.csproj", "{BF67DBAE-EBE1-45CE-86E5-B2E9E3D4EF6B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dummies.Xunit.UnitTests", "Dummies.Xunit.UnitTests\Dummies.Xunit.UnitTests.csproj", "{75FD5E2C-A871-4659-8A01-13461FED84EB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JustDummies.Xunit.UnitTests", "JustDummies.Xunit.UnitTests\JustDummies.Xunit.UnitTests.csproj", "{75FD5E2C-A871-4659-8A01-13461FED84EB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

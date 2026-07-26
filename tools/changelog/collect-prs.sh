@@ -7,7 +7,7 @@
 # labels or by the pull request title:
 #   lib -> scopes core, analyzers, testing, binder (FirstClassErrors + .Testing + .RequestBinder)
 #   cli -> scopes cli, gendoc                      (the fce tool: CLI + GenDoc + worker)
-#   dum -> scope dummies                           (the standalone Dummies library)
+#   dum -> scope justdummies                           (the standalone JustDummies library)
 # A pull request is kept when at least one of its commits carries a scope in the
 # train's set. Pull requests whose commits are all scopeless infrastructure
 # (bare `ci:` / `chore:` / `docs:` ...) belong to neither train and are dropped —
