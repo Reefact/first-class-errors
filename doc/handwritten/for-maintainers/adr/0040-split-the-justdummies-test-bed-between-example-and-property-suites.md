@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0040-split-the-justdummies-test-bed-between-example-and-property-suites.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-07-26
 **Decision Makers:** Reefact
 
