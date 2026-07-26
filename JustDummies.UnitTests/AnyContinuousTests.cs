@@ -6,17 +6,16 @@ using NFluent;
 
 namespace JustDummies.UnitTests;
 
+/// <summary>
+///     The example-based half of the continuous generators' contract: conflict messages, the named domain
+///     extremes, the exclusion families the property suite leaves alone, and the seeded regression for issue
+///     #206. Containment, strictness, inclusiveness, sign handling and the rejection of non-finite arguments
+///     hold for <i>every</i> bound and are quantified in <c>JustDummies.PropertyTests</c> (ADR-0040); the #206
+///     regression stays here because it pins the interval where the defect actually occurred.
+/// </summary>
 public sealed class AnyContinuousTests {
 
     private const int SampleCount = 200;
-
-    [Fact(DisplayName = "Double: unconstrained draws are always finite.")]
-    public void DoubleIsFinite() {
-        for (int i = 0; i < SampleCount; i++) {
-            double value = Any.Double().Generate();
-            Check.That(double.IsNaN(value) || double.IsInfinity(value)).IsFalse();
-        }
-    }
 
     [Fact(DisplayName = "Double: sign constraints are strict, Zero pins, NonZero excludes.")]
     public void DoubleSignFamily() {
@@ -44,15 +43,6 @@ public sealed class AnyContinuousTests {
         Check.That(conflict.Message).Contains("LessThan(10)");
         Check.That(conflict.Message).Contains("GreaterThan(100)");
         Check.ThatCode(() => Any.Double().GreaterThan(double.MaxValue)).Throws<ConflictingAnyConstraintException>();
-    }
-
-    [Fact(DisplayName = "Double: non-finite arguments are rejected as argument errors.")]
-    public void DoubleRejectsNonFinite() {
-        Check.ThatCode(() => Any.Double().GreaterThan(double.NaN)).Throws<ArgumentException>();
-        Check.ThatCode(() => Any.Double().LessThan(double.PositiveInfinity)).Throws<ArgumentException>();
-        Check.ThatCode(() => Any.Double().Between(double.NegativeInfinity, 0d)).Throws<ArgumentException>();
-        Check.ThatCode(() => Any.Double().OneOf(1d, double.NaN)).Throws<ArgumentException>();
-        Check.ThatCode(() => Any.Double().Between(10d, 1d)).Throws<ArgumentException>();
     }
 
     [Fact(DisplayName = "Double: OneOf stays within and Except/DifferentFrom never yield the excluded value.")]

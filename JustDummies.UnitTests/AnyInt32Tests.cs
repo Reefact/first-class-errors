@@ -8,6 +8,13 @@ using NFluent;
 
 namespace JustDummies.UnitTests;
 
+/// <summary>
+///     The example-based half of <see cref="AnyInt32" />'s contract: what a conflict message must name, which
+///     arguments are rejected outright, that the named domain extremes are generable, and that a bounded range
+///     is actually reached. The invariants that hold for <i>every</i> bound — containment, strictness,
+///     inclusiveness, exclusion, immutability — are quantified over generated bounds in
+///     <c>JustDummies.PropertyTests</c> instead, and are deliberately not restated here (ADR-0040).
+/// </summary>
 [TestSubject(typeof(AnyInt32))]
 public sealed class AnyInt32Tests {
 
@@ -54,19 +61,6 @@ public sealed class AnyInt32Tests {
         }
     }
 
-    [Fact(DisplayName = "Between yields values within the inclusive bounds.")]
-    public void BetweenStaysWithinBounds() {
-        foreach (int value in Samples(Any.Int32().Between(10, 20))) {
-            Check.That(value).IsGreaterOrEqualThan(10);
-            Check.That(value).IsLessOrEqualThan(20);
-        }
-    }
-
-    [Fact(DisplayName = "Between with equal bounds pins the value.")]
-    public void BetweenWithEqualBoundsPins() {
-        Check.That(Any.Int32().Between(5, 5).Generate()).IsEqualTo(5);
-    }
-
     [Fact(DisplayName = "Between eventually reaches both inclusive bounds.")]
     public void BetweenReachesItsBounds() {
         HashSet<int> seen = new(Samples(Any.Int32().Between(1, 3)));
@@ -75,45 +69,10 @@ public sealed class AnyInt32Tests {
         Check.That(seen.Contains(3)).IsTrue();
     }
 
-    [Fact(DisplayName = "GreaterThan is exclusive, GreaterThanOrEqualTo is inclusive.")]
-    public void LowerBoundsAreExactlyExclusiveOrInclusive() {
-        foreach (int value in Samples(Any.Int32().GreaterThan(10).LessThanOrEqualTo(12))) {
-            Check.That(value).IsGreaterOrEqualThan(11);
-        }
-
-        HashSet<int> seen = new(Samples(Any.Int32().GreaterThanOrEqualTo(10).LessThanOrEqualTo(11)));
-        Check.That(seen.Contains(10)).IsTrue();
-    }
-
-    [Fact(DisplayName = "LessThan is exclusive, LessThanOrEqualTo is inclusive.")]
-    public void UpperBoundsAreExactlyExclusiveOrInclusive() {
-        foreach (int value in Samples(Any.Int32().LessThan(10).GreaterThanOrEqualTo(8))) {
-            Check.That(value).IsLessOrEqualThan(9);
-        }
-
-        HashSet<int> seen = new(Samples(Any.Int32().LessThanOrEqualTo(10).GreaterThanOrEqualTo(9)));
-        Check.That(seen.Contains(10)).IsTrue();
-    }
-
     [Fact(DisplayName = "The extreme bounds of the Int32 range are generable.")]
     public void ExtremeBoundsAreGenerable() {
         Check.That(Any.Int32().LessThanOrEqualTo(int.MinValue).Generate()).IsEqualTo(int.MinValue);
         Check.That(Any.Int32().GreaterThanOrEqualTo(int.MaxValue).Generate()).IsEqualTo(int.MaxValue);
-    }
-
-    [Fact(DisplayName = "OneOf yields only the supplied values.")]
-    public void OneOfStaysWithinTheSuppliedValues() {
-        int[] allowed = [1, 5, 9];
-        foreach (int value in Samples(Any.Int32().OneOf(allowed))) {
-            Check.That(allowed.Contains(value)).IsTrue();
-        }
-    }
-
-    [Fact(DisplayName = "Except never yields an excluded value.")]
-    public void ExceptNeverYieldsAnExcludedValue() {
-        foreach (int value in Samples(Any.Int32().Between(1, 3).Except(2))) {
-            Check.That(value).IsNotEqualTo(2);
-        }
     }
 
     [Fact(DisplayName = "DifferentFrom never yields the excluded value.")]
@@ -179,28 +138,12 @@ public sealed class AnyInt32Tests {
         Check.ThatCode(() => Any.Int32().OneOf(1, 2).Except(1).Except(2)).Throws<ConflictingAnyConstraintException>();
     }
 
-    [Fact(DisplayName = "Between with crossed arguments is an argument error, not a conflict.")]
-    public void BetweenWithCrossedArgumentsIsAnArgumentError() {
-        Check.ThatCode(() => Any.Int32().Between(10, 1)).Throws<ArgumentException>();
-    }
-
     [Fact(DisplayName = "OneOf and Except reject null or empty value lists.")]
     public void OneOfAndExceptRejectNullOrEmpty() {
         Check.ThatCode(() => Any.Int32().OneOf()).Throws<ArgumentException>();
         Check.ThatCode(() => Any.Int32().OneOf(null!)).Throws<ArgumentNullException>();
         Check.ThatCode(() => Any.Int32().Except()).Throws<ArgumentException>();
         Check.ThatCode(() => Any.Int32().Except(null!)).Throws<ArgumentNullException>();
-    }
-
-    [Fact(DisplayName = "A constrained generator is a new instance: the original is unchanged.")]
-    public void ConstrainingReturnsANewGenerator() {
-        AnyInt32 original    = Any.Int32().Between(1, 10);
-        AnyInt32 constrained = original.GreaterThanOrEqualTo(10);
-
-        Check.That(ReferenceEquals(constrained, original)).IsFalse();
-        // The original still generates over its own, wider domain.
-        HashSet<int> seen = new(Samples(original));
-        Check.That(seen.Count).IsStrictlyGreaterThan(1);
     }
 
 }
