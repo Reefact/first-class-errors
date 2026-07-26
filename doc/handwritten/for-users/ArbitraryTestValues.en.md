@@ -87,6 +87,26 @@ Dummies.Any.Reproducibly(1234, () => {
 
 Reproducing a run needs the same sequence of draws, so a body whose order depends on non-deterministic external state is not fully replayable from the seed alone. There is also an asynchronous overload, `Dummies.Any.Reproducibly(Func<Task>)`, for `async` test bodies. Because the factories, the primitives, and the clock and id seams below all draw from the same ambient source, one `Reproducibly` scope replays them together.
 
+### Pinning the seed without a body to wrap
+
+`Reproducibly` needs a delegate. A caller that observes a test from the outside — a test-framework adapter running code *before* and *after* the test method — has no such delegate, so it pins the ambient source with a scope it opens and disposes itself:
+
+```csharp
+IDisposable scope = Dummies.Any.UseSeed(1234);
+// ... the test runs ...
+scope.Dispose();
+```
+
+The scope flows with the execution context and nests exactly like `Reproducibly`, and disposing restores whatever was pinned before. What it does **not** do is report the seed when the test fails: whoever opens the scope owns telling the reader which seed to replay.
+
+That ownership extends to the replay instruction. When a generator itself fails, the `AnyGenerationException` message names how to replay the run — by default `Any.Reproducibly(1234, ...)`, which is the wrong instruction for a test that contains no such call. A caller that pins the seed from outside says so, and its instruction is quoted verbatim instead:
+
+```csharp
+Dummies.Any.UseSeed(1234, "[Reproducible(Seed = 1234)]");
+```
+
+Inside a test body, prefer `Reproducibly`: it reports the seed for you. Reach for `UseSeed` only when there is no body to wrap.
+
 ## Arbitrary `OccurredAt` and `InstanceId`
 
 Occurrence data is arbitrary in the same sense: a test often needs it stable without asserting the exact instant or id. The clock and instance-id seams therefore pair a `UseAny` with their `UseFixed`. `Clock.UseAny()` freezes a single arbitrary instant for the scope, while `InstanceIds.UseAny()` hands each error its own distinct arbitrary id:
