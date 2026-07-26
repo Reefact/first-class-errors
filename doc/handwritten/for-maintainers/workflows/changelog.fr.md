@@ -30,7 +30,7 @@ changelog **distincts** :
 | --- | --- | --- |
 | `lib` | `core`, `analyzers`, `testing`, `binder` | [`CHANGELOG.md`](../../../../CHANGELOG.md) |
 | `cli` | `cli`, `gendoc` | [`FirstClassErrors.Cli/CHANGELOG.md`](../../../../FirstClassErrors.Cli/CHANGELOG.md) |
-| `dum` | `dummies` | [`Dummies/CHANGELOG.md`](../../../../Dummies/CHANGELOG.md) |
+| `dum` | `justdummies` | [`JustDummies/CHANGELOG.md`](../../../../JustDummies/CHANGELOG.md) |
 
 ## Quand il s'exécute
 

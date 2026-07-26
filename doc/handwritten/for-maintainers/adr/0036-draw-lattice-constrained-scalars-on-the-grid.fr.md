@@ -8,7 +8,7 @@
 
 ## Contexte
 
-Dummies construit un scalaire directement pour satisfaire ses contraintes — jamais généré-puis-filtré —, détecte les contradictions au moment de la déclaration, et évite les boucles de nouvelles tentatives cachées et non bornées. Un générateur scalaire qui existe peut toujours générer, en un seul tirage. Les types à projection ordinale (les entiers, les temporels) tirent le k-ième ordinal non exclu du domaine en une passe sur un espace ordinal affine et préservant l'ordre ; le `decimal` tire un candidat et le décale dans un budget borné.
+JustDummies construit un scalaire directement pour satisfaire ses contraintes — jamais généré-puis-filtré —, détecte les contradictions au moment de la déclaration, et évite les boucles de nouvelles tentatives cachées et non bornées. Un générateur scalaire qui existe peut toujours générer, en un seul tirage. Les types à projection ordinale (les entiers, les temporels) tirent le k-ième ordinal non exclu du domaine en une passe sur un espace ordinal affine et préservant l'ordre ; le `decimal` tire un candidat et le décale dans un budget borné.
 
 Un besoin récurrent est celui d'une valeur qui doit se situer sur une grille régulière : un multiple d'une unité (un montant en centimes entiers, une quantité à la douzaine), un `decimal` exprimable en un nombre fixe de décimales (un montant monétaire), ou un instant rond (une seconde pleine, un quart d'heure, un jour plein). Ce sont des invariants du code testé — un value object ou une précondition de contrat que la valeur doit respecter —, non ce que le test vérifie.
 
@@ -28,7 +28,7 @@ Tirer sur la grille préserve l'invariant du tirage unique et sans nouvelle tent
 
 Le réseau est refusé aux flottants binaires parce qu'une grille décimale n'y est pas exactement représentable ; l'offrir rendrait des valeurs hors grille sous une promesse que le type ne peut tenir. Il se déclare une seule fois — un second réseau différent entre en conflit plutôt que de s'intersecter silencieusement —, à l'image de la règle « déclaré une seule fois » qu'utilise déjà la liste d'autorisation, et cela épargne une combinaison par plus petit commun multiple que la demande ne justifie pas. Exposer une seule capacité du moteur comme `MultipleOf` sur les entiers et `WithGranularity` sur les temporels est ce qui permet à une seule dimension de servir les deux familles, de sorte qu'un correctif de la logique de grille atteint tous les types d'un coup.
 
-L'arithmétique du pas, le calage-et-décalage décimal et la formulation des messages de conflit relèvent de l'implémentation, documentée dans le code `Dummies` (`OrdinalIntervalSpec`, `WideIntervalSpec`, `DecimalIntervalSpec`) et dans la documentation utilisateur de Dummies — pas ici.
+L'arithmétique du pas, le calage-et-décalage décimal et la formulation des messages de conflit relèvent de l'implémentation, documentée dans le code `JustDummies` (`OrdinalIntervalSpec`, `WideIntervalSpec`, `DecimalIntervalSpec`) et dans la documentation utilisateur de JustDummies — pas ici.
 
 ## Alternatives envisagées
 
@@ -72,7 +72,7 @@ Envisagée parce que « multiple de 4 et de 6 » est mathématiquement « multip
 
 ## Actions de suivi
 
-* Documenter `MultipleOf`/`WithScale`/`WithGranularity` dans le readme de Dummies et la documentation des builders (fait dans la pull request d'implémentation).
+* Documenter `MultipleOf`/`WithScale`/`WithGranularity` dans le readme de JustDummies et la documentation des builders (fait dans la pull request d'implémentation).
 * N'ajouter le sucre temporel `WholeSeconds()`/`WholeDays()` que si la demande apparaît ; le `WithGranularity(TimeSpan)` général le couvre en attendant.
 * Ne revisiter la combinaison par plus petit commun multiple des réseaux répétés que si l'usage réel montre que la règle « déclaré une seule fois » est trop stricte.
 
@@ -81,4 +81,4 @@ Envisagée parce que « multiple de 4 et de 6 » est mathématiquement « multip
 * Issue [#226](https://github.com/Reefact/first-class-errors/issues/226) — le backlog piloté par la demande qui recense `MultipleOf`/`WithScale` et la granularité temporelle.
 * [ADR-0013](0013-gate-distinct-collections-by-cardinality-else-bounded-draw.md) — l'indice de cardinalité qu'un réseau alimente, et le frère du tirage borné.
 * [ADR-0020](0020-materialize-dummies-only-through-generate.md) — les dummies ne se matérialisent qu'à travers `Generate()`.
-* `OrdinalIntervalSpec`, `WideIntervalSpec`, `DecimalIntervalSpec` et les builders concernés dans le projet `Dummies` ; le readme NuGet de Dummies.
+* `OrdinalIntervalSpec`, `WideIntervalSpec`, `DecimalIntervalSpec` et les builders concernés dans le projet `JustDummies` ; le readme NuGet de JustDummies.

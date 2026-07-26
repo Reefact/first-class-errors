@@ -8,7 +8,7 @@
 
 ## Contexte
 
-`Dummies` fournit des valeurs arbitraires mais valides depuis une source unique et seedable, de sorte que tout run est
+`JustDummies` fournit des valeurs arbitraires mais valides depuis une source unique et seedable, de sorte que tout run est
 reproductible à partir d'un seed reporté (ADR-0006). Un besoin récurrent est une valeur dont le domaine est un
 **ensemble fermé que l'appelant détient déjà** — l'une des devises pour lesquelles un contexte est configuré, l'une des
 commandes déjà présentes dans une fixture, l'un d'une poignée d'états métier sur lesquels le test ne porte aucune
@@ -39,7 +39,7 @@ Plusieurs faits existants cadrent le choix :
   opérande, donc — contrairement à `Combine`/`ListOf`/`SetOf` — elle doit exister à la fois sur `Any` (ambiant) et
   `AnyContext` (seedé) ; la garde de parité de surface traite une telle factory comme une factory scalaire et exige le
   miroir.
-* L'audit d'architecture et de conception de Dummies du 2026-07-20 (§10) classe cet ajout comme le Must-Have à plus
+* L'audit d'architecture et de conception de JustDummies du 2026-07-20 (§10) classe cet ajout comme le Must-Have à plus
   fort levier : chaque consommateur, presque chaque semaine.
 
 ## Décision
@@ -143,7 +143,7 @@ forme qui convienne.
 
 ## Actions de suivi
 
-* Documenter `OneOf`/`ElementOf` dans le guide utilisateur de Dummies (`ArbitraryTestValues.en.md`) et sa traduction
+* Documenter `OneOf`/`ElementOf` dans le guide utilisateur de JustDummies (`ArbitraryTestValues.en.md`) et sa traduction
   française, ainsi que dans le README du package (`README.nuget.md`), avec un exemple.
 * Garder le miroir `Any`↔`AnyContext` au vert (imposé par `SurfaceParityTests`).
 * Envisager d'aligner les messages d'élément `null` du générateur de chaînes et du générateur générique lors de la
@@ -160,6 +160,6 @@ forme qui convienne.
   combinateurs, sont exemptés).
 * ADR-0020 — Ne matérialiser les dummies qu'à travers `Generate()`.
 * Issue [#223](https://github.com/Reefact/first-class-errors/issues/223) et l'audit d'architecture et de conception de
-  Dummies du 2026-07-20 (§10 Must-Have).
+  JustDummies du 2026-07-20 (§10 Must-Have).
 * Le type `AnyOneOf<T>`, les factories `Any.OneOf`/`Any.ElementOf` et `AnyContext.OneOf`/`AnyContext.ElementOf`, et
-  leurs tests dans le projet `Dummies` et `Dummies.UnitTests`.
+  leurs tests dans le projet `JustDummies` et `JustDummies.UnitTests`.

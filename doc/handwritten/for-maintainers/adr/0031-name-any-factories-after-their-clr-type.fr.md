@@ -8,7 +8,7 @@
 
 ## Contexte
 
-* `Dummies` expose un point d'entrée statique `Any` dont les fabriques sans paramètre démarrent
+* `JustDummies` expose un point d'entrée statique `Any` dont les fabriques sans paramètre démarrent
   chacune un générateur pour un type simple .NET — `Any.Int32()`, `Any.SByte()`,
   `Any.Single()`, `Any.UInt64()`, `Any.String()`, `Any.Guid()`, `Any.DateTime()`, … — et
   retournent chacune un type builder nommé `Any{Nom}` (`Any.Int32()` retourne `AnyInt32`).
@@ -24,10 +24,10 @@
   `BitConverter.ToInt32` / `ToBoolean` — jamais `ToBool`, `ToFloat` ou `ToInt`.
 * Une fabrique déviait : `Any.Bool()`, retournant `AnyBool`, produisait un `System.Boolean`,
   dont le nom CLR est `Boolean`. C'était le seul membre de la surface scalaire non nommé d'après
-  son type CLR. L'audit d'architecture et de conception de Dummies du 2026-07-20 l'a mis en
+  son type CLR. L'audit d'architecture et de conception de JustDummies du 2026-07-20 l'a mis en
   évidence (§8.2, §8.4) et a recommandé que le choix soit tranché délibérément et consigné avant
   la publication.
-* `Dummies` est en pré-publication : aucun tag `dum-v*`, aucun consommateur NuGet externe, une
+* `JustDummies` est en pré-publication : aucun tag `dum-v*`, aucun consommateur NuGet externe, une
   section *Unreleased* de changelog vide. Renommer une fabrique publique et un type builder
   public est un changement cassant dès que des consommateurs en dépendent, et ne coûte rien avant
   la première publication.
@@ -124,9 +124,9 @@ sans coût.
 ## Actions de suivi
 
 * Renommer `Any.Bool()` / `AnyContext.Bool()` / `AnyBool` en `Boolean` / `AnyBoolean`, et mettre
-  à jour les tests, la sonde d'artefact empaqueté `dummies-check` et le README du package *(fait
+  à jour les tests, la sonde d'artefact empaqueté `justdummies-check` et le README du package *(fait
   dans ce changement)*.
-* Ajouter le garde de parité de nommage à `Dummies.UnitTests` *(fait dans ce changement)*.
+* Ajouter le garde de parité de nommage à `JustDummies.UnitTests` *(fait dans ce changement)*.
 
 ## Références
 
@@ -135,6 +135,6 @@ sans coût.
 * ADR-0007 — nommer les terminaux du binder New et Create ; précédent de décision de nommage.
 * ADR-0020 — matérialiser les dummies uniquement via Generate() ; partage le cadrage pré-1.0 du
   « moment le moins cher pour décider ».
-* Audit d'architecture et de conception de Dummies du 2026-07-20, §8.2 et §8.4 — a mis en
+* Audit d'architecture et de conception de JustDummies du 2026-07-20, §8.2 et §8.4 — a mis en
   évidence la déviation.
 * Issue #222.

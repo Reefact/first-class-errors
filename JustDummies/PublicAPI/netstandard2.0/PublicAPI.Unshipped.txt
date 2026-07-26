@@ -1,0 +1,426 @@
+#nullable enable
+JustDummies.Any
+JustDummies.AnyArray<T>
+JustDummies.AnyArray<T>.Distinct() -> JustDummies.AnyArray<T>!
+JustDummies.AnyArray<T>.Distinct(System.Collections.Generic.IEqualityComparer<T>! comparer) -> JustDummies.AnyArray<T>!
+JustDummies.AnyBoolean
+JustDummies.AnyBoolean.DifferentFrom(bool value) -> JustDummies.AnyBoolean!
+JustDummies.AnyBoolean.False() -> JustDummies.AnyBoolean!
+JustDummies.AnyBoolean.Generate() -> bool
+JustDummies.AnyBoolean.True() -> JustDummies.AnyBoolean!
+JustDummies.AnyByte
+JustDummies.AnyByte.Between(byte minimum, byte maximum) -> JustDummies.AnyByte!
+JustDummies.AnyByte.DifferentFrom(byte value) -> JustDummies.AnyByte!
+JustDummies.AnyByte.Except(params byte[]! values) -> JustDummies.AnyByte!
+JustDummies.AnyByte.Generate() -> byte
+JustDummies.AnyByte.GreaterThan(byte value) -> JustDummies.AnyByte!
+JustDummies.AnyByte.GreaterThanOrEqualTo(byte value) -> JustDummies.AnyByte!
+JustDummies.AnyByte.LessThan(byte value) -> JustDummies.AnyByte!
+JustDummies.AnyByte.LessThanOrEqualTo(byte value) -> JustDummies.AnyByte!
+JustDummies.AnyByte.MultipleOf(byte value) -> JustDummies.AnyByte!
+JustDummies.AnyByte.NonZero() -> JustDummies.AnyByte!
+JustDummies.AnyByte.OneOf(params byte[]! values) -> JustDummies.AnyByte!
+JustDummies.AnyByte.Zero() -> JustDummies.AnyByte!
+JustDummies.AnyChar
+JustDummies.AnyChar.Alpha() -> JustDummies.AnyChar!
+JustDummies.AnyChar.AlphaNumeric() -> JustDummies.AnyChar!
+JustDummies.AnyChar.DifferentFrom(char value) -> JustDummies.AnyChar!
+JustDummies.AnyChar.Except(params char[]! values) -> JustDummies.AnyChar!
+JustDummies.AnyChar.Generate() -> char
+JustDummies.AnyChar.LowerCase() -> JustDummies.AnyChar!
+JustDummies.AnyChar.Numeric() -> JustDummies.AnyChar!
+JustDummies.AnyChar.OneOf(params char[]! values) -> JustDummies.AnyChar!
+JustDummies.AnyChar.UpperCase() -> JustDummies.AnyChar!
+JustDummies.AnyCollection<TItem, TResult, TSelf>
+JustDummies.AnyCollection<TItem, TResult, TSelf>.Containing(TItem value) -> TSelf!
+JustDummies.AnyCollection<TItem, TResult, TSelf>.ContainingAny(JustDummies.IAny<TItem>! generator) -> TSelf!
+JustDummies.AnyCollection<TItem, TResult, TSelf>.Empty() -> TSelf!
+JustDummies.AnyCollection<TItem, TResult, TSelf>.Generate() -> TResult
+JustDummies.AnyCollection<TItem, TResult, TSelf>.NonEmpty() -> TSelf!
+JustDummies.AnyCollection<TItem, TResult, TSelf>.WithCount(int count) -> TSelf!
+JustDummies.AnyCollection<TItem, TResult, TSelf>.WithCountBetween(int minimum, int maximum) -> TSelf!
+JustDummies.AnyCollection<TItem, TResult, TSelf>.WithMaxCount(int count) -> TSelf!
+JustDummies.AnyCollection<TItem, TResult, TSelf>.WithMinCount(int count) -> TSelf!
+JustDummies.AnyContext
+JustDummies.AnyContext.Boolean() -> JustDummies.AnyBoolean!
+JustDummies.AnyContext.Byte() -> JustDummies.AnyByte!
+JustDummies.AnyContext.Char() -> JustDummies.AnyChar!
+JustDummies.AnyContext.DateTime() -> JustDummies.AnyDateTime!
+JustDummies.AnyContext.DateTimeOffset() -> JustDummies.AnyDateTimeOffset!
+JustDummies.AnyContext.Decimal() -> JustDummies.AnyDecimal!
+JustDummies.AnyContext.Double() -> JustDummies.AnyDouble!
+JustDummies.AnyContext.ElementOf<T>(System.Collections.Generic.IEnumerable<T>! values) -> JustDummies.AnyOneOf<T>!
+JustDummies.AnyContext.ElementOf<T>(System.Collections.Generic.IReadOnlyList<T>! values) -> JustDummies.AnyOneOf<T>!
+JustDummies.AnyContext.Enum<TEnum>() -> JustDummies.AnyEnum<TEnum>!
+JustDummies.AnyContext.Guid() -> JustDummies.AnyGuid!
+JustDummies.AnyContext.Int16() -> JustDummies.AnyInt16!
+JustDummies.AnyContext.Int32() -> JustDummies.AnyInt32!
+JustDummies.AnyContext.Int64() -> JustDummies.AnyInt64!
+JustDummies.AnyContext.OneOf<T>(params T[]! values) -> JustDummies.AnyOneOf<T>!
+JustDummies.AnyContext.SByte() -> JustDummies.AnySByte!
+JustDummies.AnyContext.Seed.get -> int
+JustDummies.AnyContext.Single() -> JustDummies.AnySingle!
+JustDummies.AnyContext.String() -> JustDummies.AnyString!
+JustDummies.AnyContext.StringMatching(string! pattern) -> JustDummies.AnyPattern!
+JustDummies.AnyContext.StringMatching(System.Text.RegularExpressions.Regex! pattern) -> JustDummies.AnyPattern!
+JustDummies.AnyContext.TimeSpan() -> JustDummies.AnyTimeSpan!
+JustDummies.AnyContext.UInt16() -> JustDummies.AnyUInt16!
+JustDummies.AnyContext.UInt32() -> JustDummies.AnyUInt32!
+JustDummies.AnyContext.UInt64() -> JustDummies.AnyUInt64!
+JustDummies.AnyContext.Uri() -> JustDummies.AnyUri!
+JustDummies.AnyDateTime
+JustDummies.AnyDateTime.After(System.DateTime instant) -> JustDummies.AnyDateTime!
+JustDummies.AnyDateTime.AfterOrEqualTo(System.DateTime instant) -> JustDummies.AnyDateTime!
+JustDummies.AnyDateTime.Before(System.DateTime instant) -> JustDummies.AnyDateTime!
+JustDummies.AnyDateTime.BeforeOrEqualTo(System.DateTime instant) -> JustDummies.AnyDateTime!
+JustDummies.AnyDateTime.Between(System.DateTime start, System.DateTime end) -> JustDummies.AnyDateTime!
+JustDummies.AnyDateTime.DifferentFrom(System.DateTime value) -> JustDummies.AnyDateTime!
+JustDummies.AnyDateTime.Except(params System.DateTime[]! values) -> JustDummies.AnyDateTime!
+JustDummies.AnyDateTime.Generate() -> System.DateTime
+JustDummies.AnyDateTime.OneOf(params System.DateTime[]! values) -> JustDummies.AnyDateTime!
+JustDummies.AnyDateTime.WithGranularity(System.TimeSpan granularity) -> JustDummies.AnyDateTime!
+JustDummies.AnyDateTimeOffset
+JustDummies.AnyDateTimeOffset.After(System.DateTimeOffset instant) -> JustDummies.AnyDateTimeOffset!
+JustDummies.AnyDateTimeOffset.AfterOrEqualTo(System.DateTimeOffset instant) -> JustDummies.AnyDateTimeOffset!
+JustDummies.AnyDateTimeOffset.Before(System.DateTimeOffset instant) -> JustDummies.AnyDateTimeOffset!
+JustDummies.AnyDateTimeOffset.BeforeOrEqualTo(System.DateTimeOffset instant) -> JustDummies.AnyDateTimeOffset!
+JustDummies.AnyDateTimeOffset.Between(System.DateTimeOffset start, System.DateTimeOffset end) -> JustDummies.AnyDateTimeOffset!
+JustDummies.AnyDateTimeOffset.DifferentFrom(System.DateTimeOffset value) -> JustDummies.AnyDateTimeOffset!
+JustDummies.AnyDateTimeOffset.Except(params System.DateTimeOffset[]! values) -> JustDummies.AnyDateTimeOffset!
+JustDummies.AnyDateTimeOffset.Generate() -> System.DateTimeOffset
+JustDummies.AnyDateTimeOffset.OneOf(params System.DateTimeOffset[]! values) -> JustDummies.AnyDateTimeOffset!
+JustDummies.AnyDateTimeOffset.WithGranularity(System.TimeSpan granularity) -> JustDummies.AnyDateTimeOffset!
+JustDummies.AnyDateTimeOffset.WithOffset(System.TimeSpan offset) -> JustDummies.AnyDateTimeOffset!
+JustDummies.AnyDateTimeOffset.WithOffsetBetween(System.TimeSpan minimum, System.TimeSpan maximum) -> JustDummies.AnyDateTimeOffset!
+JustDummies.AnyDecimal
+JustDummies.AnyDecimal.Between(decimal minimum, decimal maximum) -> JustDummies.AnyDecimal!
+JustDummies.AnyDecimal.DifferentFrom(decimal value) -> JustDummies.AnyDecimal!
+JustDummies.AnyDecimal.Except(params decimal[]! values) -> JustDummies.AnyDecimal!
+JustDummies.AnyDecimal.Generate() -> decimal
+JustDummies.AnyDecimal.GreaterThan(decimal value) -> JustDummies.AnyDecimal!
+JustDummies.AnyDecimal.GreaterThanOrEqualTo(decimal value) -> JustDummies.AnyDecimal!
+JustDummies.AnyDecimal.LessThan(decimal value) -> JustDummies.AnyDecimal!
+JustDummies.AnyDecimal.LessThanOrEqualTo(decimal value) -> JustDummies.AnyDecimal!
+JustDummies.AnyDecimal.Negative() -> JustDummies.AnyDecimal!
+JustDummies.AnyDecimal.NonZero() -> JustDummies.AnyDecimal!
+JustDummies.AnyDecimal.OneOf(params decimal[]! values) -> JustDummies.AnyDecimal!
+JustDummies.AnyDecimal.Positive() -> JustDummies.AnyDecimal!
+JustDummies.AnyDecimal.WithScale(int scale) -> JustDummies.AnyDecimal!
+JustDummies.AnyDecimal.Zero() -> JustDummies.AnyDecimal!
+JustDummies.AnyDictionary<TKey, TValue>
+JustDummies.AnyDictionary<TKey, TValue>.ContainingAnyKey(JustDummies.IAny<TKey>! generator) -> JustDummies.AnyDictionary<TKey, TValue>!
+JustDummies.AnyDictionary<TKey, TValue>.ContainingEntry(TKey key, TValue value) -> JustDummies.AnyDictionary<TKey, TValue>!
+JustDummies.AnyDictionary<TKey, TValue>.ContainingKey(TKey key) -> JustDummies.AnyDictionary<TKey, TValue>!
+JustDummies.AnyDictionary<TKey, TValue>.Empty() -> JustDummies.AnyDictionary<TKey, TValue>!
+JustDummies.AnyDictionary<TKey, TValue>.Generate() -> System.Collections.Generic.Dictionary<TKey, TValue>!
+JustDummies.AnyDictionary<TKey, TValue>.NonEmpty() -> JustDummies.AnyDictionary<TKey, TValue>!
+JustDummies.AnyDictionary<TKey, TValue>.WithCount(int count) -> JustDummies.AnyDictionary<TKey, TValue>!
+JustDummies.AnyDictionary<TKey, TValue>.WithCountBetween(int minimum, int maximum) -> JustDummies.AnyDictionary<TKey, TValue>!
+JustDummies.AnyDictionary<TKey, TValue>.WithMaxCount(int count) -> JustDummies.AnyDictionary<TKey, TValue>!
+JustDummies.AnyDictionary<TKey, TValue>.WithMinCount(int count) -> JustDummies.AnyDictionary<TKey, TValue>!
+JustDummies.AnyDouble
+JustDummies.AnyDouble.Between(double minimum, double maximum) -> JustDummies.AnyDouble!
+JustDummies.AnyDouble.DifferentFrom(double value) -> JustDummies.AnyDouble!
+JustDummies.AnyDouble.Except(params double[]! values) -> JustDummies.AnyDouble!
+JustDummies.AnyDouble.Generate() -> double
+JustDummies.AnyDouble.GreaterThan(double value) -> JustDummies.AnyDouble!
+JustDummies.AnyDouble.GreaterThanOrEqualTo(double value) -> JustDummies.AnyDouble!
+JustDummies.AnyDouble.LessThan(double value) -> JustDummies.AnyDouble!
+JustDummies.AnyDouble.LessThanOrEqualTo(double value) -> JustDummies.AnyDouble!
+JustDummies.AnyDouble.Negative() -> JustDummies.AnyDouble!
+JustDummies.AnyDouble.NonZero() -> JustDummies.AnyDouble!
+JustDummies.AnyDouble.OneOf(params double[]! values) -> JustDummies.AnyDouble!
+JustDummies.AnyDouble.Positive() -> JustDummies.AnyDouble!
+JustDummies.AnyDouble.Zero() -> JustDummies.AnyDouble!
+JustDummies.AnyEnum<TEnum>
+JustDummies.AnyEnum<TEnum>.DifferentFrom(TEnum value) -> JustDummies.AnyEnum<TEnum>!
+JustDummies.AnyEnum<TEnum>.Except(params TEnum[]! values) -> JustDummies.AnyEnum<TEnum>!
+JustDummies.AnyEnum<TEnum>.Generate() -> TEnum
+JustDummies.AnyEnum<TEnum>.OneOf(params TEnum[]! values) -> JustDummies.AnyEnum<TEnum>!
+JustDummies.AnyException
+JustDummies.AnyException.AnyException(string! message) -> void
+JustDummies.AnyException.AnyException(string! message, System.Exception! innerException) -> void
+JustDummies.AnyExtensions
+JustDummies.AnyFtpUri
+JustDummies.AnyFtpUri.Generate() -> System.Uri!
+JustDummies.AnyFtpUri.WithHost(string! host) -> JustDummies.AnyFtpUri!
+JustDummies.AnyFtpUri.WithoutPath() -> JustDummies.AnyFtpUri!
+JustDummies.AnyFtpUri.WithPathSegments(int count) -> JustDummies.AnyFtpUri!
+JustDummies.AnyFtpUri.WithPort() -> JustDummies.AnyFtpUri!
+JustDummies.AnyFtpUri.WithPort(int port) -> JustDummies.AnyFtpUri!
+JustDummies.AnyFtpUri.WithUserInfo() -> JustDummies.AnyFtpUri!
+JustDummies.AnyFtpUri.WithUserInfo(string! user) -> JustDummies.AnyFtpUri!
+JustDummies.AnyFtpUri.WithUserInfo(string! user, string! password) -> JustDummies.AnyFtpUri!
+JustDummies.AnyGenerationException
+JustDummies.AnyGenerationException.AnyGenerationException(string! message) -> void
+JustDummies.AnyGenerationException.AnyGenerationException(string! message, System.Exception! innerException) -> void
+JustDummies.AnyGenerationException.Seed.get -> int?
+JustDummies.AnyGuid
+JustDummies.AnyGuid.DifferentFrom(System.Guid value) -> JustDummies.AnyGuid!
+JustDummies.AnyGuid.Empty() -> JustDummies.AnyGuid!
+JustDummies.AnyGuid.Except(params System.Guid[]! values) -> JustDummies.AnyGuid!
+JustDummies.AnyGuid.Generate() -> System.Guid
+JustDummies.AnyGuid.NonEmpty() -> JustDummies.AnyGuid!
+JustDummies.AnyGuid.OneOf(params System.Guid[]! values) -> JustDummies.AnyGuid!
+JustDummies.AnyInt16
+JustDummies.AnyInt16.Between(short minimum, short maximum) -> JustDummies.AnyInt16!
+JustDummies.AnyInt16.DifferentFrom(short value) -> JustDummies.AnyInt16!
+JustDummies.AnyInt16.Except(params short[]! values) -> JustDummies.AnyInt16!
+JustDummies.AnyInt16.Generate() -> short
+JustDummies.AnyInt16.GreaterThan(short value) -> JustDummies.AnyInt16!
+JustDummies.AnyInt16.GreaterThanOrEqualTo(short value) -> JustDummies.AnyInt16!
+JustDummies.AnyInt16.LessThan(short value) -> JustDummies.AnyInt16!
+JustDummies.AnyInt16.LessThanOrEqualTo(short value) -> JustDummies.AnyInt16!
+JustDummies.AnyInt16.MultipleOf(short value) -> JustDummies.AnyInt16!
+JustDummies.AnyInt16.Negative() -> JustDummies.AnyInt16!
+JustDummies.AnyInt16.NonZero() -> JustDummies.AnyInt16!
+JustDummies.AnyInt16.OneOf(params short[]! values) -> JustDummies.AnyInt16!
+JustDummies.AnyInt16.Positive() -> JustDummies.AnyInt16!
+JustDummies.AnyInt16.Zero() -> JustDummies.AnyInt16!
+JustDummies.AnyInt32
+JustDummies.AnyInt32.Between(int minimum, int maximum) -> JustDummies.AnyInt32!
+JustDummies.AnyInt32.DifferentFrom(int value) -> JustDummies.AnyInt32!
+JustDummies.AnyInt32.Except(params int[]! values) -> JustDummies.AnyInt32!
+JustDummies.AnyInt32.Generate() -> int
+JustDummies.AnyInt32.GreaterThan(int value) -> JustDummies.AnyInt32!
+JustDummies.AnyInt32.GreaterThanOrEqualTo(int value) -> JustDummies.AnyInt32!
+JustDummies.AnyInt32.LessThan(int value) -> JustDummies.AnyInt32!
+JustDummies.AnyInt32.LessThanOrEqualTo(int value) -> JustDummies.AnyInt32!
+JustDummies.AnyInt32.MultipleOf(int value) -> JustDummies.AnyInt32!
+JustDummies.AnyInt32.Negative() -> JustDummies.AnyInt32!
+JustDummies.AnyInt32.NonZero() -> JustDummies.AnyInt32!
+JustDummies.AnyInt32.OneOf(params int[]! values) -> JustDummies.AnyInt32!
+JustDummies.AnyInt32.Positive() -> JustDummies.AnyInt32!
+JustDummies.AnyInt32.Zero() -> JustDummies.AnyInt32!
+JustDummies.AnyInt64
+JustDummies.AnyInt64.Between(long minimum, long maximum) -> JustDummies.AnyInt64!
+JustDummies.AnyInt64.DifferentFrom(long value) -> JustDummies.AnyInt64!
+JustDummies.AnyInt64.Except(params long[]! values) -> JustDummies.AnyInt64!
+JustDummies.AnyInt64.Generate() -> long
+JustDummies.AnyInt64.GreaterThan(long value) -> JustDummies.AnyInt64!
+JustDummies.AnyInt64.GreaterThanOrEqualTo(long value) -> JustDummies.AnyInt64!
+JustDummies.AnyInt64.LessThan(long value) -> JustDummies.AnyInt64!
+JustDummies.AnyInt64.LessThanOrEqualTo(long value) -> JustDummies.AnyInt64!
+JustDummies.AnyInt64.MultipleOf(long value) -> JustDummies.AnyInt64!
+JustDummies.AnyInt64.Negative() -> JustDummies.AnyInt64!
+JustDummies.AnyInt64.NonZero() -> JustDummies.AnyInt64!
+JustDummies.AnyInt64.OneOf(params long[]! values) -> JustDummies.AnyInt64!
+JustDummies.AnyInt64.Positive() -> JustDummies.AnyInt64!
+JustDummies.AnyInt64.Zero() -> JustDummies.AnyInt64!
+JustDummies.AnyList<T>
+JustDummies.AnyList<T>.Distinct() -> JustDummies.AnyList<T>!
+JustDummies.AnyList<T>.Distinct(System.Collections.Generic.IEqualityComparer<T>! comparer) -> JustDummies.AnyList<T>!
+JustDummies.AnyMailtoUri
+JustDummies.AnyMailtoUri.Generate() -> System.Uri!
+JustDummies.AnyMailtoUri.WithDomain(string! domain) -> JustDummies.AnyMailtoUri!
+JustDummies.AnyMailtoUri.WithHeaders() -> JustDummies.AnyMailtoUri!
+JustDummies.AnyMailtoUri.WithLocalPart(string! localPart) -> JustDummies.AnyMailtoUri!
+JustDummies.AnyOneOf<T>
+JustDummies.AnyOneOf<T>.Generate() -> T
+JustDummies.AnyPattern
+JustDummies.AnyPattern.Generate() -> string!
+JustDummies.AnyRelativeUri
+JustDummies.AnyRelativeUri.Generate() -> System.Uri!
+JustDummies.AnyRelativeUri.Rooted() -> JustDummies.AnyRelativeUri!
+JustDummies.AnyRelativeUri.WithFragment() -> JustDummies.AnyRelativeUri!
+JustDummies.AnyRelativeUri.WithPathSegments(int count) -> JustDummies.AnyRelativeUri!
+JustDummies.AnyRelativeUri.WithQuery() -> JustDummies.AnyRelativeUri!
+JustDummies.AnySByte
+JustDummies.AnySByte.Between(sbyte minimum, sbyte maximum) -> JustDummies.AnySByte!
+JustDummies.AnySByte.DifferentFrom(sbyte value) -> JustDummies.AnySByte!
+JustDummies.AnySByte.Except(params sbyte[]! values) -> JustDummies.AnySByte!
+JustDummies.AnySByte.Generate() -> sbyte
+JustDummies.AnySByte.GreaterThan(sbyte value) -> JustDummies.AnySByte!
+JustDummies.AnySByte.GreaterThanOrEqualTo(sbyte value) -> JustDummies.AnySByte!
+JustDummies.AnySByte.LessThan(sbyte value) -> JustDummies.AnySByte!
+JustDummies.AnySByte.LessThanOrEqualTo(sbyte value) -> JustDummies.AnySByte!
+JustDummies.AnySByte.MultipleOf(sbyte value) -> JustDummies.AnySByte!
+JustDummies.AnySByte.Negative() -> JustDummies.AnySByte!
+JustDummies.AnySByte.NonZero() -> JustDummies.AnySByte!
+JustDummies.AnySByte.OneOf(params sbyte[]! values) -> JustDummies.AnySByte!
+JustDummies.AnySByte.Positive() -> JustDummies.AnySByte!
+JustDummies.AnySByte.Zero() -> JustDummies.AnySByte!
+JustDummies.AnySequence<T>
+JustDummies.AnySequence<T>.Distinct() -> JustDummies.AnySequence<T>!
+JustDummies.AnySequence<T>.Distinct(System.Collections.Generic.IEqualityComparer<T>! comparer) -> JustDummies.AnySequence<T>!
+JustDummies.AnySet<T>
+JustDummies.AnySingle
+JustDummies.AnySingle.Between(float minimum, float maximum) -> JustDummies.AnySingle!
+JustDummies.AnySingle.DifferentFrom(float value) -> JustDummies.AnySingle!
+JustDummies.AnySingle.Except(params float[]! values) -> JustDummies.AnySingle!
+JustDummies.AnySingle.Generate() -> float
+JustDummies.AnySingle.GreaterThan(float value) -> JustDummies.AnySingle!
+JustDummies.AnySingle.GreaterThanOrEqualTo(float value) -> JustDummies.AnySingle!
+JustDummies.AnySingle.LessThan(float value) -> JustDummies.AnySingle!
+JustDummies.AnySingle.LessThanOrEqualTo(float value) -> JustDummies.AnySingle!
+JustDummies.AnySingle.Negative() -> JustDummies.AnySingle!
+JustDummies.AnySingle.NonZero() -> JustDummies.AnySingle!
+JustDummies.AnySingle.OneOf(params float[]! values) -> JustDummies.AnySingle!
+JustDummies.AnySingle.Positive() -> JustDummies.AnySingle!
+JustDummies.AnySingle.Zero() -> JustDummies.AnySingle!
+JustDummies.AnyString
+JustDummies.AnyString.Alpha() -> JustDummies.AnyString!
+JustDummies.AnyString.AlphaNumeric() -> JustDummies.AnyString!
+JustDummies.AnyString.Containing(string! value) -> JustDummies.AnyString!
+JustDummies.AnyString.DifferentFrom(string! value) -> JustDummies.AnyString!
+JustDummies.AnyString.EndingWith(string! suffix) -> JustDummies.AnyString!
+JustDummies.AnyString.Except(params string![]! values) -> JustDummies.AnyString!
+JustDummies.AnyString.Generate() -> string!
+JustDummies.AnyString.LowerCase() -> JustDummies.AnyString!
+JustDummies.AnyString.NonEmpty() -> JustDummies.AnyString!
+JustDummies.AnyString.Numeric() -> JustDummies.AnyString!
+JustDummies.AnyString.OneOf(params string![]! values) -> JustDummies.AnyStringOneOf!
+JustDummies.AnyString.OneOf(System.Collections.Generic.IEnumerable<string!>! values) -> JustDummies.AnyStringOneOf!
+JustDummies.AnyString.StartingWith(string! prefix) -> JustDummies.AnyString!
+JustDummies.AnyString.UpperCase() -> JustDummies.AnyString!
+JustDummies.AnyString.WithChars(string! pool) -> JustDummies.AnyString!
+JustDummies.AnyString.WithLength(int length) -> JustDummies.AnyString!
+JustDummies.AnyString.WithLengthBetween(int minimum, int maximum) -> JustDummies.AnyString!
+JustDummies.AnyString.WithMaxLength(int length) -> JustDummies.AnyString!
+JustDummies.AnyString.WithMinLength(int length) -> JustDummies.AnyString!
+JustDummies.AnyStringOneOf
+JustDummies.AnyStringOneOf.Generate() -> string!
+JustDummies.AnyTimeSpan
+JustDummies.AnyTimeSpan.Between(System.TimeSpan minimum, System.TimeSpan maximum) -> JustDummies.AnyTimeSpan!
+JustDummies.AnyTimeSpan.DifferentFrom(System.TimeSpan value) -> JustDummies.AnyTimeSpan!
+JustDummies.AnyTimeSpan.Except(params System.TimeSpan[]! values) -> JustDummies.AnyTimeSpan!
+JustDummies.AnyTimeSpan.Generate() -> System.TimeSpan
+JustDummies.AnyTimeSpan.GreaterThan(System.TimeSpan value) -> JustDummies.AnyTimeSpan!
+JustDummies.AnyTimeSpan.GreaterThanOrEqualTo(System.TimeSpan value) -> JustDummies.AnyTimeSpan!
+JustDummies.AnyTimeSpan.LessThan(System.TimeSpan value) -> JustDummies.AnyTimeSpan!
+JustDummies.AnyTimeSpan.LessThanOrEqualTo(System.TimeSpan value) -> JustDummies.AnyTimeSpan!
+JustDummies.AnyTimeSpan.Negative() -> JustDummies.AnyTimeSpan!
+JustDummies.AnyTimeSpan.NonZero() -> JustDummies.AnyTimeSpan!
+JustDummies.AnyTimeSpan.OneOf(params System.TimeSpan[]! values) -> JustDummies.AnyTimeSpan!
+JustDummies.AnyTimeSpan.Positive() -> JustDummies.AnyTimeSpan!
+JustDummies.AnyTimeSpan.WithGranularity(System.TimeSpan granularity) -> JustDummies.AnyTimeSpan!
+JustDummies.AnyTimeSpan.Zero() -> JustDummies.AnyTimeSpan!
+JustDummies.AnyUInt16
+JustDummies.AnyUInt16.Between(ushort minimum, ushort maximum) -> JustDummies.AnyUInt16!
+JustDummies.AnyUInt16.DifferentFrom(ushort value) -> JustDummies.AnyUInt16!
+JustDummies.AnyUInt16.Except(params ushort[]! values) -> JustDummies.AnyUInt16!
+JustDummies.AnyUInt16.Generate() -> ushort
+JustDummies.AnyUInt16.GreaterThan(ushort value) -> JustDummies.AnyUInt16!
+JustDummies.AnyUInt16.GreaterThanOrEqualTo(ushort value) -> JustDummies.AnyUInt16!
+JustDummies.AnyUInt16.LessThan(ushort value) -> JustDummies.AnyUInt16!
+JustDummies.AnyUInt16.LessThanOrEqualTo(ushort value) -> JustDummies.AnyUInt16!
+JustDummies.AnyUInt16.MultipleOf(ushort value) -> JustDummies.AnyUInt16!
+JustDummies.AnyUInt16.NonZero() -> JustDummies.AnyUInt16!
+JustDummies.AnyUInt16.OneOf(params ushort[]! values) -> JustDummies.AnyUInt16!
+JustDummies.AnyUInt16.Zero() -> JustDummies.AnyUInt16!
+JustDummies.AnyUInt32
+JustDummies.AnyUInt32.Between(uint minimum, uint maximum) -> JustDummies.AnyUInt32!
+JustDummies.AnyUInt32.DifferentFrom(uint value) -> JustDummies.AnyUInt32!
+JustDummies.AnyUInt32.Except(params uint[]! values) -> JustDummies.AnyUInt32!
+JustDummies.AnyUInt32.Generate() -> uint
+JustDummies.AnyUInt32.GreaterThan(uint value) -> JustDummies.AnyUInt32!
+JustDummies.AnyUInt32.GreaterThanOrEqualTo(uint value) -> JustDummies.AnyUInt32!
+JustDummies.AnyUInt32.LessThan(uint value) -> JustDummies.AnyUInt32!
+JustDummies.AnyUInt32.LessThanOrEqualTo(uint value) -> JustDummies.AnyUInt32!
+JustDummies.AnyUInt32.MultipleOf(uint value) -> JustDummies.AnyUInt32!
+JustDummies.AnyUInt32.NonZero() -> JustDummies.AnyUInt32!
+JustDummies.AnyUInt32.OneOf(params uint[]! values) -> JustDummies.AnyUInt32!
+JustDummies.AnyUInt32.Zero() -> JustDummies.AnyUInt32!
+JustDummies.AnyUInt64
+JustDummies.AnyUInt64.Between(ulong minimum, ulong maximum) -> JustDummies.AnyUInt64!
+JustDummies.AnyUInt64.DifferentFrom(ulong value) -> JustDummies.AnyUInt64!
+JustDummies.AnyUInt64.Except(params ulong[]! values) -> JustDummies.AnyUInt64!
+JustDummies.AnyUInt64.Generate() -> ulong
+JustDummies.AnyUInt64.GreaterThan(ulong value) -> JustDummies.AnyUInt64!
+JustDummies.AnyUInt64.GreaterThanOrEqualTo(ulong value) -> JustDummies.AnyUInt64!
+JustDummies.AnyUInt64.LessThan(ulong value) -> JustDummies.AnyUInt64!
+JustDummies.AnyUInt64.LessThanOrEqualTo(ulong value) -> JustDummies.AnyUInt64!
+JustDummies.AnyUInt64.MultipleOf(ulong value) -> JustDummies.AnyUInt64!
+JustDummies.AnyUInt64.NonZero() -> JustDummies.AnyUInt64!
+JustDummies.AnyUInt64.OneOf(params ulong[]! values) -> JustDummies.AnyUInt64!
+JustDummies.AnyUInt64.Zero() -> JustDummies.AnyUInt64!
+JustDummies.AnyUri
+JustDummies.AnyUri.Ftp() -> JustDummies.AnyFtpUri!
+JustDummies.AnyUri.Generate() -> System.Uri!
+JustDummies.AnyUri.Mailto() -> JustDummies.AnyMailtoUri!
+JustDummies.AnyUri.Relative() -> JustDummies.AnyRelativeUri!
+JustDummies.AnyUri.Web() -> JustDummies.AnyWebUri!
+JustDummies.AnyUri.WebSocket() -> JustDummies.AnyWebSocketUri!
+JustDummies.AnyWebSocketUri
+JustDummies.AnyWebSocketUri.Generate() -> System.Uri!
+JustDummies.AnyWebSocketUri.UsingWs() -> JustDummies.AnyWebSocketUri!
+JustDummies.AnyWebSocketUri.UsingWss() -> JustDummies.AnyWebSocketUri!
+JustDummies.AnyWebSocketUri.WithHost(string! host) -> JustDummies.AnyWebSocketUri!
+JustDummies.AnyWebSocketUri.WithoutPath() -> JustDummies.AnyWebSocketUri!
+JustDummies.AnyWebSocketUri.WithPathSegments(int count) -> JustDummies.AnyWebSocketUri!
+JustDummies.AnyWebSocketUri.WithPort() -> JustDummies.AnyWebSocketUri!
+JustDummies.AnyWebSocketUri.WithPort(int port) -> JustDummies.AnyWebSocketUri!
+JustDummies.AnyWebSocketUri.WithQuery() -> JustDummies.AnyWebSocketUri!
+JustDummies.AnyWebUri
+JustDummies.AnyWebUri.Generate() -> System.Uri!
+JustDummies.AnyWebUri.UsingHttp() -> JustDummies.AnyWebUri!
+JustDummies.AnyWebUri.UsingHttps() -> JustDummies.AnyWebUri!
+JustDummies.AnyWebUri.WithFragment() -> JustDummies.AnyWebUri!
+JustDummies.AnyWebUri.WithHost(string! host) -> JustDummies.AnyWebUri!
+JustDummies.AnyWebUri.WithoutPath() -> JustDummies.AnyWebUri!
+JustDummies.AnyWebUri.WithPathSegments(int count) -> JustDummies.AnyWebUri!
+JustDummies.AnyWebUri.WithPort() -> JustDummies.AnyWebUri!
+JustDummies.AnyWebUri.WithPort(int port) -> JustDummies.AnyWebUri!
+JustDummies.AnyWebUri.WithQuery() -> JustDummies.AnyWebUri!
+JustDummies.AnyWebUri.WithUserInfo() -> JustDummies.AnyWebUri!
+JustDummies.AnyWebUri.WithUserInfo(string! user) -> JustDummies.AnyWebUri!
+JustDummies.AnyWebUri.WithUserInfo(string! user, string! password) -> JustDummies.AnyWebUri!
+JustDummies.ConflictingAnyConstraintException
+JustDummies.ConflictingAnyConstraintException.ConflictingAnyConstraintException(string! message) -> void
+JustDummies.IAny<T>
+JustDummies.IAny<T>.Generate() -> T
+JustDummies.NullableExtensions
+JustDummies.NullableReferenceExtensions
+JustDummies.UnsupportedRegexException
+JustDummies.UnsupportedRegexException.UnsupportedRegexException(string! message) -> void
+static JustDummies.Any.ArrayOf<T>(JustDummies.IAny<T>! item) -> JustDummies.AnyArray<T>!
+static JustDummies.Any.Boolean() -> JustDummies.AnyBoolean!
+static JustDummies.Any.Byte() -> JustDummies.AnyByte!
+static JustDummies.Any.Char() -> JustDummies.AnyChar!
+static JustDummies.Any.Combine<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(JustDummies.IAny<T1>! first, JustDummies.IAny<T2>! second, JustDummies.IAny<T3>! third, JustDummies.IAny<T4>! fourth, JustDummies.IAny<T5>! fifth, JustDummies.IAny<T6>! sixth, JustDummies.IAny<T7>! seventh, JustDummies.IAny<T8>! eighth, System.Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult>! compose) -> JustDummies.IAny<TResult>!
+static JustDummies.Any.Combine<T1, T2, T3, T4, T5, T6, T7, TResult>(JustDummies.IAny<T1>! first, JustDummies.IAny<T2>! second, JustDummies.IAny<T3>! third, JustDummies.IAny<T4>! fourth, JustDummies.IAny<T5>! fifth, JustDummies.IAny<T6>! sixth, JustDummies.IAny<T7>! seventh, System.Func<T1, T2, T3, T4, T5, T6, T7, TResult>! compose) -> JustDummies.IAny<TResult>!
+static JustDummies.Any.Combine<T1, T2, T3, T4, T5, T6, TResult>(JustDummies.IAny<T1>! first, JustDummies.IAny<T2>! second, JustDummies.IAny<T3>! third, JustDummies.IAny<T4>! fourth, JustDummies.IAny<T5>! fifth, JustDummies.IAny<T6>! sixth, System.Func<T1, T2, T3, T4, T5, T6, TResult>! compose) -> JustDummies.IAny<TResult>!
+static JustDummies.Any.Combine<T1, T2, T3, T4, T5, TResult>(JustDummies.IAny<T1>! first, JustDummies.IAny<T2>! second, JustDummies.IAny<T3>! third, JustDummies.IAny<T4>! fourth, JustDummies.IAny<T5>! fifth, System.Func<T1, T2, T3, T4, T5, TResult>! compose) -> JustDummies.IAny<TResult>!
+static JustDummies.Any.Combine<T1, T2, T3, T4, TResult>(JustDummies.IAny<T1>! first, JustDummies.IAny<T2>! second, JustDummies.IAny<T3>! third, JustDummies.IAny<T4>! fourth, System.Func<T1, T2, T3, T4, TResult>! compose) -> JustDummies.IAny<TResult>!
+static JustDummies.Any.Combine<T1, T2, T3, TResult>(JustDummies.IAny<T1>! first, JustDummies.IAny<T2>! second, JustDummies.IAny<T3>! third, System.Func<T1, T2, T3, TResult>! compose) -> JustDummies.IAny<TResult>!
+static JustDummies.Any.Combine<T1, T2, TResult>(JustDummies.IAny<T1>! first, JustDummies.IAny<T2>! second, System.Func<T1, T2, TResult>! compose) -> JustDummies.IAny<TResult>!
+static JustDummies.Any.DateTime() -> JustDummies.AnyDateTime!
+static JustDummies.Any.DateTimeOffset() -> JustDummies.AnyDateTimeOffset!
+static JustDummies.Any.Decimal() -> JustDummies.AnyDecimal!
+static JustDummies.Any.DictionaryOf<TKey, TValue>(JustDummies.IAny<TKey>! keys, JustDummies.IAny<TValue>! values) -> JustDummies.AnyDictionary<TKey, TValue>!
+static JustDummies.Any.DictionaryOf<TKey, TValue>(JustDummies.IAny<TKey>! keys, JustDummies.IAny<TValue>! values, System.Collections.Generic.IEqualityComparer<TKey>! keyComparer) -> JustDummies.AnyDictionary<TKey, TValue>!
+static JustDummies.Any.Double() -> JustDummies.AnyDouble!
+static JustDummies.Any.ElementOf<T>(System.Collections.Generic.IEnumerable<T>! values) -> JustDummies.AnyOneOf<T>!
+static JustDummies.Any.ElementOf<T>(System.Collections.Generic.IReadOnlyList<T>! values) -> JustDummies.AnyOneOf<T>!
+static JustDummies.Any.Enum<TEnum>() -> JustDummies.AnyEnum<TEnum>!
+static JustDummies.Any.Guid() -> JustDummies.AnyGuid!
+static JustDummies.Any.Int16() -> JustDummies.AnyInt16!
+static JustDummies.Any.Int32() -> JustDummies.AnyInt32!
+static JustDummies.Any.Int64() -> JustDummies.AnyInt64!
+static JustDummies.Any.ListOf<T>(JustDummies.IAny<T>! item) -> JustDummies.AnyList<T>!
+static JustDummies.Any.OneOf<T>(params T[]! values) -> JustDummies.AnyOneOf<T>!
+static JustDummies.Any.PairOf<T1, T2>(JustDummies.IAny<T1>! first, JustDummies.IAny<T2>! second) -> JustDummies.IAny<(T1, T2)>!
+static JustDummies.Any.Reproducibly(int seed, System.Action! body, System.Action<string!>? report = null) -> void
+static JustDummies.Any.Reproducibly(int seed, System.Func<System.Threading.Tasks.Task!>! body, System.Action<string!>? report = null) -> System.Threading.Tasks.Task!
+static JustDummies.Any.Reproducibly(System.Action! body, System.Action<string!>? report = null) -> void
+static JustDummies.Any.Reproducibly(System.Func<System.Threading.Tasks.Task!>! body, System.Action<string!>? report = null) -> System.Threading.Tasks.Task!
+static JustDummies.Any.SByte() -> JustDummies.AnySByte!
+static JustDummies.Any.SequenceOf<T>(JustDummies.IAny<T>! item) -> JustDummies.AnySequence<T>!
+static JustDummies.Any.SetOf<T>(JustDummies.IAny<T>! item) -> JustDummies.AnySet<T>!
+static JustDummies.Any.SetOf<T>(JustDummies.IAny<T>! item, System.Collections.Generic.IEqualityComparer<T>! comparer) -> JustDummies.AnySet<T>!
+static JustDummies.Any.Single() -> JustDummies.AnySingle!
+static JustDummies.Any.String() -> JustDummies.AnyString!
+static JustDummies.Any.StringMatching(string! pattern) -> JustDummies.AnyPattern!
+static JustDummies.Any.StringMatching(System.Text.RegularExpressions.Regex! pattern) -> JustDummies.AnyPattern!
+static JustDummies.Any.TimeSpan() -> JustDummies.AnyTimeSpan!
+static JustDummies.Any.TripleOf<T1, T2, T3>(JustDummies.IAny<T1>! first, JustDummies.IAny<T2>! second, JustDummies.IAny<T3>! third) -> JustDummies.IAny<(T1, T2, T3)>!
+static JustDummies.Any.UInt16() -> JustDummies.AnyUInt16!
+static JustDummies.Any.UInt32() -> JustDummies.AnyUInt32!
+static JustDummies.Any.UInt64() -> JustDummies.AnyUInt64!
+static JustDummies.Any.Uri() -> JustDummies.AnyUri!
+static JustDummies.Any.UseSeed(int seed) -> System.IDisposable!
+static JustDummies.Any.UseSeed(int seed, string! replaySnippet) -> System.IDisposable!
+static JustDummies.Any.WithSeed(int seed) -> JustDummies.AnyContext!
+static JustDummies.AnyExtensions.As<TSource, TResult>(this JustDummies.IAny<TSource>! generator, System.Func<TSource, TResult>! factory) -> JustDummies.IAny<TResult>!
+static JustDummies.NullableExtensions.OrNull<T>(this JustDummies.IAny<T>! generator) -> JustDummies.IAny<T?>!
+static JustDummies.NullableReferenceExtensions.OrNull<T>(this JustDummies.IAny<T!>! generator) -> JustDummies.IAny<T?>!

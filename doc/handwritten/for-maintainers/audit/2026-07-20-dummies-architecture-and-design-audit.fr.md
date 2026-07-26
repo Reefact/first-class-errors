@@ -1,12 +1,12 @@
-# Dummies — Audit d'architecture et de conception
+# JustDummies — Audit d'architecture et de conception
 
 🌍 **Langues :**  
 🇫🇷 Français (ce fichier) | 🇬🇧 [English](./2026-07-20-dummies-architecture-and-design-audit.md)
 
 **Date :** 2026-07-20
 **Révision auditée :** `3bf89e3` (sommet de `main` au moment de l'audit)
-**Périmètre :** la seule bibliothèque `Dummies` — `Dummies/`, `Dummies.UnitTests/`, son outillage de
-garde (`tools/dummies-check/`, `.github/workflows/dummies.yml`), sa documentation, et les ADR qui la
+**Périmètre :** la seule bibliothèque `JustDummies` — `JustDummies/`, `JustDummies.UnitTests/`, son outillage de
+garde (`tools/justdummies-check/`, `.github/workflows/justdummies.yml`), sa documentation, et les ADR qui la
 gouvernent.
 **Statut :** consultatif. Conformément à la convention du dépôt (ADR-0004), cet audit produit des
 recommandations, jamais des bloqueurs ; toute modification d'ADR proposée est un brouillon que
@@ -18,7 +18,7 @@ applicabilité et les 8 applicables revues à la fois pour leur qualité intrins
 de l'implémentation ; les constats ont été vérifiés de façon contradictoire face au code, et les trois
 défauts de comportement rapportés ci-dessous ont été **reproduits indépendamment à l'exécution** contre
 la bibliothèque compilée. La suite de tests unitaires complète a été exécutée : **222/222 réussis**
-(`dotnet test Dummies.UnitTests`, exécuteur net10.0). Les jugements sont calibrés sur les objectifs
+(`dotnet test JustDummies.UnitTests`, exécuteur net10.0). Les jugements sont calibrés sur les objectifs
 affichés de la bibliothèque — des tests lisibles, des données de test expressives, un déterminisme
 optionnel, une API fluide et découvrable, la simplicité — et délibérément *pas* sur les objectifs des
 frameworks de test par propriétés ou de fuzzing, ce que cette bibliothèque n'est explicitement pas.
@@ -27,7 +27,7 @@ frameworks de test par propriétés ou de fuzzing, ce que cette bibliothèque n'
 
 ## 1. Résumé exécutif
 
-Dummies est une jeune bibliothèque construite avec un niveau d'exigence inhabituel. Son idée
+JustDummies est une jeune bibliothèque construite avec un niveau d'exigence inhabituel. Son idée
 architecturale centrale — projeter chaque type discret dans un espace ordinal 64 bits partagé pour
 qu'un seul moteur possède les bornes, les exclusions, la détection de conflits et l'échantillonnage de
 treize générateurs à la fois — est élégante et correctement exécutée. Sa discipline de messages
@@ -57,7 +57,7 @@ contraintes ; aucun test ne vérifie que le domaine déclaré est atteignable da
 spécification déclarée satisfiable génère effectivement. C'est l'angle mort précis d'une suite par
 ailleurs bien conçue, et le combler compte davantage que n'importe quel correctif isolé.
 
-Un fait de cadrage atténue considérablement tout cela : **Dummies n'a jamais été publiée.** Il n'y a
+Un fait de cadrage atténue considérablement tout cela : **JustDummies n'a jamais été publiée.** Il n'y a
 aucun tag `dum-v*` ; le changelog ne contient qu'une section *Unreleased* vide. Chaque défaut ci-dessus
 peut être corrigé, et chaque contrat décidé, à coût de compatibilité nul. La recommandation-phare de
 cet audit est de traiter la fenêtre pré-1.0 comme l'a fait l'ADR-0020 — le moment le moins cher pour
@@ -69,7 +69,7 @@ documentation a déjà commencé) ; le **contrat de déterminisme présente des 
 (des tirages concurrents dans un même scope à graine annulent silencieusement la rejouabilité ; la
 stabilité des graines entre versions n'est ni promise ni écartée ; l'ancrage ADR du contrat a été perdu
 lorsque l'ADR-0006 a été remplacée) ; la **cible netstandard2.0 n'est jamais exécutée par la propre
-suite de tests de Dummies** (seulement transitivement, via le job de plancher de FirstClassErrors) ; et
+suite de tests de JustDummies** (seulement transitivement, via le job de plancher de FirstClassErrors) ; et
 il n'existe **aucune référence utilisateur de la surface de contraintes** — le README du dépôt ne
 mentionne même pas le paquet. L'analyse des manques (§10) juge la couverture de types réellement
 complète au regard de la philosophie de la bibliothèque ; les deux absences qui méritent la qualité de
@@ -192,13 +192,13 @@ selon laquelle l'approche de l'ADR-0025 était saine et honnêtement argumentée
 La frontière zéro-dépendance, agnostique aux erreurs, est appliquée de trois façons : un commentaire de
 `.csproj` énonçant la règle, un test d'architecture fondé sur l'intention qui échoue à toute référence
 d'assemblage hors BCL (`ArchitectureTests.cs:27-37`), et le garde-fou d'artefact empaqueté
-`dummies-check` — un vrai programme consommateur, exécuté en CI contre l'*artefact packé* pour chaque
+`justdummies-check` — un vrai programme consommateur, exécuté en CI contre l'*artefact packé* pour chaque
 cible, qui prouve que l'asset net8.0 porte les générateurs modernes, que l'asset netstandard2.0 ne les
 porte pas, que les contraintes et conflits se comportent bien, et que des contextes à même graine
-rejouent (`tools/dummies-check/Program.cs`). L'empaquetage lui-même est de niveau production : SourceLink
+rejouent (`tools/justdummies-check/Program.cs`). L'empaquetage lui-même est de niveau production : SourceLink
 avec sources non suivies embarquées, builds CI déterministes, symboles snupkg, un SBOM SPDX embarqué au
 moment du pack, des assets de release à provenance attestée (`Directory.Build.props:10-23`,
-`Dummies.csproj:60-66`, `release.yml`). La base d'ADR qui consigne tout cela est discutée au §5 — c'est
+`JustDummies.csproj:60-66`, `release.yml`). La base d'ADR qui consigne tout cela est discutée au §5 — c'est
 une force en soi.
 
 ### 3.8 La philosophie d'API est cohérente et documentée là où l'utilisateur regarde
@@ -366,11 +366,11 @@ réflexion, *pas* une classe de base générique) sont au §9.2.
 
 ### 4.4 La documentation n'atteint ni celui qui découvre ni l'utilisateur avancé
 
-* Le **README du dépôt ne mentionne jamais Dummies** (vérifié : zéro occurrence), alors que le README du
+* Le **README du dépôt ne mentionne jamais JustDummies** (vérifié : zéro occurrence), alors que le README du
   paquet renvoie au dépôt pour la « documentation complète ». Celui qui découvre le paquet sur NuGet
   arrive sur une page d'accueil portant sur une autre bibliothèque ; ce qui ressemble le plus à un guide
-  Dummies (`ArbitraryTestValues.en.md`) est un guide d'intégration de FirstClassErrors.Testing qui
-  renvoie lui-même à « documented with Dummies itself » — une référence circulaire.
+  JustDummies (`ArbitraryTestValues.en.md`) est un guide d'intégration de FirstClassErrors.Testing qui
+  renvoie lui-même à « documented with JustDummies itself » — une référence circulaire.
 * **Aucune référence utilisateur ne documente la surface de contraintes par générateur.** Où
   l'utilisateur apprend-il que `Except`/`OneOf`/`DifferentFrom` existent sur les numériques, que
   `WithLengthBetween` existe, que `ContainingAny` diffère de `Containing`, ou quel dialecte regex
@@ -390,34 +390,34 @@ rapports de graine peuvent nommer une graine erronée ou inapplicable pour les c
 fixe et à sources mixtes ; la stabilité de la séquence de graines entre versions et entre TFM n'est ni
 promise ni écartée ; et le contrat entier a perdu son ancrage ADR lorsque l'ADR-0006 a été remplacée.
 
-### 4.6 La cible netstandard2.0 n'est jamais exécutée par la propre suite de Dummies
+### 4.6 La cible netstandard2.0 n'est jamais exécutée par la propre suite de JustDummies
 
-`Dummies.UnitTests` ne cible que net10.0. L'assemblage netstandard2.0 — celui que chargeront les
+`JustDummies.UnitTests` ne cible que net10.0. L'assemblage netstandard2.0 — celui que chargeront les
 consommateurs .NET Framework — n'est exercé que *transitivement* : le job de plancher de
 FirstClassErrors (`ci.yml:98-115`) exécute `FirstClassErrors.UnitTests` sur net472, qui prépare ses
-`Arrange` avec `Dummies.Any` via référence de projet et via les fabriques de Testing, si bien que
-Dummies se charge et génère bien sur le vrai CLR .NET Framework — mais sa propre suite de contrat de
+`Arrange` avec `JustDummies.Any` via référence de projet et via les fabriques de Testing, si bien que
+JustDummies se charge et génère bien sur le vrai CLR .NET Framework — mais sa propre suite de contrat de
 222 tests (oracle regex, détection de conflits, gating de distinction, reproductibilité de graine) n'y
 tourne jamais, et l'égalité même-graine-mêmes-valeurs entre les deux assets empaquetés n'est assertée
 nulle part. Le dépôt possède déjà exactement la machinerie nécessaire (`build/Net472TestFloor.props`,
-utilisée par `FirstClassErrors.UnitTests`) ; l'étendre à `Dummies.UnitTests` (en conditionnant hors
+utilisée par `FirstClassErrors.UnitTests`) ; l'étendre à `JustDummies.UnitTests` (en conditionnant hors
 scope les tests net8-only) est mécanique. Voir la conformité à l'ADR-0022, §6.
 
 ### 4.7 Garde-fous d'ingénierie de release pas encore installés
 
 Aucune référence d'API publique (`Microsoft.CodeAnalysis.PublicApiAnalyzers`), aucun
-`EnablePackageValidation`/ApiCompat. Le changelog engage Dummies vers la gestion sémantique de version
+`EnablePackageValidation`/ApiCompat. Le changelog engage JustDummies vers la gestion sémantique de version
 tandis que l'audit lui-même démontre que la surface d'API est recopiée à la main et dérive déjà dans la
 documentation ; la détection de changements cassants contre une référence publiée est le mécanisme
 complémentaire que les tests de parité ne peuvent pas remplacer (une surcharge supprimée ou un type de
 retour rétréci passe un test de miroir). L'avant-première-publication est le moment le moins cher pour
 installer les deux. Un commentaire périmé trouvé ici : `Directory.Build.props:3-9` dit que le dépôt
-livre « FirstClassErrors and FirstClassErrors.Testing » — il omet Dummies, le paquet même que ces
+livre « FirstClassErrors and FirstClassErrors.Testing » — il omet JustDummies, le paquet même que ces
 propriétés de pack gouvernent désormais aussi.
 
 ## 5. Revue des ADR
 
-Dix-huit des vingt-six ADR ne concernent pas Dummies (elles nomment les analyseurs, le request binder,
+Dix-huit des vingt-six ADR ne concernent pas JustDummies (elles nomment les analyseurs, le request binder,
 l'outillage GenDoc/CLI, l'API Outcome, ou le processus du dépôt). Huit s'appliquent, et leur qualité a
 été revue individuellement. Le niveau d'ensemble est assez élevé pour le dire simplement : cette base
 d'ADR est un modèle du genre. Les décisions portent des contraintes honnêtes, des alternatives
@@ -432,7 +432,7 @@ un adaptateur xUnit) ont été honorés ou consciemment différés. Son analyse 
 défaut non semé est exactement à la bonne profondeur. **Problème :** sa mise en remplacement a créé une
 lacune — voir « lacunes structurelles » plus bas.
 
-### ADR-0011 — Héberger Dummies comme paquet autonome *(Acceptée)*
+### ADR-0011 — Héberger JustDummies comme paquet autonome *(Acceptée)*
 
 **Qualité : bonne.** Le raisonnement nom/identité/frontière est sain et la règle de non-référence est
 vérifiée par machine. Deux points de précision. Premièrement, l'invariant *appliqué* est plus fort que
@@ -441,7 +441,7 @@ celui *consigné* : le test d'architecture interdit **toute** référence hors B
 est vérifiée par machine (ADR-0011) » — mais le texte de décision de l'ADR-0011 n'interdit que de
 référencer des *projets FirstClassErrors*. La règle du zéro-dépendance-*tierce*, porteuse pour tout
 l'argument de l'ADR-0025, n'est consignée nulle part comme décision. Deuxièmement, les alternatives ne
-pèsent jamais les risques de l'identifiant NuGet ultra-générique `Dummies` (squattage/collision/
+pèsent jamais les risques de l'identifiant NuGet ultra-générique `JustDummies` (squattage/collision/
 recherchabilité) — une identité de paquet que l'ADR elle-même qualifie de coûteuse à renommer. Aucun de
 ces points ne change la décision ; les deux méritent une ligne au dossier.
 
@@ -455,7 +455,7 @@ fournir, créditer les valeurs `Containing` hors de son domaine, traiter les tir
 un mauvais réglage du budget et enjoint de « réviser sur preuves plutôt que de décrire l'échec comme
 impossible ». **Problème (partagé avec l'ADR-0015) :** elle diffère « l'interface exacte de l'indice,
 l'état de collection, le budget de tirage, la charge utile d'exception et la propagation de graine » vers
-la référence d'implémentation — mais la section Dummies de cette référence
+la référence d'implémentation — mais la section JustDummies de cette référence
 (`adr-implementation-reference.md:58-68`) ne consigne aucune de ces spécificités (pas de chiffres de
 budget, pas de charge utile d'exception, pas de règle de propagation de graine). Le renvoi promet plus
 que la destination ne contient ; soit enrichir la référence, soit adoucir le renvoi.
@@ -479,10 +479,10 @@ recommandée.
 
 **Qualité : politique saine ; formulation de périmètre vieillie.** « Une promesse de compatibilité qui
 n'est pas exercée ne peut pas fournir une frontière de support fiable » est le bon principe. Mais l'ADR
-précède Dummies et parle des « bibliothèques `netstandard2.0` livrées » sans les nommer ; savoir si
-Dummies est dans son périmètre relève désormais de l'inférence, et le job de plancher ne l'inclut pas
+précède JustDummies et parle des « bibliothèques `netstandard2.0` livrées » sans les nommer ; savoir si
+JustDummies est dans son périmètre relève désormais de l'inférence, et le job de plancher ne l'inclut pas
 (§6). Quand le mainteneur touchera à nouveau à ce domaine, une clarification d'une ligne des paquets
-couverts lèverait l'ambiguïté — ou la décision de plancher propre à Dummies pourrait chevaucher la
+couverts lèverait l'ambiguïté — ou la décision de plancher propre à JustDummies pourrait chevaucher la
 nouvelle ADR de déterminisme proposée ci-dessous.
 
 ### ADR-0025 — Générer des chaînes correspondantes depuis un sous-ensemble régulier maison *(Proposée)*
@@ -503,7 +503,7 @@ pertinent pour la compatibilité. (3) Elle cite « un test par propriété » co
 existe est un test-oracle à graine fixe et corpus fixe dans le projet de tests unitaires — excellent,
 mais pas par propriété ; le texte devrait dire ce qu'est le filet de sécurité.
 
-### ADR-0026 — Rebaser les valeurs arbitraires du paquet de test sur Dummies *(Acceptée)*
+### ADR-0026 — Rebaser les valeurs arbitraires du paquet de test sur JustDummies *(Acceptée)*
 
 **Qualité : un dossier de consolidation approfondi** — six vraies alternatives, la justification de
 l'histoire à graine unique, un risque d'empaquetage intermédiaire honnête. **Deux dérives de
@@ -512,20 +512,20 @@ distinct method where composition is needed » — aucune fabrique n'expose une 
 (vérifié : zéro occurrence d'`IAny` dans les sources de `FirstClassErrors.Testing`). YAGNI défendable,
 mais le texte se lit comme une forme d'API décidée, et un contrôle de conformité dans un an ne pourra pas
 distinguer le report délibéré de la migration inachevée. (2) Sa clause de risque dit que le danger de
-double assemblage existe « precisely because Dummies types appear in Testing's public API » —
+double assemblage existe « precisely because JustDummies types appear in Testing's public API » —
 aujourd'hui aucun n'y apparaît ; la prémisse est mal énoncée (le danger est réel pour d'autres raisons
-tant que Dummies est livrée dans l'artefact). Comme les ADR acceptées ne sont jamais éditées en place,
+tant que JustDummies est livrée dans l'artefact). Comme les ADR acceptées ne sont jamais éditées en place,
 les deux relèvent d'une courte note dans la référence d'implémentation.
 
 ### Lacunes structurelles de la base (recommandations de création)
 
-1. **Le contrat de déterminisme de Dummies n'a pas d'ADR acceptée.** La source ambiante `AsyncLocal`,
+1. **Le contrat de déterminisme de JustDummies n'a pas d'ADR acceptée.** La source ambiante `AsyncLocal`,
    le `Reproducibly` optionnel, l'épinglage paresseux, le rapport de graine à l'échec — la garantie
    joyau de la couronne — a été décidée dans l'ADR-0006, désormais Remplacée *et* cadrée sur
    FirstClassErrors.Testing ; la décision de l'ADR-0026 porte sur le rebasage de Testing, pas sur le
-   contrat propre de Dummies. Un futur mainteneur qui demande « pourquoi `AsyncLocal` et pas un
+   contrat propre de JustDummies. Un futur mainteneur qui demande « pourquoi `AsyncLocal` et pas un
    paramètre ? pourquoi un `System.Random` mis en course est-il acceptable ? » ne trouve le raisonnement
-   que dans un dossier remplacé. **Recommandation : rédiger une ADR Proposée** (« Dummies fournit des
+   que dans un dossier remplacé. **Recommandation : rédiger une ADR Proposée** (« JustDummies fournit des
    valeurs arbitraires depuis une source ambiante, semable, locale au contexte d'exécution, avec
    reproductibilité optionnelle ») reprenant la justification de l'ADR-0006 et réglant, dans le même
    document, les bords ouverts que cet audit a fait remonter : la sémantique de concurrence à flux
@@ -542,12 +542,12 @@ les deux relèvent d'une courte note dans la référence d'implémentation.
 
 | ADR | Statut | Conformité de l'implémentation |
 |---|---|---|
-| 0006 (historique) | Remplacée | **Conforme et dépassée.** Le contrat de graine hérité (local au contexte, déterminisme optionnel, rapport de graine) est implémenté fidèlement ; Dummies ajoute l'`AnyContext` isolé que l'ADR d'origine ne faisait qu'anticiper. |
+| 0006 (historique) | Remplacée | **Conforme et dépassée.** Le contrat de graine hérité (local au contexte, déterminisme optionnel, rapport de graine) est implémenté fidèlement ; JustDummies ajoute l'`AnyContext` isolé que l'ADR d'origine ne faisait qu'anticiper. |
 | 0011 | Acceptée | **Conforme.** Aucune référence à FirstClassErrors ; frontière vérifiée par machine (`ArchitectureTests`) ; identité autonome, train de release et docs en place. Note : l'application est *plus forte* que la décision consignée (§5). |
 | 0013 | Acceptée | **Conforme, vérifiée en détail** — gate immédiat net des crédits `Containing` hors domaine, comptage conservateur de `ContainingAny`, arithmétique à l'abri du débordement, budget borné, les deux canaux d'échec. **Une déviation mineure :** le message de saturation promet *inconditionnellement* le rejeu `Any.Reproducibly({seed}, …)` (`CollectionState.cs:246-254` ; la garde `seed is not null` est du code mort — la graine n'y peut jamais être nulle). Pour un générateur d'éléments **étranger** dont les tirages ignorent la source ambiante, cette promesse est fausse ; l'ADR dit que les échecs sont « explicites et reproductibles ». Qualifier le message quand le générateur d'éléments ne porte aucune source de la bibliothèque. |
 | 0015 | Acceptée | **Conforme exactement** — arités 2–8, pas plus ; suppressions localisées avec justifications renvoyant à l'ADR (`Any.cs:622-623`) ; plafond documenté sur la surcharge d'arité 8. |
 | 0020 | Acceptée | **Pleinement conforme.** Aucune conversion implicite nulle part ; `Generate()` est la seule matérialisation ; générateurs vérifiés immuables (chaque méthode fluide renvoie une nouvelle instance). Résidu : trois DisplayName de test et un commentaire *décrivent* encore les conversions supprimées (§4.3). |
-| 0022 | Acceptée | **Partielle pour Dummies.** L'asset netstandard2.0 n'est chargé et exercé sur net472 que transitivement via le job de plancher de FirstClassErrors ; la propre suite de Dummies n'y tourne jamais, et le README du paquet n'énonce aucun plancher .NET Framework (celui de FirstClassErrors le fait). À solder avant la première publication (§11 point 5). |
+| 0022 | Acceptée | **Partielle pour JustDummies.** L'asset netstandard2.0 n'est chargé et exercé sur net472 que transitivement via le job de plancher de FirstClassErrors ; la propre suite de JustDummies n'y tourne jamais, et le README du paquet n'énonce aucun plancher .NET Framework (celui de FirstClassErrors le fait). À solder avant la première publication (§11 point 5). |
 | 0025 | Proposée | **Conforme sur chaque clause majeure** (analyseur maison, refus de première classe, générateur terminal, zéro dépendance, univers ASCII imprimable *par défaut*, spread borné des quantificateurs non bornés). Les défauts §4.1(c)/(d) sont des bugs de qualité *à l'intérieur* du périmètre décidé, pas des déviations — avec la réserve que (d) rompt la *promesse* de refus que l'ADR consigne. Un bord de taxonomie : une classe négative bien formée hors de l'univers imprimable lève `ArgumentException` (« malformée ») au lieu d'`UnsupportedRegexException`. |
 | 0026 | Acceptée | **Conforme sur chaque clause exécutée** — moteur unique, scope de graine unique, `Testing.Any` supprimé, fabriques livrées, horloge/ids sur le contexte ambiant, docs mises à jour EN/FR. La moitié « distinct `IAny<T>` method » non implémentée et la prémisse de risque mal énoncée sont consignées au §5. |
 
@@ -601,7 +601,7 @@ doit s'ouvrir un jour, un `ISeedableAny` dans une release mineure est la forme n
 demande à être décidé maintenant, sinon la documentation.
 
 **Pour les mainteneurs**, ajouter un nouveau type scalaire touche 6 à 9 fichiers (générateur, `Any`,
-`AnyContext`, tests, docs utilisateur EN/FR, README du paquet, `dummies-check` si net8-only,
+`AnyContext`, tests, docs utilisateur EN/FR, README du paquet, `justdummies-check` si net8-only,
 éventuellement un moteur de spec). Le processus est mécanique mais réel, et n'est que partiellement gardé
 (§9.2).
 
@@ -807,7 +807,7 @@ observer des valeurs dans les deux moitiés et toucher les deux bornes — peu c
 `WithSeed`) ; un test de limite de génération pour `AnyPattern` (actuellement non testée) ; des tests
 dédiés aux contrats documentés-mais-non-testés (enum vide, capturabilité de la base `AnyException`,
 chemin du comparateur de clés de `DictionaryOf`) ; et l'assertion même-graine inter-TFM dans
-`dummies-check` (étendre `SeedBatch` d'une séquence de référence comparée entre les cibles consommatrices
+`justdummies-check` (étendre `SeedBatch` d'une séquence de référence comparée entre les cibles consommatrices
 net8.0 et net6.0, et étendre le test de fumée pour couvrir les tirages
 `OrNull`/`SequenceOf`/`PairOf`/`StringMatching`/enum, que le garde-fou d'artefact empaqueté ne touche
 actuellement jamais).
@@ -828,7 +828,7 @@ contraintes expriment des invariants ; pas de fausses données réalistes, pas d
 couplage à l'horloge), (ii) le test de composition — *`As`/`Combine`/`StringMatching` peuvent-ils déjà
 exprimer ceci en une ligne lisible ?* — et (iii) le coût complet d'un nouveau générateur (générateur +
 `Any` + `AnyContext` + données de parité + tests + docs EN/FR + README du paquet + éventuellement
-`dummies-check`). La barre de l'**Indispensable** est celle du mandat : une absence véritablement
+`justdummies-check`). La barre de l'**Indispensable** est celle du mandat : une absence véritablement
 surprenante. La conception composition-d'abord de la bibliothèque garde cette liste courte — la plupart
 des types BCL sont déjà à un `As` de distance, ce qui est la conception fonctionnant comme prévu.
 
@@ -898,8 +898,8 @@ proposition 1.)
 * **Terminal `GenerateMany(int)`** — sucre pour « N valeurs sans la cérémonie `ListOf` » ; une *méthode
   nommée* renvoyant `IReadOnlyList<T>`, donc elle reste dans la lettre et l'esprit de l'ADR-0020.
 * **Un adaptateur de graine pour framework de test** (`[ReproducibleFact]`) — anticipé par les suivis de
-  l'ADR-0006, abandonné lors du rebasage, remplacé par rien. Dummies zéro-dépendance ne peut pas
-  référencer xUnit, c'est donc une décision de *paquet compagnon* (`Dummies.Xunit`) — méritant une ADR
+  l'ADR-0006, abandonné lors du rebasage, remplacé par rien. JustDummies zéro-dépendance ne peut pas
+  référencer xUnit, c'est donc une décision de *paquet compagnon* (`JustDummies.Xunit`) — méritant une ADR
   explicite oui/non plutôt que le silence, car chaque consommateur re-dérive aujourd'hui à la main
   l'habitude d'envelopper dans `Reproducibly`.
 
@@ -958,12 +958,12 @@ Par ordre de priorité ; les points 1–7 sont la porte pré-publication recomma
    `Combine`) ; la phrase de politique de stabilité entre versions ; la qualification générateur-étranger
    dans le message de saturation (garde-null morte retirée). Rédiger l'**ADR de déterminisme** et l'**ADR
    du moteur ordinal** (§5, lacunes structurelles) en `Proposée` pour `@reefact`.
-5. **Exécuter Dummies sur ses planchers** : importer `build/Net472TestFloor.props` dans
-   `Dummies.UnitTests` (tests net8-only conditionnés hors scope), l'ajouter à la boucle de plancher de
-   ci.yml ; ajouter l'assertion de séquence de référence inter-TFM à `dummies-check` ; énoncer le
+5. **Exécuter JustDummies sur ses planchers** : importer `build/Net472TestFloor.props` dans
+   `JustDummies.UnitTests` (tests net8-only conditionnés hors scope), l'ajouter à la boucle de plancher de
+   ci.yml ; ajouter l'assertion de séquence de référence inter-TFM à `justdummies-check` ; énoncer le
    plancher .NET Framework dans le README du paquet (suivi de l'ADR-0022).
-6. **Passe de documentation** : faire apparaître Dummies dans le README du dépôt (table des paquets +
-   sommaire) ; écrire le guide utilisateur Dummies avec la référence de contraintes par générateur et le
+6. **Passe de documentation** : faire apparaître JustDummies dans le README du dépôt (table des paquets +
+   sommaire) ; écrire le guide utilisateur JustDummies avec la référence de contraintes par générateur et le
    dialecte `StringMatching` (refermant le suivi de l'ADR-0025) ; corriger les trois emplacements « ASCII
    imprimable » (§4.2) ; annoncer le comportement vide-par-défaut dans le README du paquet ; corriger les
    commentaires/DisplayName périmés (§4.3) et l'en-tête de `Directory.Build.props`.
@@ -991,7 +991,7 @@ par décision consignée.
 **Phase 1 — premier cycle stable (complétude au sein de la philosophie).** Point 8 (les deux
 Indispensables, additifs et à faible risque), point 9, la section recettes du guide utilisateur (blobs,
 chemins, Version, Uri-via-Combine — transformant les types de la liste Optionnelle en documentation
-plutôt qu'en surface), et la décision de paquet compagnon `Dummies.Xunit` (oui ou non, en ADR).
+plutôt qu'en surface), et la décision de paquet compagnon `JustDummies.Xunit` (oui ou non, en ADR).
 
 **Phase 2 — croissance guidée par la demande.** Les Souhaitables au fur et à mesure que de vraies
 demandes arrivent (`Uri` et `WithChars` d'abord, au vu des preuves actuelles), chaque ajout portant son
@@ -1001,7 +1001,7 @@ bibliothèque telle qu'elle est.
 
 ## 13. Conclusion
 
-Dummies est ce à quoi ressemble une bibliothèque focalisée quand les auteurs savent exactement à quoi
+JustDummies est ce à quoi ressemble une bibliothèque focalisée quand les auteurs savent exactement à quoi
 elle sert et — tout aussi important — à quoi elle ne sert pas. Le moteur en espace ordinal, les
 diagnostics à provenance de contraintes, la discipline d'échappatoires bornées et la trace d'ADR sont
 tous meilleurs que la norme de la catégorie, et la conception composition-d'abord garde honnête la
@@ -1024,7 +1024,7 @@ graine rapportée — sur chaque cible pour laquelle elle est livrée.
 ## 14. Suivi des issues
 
 Les recommandations de la §11 ont été ouvertes en issues GitHub le 2026-07-20, sur le gabarit d'issue
-Dummies du dépôt. Cette table est un **instantané figé** : l'état vivant de chaque issue (ouverte, fermée,
+JustDummies du dépôt. Cette table est un **instantané figé** : l'état vivant de chaque issue (ouverte, fermée,
 en cours) vit dans le tracker, pas ici — ne pas maintenir de statut dans ce document.
 
 | Point §11 | Issue(s) | Phase (§12) |

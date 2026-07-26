@@ -8,7 +8,7 @@
 
 ## Context
 
-Dummies treats contradictory constraints as arrangement errors and avoids hidden unbounded retry loops.
+JustDummies treats contradictory constraints as arrangement errors and avoids hidden unbounded retry loops.
 
 A distinct collection of `N` elements is satisfiable only when at least `N` distinct values can be assembled from its effective domain: the element generator's own domain, widened by any values pinned outside it and by opaque externally-supplied values the generator itself could never draw. The generator's own cardinality therefore bounds only the elements that must come from it, not the whole request.
 
@@ -22,7 +22,7 @@ A distinct collection rejects a requested count immediately when it exceeds a kn
 
 ## Rationale
 
-When the domain size is known, the contradiction is certain and belongs at declaration time with the rest of Dummies' constraint validation.
+When the domain size is known, the contradiction is certain and belongs at declaration time with the rest of JustDummies' constraint validation.
 
 Counting only the generator's own cardinality would eagerly reject requests that are actually satisfiable once already-accounted-for values are considered; the eager check therefore compares against the domain size net of the values already pinned or opaquely supplied outside it, so it stays sound: it never rejects a request that was truly satisfiable, and a comparer that collapses the effective domain below the requested count is still caught by the bounded draw.
 
@@ -30,7 +30,7 @@ When the domain size is unknown, drawing and deduplicating is the only general s
 
 The cardinality capability remains optional so public and foreign generators are not forced to provide information they cannot know. A comparer-induced reduction is then handled by the generation-time bound.
 
-The exact hint interface, collection state, draw budget, exception payload, and seed propagation are documented in the [ADR implementation reference](../specifications/adr-implementation-reference.md#dummies-generation-contracts) and the Dummies user documentation.
+The exact hint interface, collection state, draw budget, exception payload, and seed propagation are documented in the [ADR implementation reference](../specifications/adr-implementation-reference.md#dummies-generation-contracts) and the JustDummies user documentation.
 
 ## Alternatives Considered
 
@@ -66,12 +66,12 @@ Considered because a satisfiable request would eventually complete. Rejected bec
 
 ## Follow-up Actions
 
-* Document both failure channels and the replay seed in the Dummies guide.
+* Document both failure channels and the replay seed in the JustDummies guide.
 * Revisit the budget if real usage reveals false exhaustion.
 
 ## References
 
-* [ADR implementation reference — Dummies generation contracts](../specifications/adr-implementation-reference.md#dummies-generation-contracts)
+* [ADR implementation reference — JustDummies generation contracts](../specifications/adr-implementation-reference.md#dummies-generation-contracts)
 * [ADR-0011](0011-host-dummies-as-a-standalone-package.md)
-* `CollectionState` and `ICardinalityHint` in the `Dummies` project.
+* `CollectionState` and `ICardinalityHint` in the `JustDummies` project.
 * [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.

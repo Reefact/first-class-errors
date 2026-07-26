@@ -20,7 +20,7 @@ guidelines.
 ## Public API baseline
 
 The shipping libraries — `FirstClassErrors`, `FirstClassErrors.Testing`,
-`FirstClassErrors.RequestBinder` (the `lib` train) and `Dummies` (the `dum`
+`FirstClassErrors.RequestBinder` (the `lib` train) and `JustDummies` (the `dum`
 train) — carry a committed public-API baseline, so every change to their public
 surface is a reviewed diff and an accidental breaking change (a removed overload,
 a narrowed return type, a renamed member) cannot ship silently under a version
@@ -35,7 +35,7 @@ number that promises compatibility. Two guards, wired once in
   surface change fails the build until the same change updates the baseline.
 * **Package validation** (`EnablePackageValidation`) runs ApiCompat during
   `dotnet pack`. With no baseline version set it performs the same-package
-  cross-target-framework check (it proves `Dummies`' net8.0 surface never drops
+  cross-target-framework check (it proves `JustDummies`' net8.0 surface never drops
   API a netstandard2.0 consumer sees). To additionally gate against a published
   version, set `PackageValidationBaselineVersion`; `0.1.0-preview.1` is the first
   such baseline available for the `lib` train.
@@ -47,7 +47,7 @@ number that promises compatibility. Two guards, wired once in
 * **From the CLI**: `dotnet format analyzers <project> --diagnostics RS0016`
   appends the new entries to `PublicAPI.Unshipped.txt`; for a **removal**, delete
   the matching line by hand.
-* **Multi-target (`Dummies`)**: each framework has its own baseline under
+* **Multi-target (`JustDummies`)**: each framework has its own baseline under
   `PublicAPI/<tfm>/`, and `dotnet format` rewrites only one framework's file per
   run — update `net8.0` and `netstandard2.0` separately when a change touches both.
 * **At release**: promote the accumulated `PublicAPI.Unshipped.txt` entries into
@@ -299,7 +299,7 @@ When present it MUST be lowercase and MUST be one of:
 | `analyzers` | `FirstClassErrors.Analyzers` — the Roslyn analyzers and their `FCExxx` diagnostics |
 | `binder` | `FirstClassErrors.RequestBinder` — the request binder for the primary-adapter boundary |
 | `cli` | `FirstClassErrors.Cli` — the command-line tool |
-| `dummies` | `Dummies` — the standalone arbitrary-test-value generator |
+| `justdummies` | `JustDummies` — the standalone arbitrary-test-value generator |
 | `gendoc` | `FirstClassErrors.GenDoc` and its worker — the documentation generator |
 | `testing` | `FirstClassErrors.Testing` — the test-support package |
 
@@ -312,7 +312,7 @@ into **release trains** by scope — `tools/trains.sh` is the single source of
 truth — and each train publishes independently: `lib` (scopes `core`, `analyzers`,
 `testing`, `binder` → `FirstClassErrors`, `FirstClassErrors.Testing` and
 `FirstClassErrors.RequestBinder`), `cli` (scopes `cli`, `gendoc` → the `fce` tool)
-and `dum` (scope `dummies` → `Dummies`). A commit's scope decides which train's
+and `dum` (scope `justdummies` → `JustDummies`). A commit's scope decides which train's
 release notes and changelog it lands in; see
 [Adding a release train](doc/handwritten/for-maintainers/AddingAReleaseTrain.en.md).
 

@@ -8,7 +8,7 @@
 
 ## Context
 
-* Every generator on `Dummies`' `Any` entry point — and its `AnyContext` mirror — has until now been a
+* Every generator on `JustDummies`' `Any` entry point — and its `AnyContext` mirror — has until now been a
   **flat builder**: a single type exposes every constraint method, the methods chain in any order, and an
   incompatible combination is reported at **run time** by a `ConflictingAnyConstraintException` whose message
   names both sides ("Cannot apply X because Y is already defined"). A spec that only proves unsatisfiable while
@@ -30,7 +30,7 @@
 * C# can make a member unavailable on a type. A generator that returns a **different type per shape**, each
   exposing only that shape's components, turns a category error into code that does not compile, whereas a
   single flat `AnyUri` exposing every component could only reject the same error at run time.
-* `Dummies` is pre-release: no `dum-v*` tag, no external consumers, an empty *Unreleased* changelog. The shape
+* `JustDummies` is pre-release: no `dum-v*` tag, no external consumers, an empty *Unreleased* changelog. The shape
   of its public generator surface can still be set at no migration cost.
 * The repository records decisions that shape the `Any` public surface as ADRs — ADR-0020 (materialize only
   through `Generate()`), ADR-0031 (name factories after their CLR type), ADR-0006 (a single seeded source). A
@@ -143,4 +143,4 @@ cannot catch, not for a structural rule they can.
 * ADR-0006 — supply arbitrary values from a single seedable source; the seed carried by `AnyGenerationException`
   on the run-time path.
 * PR #295 — add the `Any.Uri()` family, the first typed progression.
-* Issue #226 — the Dummies Nice-to-Have backlog that prompted `Any.Uri()`.
+* Issue #226 — the JustDummies Nice-to-Have backlog that prompted `Any.Uri()`.

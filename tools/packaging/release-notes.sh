@@ -5,7 +5,7 @@
 # The partition is by Conventional Commit scope (enforced by tools/commit-lint):
 #   lib -> scopes core, analyzers, testing, binder (FirstClassErrors + .Testing + .RequestBinder)
 #   cli -> scopes cli, gendoc                      (the fce tool: CLI + GenDoc + worker)
-#   dum -> scope dummies                           (the standalone Dummies library)
+#   dum -> scope justdummies                           (the standalone JustDummies library)
 # Commits with no scope (bare `ci:`, `build:`, `chore:` ...) are infrastructure and are left out
 # of both trains: these notes describe what changed for the consumer of the package, nothing else.
 #

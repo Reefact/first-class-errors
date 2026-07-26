@@ -8,7 +8,7 @@
 
 ## Context
 
-Dummies builds a scalar directly to satisfy its constraints — never generated-then-filtered — and detects contradictions eagerly at declaration, so a scalar generator that exists can always generate. It also avoids hidden unbounded retry loops.
+JustDummies builds a scalar directly to satisfy its constraints — never generated-then-filtered — and detects contradictions eagerly at declaration, so a scalar generator that exists can always generate. It also avoids hidden unbounded retry loops.
 
 Every scalar builder but one exposes an exclusion trio (`OneOf`/`Except`/`DifferentFrom`). For the ordinal-mapped types (integers, temporal types, `char`, `Guid`) an exclusion is built into construction: the draw is mapped onto the k-th non-excluded value of the domain in one pass, and whether the exclusions leave the domain non-empty is counted cheaply at declaration.
 
@@ -30,7 +30,7 @@ The failure is deferred rather than eager because string satisfiability under ex
 
 Accepting that departure is warranted because the alternatives are worse: leaving the gap keeps the most-used builder the only scalar that cannot exclude and pushes users back to seed-breaking retry loops, while forcing an eager verdict demands a decision procedure the domain does not cheaply admit. The cost — one narrowly-scoped, documented case where a string generator that exists may still fail — is the trade already accepted for distinct collections, and expected collisions are ≈ 0 for any non-trivial shape, so the constructive fast path is preserved in practice.
 
-The redraw budget, the exception payload, and the seed propagation are implementation, documented in the `Dummies` code (`StringSpec`) and the Dummies user documentation — not here.
+The redraw budget, the exception payload, and the seed propagation are implementation, documented in the `JustDummies` code (`StringSpec`) and the JustDummies user documentation — not here.
 
 ## Alternatives Considered
 
@@ -66,11 +66,11 @@ Considered because constructing the string to dodge the excluded set would keep 
 ### Risks
 
 * A poorly tuned budget could fail a theoretically satisfiable but extremely tight shape. Mitigation: keep the budget documented and revise it on evidence, rather than describing failure as impossible (the posture of ADR-0013).
-* Users may expect string exclusion to be constructive like the numeric builders. Mitigation: state the redraw and its deferred failure explicitly in the builder documentation and the Dummies readme.
+* Users may expect string exclusion to be constructive like the numeric builders. Mitigation: state the redraw and its deferred failure explicitly in the builder documentation and the JustDummies readme.
 
 ## Follow-up Actions
 
-* Document the redraw and the deferred, seed-bearing failure in the Dummies readme and the builder documentation (done in the implementing pull request).
+* Document the redraw and the deferred, seed-bearing failure in the JustDummies readme and the builder documentation (done in the implementing pull request).
 * Revisit the budget if real usage reveals false exhaustion.
 * Consider spec-aware avoidance only if evidence shows the bounded redraw is inadequate.
 
@@ -79,5 +79,5 @@ Considered because constructing the string to dodge the excluded set would keep 
 * [ADR-0013](0013-gate-distinct-collections-by-cardinality-else-bounded-draw.md) — the sibling bounded-draw-with-deferred-failure channel.
 * [ADR-0030](0030-draw-arbitrary-strings-from-an-explicit-terminal-set.md) — `AnyString.OneOf` stays terminal and does not combine with exclusions.
 * [ADR-0020](0020-materialize-dummies-only-through-generate.md) — dummies materialize only through `Generate()`.
-* `StringSpec` and `AnyString` in the `Dummies` project; the Dummies NuGet readme.
+* `StringSpec` and `AnyString` in the `JustDummies` project; the JustDummies NuGet readme.
 * Issue [#224](https://github.com/Reefact/first-class-errors/issues/224).

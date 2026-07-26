@@ -21,7 +21,7 @@ directrices plus larges concernant les changements.
 ## Base de référence de l’API publique
 
 Les bibliothèques publiées — `FirstClassErrors`, `FirstClassErrors.Testing`,
-`FirstClassErrors.RequestBinder` (le train `lib`) et `Dummies` (le train `dum`) —
+`FirstClassErrors.RequestBinder` (le train `lib`) et `JustDummies` (le train `dum`) —
 portent une base de référence d’API publique versionnée, de sorte que chaque
 changement de leur surface publique soit un diff relu et qu’un changement cassant
 accidentel (une surcharge retirée, un type de retour rétréci, un membre renommé) ne
@@ -39,7 +39,7 @@ compatibilité. Deux garde-fous, câblés une seule fois dans
 * **La validation de package** (`EnablePackageValidation`) exécute ApiCompat lors du
   `dotnet pack`. Sans version de référence définie, elle effectue le contrôle
   inter-frameworks au sein du même package (elle prouve que la surface net8.0 de
-  `Dummies` ne retire jamais une API qu’un consommateur netstandard2.0 voit). Pour
+  `JustDummies` ne retire jamais une API qu’un consommateur netstandard2.0 voit). Pour
   verrouiller en plus par rapport à une version publiée, définissez
   `PackageValidationBaselineVersion` ; `0.1.0-preview.1` est la première base de
   référence disponible pour le train `lib`.
@@ -52,7 +52,7 @@ référence dans le même commit :
 * **En ligne de commande** : `dotnet format analyzers <projet> --diagnostics RS0016`
   ajoute les nouvelles entrées à `PublicAPI.Unshipped.txt` ; pour une **suppression**,
   effacez la ligne correspondante à la main.
-* **Multi-cible (`Dummies`)** : chaque framework a sa propre base sous
+* **Multi-cible (`JustDummies`)** : chaque framework a sa propre base sous
   `PublicAPI/<tfm>/`, et `dotnet format` ne réécrit qu’un seul fichier de framework
   par exécution — mettez à jour `net8.0` et `netstandard2.0` séparément lorsqu’un
   changement touche les deux.
@@ -310,7 +310,7 @@ est présent, il DOIT être en minuscules et DOIT être l’un des suivants :
 | `analyzers` | `FirstClassErrors.Analyzers` — les analyzers Roslyn et leurs diagnostics `FCExxx` |
 | `binder` | `FirstClassErrors.RequestBinder` — le request binder pour la frontière de l’adaptateur primaire |
 | `cli` | `FirstClassErrors.Cli` — l’outil en ligne de commande |
-| `dummies` | `Dummies` — le générateur autonome de valeurs de test arbitraires |
+| `justdummies` | `JustDummies` — le générateur autonome de valeurs de test arbitraires |
 | `gendoc` | `FirstClassErrors.GenDoc` et son worker — le générateur de documentation |
 | `testing` | `FirstClassErrors.Testing` — le package de support aux tests |
 
@@ -322,7 +322,7 @@ Le scope porte le dossier de release. L’outillage répartit les commits en **t
 release** selon le scope — `tools/trains.sh` est la source de vérité unique — et chaque train
 publie indépendamment : `lib` (scopes `core`, `analyzers`, `testing`, `binder` →
 `FirstClassErrors`, `FirstClassErrors.Testing` et `FirstClassErrors.RequestBinder`), `cli`
-(scopes `cli`, `gendoc` → l’outil `fce`) et `dum` (scope `dummies` → `Dummies`). Le scope
+(scopes `cli`, `gendoc` → l’outil `fce`) et `dum` (scope `justdummies` → `JustDummies`). Le scope
 d’un commit décide dans les release notes et le changelog de quel train il atterrit ; voir
 [Ajouter un train de release](../for-maintainers/AddingAReleaseTrain.fr.md).
 

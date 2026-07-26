@@ -40,7 +40,7 @@ the model's say-so, and it **never merges** anything itself.
 ## When it runs
 
 - On **`workflow_run: completed`** of every gating workflow a Dependabot PR passes
-  through (`ci`, `sonar`, `analyzers`, `commit-lint`, `dummies`,
+  through (`ci`, `sonar`, `analyzers`, `commit-lint`, `justdummies`,
   `dependency-review`, `codeql`). Any one completing re-runs it against the head
   commit's **combined** check status.
 - Gated to **Dependabot's own pull requests from a branch in this repository**

@@ -8,7 +8,7 @@
 
 ## Context
 
-`Dummies` is a fluent DSL of typed, constraint-carrying generators. Every
+`JustDummies` is a fluent DSL of typed, constraint-carrying generators. Every
 generator implements `IAny<T>`, whose single member `Generate()` draws one value
 satisfying the declared constraints; the composition seams `As` and `Combine`
 build larger generators and materialize their parts by calling `Generate()`. The
@@ -40,7 +40,7 @@ library (issue #190):
   member generic inference flows through, and is the operation the composition
   seams use. It is the dominant idiom across the test suite.
 
-Two constraints bound the timing. `Dummies` is a pre-1.0, standalone package
+Two constraints bound the timing. `JustDummies` is a pre-1.0, standalone package
 whose API is expected to churn most in its early iterations, and it is referenced
 only by its own test project (ADR-0011); removing a public operator surface is
 therefore cheap now and a breaking change once a stable `1.0` is published. Issue
@@ -49,7 +49,7 @@ before that `1.0`.
 
 ## Decision
 
-Concrete `Dummies` generators expose no implicit conversion to their generated
+Concrete `JustDummies` generators expose no implicit conversion to their generated
 type: a value is materialized only by `Generate()`, called directly or by the
 `As` and `Combine` composition seams that call it internally.
 
@@ -143,6 +143,6 @@ surprise on the types that keep it.
 
 * Issue #190 — Define and document the contract of implicit generator
   conversions.
-* ADR-0011 — Host Dummies as a standalone package (pre-1.0 churn, self-consumed).
+* ADR-0011 — Host JustDummies as a standalone package (pre-1.0 churn, self-consumed).
 * ADR-0006 — Supply arbitrary test values from a single seedable source.
-* `Dummies/IAny.cs` — the `Generate()` contract these generators flow through.
+* `JustDummies/IAny.cs` — the `Generate()` contract these generators flow through.

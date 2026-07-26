@@ -1,4 +1,4 @@
-# ADR-0039 | Adapter Dummies à xUnit v3 via un package compagnon
+# ADR-0039 | Adapter JustDummies à xUnit v3 via un package compagnon
 
 🌍 🇬🇧 [English](0039-adapt-dummies-to-xunit-v3-through-a-companion-package.md) · 🇫🇷 Français (ce fichier)
 
@@ -9,7 +9,7 @@
 ## Contexte
 
 Un test qui tire des valeurs arbitraires n'est reproductible que si une graine
-est fixée et rapportée. `Dummies` fournit cela via un exécuteur qui fixe une
+est fixée et rapportée. `JustDummies` fournit cela via un exécuteur qui fixe une
 graine pour la durée d'un délégué et la rapporte lorsque ce délégué lève ; chaque
 test sensible aux valeurs doit donc envelopper son corps dans ce délégué. La
 cérémonie est reconstituée à la main dans chaque consommateur.
@@ -17,9 +17,9 @@ cérémonie est reconstituée à la main dans chaque consommateur.
 Un adaptateur qui la supprime a été anticipé puis perdu. Les suivis de l'ADR-0006
 appelaient un adaptateur optionnel de framework de test « pour que la graine soit
 exposée automatiquement, sans envelopper chaque corps » ; l'ADR-0026 a rebasé le
-moteur de valeurs sur `Dummies` sans reprendre ce suivi. La capacité est donc
+moteur de valeurs sur `JustDummies` sans reprendre ce suivi. La capacité est donc
 anticipée par une ADR acceptée et remplacée par rien. L'audit d'architecture et
-de conception de `Dummies` du 2026-07-20 demande un oui ou un non explicite
+de conception de `JustDummies` du 2026-07-20 demande un oui ou un non explicite
 plutôt qu'un silence prolongé, et place la décision dans le premier cycle stable.
 
 La capacité qu'un adaptateur doit fournir est étroite : fixer une graine pour la
@@ -27,7 +27,7 @@ durée d'un test, et exposer cette graine au développeur **uniquement lorsque l
 test échoue**. Une graine rapportée à chaque exécution est du bruit ; une graine
 jamais rapportée laisse un échec irreproductible.
 
-L'identité de `Dummies` est de ne dépendre de rien au-delà de la bibliothèque
+L'identité de `JustDummies` est de ne dépendre de rien au-delà de la bibliothèque
 standard (ADR-0011), une frontière qu'un test d'architecture vérifie sur son
 propre assembly. Elle ne peut donc pas référencer un framework de test, si bien
 que tout adaptateur est un package compagnon distinct — l'arrangement que
@@ -63,17 +63,17 @@ pas affecté par cette décision ; les utilisateurs de tout autre framework ne
 perdent donc aucune capacité — ils conservent la forme qui existe aujourd'hui.
 
 L'ADR-0038 ouvre la portée de graine ambiante sous forme de poignée publique, si
-bien qu'un adaptateur n'a besoin d'aucun accès privilégié à `Dummies` et
+bien qu'un adaptateur n'a besoin d'aucun accès privilégié à `JustDummies` et
 qu'ajouter plus tard un adaptateur pour un autre framework n'exige aucune
 modification de celui-ci.
 
-`Dummies` est publié sur le train de release `dum`, qui ne porte actuellement
+`JustDummies` est publié sur le train de release `dum`, qui ne porte actuellement
 qu'un seul package. La bibliothèque a vocation à rejoindre son propre dépôt à
 terme.
 
 ## Décision
 
-`Dummies` reçoit un package compagnon qui fixe et rapporte automatiquement la
+`JustDummies` reçoit un package compagnon qui fixe et rapporte automatiquement la
 graine pour les tests xUnit v3, et ne vise aucun autre framework de test.
 
 ## Justification
@@ -99,7 +99,7 @@ graine pour les tests xUnit v3, et ne vise aucun autre framework de test.
   capacité, mais seulement de la commodité.
 * **Un package compagnon est imposé par l'identité de la bibliothèque.** La
   frontière zéro-dépendance rend impossible une référence à un framework de test
-  à l'intérieur de `Dummies`, et le dépôt livre déjà un package compagnon pour
+  à l'intérieur de `JustDummies`, et le dépôt livre déjà un package compagnon pour
   exactement cette raison.
 * **Le choix est éprouvé par son auteur.** Les suites de ce dépôt s'exécutent sur
   xUnit v3, si bien que l'adaptateur est utilisé là où il est maintenu plutôt que
@@ -169,7 +169,7 @@ communs.
 * La commodité n'atteint que les utilisateurs de xUnit v3 ; tout autre framework
   conserve l'exécuteur à délégué.
 * Le plancher de frameworks supportés du package est celui du framework de test,
-  au-dessus du plancher que `Dummies` conserve — les deux ne peuvent donc pas
+  au-dessus du plancher que `JustDummies` conserve — les deux ne peuvent donc pas
   partager une même liste de cibles.
 
 ### Risques
@@ -187,7 +187,7 @@ communs.
 ## Actions de suivi
 
 * Publier le package sur le train `dum` existant dans un premier temps, pour
-  qu'il soit versionné avec `Dummies`. **Lorsque `Dummies` rejoindra son propre
+  qu'il soit versionné avec `JustDummies`. **Lorsque `JustDummies` rejoindra son propre
   dépôt, réexaminer si le package compagnon a besoin de son propre train** — un
   train partagé n'est approprié que tant que les deux sont livrés depuis le même
   endroit et à la même cadence.
@@ -203,11 +203,11 @@ communs.
   test : la poignée publique dont ce package est le premier consommateur.
 * ADR-0006 — Fournir les valeurs de test arbitraires depuis une source unique
   semable : le suivi qui a anticipé cet adaptateur.
-* ADR-0011 — Héberger Dummies comme package autonome : la frontière
+* ADR-0011 — Héberger JustDummies comme package autonome : la frontière
   zéro-dépendance qui impose un package compagnon.
-* ADR-0026 — Rebaser les valeurs arbitraires du package de test sur Dummies : le
+* ADR-0026 — Rebaser les valeurs arbitraires du package de test sur JustDummies : le
   rebase dans lequel le suivi anticipé a été abandonné.
 * `doc/handwritten/for-maintainers/audit/2026-07-20-dummies-architecture-and-design-audit.md`
   — l'audit demandant une décision explicite.
-* Issue #226 — le backlog des « nice-to-have » de Dummies où l'adaptateur est
+* Issue #226 — le backlog des « nice-to-have » de JustDummies où l'adaptateur est
   suivi.

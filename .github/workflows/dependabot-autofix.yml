@@ -38,7 +38,7 @@ on:
       - sonar
       - analyzers
       - commit-lint
-      - dummies
+      - justdummies
       - dependency-review
       - codeql
     types:

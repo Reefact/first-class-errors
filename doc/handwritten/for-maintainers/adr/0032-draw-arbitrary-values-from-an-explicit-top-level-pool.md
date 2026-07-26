@@ -8,7 +8,7 @@
 
 ## Context
 
-`Dummies` supplies arbitrary yet valid values from a single seedable source, so any run is reproducible from a
+`JustDummies` supplies arbitrary yet valid values from a single seedable source, so any run is reproducible from a
 reported seed (ADR-0006). A recurring need is a value whose domain is a **closed set the caller already holds** — one
 of the currencies a context is configured with, one of the orders already in a fixture, one of a handful of domain
 states the test does not assert on. The library generates structural shapes (a length, an interval, a pattern); it
@@ -36,7 +36,7 @@ Several existing facts frame the choice:
 * A factory that takes raw values rather than an `IAny<>` operand does not inherit a random context from an operand,
   so — unlike `Combine`/`ListOf`/`SetOf` — it must exist on both `Any` (ambient) and `AnyContext` (seeded); the
   surface-parity guard treats such a factory as a scalar factory and requires the mirror.
-* The 2026-07-20 Dummies architecture & design audit (§10) ranks this the highest-leverage Must-Have: every consumer,
+* The 2026-07-20 JustDummies architecture & design audit (§10) ranks this the highest-leverage Must-Have: every consumer,
   most weeks.
 
 ## Decision
@@ -132,7 +132,7 @@ type-agnostic, top-level factory — so a static factory on `Any`/`AnyContext` i
 
 ## Follow-up Actions
 
-* Document `OneOf`/`ElementOf` in the Dummies user guide (`ArbitraryTestValues.en.md`) and its French translation, and
+* Document `OneOf`/`ElementOf` in the JustDummies user guide (`ArbitraryTestValues.en.md`) and its French translation, and
   in the package README (`README.nuget.md`), with an example.
 * Keep the `Any`↔`AnyContext` mirror green (enforced by `SurfaceParityTests`).
 * Consider aligning the string generator's and the generic generator's `null`-element messages when the string
@@ -146,7 +146,7 @@ type-agnostic, top-level factory — so a static factory on `Any`/`AnyContext` i
 * ADR-0006 — Supply arbitrary test values from a single seedable source (reproducibility).
 * ADR-0031 — Name Any's scalar factories after their CLR type (why `OneOf`/`ElementOf`, as combinators, are exempt).
 * ADR-0020 — Materialize dummies only through `Generate()`.
-* Issue [#223](https://github.com/Reefact/first-class-errors/issues/223) and the 2026-07-20 Dummies architecture &
+* Issue [#223](https://github.com/Reefact/first-class-errors/issues/223) and the 2026-07-20 JustDummies architecture &
   design audit (§10 Must-Have).
 * The `AnyOneOf<T>` type, the `Any.OneOf`/`Any.ElementOf` and `AnyContext.OneOf`/`AnyContext.ElementOf` factories, and
-  their tests in the `Dummies` project and `Dummies.UnitTests`.
+  their tests in the `JustDummies` project and `JustDummies.UnitTests`.

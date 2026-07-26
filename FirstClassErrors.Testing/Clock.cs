@@ -55,13 +55,13 @@ public static class Clock {
     /// </summary>
     /// <remarks>
     ///     The instant is drawn once, when this method is called, and stays fixed for every error created within the
-    ///     scope — the same freezing behavior as <see cref="UseFixed" />. The value is drawn from Dummies' ambient
-    ///     random context; run the test inside <c>Dummies.Any.Reproducibly(...)</c> to make the chosen instant
+    ///     scope — the same freezing behavior as <see cref="UseFixed" />. The value is drawn from JustDummies' ambient
+    ///     random context; run the test inside <c>JustDummies.Any.Reproducibly(...)</c> to make the chosen instant
     ///     reproducible and reported on failure.
     /// </remarks>
     /// <returns>A scope that restores the real system clock when disposed.</returns>
     public static IDisposable UseAny() {
-        return UseFixed(Dummies.Any.DateTimeOffset().Generate());
+        return UseFixed(JustDummies.Any.DateTimeOffset().Generate());
     }
 
 }

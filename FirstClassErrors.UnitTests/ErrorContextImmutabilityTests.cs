@@ -34,7 +34,7 @@ public sealed class ErrorContextImmutabilityTests : IDisposable {
         // Setup
         ErrorContextKey<string> key = ErrorContextKey.Create<string>("K");
         ErrorContext context = DomainError.Create(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any(),
-                                                  ctx => ctx.Add(key, Dummies.Any.String().NonEmpty().Generate())).WithPublicMessage(ShortMessageFactory.Any()).Context;
+                                                  ctx => ctx.Add(key, JustDummies.Any.String().NonEmpty().Generate())).WithPublicMessage(ShortMessageFactory.Any()).Context;
 
         // Exercise & verify
         Check.ThatCode(() => ((IDictionary<ErrorContextKey, object?>)context.Values).Clear())

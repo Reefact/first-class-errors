@@ -8,7 +8,7 @@
 
 ## Context
 
-`Dummies` supplies arbitrary yet valid values, with constraints that express what the surrounding code requires of
+`JustDummies` supplies arbitrary yet valid values, with constraints that express what the surrounding code requires of
 a value. A recurring need is a value whose domain is a **fixed, closed list** the test does not assert on — a
 currency code drawn from a short table, a status label, a well-known company name. The library generates
 **structural** shapes (a length, a character family, a regular pattern); it cannot synthesize such a real-world set,
@@ -114,7 +114,7 @@ a non-deterministic, non-hermetic first run to a library whose identity is zero-
 
 ## Follow-up Actions
 
-* Document the generator in the `Dummies` package README (done) and in the user documentation when the string surface
+* Document the generator in the `JustDummies` package README (done) and in the user documentation when the string surface
   is next revised.
 * Keep the "no realistic fake data" non-goal in the README accurate: `OneOf` draws from caller-supplied values and
   ships no dataset.
@@ -124,6 +124,6 @@ a non-deterministic, non-hermetic first run to a library whose identity is zero-
 * ADR-0025 — Generate matching strings from a home-grown regular subset (the terminal-generator precedent).
 * ADR-0013 — Gate distinct collections by cardinality, otherwise by a bounded draw (the `ICardinalityHint` contract).
 * ADR-0006 — Supply arbitrary test values from a single seedable source (reproducibility).
-* ADR-0011 — Host Dummies as a standalone package in this repository (the zero-dependency, no-dataset boundary).
-* The `AnyStringOneOf` type, the `AnyString.OneOf` method, and their tests in the `Dummies` project and
-  `Dummies.UnitTests`.
+* ADR-0011 — Host JustDummies as a standalone package in this repository (the zero-dependency, no-dataset boundary).
+* The `AnyStringOneOf` type, the `AnyString.OneOf` method, and their tests in the `JustDummies` project and
+  `JustDummies.UnitTests`.

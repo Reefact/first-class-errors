@@ -8,7 +8,7 @@
 
 ## Contexte
 
-`Dummies` tire chaque valeur arbitraire d'une source aléatoire. Les points
+`JustDummies` tire chaque valeur arbitraire d'une source aléatoire. Les points
 d'entrée statiques `Any` tirent d'une source **ambiante** qui suit le contexte
 d'exécution, si bien qu'elle ne fuit jamais entre des tests exécutés en
 parallèle. Le déterminisme sur cette source ambiante est optionnel, et
@@ -52,19 +52,19 @@ consigné dans l'ADR-0006 et employé par les coutures d'horloge et d'identifian
 d'instance du package de test : la surcharge est ouverte par un appel `Use…` et
 fermée en disposant ce qu'il retourne.
 
-`Dummies` est en pré-1.0 et n'est pas encore publié sur NuGet (ADR-0011), donc sa
+`JustDummies` est en pré-1.0 et n'est pas encore publié sur NuGet (ADR-0011), donc sa
 surface publique peut encore grandir sans cérémonie de compatibilité. L'identité
 de la bibliothèque est de ne dépendre de rien au-delà de la bibliothèque
 standard, une frontière qu'un test d'architecture vérifie sur son propre
 assembly.
 
 Le chemin d'accès alternatif — accorder à un package compagnon nommé l'accès aux
-membres internes de `Dummies` — est disponible : la bibliothèque ne déclare
+membres internes de `JustDummies` — est disponible : la bibliothèque ne déclare
 aucune autorisation de ce type aujourd'hui.
 
 ## Décision
 
-`Dummies` expose la portée de graine ambiante sous forme de poignée publique et
+`JustDummies` expose la portée de graine ambiante sous forme de poignée publique et
 disposable, dont l'ouvreur peut fournir l'extrait de rejeu que les
 diagnostics d'échec de génération nommeront.
 
@@ -80,7 +80,7 @@ diagnostics d'échec de génération nommeront.
   garde tous les adaptateurs possibles.** Une autorisation d'accès privilégie un
   compagnon nommé et exclut les autres : un adaptateur tiers, ou un adaptateur
   interne pour un autre framework, exigerait chacun sa propre autorisation et sa
-  propre modification de `Dummies`. Une poignée publique fait de « adapter un
+  propre modification de `JustDummies`. Une poignée publique fait de « adapter un
   autre framework plus tard » une décision additive ne touchant rien ici — ce qui
   est précisément la propriété qui permet de prendre la décision xUnit de façon
   étroite, sans trancher le reste.
@@ -102,12 +102,12 @@ diagnostics d'échec de génération nommeront.
 
 ## Alternatives considérées
 
-### Accorder au package compagnon l'accès aux membres internes de Dummies
+### Accorder au package compagnon l'accès aux membres internes de JustDummies
 
 Considérée parce qu'elle n'ajoute aucune surface publique : l'adaptateur
 utiliserait la poignée interne existante telle quelle. Rejetée parce qu'elle
 privilégie un compagnon nommé — tout autre adaptateur, interne ou tiers, aurait
-besoin de sa propre autorisation et donc de sa propre modification de `Dummies` —
+besoin de sa propre autorisation et donc de sa propre modification de `JustDummies` —
 et parce qu'elle couple les identités d'assembly des deux packages pour une
 capacité qui n'est pas, en elle-même, privée.
 
@@ -139,7 +139,7 @@ passer : il observe le test, il ne l'invoque pas.
 
 ### Positives
 
-* Tout framework de test peut être adapté sans accès privilégié à `Dummies` et
+* Tout framework de test peut être adapté sans accès privilégié à `JustDummies` et
   sans modification supplémentaire de celui-ci, si bien que chaque adaptateur
   supplémentaire est une décision indépendante et additive.
 * Une exécution dont un adaptateur a fixé la graine rapporte un extrait de
@@ -154,7 +154,7 @@ passer : il observe le test, il ne l'invoque pas.
   à délégué et du contexte isolé. La documentation doit garder les trois
   distinctes et dire laquelle le lecteur cherche.
 * L'extrait de rejeu est fourni par l'appelant et ne peut pas être validé
-  par `Dummies` ; une formulation maladroite dégrade donc le diagnostic qu'elle
+  par `JustDummies` ; une formulation maladroite dégrade donc le diagnostic qu'elle
   devait améliorer.
 
 ### Risques
@@ -182,11 +182,11 @@ passer : il observe le test, il ne l'invoque pas.
 * ADR-0006 — Fournir les valeurs de test arbitraires depuis une source unique
   semable : l'idiome de portée disposable que cet ajout réutilise, et le suivi
   anticipant un adaptateur de framework de test.
-* ADR-0011 — Héberger Dummies comme package autonome : l'identité zéro-dépendance
+* ADR-0011 — Héberger JustDummies comme package autonome : l'identité zéro-dépendance
   et la latitude pré-1.0 sur lesquelles cette décision s'appuie.
-* ADR-0026 — Rebaser les valeurs arbitraires du package de test sur Dummies : le
+* ADR-0026 — Rebaser les valeurs arbitraires du package de test sur JustDummies : le
   récit unique de graine que cette source ambiante porte désormais.
-* ADR-0039 — Adapter Dummies à xUnit v3 via un package compagnon : le premier
+* ADR-0039 — Adapter JustDummies à xUnit v3 via un package compagnon : le premier
   consommateur de cette poignée.
-* Issue #226 — le backlog des « nice-to-have » de Dummies où l'adaptateur est
+* Issue #226 — le backlog des « nice-to-have » de JustDummies où l'adaptateur est
   suivi.
