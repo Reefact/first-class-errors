@@ -173,7 +173,9 @@ public sealed class SurfaceParityTests {
         // The remaining scalar builders each carry their own deliberate set.
         yield return [typeof(AnyBoolean), new[] { "True", "False", "DifferentFrom" }];
         yield return [typeof(AnyGuid), new[] { "NonEmpty", "Empty", "OneOf", "Except", "DifferentFrom" }];
-        yield return [typeof(AnyEnum<DayOfWeek>), new[] { "OneOf", "Except", "DifferentFrom" }];
+        // AnyEnum adds AllowingCombinations, the opt-in widening the draw from the declared members to their
+        // combinations — meaningful only for a [Flags] enum, hence a constraint rather than a second factory.
+        yield return [typeof(AnyEnum<DayOfWeek>), new[] { "AllowingCombinations", "OneOf", "Except", "DifferentFrom" }];
         yield return [typeof(AnyChar), new[] { "Alpha", "AlphaNumeric", "Numeric", "UpperCase", "LowerCase", "OneOf", "Except", "DifferentFrom" }];
 
         // AnyString carries the exclusion pair Except/DifferentFrom (met by a bounded redraw, since strings are not
