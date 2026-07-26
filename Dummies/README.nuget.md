@@ -81,6 +81,11 @@ matter — and that is the point.
   (`WithGranularity(TimeSpan.FromMinutes(15))`) — so tick-precision values never surprise a
   serialization round-trip. Each is built in one draw, composes with the bounds and
   exclusions, and conflicts eagerly when the range holds no grid point.
+- **Offset-aware `DateTimeOffset`**: unconstrained, `Any.DateTimeOffset()` carries offset
+  `TimeSpan.Zero` (UTC); `WithOffset(TimeSpan)` pins a whole-minute offset (±14:00) and
+  `WithOffsetBetween(min, max)` draws a bounded one, so offset-sensitive code (local
+  rendering, offset arithmetic, "same instant, different offset") is actually exercised. The
+  instant is tightened first, so the value stays valid even at the edges of the range.
 - **Values built to satisfy the constraints** — a scalar is constructed directly,
   never generated-then-filtered. The one exception is excluding values from a string
   (`Any.String().DifferentFrom(...)`/`Except(...)`): a string has no ordinal mapping to
