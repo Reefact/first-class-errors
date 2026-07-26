@@ -1,7 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Adds the .NET Framework 4.7.2 support-floor leg (gated by EnableNet472Floor) and owns the target
+       frameworks; exercised by the `framework-floor` job in .github/workflows/ci.yml. Dummies.Xunit is a
+       netstandard2.0 package, so a .NET Framework consumer loads that asset — this carries the adapter's
+       contract suite onto the floor it actually claims to support (ADR-0022). -->
+  <Import Project="..\build\Net472TestFloor.props" />
+
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>

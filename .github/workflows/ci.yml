@@ -100,8 +100,10 @@ jobs:
       # because its fixtures bind DateOnly, a .NET 6+ type absent from net472. RequestBinder is still floored here
       # through its property tests, and Dummies through its own contract suite (Dummies.UnitTests), running on the
       # netstandard2.0 asset .NET Framework consumers load — its net8-only tests are conditioned out (issue #215).
+      # Dummies.Xunit is floored the same way: it ships netstandard2.0, so a .NET Framework consumer loads that
+      # asset, and its adapter suite must prove it works there and not only on net10.
       # A per-project loop (not a solution-wide -f net472, which would force the TFM onto the net10-only projects
-      # and fail) keeps the net472 scope exactly these four.
+      # and fail) keeps the net472 scope exactly these five.
       - name: Test the netstandard2.0 libraries on .NET Framework 4.7.2
         shell: bash
         run: |
@@ -110,7 +112,8 @@ jobs:
             FirstClassErrors.UnitTests \
             FirstClassErrors.PropertyTests \
             FirstClassErrors.RequestBinder.PropertyTests \
-            Dummies.UnitTests ; do
+            Dummies.UnitTests \
+            Dummies.Xunit.UnitTests ; do
             echo "::group::$proj (net472)"
             dotnet test "$proj/$proj.csproj" -c Release -f net472 -p:EnableNet472Floor=true \
               --logger "console;verbosity=normal"
