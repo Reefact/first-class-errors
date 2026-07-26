@@ -33,13 +33,13 @@ l'autre, ce qu'aucun chemin public ne permet.
 
 Deux faits supplémentaires pèsent sur la forme de cette ouverture.
 
-* **Les échecs de génération portent une instruction de rejeu.** Lorsqu'un
+* **Les échecs de génération portent un extrait de rejeu.** Lorsqu'un
   générateur échoue — typiquement une fabrique rejetant une valeur tirée — le
   message d'exception ajoute une indication nommant le mécanisme qui rejoue
   réellement l'exécution. Cette indication est choisie par type de source : la
   source ambiante nomme l'exécuteur à délégué, un contexte isolé se nomme
-  lui-même, parce que les deux se rejouent différemment. Nommer une instruction
-  que le code de l'appelant n'utilise pas est un diagnostic trompeur, et l'éviter
+  lui-même, parce que les deux se rejouent différemment. Nommer un extrait
+  que le code de l'appelant ne contient pas est un diagnostic trompeur, et l'éviter
   est la raison même pour laquelle l'indication varie.
 * **Aucune des formulations existantes ne convient à une exécution fixée par un
   adaptateur.** Un test dont la graine a été fixée par un adaptateur ne contient
@@ -65,7 +65,7 @@ aucune autorisation de ce type aujourd'hui.
 ## Décision
 
 `Dummies` expose la portée de graine ambiante sous forme de poignée publique et
-disposable, dont l'ouvreur peut fournir l'instruction de rejeu que les
+disposable, dont l'ouvreur peut fournir l'extrait de rejeu que les
 diagnostics d'échec de génération nommeront.
 
 ## Justification
@@ -84,14 +84,14 @@ diagnostics d'échec de génération nommeront.
   autre framework plus tard » une décision additive ne touchant rien ici — ce qui
   est précisément la propriété qui permet de prendre la décision xUnit de façon
   étroite, sans trancher le reste.
-* **Porter l'instruction de rejeu préserve un invariant que la bibliothèque
+* **Porter l'extrait de rejeu préserve un invariant que la bibliothèque
   applique déjà.** Le diagnostic nomme le mécanisme qui s'applique ; c'est
   d'ailleurs pourquoi l'indication varie selon la source. Un adaptateur introduit
   une troisième manière de fixer la source ambiante, et sans moyen de le dire il
   hériterait de la formulation de l'exécuteur à délégué — annonçant, à un
   développeur dont le test ne contient aucun appel de ce genre, exactement
-  l'instruction trompeuse que le mécanisme existe pour empêcher. Laisser
-  l'ouvreur nommer l'instruction prolonge ce design au lieu de le contourner.
+  l'extrait trompeur que le mécanisme existe pour empêcher. Laisser
+  l'ouvreur nommer l'extrait prolonge ce design au lieu de le contourner.
 * **La forme « portée disposable » est déjà l'idiome maison.** L'ADR-0006 l'a
   établie pour les surcharges d'horloge et d'identifiants d'instance, si bien que
   l'ajout se reconnaît comme la même chose plutôt que comme un second mécanisme
@@ -111,7 +111,7 @@ besoin de sa propre autorisation et donc de sa propre modification de `Dummies` 
 et parce qu'elle couple les identités d'assembly des deux packages pour une
 capacité qui n'est pas, en elle-même, privée.
 
-### Exposer la portée sans instruction de rejeu
+### Exposer la portée sans extrait de rejeu
 
 Considérée comme le plus petit ajout possible, reportant la question du
 diagnostic jusqu'à l'existence d'un adaptateur. Rejetée parce qu'elle livre le
@@ -125,7 +125,7 @@ perturbateur.
 
 Considérée parce qu'une indication ne nommant aucun mécanisme ne peut pas nommer
 le mauvais. Rejetée parce qu'elle fait payer le cas rare par le cas dominant :
-les utilisateurs de l'exécuteur à délégué perdraient une instruction actionnable
+les utilisateurs de l'exécuteur à délégué perdraient un extrait actionnable
 — l'appel exact à écrire — pour accommoder un appelant qui peut simplement
 énoncer la sienne.
 
@@ -142,7 +142,7 @@ passer : il observe le test, il ne l'invoque pas.
 * Tout framework de test peut être adapté sans accès privilégié à `Dummies` et
   sans modification supplémentaire de celui-ci, si bien que chaque adaptateur
   supplémentaire est une décision indépendante et additive.
-* Une exécution dont un adaptateur a fixé la graine rapporte une instruction de
+* Une exécution dont un adaptateur a fixé la graine rapporte un extrait de
   rejeu correspondant au code de l'appelant, ce qui préserve la garantie qu'un
   diagnostic ne nomme jamais un mécanisme que le lecteur n'utilise pas.
 * L'ajout réutilise l'idiome établi de portée disposable au lieu d'introduire une
@@ -153,7 +153,7 @@ passer : il observe le test, il ne l'invoque pas.
 * Une troisième manière publique de contrôler la graine, aux côtés de l'exécuteur
   à délégué et du contexte isolé. La documentation doit garder les trois
   distinctes et dire laquelle le lecteur cherche.
-* L'instruction de rejeu est fournie par l'appelant et ne peut pas être validée
+* L'extrait de rejeu est fourni par l'appelant et ne peut pas être validé
   par `Dummies` ; une formulation maladroite dégrade donc le diagnostic qu'elle
   devait améliorer.
 
@@ -174,7 +174,7 @@ passer : il observe le test, il ne l'invoque pas.
 * Documenter l'ajout dans le guide utilisateur, en anglais et en français de
   concert, en distinguant les trois manières de contrôler la graine et en
   désignant le cas de l'adaptateur comme celui pour lequel cette poignée existe.
-* Réexaminer la forme portant l'instruction si un second adaptateur montre
+* Réexaminer la forme portant l'extrait si un second adaptateur montre
   qu'elle reste habituellement inutilisée.
 
 ## Références

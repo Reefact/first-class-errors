@@ -228,7 +228,7 @@ internal sealed class UriSpec {
         if (_pathMode == UriPathMode.Exact) {
             int seed = source.Current.Seed;
             throw new AnyGenerationException(
-                "A relative URI with exactly 0 path segments and no query, fragment or root is empty, which is not a valid URI reference. Add a query, a fragment, Rooted(), or a positive segment count. " + source.ReplayHint(seed),
+                "A relative URI with exactly 0 path segments and no query, fragment or root is empty, which is not a valid URI reference. Add a query, a fragment, Rooted(), or a positive segment count. " + source.ReplayGuidance(seed),
                 seed);
         }
 

@@ -251,8 +251,8 @@ internal sealed class CollectionState<T> {
         // false) — even where it still carries a non-null source to name — so promising a full replay of its elements
         // would be false: qualify the hint instead.
         string replay = AnyDerivation.IsReproducible(culprit)
-                            ? source.ReplayHint(seed)
-                            : source.PartialReplayHint(seed);
+                            ? source.ReplayGuidance(seed)
+                            : source.PartialReplayGuidance(seed);
         string message = $"Could not generate a distinct collection of {Elements(target)}: {what} produced only {reached} distinct value(s) before the draw budget was exhausted. Loosen the count or widen the element generator's domain. {replay}";
 
         return new AnyGenerationException(message, seed);

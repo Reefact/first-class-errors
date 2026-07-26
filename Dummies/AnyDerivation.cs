@@ -87,7 +87,7 @@ internal static class AnyDerivation {
             int?   seed    = source?.Current.Seed;
             string message = $"Generation failed: {failure} ({exception.GetType().Name}: {exception.Message}).";
             if (source is not null) {
-                message += $" {(reproducible ? source.ReplayHint(seed!.Value) : source.PartialReplayHint(seed!.Value))}";
+                message += $" {(reproducible ? source.ReplayGuidance(seed!.Value) : source.PartialReplayGuidance(seed!.Value))}";
             }
 
             throw new AnyGenerationException(message, seed, exception);

@@ -41,7 +41,7 @@ Pin it to replay:
     [Fact, Reproducible(Seed = 1234)]
     public void Order_reference_is_accepted() { /* ... */ }
 
-The same instruction is what a generation failure names, so a diagnostic never
+The same snippet is what a generation failure names, so a diagnostic never
 points at a call the test does not contain.
 
 ## Where it applies

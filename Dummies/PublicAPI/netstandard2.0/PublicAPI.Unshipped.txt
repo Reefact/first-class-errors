@@ -419,7 +419,7 @@ static Dummies.Any.UInt32() -> Dummies.AnyUInt32!
 static Dummies.Any.UInt64() -> Dummies.AnyUInt64!
 static Dummies.Any.Uri() -> Dummies.AnyUri!
 static Dummies.Any.UseSeed(int seed) -> System.IDisposable!
-static Dummies.Any.UseSeed(int seed, string! replayInstruction) -> System.IDisposable!
+static Dummies.Any.UseSeed(int seed, string! replaySnippet) -> System.IDisposable!
 static Dummies.Any.WithSeed(int seed) -> Dummies.AnyContext!
 static Dummies.AnyExtensions.As<TSource, TResult>(this Dummies.IAny<TSource>! generator, System.Func<TSource, TResult>! factory) -> Dummies.IAny<TResult>!
 static Dummies.NullableExtensions.OrNull<T>(this Dummies.IAny<T>! generator) -> Dummies.IAny<T?>!

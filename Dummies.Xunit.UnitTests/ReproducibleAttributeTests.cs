@@ -100,7 +100,7 @@ public sealed class ReproducibleAttributeTests {
 
         Check.That(caught.Seed).IsEqualTo(2026);
         Check.That(caught.Message).Contains("[Reproducible(Seed = 2026)]");
-        // The whole point of the replay instruction: this test contains no Any.Reproducibly call, so naming
+        // The whole point of the replay snippet: this test contains no Any.Reproducibly call, so naming
         // one would send the reader to a call that is not there.
         Check.That(caught.Message).Not.Contains("Any.Reproducibly");
     }
