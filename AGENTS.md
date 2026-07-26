@@ -17,6 +17,11 @@ Two roles are covered: **writing code** and **reviewing pull requests**.
   (`Transience`, `ErrorOrigin`) are the only value-type exception.
 - Keep changes small and focused. Treat renamed error codes, diagnostic IDs and
   public types as breaking changes.
+- Adding a new project? Also add its GUID to `FirstClassErrors.sln`'s
+  `GlobalSection(NestedProjects)`, nested under the `src` or `tests` solution
+  folder like its siblings — a project left out of that section sits loose at
+  the solution root instead of grouped with the rest. This has recurred
+  several times; check it whenever a `.csproj` is added.
 
 ## Architecture decisions (code changes)
 
