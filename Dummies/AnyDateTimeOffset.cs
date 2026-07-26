@@ -14,19 +14,23 @@ namespace Dummies;
 ///     draw.
 /// </summary>
 /// <remarks>
-///     Generated values carry offset <see cref="TimeSpan.Zero" /> (UTC); constraints compare by
-///     <see cref="DateTimeOffset.UtcTicks" /> — the instant, not the local rendering — exactly as
-///     <see cref="DateTimeOffset" />'s own comparison operators do. Values supplied to <see cref="OneOf" /> are
-///     returned as given, offset included. There is deliberately no clock-relative constraint (no "in the
-///     past/future"): a reproducible test pins its reference instants explicitly with <see cref="After" /> and
-///     <see cref="Before" />.
+///     Constraints compare by <see cref="DateTimeOffset.UtcTicks" /> — the instant, not the local rendering — exactly
+///     as <see cref="DateTimeOffset" />'s own comparison operators do. Unconstrained, generated values carry offset
+///     <see cref="TimeSpan.Zero" /> (UTC); <see cref="WithOffset" /> / <see cref="WithOffsetBetween" /> opt the offset
+///     dimension into a fixed or bounded whole-minute value so offset-sensitive code can be exercised. Values supplied
+///     to <see cref="OneOf" /> are returned as given, offset included. There is deliberately no clock-relative
+///     constraint (no "in the past/future"): a reproducible test pins its reference instants explicitly with
+///     <see cref="After" /> and <see cref="Before" />.
 /// </remarks>
 public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, ICardinalityHint<DateTimeOffset> {
+
+    // DateTimeOffset admits an offset in whole minutes within ±14:00.
+    private const int MaxOffsetMinutes = 14 * 60;
 
     #region Statics members declarations
 
     internal static AnyDateTimeOffset Create(RandomSource source) {
-        return new AnyDateTimeOffset(source, OrdinalIntervalSpec.Unconstrained("DateTimeOffset", ordinal => V(Val(ordinal)), Ord(DateTimeOffset.MinValue), Ord(DateTimeOffset.MaxValue)), null);
+        return new AnyDateTimeOffset(source, OrdinalIntervalSpec.Unconstrained("DateTimeOffset", ordinal => V(Val(ordinal)), Ord(DateTimeOffset.MinValue), Ord(DateTimeOffset.MaxValue)), null, false, 0, 0);
     }
 
     private static ulong Ord(DateTimeOffset value) {
@@ -41,8 +45,22 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
         return value.ToString("O", CultureInfo.InvariantCulture);
     }
 
+    private static string Render(TimeSpan offset) {
+        return offset.ToString("c", CultureInfo.InvariantCulture);
+    }
+
     private static string Join(DateTimeOffset[] values) {
         return string.Join(", ", values.Select(V));
+    }
+
+    /// <summary>Validates a supplied offset (whole minutes, within ±14:00) and returns it in whole minutes.</summary>
+    private static int ValidateOffset(TimeSpan offset, string parameterName) {
+        if (offset.Ticks % TimeSpan.TicksPerMinute != 0) { throw new ArgumentException("The offset must be a whole number of minutes.", parameterName); }
+        if (offset < TimeSpan.FromMinutes(-MaxOffsetMinutes) || offset > TimeSpan.FromMinutes(MaxOffsetMinutes)) {
+            throw new ArgumentOutOfRangeException(parameterName, offset, "The offset must be within ±14:00.");
+        }
+
+        return (int)(offset.Ticks / TimeSpan.TicksPerMinute);
     }
 
     #endregion
@@ -50,15 +68,22 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
     #region Fields declarations
 
     private readonly IReadOnlyDictionary<ulong, DateTimeOffset>? _allowedOriginals;
+    private readonly bool                                        _offsetDeclared;
+    private readonly int                                         _offsetMaxMinutes;
+    private readonly int                                         _offsetMinMinutes;
     private readonly RandomSource                                _source;
     private readonly OrdinalIntervalSpec                         _spec;
 
     #endregion
 
-    private AnyDateTimeOffset(RandomSource source, OrdinalIntervalSpec spec, IReadOnlyDictionary<ulong, DateTimeOffset>? allowedOriginals) {
+    private AnyDateTimeOffset(RandomSource source, OrdinalIntervalSpec spec, IReadOnlyDictionary<ulong, DateTimeOffset>? allowedOriginals,
+                             bool offsetDeclared, int offsetMinMinutes, int offsetMaxMinutes) {
         _source           = source;
         _spec             = spec;
         _allowedOriginals = allowedOriginals;
+        _offsetDeclared   = offsetDeclared;
+        _offsetMinMinutes = offsetMinMinutes;
+        _offsetMaxMinutes = offsetMaxMinutes;
     }
 
     RandomSource? IHasRandomSource.Source => _source;
@@ -72,7 +97,7 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateTimeOffset After(DateTimeOffset instant) {
-        return new AnyDateTimeOffset(_source, _spec.WithMinimumAbove(Ord(instant), $"After({V(instant)})"), _allowedOriginals);
+        return With(_spec.WithMinimumAbove(Ord(instant), $"After({V(instant)})"));
     }
 
     /// <summary>Requires an instant at or after <paramref name="instant" />.</summary>
@@ -80,7 +105,7 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateTimeOffset AfterOrEqualTo(DateTimeOffset instant) {
-        return new AnyDateTimeOffset(_source, _spec.WithMinimum(Ord(instant), $"AfterOrEqualTo({V(instant)})"), _allowedOriginals);
+        return With(_spec.WithMinimum(Ord(instant), $"AfterOrEqualTo({V(instant)})"));
     }
 
     /// <summary>Requires an instant strictly before <paramref name="instant" />.</summary>
@@ -88,7 +113,7 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateTimeOffset Before(DateTimeOffset instant) {
-        return new AnyDateTimeOffset(_source, _spec.WithMaximumBelow(Ord(instant), $"Before({V(instant)})"), _allowedOriginals);
+        return With(_spec.WithMaximumBelow(Ord(instant), $"Before({V(instant)})"));
     }
 
     /// <summary>Requires an instant at or before <paramref name="instant" />.</summary>
@@ -96,7 +121,7 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateTimeOffset BeforeOrEqualTo(DateTimeOffset instant) {
-        return new AnyDateTimeOffset(_source, _spec.WithMaximum(Ord(instant), $"BeforeOrEqualTo({V(instant)})"), _allowedOriginals);
+        return With(_spec.WithMaximum(Ord(instant), $"BeforeOrEqualTo({V(instant)})"));
     }
 
     /// <summary>Requires an instant within the inclusive range [<paramref name="start" />, <paramref name="end" />].</summary>
@@ -110,7 +135,7 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
 
         string constraint = $"Between({V(start)}, {V(end)})";
 
-        return new AnyDateTimeOffset(_source, _spec.WithMinimum(Ord(start), constraint).WithMaximum(Ord(end), constraint), _allowedOriginals);
+        return With(_spec.WithMinimum(Ord(start), constraint).WithMaximum(Ord(end), constraint));
     }
 
     /// <summary>
@@ -128,7 +153,42 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
 
         string rendered = granularity.ToString("c", CultureInfo.InvariantCulture);
 
-        return new AnyDateTimeOffset(_source, _spec.WithStep((ulong)granularity.Ticks, Ord(DateTimeOffset.MinValue), $"WithGranularity({rendered})"), _allowedOriginals);
+        return With(_spec.WithStep((ulong)granularity.Ticks, Ord(DateTimeOffset.MinValue), $"WithGranularity({rendered})"));
+    }
+
+    /// <summary>
+    ///     Pins the offset dimension to <paramref name="offset" /> — every generated value carries exactly that offset,
+    ///     rather than the default <see cref="TimeSpan.Zero" />. The instant is tightened so the value stays valid at
+    ///     the domain edges. Declared once per generator.
+    /// </summary>
+    /// <param name="offset">The offset to pin; a whole number of minutes, within ±14:00.</param>
+    /// <returns>A new generator carrying the added constraint.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="offset" /> is not a whole number of minutes.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="offset" /> is outside ±14:00.</exception>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    public AnyDateTimeOffset WithOffset(TimeSpan offset) {
+        int minutes = ValidateOffset(offset, nameof(offset));
+
+        return WithOffsetRange(minutes, minutes, $"WithOffset({Render(offset)})");
+    }
+
+    /// <summary>
+    ///     Draws the offset dimension from the inclusive range [<paramref name="minimum" />, <paramref name="maximum" />] —
+    ///     a bounded, whole-minute offset — so a test can exercise offset-sensitive logic while staying valid. The
+    ///     instant is tightened so every offset in the range stays valid. Declared once per generator.
+    /// </summary>
+    /// <param name="minimum">The inclusive lower offset; a whole number of minutes, within ±14:00.</param>
+    /// <param name="maximum">The inclusive upper offset; a whole number of minutes, within ±14:00.</param>
+    /// <returns>A new generator carrying the added constraint.</returns>
+    /// <exception cref="ArgumentException">Thrown when an offset is not a whole number of minutes, or <paramref name="minimum" /> is after <paramref name="maximum" />.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when an offset is outside ±14:00.</exception>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    public AnyDateTimeOffset WithOffsetBetween(TimeSpan minimum, TimeSpan maximum) {
+        int min = ValidateOffset(minimum, nameof(minimum));
+        int max = ValidateOffset(maximum, nameof(maximum));
+        if (min > max) { throw new ArgumentException($"The minimum offset ({Render(minimum)}) must be at or before the maximum ({Render(maximum)}).", nameof(minimum)); }
+
+        return WithOffsetRange(min, max, $"WithOffsetBetween({Render(minimum)}, {Render(maximum)})");
     }
 
     /// <summary>
@@ -151,7 +211,7 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
             if (!originals.ContainsKey(Ord(value))) { originals.Add(Ord(value), value); }
         }
 
-        return new AnyDateTimeOffset(_source, _spec.WithAllowed(values.Select(Ord).ToArray(), $"OneOf({Join(values)})"), originals);
+        return new AnyDateTimeOffset(_source, _spec.WithAllowed(values.Select(Ord).ToArray(), $"OneOf({Join(values)})"), originals, _offsetDeclared, _offsetMinMinutes, _offsetMaxMinutes);
     }
 
     /// <summary>Requires the instant to be none of the supplied values (compared by instant).</summary>
@@ -164,7 +224,7 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        return new AnyDateTimeOffset(_source, _spec.WithExcluded(values.Select(Ord).ToArray(), $"Except({Join(values)})"), _allowedOriginals);
+        return With(_spec.WithExcluded(values.Select(Ord).ToArray(), $"Except({Join(values)})"));
     }
 
     /// <summary>
@@ -176,15 +236,47 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateTimeOffset DifferentFrom(DateTimeOffset value) {
-        return new AnyDateTimeOffset(_source, _spec.WithExcluded([Ord(value)], $"DifferentFrom({V(value)})"), _allowedOriginals);
+        return With(_spec.WithExcluded([Ord(value)], $"DifferentFrom({V(value)})"));
     }
 
     /// <inheritdoc />
     public DateTimeOffset Generate() {
-        ulong ordinal = _spec.GenerateOrdinal(_source.Current.Random);
+        Random random  = _source.Current.Random;
+        ulong  ordinal = _spec.GenerateOrdinal(random);
         if (_allowedOriginals is not null && _allowedOriginals.TryGetValue(ordinal, out DateTimeOffset original)) { return original; }
+        if (!_offsetDeclared) { return Val(ordinal); }
 
-        return Val(ordinal);
+        int minutes = _offsetMinMinutes == _offsetMaxMinutes
+                          ? _offsetMinMinutes
+                          : _offsetMinMinutes + random.Next(_offsetMaxMinutes - _offsetMinMinutes + 1);
+        TimeSpan offset = TimeSpan.FromMinutes(minutes);
+
+        // The instant domain was tightened when the offset was declared, so the local ticks stay valid here.
+        return new DateTimeOffset((long)ordinal + offset.Ticks, offset);
+    }
+
+    /// <summary>Carries the offset state forward onto a new spec — every instant constraint routes through here.</summary>
+    private AnyDateTimeOffset With(OrdinalIntervalSpec spec) {
+        return new AnyDateTimeOffset(_source, spec, _allowedOriginals, _offsetDeclared, _offsetMinMinutes, _offsetMaxMinutes);
+    }
+
+    private AnyDateTimeOffset WithOffsetRange(int minMinutes, int maxMinutes, string applying) {
+        if (_offsetDeclared) {
+            if (_offsetMinMinutes == minMinutes && _offsetMaxMinutes == maxMinutes) { return this; }
+
+            throw new ConflictingAnyConstraintException($"Cannot apply {applying} because an offset constraint is already defined.");
+        }
+
+        // Tighten the instant so local ticks = UtcTicks + offset stay in [0, MaxTicks] for every offset in the range;
+        // the offset can then be drawn independently, never producing an out-of-range DateTimeOffset.
+        long  minOffsetTicks = minMinutes * TimeSpan.TicksPerMinute;
+        long  maxOffsetTicks = maxMinutes * TimeSpan.TicksPerMinute;
+        ulong lowerUtc       = (ulong)Math.Max(0L, -minOffsetTicks);
+        ulong upperUtc       = (ulong)(DateTimeOffset.MaxValue.UtcTicks - Math.Max(0L, maxOffsetTicks));
+
+        OrdinalIntervalSpec spec = _spec.WithMinimum(lowerUtc, applying).WithMaximum(upperUtc, applying);
+
+        return new AnyDateTimeOffset(_source, spec, _allowedOriginals, true, minMinutes, maxMinutes);
     }
 
 }
