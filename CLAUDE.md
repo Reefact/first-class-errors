@@ -22,6 +22,13 @@ errors should stay structured, documented, and close to the code.
 * Test: `dotnet test FirstClassErrors.sln`
 * Run the analyzer tests when touching analyzers:
   `dotnet test FirstClassErrors.Analyzers.UnitTests`
+* `JustDummies` has two test suites, and a new test belongs to exactly one of them:
+  `JustDummies.PropertyTests` owns invariants that hold for every legal constraint
+  argument, `JustDummies.UnitTests` owns specific named cases (message content,
+  argument validation, structural conventions, dated regressions). The rule and how
+  to apply it are in
+  [`doc/handwritten/for-maintainers/WritingJustDummiesTests.en.md`](doc/handwritten/for-maintainers/WritingJustDummiesTests.en.md)
+  (decision: ADR-0040). Read it before adding a JustDummies test.
 * Only report tests as passing if you actually ran the corresponding command.
 * If you did not run a relevant command, say so explicitly.
 

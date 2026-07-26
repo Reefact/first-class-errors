@@ -172,13 +172,12 @@ be attributed with confidence.
 
 ## Follow-up Actions
 
-* Publish the boundary as a maintainer guide so a contributor adding a constraint or fixing
-  a defect can place the test without re-deriving this decision.
 * Revisit ADR-0025's "property test" wording, which the audit flagged as inaccurate, now that
   a round-trip property exists. Only `@reefact` may amend or supersede an accepted ADR.
 
 ## References
 
+* [Writing JustDummies tests](../WritingJustDummiesTests.en.md) — how this boundary is applied when adding a test
 * [ADR-0025](0025-generate-strings-from-a-home-grown-regular-subset.md) — the regular subset whose round-trip this suite proves
 * [ADR-0035](0035-enforce-structural-any-conflicts-at-compile-time.md) — structural versus value-dependent conflicts, which decides how a property must branch
 * [ADR-0036](0036-draw-lattice-constrained-scalars-on-the-grid.md) — lattice constraints, whose grid invariant is quantified by the property suite

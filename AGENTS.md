@@ -8,6 +8,12 @@ Two roles are covered: **writing code** and **reviewing pull requests**.
 - .NET Standard 2.0 library. Errors are first-class, documented, diagnosable concepts.
 - Build: `dotnet build FirstClassErrors.sln`
 - Test: `dotnet test FirstClassErrors.sln` (analyzer tests: `dotnet test FirstClassErrors.Analyzers.UnitTests`).
+- Adding a `JustDummies` test? It belongs to exactly one of two suites:
+  `JustDummies.PropertyTests` for invariants that hold for every legal constraint
+  argument, `JustDummies.UnitTests` for specific named cases — message content,
+  argument validation, structural conventions, dated regressions. Read
+  [`doc/handwritten/for-maintainers/WritingJustDummiesTests.en.md`](doc/handwritten/for-maintainers/WritingJustDummiesTests.en.md)
+  first; the decision behind it is ADR-0040.
 - Repository language is **English** (code, comments, commits, PRs, issues, and
   review comments). French lives only in `doc/handwritten/for-users/README.fr.md` and must stay in sync
   with the English README.
