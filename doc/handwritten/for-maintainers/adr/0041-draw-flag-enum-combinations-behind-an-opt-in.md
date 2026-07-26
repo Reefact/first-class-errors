@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0041-draw-flag-enum-combinations-behind-an-opt-in.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-07-26
 **Decision Makers:** Reefact
 
