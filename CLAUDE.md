@@ -36,6 +36,13 @@ errors should stay structured, documented, and close to the code.
 * `FirstClassErrors.Usage`         — usage examples
 * `doc/`                           — documentation: `handwritten/` (`for-users`, `for-maintainers`) and `generated/` (CI/CD living docs)
 
+When adding a new project to the solution, also add its GUID to
+`FirstClassErrors.sln`'s `GlobalSection(NestedProjects)`, nested under the
+`src` or `tests` solution folder like its siblings — a project missing from
+that section shows up loose at the solution root in Visual Studio/Rider
+instead of grouped with the rest. This has been missed and fixed after the
+fact several times; check it every time a `.csproj` is added.
+
 ## Change guidelines
 
 * Keep changes small, focused, and aligned with the requested task.
