@@ -276,7 +276,7 @@ internal sealed class StringSpec {
     private AnyGenerationException Exhausted(RandomSource source) {
         int seed = source.Current.Seed;
         // A string generator draws only from its own source, so the seed replays the run fully — never the partial hint.
-        string replay = source.ReplayHint(seed);
+        string replay = source.ReplayGuidance(seed);
         string message =
             $"Could not generate a string that satisfies the declared shape while excluding {DescribeExcluded()}: " +
             $"no candidate survived {V(ExclusionRedrawBudget)} draws, so the exclusions leave the shape unsatisfiable " +

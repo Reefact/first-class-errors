@@ -428,34 +428,40 @@ public static class Any {
     }
 
     /// <summary>
-    ///     Pins the ambient random context to <paramref name="seed" /> and names, through
-    ///     <paramref name="replayInstruction" />, what a reader must write to replay this run — the form a
-    ///     test-framework adapter uses. A generation failure appends a reproduction guidance naming the mechanism that
-    ///     actually replays the run; the default names <c>Any.Reproducibly(seed, ...)</c>, which is the wrong
-    ///     instruction for a run pinned from outside the test body, where replaying means changing what the adapter
-    ///     reads instead.
+    ///     Pins the ambient random context to <paramref name="seed" /> and supplies the <b>replay snippet</b> — the
+    ///     code a reader copies to replay this run — that generation-failure guidance will embed. This is the form a
+    ///     test-framework adapter uses: the default snippet is <c>Any.Reproducibly(seed, ...)</c>, which points at a
+    ///     call a test pinned from outside its own body does not contain, where replaying means changing what the
+    ///     adapter reads instead.
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///         The instruction is quoted verbatim into the guidance, so pass what the reader must write — an attribute
-    ///         with its seed argument, a runner setting — not a sentence about it. It is not validated beyond being
-    ///         non-blank: a badly phrased instruction degrades the very diagnostic it is meant to improve.
+    ///         A failure's guidance is one sentence embedding this snippet, so pass the code itself — an attribute with
+    ///         its seed argument, a runner setting — not a sentence about it. It is quoted verbatim and validated only
+    ///         for being non-blank: a badly phrased snippet degrades the very diagnostic it is meant to improve.
     ///     </para>
+    ///     <example>
+    ///         <code>
+    ///         using (Any.UseSeed(1234, "[Reproducible(Seed = 1234)]")) { /* ... */ }
+    ///         // A generation failure then reads:
+    ///         //   The arbitrary values were seeded with 1234; reproduce this run with [Reproducible(Seed = 1234)].
+    ///         </code>
+    ///     </example>
     ///     <para>
     ///         Everything else matches <see cref="UseSeed(int)" />: the scope flows with the execution context, nests,
     ///         and restores the previous ambient context when disposed.
     ///     </para>
     /// </remarks>
     /// <param name="seed">The seed pinning the ambient context's value sequence.</param>
-    /// <param name="replayInstruction">What a reader must write to replay this run, quoted verbatim into generation-failure guidance.</param>
+    /// <param name="replaySnippet">The code a reader copies to replay this run, quoted verbatim into generation-failure guidance.</param>
     /// <returns>A handle that restores the previous ambient context when disposed.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="replayInstruction" /> is <c>null</c>.</exception>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="replayInstruction" /> is empty or white space.</exception>
-    public static IDisposable UseSeed(int seed, string replayInstruction) {
-        if (replayInstruction is null) { throw new ArgumentNullException(nameof(replayInstruction)); }
-        if (replayInstruction.Trim().Length == 0) { throw new ArgumentException("The replay instruction must name what a reader writes to replay the run; pass a non-blank instruction, or use the overload without one to name Any.Reproducibly(seed, ...).", nameof(replayInstruction)); }
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="replaySnippet" /> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="replaySnippet" /> is empty or white space.</exception>
+    public static IDisposable UseSeed(int seed, string replaySnippet) {
+        if (replaySnippet is null) { throw new ArgumentNullException(nameof(replaySnippet)); }
+        if (replaySnippet.Trim().Length == 0) { throw new ArgumentException("The replay snippet must be the code a reader copies to replay the run; pass a non-blank snippet, or use the overload without one to name Any.Reproducibly(seed, ...).", nameof(replaySnippet)); }
 
-        return AmbientRandomSource.UseSeed(seed, replayInstruction);
+        return AmbientRandomSource.UseSeed(seed, replaySnippet);
     }
 
     /// <summary>

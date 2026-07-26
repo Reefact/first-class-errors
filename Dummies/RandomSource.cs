@@ -13,24 +13,31 @@ internal abstract class RandomSource {
     internal abstract SeededRandom Current { get; }
 
     /// <summary>
-    ///     The reproduction guidance to append to a generation-failure message, phrased for this kind of source. The
-    ///     ambient source points at <c>Any.Reproducibly(seed, ...)</c> — or at whatever instruction the opener of the
-    ///     current <see cref="Any.UseSeed(int, string)" /> scope supplied, since a run pinned by a test-framework
-    ///     adapter is replayed by changing what the adapter reads, not by adding a call the test never had; a fixed
-    ///     <c>Any.WithSeed(...)</c> context replays deterministically on its own, so pinning the ambient source would
-    ///     not apply — naming the wrong instruction is exactly the misleading diagnostic this method exists to avoid.
+    ///     The reproduction guidance to append to a generation-failure message, phrased for this kind of source: one
+    ///     <b>sentence</b>, which <b>embeds</b> a replay <b>snippet</b> — the code the reader copies. The two words are
+    ///     a whole and its part, and they are never interchangeable: guidance is the sentence, a snippet is the
+    ///     fragment it names.
     /// </summary>
-    internal abstract string ReplayHint(int seed);
+    /// <remarks>
+    ///     Which snippet the sentence names depends on how the run was pinned, and getting that wrong is the whole
+    ///     point of this method existing. The ambient source names <c>Any.Reproducibly(seed, ...)</c> — or whatever
+    ///     snippet the opener of the current <see cref="Any.UseSeed(int, string)" /> scope supplied, since a run pinned
+    ///     by a test-framework adapter is replayed by changing what the adapter reads, not by adding a call the test
+    ///     never had. A fixed <c>Any.WithSeed(...)</c> context replays deterministically on its own, so pinning the
+    ///     ambient source would not apply. Naming a snippet the reader's code does not contain is exactly the
+    ///     misleading diagnostic this method exists to avoid.
+    /// </remarks>
+    internal abstract string ReplayGuidance(int seed);
 
     /// <summary>
     ///     The reproduction guidance for a failure whose seeded draws this source drove but whose result also depends on
     ///     a generator that does not draw from this source — a foreign <see cref="IAny{T}" />, or a derivation built over
     ///     one (including a <c>Combine</c> that mixes a foreign operand with a sourced one). It names the same replay
-    ///     mechanism as <see cref="ReplayHint" /> for the seeded part, but scopes the promise to it: the foreign values
+    ///     mechanism as <see cref="ReplayGuidance" /> for the seeded part, but scopes the promise to it: the foreign values
     ///     are not reproducible from this seed alone, so claiming a full replay would be the misleading diagnostic the
     ///     seed reporting exists to avoid.
     /// </summary>
-    internal abstract string PartialReplayHint(int seed);
+    internal abstract string PartialReplayGuidance(int seed);
 
 }
 
@@ -71,9 +78,9 @@ internal sealed class AmbientRandomSource : RandomSource {
         return UseSeed(seed, null);
     }
 
-    internal static IDisposable UseSeed(int seed, string? replayInstruction) {
+    internal static IDisposable UseSeed(int seed, string? replaySnippet) {
         AmbientState? previous = State.Value;
-        State.Value = new AmbientState(new SeededRandom(seed), replayInstruction);
+        State.Value = new AmbientState(new SeededRandom(seed), replaySnippet);
 
         return new SeedScope(previous);
     }
@@ -94,21 +101,22 @@ internal sealed class AmbientRandomSource : RandomSource {
         }
     }
 
-    internal override string ReplayHint(int seed) {
-        return $"The arbitrary values were seeded with {seed}; reproduce this run with {ReplayInstruction(seed)}.";
+    internal override string ReplayGuidance(int seed) {
+        return $"The arbitrary values were seeded with {seed}; reproduce this run with {ReplaySnippet(seed)}.";
     }
 
-    internal override string PartialReplayHint(int seed) {
-        return $"The seeded draws were made with {seed} ({ReplayInstruction(seed)}), but some values come from a generator that does not draw from this source, so they are not reproducible from this seed alone.";
+    internal override string PartialReplayGuidance(int seed) {
+        return $"The seeded draws were made with {seed} ({ReplaySnippet(seed)}), but some values come from a generator that does not draw from this source, so they are not reproducible from this seed alone.";
     }
 
     /// <summary>
-    ///     What the reader must write to replay the current run: the instruction the opener of the scope supplied, or
-    ///     the delegate runner when nothing was supplied. Read from the scope rather than fixed on the source, because
-    ///     the ambient source is pinned by several mechanisms and each is replayed differently.
+    ///     The code the reader copies to replay the current run — the fragment the guidance sentence embeds, never the
+    ///     sentence itself: the snippet the opener of the scope supplied, or the delegate runner when none was. Read
+    ///     from the scope rather than fixed on the source, because the ambient source is pinned by several mechanisms
+    ///     and each is replayed differently.
     /// </summary>
-    private static string ReplayInstruction(int seed) {
-        return State.Value?.ReplayInstruction ?? $"Any.Reproducibly({seed}, ...)";
+    private static string ReplaySnippet(int seed) {
+        return State.Value?.ReplaySnippet ?? $"Any.Reproducibly({seed}, ...)";
     }
 
     #region Nested types
@@ -116,13 +124,13 @@ internal sealed class AmbientRandomSource : RandomSource {
     /// <summary>The ambient state a seed scope installs: the seeded generator, and how to replay the run that uses it.</summary>
     private sealed class AmbientState {
 
-        internal AmbientState(SeededRandom random, string? replayInstruction) {
-            Random            = random;
-            ReplayInstruction = replayInstruction;
+        internal AmbientState(SeededRandom random, string? replaySnippet) {
+            Random        = random;
+            ReplaySnippet = replaySnippet;
         }
 
-        internal SeededRandom Random            { get; }
-        internal string?      ReplayInstruction { get; }
+        internal SeededRandom Random        { get; }
+        internal string?      ReplaySnippet { get; }
 
     }
 
@@ -163,11 +171,11 @@ internal sealed class FixedRandomSource : RandomSource {
 
     internal override SeededRandom Current => _random;
 
-    internal override string ReplayHint(int seed) {
+    internal override string ReplayGuidance(int seed) {
         return $"The arbitrary values were drawn from Any.WithSeed({seed}), which already replays deterministically.";
     }
 
-    internal override string PartialReplayHint(int seed) {
+    internal override string PartialReplayGuidance(int seed) {
         return $"The seeded draws were made from Any.WithSeed({seed}), but some values come from a generator that does not draw from it, so they are not reproducible from this seed alone.";
     }
 
