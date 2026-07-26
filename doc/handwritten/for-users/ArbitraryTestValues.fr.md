@@ -107,6 +107,19 @@ Dummies.Any.UseSeed(1234, "[Reproducible(Seed = 1234)]");
 
 Dans un corps de test, préférez `Reproducibly` : il rapporte la graine pour vous. Ne recourez à `UseSeed` que lorsqu’il n’y a aucun corps à envelopper.
 
+### Sur xUnit v3 : `[Reproducible]`
+
+Le package compagnon `Dummies.Xunit` fait l’enveloppement pour vous. Marquez un test, une classe ou l’assembly entier, et ses valeurs arbitraires sont tirées d’une graine fixée, rapportée **uniquement lorsque le test échoue** :
+
+```csharp
+[Fact, Reproducible]
+public void Some_value_sensitive_test() {
+    // ... arrange avec les fabriques et Dummies.Any, act, assert ...
+}
+```
+
+Une exécution en échec écrit `Reproduce this run with [Reproducible(Seed = 1234)]` dans la sortie du test ; fixez `[Reproducible(Seed = 1234)]` pour la rejouer. Chaque cas d’une théorie tire sa propre graine, et une déclaration au niveau méthode l’emporte sur une déclaration au niveau classe ou assembly. Ce n’est qu’une commodité : `Reproducibly` reste la forme portable et fonctionne sur tous les frameworks.
+
 ## `OccurredAt` et `InstanceId` arbitraires
 
 Les données d’occurrence sont arbitraires au même sens : un test a souvent besoin qu’elles soient stables sans en vérifier l’instant ou l’identifiant exact. Les seams de l’horloge et des identifiants proposent donc un `UseAny` en pendant de leur `UseFixed`. `Clock.UseAny()` fige un unique instant arbitraire pour la portée, tandis que `InstanceIds.UseAny()` attribue à chaque erreur son propre identifiant arbitraire distinct :
