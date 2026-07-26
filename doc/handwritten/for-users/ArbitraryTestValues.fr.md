@@ -99,7 +99,7 @@ scope.Dispose();
 
 La portée suit le contexte d’exécution et s’imbrique exactement comme `Reproducibly`, et la disposer restaure ce qui était fixé auparavant. Ce qu’elle ne fait **pas**, c’est rapporter la graine quand le test échoue : c’est à celui qui ouvre la portée de dire au lecteur quelle graine rejouer.
 
-Cette responsabilité s’étend à l’instruction de rejeu. Lorsqu’un générateur échoue lui-même, le message de l’`AnyGenerationException` nomme la façon de rejouer l’exécution — par défaut `Any.Reproducibly(1234, ...)`, ce qui est la mauvaise instruction pour un test ne contenant aucun appel de ce genre. Un appelant qui fixe la graine depuis l’extérieur l’énonce, et son instruction est citée telle quelle à la place :
+Cette responsabilité s’étend à l’extrait de rejeu. Lorsqu’un générateur échoue lui-même, le message de l’`AnyGenerationException` nomme la façon de rejouer l’exécution — par défaut `Any.Reproducibly(1234, ...)`, ce qui est la mauvaise instruction pour un test ne contenant aucun appel de ce genre. Un appelant qui fixe la graine depuis l’extérieur l’énonce, et son instruction est citée telle quelle à la place :
 
 ```csharp
 Dummies.Any.UseSeed(1234, "[Reproducible(Seed = 1234)]");

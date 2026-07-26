@@ -194,7 +194,7 @@ internal sealed class ContinuousIntervalSpec {
         double? free = NudgeToFree(candidate, ascending: true) ?? NudgeToFree(candidate, ascending: false);
         if (free is null) {
             throw new AnyGenerationException(
-                $"Generation failed: no {_typeName} value near the drawn candidate satisfies the exclusions. {source.ReplayHint(current.Seed)}",
+                $"Generation failed: no {_typeName} value near the drawn candidate satisfies the exclusions. {source.ReplayGuidance(current.Seed)}",
                 current.Seed,
                 new InvalidOperationException("No representable value in range remains after applying the exclusions."));
         }

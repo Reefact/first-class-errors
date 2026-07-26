@@ -80,7 +80,7 @@ public sealed class ReproducibleAttribute : BeforeAfterTestAttribute {
     public override void Before(MethodInfo methodUnderTest, IXunitTest test) {
         int seed = _seed ?? NewSeed();
 
-        Open.Value = new Scope(Any.UseSeed(seed, ReplayInstruction(seed)), seed, Open.Value);
+        Open.Value = new Scope(Any.UseSeed(seed, ReplaySnippet(seed)), seed, Open.Value);
     }
 
     /// <inheritdoc />
@@ -104,7 +104,7 @@ public sealed class ReproducibleAttribute : BeforeAfterTestAttribute {
     ///     What the reader must write to replay the run — the attribute with its seed, not the delegate runner the
     ///     ambient source names by default, because a test carrying this attribute contains no such call.
     /// </summary>
-    private static string ReplayInstruction(int seed) {
+    private static string ReplaySnippet(int seed) {
         return $"[Reproducible(Seed = {seed})]";
     }
 
@@ -124,7 +124,7 @@ public sealed class ReproducibleAttribute : BeforeAfterTestAttribute {
     /// </summary>
     internal static string? ReportFor(bool failed, int seed) {
         return failed
-            ? $"[Dummies] These arbitrary values were seeded with {seed}. Reproduce this run with {ReplayInstruction(seed)}."
+            ? $"[Dummies] These arbitrary values were seeded with {seed}. Reproduce this run with {ReplaySnippet(seed)}."
             : null;
     }
 

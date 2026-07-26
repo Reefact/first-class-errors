@@ -99,7 +99,7 @@ scope.Dispose();
 
 The scope flows with the execution context and nests exactly like `Reproducibly`, and disposing restores whatever was pinned before. What it does **not** do is report the seed when the test fails: whoever opens the scope owns telling the reader which seed to replay.
 
-That ownership extends to the replay instruction. When a generator itself fails, the `AnyGenerationException` message names how to replay the run — by default `Any.Reproducibly(1234, ...)`, which is the wrong instruction for a test that contains no such call. A caller that pins the seed from outside says so, and its instruction is quoted verbatim instead:
+That ownership extends to the replay snippet. When a generator itself fails, the `AnyGenerationException` message names how to replay the run — by default `Any.Reproducibly(1234, ...)`, which is the wrong instruction for a test that contains no such call. A caller that pins the seed from outside says so, and its instruction is quoted verbatim instead:
 
 ```csharp
 Dummies.Any.UseSeed(1234, "[Reproducible(Seed = 1234)]");

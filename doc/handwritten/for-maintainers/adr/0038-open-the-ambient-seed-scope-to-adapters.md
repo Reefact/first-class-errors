@@ -29,13 +29,13 @@ hook and close it in the other, which no public path allows.
 
 Two further facts bear on the shape of that opening.
 
-* **Generation failures carry a replay instruction.** When a generator fails —
+* **Generation failures carry a replay snippet.** When a generator fails —
   typically a factory rejecting a drawn value — the exception message appends a
-  hint naming the mechanism that actually replays the run. That hint is chosen
+  guidance naming the mechanism that actually replays the run. That guidance is chosen
   per kind of source: the ambient source names the delegate runner, an isolated
   context names itself, because the two are replayed differently. Naming an
-  instruction the caller's code does not use is a misleading diagnostic, and
-  avoiding it is the reason the hint varies at all.
+  snippet the caller's code does not contain is a misleading diagnostic, and
+  avoiding it is the reason the guidance varies at all.
 * **Neither existing phrasing fits an adapter-pinned run.** A test whose seed was
   pinned by an adapter contains no call to the delegate runner, and replaying it
   means changing whatever the adapter reads — an attribute argument, a runner
@@ -57,7 +57,7 @@ The alternative access path — granting a named companion package access to
 ## Decision
 
 `Dummies` exposes the ambient seed scope as a public, disposable handle whose
-opener may supply the replay instruction that generation-failure diagnostics will
+opener may supply the replay snippet that generation-failure diagnostics will
 name.
 
 ## Rationale
@@ -74,13 +74,13 @@ name.
   handle makes "adapt another framework later" an additive decision that touches
   nothing here — which is precisely the property that lets the xUnit decision be
   taken narrowly, without deciding the rest.
-* **Carrying the replay instruction preserves an invariant the library already
+* **Carrying the replay snippet preserves an invariant the library already
   enforces.** The diagnostic names the mechanism that applies; that is why the
-  hint varies by source in the first place. An adapter introduces a third way of
+  guidance varies by source in the first place. An adapter introduces a third way of
   pinning the ambient source, and without a way to say so it would inherit the
   delegate runner's phrasing — advertising, to a developer whose test contains no
-  such call, exactly the misleading instruction the mechanism exists to prevent.
-  Letting the opener name the instruction extends that design rather than
+  such call, exactly the misleading snippet the mechanism exists to prevent.
+  Letting the opener name the snippet extends that design rather than
   working around it.
 * **The disposable-scope shape is already the house idiom.** ADR-0006 established
   it for the clock and instance-id overrides, so the addition is recognizable as
@@ -99,19 +99,19 @@ companion — every other adapter, first-party or third-party, would need its ow
 grant and therefore its own change to `Dummies` — and because it couples the two
 packages' assembly identities for a capability that is not, in itself, private.
 
-### Expose the scope without a replay instruction
+### Expose the scope without a replay snippet
 
 Considered as the smallest possible addition, deferring the diagnostic question
 until an adapter exists. Rejected because it ships the misleading diagnostic the
-hint mechanism exists to prevent: every adapter-pinned run whose generation fails
+guidance mechanism exists to prevent: every adapter-pinned run whose generation fails
 would tell the developer to use a call their test does not contain. It also
 defers a parameter onto a published member, which is the more disruptive order.
 
-### Phrase the ambient hint neutrally, so it is never wrong
+### Phrase the ambient guidance neutrally, so it is never wrong
 
-Considered because a hint that names no mechanism cannot name the wrong one.
+Considered because guidance that names no mechanism cannot name the wrong one.
 Rejected because it pays for the rarer case with the dominant one: the delegate
-runner's users would lose an actionable instruction — the exact call to write —
+runner's users would lose an actionable snippet — the exact call to write —
 to accommodate a caller that can simply state its own.
 
 ### Let adapters reuse the delegate runner
@@ -127,7 +127,7 @@ does not invoke it.
 * Any test framework can be adapted without privileged access to `Dummies` and
   without a further change to it, so each additional adapter is an independent,
   additive decision.
-* A run whose seed an adapter pinned reports a replay instruction that matches
+* A run whose seed an adapter pinned reports a replay snippet that matches
   the caller's own code, keeping the guarantee that a diagnostic never names a
   mechanism the reader does not use.
 * The addition reuses the established disposable-scope idiom instead of
@@ -138,7 +138,7 @@ does not invoke it.
 * A third public way to control seeding, alongside the delegate runner and the
   isolated context. The documentation must keep the three distinct and say which
   one a reader wants.
-* The replay instruction is supplied by the caller and cannot be validated by
+* The replay snippet is supplied by the caller and cannot be validated by
   `Dummies`, so a badly phrased one degrades the diagnostic it was meant to
   improve.
 
@@ -157,7 +157,7 @@ does not invoke it.
 * Document the addition in the user guide, in English and French in lockstep,
   distinguishing the three ways to control seeding and naming the adapter case as
   the one this handle exists for.
-* Revisit the instruction-carrying form if a second adapter shows it is
+* Revisit the snippet-carrying form if a second adapter shows it is
   habitually left unused.
 
 ## References

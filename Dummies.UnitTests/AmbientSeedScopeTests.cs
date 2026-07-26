@@ -11,7 +11,7 @@ namespace Dummies.UnitTests;
 /// <summary>
 ///     The scope form of reproducibility: a handle a caller opens and disposes itself, for a test-framework adapter
 ///     that observes a test through before/after hooks and therefore has no delegate to wrap (ADR-0035). The seed
-///     behaviour must match <c>Any.Reproducibly</c>; what the scope adds is the replay instruction a
+///     behaviour must match <c>Any.Reproducibly</c>; what the scope adds is the replay snippet a
 ///     generation-failure diagnostic names, so a run pinned from outside the test body never advertises a call the
 ///     test does not contain.
 /// </summary>
@@ -123,7 +123,7 @@ public sealed class AmbientSeedScopeTests {
         Check.That(outside).IsNotEqualTo(inside);
     }
 
-    [Fact(DisplayName = "Without a replay instruction, a generation failure names Any.Reproducibly.")]
+    [Fact(DisplayName = "Without a replay snippet, a generation failure names Any.Reproducibly.")]
     public void WithoutAnInstructionTheFailureNamesTheDelegateRunner() {
         AnyGenerationException caught;
 
@@ -137,7 +137,7 @@ public sealed class AmbientSeedScopeTests {
         Check.That(caught.Message).Contains("Any.Reproducibly(1234, ...)");
     }
 
-    [Fact(DisplayName = "With a replay instruction, a generation failure names it instead of Any.Reproducibly.")]
+    [Fact(DisplayName = "With a replay snippet, a generation failure names it instead of Any.Reproducibly.")]
     public void WithAnInstructionTheFailureNamesIt() {
         AnyGenerationException caught;
 
@@ -152,7 +152,7 @@ public sealed class AmbientSeedScopeTests {
         Check.That(caught.Message).Not.Contains("Any.Reproducibly");
     }
 
-    [Fact(DisplayName = "The replay instruction also reaches the partial-replay guidance.")]
+    [Fact(DisplayName = "The replay snippet also reaches the partial-replay guidance.")]
     public void TheInstructionReachesThePartialReplayGuidance() {
         AnyGenerationException caught;
 
@@ -167,7 +167,7 @@ public sealed class AmbientSeedScopeTests {
         Check.That(caught.Message).Not.Contains("Any.Reproducibly");
     }
 
-    [Fact(DisplayName = "The replay instruction is scoped: it does not outlive the scope that supplied it.")]
+    [Fact(DisplayName = "The replay snippet is scoped: it does not outlive the scope that supplied it.")]
     public void TheInstructionDoesNotOutliveItsScope() {
         using (Any.UseSeed(1, "[Reproducible(Seed = 1)]")) { }
 
@@ -181,12 +181,12 @@ public sealed class AmbientSeedScopeTests {
         Check.That(caught.Message).Not.Contains("[Reproducible");
     }
 
-    [Fact(DisplayName = "UseSeed rejects a null replay instruction.")]
+    [Fact(DisplayName = "UseSeed rejects a null replay snippet.")]
     public void UseSeedRejectsANullInstruction() {
         Check.ThatCode(() => Any.UseSeed(1, null!)).Throws<ArgumentNullException>();
     }
 
-    [Theory(DisplayName = "UseSeed rejects a blank replay instruction.")]
+    [Theory(DisplayName = "UseSeed rejects a blank replay snippet.")]
     [InlineData("")]
     [InlineData("   ")]
     public void UseSeedRejectsABlankInstruction(string instruction) {
