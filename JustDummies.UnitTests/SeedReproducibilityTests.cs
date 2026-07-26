@@ -8,6 +8,12 @@ using NFluent;
 
 namespace JustDummies.UnitTests;
 
+/// <summary>
+///     The example-based half of the reproducibility contract: what the failure report must say, that a
+///     successful run stays silent, the asynchronous overloads, and the null-argument guards. That two runs
+///     under the same seed agree — and that different seeds diverge — holds for <i>every</i> seed and is
+///     quantified in <c>JustDummies.PropertyTests</c> instead of pinned to 12345, 777 and 31415 (ADR-0040).
+/// </summary>
 [TestSubject(typeof(Any))]
 public sealed class SeedReproducibilityTests {
 
@@ -50,71 +56,6 @@ public sealed class SeedReproducibilityTests {
     }
 
     #endregion
-
-    [Fact(DisplayName = "Two contexts created with the same seed yield the same values.")]
-    public void SameSeedContextsAgree() {
-        AnyContext any1 = Any.WithSeed(12345);
-        AnyContext any2 = Any.WithSeed(12345);
-
-        string value1 = any1.String().NonEmpty().Generate();
-        string value2 = any2.String().NonEmpty().Generate();
-
-        Check.That(value2).IsEqualTo(value1);
-    }
-
-    [Fact(DisplayName = "Two contexts with the same seed agree across a mixed sequence of draws.")]
-    public void SameSeedContextsAgreeAcrossASequence() {
-        AnyContext any1 = Any.WithSeed(777);
-        AnyContext any2 = Any.WithSeed(777);
-
-        string sequence1 = $"{any1.Int32().Positive().Generate()}|{any1.String().WithLength(8).Generate()}|{any1.Int32().Between(0, 9).Generate()}";
-        string sequence2 = $"{any2.Int32().Positive().Generate()}|{any2.String().WithLength(8).Generate()}|{any2.Int32().Between(0, 9).Generate()}";
-
-        Check.That(sequence2).IsEqualTo(sequence1);
-    }
-
-    [Fact(DisplayName = "Contexts with different seeds diverge.")]
-    public void DifferentSeedContextsDiverge() {
-        string sequence1 = string.Join("|", Enumerable.Range(0, 8).Select(_ => Any.WithSeed(1).String().WithLength(12).Generate()));
-        string sequence2 = string.Join("|", Enumerable.Range(0, 8).Select(_ => Any.WithSeed(2).String().WithLength(12).Generate()));
-
-        Check.That(sequence2).IsNotEqualTo(sequence1);
-    }
-
-    [Fact(DisplayName = "A context is isolated from the ambient source: interleaved ambient draws do not shift it.")]
-    public void ContextIsIsolatedFromAmbientDraws() {
-        AnyContext quiet = Any.WithSeed(31415);
-        string undisturbed = quiet.String().WithLength(10).Generate();
-
-        AnyContext interleaved = Any.WithSeed(31415);
-        Any.String().Generate();
-        Any.Int32().Generate();
-        string disturbed = interleaved.String().WithLength(10).Generate();
-
-        Check.That(disturbed).IsEqualTo(undisturbed);
-    }
-
-    [Fact(DisplayName = "Reproducibly with a given seed replays the same sequence of values.")]
-    public void ReproduciblyWithASeedIsDeterministic() {
-        string first  = string.Empty;
-        string second = string.Empty;
-
-        Any.Reproducibly(1234, () => { first = Batch(); });
-        Any.Reproducibly(1234, () => { second = Batch(); });
-
-        Check.That(second).IsEqualTo(first);
-    }
-
-    [Fact(DisplayName = "Reproducibly with different seeds produces different sequences.")]
-    public void DifferentSeedsDiffer() {
-        string fromOne = string.Empty;
-        string fromTwo = string.Empty;
-
-        Any.Reproducibly(1, () => { fromOne = Batch(); });
-        Any.Reproducibly(2, () => { fromTwo = Batch(); });
-
-        Check.That(fromTwo).IsNotEqualTo(fromOne);
-    }
 
     [Fact(DisplayName = "Reproducibly reports the seed and rethrows the original exception on failure.")]
     public void ReproduciblyReportsTheSeedAndRethrows() {
