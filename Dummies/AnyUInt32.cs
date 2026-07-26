@@ -116,6 +116,21 @@ public sealed class AnyUInt32 : IAny<uint>, IHasRandomSource, ICardinalityHint<u
         return new AnyUInt32(_source, _spec.WithMinimum(Ord(minimum), constraint).WithMaximum(Ord(maximum), constraint));
     }
 
+    /// <summary>
+    ///     Requires the value to be a multiple of <paramref name="value" /> — drawn directly on that lattice, so the
+    ///     declared range keeps its meaning (unlike a post-hoc <c>As(x =&gt; x * k)</c> projection). Declared once per
+    ///     generator.
+    /// </summary>
+    /// <param name="value">The lattice step; must be strictly positive. A value of <c>1</c> adds no constraint.</param>
+    /// <returns>A new generator carrying the added constraint.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="value" /> is not strictly positive.</exception>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    public AnyUInt32 MultipleOf(uint value) {
+        if (value == 0) { throw new ArgumentOutOfRangeException(nameof(value), value, "The multiple must be strictly positive."); }
+
+        return new AnyUInt32(_source, _spec.WithStep((ulong)value, Ord(0), $"MultipleOf({V(value)})"));
+    }
+
     /// <summary>Requires the value to be one of the supplied values. Declared once per generator.</summary>
     /// <param name="values">The allowed values; duplicates are ignored.</param>
     /// <returns>A new generator carrying the added constraint.</returns>

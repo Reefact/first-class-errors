@@ -86,18 +86,44 @@ public sealed class SurfaceParityTests {
     #region Algebra parity: per-family constraint sets
 
     // The constraint vocabulary each family declares, encoded once as data. This table is the specification; the
-    // test compares it against what each builder actually exposes through reflection.
-    private static readonly string[] SignedNumericAlgebra = [
+    // test compares it against what each builder actually exposes through reflection. Ordering here is irrelevant —
+    // the test compares sets. The lattice constraint splits what was once one signed-numeric family: only the
+    // integers carry MultipleOf, only Decimal carries WithScale, only the temporals carry WithGranularity.
+
+    // Signed integers: the bound/sign vocabulary plus the integer lattice MultipleOf.
+    private static readonly string[] SignedIntegerAlgebra = [
+        "Positive", "Negative", "Zero", "NonZero",
+        "GreaterThan", "GreaterThanOrEqualTo", "LessThan", "LessThanOrEqualTo",
+        "Between", "MultipleOf", "OneOf", "Except", "DifferentFrom"
+    ];
+
+    // Unsigned integers drop Positive/Negative (meaningless there — NonZero carries the intent); they keep MultipleOf.
+    private static readonly string[] UnsignedIntegerAlgebra = [
+        "Zero", "NonZero",
+        "GreaterThan", "GreaterThanOrEqualTo", "LessThan", "LessThanOrEqualTo",
+        "Between", "MultipleOf", "OneOf", "Except", "DifferentFrom"
+    ];
+
+    // Binary floating-point carries the full signed vocabulary but no lattice: a grid of 10^-n over binary floats is a
+    // footgun (0.1 is not representable), so MultipleOf/WithScale are deliberately withheld.
+    private static readonly string[] FloatingPointAlgebra = [
         "Positive", "Negative", "Zero", "NonZero",
         "GreaterThan", "GreaterThanOrEqualTo", "LessThan", "LessThanOrEqualTo",
         "Between", "OneOf", "Except", "DifferentFrom"
     ];
 
-    // Unsigned integers drop Positive/Negative (meaningless there — NonZero carries the intent).
-    private static readonly string[] UnsignedNumericAlgebra = [
-        "Zero", "NonZero",
+    // Decimal is the signed vocabulary plus the decimal scale lattice WithScale.
+    private static readonly string[] DecimalAlgebra = [
+        "Positive", "Negative", "Zero", "NonZero",
         "GreaterThan", "GreaterThanOrEqualTo", "LessThan", "LessThanOrEqualTo",
-        "Between", "OneOf", "Except", "DifferentFrom"
+        "Between", "OneOf", "Except", "DifferentFrom", "WithScale"
+    ];
+
+    // TimeSpan is a signed magnitude with a temporal granularity lattice WithGranularity.
+    private static readonly string[] TimeSpanAlgebra = [
+        "Positive", "Negative", "Zero", "NonZero",
+        "GreaterThan", "GreaterThanOrEqualTo", "LessThan", "LessThanOrEqualTo",
+        "Between", "OneOf", "Except", "DifferentFrom", "WithGranularity"
     ];
 
     // Instant-like builders rename the bound family to domain vocabulary, with identical inclusive/exclusive
@@ -107,24 +133,32 @@ public sealed class SurfaceParityTests {
         "Between", "OneOf", "Except", "DifferentFrom"
     ];
 
+    // Instants with sub-day tick precision also carry the temporal granularity lattice WithGranularity (DateOnly,
+    // already day-resolution, keeps the plain InstantAlgebra).
+    private static readonly string[] InstantWithGranularityAlgebra = [
+        "After", "AfterOrEqualTo", "Before", "BeforeOrEqualTo",
+        "Between", "OneOf", "Except", "DifferentFrom", "WithGranularity"
+    ];
+
     public static IEnumerable<object[]> Builders() {
-        // Signed integers, the continuous/decimal builders, and TimeSpan (a signed magnitude) share the full algebra.
-        yield return [typeof(AnyInt32), SignedNumericAlgebra];
-        yield return [typeof(AnySByte), SignedNumericAlgebra];
-        yield return [typeof(AnyInt16), SignedNumericAlgebra];
-        yield return [typeof(AnyInt64), SignedNumericAlgebra];
-        yield return [typeof(AnyDouble), SignedNumericAlgebra];
-        yield return [typeof(AnySingle), SignedNumericAlgebra];
-        yield return [typeof(AnyDecimal), SignedNumericAlgebra];
-        yield return [typeof(AnyTimeSpan), SignedNumericAlgebra];
+        // Signed integers carry MultipleOf; the binary floats do not; Decimal carries WithScale; TimeSpan (a signed
+        // magnitude) carries WithGranularity — the lattice constraint is what forks the former shared signed family.
+        yield return [typeof(AnyInt32), SignedIntegerAlgebra];
+        yield return [typeof(AnySByte), SignedIntegerAlgebra];
+        yield return [typeof(AnyInt16), SignedIntegerAlgebra];
+        yield return [typeof(AnyInt64), SignedIntegerAlgebra];
+        yield return [typeof(AnyDouble), FloatingPointAlgebra];
+        yield return [typeof(AnySingle), FloatingPointAlgebra];
+        yield return [typeof(AnyDecimal), DecimalAlgebra];
+        yield return [typeof(AnyTimeSpan), TimeSpanAlgebra];
 
-        yield return [typeof(AnyByte), UnsignedNumericAlgebra];
-        yield return [typeof(AnyUInt16), UnsignedNumericAlgebra];
-        yield return [typeof(AnyUInt32), UnsignedNumericAlgebra];
-        yield return [typeof(AnyUInt64), UnsignedNumericAlgebra];
+        yield return [typeof(AnyByte), UnsignedIntegerAlgebra];
+        yield return [typeof(AnyUInt16), UnsignedIntegerAlgebra];
+        yield return [typeof(AnyUInt32), UnsignedIntegerAlgebra];
+        yield return [typeof(AnyUInt64), UnsignedIntegerAlgebra];
 
-        yield return [typeof(AnyDateTime), InstantAlgebra];
-        yield return [typeof(AnyDateTimeOffset), InstantAlgebra];
+        yield return [typeof(AnyDateTime), InstantWithGranularityAlgebra];
+        yield return [typeof(AnyDateTimeOffset), InstantWithGranularityAlgebra];
 
         // The remaining scalar builders each carry their own deliberate set.
         yield return [typeof(AnyBoolean), new[] { "True", "False", "DifferentFrom" }];
@@ -142,11 +176,11 @@ public sealed class SurfaceParityTests {
         }];
 
 #if NET8_0_OR_GREATER
-        yield return [typeof(AnyInt128), SignedNumericAlgebra];
-        yield return [typeof(AnyHalf), SignedNumericAlgebra];
-        yield return [typeof(AnyUInt128), UnsignedNumericAlgebra];
+        yield return [typeof(AnyInt128), SignedIntegerAlgebra];
+        yield return [typeof(AnyHalf), FloatingPointAlgebra];
+        yield return [typeof(AnyUInt128), UnsignedIntegerAlgebra];
         yield return [typeof(AnyDateOnly), InstantAlgebra];
-        yield return [typeof(AnyTimeOnly), InstantAlgebra];
+        yield return [typeof(AnyTimeOnly), InstantWithGranularityAlgebra];
 #endif
     }
 
