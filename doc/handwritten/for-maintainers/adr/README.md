@@ -220,3 +220,5 @@ Optional supporting material:
 | [ADR-0035](0035-enforce-structural-any-conflicts-at-compile-time.md) | Enforce structural Any conflicts at compile time, value-dependent ones at run time | Accepted |
 | [ADR-0036](0036-draw-lattice-constrained-scalars-on-the-grid.md) | Draw lattice-constrained scalars on the grid | Proposed |
 | [ADR-0037](0037-vary-the-datetimeoffset-offset-dimension.md) | Vary the DateTimeOffset offset dimension | Proposed |
+| [ADR-0038](0038-open-the-ambient-seed-scope-to-adapters.md) | Open the ambient seed scope to test-framework adapters | Accepted |
+| [ADR-0039](0039-adapt-dummies-to-xunit-v3-through-a-companion-package.md) | Adapt Dummies to xUnit v3 through a companion package | Accepted |

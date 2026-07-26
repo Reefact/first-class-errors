@@ -112,7 +112,11 @@ matter — and that is the point.
   for value types (`int?`, `Guid?`, ...) and reference types alike.
 - **Reproducible runs**: wrap a test in `Any.Reproducibly(...)` and a failing run
   reports the seed to replay; `Any.WithSeed(seed)` gives an isolated, deterministic
-  context.
+  context; `Any.UseSeed(seed)` pins the ambient one until the handle is disposed, for
+  a caller that has no body to wrap — a test-framework adapter driving the seed from
+  before/after hooks. Its second overload names what the reader must write to replay,
+  so a run pinned from outside the test body never points at a call the test does not
+  contain.
 
 ## Example
 
