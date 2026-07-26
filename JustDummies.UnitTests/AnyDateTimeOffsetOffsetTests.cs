@@ -69,6 +69,21 @@ public sealed class AnyDateTimeOffsetOffsetTests {
         Check.ThatCode(() => Any.DateTimeOffset().WithOffsetBetween(TimeSpan.FromHours(2), TimeSpan.FromHours(-2))).Throws<ArgumentException>();
     }
 
+    [Fact(DisplayName = "WithOffset: OneOf returns its values verbatim, offset included, in either order.")]
+    public void OneOfKeepsItsOwnOffset() {
+        // The accepted risk recorded in ADR-0037: OneOf is a terminal enumeration of exact values, so the offset
+        // dimension governs only the CONSTRUCTED draw and never rewrites a supplied value's own offset. Pinned here so
+        // the divergence stays a decision rather than becoming an unnoticed regression in either direction.
+        DateTimeOffset pinned    = new(2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        TimeSpan       requested = TimeSpan.FromHours(5);
+
+        for (int i = 0; i < SampleCount; i++) {
+            Check.That(Any.DateTimeOffset().WithOffset(requested).OneOf(pinned).Generate()).IsEqualTo(pinned);
+            Check.That(Any.DateTimeOffset().WithOffset(requested).OneOf(pinned).Generate().Offset).IsEqualTo(pinned.Offset);
+            Check.That(Any.DateTimeOffset().OneOf(pinned).WithOffset(requested).Generate().Offset).IsEqualTo(pinned.Offset);
+        }
+    }
+
     [Fact(DisplayName = "WithOffset: a second, different offset is rejected as already declared.")]
     public void WithOffsetDeclaredOnce() {
         Check.ThatCode(() => Any.DateTimeOffset().WithOffset(TimeSpan.FromHours(2)).WithOffset(TimeSpan.FromHours(3)))
