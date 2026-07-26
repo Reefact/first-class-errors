@@ -107,6 +107,19 @@ Dummies.Any.UseSeed(1234, "[Reproducible(Seed = 1234)]");
 
 Inside a test body, prefer `Reproducibly`: it reports the seed for you. Reach for `UseSeed` only when there is no body to wrap.
 
+### On xUnit v3: `[Reproducible]`
+
+The `Dummies.Xunit` companion package does the wrapping for you. Mark a test, a class, or the whole assembly, and its arbitrary values are drawn from a pinned seed reported **only when the test fails**:
+
+```csharp
+[Fact, Reproducible]
+public void Some_value_sensitive_test() {
+    // ... arrange with the factories and Dummies.Any, act, assert ...
+}
+```
+
+A failing run writes `Reproduce this run with [Reproducible(Seed = 1234)]` to the test output; pin `[Reproducible(Seed = 1234)]` to replay it. Each case of a theory draws its own seed, and a method-level declaration overrides a class- or assembly-level one. This is convenience only: `Reproducibly` remains the portable form and works on every framework.
+
 ## Arbitrary `OccurredAt` and `InstanceId`
 
 Occurrence data is arbitrary in the same sense: a test often needs it stable without asserting the exact instant or id. The clock and instance-id seams therefore pair a `UseAny` with their `UseFixed`. `Clock.UseAny()` freezes a single arbitrary instant for the scope, while `InstanceIds.UseAny()` hands each error its own distinct arbitrary id:
