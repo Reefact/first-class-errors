@@ -1,6 +1,6 @@
-# ADR-0043 | Fournir des analyseurs JustDummies de première partie, et garder avec eux la surface asynchrone reproductible
+# ADR-0044 | Fournir des analyseurs JustDummies de première partie, et garder avec eux la surface asynchrone reproductible
 
-🌍 🇫🇷 Français (ce fichier) · 🇬🇧 [English](0043-ship-justdummies-analyzers.md)
+🌍 🇫🇷 Français (ce fichier) · 🇬🇧 [English](0044-ship-justdummies-analyzers.md)
 
 **Statut :** Proposé
 **Date :** 2026-07-27
