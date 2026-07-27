@@ -26,7 +26,7 @@
 
     <!-- Description -->
     <Description>
-      A fluent DSL for generating arbitrary yet valid test values: dummies. Constraints express the invariants a value must satisfy — never what the test asserts. Conflicting constraints fail fast with clear, actionable exceptions, and any run is reproducible from a reported seed.
+      A fluent DSL for generating arbitrary yet valid test values: dummies. Constraints express the invariants a value must satisfy — never what the test asserts. Conflicting constraints fail fast with clear, actionable exceptions, and any sequential run is reproducible from a reported seed.
     </Description>
 
     <!-- Metadata -->
