@@ -15,6 +15,8 @@ public sealed class AnyWebSocketUri : IAny<Uri>, IHasRandomSource {
     #endregion
 
     internal AnyWebSocketUri(RandomSource source, UriSpec spec) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+        if (spec is null) { throw new ArgumentNullException(nameof(spec)); }
         _source = source;
         _spec   = spec;
     }

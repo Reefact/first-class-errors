@@ -17,6 +17,8 @@ public sealed class AnyUInt16 : IAny<ushort>, IHasRandomSource, ICardinalityHint
     #region Statics members declarations
 
     internal static AnyUInt16 Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         return new AnyUInt16(source, OrdinalIntervalSpec.Unconstrained("UInt16", ordinal => V(Val(ordinal)), Ord(ushort.MinValue), Ord(ushort.MaxValue)));
     }
 

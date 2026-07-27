@@ -120,6 +120,8 @@ internal sealed class UriSpec {
     }
 
     internal UriSpec WithScheme(string scheme, string applying) {
+        if (scheme is null) { throw new ArgumentNullException(nameof(scheme)); }
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_schemeConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_schemeConstraint} is already defined."); }
 
         return new UriSpec(_family, scheme, applying, _host, _hasUserInfo, _user, _password,
@@ -131,6 +133,7 @@ internal sealed class UriSpec {
     #region Component pins
 
     internal UriSpec WithHost(string host) {
+        if (host is null) { throw new ArgumentNullException(nameof(host)); }
         return new UriSpec(_family, _scheme, _schemeConstraint, host, _hasUserInfo, _user, _password,
                            _hasPort, _port, _pathMode, _pathSegments, _hasQuery, _hasFragment, _rooted, _pathConstraint);
     }
@@ -146,6 +149,7 @@ internal sealed class UriSpec {
     }
 
     internal UriSpec WithPath(UriPathMode mode, int segments, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_pathConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_pathConstraint} is already defined."); }
 
         return new UriSpec(_family, _scheme, _schemeConstraint, _host, _hasUserInfo, _user, _password,
@@ -172,6 +176,7 @@ internal sealed class UriSpec {
     #region Generation
 
     internal Uri Generate(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
         SeededRandom random = source.Current;
         UriFamily    family = _family ?? DefaultFamilies[random.Next(DefaultFamilies.Length)];
 
@@ -311,6 +316,7 @@ internal sealed class UriSpec {
 
     internal static string RequireHost(string host, string parameterName) {
         if (host is null) { throw new ArgumentNullException(parameterName); }
+        if (parameterName is null) { throw new ArgumentNullException(nameof(parameterName)); }
         if (host.Length == 0) { throw new ArgumentException("The host must not be empty.", parameterName); }
         if (host.Any(character => character > 127)) {
             throw new ArgumentException("The host must be ASCII: an internationalized (IDN) host would not round-trip identically across target frameworks. Pass the punycode form instead (e.g. \"xn--mnchen-3ya.de\").", parameterName);
@@ -344,6 +350,7 @@ internal sealed class UriSpec {
 
     internal static string RequireUserInfoPart(string value, string parameterName) {
         if (value is null) { throw new ArgumentNullException(parameterName); }
+        if (parameterName is null) { throw new ArgumentNullException(nameof(parameterName)); }
         foreach (char character in value) {
             if (Unreserved.IndexOf(char.ToLowerInvariant(character)) < 0) {
                 throw new ArgumentException($"The user-info part may only contain unreserved characters (letters, digits, '-', '.', '_', '~'); '{character}' is not allowed.", parameterName);
@@ -354,12 +361,14 @@ internal sealed class UriSpec {
     }
 
     internal static int RequirePort(int port, string parameterName) {
+        if (parameterName is null) { throw new ArgumentNullException(nameof(parameterName)); }
         if (port is < 1 or > 65535) { throw new ArgumentOutOfRangeException(parameterName, port, "The port must be between 1 and 65535."); }
 
         return port;
     }
 
     internal static int RequireSegmentCount(int count, string parameterName) {
+        if (parameterName is null) { throw new ArgumentNullException(nameof(parameterName)); }
         if (count < 0) { throw new ArgumentOutOfRangeException(parameterName, count, "The segment count must not be negative."); }
 
         return count;
