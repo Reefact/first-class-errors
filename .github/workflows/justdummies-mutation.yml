@@ -54,13 +54,16 @@ jobs:
       # generator is red.
       fail-fast: false
       matrix:
-        # The two JustDummies packages this repository SHIPS: the generator and its xUnit v3 adapter
-        # (ADR-0039). The FirstClassErrors libraries live in `mutation.yml`. See ADR-0043.
+        # What the JustDummies packages SHIP: the generator, its xUnit v3 adapter (ADR-0039), and the
+        # analyzers packed inside the generator package (ADR-0044). The FirstClassErrors libraries live
+        # in `mutation.yml`. See ADR-0043.
         include:
           - name: justdummies
             config: build/stryker/justdummies.json
           - name: justdummies-xunit
             config: build/stryker/justdummies-xunit.json
+          - name: justdummies-analyzers
+            config: build/stryker/justdummies-analyzers.json
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -196,6 +199,8 @@ jobs:
             config: build/stryker/justdummies.json
           - name: justdummies-xunit
             config: build/stryker/justdummies-xunit.json
+          - name: justdummies-analyzers
+            config: build/stryker/justdummies-analyzers.json
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

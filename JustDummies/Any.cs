@@ -539,12 +539,18 @@ public static class Any {
     ///     Asynchronous counterpart of <see cref="Reproducibly(Action, Action{String})" />: awaits
     ///     <paramref name="body" /> under a fresh seed and reports it if the body faults.
     /// </summary>
+    /// <remarks>
+    ///     <b>The returned task must be awaited.</b> Dropping it silences the body's failures — the assertions run
+    ///     on a continuation after the caller has already moved on, and a discarded fault never reaches the test
+    ///     runner. Discarding it is a compile error (diagnostic <c>JD002</c>); passing an asynchronous body to the
+    ///     synchronous <see cref="Reproducibly(Action, Action{String})" /> instead is a compile error (<c>JD001</c>).
+    /// </remarks>
     /// <param name="body">The asynchronous test body to run under a reproducible random context.</param>
     /// <param name="report">The sink the seed is written to on failure. Defaults to <see cref="Console.Error" /> when <c>null</c>.</param>
-    /// <returns>A task that completes when <paramref name="body" /> completes.</returns>
+    /// <returns>A task that completes when <paramref name="body" /> completes, and faults with the body's exception.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="body" /> is <c>null</c>.</exception>
-    public static Task Reproducibly(Func<Task> body, Action<string>? report = null) {
-        return Reproducibly(AmbientRandomSource.NewSeed(), body, report);
+    public static Task ReproduciblyAsync(Func<Task> body, Action<string>? report = null) {
+        return ReproduciblyAsync(AmbientRandomSource.NewSeed(), body, report);
     }
 
     /// <summary>
@@ -556,7 +562,7 @@ public static class Any {
     /// <param name="report">The sink the seed is written to on failure. Defaults to <see cref="Console.Error" /> when <c>null</c>.</param>
     /// <returns>A task that completes when <paramref name="body" /> completes.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="body" /> is <c>null</c>.</exception>
-    public static async Task Reproducibly(int seed, Func<Task> body, Action<string>? report = null) {
+    public static async Task ReproduciblyAsync(int seed, Func<Task> body, Action<string>? report = null) {
         if (body is null) { throw new ArgumentNullException(nameof(body)); }
 
         using (AmbientRandomSource.UseSeed(seed)) {

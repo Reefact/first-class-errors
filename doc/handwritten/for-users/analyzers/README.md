@@ -1,11 +1,11 @@
-# FirstClassErrors analyzers
+# Analyzers
 
 🌍 **Languages:**  
 🇬🇧 English (this file) | 🇫🇷 [Français](./README.fr.md)
 
-The FirstClassErrors analyzers are Roslyn rules that run while your project compiles. They turn mistakes that the FirstClassErrors runtime and documentation pipeline would otherwise report late — or never report at all — into build-time diagnostics. The rules ship **inside the `FirstClassErrors` NuGet package**: any project that references it picks them up automatically, with no extra install.
+This repository ships Roslyn rules with two packages. They run while your project compiles, turning mistakes that the runtime and documentation pipeline would otherwise report late — or never at all — into build-time diagnostics. The **FirstClassErrors** rules (`FCExxx`) ship inside the `FirstClassErrors` package; the **JustDummies** rules (`JDxxx`) ship inside the `JustDummies` package. Any project that references a package picks up its rules automatically, with no extra install.
 
-Each rule has a stable id `FCExxx`. Errors are hard defects; warnings flag likely mistakes; the info rules are conventions, and several are opt-in (see each page for how to enable them).
+Each rule has a stable id (`FCExxx` or `JDxxx`). Errors are hard defects; warnings flag likely mistakes; the info rules are conventions, and several are opt-in (see each page for how to enable them).
 
 ## Error codes
 
@@ -48,6 +48,15 @@ Each rule has a stable id `FCExxx`. Errors are hard defects; warnings flag likel
 | [FCE020 TryCatchesRichProtocolException](FCE020.en.md) | 🟠 Warning | opt-in | Outcome.Try catches a protocol failure (HttpRequestException, DbException, SocketException, ...) whose status or result data is lost when reduced to a throw. |
 | [FCE021 PreferNonThrowingAlternativeToTry](FCE021.en.md) | 🟠 Warning | on | Outcome.Try wraps a call that already has a non-throwing TryXxx / TryCreate counterpart available for the target framework; consider mapping its result (advisory — suppress where the counterpart is not a true inverse). |
 | [FCE022 TryCatchesCancellation](FCE022.en.md) | 🟠 Warning | on | Outcome.Try binds TException to OperationCanceledException (or a subtype); Try always lets cancellation propagate, so the catch is unreachable and the mapper never runs. |
+
+## JustDummies — Reproducibility
+
+These rules ship in the **`JustDummies`** package (not FirstClassErrors) and keep an asynchronous test body from silently swallowing its own failures.
+
+| Rule | Severity | Default | Description |
+|------|----------|---------|-------------|
+| [JD001 AsyncBodyPassedToReproducibly](JD001.en.md) | 🔴 Error | on | An async lambda is passed to the synchronous Any.Reproducibly(Action); bound to an Action it becomes async void and its failures never fail the test. Use Any.ReproduciblyAsync and await it. |
+| [JD002 DiscardedReproduciblyAsyncResult](JD002.en.md) | 🔴 Error | on | The task returned by Any.ReproduciblyAsync is discarded (a bare statement, or `_ =`); the body's failures are lost. Await it. |
 
 ## Configuring
 

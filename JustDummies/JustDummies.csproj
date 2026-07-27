@@ -57,9 +57,10 @@
     <None Include="README.nuget.md" Pack="true" PackagePath="readme.md" />
   </ItemGroup>
 
-  <!-- Deliberately NO ProjectReference: JustDummies is a standalone, error-agnostic library. It must never
-       depend on FirstClassErrors (or any other project in this repository); the boundary is guarded by
-       an architecture test in JustDummies.UnitTests. -->
+  <!-- No runtime ProjectReference: JustDummies is a standalone, error-agnostic library. It must never depend on
+       FirstClassErrors (or any other project in this repository) at runtime; the boundary is guarded by an
+       architecture test in JustDummies.UnitTests. The build-only reference below (ReferenceOutputAssembly=false) is
+       the sole exception: it packs the JustDummies analyzers into this package and adds no assembly dependency. -->
 
   <ItemGroup>
     <!-- Embed an SPDX SBOM (software bill of materials) inside the package at pack time
@@ -68,5 +69,29 @@
          (PrivateAssets=all): consumers never see this as a dependency. -->
     <PackageReference Include="Microsoft.Sbom.Targets" PrivateAssets="all" />
   </ItemGroup>
+
+  <!-- Ship the analyzers inside this package (analyzers/dotnet/cs) so package consumers get them automatically.
+       ReferenceOutputAssembly=false + PrivateAssets=all keeps the analyzer off the runtime/dependency graph (the
+       standalone-boundary test still passes); the ProjectReference only guarantees the analyzer is built before this
+       project is packed. -->
+  <ItemGroup>
+    <ProjectReference Include="..\JustDummies.Analyzers\JustDummies.Analyzers.csproj"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzerToPackage</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <!-- Analyzers live at a single, non-per-TFM path, so add the DLL once (during the netstandard2.0 pass); adding it
+       under TargetsForTfmSpecificContentInPackage without a condition would pack it once per target framework. -->
+  <Target Name="_AddAnalyzerToPackage" Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(MSBuildThisFileDirectory)..\JustDummies.Analyzers\bin\$(Configuration)\netstandard2.0\JustDummies.Analyzers.dll">
+        <PackagePath>analyzers/dotnet/cs</PackagePath>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+  </Target>
 
 </Project>
