@@ -188,6 +188,36 @@ public sealed class AnyPatternTests {
         Check.That(Any.StringMatching(@"^?abc$?").Generate()).IsEqualTo("abc");
     }
 
+    [Fact(DisplayName = "An unbounded quantifier whose minimum sits at int.MaxValue overruns the ceiling; it never yields a short value.")]
+    public void UnboundedQuantifierAtTheTopOfTheIntRangeNeverYieldsAShortValue() {
+        // Regression: the unbounded repetition count was computed as 'min + Next(0, 9)' in int arithmetic, so a
+        // minimum within 8 of int.MaxValue wrapped negative and the repetition loop wrote nothing — Generate()
+        // returned "" for a pattern demanding 2,147,483,647 characters, in 36 draws out of 40. A value the pattern
+        // does not match is the one outcome generation must never produce; overrunning the ceiling is the honest
+        // answer, and the same one 'a{100000,}' already gave.
+        AnyPattern generator = Any.StringMatching("a{2147483647,}");
+
+        for (int i = 0; i < 40; i++) {
+            AnyGenerationException caught = Assert.Throws<AnyGenerationException>(() => generator.Generate());
+            Check.That(caught.Message).Contains("generation limit");
+        }
+    }
+
+    [Theory(DisplayName = "Across the whole overflow band, an unbounded minimum overruns the ceiling rather than wrapping negative.")]
+    [InlineData(2147483639)] // int.MaxValue - 8: the last minimum that could not wrap even before the fix
+    [InlineData(2147483640)] // int.MaxValue - 7: the first that could, and did — 3 empty strings out of 30
+    [InlineData(2147483646)]
+    [InlineData(2147483647)]
+    public void EveryMinimumInTheOverflowBandOverrunsTheCeiling(int minimum) {
+        // The band is 'min > int.MaxValue - UnboundedExtra'. Pinned at both edges so a future change to
+        // UnboundedExtra cannot narrow the guard back to a subset of it without failing here.
+        AnyPattern generator = Any.WithSeed(1).StringMatching($"a{{{minimum},}}");
+
+        for (int i = 0; i < 12; i++) {
+            Assert.Throws<AnyGenerationException>(() => generator.Generate());
+        }
+    }
+
     [Fact(DisplayName = "A pattern that overruns the generation ceiling fails with an honest message, naming no false cause.")]
     public void OverLimitPatternFailsWithoutAFalseCause() {
         // '(a{1000}){1000}' deterministically asks for 1,000,000 characters — every quantifier is bounded, there is
