@@ -1,6 +1,7 @@
 #region Usings declarations
 
 using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 
 using JetBrains.Annotations;
 
@@ -136,5 +137,98 @@ public sealed class ConcurrentDrawTests {
              .That(afterwards.Distinct().Count())
              .IsStrictlyGreaterThan(1);
     }
+
+    #region Composed draw paths
+
+    // The lock lives at one choke point — SeededRandom — but every generator reaches it through a different path.
+    // The scalar cases above prove the choke point itself; these prove the paths with the most moving parts still
+    // route through it: the derived generators (As, Combine) that wrap a draw, the collection engine's fill and
+    // dedup-draw loops, and the regex context. Each collapses in its own way if the source dies, so each asserts
+    // the shape of its own non-collapse — and each was confirmed red before the fix by stripping the lock (#310).
+    //
+    // Paths whose per-draw work is a single light sample — OrNull's null/value coin, a bare Any.Double() — are
+    // deliberately absent. Corruption is reliably provoked only by NextBytes-heavy draws (an eight-byte ordinal
+    // fill, a regex drawing one choice per character); a lone Next(2) or NextDouble() never builds enough
+    // contention to corrupt the source within a bounded run, so a lock-stripped mutant does not make such a test
+    // fail. A test that cannot go red on the broken code would only manufacture false confidence, and the choke
+    // point those paths share is already pinned by the cases here. (Measured: OrNull and Double each missed 5/5
+    // lock-stripped runs, while every case below tripped 5/5.)
+
+    [Fact(DisplayName = "Concurrent draws through Combine never collapse either operand.")]
+    public void ConcurrentCombineDrawsDoNotCollapse() {
+        List<(int First, int Second)> drawn = [];
+
+        Any.Reproducibly(310, () => drawn = Storm(() => Any.Combine(Any.Int32(), Any.Int32(), (first, second) => (first, second)).Generate()));
+
+        Check.WithCustomMessage($"Combine's first operand collapsed: {MostFrequent(drawn.Select(pair => pair.First))} of {TotalDraws} identical.")
+             .That(MostFrequent(drawn.Select(pair => pair.First)))
+             .IsStrictlyLessThan(TotalDraws / 10);
+        Check.WithCustomMessage($"Combine's second operand collapsed: {MostFrequent(drawn.Select(pair => pair.Second))} of {TotalDraws} identical.")
+             .That(MostFrequent(drawn.Select(pair => pair.Second)))
+             .IsStrictlyLessThan(TotalDraws / 10);
+    }
+
+    [Fact(DisplayName = "Concurrent draws through As keep the underlying draw healthy.")]
+    public void ConcurrentAsDrawsStayHealthy() {
+        // A pure projection carries no shared state, so any degeneration here is the library's own serialized draw
+        // collapsing, not a user-side race — the latter is the caller's responsibility, per the IAny<T> contract.
+        List<long> drawn = [];
+
+        Any.Reproducibly(310, () => drawn = Storm(() => Any.Int32().As(value => (long)value * 2).Generate()));
+
+        Check.WithCustomMessage($"{MostFrequent(drawn)} of {TotalDraws} As-projected values were identical; the underlying draw collapsed.")
+             .That(MostFrequent(drawn))
+             .IsStrictlyLessThan(TotalDraws / 10);
+    }
+
+    [Fact(DisplayName = "Concurrent draws through a list generator keep the right size and never collapse the elements.")]
+    public void ConcurrentListDrawsDoNotCollapse() {
+        List<List<int>> drawn = [];
+
+        Any.Reproducibly(310, () => drawn = Storm(() => Any.ListOf(Any.Int32()).WithCount(4).Generate()));
+
+        List<int> elements = drawn.SelectMany(list => list).ToList();
+
+        Check.WithCustomMessage("A fixed-count list came back the wrong size under concurrency.")
+             .That(drawn.All(list => list.Count == 4)).IsTrue();
+        Check.WithCustomMessage($"{MostFrequent(elements)} of {elements.Count} list elements were identical; the element draw collapsed.")
+             .That(MostFrequent(elements))
+             .IsStrictlyLessThan(elements.Count / 10);
+    }
+
+    [Fact(DisplayName = "Concurrent draws through a distinct set generator stay valid.")]
+    public void ConcurrentSetDrawsStayValid() {
+        // The distinct path runs a bounded dedup-draw against a fresh HashSet per generation — the path most exposed
+        // to a dead source, which cannot supply the fresh values it needs and fails loudly rather than collapsing.
+        List<HashSet<int>> drawn = [];
+
+        Any.Reproducibly(310, () => drawn = Storm(() => Any.SetOf(Any.Int32().Between(0, 100_000)).WithCount(5).Generate()));
+
+        Check.WithCustomMessage("A distinct set came back the wrong size under concurrency.")
+             .That(drawn.All(set => set.Count == 5)).IsTrue();
+
+        List<int> elements = drawn.SelectMany(set => set).ToList();
+        Check.WithCustomMessage($"{MostFrequent(elements)} of {elements.Count} set elements were identical; the element draw collapsed.")
+             .That(MostFrequent(elements))
+             .IsStrictlyLessThan(elements.Count / 5);
+    }
+
+    [Fact(DisplayName = "Concurrent draws through a pattern generator match and never collapse.")]
+    public void ConcurrentPatternDrawsStayValid() {
+        Regex        pattern = new("^[A-Z]{3}-[0-9]{4}$");
+        List<string> drawn   = [];
+
+        Any.Reproducibly(310, () => drawn = Storm(() => Any.StringMatching("^[A-Z]{3}-[0-9]{4}$").Generate()));
+
+        Check.WithCustomMessage($"A pattern draw did not match under concurrency, e.g. \"{drawn.FirstOrDefault(value => !pattern.IsMatch(value))}\".")
+             .That(drawn.All(value => pattern.IsMatch(value))).IsTrue();
+        // A dead regex context still matches (it picks the first choice every time — "AAA-0000"), so matching alone
+        // would not catch the collapse; the non-collapse assertion is what pins it.
+        Check.WithCustomMessage($"{MostFrequent(drawn)} of {TotalDraws} pattern draws were identical; generation collapsed.")
+             .That(MostFrequent(drawn))
+             .IsStrictlyLessThan(TotalDraws / 10);
+    }
+
+    #endregion
 
 }
