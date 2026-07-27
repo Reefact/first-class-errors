@@ -68,6 +68,8 @@ documentées une seule fois ici plutôt que répétées sur chaque page.
 | --- | --- |
 | [`ci`](ci.fr.md) | Construit et teste toute la solution sous Linux et Windows, avec couverture. Le barrage principal. |
 | [`sonar`](sonar.fr.md) | Analyse SonarQube Cloud — quality gate et remontée de couverture. |
+| [`mutation`](mutation.fr.md) | Tests de mutation des bibliothèques et de l'outillage FirstClassErrors avec Stryker.NET — check obligatoire sur ce qu'une PR modifie, plus un balayage complet hebdomadaire. |
+| [`justdummies-mutation`](justdummies-mutation.fr.md) | Idem pour les packages JustDummies, avec son propre check obligatoire — séparé pour que la future séparation de dépôt soit un déplacement de fichier. |
 | [`analyzers`](analyzers.fr.md) | Dogfood des analyzers Roslyn embarqués, y compris sur le plus vieux compilateur supporté (le floor Roslyn). |
 | [`commit-lint`](commit-lint.fr.md) | Impose la convention Conventional Commits sur chaque commit de PR, via le même script que le hook local. |
 | [`adr-check`](adr-check.fr.md) | Consultatif, dispatch manuel : confronte une branche à la base d'ADR (nouvelle décision / remplacement / conflit). Le repli pour les contributeurs sans Claude Code ; ne bloque jamais. |

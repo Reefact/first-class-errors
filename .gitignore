@@ -299,3 +299,7 @@ tools/floor-check/build.log
 tools/justdummies-check/local-feed/
 tools/justdummies-check/packages/
 tools/justdummies-check/*.log
+# Stryker mutation runs (the `mutation` workflow, or `dotnet stryker` locally): reports and the temporary
+# copies of the solution Stryker compiles the mutants in. The workflow writes under artifacts/ (already
+# ignored above); a local run defaults to StrykerOutput/ next to the config file.
+StrykerOutput/

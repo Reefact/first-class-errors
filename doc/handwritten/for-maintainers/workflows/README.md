@@ -64,6 +64,8 @@ here instead of being repeated on every page.
 | --- | --- |
 | [`ci`](ci.en.md) | Build and test the whole solution on Linux and Windows, with coverage. The primary gate. |
 | [`sonar`](sonar.en.md) | SonarQube Cloud analysis — quality gate and coverage reporting. |
+| [`mutation`](mutation.en.md) | Mutation testing of the FirstClassErrors libraries and tooling with Stryker.NET — a required check on what a PR changed, plus a weekly full sweep. |
+| [`justdummies-mutation`](justdummies-mutation.en.md) | The same, for the JustDummies packages, with its own required check — kept separate so the future repository split is a file move. |
 | [`analyzers`](analyzers.en.md) | Dogfood the bundled Roslyn analyzers, including on the oldest supported compiler (the Roslyn floor). |
 | [`commit-lint`](commit-lint.en.md) | Enforce the Conventional Commits convention on every PR commit, using the same script as the local hook. |
 | [`adr-check`](adr-check.en.md) | Advisory, manual dispatch: check a branch against the ADR base (new decision / supersede / conflict). The fallback for contributors without Claude Code; never blocks. |
