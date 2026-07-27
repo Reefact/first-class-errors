@@ -605,7 +605,7 @@ public static class Any {
         if (compose is null) { throw new ArgumentNullException(nameof(compose)); }
 
         RandomSource? source       = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second);
-        bool          reproducible = AnyDerivation.IsReproducible(first) && AnyDerivation.IsReproducible(second);
+        bool          reproducible = AnyDerivation.DrawsOnlyFrom(first, source) && AnyDerivation.DrawsOnlyFrom(second, source);
 
         return new DerivedAny<TResult>(source, reproducible, () => {
             T1 firstValue  = first.Generate();
@@ -636,7 +636,7 @@ public static class Any {
         if (compose is null) { throw new ArgumentNullException(nameof(compose)); }
 
         RandomSource? source       = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second) ?? AnyDerivation.SourceOf(third);
-        bool          reproducible = AnyDerivation.IsReproducible(first) && AnyDerivation.IsReproducible(second) && AnyDerivation.IsReproducible(third);
+        bool          reproducible = AnyDerivation.DrawsOnlyFrom(first, source) && AnyDerivation.DrawsOnlyFrom(second, source) && AnyDerivation.DrawsOnlyFrom(third, source);
 
         return new DerivedAny<TResult>(source, reproducible, () => {
             T1 firstValue  = first.Generate();
@@ -670,7 +670,7 @@ public static class Any {
         if (compose is null) { throw new ArgumentNullException(nameof(compose)); }
 
         RandomSource? source       = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second) ?? AnyDerivation.SourceOf(third) ?? AnyDerivation.SourceOf(fourth);
-        bool          reproducible = AnyDerivation.IsReproducible(first) && AnyDerivation.IsReproducible(second) && AnyDerivation.IsReproducible(third) && AnyDerivation.IsReproducible(fourth);
+        bool          reproducible = AnyDerivation.DrawsOnlyFrom(first, source) && AnyDerivation.DrawsOnlyFrom(second, source) && AnyDerivation.DrawsOnlyFrom(third, source) && AnyDerivation.DrawsOnlyFrom(fourth, source);
 
         return new DerivedAny<TResult>(source, reproducible, () => {
             T1 firstValue  = first.Generate();
@@ -708,7 +708,7 @@ public static class Any {
         if (compose is null) { throw new ArgumentNullException(nameof(compose)); }
 
         RandomSource? source       = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second) ?? AnyDerivation.SourceOf(third) ?? AnyDerivation.SourceOf(fourth) ?? AnyDerivation.SourceOf(fifth);
-        bool          reproducible = AnyDerivation.IsReproducible(first) && AnyDerivation.IsReproducible(second) && AnyDerivation.IsReproducible(third) && AnyDerivation.IsReproducible(fourth) && AnyDerivation.IsReproducible(fifth);
+        bool          reproducible = AnyDerivation.DrawsOnlyFrom(first, source) && AnyDerivation.DrawsOnlyFrom(second, source) && AnyDerivation.DrawsOnlyFrom(third, source) && AnyDerivation.DrawsOnlyFrom(fourth, source) && AnyDerivation.DrawsOnlyFrom(fifth, source);
 
         return new DerivedAny<TResult>(source, reproducible, () => {
             T1 firstValue  = first.Generate();
@@ -750,7 +750,7 @@ public static class Any {
         if (compose is null) { throw new ArgumentNullException(nameof(compose)); }
 
         RandomSource? source       = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second) ?? AnyDerivation.SourceOf(third) ?? AnyDerivation.SourceOf(fourth) ?? AnyDerivation.SourceOf(fifth) ?? AnyDerivation.SourceOf(sixth);
-        bool          reproducible = AnyDerivation.IsReproducible(first) && AnyDerivation.IsReproducible(second) && AnyDerivation.IsReproducible(third) && AnyDerivation.IsReproducible(fourth) && AnyDerivation.IsReproducible(fifth) && AnyDerivation.IsReproducible(sixth);
+        bool          reproducible = AnyDerivation.DrawsOnlyFrom(first, source) && AnyDerivation.DrawsOnlyFrom(second, source) && AnyDerivation.DrawsOnlyFrom(third, source) && AnyDerivation.DrawsOnlyFrom(fourth, source) && AnyDerivation.DrawsOnlyFrom(fifth, source) && AnyDerivation.DrawsOnlyFrom(sixth, source);
 
         return new DerivedAny<TResult>(source, reproducible, () => {
             T1 firstValue  = first.Generate();
@@ -798,7 +798,7 @@ public static class Any {
         if (compose is null) { throw new ArgumentNullException(nameof(compose)); }
 
         RandomSource? source       = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second) ?? AnyDerivation.SourceOf(third) ?? AnyDerivation.SourceOf(fourth) ?? AnyDerivation.SourceOf(fifth) ?? AnyDerivation.SourceOf(sixth) ?? AnyDerivation.SourceOf(seventh);
-        bool          reproducible = AnyDerivation.IsReproducible(first) && AnyDerivation.IsReproducible(second) && AnyDerivation.IsReproducible(third) && AnyDerivation.IsReproducible(fourth) && AnyDerivation.IsReproducible(fifth) && AnyDerivation.IsReproducible(sixth) && AnyDerivation.IsReproducible(seventh);
+        bool          reproducible = AnyDerivation.DrawsOnlyFrom(first, source) && AnyDerivation.DrawsOnlyFrom(second, source) && AnyDerivation.DrawsOnlyFrom(third, source) && AnyDerivation.DrawsOnlyFrom(fourth, source) && AnyDerivation.DrawsOnlyFrom(fifth, source) && AnyDerivation.DrawsOnlyFrom(sixth, source) && AnyDerivation.DrawsOnlyFrom(seventh, source);
 
         return new DerivedAny<TResult>(source, reproducible, () => {
             T1 firstValue   = first.Generate();
@@ -851,7 +851,7 @@ public static class Any {
         if (compose is null) { throw new ArgumentNullException(nameof(compose)); }
 
         RandomSource? source       = AnyDerivation.SourceOf(first) ?? AnyDerivation.SourceOf(second) ?? AnyDerivation.SourceOf(third) ?? AnyDerivation.SourceOf(fourth) ?? AnyDerivation.SourceOf(fifth) ?? AnyDerivation.SourceOf(sixth) ?? AnyDerivation.SourceOf(seventh) ?? AnyDerivation.SourceOf(eighth);
-        bool          reproducible = AnyDerivation.IsReproducible(first) && AnyDerivation.IsReproducible(second) && AnyDerivation.IsReproducible(third) && AnyDerivation.IsReproducible(fourth) && AnyDerivation.IsReproducible(fifth) && AnyDerivation.IsReproducible(sixth) && AnyDerivation.IsReproducible(seventh) && AnyDerivation.IsReproducible(eighth);
+        bool          reproducible = AnyDerivation.DrawsOnlyFrom(first, source) && AnyDerivation.DrawsOnlyFrom(second, source) && AnyDerivation.DrawsOnlyFrom(third, source) && AnyDerivation.DrawsOnlyFrom(fourth, source) && AnyDerivation.DrawsOnlyFrom(fifth, source) && AnyDerivation.DrawsOnlyFrom(sixth, source) && AnyDerivation.DrawsOnlyFrom(seventh, source) && AnyDerivation.DrawsOnlyFrom(eighth, source);
 
         return new DerivedAny<TResult>(source, reproducible, () => {
             T1 firstValue   = first.Generate();

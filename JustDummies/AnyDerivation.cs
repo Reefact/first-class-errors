@@ -64,6 +64,18 @@ internal static class AnyDerivation {
     }
 
     /// <summary>
+    ///     Whether <paramref name="generator" /> is reproducible <b>and</b> draws from <paramref name="source" />
+    ///     specifically — the per-operand condition for a <c>Combine</c>'s full-replay promise. An operand that is
+    ///     individually reproducible but draws from a <i>different</i> seeded source (a second <see cref="Any.WithSeed" />
+    ///     context, or the ambient source alongside a fixed one) leaves the reported seed covering only part of the run,
+    ///     so naming it as a deterministic full replay would over-promise. When the operands do not all draw from the one
+    ///     reported source, the hint is qualified instead — exactly as it is for a foreign operand.
+    /// </summary>
+    internal static bool DrawsOnlyFrom<T>(IAny<T> generator, RandomSource? source) {
+        return IsReproducible(generator) && ReferenceEquals(SourceOf(generator), source);
+    }
+
+    /// <summary>
     ///     A conservative upper bound on the number of distinct values <paramref name="generator" /> yields, when it
     ///     advertises one through <see cref="ICardinalityHint{T}" />; <c>null</c> when the domain is unbounded or unknown.
     /// </summary>
