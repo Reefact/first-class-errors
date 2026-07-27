@@ -106,6 +106,68 @@ public sealed class AmbientSeedScopeTests {
         Check.ThatCode(() => scope.Dispose()).DoesNotThrow();
     }
 
+    [Fact(DisplayName = "Disposing an outer scope out of order leaves the still-open inner scope's seed pinned.")]
+    public void OutOfOrderDisposalKeepsTheInnerScopePinned() {
+        // Reference: what seed 2 yields as the sole, top-of-stack scope.
+        (int, string) reference;
+        using (Any.UseSeed(2)) { reference = Batch(); }
+
+        // Open two scopes, then dispose the OUTER first — the inner (seed 2) is still open, so the ambient
+        // context must still be pinned to seed 2. A blind restore-the-previous unpins it instead, leaving the
+        // still-open inner scope drawing from a fresh unseeded generator.
+        IDisposable outer = Any.UseSeed(1);
+        IDisposable inner = Any.UseSeed(2);
+        outer.Dispose();
+        (int, string) whileInnerStillOpen = Batch();
+        inner.Dispose();
+
+        Check.That(whileInnerStillOpen).IsEqualTo(reference);
+    }
+
+    [Fact(DisplayName = "Out-of-order disposal does not leak a pinned seed to what runs next.")]
+    public void OutOfOrderDisposalDoesNotLeakASeed() {
+        // Reference: seed 1's sequence, to prove it is NOT what a later, unseeded draw replays.
+        (int, string) seedOneSequence;
+        using (Any.UseSeed(1)) { seedOneSequence = Batch(); }
+
+        // Dispose the outer first, then the inner: a blind restore-the-previous now reinstates seed 1's frame,
+        // stranding it as the ambient context for whatever runs next.
+        IDisposable outer = Any.UseSeed(1);
+        IDisposable inner = Any.UseSeed(2);
+        outer.Dispose();
+        inner.Dispose();
+
+        // Both scopes are closed, so the ambient context must be unseeded again — not pinned to seed 1.
+        (int, string) afterAllDisposed = Batch();
+
+        Check.That(afterAllDisposed).IsNotEqualTo(seedOneSequence);
+    }
+
+    [Fact(DisplayName = "Disposing a middle scope out of order leaves the top scope and its live ancestors intact.")]
+    public void OutOfOrderMiddleDisposalPreservesTheStack() {
+        (int, string) seedThree;
+        using (Any.UseSeed(3)) { seedThree = Batch(); }
+        (int, string) seedOne;
+        using (Any.UseSeed(1)) { seedOne = Batch(); }
+
+        IDisposable bottom = Any.UseSeed(1);
+        IDisposable middle = Any.UseSeed(2);
+        IDisposable top    = Any.UseSeed(3);
+
+        // Dispose the middle scope early: the top (seed 3) is untouched and stays pinned.
+        middle.Dispose();
+        (int, string) topStillPinned = Batch();
+
+        // Now the top goes: it must skip the already-disposed middle and land on the bottom (seed 1).
+        top.Dispose();
+        (int, string) afterTopDisposed = Batch();
+
+        bottom.Dispose();
+
+        Check.That(topStillPinned).IsEqualTo(seedThree);
+        Check.That(afterTopDisposed).IsEqualTo(seedOne);
+    }
+
     [Fact(DisplayName = "The scope does not leak across parallel execution contexts.")]
     public async Task TheScopeDoesNotLeakAcrossExecutionContexts() {
         (int, string) inside;
