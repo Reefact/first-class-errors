@@ -27,16 +27,20 @@ that future boundary now means the move is a **file move rather than an edit**:
 nothing in this workflow names a FirstClassErrors project, and nothing in
 [`mutation`](mutation.en.md) names a JustDummies one.
 
-It also gives JustDummies its **own required check**,
+It also gives JustDummies its **own check**,
 **`JustDummies mutation gate`**, independent of the FirstClassErrors one. Two
-gates, two branch-protection entries, two bars that move independently — which is
-what two libraries at different levels of test maturity need anyway.
+checks, two bars that move independently — which is what two libraries at different
+levels of test maturity need anyway. On pull requests both are **advisory**
+([ADR-0046](../adr/0046-make-the-per-pull-request-mutation-gate-advisory.md)); the
+enforced bar for each is its weekly full sweep.
 
 ## When it runs
 
-- On every **pull request targeting `main`** — diff-scoped. **This is the gate.**
-- **Weekly** on a schedule (Monday, 03:47 UTC) — the full sweep, advisory. The
-  slot is offset from `mutation`'s so the two sweeps do not contend for runners.
+- On every **pull request targeting `main`** — diff-scoped and **advisory**: it
+  reports the diff's score but never blocks the merge ([ADR-0046](../adr/0046-make-the-per-pull-request-mutation-gate-advisory.md)).
+- **Weekly** on a schedule (Monday, 03:47 UTC) — the full sweep, the **enforced
+  bar**. The slot is offset from `mutation`'s so the two sweeps do not contend for
+  runners.
 - On demand via **`workflow_dispatch`** — the full sweep.
 
 ## How it runs
