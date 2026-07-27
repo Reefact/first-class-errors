@@ -1,5 +1,7 @@
 #region Usings declarations
 
+using System.Runtime.CompilerServices;
+
 using FsCheck;
 using FsCheck.Fluent;
 
@@ -267,6 +269,39 @@ public sealed class CollectionProperties {
             .QuickCheckThrowOnFailure();
     }
 
+    [Fact(DisplayName = "Under a comparer stricter than the default one, every pinned reference-distinct value extends the domain.")]
+    public void AStricterComparerLetsEveryPinnedValueExtendTheDomain() {
+        Gen<(int Pool, int Pinned)> cases =
+            from pool in Gen.Choose(1, 4)
+            from pinned in Gen.Choose(1, 4)
+            select (Pool: pool, Pinned: pinned);
+
+        Prop.ForAll(cases.ToArbitrary(),
+                    testCase => {
+                        // The pool holds Tag(0)..Tag(pool-1) — distinct by value, so AnyOneOf keeps all of them (it
+                        // deduplicates under the DEFAULT comparer, which is why the pool cannot itself carry
+                        // reference-distinct twins). The pinned values are fresh instances of the SAME values, so
+                        // each is value-equal to a pool member and reference-distinct from it. Under ReferenceComparer
+                        // the effective domain is therefore pool + pinned for every pair — the input space the pinned
+                        // example cannot reach, and the one the eager check got wrong for every pinned >= 1 by
+                        // consulting a membership answered under the default comparer.
+                        Tag[] pooled = Enumerable.Range(0, testCase.Pool).Select(value => new Tag(value)).ToArray();
+                        Tag[] pinned = Enumerable.Range(0, testCase.Pinned).Select(value => new Tag(value % testCase.Pool)).ToArray();
+
+                        AnyList<Tag> generator = Any.ListOf(Any.OneOf(pooled)).Distinct(new ReferenceComparer());
+                        foreach (Tag value in pinned) { generator = generator.Containing(value); }
+
+                        List<Tag> list = generator.WithCount(testCase.Pool + testCase.Pinned).Generate();
+
+                        // Reference-counted on both sides: every pinned value present exactly once, every pooled value
+                        // present exactly once, and nothing else — the collection really did keep the twins apart.
+                        return list.Count == testCase.Pool + testCase.Pinned
+                               && pinned.All(value => list.Count(element => ReferenceEquals(element, value)) == 1)
+                               && pooled.All(value => list.Count(element => ReferenceEquals(element, value)) == 1);
+                    })
+            .QuickCheckThrowOnFailure();
+    }
+
     [Fact(DisplayName = "A generated sequence is fully materialized: enumerating it twice yields the same elements.")]
     public void SequenceIsFullyMaterialized() {
         Prop.ForAll(Generators.Count(30).ToArbitrary(),
@@ -280,5 +315,41 @@ public sealed class CollectionProperties {
                     })
             .QuickCheckThrowOnFailure();
     }
+
+    #region Nested types
+
+    // A value-equal reference type: two Tag(1) are one value under the default comparer and two under reference
+    // equality. That gap between the two comparers is exactly what the eager cardinality check has to respect.
+    private sealed class Tag {
+
+        private readonly int _value;
+
+        public Tag(int value) {
+            _value = value;
+        }
+
+        public override bool Equals(object? other) {
+            return other is Tag tag && tag._value == _value;
+        }
+
+        public override int GetHashCode() {
+            return _value;
+        }
+
+    }
+
+    private sealed class ReferenceComparer : IEqualityComparer<Tag> {
+
+        public bool Equals(Tag? x, Tag? y) {
+            return ReferenceEquals(x, y);
+        }
+
+        public int GetHashCode(Tag obj) {
+            return RuntimeHelpers.GetHashCode(obj);
+        }
+
+    }
+
+    #endregion
 
 }

@@ -63,9 +63,12 @@ public sealed class AnyOneOf<T> : IAny<T>, IHasRandomSource, ICardinalityHint<T>
     RandomSource? IHasRandomSource.Source => _source;
 
     // The pool is fixed and deduplicated at construction under the default comparer, so its count is the exact number
-    // of distinct values drawable, and membership is a direct lookup under that same comparer. Both deliberately ignore
-    // any custom comparer a downstream distinct collection carries: such a comparer can only merge values, never create
-    // new ones, so the advertised size stays a sound upper bound and membership never claims a value the pool lacks.
+    // of distinct values drawable, and membership is a direct lookup under that same comparer. The two answers do not
+    // survive a custom comparer equally. The count does: a pool of n values is at most n distinct under any comparer,
+    // so the advertised size stays a sound upper bound. Membership does not: a comparer stricter than the default one
+    // keeps apart values this lookup calls equal, so it may report a value as drawable that, under that comparer, the
+    // pool can never yield. A distinct collection carrying a custom comparer must therefore not consult membership —
+    // CollectionState.FixedOutsideCount is where that is enforced.
     long? ICardinalityHint<T>.DistinctCardinality => _values.Count;
 
     bool ICardinalityHint<T>.Contains(T value) => _values.Contains(value);
