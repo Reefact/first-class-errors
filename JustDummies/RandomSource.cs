@@ -96,6 +96,8 @@ internal sealed class SeededRandom {
 
     /// <summary>Fills <paramref name="buffer" /> with random bytes.</summary>
     internal void NextBytes(byte[] buffer) {
+        if (buffer is null) { throw new ArgumentNullException(nameof(buffer)); }
+
         lock (_gate) { _random.NextBytes(buffer); }
     }
 
@@ -177,6 +179,8 @@ internal sealed class AmbientRandomSource : RandomSource {
     private sealed class AmbientState {
 
         internal AmbientState(SeededRandom random, string? replaySnippet) {
+            if (random is null) { throw new ArgumentNullException(nameof(random)); }
+
             Random        = random;
             ReplaySnippet = replaySnippet;
         }
@@ -271,6 +275,7 @@ internal static class RandomSampling {
     ///     overload resolution over a same-named extension and silently change the semantics.
     /// </summary>
     internal static long NextInt64Inclusive(this SeededRandom random, long minInclusive, long maxInclusive) {
+        if (random is null) { throw new ArgumentNullException(nameof(random)); }
         if (minInclusive > maxInclusive) { throw new ArgumentOutOfRangeException(nameof(maxInclusive), "The maximum must be greater than or equal to the minimum."); }
 
         ulong rangeSize = (ulong)(maxInclusive - minInclusive) + 1UL;
@@ -285,11 +290,15 @@ internal static class RandomSampling {
 
     /// <summary>Draws a uniform <see cref="int" /> in the inclusive range — see <see cref="NextInt64Inclusive" />.</summary>
     internal static int NextInt32Inclusive(this SeededRandom random, int minInclusive, int maxInclusive) {
+        if (random is null) { throw new ArgumentNullException(nameof(random)); }
+
         return (int)random.NextInt64Inclusive(minInclusive, maxInclusive);
     }
 
     /// <summary>Draws 8 random bytes as a <see cref="ulong" /> — the raw material of the ordinal sampling.</summary>
     internal static ulong NextUInt64(this SeededRandom random) {
+        if (random is null) { throw new ArgumentNullException(nameof(random)); }
+
         byte[] bytes = new byte[8];
         random.NextBytes(bytes);
 

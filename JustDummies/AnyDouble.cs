@@ -17,6 +17,8 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource, ICardinalityHint
     #region Statics members declarations
 
     internal static AnyDouble Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         return new AnyDouble(source, ContinuousIntervalSpec.Unconstrained("Double", V, value => value, ContinuousIntervalSpec.NextUp, -double.MaxValue, double.MaxValue));
     }
 

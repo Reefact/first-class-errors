@@ -69,6 +69,8 @@ public sealed class AnyString : IAny<string>, IHasRandomSource {
     #endregion
 
     internal AnyString(RandomSource source, StringSpec spec) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+        if (spec is null) { throw new ArgumentNullException(nameof(spec)); }
         _source = source;
         _spec   = spec;
     }

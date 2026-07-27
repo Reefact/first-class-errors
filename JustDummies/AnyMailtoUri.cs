@@ -16,6 +16,8 @@ public sealed class AnyMailtoUri : IAny<Uri>, IHasRandomSource {
     #endregion
 
     internal AnyMailtoUri(RandomSource source, UriSpec spec) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+        if (spec is null) { throw new ArgumentNullException(nameof(spec)); }
         _source = source;
         _spec   = spec;
     }

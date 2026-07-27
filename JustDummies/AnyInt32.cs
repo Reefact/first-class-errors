@@ -33,6 +33,8 @@ public sealed class AnyInt32 : IAny<int>, IHasRandomSource, ICardinalityHint<int
     #region Statics members declarations
 
     internal static AnyInt32 Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         return new AnyInt32(source, OrdinalIntervalSpec.Unconstrained("Int32", ordinal => V(Val(ordinal)), Ord(int.MinValue), Ord(int.MaxValue)));
     }
 

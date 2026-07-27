@@ -39,16 +39,21 @@ internal static class CountConstraints {
 
     /// <summary>Requires at least one element.</summary>
     internal static CollectionState<T> NonEmpty<T>(CollectionState<T> state) {
+        if (state is null) { throw new ArgumentNullException(nameof(state)); }
+
         return state.WithMinCount(1, "NonEmpty()");
     }
 
     /// <summary>Fixes the collection to no elements.</summary>
     internal static CollectionState<T> Empty<T>(CollectionState<T> state) {
+        if (state is null) { throw new ArgumentNullException(nameof(state)); }
+
         return state.WithExactCount(0, "Empty()");
     }
 
     /// <summary>Fixes the exact number of elements.</summary>
     internal static CollectionState<T> WithCount<T>(CollectionState<T> state, int count) {
+        if (state is null) { throw new ArgumentNullException(nameof(state)); }
         RequireNonNegative(count, nameof(count));
 
         return state.WithExactCount(count, $"WithCount({V(count)})");
@@ -56,6 +61,7 @@ internal static class CountConstraints {
 
     /// <summary>Requires at least <paramref name="count" /> elements.</summary>
     internal static CollectionState<T> WithMinCount<T>(CollectionState<T> state, int count) {
+        if (state is null) { throw new ArgumentNullException(nameof(state)); }
         RequireNonNegative(count, nameof(count));
 
         return state.WithMinCount(count, $"WithMinCount({V(count)})");
@@ -63,6 +69,7 @@ internal static class CountConstraints {
 
     /// <summary>Requires at most <paramref name="count" /> elements.</summary>
     internal static CollectionState<T> WithMaxCount<T>(CollectionState<T> state, int count) {
+        if (state is null) { throw new ArgumentNullException(nameof(state)); }
         RequireNonNegative(count, nameof(count));
 
         return state.WithMaxCount(count, $"WithMaxCount({V(count)})");
@@ -70,6 +77,7 @@ internal static class CountConstraints {
 
     /// <summary>Requires a number of elements within the inclusive range [<paramref name="minimum" />, <paramref name="maximum" />].</summary>
     internal static CollectionState<T> WithCountBetween<T>(CollectionState<T> state, int minimum, int maximum) {
+        if (state is null) { throw new ArgumentNullException(nameof(state)); }
         RequireNonNegative(minimum, nameof(minimum));
         RequireNonNegative(maximum, nameof(maximum));
         if (minimum > maximum) { throw new ArgumentException($"The minimum ({V(minimum)}) must be less than or equal to the maximum ({V(maximum)}).", nameof(minimum)); }
