@@ -21,9 +21,11 @@ la suite laisse passer est un **survivant** : un comportement que le code a et q
 rien n'affirme. Un mutant tué, c'est un test qui fait son travail.
 
 Ce workflow rend ce contrôle automatique. Sur une pull request, il ne mute **que
-les fichiers modifiés par la pull request** — c'est ce qui le rend assez peu
-coûteux pour être un check obligatoire ; un balayage hebdomadaire mesure tout le
-reste.
+les fichiers modifiés par la pull request** et rapporte le score **sans bloquer le
+merge** — consultatif depuis l'[ADR-0046](../adr/0046-make-the-per-pull-request-mutation-gate-advisory.md),
+car la sélection par-*fichier* du `--since` de Stryker fait suivre le coût à la
+taille du fichier où atterrit un changement, pas au changement. Le **balayage
+hebdomadaire** est le niveau imposé, et il mesure tout le reste.
 
 Son périmètre, c'est **tout projet FirstClassErrors dont le code est livré ou
 exécuté** : les trois bibliothèques (`FirstClassErrors`,
@@ -42,10 +44,11 @@ le répéter.
 
 ## Quand il s'exécute
 
-- Sur chaque **pull request ciblant `main`** — cantonné au diff. **C'est le
-  barrage.**
-- **Chaque semaine** sur planification (lundi, 03h23 UTC) — le balayage complet,
-  consultatif.
+- Sur chaque **pull request ciblant `main`** — cantonné au diff et **consultatif** :
+  il rapporte le score du diff mais ne bloque jamais le merge
+  ([ADR-0046](../adr/0046-make-the-per-pull-request-mutation-gate-advisory.md)).
+- **Chaque semaine** sur planification (lundi, 03h23 UTC) — le balayage complet, et
+  le **niveau imposé**.
 - À la demande via **`workflow_dispatch`** — le balayage complet.
 
 ## Comment il s'exécute
@@ -86,16 +89,20 @@ aucun mutant, signale *« unable to calculate a mutation score »*, et sort en 0
 C'est un succès — et c'est le cas courant, la plupart des pull requests ne
 touchant qu'un projet.
 
-### `gate` — l'unique check obligatoire
+### `gate` — l'unique check consultatif
 
-Une matrice produit un check par branche : rendre le barrage obligatoire sur
-`main` obligerait donc à redéclarer les noms des branches dans la protection de
-branche à chaque évolution de la matrice. `gate` les regroupe sous un nom de check
-stable — **`Mutation gate`** — et c'est celui-là qu'il faut rendre obligatoire.
+Une matrice produit un check par branche. `gate` les regroupe sous un nom de check
+stable — **`Mutation gate`** — pour que la protection de branche ait une seule
+entrée à viser, plutôt que de redéclarer les noms des branches à chaque évolution
+de la matrice.
 
-Il s'exécute avec `if: always()`, ce qui est porteur : sans cela, une branche en
-échec laisserait `gate` *skipped*, et GitHub compte un check obligatoire skippé
-comme un succès.
+Il est **consultatif** ([ADR-0046](../adr/0046-make-the-per-pull-request-mutation-gate-advisory.md)) :
+il rapporte l'agrégat des legs du diff mais **ne fait jamais échouer la pull
+request**. Un vrai échec de leg est remonté comme `::warning::` à investiguer, et un
+run annulé par une poussée supplantante est traité comme du bruit, pas comme un
+échec. Il s'exécute avec `if: always()` pour rapporter après une branche en échec
+*ou annulée* au lieu d'être skippé. Le niveau imposé est le balayage `full`
+hebdomadaire, pas ce check.
 
 ### `full` — le balayage hebdomadaire
 
@@ -247,8 +254,10 @@ tests ; il ne stocke aucun secret et n'a besoin d'aucun périmètre en écriture
   Stryker se mettait à en tenir compte, des mutants deviendraient silencieusement
   des erreurs de compilation au lieu d'être testés — c'est ce compteur, dans le
   log du run, qui le révélerait.
-- **`if: always()` sur `gate` est nécessaire.** Retirez-le et une branche de
-  matrice rouge rend le check obligatoire vert.
+- **`if: always()` sur `gate` est porteur.** Retirez-le et `gate` est skippé dès
+  qu'une branche échoue ou est annulée, donc il ne rapporte jamais l'agrégat —
+  l'avertissement consultatif ([ADR-0046](../adr/0046-make-the-per-pull-request-mutation-gate-advisory.md))
+  serait silencieusement perdu précisément quand il y a quelque chose à dire.
 - **La version de Stryker est épinglée dans le manifeste d'outils.** La monter est
   un acte délibéré : attendez-vous à voir les scores bouger, et relisez les
   seuils.
