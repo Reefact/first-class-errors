@@ -131,4 +131,71 @@ public sealed class SeedReproducibilityTests {
         Check.ThatCode(() => Any.ReproduciblyAsync((Func<Task>)null!)).Throws<ArgumentNullException>();
     }
 
+    [Fact(DisplayName = "A report sink that throws does not mask the body's failure.")]
+    public void AThrowingReportSinkDoesNotMaskTheBodyFailure() {
+        InvalidOperationException boom         = new("real body failure");
+        Action<string>            throwingSink = _ => throw new Exception("sink failure");
+
+        // The seed report is a best-effort aid: a sink that throws must never replace the failure it exists to
+        // help diagnose. The body's exception — not the sink's — must reach the test runner, unchanged.
+        InvalidOperationException thrown = Assert.Throws<InvalidOperationException>(
+            () => Any.Reproducibly(4242, () => throw boom, throwingSink));
+
+        Check.That(ReferenceEquals(thrown, boom)).IsTrue();
+        Check.That(thrown.Message).IsEqualTo("real body failure");
+    }
+
+    [Fact(DisplayName = "An async report sink that throws does not mask the body's failure.")]
+    public async Task AsyncAThrowingReportSinkDoesNotMaskTheBodyFailure() {
+        InvalidOperationException boom         = new("real async failure");
+        Action<string>            throwingSink = _ => throw new Exception("sink failure");
+
+        InvalidOperationException thrown = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => Any.ReproduciblyAsync(7, async () => {
+                await Task.Yield();
+
+                throw boom;
+            }, throwingSink));
+
+        Check.That(ReferenceEquals(thrown, boom)).IsTrue();
+        Check.That(thrown.Message).IsEqualTo("real async failure");
+    }
+
+    [Fact(DisplayName = "A report sink that throws falls back to the console so the seed still surfaces.")]
+    public void AThrowingReportSinkFallsBackToTheConsole() {
+        TextWriter   original = Console.Error;
+        StringWriter captured = new();
+        Console.SetError(captured);
+        try {
+            Assert.Throws<InvalidOperationException>(
+                () => Any.Reproducibly(6006, () => throw new InvalidOperationException("boom"),
+                                       _ => throw new Exception("sink down")));
+        } finally {
+            Console.SetError(original);
+        }
+
+        // A throwing sink must not lose the seed: it falls back to the default console sink so the run stays replayable.
+        Check.That(captured.ToString()).Contains("6006");
+    }
+
+    [Fact(DisplayName = "A report sink that succeeds is not also written to the console.")]
+    public void ASucceedingReportSinkIsNotDuplicatedToTheConsole() {
+        TextWriter   original = Console.Error;
+        StringWriter captured = new();
+        Console.SetError(captured);
+        string? reported = null;
+        try {
+            Assert.Throws<InvalidOperationException>(
+                () => Any.Reproducibly(5005, () => throw new InvalidOperationException("boom"),
+                                       message => reported = message));
+        } finally {
+            Console.SetError(original);
+        }
+
+        // A custom sink replaces console output; a working sink must not be duplicated to the console fallback.
+        Check.That(reported).IsNotNull();
+        Check.That(reported!).Contains("5005");
+        Check.That(captured.ToString()).Not.Contains("5005");
+    }
+
 }

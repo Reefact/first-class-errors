@@ -1026,8 +1026,25 @@ public static class Any {
     }
 
     private static void Report(Action<string>? report, int seed) {
-        (report ?? Console.Error.WriteLine)(
-            $"[JustDummies] These arbitrary values were seeded with {seed}. Reproduce this run with Any.Reproducibly({seed}, ...).");
+        string message = $"[JustDummies] These arbitrary values were seeded with {seed}. Reproduce this run with Any.Reproducibly({seed}, ...).";
+
+        // The seed report is a best-effort diagnostic aid, called while an exception is already propagating: a
+        // caller-supplied sink that throws must never mask the failure the seed exists to help diagnose. Try the
+        // caller's sink first; if it throws, fall back to the default console sink so the seed still surfaces, and
+        // swallow even the fallback's failure so the body's exception always propagates unchanged.
+        if (report is not null && TryWrite(report, message)) { return; }
+
+        TryWrite(Console.Error.WriteLine, message);
+    }
+
+    private static bool TryWrite(Action<string> sink, string message) {
+        try {
+            sink(message);
+
+            return true;
+        } catch {
+            return false;
+        }
     }
 
 }
