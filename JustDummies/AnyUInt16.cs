@@ -170,7 +170,7 @@ public sealed class AnyUInt16 : IAny<ushort>, IHasRandomSource, ICardinalityHint
 
     /// <inheritdoc />
     public ushort Generate() {
-        return Val(_spec.GenerateOrdinal(_source.Current.Random));
+        return Val(_spec.GenerateOrdinal(_source.Current));
     }
 
 }

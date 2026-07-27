@@ -172,8 +172,7 @@ internal sealed class ContinuousIntervalSpec {
 
     /// <summary>Draws one value satisfying the whole specification.</summary>
     internal double Generate(RandomSource source) {
-        SeededRandom current = source.Current;
-        Random       random  = current.Random;
+        SeededRandom random = source.Current;
 
         if (_effectiveAllowed is not null) {
             return _effectiveAllowed[random.Next(_effectiveAllowed.Count)];
@@ -194,8 +193,8 @@ internal sealed class ContinuousIntervalSpec {
         double? free = NudgeToFree(candidate, ascending: true) ?? NudgeToFree(candidate, ascending: false);
         if (free is null) {
             throw new AnyGenerationException(
-                $"Generation failed: no {_typeName} value near the drawn candidate satisfies the exclusions. {source.ReplayGuidance(current.Seed)}",
-                current.Seed,
+                $"Generation failed: no {_typeName} value near the drawn candidate satisfies the exclusions. {source.ReplayGuidance(random.Seed)}",
+                random.Seed,
                 new InvalidOperationException("No representable value in range remains after applying the exclusions."));
         }
 

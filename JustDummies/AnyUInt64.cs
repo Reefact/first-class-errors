@@ -170,7 +170,7 @@ public sealed class AnyUInt64 : IAny<ulong>, IHasRandomSource, ICardinalityHint<
 
     /// <inheritdoc />
     public ulong Generate() {
-        return Val(_spec.GenerateOrdinal(_source.Current.Random));
+        return Val(_spec.GenerateOrdinal(_source.Current));
     }
 
 }

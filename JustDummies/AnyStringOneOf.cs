@@ -47,7 +47,7 @@ public sealed class AnyStringOneOf : IAny<string>, IHasRandomSource, ICardinalit
 
     /// <inheritdoc />
     public string Generate() {
-        return _values[_source.Current.Random.Next(_values.Count)];
+        return _values[_source.Current.Next(_values.Count)];
     }
 
 }

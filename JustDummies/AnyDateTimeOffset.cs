@@ -241,8 +241,8 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
 
     /// <inheritdoc />
     public DateTimeOffset Generate() {
-        Random random  = _source.Current.Random;
-        ulong  ordinal = _spec.GenerateOrdinal(random);
+        SeededRandom random  = _source.Current;
+        ulong        ordinal = _spec.GenerateOrdinal(random);
         if (_allowedOriginals is not null && _allowedOriginals.TryGetValue(ordinal, out DateTimeOffset original)) { return original; }
         if (!_offsetDeclared) { return Val(ordinal); }
 

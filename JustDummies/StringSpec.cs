@@ -241,7 +241,7 @@ internal sealed class StringSpec {
     ///     exhausted budget means the exclusions leave the shape unsatisfiable, reported with the seed to replay.
     /// </summary>
     internal string Generate(RandomSource source) {
-        Random random = source.Current.Random;
+        SeededRandom random = source.Current;
         if (_excluded.Count == 0) { return BuildCandidate(random); }
 
         for (int collisions = 0;;) {
@@ -251,7 +251,7 @@ internal sealed class StringSpec {
         }
     }
 
-    private string BuildCandidate(Random random) {
+    private string BuildCandidate(SeededRandom random) {
         int required     = RequiredLength();
         int effectiveMin = Math.Max(_minLength, required);
         // Long arithmetic: a huge declared minimum must saturate instead of overflowing past int.MaxValue.
@@ -290,7 +290,7 @@ internal sealed class StringSpec {
         return string.Join(", ", _excluded.Select(value => $"\"{value}\""));
     }
 
-    private static void AppendFiller(StringBuilder builder, Random random, string pool, int count) {
+    private static void AppendFiller(StringBuilder builder, SeededRandom random, string pool, int count) {
         for (int i = 0; i < count; i++) {
             builder.Append(pool[random.Next(pool.Length)]);
         }

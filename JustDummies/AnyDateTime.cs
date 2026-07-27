@@ -175,7 +175,7 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource, ICardinality
 
     /// <inheritdoc />
     public DateTime Generate() {
-        ulong ordinal = _spec.GenerateOrdinal(_source.Current.Random);
+        ulong ordinal = _spec.GenerateOrdinal(_source.Current);
         if (_allowedOriginals is not null && _allowedOriginals.TryGetValue(ordinal, out DateTime original)) { return original; }
 
         return Val(ordinal);

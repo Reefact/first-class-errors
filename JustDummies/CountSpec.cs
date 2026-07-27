@@ -94,7 +94,7 @@ internal sealed class CountSpec {
     ///     the ceiling to the number of distinct values a distinct collection can hold. Both are already known to be
     ///     compatible with the declared bounds — the collection validates them eagerly before generation.
     /// </summary>
-    internal int Resolve(Random random, int requiredMin, int? cap) {
+    internal int Resolve(SeededRandom random, int requiredMin, int? cap) {
         if (_exact is int exact) { return exact; }
 
         int min = Math.Max(_min, requiredMin);

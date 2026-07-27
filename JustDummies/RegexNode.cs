@@ -22,12 +22,12 @@ internal sealed class RegexGenerationContext {
 
     #endregion
 
-    internal RegexGenerationContext(Random random, int limit) {
+    internal RegexGenerationContext(SeededRandom random, int limit) {
         Random = random;
         _limit = limit;
     }
 
-    internal Random Random { get; }
+    internal SeededRandom Random { get; }
 
     internal void Append(char character) {
         if (_builder.Length >= _limit) {

@@ -57,7 +57,7 @@ public sealed class AnyPattern : IAny<string>, IHasRandomSource {
 
     /// <inheritdoc />
     public string Generate() {
-        RegexGenerationContext context = new(_source.Current.Random, GenerationLimit);
+        RegexGenerationContext context = new(_source.Current, GenerationLimit);
         _root.Append(context);
 
         return context.Result();

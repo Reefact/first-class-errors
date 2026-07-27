@@ -43,7 +43,7 @@ internal sealed class CollectionState<T> {
         return copy;
     }
 
-    private static void Shuffle(List<T> items, Random random) {
+    private static void Shuffle(List<T> items, SeededRandom random) {
         // Fisher-Yates: contained values and filler are appended in a fixed order, so a shuffle keeps a dummy
         // collection from advertising a positional invariant a caller might accidentally rely on.
         for (int index = items.Count - 1; index > 0; index--) {
@@ -113,10 +113,10 @@ internal sealed class CollectionState<T> {
 
     /// <summary>Builds one collection satisfying the whole specification — laid out directly, never generate-then-retry.</summary>
     internal List<T> Materialize(RandomSource source) {
-        Random random   = source.Current.Random;
-        int    required = _fixedContaining.Count + _generatedContaining.Count;
-        int?   cap      = _distinct ? CardinalityCap() : null;
-        int    count    = _count.Resolve(random, required, cap);
+        SeededRandom random   = source.Current;
+        int          required = _fixedContaining.Count + _generatedContaining.Count;
+        int?         cap      = _distinct ? CardinalityCap() : null;
+        int          count    = _count.Resolve(random, required, cap);
 
         if (!_distinct) {
             List<T> items = new(Math.Max(count, required));

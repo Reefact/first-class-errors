@@ -68,7 +68,7 @@ public sealed class AnyBoolean : IAny<bool>, IHasRandomSource, ICardinalityHint<
 
     /// <inheritdoc />
     public bool Generate() {
-        return _pinned ?? _source.Current.Random.Next(2) == 0;
+        return _pinned ?? _source.Current.Next(2) == 0;
     }
 
     private AnyBoolean Pin(bool value, string applying) {

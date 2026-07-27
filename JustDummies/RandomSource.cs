@@ -9,7 +9,7 @@ namespace JustDummies;
 /// </summary>
 internal abstract class RandomSource {
 
-    /// <summary>The seeded pseudo-random generator to draw from right now.</summary>
+    /// <summary>The seeded generator to draw from right now. Every draw goes through it, serialized on its own lock.</summary>
     internal abstract SeededRandom Current { get; }
 
     /// <summary>
@@ -41,16 +41,68 @@ internal abstract class RandomSource {
 
 }
 
-/// <summary>A pseudo-random generator that remembers the seed it was created from.</summary>
+/// <summary>
+///     A pseudo-random generator that remembers the seed it was created from, and the <b>only</b> door to it: the
+///     underlying <see cref="Random" /> is never handed out, so every draw goes through this type and is serialized
+///     on its own lock.
+/// </summary>
+/// <remarks>
+///     <para>
+///         <see cref="Random" /> is not thread-safe, and a source reaches several threads by two ordinary routes: the
+///         ambient state flows with the execution context into every task a test spawns, and an
+///         <see cref="AnyContext" /> is shared by whoever holds it. Left unsynchronized, concurrent draws converge the
+///         generator's two internal indices and it returns zero <b>for ever</b> — so every generator settles on the
+///         minimum of its declared range (<c>0</c>, <c>""</c>, <see cref="Guid.Empty" />) and the source never
+///         recovers. Silent, and exactly the values most likely to make an assertion pass for the wrong reason.
+///     </para>
+///     <para>
+///         Keeping the <see cref="Random" /> private is what makes the guarantee hold: a synchronized subclass would
+///         leak any member left un-overridden, whereas here a draw that bypasses the lock does not compile. An
+///         uncontended lock leaves single-threaded sequences bit-identical, so a pinned seed replays exactly as
+///         before, and the cost is immaterial on paths that are not hot loops.
+///     </para>
+///     <para>
+///         What this does <b>not</b> buy is a value-level guarantee across threads: the lock is per primitive draw, so
+///         two threads interleave inside a multi-draw generation (a string consumes one draw per character). Neither
+///         the sequence nor the multiset of generated values is stable under parallelism — see
+///         <see cref="Any.UseSeed(int)" /> for the per-work-item scope that is.
+///     </para>
+/// </remarks>
 internal sealed class SeededRandom {
 
+    #region Fields declarations
+
+    private readonly object _gate = new();
+    private readonly Random _random;
+
+    #endregion
+
     internal SeededRandom(int seed) {
-        Seed   = seed;
-        Random = new Random(seed);
+        Seed    = seed;
+        _random = new Random(seed);
     }
 
-    internal int    Seed   { get; }
-    internal Random Random { get; }
+    internal int Seed { get; }
+
+    /// <summary>Draws a non-negative <see cref="int" /> below <paramref name="maxExclusive" />.</summary>
+    internal int Next(int maxExclusive) {
+        lock (_gate) { return _random.Next(maxExclusive); }
+    }
+
+    /// <summary>Draws an <see cref="int" /> in the half-open range [<paramref name="minInclusive" />, <paramref name="maxExclusive" />).</summary>
+    internal int Next(int minInclusive, int maxExclusive) {
+        lock (_gate) { return _random.Next(minInclusive, maxExclusive); }
+    }
+
+    /// <summary>Fills <paramref name="buffer" /> with random bytes.</summary>
+    internal void NextBytes(byte[] buffer) {
+        lock (_gate) { _random.NextBytes(buffer); }
+    }
+
+    /// <summary>Draws a <see cref="double" /> in the half-open range [0, 1).</summary>
+    internal double NextDouble() {
+        lock (_gate) { return _random.NextDouble(); }
+    }
 
 }
 
@@ -218,7 +270,7 @@ internal static class RandomSampling {
     ///     <c>Random.NextInt64(long, long)</c> instance method — whose upper bound is EXCLUSIVE — would win
     ///     overload resolution over a same-named extension and silently change the semantics.
     /// </summary>
-    internal static long NextInt64Inclusive(this Random random, long minInclusive, long maxInclusive) {
+    internal static long NextInt64Inclusive(this SeededRandom random, long minInclusive, long maxInclusive) {
         if (minInclusive > maxInclusive) { throw new ArgumentOutOfRangeException(nameof(maxInclusive), "The maximum must be greater than or equal to the minimum."); }
 
         ulong rangeSize = (ulong)(maxInclusive - minInclusive) + 1UL;
@@ -232,12 +284,12 @@ internal static class RandomSampling {
     }
 
     /// <summary>Draws a uniform <see cref="int" /> in the inclusive range — see <see cref="NextInt64Inclusive" />.</summary>
-    internal static int NextInt32Inclusive(this Random random, int minInclusive, int maxInclusive) {
+    internal static int NextInt32Inclusive(this SeededRandom random, int minInclusive, int maxInclusive) {
         return (int)random.NextInt64Inclusive(minInclusive, maxInclusive);
     }
 
     /// <summary>Draws 8 random bytes as a <see cref="ulong" /> — the raw material of the ordinal sampling.</summary>
-    internal static ulong NextUInt64(this Random random) {
+    internal static ulong NextUInt64(this SeededRandom random) {
         byte[] bytes = new byte[8];
         random.NextBytes(bytes);
 

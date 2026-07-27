@@ -240,7 +240,7 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinality
 
     /// <inheritdoc />
     public TEnum Generate() {
-        return _pool[_source.Current.Random.Next(_pool.Count)];
+        return _pool[_source.Current.Next(_pool.Count)];
     }
 
     /// <summary>

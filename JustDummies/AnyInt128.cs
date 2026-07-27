@@ -186,7 +186,7 @@ public sealed class AnyInt128 : IAny<Int128>, IHasRandomSource, ICardinalityHint
 
     /// <inheritdoc />
     public Int128 Generate() {
-        return Val(_spec.GenerateOrdinal(_source.Current.Random));
+        return Val(_spec.GenerateOrdinal(_source.Current));
     }
 
 }
