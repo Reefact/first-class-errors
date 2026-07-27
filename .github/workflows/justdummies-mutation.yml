@@ -184,8 +184,10 @@ jobs:
     runs-on: ubuntu-latest
     # The sweep runs the library's whole test suite once per mutant, and `JustDummies` carries a few
     # thousand of them — this is the longest job in the repository, and the reason the sweep is
-    # weekly and the gate is diff-scoped.
-    timeout-minutes: 180
+    # weekly and the gate is diff-scoped. Measured locally on four cores, it runs well past an hour;
+    # the cap therefore sits just under the six-hour ceiling GitHub imposes on a job, because this
+    # run is meant to take as long as it takes rather than be cut short.
+    timeout-minutes: 350
     strategy:
       fail-fast: false
       matrix:

@@ -76,8 +76,8 @@ nom de check par branche.
 ## Décision
 
 Toute pull request ciblant `main` doit franchir un seuil de score de mutation,
-mesuré par Stryker.NET sur les mutants des fichiers qu'elle modifie, pour chacune
-des cinq bibliothèques que le dépôt livre — imposé par deux barrages
+mesuré par Stryker.NET sur les mutants des fichiers qu'elle modifie, pour chaque
+projet du dépôt dont le code est livré ou exécuté — imposé par deux barrages
 indépendants, découpés le long de la frontière de dépôt à venir.
 
 ## Justification
@@ -110,13 +110,18 @@ et c'est la bonne direction pour l'erreur : elle pousse à la hausse la couvertu
 des fichiers les plus faibles au contact, et le mainteneur peut toujours écarter
 une branche.
 
-Restreindre le périmètre aux **cinq bibliothèques livrées** applique le même
-argument de coût dans l'autre sens. L'outillage `fce` et les analyseurs Roslyn ne
-sont liés dans l'application de personne ; leurs tests pilotent des compilations
-Roslyn et lancent des processus, leur coût par mutant est donc d'un ordre de
-grandeur supérieur, et leur comportement est déjà tenu de bout en bout par des
-workflows dédiés. Les inclure multiplierait le coût du barrage là où un défaut
-est le moins cher à remarquer.
+Le périmètre couvre **l'outillage et les analyseurs autant que les
+bibliothèques**. Leurs suites sont les lentes — elles pilotent des compilations
+Roslyn et des comparaisons de snapshots, donc leurs mutants sont les chers —, mais
+la dépense est une raison de les mettre dans le balayage hebdomadaire, pas une
+raison de les laisser sans mesure : ce balayage est précisément le run autorisé à
+durer le temps qu'il faut. Sur le barrage, le cantonnement au diff borne déjà ce
+qu'ils coûtent, puisqu'une pull request qui ne touche pas le générateur ne paie
+rien pour lui. Ce qui reste exclu l'est pour une autre raison que le coût : les
+échantillons `Usage` et les benchmarks du binder ne sont pas du comportement
+livré, et le worker de documentation est un point d'entrée de processus qu'aucun
+test n'exerce en processus — le muter ne fabriquerait que des survivants qu'aucun
+test ne pourrait tuer.
 
 L'imposer par **deux barrages plutôt qu'un** ne coûte rien aujourd'hui et achète
 la migration. Les packages JustDummies sont déjà isolés du reste par construction,
@@ -179,14 +184,13 @@ est comparable d'un run à l'autre, et il ne peut pas être contourné en
 n'effleurant que les bords d'un fichier.
 
 Rejetée pour deux raisons. La première est le coût : le coût par mutant est une
-exécution complète de la suite de la bibliothèque, si bien qu'un balayage complet
-des cinq se compte en dizaines de minutes au mieux — payées à chaque push,
-essentiellement pour re-mesurer du code que personne n'a changé. La seconde suffit
-à elle seule : **un score sur toute la bibliothèque est bien trop insensible pour
-servir de barrage**. La plus grosse bibliothèque porte plusieurs centaines de
-mutants : un comportement nouvellement ajouté et non affirmé déplace donc son
-score d'une fraction de pour-cent — bien en dessous de tout seuil qui ne serait
-pas lui-même du bruit. Le score cantonné au diff est sensible précisément parce
+exécution complète de la suite du projet, si bien qu'un balayage complet de tout
+le périmètre se compte en heures — payées à chaque push, essentiellement pour
+re-mesurer du code que personne n'a changé. La seconde suffit à elle seule : **un
+score sur tout un projet est bien trop insensible pour servir de barrage**. La
+plus grosse bibliothèque porte quelques milliers de mutants : un comportement
+nouvellement ajouté et non affirmé déplace donc son score d'une fraction de
+pour-cent — bien en dessous de tout seuil qui ne serait pas lui-même du bruit. Le score cantonné au diff est sensible précisément parce
 que son dénominateur est petit : une poignée de mutants neufs, dont un survit,
 c'est une chute visible. Le balayage hebdomadaire récupère le chiffre sur toute la
 bibliothèque là où il a sa place — comme tendance, pas comme barrage.
@@ -214,18 +218,21 @@ mutants qui cassent la suite de façon démontrable quand on les applique à la
 main. La choisir reviendrait soit à un barrage rouge en permanence, soit à un
 seuil assez bas pour ne rien vouloir dire.
 
-### Étendre le barrage à l'outillage et aux analyseurs
+### Restreindre le périmètre aux bibliothèques livrées, en laissant l'outillage dehors
 
-Envisagée par souci d'uniformité — une règle unique couvrant tout le dépôt se
-défend mieux qu'une liste de cinq projets.
+Envisagée, et retenue dans un premier temps, pour son coût : les tests
+d'analyseurs et de générateur compilent du code et lancent des processus, leurs
+mutants sont donc d'un ordre de grandeur plus chers que ceux d'une bibliothèque,
+et leur comportement visible de l'extérieur est déjà tenu par les jobs
+`analyzers`, `gendoc-docs` et le `floor` de `ci`.
 
-Rejetée parce que le coût est concentré exactement là où la valeur est la plus
-faible. Les tests d'analyseurs et de générateur compilent du code et lancent des
-processus ; leurs suites sont les lentes, donc leurs mutants sont les chers. Leur
-comportement visible de l'extérieur est déjà tenu par les jobs `analyzers`,
-`gendoc-docs` et le `floor` de `ci`, et un défaut s'y manifeste par un build
-cassé ou un document faux, pas par une réponse silencieusement fausse dans
-l'application d'un consommateur.
+Rejetée parce que le coût qu'elle évite est précisément celui que le balayage
+hebdomadaire est là pour absorber, et parce que l'exclusion laissait un trou
+plutôt qu'une frontière : une pull request ne touchant que les analyseurs n'aurait
+franchi aucun barrage de mutation. Mesuré avant de revenir sur la décision, les
+projets exclus portent à peu près autant de mutants que les bibliothèques
+FirstClassErrors déjà dans le périmètre, et Stryker tourne sur tous — suites à
+snapshots et tests lanceurs de processus compris.
 
 ## Conséquences
 
@@ -254,6 +261,10 @@ l'application d'un consommateur.
   l'impose.
 * Les mutants équivalents rendent une partie de la distance restante jusqu'à
   100 % inatteignable : le seuil relève donc du jugement, pas d'un calcul.
+* Le balayage hebdomadaire est long — des heures, dominées par la plus grosse
+  bibliothèque et par les suites lentes de l'outillage. C'est assumé : c'est la
+  raison pour laquelle ce balayage est hebdomadaire et consultatif, pas un
+  barrage.
 
 ### Risques
 
@@ -290,10 +301,11 @@ l'application d'un consommateur.
   elle classera correctement les mutants couverts.
 * Relire les seuils après chaque montée de version du moteur, et après tout ajout
   d'une bibliothèque au périmètre.
-* Fixer le seuil de `JustDummies` à partir du premier balayage hebdomadaire. Son
-  balayage complet est trop long pour être exécuté interactivement : aucun score
-  n'a donc été mesuré pour elle et sa barre est pour l'instant désactivée — la
-  seule bibliothèque que le barrage ne tient pas encore à un score.
+* Fixer un seuil pour les projets qui n'en ont pas encore — `JustDummies`, les
+  analyseurs, le générateur de documentation et la ligne de commande — à partir du
+  premier balayage hebdomadaire. Leurs balayages sont trop longs pour être
+  exécutés interactivement : aucun score n'a donc été mesuré pour eux, et leurs
+  barrages de score sont livrés désactivés plutôt que devinés.
 
 ## Références
 

@@ -24,10 +24,11 @@ This workflow makes that check automatic. On a pull request it mutates **only th
 files the pull request changed**, which is what keeps it cheap enough to be a
 required check; a weekly sweep measures everything else.
 
-Its scope is the **three FirstClassErrors libraries the repository ships** —
-`FirstClassErrors`, `FirstClassErrors.Testing` and
-`FirstClassErrors.RequestBinder`. The `fce` tooling and the Roslyn analyzers are
-deliberately out of scope; see *Handle with care* below.
+Its scope is **every FirstClassErrors project whose code is shipped or executed**:
+the three libraries (`FirstClassErrors`, `FirstClassErrors.Testing`,
+`FirstClassErrors.RequestBinder`) *and* the tooling — the `fce` command line, the
+documentation generator, the Roslyn analyzers. What stays out, and why, is under
+*Handle with care* below.
 
 **JustDummies is not measured here.** It has its own workflow with its own gate,
 [`justdummies-mutation`](justdummies-mutation.en.md), because it is headed for a
@@ -57,7 +58,7 @@ mutants, which moves every score on its own.
 
 ### `changed` — the diff, on every pull request
 
-One matrix leg per shipped library. Each leg:
+One matrix leg per project in scope. Each leg:
 
 1. Checks out with **`fetch-depth: 0`** — Stryker's `--since` diffs against a
    commit, so the history has to be there.
@@ -72,8 +73,9 @@ One matrix leg per shipped library. Each leg:
 5. Uploads the HTML and JSON reports as an artifact — `if: always()`, because the
    HTML view shows each survivor *in its source*, which the summary table cannot.
 
-A leg whose library the pull request did not touch selects no mutant, reports
-*"unable to calculate a mutation score"*, and exits 0. That is a pass.
+A leg whose project the pull request did not touch selects no mutant, reports
+*"unable to calculate a mutation score"*, and exits 0. That is a pass — and it is
+the common case, since most pull requests touch one project.
 
 ### `gate` — the single required check
 
@@ -88,8 +90,8 @@ success.
 
 ### `full` — the weekly sweep
 
-The same three legs with the `--since` filter removed: every mutant of every
-library in scope. It is **advisory by construction** — `--break-at 0` disables the
+The same six legs with the `--since` filter removed: every mutant of every
+project in scope. It is **advisory by construction** — `--break-at 0` disables the
 threshold — because its job is to publish a trend, not to turn `main` red on a
 Monday morning over code nobody changed. Read it from the uploaded HTML report.
 
@@ -126,9 +128,11 @@ mutants the suite *does* kill get classified as uncovered and counted against th
 score. Measured on `Error.cs`, the same population scores 75 % with selection on
 and 100 % with it off — and the 100 % is the true figure.
 
-Turning it off costs almost nothing because these suites are fast: every mutant
-runs the library's whole suite, and that is still a fraction of a second to a
-couple of seconds per mutant.
+Turning it off costs little on the libraries, whose suites are fast — a fraction
+of a second to a couple of seconds per mutant. It costs more on the tooling, whose
+suites compile Roslyn and compare snapshots. That is a reason to keep those legs
+out of the critical path, not a reason to re-enable a selection that reports the
+wrong number.
 
 ## The cost model, and why the gate is diff-scoped
 
@@ -150,11 +154,19 @@ two things that surprise people:
 
 ## Where the thresholds come from
 
-Each library carries its own `break` in `build/stryker/*.json`, and the values
-differ from one to the next on purpose. They are **not** an opinion about how good a library
-ought to be: each one was set from that library's measured full-sweep score at
-the time the gate was introduced, rounded down, with a little room left for the
-odd equivalent mutant.
+Each project carries its own `break` in `build/stryker/*.json`, and the values
+differ from one to the next on purpose. They are **not** an opinion about how good
+a project ought to be: each one was set from that project's measured full-sweep
+score at the time the gate was introduced, rounded down, with a little room left
+for the odd equivalent mutant.
+
+**Four projects have no bar yet** — the analyzers, the documentation generator,
+the command line and `JustDummies`. Their sweeps are too long to have been run
+interactively, so no score was ever measured for them, and a bar was **not**
+guessed: their `break` is `0`. Their legs still run, still fail on a broken build
+or a failing suite, and still list their survivors — they simply do not yet refuse
+a pull request over a score. The first weekly sweep is what supplies those four
+figures.
 
 That makes the gate a **ratchet**, not an aspiration. It says *do not go below
 where this library already is* — a bar every library clears on day one, so the
@@ -220,11 +232,19 @@ no secret and needs no write scope.
 - **The thresholds live in `build/stryker/*.json`, not in the YAML.** That is what
   keeps a local run and CI in agreement. `break` is the value that fails the
   build; `high`/`low` only colour the report.
-- **The tooling and the analyzers are out of scope on purpose.** Their tests
-  drive Roslyn compilations and spawn processes, so the per-mutant cost is an
-  order of magnitude above the libraries', and their behaviour is already pinned
-  end to end by [`analyzers`](analyzers.en.md), `gendoc-docs` and the `floor` job
-  of [`ci`](ci.en.md). Adding them is a cost decision, not an oversight.
+- **Three things are out of scope, and none of them for cost.** The `Usage`
+  samples and the binder benchmarks are not shipped behaviour — a sample and a
+  measurement harness. `FirstClassErrors.GenDoc.Worker` is a process entry point
+  that no test exercises *in process*: it is proven end to end by the `floor` job
+  of [`ci`](ci.en.md), and mutating it would only manufacture survivors that no
+  test could ever kill. Everything else that compiles into a shipped artefact is
+  measured.
+- **The tooling legs are the slow ones.** Analyzer and generator suites drive
+  Roslyn compilations and snapshot comparisons, so each of their mutants costs
+  more than a library's. That is why they belong to the weekly sweep — the run
+  allowed to take as long as it takes — and why the gate's diff scope matters
+  more for them than anywhere else: a pull request that does not touch the
+  generator pays nothing for it.
 - **A survivor is not automatically a bug**, and the answer to an equivalent one
   is a `// Stryker disable once` comment with a reason, never a lowered threshold
   — see *When the survivor is an equivalent mutant* above.

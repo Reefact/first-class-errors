@@ -1,0 +1,20 @@
+{
+  "stryker-config": {
+    "solution": "FirstClassErrors.sln",
+    "project": "FirstClassErrors.GenDoc.csproj",
+    "test-projects": [
+      "FirstClassErrors.GenDoc.UnitTests/FirstClassErrors.GenDoc.UnitTests.csproj"
+    ],
+    "test-runner": "mtp",
+    "coverage-analysis": "off",
+    "reporters": [
+      "html",
+      "json"
+    ],
+    "thresholds": {
+      "high": 100,
+      "low": 60,
+      "break": 0
+    }
+  }
+}
