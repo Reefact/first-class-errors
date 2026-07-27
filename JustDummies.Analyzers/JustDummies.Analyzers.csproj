@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Analyzers must target netstandard2.0 so they load in every Roslyn host. -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+
+    <!-- Roslyn analyzer development guidance (RSxxxx rules, release tracking). -->
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+
+    <!-- Packed into the JustDummies NuGet package (analyzers/dotnet/cs) in a later step, not shipped on its own. -->
+    <IsPackable>false</IsPackable>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- LOAD CONTRACT — do not bump. Microsoft.CodeAnalysis.CSharp is pinned to $(RoslynFloorVersion), the minimum
+         Roslyn (host compiler) able to load the shipped analyzer: it is packed inside JustDummies and loaded by each
+         consumer's compiler, so a higher version makes it silently fail to load (CS8032) on older SDKs/IDEs. The floor
+         lives once in Directory.Build.props. Microsoft.CodeAnalysis.Analyzers is only a build-time authoring analyzer
+         (PrivateAssets=all), not part of the load contract, so it is free to move. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(RoslynFloorVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Release tracking (RS2008): declared rules live here, verified at build time. -->
+    <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
+    <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+  </ItemGroup>
+
+</Project>
