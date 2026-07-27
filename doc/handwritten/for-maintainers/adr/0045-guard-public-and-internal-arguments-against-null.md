@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0045-guard-public-and-internal-arguments-against-null.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-07-27
 **Decision Makers:** Reefact
 

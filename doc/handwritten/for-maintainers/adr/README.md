@@ -227,4 +227,4 @@ Optional supporting material:
 | [ADR-0042](0042-serialize-draws-on-a-random-source.md) | Serialize draws on a random source, and scope reproducibility to the draw sequence | Proposed |
 | [ADR-0043](0043-gate-pull-requests-on-the-mutation-score-of-the-diff.md) | Gate pull requests on the mutation score of what they changed | Proposed |
 | [ADR-0044](0044-ship-justdummies-analyzers.md) | Ship first-party JustDummies analyzers, and guard the reproducible async surface with them | Proposed |
-| [ADR-0045](0045-guard-public-and-internal-arguments-against-null.md) | Guard public and internal arguments against null, enforced by a reflection convention | Proposed |
+| [ADR-0045](0045-guard-public-and-internal-arguments-against-null.md) | Guard public and internal arguments against null, enforced by a reflection convention | Accepted |
