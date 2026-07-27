@@ -48,6 +48,9 @@ internal sealed class OrdinalIntervalSpec {
     #region Statics members declarations
 
     internal static OrdinalIntervalSpec Unconstrained(string typeName, Func<ulong, string> render, ulong domainMin, ulong domainMax) {
+        if (typeName is null) { throw new ArgumentNullException(nameof(typeName)); }
+        if (render is null) { throw new ArgumentNullException(nameof(render)); }
+
         return new OrdinalIntervalSpec(typeName, render, domainMin, domainMax,
                                        domainMin, null, domainMax, null, null, null, [],
                                        1UL, 0UL, null);
@@ -151,6 +154,7 @@ internal sealed class OrdinalIntervalSpec {
 
     /// <summary>Tightens the lower bound; a looser bound than the current one is a no-op.</summary>
     internal OrdinalIntervalSpec WithMinimum(ulong minimum, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (minimum <= _min) { return this; }
 
         if (minimum > _max) {
@@ -164,6 +168,7 @@ internal sealed class OrdinalIntervalSpec {
 
     /// <summary>Tightens the lower bound to strictly above <paramref name="bound" /> — the exclusive form of <see cref="WithMinimum" />.</summary>
     internal OrdinalIntervalSpec WithMinimumAbove(ulong bound, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (bound == _domainMax) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because no {_typeName} value satisfies it."); }
 
         return WithMinimum(bound + 1, applying);
@@ -171,6 +176,7 @@ internal sealed class OrdinalIntervalSpec {
 
     /// <summary>Tightens the upper bound; a looser bound than the current one is a no-op.</summary>
     internal OrdinalIntervalSpec WithMaximum(ulong maximum, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (maximum >= _max) { return this; }
 
         if (maximum < _min) {
@@ -184,6 +190,7 @@ internal sealed class OrdinalIntervalSpec {
 
     /// <summary>Tightens the upper bound to strictly below <paramref name="bound" /> — the exclusive form of <see cref="WithMaximum" />.</summary>
     internal OrdinalIntervalSpec WithMaximumBelow(ulong bound, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (bound == _domainMin) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because no {_typeName} value satisfies it."); }
 
         return WithMaximum(bound - 1, applying);
@@ -191,6 +198,8 @@ internal sealed class OrdinalIntervalSpec {
 
     /// <summary>Restricts the domain to an explicit allow-list; declared once per generator.</summary>
     internal OrdinalIntervalSpec WithAllowed(ulong[] ordinals, string applying) {
+        if (ordinals is null) { throw new ArgumentNullException(nameof(ordinals)); }
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_allowedConstraint} is already defined."); }
 
         ulong[] distinct = ordinals.Distinct().ToArray();
@@ -200,6 +209,9 @@ internal sealed class OrdinalIntervalSpec {
 
     /// <summary>Adds values the generator must never produce.</summary>
     internal OrdinalIntervalSpec WithExcluded(ulong[] ordinals, string applying) {
+        if (ordinals is null) { throw new ArgumentNullException(nameof(ordinals)); }
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+
         // The applied constraint tags its own ordinals, so a later exhaustion message can name the exclusion
         // that actually emptied the domain rather than a bound that merely happens to border it.
         List<(string Constraint, ulong[] Ordinals)> exclusions = new(_exclusions) { (applying, ordinals) };
@@ -213,6 +225,7 @@ internal sealed class OrdinalIntervalSpec {
     ///     generator (a second, different lattice conflicts rather than silently intersecting).
     /// </summary>
     internal OrdinalIntervalSpec WithStep(ulong step, ulong anchor, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (step <= 1UL) { return this; } // every value is a multiple of one: a no-op, not a constraint
 
         if (_step > 1UL) {
@@ -262,6 +275,8 @@ internal sealed class OrdinalIntervalSpec {
 
     /// <summary>Draws one ordinal satisfying the whole specification — built directly, never generate-then-retry.</summary>
     internal ulong GenerateOrdinal(SeededRandom random) {
+        if (random is null) { throw new ArgumentNullException(nameof(random)); }
+
         if (_effectiveAllowed is not null) {
             return _effectiveAllowed[random.Next(_effectiveAllowed.Count)];
         }

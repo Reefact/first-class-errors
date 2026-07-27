@@ -17,6 +17,8 @@ public sealed class AnyInt64 : IAny<long>, IHasRandomSource, ICardinalityHint<lo
     #region Statics members declarations
 
     internal static AnyInt64 Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         return new AnyInt64(source, OrdinalIntervalSpec.Unconstrained("Int64", ordinal => V(Val(ordinal)), Ord(long.MinValue), Ord(long.MaxValue)));
     }
 

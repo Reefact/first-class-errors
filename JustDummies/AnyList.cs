@@ -29,10 +29,14 @@ public sealed class AnyList<T> : AnyCollection<T, List<T>, AnyList<T>> {
     }
 
     private protected override AnyList<T> With(CollectionState<T> state) {
+        if (state is null) { throw new ArgumentNullException(nameof(state)); }
+
         return new AnyList<T>(SourceOrNull, state);
     }
 
     private protected override List<T> Build(List<T> items) {
+        if (items is null) { throw new ArgumentNullException(nameof(items)); }
+
         return items;
     }
 

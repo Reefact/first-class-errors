@@ -17,6 +17,8 @@ public sealed class AnyByte : IAny<byte>, IHasRandomSource, ICardinalityHint<byt
     #region Statics members declarations
 
     internal static AnyByte Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         return new AnyByte(source, OrdinalIntervalSpec.Unconstrained("Byte", ordinal => V(Val(ordinal)), Ord(byte.MinValue), Ord(byte.MaxValue)));
     }
 

@@ -43,6 +43,7 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinality
     private static TEnum[]? _combinations;
 
     internal static AnyEnum<TEnum> Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
         if (Declared.Length == 0) {
             throw new AnyGenerationException($"Cannot generate an arbitrary {typeof(TEnum).Name} value because the enum declares no members.");
         }

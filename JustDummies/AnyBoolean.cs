@@ -10,6 +10,8 @@ public sealed class AnyBoolean : IAny<bool>, IHasRandomSource, ICardinalityHint<
     #region Statics members declarations
 
     internal static AnyBoolean Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         return new AnyBoolean(source, null, null);
     }
 

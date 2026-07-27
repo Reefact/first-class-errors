@@ -27,6 +27,8 @@ public abstract class AnyCollection<TItem, TResult, TSelf> : IAny<TResult>, IHas
     #endregion
 
     private protected AnyCollection(RandomSource? source, CollectionState<TItem> state) {
+        if (state is null) { throw new ArgumentNullException(nameof(state)); }
+
         SourceOrNull = source;
         State        = state;
     }

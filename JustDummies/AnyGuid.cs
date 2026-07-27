@@ -13,6 +13,8 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Gui
     #region Statics members declarations
 
     internal static AnyGuid Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         return new AnyGuid(source, null, null, null, null, []);
     }
 

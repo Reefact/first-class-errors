@@ -28,7 +28,10 @@ public sealed class AnyDictionary<TKey, TValue> : IAny<Dictionary<TKey, TValue>>
     #endregion
 
     internal AnyDictionary(RandomSource? source, CollectionState<TKey> keys, IAny<TValue> values)
-        : this(source, keys, values, NoPinnedValues) { }
+        : this(source, keys, values, NoPinnedValues) {
+        if (keys is null) { throw new ArgumentNullException(nameof(keys)); }
+        if (values is null) { throw new ArgumentNullException(nameof(values)); }
+    }
 
     private AnyDictionary(RandomSource? source, CollectionState<TKey> keys, IAny<TValue> values, IReadOnlyDictionary<TKey, TValue> pinnedValues) {
         _source       = source;

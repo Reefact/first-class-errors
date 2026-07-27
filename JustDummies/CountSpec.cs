@@ -69,6 +69,7 @@ internal sealed class CountSpec {
 
     /// <summary>Fixes the exact count; declared once per generator.</summary>
     internal CountSpec WithExactCount(int count, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_exactConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_exactConstraint} is already defined."); }
 
         return new CountSpec(count, applying, _min, _minConstraint, _max, _maxConstraint).Validated(applying);
@@ -76,6 +77,7 @@ internal sealed class CountSpec {
 
     /// <summary>Tightens the minimum count; a looser bound than the current one is a no-op.</summary>
     internal CountSpec WithMinCount(int count, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (count <= _min) { return this; }
 
         return new CountSpec(_exact, _exactConstraint, count, applying, _max, _maxConstraint).Validated(applying);
@@ -83,6 +85,7 @@ internal sealed class CountSpec {
 
     /// <summary>Tightens the maximum count; a looser bound than the current one is a no-op.</summary>
     internal CountSpec WithMaxCount(int count, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_max is not null && count >= _max) { return this; }
 
         return new CountSpec(_exact, _exactConstraint, _min, _minConstraint, count, applying).Validated(applying);
@@ -95,6 +98,7 @@ internal sealed class CountSpec {
     ///     compatible with the declared bounds — the collection validates them eagerly before generation.
     /// </summary>
     internal int Resolve(SeededRandom random, int requiredMin, int? cap) {
+        if (random is null) { throw new ArgumentNullException(nameof(random)); }
         if (_exact is int exact) { return exact; }
 
         int min = Math.Max(_min, requiredMin);
@@ -112,6 +116,7 @@ internal sealed class CountSpec {
     ///     was the count cap or the containment requirement.
     /// </summary>
     internal void EnsureFits(int required, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         int? cap = _exact ?? _max;
         if (cap is int ceiling && required > ceiling) {
             throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {Elements(required)} required to be contained cannot fit in a collection of at most {Elements(ceiling)}.");

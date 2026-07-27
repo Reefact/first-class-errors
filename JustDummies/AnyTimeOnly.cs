@@ -21,6 +21,8 @@ public sealed class AnyTimeOnly : IAny<TimeOnly>, IHasRandomSource, ICardinality
     #region Statics members declarations
 
     internal static AnyTimeOnly Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         return new AnyTimeOnly(source, OrdinalIntervalSpec.Unconstrained("TimeOnly", ordinal => V(Val(ordinal)), Ord(TimeOnly.MinValue), Ord(TimeOnly.MaxValue)));
     }
 

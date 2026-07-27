@@ -47,6 +47,9 @@
     <Compile Remove="AnyModernTypeTests.cs" />
     <Compile Remove="CrossEngineReachabilityTests.cs" />
     <Compile Remove="ContinuousExclusionNudgeTests.cs" />
+    <!-- Uses System.Reflection nullability metadata (NullabilityInfoContext, .NET 6+) to read parameter annotations,
+         which the net472 floor does not carry; the null-argument guards it enforces are themselves netstandard2.0. -->
+    <Compile Remove="NullArgumentGuardConventionTests.cs" />
   </ItemGroup>
 
 </Project>

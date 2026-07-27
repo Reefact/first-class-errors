@@ -20,6 +20,9 @@ internal sealed class DecimalIntervalSpec {
     #region Statics members declarations
 
     internal static DecimalIntervalSpec Unconstrained(string typeName, Func<decimal, string> render) {
+        if (typeName is null) { throw new ArgumentNullException(nameof(typeName)); }
+        if (render is null) { throw new ArgumentNullException(nameof(render)); }
+
         return new DecimalIntervalSpec(typeName, render, decimal.MinValue, null, decimal.MaxValue, null, null, null, [], NoScale, null);
     }
 
@@ -96,6 +99,7 @@ internal sealed class DecimalIntervalSpec {
 
     /// <summary>Tightens the lower bound; a looser bound than the current one is a no-op.</summary>
     internal DecimalIntervalSpec WithMinimum(decimal minimum, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (minimum <= _min) { return this; }
 
         if (minimum > _max) {
@@ -109,6 +113,7 @@ internal sealed class DecimalIntervalSpec {
 
     /// <summary>Tightens the upper bound; a looser bound than the current one is a no-op.</summary>
     internal DecimalIntervalSpec WithMaximum(decimal maximum, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (maximum >= _max) { return this; }
 
         if (maximum < _min) {
@@ -122,16 +127,22 @@ internal sealed class DecimalIntervalSpec {
 
     /// <summary>Tightens the lower bound to strictly above <paramref name="bound" /> — the inclusive bound plus a point exclusion.</summary>
     internal DecimalIntervalSpec WithMinimumAbove(decimal bound, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+
         return WithMinimum(bound, applying).WithExcluded([bound], applying);
     }
 
     /// <summary>Tightens the upper bound to strictly below <paramref name="bound" /> — the inclusive bound plus a point exclusion.</summary>
     internal DecimalIntervalSpec WithMaximumBelow(decimal bound, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+
         return WithMaximum(bound, applying).WithExcluded([bound], applying);
     }
 
     /// <summary>Restricts the domain to an explicit allow-list; declared once per generator.</summary>
     internal DecimalIntervalSpec WithAllowed(decimal[] values, string applying) {
+        if (values is null) { throw new ArgumentNullException(nameof(values)); }
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_allowedConstraint} is already defined."); }
 
         decimal[] distinct = values.Distinct().ToArray();
@@ -141,6 +152,9 @@ internal sealed class DecimalIntervalSpec {
 
     /// <summary>Adds values the generator must never produce.</summary>
     internal DecimalIntervalSpec WithExcluded(decimal[] values, string applying) {
+        if (values is null) { throw new ArgumentNullException(nameof(values)); }
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+
         // The applied constraint tags its own values, so a later exhaustion message can name the exclusion
         // that actually emptied the domain rather than a bound that merely happens to border it.
         List<(string Constraint, decimal[] Ordinals)> exclusions = new(_exclusions) { (applying, values) };
@@ -154,6 +168,7 @@ internal sealed class DecimalIntervalSpec {
     ///     rendered form is not padded with trailing zeros. Declared once per generator.
     /// </summary>
     internal DecimalIntervalSpec WithScale(int scale, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_scale >= 0) {
             if (_scale == scale) { return this; }
 
@@ -198,6 +213,8 @@ internal sealed class DecimalIntervalSpec {
 
     /// <summary>Draws one value satisfying the whole specification.</summary>
     internal decimal Generate(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         SeededRandom random = source.Current;
 
         if (_effectiveAllowed is not null) {

@@ -14,10 +14,14 @@ public sealed class AnySet<T> : AnyCollection<T, HashSet<T>, AnySet<T>> {
     internal AnySet(RandomSource? source, CollectionState<T> state) : base(source, state) { }
 
     private protected override AnySet<T> With(CollectionState<T> state) {
+        if (state is null) { throw new ArgumentNullException(nameof(state)); }
+
         return new AnySet<T>(SourceOrNull, state);
     }
 
     private protected override HashSet<T> Build(List<T> items) {
+        if (items is null) { throw new ArgumentNullException(nameof(items)); }
+
         // The state already deduplicated under the comparer; the set carries the same comparer so later lookups
         // by the caller behave identically.
         return new HashSet<T>(items, State.Comparer);

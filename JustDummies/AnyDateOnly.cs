@@ -21,6 +21,8 @@ public sealed class AnyDateOnly : IAny<DateOnly>, IHasRandomSource, ICardinality
     #region Statics members declarations
 
     internal static AnyDateOnly Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         return new AnyDateOnly(source, OrdinalIntervalSpec.Unconstrained("DateOnly", ordinal => V(Val(ordinal)), Ord(DateOnly.MinValue), Ord(DateOnly.MaxValue)));
     }
 

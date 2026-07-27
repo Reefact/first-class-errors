@@ -13,6 +13,8 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint<cha
     #region Statics members declarations
 
     internal static AnyChar Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         return new AnyChar(source, null, null, null, null, null, null, []);
     }
 
