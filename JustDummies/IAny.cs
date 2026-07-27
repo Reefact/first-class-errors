@@ -32,10 +32,15 @@ public interface IAny<out T> {
     ///     Produces one arbitrary value satisfying every constraint declared on this generator.
     /// </summary>
     /// <remarks>
-    ///     Safe to call concurrently: draws on a random context are serialized, so no amount of parallelism can
-    ///     degrade the values. Reproducibility is what parallelism costs — concurrent draws interleave, so a seed
-    ///     replays a run only while its draws are taken one at a time. To keep a parallel run reproducible, open a
-    ///     scope per unit of work with <see cref="Any.UseSeed(int)" /> and derive its seed from the run's own.
+    ///     A built-in generator is safe to call concurrently: its draw on a random context is serialized, so no
+    ///     amount of parallelism can corrupt the source or produce a value outside the declared constraints. That
+    ///     covers the library's own draw only — a call may also run caller-supplied code (a factory passed to
+    ///     <see cref="AnyExtensions.As{TSource,TResult}" />, a composer passed to
+    ///     <see cref="Any.Combine{T1,T2,TResult}" />, an element generator, a comparer) or a foreign
+    ///     <see cref="IAny{T}" /> implementation, whose thread-safety is the caller's own responsibility.
+    ///     Reproducibility is the separate cost of parallelism: concurrent draws interleave, so a seed replays a
+    ///     run only while its draws are taken one at a time. To keep a parallel run reproducible, open a scope per
+    ///     unit of work with <see cref="Any.UseSeed(int)" /> and derive its seed from the run's own.
     /// </remarks>
     /// <returns>A value that satisfies the declared constraints.</returns>
     /// <exception cref="AnyGenerationException">
