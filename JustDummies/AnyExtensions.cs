@@ -43,7 +43,7 @@ public static class AnyExtensions {
         return new DerivedAny<TResult>(source, reproducible, () => {
             TSource value = generator.Generate();
 
-            return AnyDerivation.Invoke(() => factory(value), source, reproducible, $"the factory passed to As(...) threw for the generated value {AnyDerivation.Display(value)}");
+            return AnyDerivation.Invoke(() => factory(value), source, reproducible, () => $"the factory passed to As(...) threw for the generated value {AnyDerivation.Display(value)}");
         });
     }
 

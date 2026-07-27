@@ -97,8 +97,14 @@ internal static class AnyDerivation {
     ///     known, the seed that replays the run. <paramref name="reproducible" /> tells whether the derived value draws
     ///     only from that source: when it does not — a foreign operand contributes — the hint is qualified rather than
     ///     promising a full replay the seed cannot deliver. The library's own exceptions pass through untouched.
+    ///     <para>
+    ///         <paramref name="failure" /> is a <b>thunk</b>, not a string, because rendering the generated values is
+    ///         only ever needed on the failing path: an eagerly interpolated message would run the caller's
+    ///         <c>ToString()</c> — and allocate the whole sentence — on every successful draw, which is every draw a
+    ///         test actually makes.
+    ///     </para>
     /// </summary>
-    internal static T Invoke<T>(Func<T> invoke, RandomSource? source, bool reproducible, string failure) {
+    internal static T Invoke<T>(Func<T> invoke, RandomSource? source, bool reproducible, Func<string> failure) {
         if (invoke is null) { throw new ArgumentNullException(nameof(invoke)); }
         if (failure is null) { throw new ArgumentNullException(nameof(failure)); }
 
@@ -108,7 +114,7 @@ internal static class AnyDerivation {
             throw;
         } catch (Exception exception) {
             int?   seed    = source?.Current.Seed;
-            string message = $"Generation failed: {failure} ({exception.GetType().Name}: {exception.Message}).";
+            string message = $"Generation failed: {failure()} ({exception.GetType().Name}: {exception.Message}).";
             if (source is not null) {
                 message += $" {(reproducible ? source.ReplayGuidance(seed!.Value) : source.PartialReplayGuidance(seed!.Value))}";
             }
@@ -117,13 +123,25 @@ internal static class AnyDerivation {
         }
     }
 
-    /// <summary>Renders a generated value for an exception message.</summary>
+    /// <summary>
+    ///     Renders a generated value for an exception message. A value's own <c>ToString()</c> is user code and may
+    ///     throw — a domain object rendering state the fixture never set is the ordinary case. A renderer that let
+    ///     that through would replace the diagnostic being built with an unrelated failure, hiding the constraint
+    ///     conflict or factory rejection the caller needs to read, so a throwing rendering falls back to the type
+    ///     name: the message loses a detail, never the report it was explaining.
+    /// </summary>
     internal static string Display(object? value) {
         switch (value) {
-            case null:            return "null";
-            case string text:     return "\"" + text + "\"";
-            case IFormattable formattable: return formattable.ToString(null, CultureInfo.InvariantCulture);
-            default:              return value.ToString() ?? value.GetType().Name;
+            case null:        return "null";
+            case string text: return "\"" + text + "\"";
+            default:
+                try {
+                    return value is IFormattable formattable
+                               ? formattable.ToString(null, CultureInfo.InvariantCulture)
+                               : value.ToString() ?? value.GetType().Name;
+                } catch (Exception) {
+                    return value.GetType().Name;
+                }
         }
     }
 
