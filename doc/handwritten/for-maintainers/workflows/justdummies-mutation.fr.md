@@ -32,18 +32,21 @@ plutôt qu'une réécriture** : rien dans ce workflow ne nomme un projet
 FirstClassErrors, et rien dans [`mutation`](mutation.fr.md) ne nomme un projet
 JustDummies.
 
-Cela donne aussi à JustDummies **son propre check obligatoire**,
+Cela donne aussi à JustDummies **son propre check**,
 **`JustDummies mutation gate`**, indépendant de celui de FirstClassErrors. Deux
-barrages, deux entrées de protection de branche, deux barres qui évoluent
-séparément — ce dont deux bibliothèques de maturité de test différente ont de
-toute façon besoin.
+checks, deux barres qui évoluent séparément — ce dont deux bibliothèques de
+maturité de test différente ont de toute façon besoin. Sur les pull requests, les
+deux sont **consultatifs**
+([ADR-0046](../adr/0046-make-the-per-pull-request-mutation-gate-advisory.md)) ; le
+niveau imposé de chacun est son balayage complet hebdomadaire.
 
 ## Quand il s'exécute
 
-- Sur chaque **pull request ciblant `main`** — cantonné au diff. **C'est le
-  barrage.**
-- **Chaque semaine** sur planification (lundi, 03h47 UTC) — le balayage complet,
-  consultatif. Le créneau est décalé de celui de `mutation` pour que les deux
+- Sur chaque **pull request ciblant `main`** — cantonné au diff et **consultatif** :
+  il rapporte le score du diff mais ne bloque jamais le merge
+  ([ADR-0046](../adr/0046-make-the-per-pull-request-mutation-gate-advisory.md)).
+- **Chaque semaine** sur planification (lundi, 03h47 UTC) — le balayage complet, le
+  **niveau imposé**. Le créneau est décalé de celui de `mutation` pour que les deux
   balayages ne se disputent pas les runners.
 - À la demande via **`workflow_dispatch`** — le balayage complet.
 

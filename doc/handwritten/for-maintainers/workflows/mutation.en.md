@@ -21,8 +21,11 @@ suite against each rewrite. A **mutant** the suite still passes on is a
 test doing its job.
 
 This workflow makes that check automatic. On a pull request it mutates **only the
-files the pull request changed**, which is what keeps it cheap enough to be a
-required check; a weekly sweep measures everything else.
+files the pull request changed** and reports the score **without blocking the merge**
+— advisory since [ADR-0046](../adr/0046-make-the-per-pull-request-mutation-gate-advisory.md),
+because Stryker's per-*file* `--since` selection makes the cost follow the size of the
+file a change lands in, not the change. The **weekly sweep** is the enforced bar, and it
+measures everything else.
 
 Its scope is **every FirstClassErrors project whose code is shipped or executed**:
 the three libraries (`FirstClassErrors`, `FirstClassErrors.Testing`,
@@ -39,8 +42,9 @@ than repeating it.
 
 ## When it runs
 
-- On every **pull request targeting `main`** — diff-scoped. **This is the gate.**
-- **Weekly** on a schedule (Monday, 03:23 UTC) — the full sweep, advisory.
+- On every **pull request targeting `main`** — diff-scoped and **advisory**: it
+  reports the diff's score but never blocks the merge ([ADR-0046](../adr/0046-make-the-per-pull-request-mutation-gate-advisory.md)).
+- **Weekly** on a schedule (Monday, 03:23 UTC) — the full sweep, and the **enforced bar**.
 - On demand via **`workflow_dispatch`** — the full sweep.
 
 ## How it runs
@@ -77,16 +81,18 @@ A leg whose project the pull request did not touch selects no mutant, reports
 *"unable to calculate a mutation score"*, and exits 0. That is a pass — and it is
 the common case, since most pull requests touch one project.
 
-### `gate` — the single required check
+### `gate` — the single advisory check
 
-A matrix produces one check per leg, so marking the gate as required on `main`
-would mean re-declaring the leg names in the branch protection every time the
-matrix changes. `gate` collapses them into one stable check name — **`Mutation
-gate`** — and that is the one to make required.
+A matrix produces one check per leg. `gate` collapses them into one stable check
+name — **`Mutation gate`** — so branch protection has a single entry to point at
+rather than re-declaring leg names every time the matrix changes.
 
-It runs with `if: always()`, which is load-bearing: without it, a failed leg
-would leave `gate` *skipped*, and GitHub reports a skipped required check as a
-success.
+It is **advisory** ([ADR-0046](../adr/0046-make-the-per-pull-request-mutation-gate-advisory.md)):
+it reports the aggregate of the diff legs but **never fails the pull request**. A
+genuine leg failure is surfaced as a `::warning::` to investigate, and a run
+cancelled by a superseding push is treated as noise, not a failure. It runs with
+`if: always()` so it reports after a failed *or cancelled* leg rather than being
+skipped. The enforced bar is the weekly `full` sweep, not this check.
 
 ### `full` — the weekly sweep
 
@@ -226,8 +232,10 @@ no secret and needs no write scope.
   compile-error count is identical with the ratchet on and off. If a future
   Stryker started honouring it, mutants would silently turn into compile errors
   instead of being tested — the count in the run log is where that would show.
-- **`if: always()` on `gate` is required.** Remove it and a red matrix leg turns
-  the required check green.
+- **`if: always()` on `gate` is load-bearing.** Remove it and `gate` is skipped
+  whenever a leg fails or is cancelled, so it never reports the aggregate — the
+  advisory warning ([ADR-0046](../adr/0046-make-the-per-pull-request-mutation-gate-advisory.md))
+  would be silently dropped exactly when there is something to say.
 - **The Stryker version is pinned in the tool manifest.** Bumping it is a
   deliberate act: expect the scores to move, and re-read the thresholds.
 - **The thresholds live in `build/stryker/*.json`, not in the YAML.** That is what

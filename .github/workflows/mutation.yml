@@ -160,11 +160,12 @@ jobs:
           # A leg that selected no mutant writes no report; that is a pass, not a packaging failure.
           if-no-files-found: ignore
 
-  # The single check to mark as required on `main` for the FirstClassErrors libraries. A matrix
+  # The single check that reports the per-PR mutation legs for the FirstClassErrors libraries. A matrix
   # produces one check per leg, and the set of leg names would have to be re-declared in the branch
   # protection every time the matrix changes; this job collapses them into one stable name.
-  # `if: always()` is what makes it run after a failed leg — without it the job would be skipped, and
-  # GitHub reports a skipped required check as success.
+  # `if: always()` is what makes it run after a failed or cancelled leg rather than being skipped.
+  # ADVISORY on pull requests (ADR-0046): the enforced bar is the weekly `full` sweep, so this job
+  # summarises the diff legs without ever turning a pull request red.
   gate:
     name: Mutation gate
     if: always() && github.event_name == 'pull_request'
@@ -172,15 +173,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Check the mutation legs
-        # `needs.changed.result` is the matrix's aggregate: 'success' only when every leg succeeded.
-        # 'skipped' is accepted so the job stays green when the whole matrix is skipped by design.
+      - name: Report the mutation legs
+        # `needs.changed.result` is the matrix's aggregate: 'success' only when every leg succeeded,
+        # 'skipped' when the whole matrix is skipped by design, 'cancelled' when a superseding push
+        # cancelled the run. None of these blocks the merge: a genuine leg failure is surfaced as a
+        # warning to investigate, and a cancelled superseded run is simply noise, not a failure.
         run: |
           result='${{ needs.changed.result }}'
           echo "mutation legs: $result"
           if [ "$result" != "success" ] && [ "$result" != "skipped" ]; then
-            echo "::error::the mutation gate failed — see the 'Mutate the diff' legs and their reports"
-            exit 1
+            echo "::warning::mutation legs did not all succeed ($result) — advisory only; see the 'Mutate the diff' legs and the weekly sweep"
           fi
 
   # The weekly sweep: every mutant of every FirstClassErrors library, not just the ones a pull request
