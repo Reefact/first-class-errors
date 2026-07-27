@@ -19,9 +19,17 @@ namespace JustDummies;
 ///         A generator whose domain is unbounded, effectively unbounded, or simply unknown (a foreign
 ///         <see cref="IAny{T}" />, a derived generator) does not implement this interface; the collection then relies
 ///         on the bounded dedup-draw fallback, which surfaces a genuine shortfall as an
-///         <see cref="AnyGenerationException" />. Because both the bound and membership ignore any custom
-///         <see cref="IEqualityComparer{T}" /> (which can only <i>merge</i> values, never create new ones), they stay
-///         sound under a comparer too.
+///         <see cref="AnyGenerationException" />.
+///     </para>
+///     <para>
+///         Both answers are given under <see cref="EqualityComparer{T}.Default" />, and only one of them survives a
+///         collection carrying its own <see cref="IEqualityComparer{T}" />. <see cref="DistinctCardinality" /> does:
+///         it is an upper bound, and no comparer can make a generator yield more distinct values than it has.
+///         <see cref="Contains" /> does not — a comparer <i>stricter</i> than the default one (reference equality over
+///         a type with value equality) keeps apart values this membership calls the same, so a value it reports as
+///         inside the domain may be one the collection would count as extending it. A collection carrying a custom
+///         comparer therefore gates on the bound alone and treats every pinned value as outside: that can only defer
+///         to the bounded dedup-draw, never refuse a specification the comparer makes satisfiable.
 ///     </para>
 /// </remarks>
 /// <typeparam name="T">The element type.</typeparam>
