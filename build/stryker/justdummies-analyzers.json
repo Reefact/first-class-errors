@@ -1,0 +1,20 @@
+{
+  "stryker-config": {
+    "solution": "FirstClassErrors.sln",
+    "project": "JustDummies.Analyzers.csproj",
+    "test-projects": [
+      "JustDummies.Analyzers.UnitTests/JustDummies.Analyzers.UnitTests.csproj"
+    ],
+    "test-runner": "mtp",
+    "coverage-analysis": "off",
+    "reporters": [
+      "html",
+      "json"
+    ],
+    "thresholds": {
+      "high": 100,
+      "low": 60,
+      "break": 0
+    }
+  }
+}
