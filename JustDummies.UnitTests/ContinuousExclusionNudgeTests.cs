@@ -87,6 +87,37 @@ public sealed class ContinuousExclusionNudgeTests {
         Check.That(thrown.Message).Not.Contains("Any.Reproducibly(");
     }
 
+    [Fact(DisplayName = "An exhausted nudge reports a local search, never a claim that the range holds no free value.")]
+    public void ExhaustedNudgeDoesNotClaimAnEmptyRange() {
+        // A range of 401 representable doubles whose 399 interior values are excluded: both bounds survive, so the
+        // range plainly holds free values. They sit further than the 128-step budget from a draw landing mid-range,
+        // so both walks give up — and the inner exception used to assert "No representable value in range remains
+        // after applying the exclusions", which nothing had established and which is false here. Seed 5 lands in that
+        // band on the first draw, so the case is pinned rather than statistical.
+        double min = 1d;
+        double max = 1d;
+        for (int step = 0; step < 400; step++) { max = Math.BitIncrement(max); }
+
+        List<double> excluded = new();
+        double       value    = Math.BitIncrement(min);
+        for (int step = 0; step < 399; step++) {
+            excluded.Add(value);
+            value = Math.BitIncrement(value);
+        }
+
+        AnyGenerationException thrown = Assert.Throws<AnyGenerationException>(
+            () => Any.WithSeed(5).Double().Between(min, max).Except(excluded.ToArray()).Generate());
+
+        // The two bounds are free: the range is satisfiable, so any claim that it is empty would be a falsehood.
+        Check.That(excluded).Not.Contains(min);
+        Check.That(excluded).Not.Contains(max);
+
+        string inner = thrown.InnerException!.Message;
+        Check.That(inner).Contains("128 steps");
+        Check.That(inner).Contains("not examined");
+        Check.That(inner).Not.Contains("No representable value in range remains");
+    }
+
     [Fact(DisplayName = "The nudge stays reproducible: the same seed yields the same value across runs.")]
     public void NudgeIsReproducibleForAGivenSeed() {
         double min = 1d;

@@ -1,3 +1,9 @@
+#region Usings declarations
+
+using System.Globalization;
+
+#endregion
+
 namespace JustDummies;
 
 /// <summary>
@@ -17,8 +23,10 @@ namespace JustDummies;
 ///         Excluding a point from a continuum can only collide with a draw on a set of measure zero, but the engine
 ///         still guarantees the constraint: a colliding draw is nudged to the nearest non-excluded representable
 ///         value — a bounded deterministic walk along the type's own ladder, ascending then descending from the
-///         original draw, not a retry loop. When no representable value in range remains the generation fails with
-///         an <see cref="AnyGenerationException" /> naming the seed.
+///         original draw, not a retry loop. When neither walk finds a free value within its budget the generation
+///         fails with an <see cref="AnyGenerationException" /> naming the seed. That is an exhausted <i>local</i>
+///         search, not a proof that the range holds no free value, and the message says so: free values further than
+///         the budget from the drawn candidate are never examined.
 ///     </para>
 /// </remarks>
 internal sealed class ContinuousIntervalSpec {
@@ -215,10 +223,15 @@ internal sealed class ContinuousIntervalSpec {
         // sub-ulp double step that re-quantizes to the same value.
         double? free = NudgeToFree(candidate, ascending: true) ?? NudgeToFree(candidate, ascending: false);
         if (free is null) {
+            // The inner exception states what was actually established. Both walks are bounded, so their failure
+            // means the neighbourhood was exhausted — not that the range holds no free value, which nothing here
+            // examined. Reporting the stronger claim would send a caller looking for a contradiction that may not
+            // exist, and the shape that reaches this line (a wide range whose free values sit further than the
+            // budget from the draw) is precisely the one where it would not.
             throw new AnyGenerationException(
                 $"Generation failed: no {_typeName} value near the drawn candidate satisfies the exclusions. {source.ReplayGuidance(random.Seed)}",
                 random.Seed,
-                new InvalidOperationException("No representable value in range remains after applying the exclusions."));
+                new InvalidOperationException($"Every representable value within {NudgeBudget.ToString(CultureInfo.InvariantCulture)} steps of the drawn candidate, in both directions, is excluded or out of bounds. Values further away were not examined, so this is an exhausted local search rather than an empty range."));
         }
 
         return free.Value;
@@ -227,8 +240,9 @@ internal sealed class ContinuousIntervalSpec {
     /// <summary>
     ///     Walks from <paramref name="from" /> along the type's representable ladder — ascending or descending — to the
     ///     nearest value the exclusions allow, staying within the bounds. Returns <c>null</c> when the walk reaches a
-    ///     bound before finding one, so the caller can try the opposite direction; a genuinely exhausted range is the
-    ///     case where both directions return <c>null</c>.
+    ///     bound <b>or spends its <see cref="NudgeBudget" /></b> before finding one, so the caller can try the opposite
+    ///     direction. Both directions returning <c>null</c> therefore means the neighbourhood is exhausted, which is
+    ///     weaker than the range being empty: only the budget was searched.
     /// </summary>
     private double? NudgeToFree(double from, bool ascending) {
         double candidate = from;
