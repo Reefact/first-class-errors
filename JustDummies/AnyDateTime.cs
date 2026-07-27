@@ -24,6 +24,8 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource, ICardinality
     #region Statics members declarations
 
     internal static AnyDateTime Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         return new AnyDateTime(source, OrdinalIntervalSpec.Unconstrained("DateTime", ordinal => V(Val(ordinal)), Ord(DateTime.MinValue), Ord(DateTime.MaxValue)));
     }
 

@@ -48,6 +48,7 @@ internal static class RegexAlphabet {
 
     /// <summary>The printable characters none of <paramref name="excluded" /> covers — the universe of a negated class <c>[^…]</c>.</summary>
     internal static char[] Negate(ISet<char> excluded) {
+        if (excluded is null) { throw new ArgumentNullException(nameof(excluded)); }
         return Where(character => !excluded.Contains(character));
     }
 

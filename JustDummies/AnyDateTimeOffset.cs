@@ -30,6 +30,8 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
     #region Statics members declarations
 
     internal static AnyDateTimeOffset Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         return new AnyDateTimeOffset(source, OrdinalIntervalSpec.Unconstrained("DateTimeOffset", ordinal => V(Val(ordinal)), Ord(DateTimeOffset.MinValue), Ord(DateTimeOffset.MaxValue)), null, false, 0, 0);
     }
 

@@ -19,6 +19,8 @@ public sealed class AnyHalf : IAny<Half>, IHasRandomSource, ICardinalityHint<Hal
     #region Statics members declarations
 
     internal static AnyHalf Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         return new AnyHalf(source, ContinuousIntervalSpec.Unconstrained("Half", value => V((Half)value), value => (double)(Half)value, value => NextUp((Half)value), -(double)Half.MaxValue, (double)Half.MaxValue));
     }
 

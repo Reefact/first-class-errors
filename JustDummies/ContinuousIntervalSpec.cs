@@ -28,11 +28,17 @@ internal sealed class ContinuousIntervalSpec {
     #region Statics members declarations
 
     internal static ContinuousIntervalSpec Unconstrained(string typeName, Func<double, string> render, Func<double, double> quantize, Func<double, double> nextUp, double domainMin, double domainMax) {
+        if (typeName is null) { throw new ArgumentNullException(nameof(typeName)); }
+        if (render is null) { throw new ArgumentNullException(nameof(render)); }
+        if (quantize is null) { throw new ArgumentNullException(nameof(quantize)); }
+        if (nextUp is null) { throw new ArgumentNullException(nameof(nextUp)); }
+
         return new ContinuousIntervalSpec(typeName, render, quantize, nextUp, domainMin, null, domainMax, null, null, null, []);
     }
 
     /// <summary>Rejects NaN and the infinities — the shared argument guard of every floating-point generator.</summary>
     internal static void EnsureFinite(double value, string parameterName) {
+        if (parameterName is null) { throw new ArgumentNullException(nameof(parameterName)); }
         if (double.IsNaN(value) || double.IsInfinity(value)) { throw new ArgumentException("The value must be finite: NaN and infinities are never generated.", parameterName); }
     }
 
@@ -93,6 +99,7 @@ internal sealed class ContinuousIntervalSpec {
 
     /// <summary>Tightens the lower bound; a looser bound than the current one is a no-op.</summary>
     internal ContinuousIntervalSpec WithMinimum(double minimum, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (double.IsInfinity(minimum)) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because no {_typeName} value satisfies it."); }
         if (minimum <= _min) { return this; }
 
@@ -107,6 +114,7 @@ internal sealed class ContinuousIntervalSpec {
 
     /// <summary>Tightens the upper bound; a looser bound than the current one is a no-op.</summary>
     internal ContinuousIntervalSpec WithMaximum(double maximum, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (double.IsInfinity(maximum)) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because no {_typeName} value satisfies it."); }
         if (maximum >= _max) { return this; }
 
@@ -121,16 +129,22 @@ internal sealed class ContinuousIntervalSpec {
 
     /// <summary>Tightens the lower bound to strictly above <paramref name="bound" /> — via the type's next representable value.</summary>
     internal ContinuousIntervalSpec WithMinimumAbove(double bound, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+
         return WithMinimum(_nextUp(bound), applying);
     }
 
     /// <summary>Tightens the upper bound to strictly below <paramref name="bound" /> — via the type's next representable value.</summary>
     internal ContinuousIntervalSpec WithMaximumBelow(double bound, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+
         return WithMaximum(-_nextUp(-bound), applying);
     }
 
     /// <summary>Restricts the domain to an explicit allow-list; declared once per generator.</summary>
     internal ContinuousIntervalSpec WithAllowed(double[] values, string applying) {
+        if (values is null) { throw new ArgumentNullException(nameof(values)); }
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_allowedConstraint} is already defined."); }
 
         double[] distinct = values.Distinct().ToArray();
@@ -140,6 +154,9 @@ internal sealed class ContinuousIntervalSpec {
 
     /// <summary>Adds values the generator must never produce.</summary>
     internal ContinuousIntervalSpec WithExcluded(double[] values, string applying) {
+        if (values is null) { throw new ArgumentNullException(nameof(values)); }
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+
         // The applied constraint tags its own values, so a later exhaustion message can name the exclusion
         // that actually emptied the domain rather than a bound that merely happens to border it.
         List<(string Constraint, double[] Ordinals)> exclusions = new(_exclusions) { (applying, values) };
@@ -176,6 +193,8 @@ internal sealed class ContinuousIntervalSpec {
 
     /// <summary>Draws one value satisfying the whole specification.</summary>
     internal double Generate(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         SeededRandom random = source.Current;
 
         if (_effectiveAllowed is not null) {

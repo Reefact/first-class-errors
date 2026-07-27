@@ -36,6 +36,8 @@ public sealed class AnyPattern : IAny<string>, IHasRandomSource {
     private const int GenerationLimit = 65536;
 
     internal static AnyPattern FromPattern(RandomSource source, string pattern, bool ignoreCase) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+        if (pattern is null) { throw new ArgumentNullException(nameof(pattern)); }
         return new AnyPattern(source, RegexParser.Parse(pattern, ignoreCase));
     }
 
@@ -49,6 +51,8 @@ public sealed class AnyPattern : IAny<string>, IHasRandomSource {
     #endregion
 
     internal AnyPattern(RandomSource source, RegexNode root) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+        if (root is null) { throw new ArgumentNullException(nameof(root)); }
         _source = source;
         _root   = root;
     }

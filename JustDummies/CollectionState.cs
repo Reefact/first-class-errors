@@ -29,6 +29,8 @@ internal sealed class CollectionState<T> {
     #region Statics members declarations
 
     internal static CollectionState<T> Create(IAny<T> item, bool distinct, IEqualityComparer<T>? comparer) {
+        if (item is null) { throw new ArgumentNullException(nameof(item)); }
+
         return new CollectionState<T>(item, AnyDerivation.CardinalityOf(item), CountSpec.Unconstrained, distinct, comparer,
                                       Array.Empty<T>(), Array.Empty<IAny<T>>());
     }
@@ -83,36 +85,51 @@ internal sealed class CollectionState<T> {
 
     /// <summary>Fixes the exact element count.</summary>
     internal CollectionState<T> WithExactCount(int count, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+
         return Rebuild(_count.WithExactCount(count, applying), _distinct, _comparer, _fixedContaining, _generatedContaining, applying);
     }
 
     /// <summary>Tightens the minimum element count.</summary>
     internal CollectionState<T> WithMinCount(int count, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+
         return Rebuild(_count.WithMinCount(count, applying), _distinct, _comparer, _fixedContaining, _generatedContaining, applying);
     }
 
     /// <summary>Tightens the maximum element count.</summary>
     internal CollectionState<T> WithMaxCount(int count, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+
         return Rebuild(_count.WithMaxCount(count, applying), _distinct, _comparer, _fixedContaining, _generatedContaining, applying);
     }
 
     /// <summary>Requires the elements to be pairwise distinct, optionally under <paramref name="comparer" />.</summary>
     internal CollectionState<T> AsDistinct(IEqualityComparer<T>? comparer, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+
         return Rebuild(_count, true, comparer ?? _comparer, _fixedContaining, _generatedContaining, applying);
     }
 
     /// <summary>Requires the collection to contain <paramref name="value" />.</summary>
     internal CollectionState<T> WithContaining(T value, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+
         return Rebuild(_count, _distinct, _comparer, Append(_fixedContaining, value), _generatedContaining, applying);
     }
 
     /// <summary>Requires the collection to contain a value drawn from <paramref name="generator" />.</summary>
     internal CollectionState<T> WithContaining(IAny<T> generator, string applying) {
+        if (generator is null) { throw new ArgumentNullException(nameof(generator)); }
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+
         return Rebuild(_count, _distinct, _comparer, _fixedContaining, Append(_generatedContaining, generator), applying);
     }
 
     /// <summary>Builds one collection satisfying the whole specification — laid out directly, never generate-then-retry.</summary>
     internal List<T> Materialize(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         SeededRandom random   = source.Current;
         int          required = _fixedContaining.Count + _generatedContaining.Count;
         int?         cap      = _distinct ? CardinalityCap() : null;

@@ -35,10 +35,14 @@ public sealed class AnySequence<T> : AnyCollection<T, IEnumerable<T>, AnySequenc
     }
 
     private protected override AnySequence<T> With(CollectionState<T> state) {
+        if (state is null) { throw new ArgumentNullException(nameof(state)); }
+
         return new AnySequence<T>(SourceOrNull, state);
     }
 
     private protected override IEnumerable<T> Build(List<T> items) {
+        if (items is null) { throw new ArgumentNullException(nameof(items)); }
+
         return items;
     }
 

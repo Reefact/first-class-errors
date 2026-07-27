@@ -33,6 +33,7 @@ internal sealed class RegexParser {
     private const int MaxGroupDepth = 256;
 
     internal static RegexNode Parse(string pattern, bool ignoreCase) {
+        if (pattern is null) { throw new ArgumentNullException(nameof(pattern)); }
         RegexParser parser = new(pattern, ignoreCase);
         RegexNode   root   = parser.ParseAlternation();
         if (!parser.AtEnd) {

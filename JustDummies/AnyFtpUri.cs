@@ -14,6 +14,8 @@ public sealed class AnyFtpUri : IAny<Uri>, IHasRandomSource {
     #endregion
 
     internal AnyFtpUri(RandomSource source, UriSpec spec) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+        if (spec is null) { throw new ArgumentNullException(nameof(spec)); }
         _source = source;
         _spec   = spec;
     }

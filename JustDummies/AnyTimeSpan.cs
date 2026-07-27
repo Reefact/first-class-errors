@@ -18,6 +18,8 @@ public sealed class AnyTimeSpan : IAny<TimeSpan>, IHasRandomSource, ICardinality
     #region Statics members declarations
 
     internal static AnyTimeSpan Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         return new AnyTimeSpan(source, OrdinalIntervalSpec.Unconstrained("TimeSpan", ordinal => V(Val(ordinal)), Ord(TimeSpan.MinValue), Ord(TimeSpan.MaxValue)));
     }
 

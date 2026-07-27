@@ -17,6 +17,8 @@ public sealed class AnyUInt64 : IAny<ulong>, IHasRandomSource, ICardinalityHint<
     #region Statics members declarations
 
     internal static AnyUInt64 Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         return new AnyUInt64(source, OrdinalIntervalSpec.Unconstrained("UInt64", ordinal => V(Val(ordinal)), Ord(ulong.MinValue), Ord(ulong.MaxValue)));
     }
 

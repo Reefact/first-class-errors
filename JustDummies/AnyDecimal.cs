@@ -18,6 +18,8 @@ public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource, ICardinalityHi
     #region Statics members declarations
 
     internal static AnyDecimal Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         return new AnyDecimal(source, DecimalIntervalSpec.Unconstrained("Decimal", V));
     }
 

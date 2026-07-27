@@ -12,6 +12,9 @@ internal sealed class WideIntervalSpec {
     #region Statics members declarations
 
     internal static WideIntervalSpec Unconstrained(string typeName, Func<UInt128, string> render, UInt128 domainMin, UInt128 domainMax) {
+        if (typeName is null) { throw new ArgumentNullException(nameof(typeName)); }
+        if (render is null) { throw new ArgumentNullException(nameof(render)); }
+
         return new WideIntervalSpec(typeName, render, domainMin, domainMax, domainMin, null, domainMax, null, null, null, [], UInt128.One, UInt128.Zero, null);
     }
 
@@ -115,6 +118,7 @@ internal sealed class WideIntervalSpec {
 
     /// <summary>Tightens the lower bound; a looser bound than the current one is a no-op.</summary>
     internal WideIntervalSpec WithMinimum(UInt128 minimum, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (minimum <= _min) { return this; }
 
         if (minimum > _max) {
@@ -128,6 +132,7 @@ internal sealed class WideIntervalSpec {
 
     /// <summary>Tightens the lower bound to strictly above <paramref name="bound" /> — the exclusive form of <see cref="WithMinimum" />.</summary>
     internal WideIntervalSpec WithMinimumAbove(UInt128 bound, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (bound == _domainMax) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because no {_typeName} value satisfies it."); }
 
         return WithMinimum(bound + 1, applying);
@@ -135,6 +140,7 @@ internal sealed class WideIntervalSpec {
 
     /// <summary>Tightens the upper bound; a looser bound than the current one is a no-op.</summary>
     internal WideIntervalSpec WithMaximum(UInt128 maximum, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (maximum >= _max) { return this; }
 
         if (maximum < _min) {
@@ -148,6 +154,7 @@ internal sealed class WideIntervalSpec {
 
     /// <summary>Tightens the upper bound to strictly below <paramref name="bound" /> — the exclusive form of <see cref="WithMaximum" />.</summary>
     internal WideIntervalSpec WithMaximumBelow(UInt128 bound, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (bound == _domainMin) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because no {_typeName} value satisfies it."); }
 
         return WithMaximum(bound - 1, applying);
@@ -155,6 +162,8 @@ internal sealed class WideIntervalSpec {
 
     /// <summary>Restricts the domain to an explicit allow-list; declared once per generator.</summary>
     internal WideIntervalSpec WithAllowed(UInt128[] ordinals, string applying) {
+        if (ordinals is null) { throw new ArgumentNullException(nameof(ordinals)); }
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_allowedConstraint} is already defined."); }
 
         UInt128[] distinct = ordinals.Distinct().ToArray();
@@ -164,6 +173,9 @@ internal sealed class WideIntervalSpec {
 
     /// <summary>Adds values the generator must never produce.</summary>
     internal WideIntervalSpec WithExcluded(UInt128[] ordinals, string applying) {
+        if (ordinals is null) { throw new ArgumentNullException(nameof(ordinals)); }
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+
         // The applied constraint tags its own ordinals, so a later exhaustion message can name the exclusion
         // that actually emptied the domain rather than a bound that merely happens to border it.
         List<(string Constraint, UInt128[] Ordinals)> exclusions = new(_exclusions) { (applying, ordinals) };
@@ -177,6 +189,7 @@ internal sealed class WideIntervalSpec {
     ///     generator.
     /// </summary>
     internal WideIntervalSpec WithStep(UInt128 step, UInt128 anchor, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (step <= UInt128.One) { return this; } // every value is a multiple of one: a no-op, not a constraint
 
         if (_step > UInt128.One) {
@@ -225,6 +238,8 @@ internal sealed class WideIntervalSpec {
 
     /// <summary>Draws one ordinal satisfying the whole specification — built directly, never generate-then-retry.</summary>
     internal UInt128 GenerateOrdinal(SeededRandom random) {
+        if (random is null) { throw new ArgumentNullException(nameof(random)); }
+
         if (_effectiveAllowed is not null) {
             return _effectiveAllowed[random.Next(_effectiveAllowed.Count)];
         }

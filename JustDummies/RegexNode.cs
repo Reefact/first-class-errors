@@ -23,6 +23,7 @@ internal sealed class RegexGenerationContext {
     #endregion
 
     internal RegexGenerationContext(SeededRandom random, int limit) {
+        if (random is null) { throw new ArgumentNullException(nameof(random)); }
         Random = random;
         _limit = limit;
     }
@@ -64,6 +65,7 @@ internal sealed class RegexCharacters : RegexNode {
     #endregion
 
     internal RegexCharacters(char[] choices) {
+        if (choices is null) { throw new ArgumentNullException(nameof(choices)); }
         _choices = choices;
     }
 
@@ -71,6 +73,7 @@ internal sealed class RegexCharacters : RegexNode {
     internal int Count => _choices.Length;
 
     internal override void Append(RegexGenerationContext context) {
+        if (context is null) { throw new ArgumentNullException(nameof(context)); }
         context.Append(_choices[context.Random.Next(_choices.Length)]);
     }
 
@@ -86,10 +89,12 @@ internal sealed class RegexSequence : RegexNode {
     #endregion
 
     internal RegexSequence(RegexNode[] parts) {
+        if (parts is null) { throw new ArgumentNullException(nameof(parts)); }
         _parts = parts;
     }
 
     internal override void Append(RegexGenerationContext context) {
+        if (context is null) { throw new ArgumentNullException(nameof(context)); }
         foreach (RegexNode part in _parts) { part.Append(context); }
     }
 
@@ -105,10 +110,12 @@ internal sealed class RegexAlternation : RegexNode {
     #endregion
 
     internal RegexAlternation(RegexNode[] branches) {
+        if (branches is null) { throw new ArgumentNullException(nameof(branches)); }
         _branches = branches;
     }
 
     internal override void Append(RegexGenerationContext context) {
+        if (context is null) { throw new ArgumentNullException(nameof(context)); }
         _branches[context.Random.Next(_branches.Length)].Append(context);
     }
 
@@ -137,12 +144,14 @@ internal sealed class RegexRepeat : RegexNode {
     #endregion
 
     internal RegexRepeat(RegexNode child, int min, int? max) {
+        if (child is null) { throw new ArgumentNullException(nameof(child)); }
         _child = child;
         _min   = min;
         _max   = max;
     }
 
     internal override void Append(RegexGenerationContext context) {
+        if (context is null) { throw new ArgumentNullException(nameof(context)); }
         int count = _max is int max
                         ? context.Random.NextInt32Inclusive(_min, max)
                         : _min + context.Random.Next(0, UnboundedExtra + 1);

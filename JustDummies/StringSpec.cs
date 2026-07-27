@@ -117,6 +117,7 @@ internal sealed class StringSpec {
 
     /// <summary>Fixes the exact length; declared once per generator.</summary>
     internal StringSpec WithExactLength(int length, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_exactConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_exactConstraint} is already defined."); }
 
         StringSpec candidate = new(length, applying, _minLength, _minConstraint, _maxLength, _maxConstraint,
@@ -128,6 +129,7 @@ internal sealed class StringSpec {
 
     /// <summary>Tightens the minimum length; a looser bound than the current one is a no-op.</summary>
     internal StringSpec WithMinLength(int length, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (length <= _minLength) { return this; }
 
         StringSpec candidate = new(_exactLength, _exactConstraint, length, applying, _maxLength, _maxConstraint,
@@ -139,6 +141,7 @@ internal sealed class StringSpec {
 
     /// <summary>Tightens the maximum length; a looser bound than the current one is a no-op.</summary>
     internal StringSpec WithMaxLength(int length, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_maxLength is not null && length >= _maxLength) { return this; }
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, length, applying,
@@ -150,6 +153,8 @@ internal sealed class StringSpec {
 
     /// <summary>Anchors a prefix; declared once per generator.</summary>
     internal StringSpec WithPrefix(string prefix, string applying) {
+        if (prefix is null) { throw new ArgumentNullException(nameof(prefix)); }
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_prefixConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_prefixConstraint} is already defined."); }
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
@@ -161,6 +166,8 @@ internal sealed class StringSpec {
 
     /// <summary>Anchors a suffix; declared once per generator.</summary>
     internal StringSpec WithSuffix(string suffix, string applying) {
+        if (suffix is null) { throw new ArgumentNullException(nameof(suffix)); }
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_suffixConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_suffixConstraint} is already defined."); }
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
@@ -172,6 +179,8 @@ internal sealed class StringSpec {
 
     /// <summary>Adds a value the generated string must contain.</summary>
     internal StringSpec WithFragment(string fragment, string applying) {
+        if (fragment is null) { throw new ArgumentNullException(nameof(fragment)); }
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         List<string> fragments = new(_fragments) { fragment };
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
@@ -183,6 +192,7 @@ internal sealed class StringSpec {
 
     /// <summary>Restricts the character family; declared once per generator.</summary>
     internal StringSpec WithCharset(CharacterSet charset, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_charsetConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_charsetConstraint} is already defined."); }
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
@@ -199,6 +209,8 @@ internal sealed class StringSpec {
     ///     distinct already.
     /// </summary>
     internal StringSpec WithCharPool(string pool, string applying) {
+        if (pool is null) { throw new ArgumentNullException(nameof(pool)); }
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_charsetConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_charsetConstraint} is already defined."); }
         if (_casingConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_casingConstraint} is already defined."); }
 
@@ -211,6 +223,7 @@ internal sealed class StringSpec {
 
     /// <summary>Imposes a letter casing; declared once per generator.</summary>
     internal StringSpec WithCasing(LetterCasing casing, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_casingConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_casingConstraint} is already defined."); }
         if (_customPool is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_charsetConstraint} is already defined."); }
 
@@ -223,6 +236,8 @@ internal sealed class StringSpec {
 
     /// <summary>Adds values the generated string must avoid; may be declared several times, the exclusions accumulate.</summary>
     internal StringSpec WithExcluded(IReadOnlyList<string> values, string applying) {
+        if (values is null) { throw new ArgumentNullException(nameof(values)); }
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         List<string> excluded = new(_excluded);
         foreach (string value in values) {
             if (!excluded.Contains(value, StringComparer.Ordinal)) { excluded.Add(value); }
@@ -241,6 +256,7 @@ internal sealed class StringSpec {
     ///     exhausted budget means the exclusions leave the shape unsatisfiable, reported with the seed to replay.
     /// </summary>
     internal string Generate(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
         SeededRandom random = source.Current;
         if (_excluded.Count == 0) { return BuildCandidate(random); }
 
