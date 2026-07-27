@@ -1,6 +1,6 @@
-# ADR-0043 | Ship first-party JustDummies analyzers, and guard the reproducible async surface with them
+# ADR-0044 | Ship first-party JustDummies analyzers, and guard the reproducible async surface with them
 
-🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0043-ship-justdummies-analyzers.fr.md)
+🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0044-ship-justdummies-analyzers.fr.md)
 
 **Status:** Proposed
 **Date:** 2026-07-27
