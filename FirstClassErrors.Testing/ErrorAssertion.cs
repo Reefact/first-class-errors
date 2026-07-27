@@ -92,6 +92,9 @@ public sealed class ErrorAssertion {
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="key" /> is <c>null</c>.</exception>
     /// <exception cref="OutcomeAssertionException">Thrown when no entry with that key is present.</exception>
     public ErrorAssertion WithContextEntry(string key) {
+        // Stryker disable once Statement,Block : equivalent mutant. Removing this guard changes nothing observable —
+        // the dictionary lookup below throws ArgumentNullException for a null key, with the same parameter name. The
+        // guard stays because it states the contract where the reader looks for it, not because it changes the outcome.
         if (key is null) { throw new ArgumentNullException(nameof(key)); }
 
         if (!_error.Context.ToNameDictionary().ContainsKey(key)) {
