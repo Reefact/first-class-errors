@@ -155,6 +155,25 @@ public sealed class CompositionTests {
         Check.That(caught.Message).Not.Contains("The arbitrary values were seeded with");
     }
 
+    [Fact(DisplayName = "A composer failure over a Combine mixing two different seeded sources does not promise a full replay from one seed.")]
+    public void CombineOverMixedSeededSourcesQualifiesTheHint() {
+        // The first operand draws from Any.WithSeed(4242); the second from the ambient source. The composed value
+        // depends on BOTH, so replaying WithSeed(4242) alone reproduces only the first — the hint must not promise a
+        // deterministic full replay from that one seed (issue #319).
+        IAny<string> generator = Any.Combine<int, int, string>(
+            Any.WithSeed(4242).Int32().Between(1, 3),
+            Any.Int32().Between(4, 6),
+            (first, second) => throw new InvalidOperationException($"rejected {first}/{second}"));
+
+        AnyGenerationException caught = Assert.Throws<AnyGenerationException>(() => generator.Generate());
+
+        Check.That(caught.Message).Contains("Combine(...)");
+        Check.WithCustomMessage($"The hint over-promised a full replay. Message: {caught.Message}")
+             .That(caught.Message).Not.Contains("already replays deterministically");
+        Check.WithCustomMessage($"The hint did not qualify the replay promise. Message: {caught.Message}")
+             .That(caught.Message).Contains("not reproducible from this seed alone");
+    }
+
     [Fact(DisplayName = "Combine composes four through eight parts, passing every constrained part to the lambda.")]
     public void CombineSupportsHigherArities() {
         IAny<int> part = Any.Int32().Between(1, 9);
