@@ -75,6 +75,12 @@ jobs:
             > doc/generated/gendoc/errors-diff.md
 
       - name: Commit the regenerated catalog to this branch
+        env:
+          # github.head_ref (the PR's branch name) is controllable by the PR author, so it must never
+          # be expanded into the run script directly: a crafted branch name would inject shell commands.
+          # Route it through the environment and reference it quoted below, so the shell -- not the
+          # Actions template engine -- handles it as data.
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
@@ -90,4 +96,4 @@ jobs:
           # Pushes made with the default GITHUB_TOKEN do not re-trigger workflows (GitHub's own loop
           # guard), so this never causes another 'pull_request: synchronize' event and another run of
           # this job.
-          git push origin HEAD:${{ github.head_ref }}
+          git push origin "HEAD:$HEAD_REF"
