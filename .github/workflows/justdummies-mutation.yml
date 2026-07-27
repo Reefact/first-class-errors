@@ -1,0 +1,257 @@
+name: justdummies-mutation
+
+# Mutation testing for the JustDummies libraries, kept in a workflow of their own rather than as two
+# more legs of `mutation.yml`. JustDummies is destined for a repository of its own (it is already a
+# standalone, error-agnostic package — ADR-0011), and this file is written so that the move is a
+# FILE MOVE, not an edit: take this workflow, `build/stryker/justdummies*.json`,
+# `.config/dotnet-tools.json` and the reference page, then repoint the `solution` field in the two
+# configs at the new solution. Nothing here refers to a FirstClassErrors project.
+#
+# The mechanism is identical to `mutation.yml`; keep the two in step when you change one.
+
+on:
+  pull_request:
+    branches:
+      - main
+  # Weekly full sweep. The pull-request legs only mutate what a pull request touched, so nothing ever
+  # re-measures the parts of the libraries no one has edited: this is the run that does. Offset from
+  # `mutation`'s slot so the two sweeps do not contend for runners.
+  schedule:
+    - cron: '47 3 * * 1'
+  workflow_dispatch:
+
+# Cancel superseded runs on the same branch / PR.
+concurrency:
+  group: justdummies-mutation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Least privilege: this workflow only checks out, builds and runs tests, so the token
+# needs nothing beyond read access to the repository contents.
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+
+jobs:
+  # The gate. One leg per shipped library, each mutating ONLY what the pull request changed
+  # (Stryker's `--since`), so the cost follows the diff and not the size of the library.
+  #
+  # `gate` below aggregates these legs into the single check to mark as required on `main`.
+  changed:
+    name: Mutate the diff (${{ matrix.name }})
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    # A leg whose library the pull request did not touch finishes in ~2 min (analysis, build, initial
+    # test run, mutant generation). The cap covers the worst realistic case instead: `JustDummies` is
+    # the largest library in the repository, and Stryker selects per changed FILE, so touching one of
+    # its bigger generators puts that whole file's mutants on the gate.
+    timeout-minutes: 60
+    strategy:
+      # Run both legs to completion: a survivor in the adapter is worth seeing even when the
+      # generator is red.
+      fail-fast: false
+      matrix:
+        # The two JustDummies packages this repository SHIPS: the generator and its xUnit v3 adapter
+        # (ADR-0039). The FirstClassErrors libraries live in `mutation.yml`. See ADR-0043.
+        include:
+          - name: justdummies
+            config: build/stryker/justdummies.json
+          - name: justdummies-xunit
+            config: build/stryker/justdummies-xunit.json
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # Stryker's `--since` diffs the working tree against a commit, so the full history must be
+          # present; a shallow clone would leave that commit unreachable.
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore the local tools
+        # Pins dotnet-stryker through .config/dotnet-tools.json, so CI and a maintainer's machine run
+        # the same mutation engine — a newer engine invents new mutants and would move every score on
+        # its own, without a line of code changing.
+        run: dotnet tool restore
+
+      # `pull_request` checks out the merge commit, so what this branch actually changed is measured
+      # from the FORK POINT — not from the base branch tip, which may have moved on since the branch
+      # was cut and would drag every file changed on `main` in the meantime into the "changed" set.
+      - name: Resolve the fork point
+        id: base
+        # A real commit SHA, not a rev expression: `--since:HEAD` is rejected outright by Stryker
+        # ("No branch or tag or commit found with given target"). `set -e` makes a failed merge-base
+        # fail the step, rather than handing Stryker an empty target that fails it later and vaguer.
+        run: |
+          set -euo pipefail
+          base=$(git merge-base '${{ github.event.pull_request.base.sha }}' HEAD)
+          echo "fork point: $base"
+          echo "sha=$base" >> "$GITHUB_OUTPUT"
+
+      - name: Mutate the changed files
+        # The runner mode, the thresholds and the reporters all live in the config file, so this is
+        # the same command a maintainer runs locally. `--break-at` is deliberately NOT passed here:
+        # overriding the threshold from the YAML is what would let CI and a local run disagree.
+        #
+        # Stryker exits 0 — "unable to calculate a mutation score" — when the diff touches none of
+        # this library's sources, which is the common case for a leg nobody is working on.
+        run: >-
+          dotnet stryker --config-file ${{ matrix.config }}
+          --since:${{ steps.base.outputs.sha }}
+          --output artifacts/mutation/${{ matrix.name }}
+
+      - name: Summarise the surviving mutants
+        # The score alone does not say what to fix. This turns the JSON report into the actionable
+        # half — file, line and the kind of rewrite that went unnoticed — in the run summary, so a
+        # failing gate can be diagnosed without downloading the artifact. `if: always()` because the
+        # interesting case is the failing one.
+        if: always()
+        run: |
+          set -euo pipefail
+          report="artifacts/mutation/${{ matrix.name }}/reports/mutation-report.json"
+          if [ ! -f "$report" ]; then
+            echo "${{ matrix.name }}: the diff selected no mutant" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          # Stryker writes a report even when it selects nothing, so "no mutant" has to be read from
+          # the report's contents, not from the file's absence: count the mutants that were actually
+          # put to the test, i.e. neither filtered out nor rejected by the compiler.
+          tested=$(jq '[.files[].mutants[]
+            | select(.status != "Ignored" and .status != "CompileError")] | length' "$report")
+          rows=$(jq -r --arg ws "$GITHUB_WORKSPACE/" '
+            .files | to_entries[] | .key as $f | .value.mutants[]
+            | select(.status == "Survived" or .status == "Timeout" or .status == "NoCoverage")
+            | "| \(.status) | \($f | ltrimstr($ws)):\(.location.start.line) | \(.mutatorName) |"
+          ' "$report")
+          {
+            echo "### Mutation — ${{ matrix.name }}"
+            echo
+            if [ "$tested" -eq 0 ]; then
+              echo "This pull request changed nothing this library is mutated from."
+            elif [ -z "$rows" ]; then
+              echo "All $tested mutants were killed."
+            else
+              echo "| Status | Location | Mutation |"
+              echo "| --- | --- | --- |"
+              echo "$rows"
+            fi
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the mutation report
+        # Always: the report is most useful precisely when the run failed the threshold — the HTML
+        # view shows each surviving mutant in its source, which the summary table cannot.
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: mutation-report-${{ matrix.name }}
+          path: artifacts/mutation/${{ matrix.name }}/reports/
+          # A leg that selected no mutant writes no report; that is a pass, not a packaging failure.
+          if-no-files-found: ignore
+
+  # The single check to mark as required on `main` for the JustDummies packages. Separate from
+  # `mutation.yml`'s gate on purpose: the two are independent quality bars for what will become two
+  # repositories, and marking them required is one branch-protection entry each.
+  gate:
+    name: JustDummies mutation gate
+    if: always() && github.event_name == 'pull_request'
+    needs: changed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check the mutation legs
+        # `needs.changed.result` is the matrix's aggregate: 'success' only when every leg succeeded.
+        # 'skipped' is accepted so the job stays green when the whole matrix is skipped by design.
+        run: |
+          result='${{ needs.changed.result }}'
+          echo "mutation legs: $result"
+          if [ "$result" != "success" ] && [ "$result" != "skipped" ]; then
+            echo "::error::the JustDummies mutation gate failed — see the 'Mutate the diff' legs and their reports"
+            exit 1
+          fi
+
+  # The weekly sweep: every mutant of both JustDummies packages, not just the ones a pull request
+  # touched. Advisory by construction — `--break-at 0` disables the threshold — because its job is to
+  # publish a trend, not to turn `main` red on a Monday morning over code nobody changed.
+  full:
+    name: Full sweep (${{ matrix.name }})
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    # The sweep runs the library's whole test suite once per mutant, and `JustDummies` carries a few
+    # thousand of them — this is the longest job in the repository, and the reason the sweep is
+    # weekly and the gate is diff-scoped.
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: justdummies
+            config: build/stryker/justdummies.json
+          - name: justdummies-xunit
+            config: build/stryker/justdummies-xunit.json
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore the local tools
+        run: dotnet tool restore
+
+      - name: Mutate everything
+        run: >-
+          dotnet stryker --config-file ${{ matrix.config }}
+          --break-at 0
+          --output artifacts/mutation/${{ matrix.name }}
+
+      - name: Summarise the surviving mutants
+        # Same table as the gate legs produce. On the sweep it is the deliverable, not a diagnosis
+        # aid: this is the list of behaviours nothing in the suite asserts, library by library.
+        if: always()
+        run: |
+          set -euo pipefail
+          report="artifacts/mutation/${{ matrix.name }}/reports/mutation-report.json"
+          if [ ! -f "$report" ]; then
+            echo "${{ matrix.name }}: no report produced" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          # Stryker writes a report even when it selects nothing, so "no mutant" has to be read from
+          # the report's contents, not from the file's absence: count the mutants that were actually
+          # put to the test, i.e. neither filtered out nor rejected by the compiler.
+          tested=$(jq '[.files[].mutants[]
+            | select(.status != "Ignored" and .status != "CompileError")] | length' "$report")
+          rows=$(jq -r --arg ws "$GITHUB_WORKSPACE/" '
+            .files | to_entries[] | .key as $f | .value.mutants[]
+            | select(.status == "Survived" or .status == "Timeout" or .status == "NoCoverage")
+            | "| \(.status) | \($f | ltrimstr($ws)):\(.location.start.line) | \(.mutatorName) |"
+          ' "$report")
+          {
+            echo "### Mutation sweep — ${{ matrix.name }}"
+            echo
+            if [ "$tested" -eq 0 ]; then
+              echo "No mutant was selected — check the run's Stryker output."
+            elif [ -z "$rows" ]; then
+              echo "All $tested mutants were killed."
+            else
+              echo "| Status | Location | Mutation |"
+              echo "| --- | --- | --- |"
+              echo "$rows"
+            fi
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the mutation report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: mutation-report-full-${{ matrix.name }}
+          path: artifacts/mutation/${{ matrix.name }}/reports/
+          # The sweep always produces a report; nothing to upload means the run never got that far.
+          if-no-files-found: error
