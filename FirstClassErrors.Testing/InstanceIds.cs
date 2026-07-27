@@ -38,6 +38,10 @@ public static class InstanceIds {
     /// <returns>A scope that restores the default (random) identifier when disposed.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="next" /> is <c>null</c>.</exception>
     public static IDisposable Use(Func<Guid> next) {
+        // Stryker disable once Statement,Block : equivalent mutant. AmbientInstanceId.Use guards the same argument with
+        // the same exception and the same parameter name, so removing this one is unobservable. It stays because this is
+        // the public entry point, and the contract belongs where the caller reads it. Clock.Use is NOT equivalent and
+        // carries no such comment: it forwards a lambda, never the argument, so its guard is the only one there is.
         if (next is null) { throw new ArgumentNullException(nameof(next)); }
 
         return AmbientInstanceId.Use(next);
