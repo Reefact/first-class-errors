@@ -1,11 +1,11 @@
-# Analyseurs FirstClassErrors
+# Analyseurs
 
 🌍 **Langues:**  
 🇬🇧 [English](./README.md) | 🇫🇷 Français (ce fichier)
 
-Les analyseurs FirstClassErrors sont des règles Roslyn qui s'exécutent pendant la compilation de votre projet. Ils transforment en diagnostics de compilation des erreurs que le runtime et le pipeline de documentation de FirstClassErrors ne signaleraient sinon que tardivement — voire jamais. Ces règles sont **incluses dans le package NuGet `FirstClassErrors`** : tout projet qui le référence en bénéficie automatiquement, sans installation supplémentaire.
+Ce dépôt fournit des règles Roslyn avec deux packages. Elles s'exécutent pendant la compilation et transforment en diagnostics de compilation des erreurs que le runtime et le pipeline de documentation ne signaleraient sinon que tardivement — voire jamais. Les règles **FirstClassErrors** (`FCExxx`) sont incluses dans le package `FirstClassErrors` ; les règles **JustDummies** (`JDxxx`) sont incluses dans le package `JustDummies`. Tout projet qui référence un package en bénéficie automatiquement, sans installation supplémentaire.
 
-Chaque règle a un identifiant stable `FCExxx`. Les erreurs sont des défauts durs ; les avertissements signalent des fautes probables ; les règles d'info sont des conventions, et plusieurs sont opt-in (voir chaque page pour les activer).
+Chaque règle a un identifiant stable (`FCExxx` ou `JDxxx`). Les erreurs sont des défauts durs ; les avertissements signalent des fautes probables ; les règles d'info sont des conventions, et plusieurs sont opt-in (voir chaque page pour les activer).
 
 ## Codes d'erreur
 
@@ -48,6 +48,15 @@ Chaque règle a un identifiant stable `FCExxx`. Les erreurs sont des défauts du
 | [FCE020 TryCatchesRichProtocolException](FCE020.fr.md) | 🟠 Warning | opt-in | Outcome.Try attrape un échec de protocole (HttpRequestException, DbException, SocketException, …) dont la donnée de statut ou de résultat est perdue une fois réduite à une levée. |
 | [FCE021 PreferNonThrowingAlternativeToTry](FCE021.fr.md) | 🟠 Warning | activée | Outcome.Try enveloppe un appel qui a déjà une contrepartie non-levante TryXxx / TryCreate disponible pour le framework cible ; envisagez de mapper son résultat (conseil — à supprimer là où la contrepartie n'est pas un vrai inverse). |
 | [FCE022 TryCatchesCancellation](FCE022.fr.md) | 🟠 Warning | activée | Outcome.Try lie TException à OperationCanceledException (ou un sous-type) ; Try laisse toujours l'annulation se propager, donc le catch est inatteignable et le mapper ne s'exécute jamais. |
+
+## JustDummies — Reproductibilité
+
+Ces règles sont incluses dans le package **`JustDummies`** (pas FirstClassErrors) et empêchent un corps de test asynchrone d'avaler silencieusement ses propres échecs.
+
+| Règle | Sévérité | Défaut | Description |
+|-------|----------|--------|-------------|
+| [JD001 AsyncBodyPassedToReproducibly](JD001.fr.md) | 🔴 Erreur | on | Une lambda async est passée à `Any.Reproducibly(Action)` synchrone ; liée à une Action elle devient async void et ses échecs ne font jamais échouer le test. Utilisez `Any.ReproduciblyAsync` et faites `await`. |
+| [JD002 DiscardedReproduciblyAsyncResult](JD002.fr.md) | 🔴 Erreur | on | Le `Task` retourné par `Any.ReproduciblyAsync` est jeté (instruction isolée ou `_ =`) ; les échecs du corps sont perdus. Faites `await`. |
 
 ## Configuration
 

@@ -225,3 +225,4 @@ Optional supporting material:
 | [ADR-0040](0040-split-the-justdummies-test-bed-between-example-and-property-suites.md) | Split the JustDummies test bed between an example suite and a property suite | Accepted |
 | [ADR-0041](0041-draw-flag-enum-combinations-behind-an-opt-in.md) | Draw flag-enum combinations behind an opt-in | Accepted |
 | [ADR-0042](0042-serialize-draws-on-a-random-source.md) | Serialize draws on a random source, and scope reproducibility to the draw sequence | Proposed |
+| [ADR-0043](0043-ship-justdummies-analyzers.md) | Ship first-party JustDummies analyzers, and guard the reproducible async surface with them | Proposed |
