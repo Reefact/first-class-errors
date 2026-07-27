@@ -85,7 +85,7 @@ JustDummies.Any.Reproducibly(1234, () => {
 });
 ```
 
-Reproducing a run needs the same sequence of draws, so a body whose order depends on non-deterministic external state is not fully replayable from the seed alone. There is also an asynchronous overload, `JustDummies.Any.Reproducibly(Func<Task>)`, for `async` test bodies. Because the factories, the primitives, and the clock and id seams below all draw from the same ambient source, one `Reproducibly` scope replays them together.
+Reproducing a run needs the same sequence of draws, so a body whose order depends on non-deterministic external state is not fully replayable from the seed alone. There is also an asynchronous form, `JustDummies.Any.ReproduciblyAsync(Func<Task>)`, for `async` test bodies — await it, or the body's failures are silently dropped (the analyzer enforces this). Because the factories, the primitives, and the clock and id seams below all draw from the same ambient source, one `Reproducibly` scope replays them together.
 
 ### Pinning the seed without a body to wrap
 

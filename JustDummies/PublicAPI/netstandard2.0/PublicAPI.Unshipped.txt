@@ -402,9 +402,9 @@ static JustDummies.Any.ListOf<T>(JustDummies.IAny<T>! item) -> JustDummies.AnyLi
 static JustDummies.Any.OneOf<T>(params T[]! values) -> JustDummies.AnyOneOf<T>!
 static JustDummies.Any.PairOf<T1, T2>(JustDummies.IAny<T1>! first, JustDummies.IAny<T2>! second) -> JustDummies.IAny<(T1, T2)>!
 static JustDummies.Any.Reproducibly(int seed, System.Action! body, System.Action<string!>? report = null) -> void
-static JustDummies.Any.Reproducibly(int seed, System.Func<System.Threading.Tasks.Task!>! body, System.Action<string!>? report = null) -> System.Threading.Tasks.Task!
 static JustDummies.Any.Reproducibly(System.Action! body, System.Action<string!>? report = null) -> void
-static JustDummies.Any.Reproducibly(System.Func<System.Threading.Tasks.Task!>! body, System.Action<string!>? report = null) -> System.Threading.Tasks.Task!
+static JustDummies.Any.ReproduciblyAsync(int seed, System.Func<System.Threading.Tasks.Task!>! body, System.Action<string!>? report = null) -> System.Threading.Tasks.Task!
+static JustDummies.Any.ReproduciblyAsync(System.Func<System.Threading.Tasks.Task!>! body, System.Action<string!>? report = null) -> System.Threading.Tasks.Task!
 static JustDummies.Any.SByte() -> JustDummies.AnySByte!
 static JustDummies.Any.SequenceOf<T>(JustDummies.IAny<T>! item) -> JustDummies.AnySequence<T>!
 static JustDummies.Any.SetOf<T>(JustDummies.IAny<T>! item) -> JustDummies.AnySet<T>!

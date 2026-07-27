@@ -93,12 +93,12 @@ public sealed class SeedReproducibilityTests {
         Check.That(reported!).Contains("Any.Reproducibly(");
     }
 
-    [Fact(DisplayName = "The async Reproducibly reports the seed and rethrows on failure.")]
+    [Fact(DisplayName = "The async ReproduciblyAsync reports the seed and rethrows on failure.")]
     public async Task AsyncReproduciblyReportsTheSeedAndRethrows() {
         string? reported = null;
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => Any.Reproducibly(7, async () => {
+            () => Any.ReproduciblyAsync(7, async () => {
                 await Task.Yield();
 
                 throw new InvalidOperationException("boom");
@@ -108,16 +108,16 @@ public sealed class SeedReproducibilityTests {
         Check.That(reported!).Contains("7");
     }
 
-    [Fact(DisplayName = "The async Reproducibly with a given seed replays the same sequence of values.")]
+    [Fact(DisplayName = "The async ReproduciblyAsync with a given seed replays the same sequence of values.")]
     public async Task AsyncReproduciblyWithASeedIsDeterministic() {
         string first  = string.Empty;
         string second = string.Empty;
 
-        await Any.Reproducibly(4321, async () => {
+        await Any.ReproduciblyAsync(4321, async () => {
             await Task.Yield();
             first = Batch();
         });
-        await Any.Reproducibly(4321, async () => {
+        await Any.ReproduciblyAsync(4321, async () => {
             await Task.Yield();
             second = Batch();
         });
@@ -125,10 +125,10 @@ public sealed class SeedReproducibilityTests {
         Check.That(second).IsEqualTo(first);
     }
 
-    [Fact(DisplayName = "Reproducibly requires a body.")]
+    [Fact(DisplayName = "Reproducibly and ReproduciblyAsync require a body.")]
     public void ReproduciblyRequiresABody() {
         Check.ThatCode(() => Any.Reproducibly((Action)null!)).Throws<ArgumentNullException>();
-        Check.ThatCode(() => Any.Reproducibly((Func<Task>)null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => Any.ReproduciblyAsync((Func<Task>)null!)).Throws<ArgumentNullException>();
     }
 
 }

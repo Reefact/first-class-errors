@@ -85,7 +85,7 @@ JustDummies.Any.Reproducibly(1234, () => {
 });
 ```
 
-Reproduire une exécution nécessite la **même séquence** de tirages : un corps dont l’ordre dépend d’un état externe non déterministe n’est pas entièrement rejouable à partir de la seule graine. Une surcharge asynchrone, `JustDummies.Any.Reproducibly(Func<Task>)`, existe pour les corps de test `async`. Comme les fabriques, les primitives et les seams d’horloge et d’identifiants ci-dessous tirent tous de la même source ambiante, un seul `Reproducibly` les rejoue ensemble.
+Reproduire une exécution nécessite la **même séquence** de tirages : un corps dont l’ordre dépend d’un état externe non déterministe n’est pas entièrement rejouable à partir de la seule graine. Une forme asynchrone, `JustDummies.Any.ReproduciblyAsync(Func<Task>)`, existe pour les corps de test `async` — attendez-la (`await`), sinon les échecs du corps sont silencieusement perdus (l'analyseur l'impose). Comme les fabriques, les primitives et les seams d’horloge et d’identifiants ci-dessous tirent tous de la même source ambiante, un seul `Reproducibly` les rejoue ensemble.
 
 ### Fixer la graine sans corps à envelopper
 
