@@ -433,8 +433,10 @@ public static class Any {
     ///     </para>
     ///     <example>
     ///         <code>
+    ///         const int runSeed = 20240501; // recorded by hand: keep it to replay, change it to explore
     ///         Parallel.For(0, 64, index =&gt; {
-    ///             using (Any.UseSeed(HashCode.Combine(runSeed, index))) {
+    ///             // a distinct, deterministic sub-seed per work item, floor-safe on netstandard2.0 (no System.HashCode)
+    ///             using (Any.UseSeed(unchecked(runSeed * 397 ^ index))) {
     ///                 sut.Handle(Any.String().NonEmpty().Generate());
     ///             }
     ///         });

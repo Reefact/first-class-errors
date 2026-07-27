@@ -121,7 +121,7 @@ matter — and that is the point.
   so a run pinned from outside the test body never points at a call the test does not
   contain. Drawing from several threads at once is safe — values stay arbitrary and
   well-formed — but concurrent draws interleave, so a seed replays a run only while its
-  draws are taken one at a time; open a `Any.UseSeed(...)` scope per unit of work to
+  draws are taken one at a time; open an `Any.UseSeed(...)` scope per unit of work to
   keep a parallel run reproducible.
 
 ## Example
