@@ -144,6 +144,24 @@ Both draw from the same ambient source as `JustDummies.Any`, so running them ins
 
 `JustDummies.Any.Reproducibly`, `Clock.UseAny`, and `InstanceIds.UseAny` all take effect only for the run or `using` block they wrap, and the arbitrary source is restored when it exits. That source is stored in an `AsyncLocal`, so it follows the test's own execution flow and never leaks into other tests running at the same time.
 
+### Inside a test that parallelises
+
+Following the test's execution flow means the source also reaches the threads the test itself starts — a `Parallel.For`, a `Task.WhenAll`. Drawing from several of them at once is safe: the values stay arbitrary and well-formed however many threads take them.
+
+What parallelism costs is the *replay*. Concurrent draws interleave, so a seed no longer pins which value lands in which call, and a run that parallelises does not reproduce from its seed alone. If you only need dummies, nothing to do. If you need the run to replay, give each unit of work its own scope and derive its seed from the run's:
+
+```csharp
+Any.Reproducibly(() => {
+    Parallel.For(0, 64, index => {
+        using (Any.UseSeed(HashCode.Combine(runSeed, index))) {
+            sut.Handle(Any.String().NonEmpty().Generate());
+        }
+    });
+});
+```
+
+Each iteration then owns its own sequence, and the whole run replays for a given `runSeed`.
+
 ## Review checklist
 
 Before reaching for an arbitrary value, verify that:

@@ -20,8 +20,11 @@ namespace JustDummies;
 ///         for example.
 ///     </para>
 ///     <para>
-///         A context owns a single pseudo-random generator and is <b>not</b> thread-safe: use one context per test
-///         or per generation sequence, not a shared one.
+///         A context owns a single pseudo-random generator, and it is safe to draw from concurrently. What
+///         parallelism costs is the replay, not the values: the draws of two threads interleave, so neither the
+///         sequence nor the multiset of values a context produces is stable across runs once it is shared. A context
+///         used from one thread at a time replays exactly; to keep a parallel run reproducible, give each unit of
+///         work its own scope with <see cref="Any.UseSeed(int)" /> rather than sharing one context across threads.
 ///     </para>
 /// </remarks>
 public sealed class AnyContext {

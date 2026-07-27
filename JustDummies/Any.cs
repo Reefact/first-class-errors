@@ -395,6 +395,11 @@ public static class Any {
     ///     behavior and reports the seed only when the test fails; reach for <see cref="WithSeed" /> when you need an
     ///     explicit generator object, for example outside a test body.
     /// </summary>
+    /// <remarks>
+    ///     A context is safe to draw from concurrently, but sharing one across threads costs the replay rather than
+    ///     the values: interleaved draws make neither the sequence nor the multiset stable across runs. Keep a
+    ///     context to one thread at a time, or give each unit of work its own <see cref="UseSeed(int)" /> scope.
+    /// </remarks>
     /// <param name="seed">The seed pinning the context's value sequence.</param>
     /// <returns>A deterministic generation context.</returns>
     public static AnyContext WithSeed(int seed) {
@@ -420,6 +425,21 @@ public static class Any {
     ///         disposing twice is harmless. Failing to dispose leaves the seed pinned for whatever runs next in the
     ///         same execution context.
     ///     </para>
+    ///     <para>
+    ///         Flowing with the execution context also means a scope opened around a parallel loop reaches every
+    ///         worker, which is what makes this the seam for a <b>reproducible parallel</b> run: draws are safe under
+    ///         concurrency but interleave, so one shared scope replays nothing, whereas a scope opened <i>inside</i>
+    ///         the loop body gives each unit of work its own sequence and the whole run replays.
+    ///     </para>
+    ///     <example>
+    ///         <code>
+    ///         Parallel.For(0, 64, index =&gt; {
+    ///             using (Any.UseSeed(HashCode.Combine(runSeed, index))) {
+    ///                 sut.Handle(Any.String().NonEmpty().Generate());
+    ///             }
+    ///         });
+    ///         </code>
+    ///     </example>
     /// </remarks>
     /// <param name="seed">The seed pinning the ambient context's value sequence.</param>
     /// <returns>A handle that restores the previous ambient context when disposed.</returns>
