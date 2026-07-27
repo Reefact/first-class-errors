@@ -151,16 +151,18 @@ Suivre le flux d’exécution du test signifie aussi que la source atteint les t
 Ce que le parallélisme coûte, c’est le *rejeu*. Les tirages concurrents s’entrelacent : une graine ne fixe plus quelle valeur atterrit dans quel appel, et une exécution parallélisée ne se reproduit pas à partir de sa seule graine. Si vous n’avez besoin que de dummies, il n’y a rien à faire. Si vous avez besoin que l’exécution rejoue, donnez à chaque unité de travail sa propre portée et dérivez sa graine de celle de l’exécution :
 
 ```csharp
-Any.Reproducibly(() => {
-    Parallel.For(0, 64, index => {
-        using (Any.UseSeed(HashCode.Combine(runSeed, index))) {
-            sut.Handle(Any.String().NonEmpty().Generate());
-        }
-    });
+// runSeed est le nombre que vous consignez à la main : gardez-le pour rejouer, changez-le pour explorer.
+const int runSeed = 20240501;
+
+Parallel.For(0, 64, index => {
+    // Une sous-graine déterministe et distincte par unité de travail. Compatible plancher : System.HashCode n'existe pas sur netstandard2.0.
+    using (Any.UseSeed(unchecked(runSeed * 397 ^ index))) {
+        sut.Handle(Any.String().NonEmpty().Generate());
+    }
 });
 ```
 
-Chaque itération possède alors sa propre séquence, et l’exécution entière rejoue pour un `runSeed` donné.
+Chaque itération possède sa propre séquence, indexée sur son rang, donc l’exécution entière rejoue pour un `runSeed` donné. Il n’y a pas de `Any.Reproducibly` englobant ici : chaque tirage se fait dans une portée par unité de travail, si bien qu’une graine rapportée par un runner englobant ne rejouerait rien — c’est le `runSeed` consigné que vous gardez.
 
 ## Checklist de revue
 
