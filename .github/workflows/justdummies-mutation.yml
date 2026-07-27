@@ -157,9 +157,11 @@ jobs:
           # A leg that selected no mutant writes no report; that is a pass, not a packaging failure.
           if-no-files-found: ignore
 
-  # The single check to mark as required on `main` for the JustDummies packages. Separate from
-  # `mutation.yml`'s gate on purpose: the two are independent quality bars for what will become two
-  # repositories, and marking them required is one branch-protection entry each.
+  # The single check that reports the per-PR mutation legs for the JustDummies packages. Kept as one
+  # job (and one check name) so branch protection has a single entry to point at. ADVISORY on pull
+  # requests (ADR-0046): the enforced bar is the weekly `full` sweep, so this job summarises the diff
+  # legs without ever turning a pull request red — the per-PR score is a signal to read, not a gate,
+  # and the whole-file cost of Stryker's per-file `--since` selection must not block a merge.
   gate:
     name: JustDummies mutation gate
     if: always() && github.event_name == 'pull_request'
@@ -167,15 +169,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Check the mutation legs
-        # `needs.changed.result` is the matrix's aggregate: 'success' only when every leg succeeded.
-        # 'skipped' is accepted so the job stays green when the whole matrix is skipped by design.
+      - name: Report the mutation legs
+        # `needs.changed.result` is the matrix's aggregate: 'success' only when every leg succeeded,
+        # 'skipped' when the whole matrix is skipped by design, 'cancelled' when a superseding push
+        # cancelled the run. None of these blocks the merge: a genuine leg failure is surfaced as a
+        # warning to investigate, and a cancelled superseded run is simply noise, not a failure.
         run: |
           result='${{ needs.changed.result }}'
           echo "mutation legs: $result"
           if [ "$result" != "success" ] && [ "$result" != "skipped" ]; then
-            echo "::error::the JustDummies mutation gate failed — see the 'Mutate the diff' legs and their reports"
-            exit 1
+            echo "::warning::JustDummies mutation legs did not all succeed ($result) — advisory only; see the 'Mutate the diff' legs and the weekly sweep"
           fi
 
   # The weekly sweep: every mutant of both JustDummies packages, not just the ones a pull request

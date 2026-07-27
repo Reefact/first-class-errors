@@ -9,9 +9,11 @@
 
 ## À quoi il sert
 
-Les tests de mutation des **deux packages JustDummies** : `JustDummies` et son
+Les tests de mutation des **trois composants JustDummies** : `JustDummies`, son
 adaptateur xUnit v3 `JustDummies.Xunit`
-([ADR-0039](../adr/0039-adapt-dummies-to-xunit-v3-through-a-companion-package.fr.md)).
+([ADR-0039](../adr/0039-adapt-dummies-to-xunit-v3-through-a-companion-package.fr.md)),
+et les analyseurs livrés dans le package
+([ADR-0044](../adr/0044-ship-justdummies-analyzers.fr.md)).
 Sur une pull request, il ne mute que les fichiers modifiés par celle-ci et échoue
 si le score passe sous le seuil de la bibliothèque ; un balayage hebdomadaire
 mesure tout le reste. Ce que *sont* les tests de mutation, et pourquoi ce dépôt
@@ -30,18 +32,21 @@ plutôt qu'une réécriture** : rien dans ce workflow ne nomme un projet
 FirstClassErrors, et rien dans [`mutation`](mutation.fr.md) ne nomme un projet
 JustDummies.
 
-Cela donne aussi à JustDummies **son propre check obligatoire**,
+Cela donne aussi à JustDummies **son propre check**,
 **`JustDummies mutation gate`**, indépendant de celui de FirstClassErrors. Deux
-barrages, deux entrées de protection de branche, deux barres qui évoluent
-séparément — ce dont deux bibliothèques de maturité de test différente ont de
-toute façon besoin.
+checks, deux barres qui évoluent séparément — ce dont deux bibliothèques de
+maturité de test différente ont de toute façon besoin. Sur les pull requests, les
+deux sont **consultatifs**
+([ADR-0046](../adr/0046-make-the-per-pull-request-mutation-gate-advisory.md)) ; le
+niveau imposé de chacun est son balayage complet hebdomadaire.
 
 ## Quand il s'exécute
 
-- Sur chaque **pull request ciblant `main`** — cantonné au diff. **C'est le
-  barrage.**
-- **Chaque semaine** sur planification (lundi, 03h47 UTC) — le balayage complet,
-  consultatif. Le créneau est décalé de celui de `mutation` pour que les deux
+- Sur chaque **pull request ciblant `main`** — cantonné au diff et **consultatif** :
+  il rapporte le score du diff mais ne bloque jamais le merge
+  ([ADR-0046](../adr/0046-make-the-per-pull-request-mutation-gate-advisory.md)).
+- **Chaque semaine** sur planification (lundi, 03h47 UTC) — le balayage complet, le
+  **niveau imposé**. Le créneau est décalé de celui de `mutation` pour que les deux
   balayages ne se disputent pas les runners.
 - À la demande via **`workflow_dispatch`** — le balayage complet.
 
@@ -51,8 +56,9 @@ toute façon besoin.
 mécanisme en entier : `changed` mute le diff depuis le point de fourche, `gate`
 regroupe la matrice sous un nom de check stable, `full` balaie tout avec le seuil
 désactivé. Les configurations Stryker sont
-[`build/stryker/justdummies.json`](../../../../build/stryker/justdummies.json) et
-[`build/stryker/justdummies-xunit.json`](../../../../build/stryker/justdummies-xunit.json).
+[`build/stryker/justdummies.json`](../../../../build/stryker/justdummies.json),
+[`build/stryker/justdummies-xunit.json`](../../../../build/stryker/justdummies-xunit.json)
+et [`build/stryker/justdummies-analyzers.json`](../../../../build/stryker/justdummies-analyzers.json).
 
 Deux points de cette page comptent ici plus qu'ailleurs :
 
@@ -89,6 +95,12 @@ bibliothèques l'ont été.
 `JustDummies.Xunit` n'appelle pas cette réserve : elle est assez petite pour que
 sa barre vienne d'un balayage complet comme les autres, et elle barre normalement.
 
+La branche des analyseurs part elle aussi avec `break` à **0**, pour une autre
+raison : ses survivants résiduels sont les mutants d'infrastructure d'analyseur et
+de chaînes de descripteurs que portent aussi les analyseurs FirstClassErrors —
+elle rapporte donc au lieu de bloquer
+([ADR-0044](../adr/0044-ship-justdummies-analyzers.fr.md)).
+
 ## Permissions & sécurité
 
 `contents: read` seulement. Le workflow fait un checkout, un build et lance des
@@ -99,14 +111,15 @@ tests ; il ne stocke aucun secret et n'a besoin d'aucun périmètre en écriture
 À emporter tel quel :
 
 - ce fichier de workflow, renommé `mutation.yml` là-bas (et son `name:` avec) ;
-- [`build/stryker/justdummies.json`](../../../../build/stryker/justdummies.json)
-  et [`build/stryker/justdummies-xunit.json`](../../../../build/stryker/justdummies-xunit.json) ;
+- [`build/stryker/justdummies.json`](../../../../build/stryker/justdummies.json),
+  [`build/stryker/justdummies-xunit.json`](../../../../build/stryker/justdummies-xunit.json)
+  et [`build/stryker/justdummies-analyzers.json`](../../../../build/stryker/justdummies-analyzers.json) ;
 - [`.config/dotnet-tools.json`](../../../../.config/dotnet-tools.json) —
   l'épinglage de Stryker ;
 - cette page, augmentée des sections partagées de [`mutation`](mutation.fr.md)
   repliées dedans, puisque la page à laquelle elle renvoie n'existera pas là-bas.
 
-Puis changer exactement une chose : le champ **`solution`** des deux
+Puis changer exactement une chose : le champ **`solution`** des trois
 configurations, qui nomme encore `FirstClassErrors.sln`. Les chemins `project` et
 `test-projects` sont déjà relatifs au dépôt et inchangés par la migration.
 
