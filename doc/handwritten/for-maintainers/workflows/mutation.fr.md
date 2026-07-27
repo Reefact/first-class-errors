@@ -176,14 +176,15 @@ niveau que tel projet devrait atteindre : chacune a été fixée à partir du sc
 balayage complet mesuré sur ce projet au moment de l'introduction du barrage,
 arrondi vers le bas, avec un peu de marge pour l'éventuel mutant équivalent.
 
-**Quatre projets n'ont pas encore de barre** : les analyseurs, le générateur de
-documentation, la ligne de commande et `JustDummies`. Leurs balayages sont trop
-longs pour avoir été exécutés interactivement : aucun score n'a donc été mesuré
-pour eux, et une barre n'a **pas** été devinée — leur `break` vaut `0`. Leurs
-branches tournent quand même, échouent toujours sur un build cassé ou une suite en
-échec, et listent toujours leurs survivants ; elles ne refusent simplement pas
-encore une pull request sur un score. C'est le premier balayage hebdomadaire qui
-fournira ces quatre chiffres.
+**Cinq projets n'ont pas encore de barre** : les analyseurs, le générateur de
+documentation, la ligne de commande, `JustDummies`, et les analyseurs JustDummies
+arrivés avec l'[ADR-0044](../adr/0044-ship-justdummies-analyzers.fr.md). Aucun
+score de balayage complet n'a été mesuré pour eux — pour la plupart, parce que le
+balayage est trop long pour avoir été exécuté interactivement — et une barre n'a
+**pas** été devinée : leur `break` vaut `0`. Leurs branches tournent quand même,
+échouent toujours sur un build cassé ou une suite en échec, et listent toujours
+leurs survivants ; elles ne refusent simplement pas encore une pull request sur un
+score. C'est le premier balayage hebdomadaire qui fournira ces cinq chiffres.
 
 Cela fait du barrage un **cliquet**, pas une aspiration. Il dit *ne descendez pas
 sous le niveau où cette bibliothèque est déjà* — une barre que toutes franchissent

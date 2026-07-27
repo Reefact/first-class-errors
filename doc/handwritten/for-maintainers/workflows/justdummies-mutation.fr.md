@@ -9,9 +9,11 @@
 
 ## À quoi il sert
 
-Les tests de mutation des **deux packages JustDummies** : `JustDummies` et son
+Les tests de mutation des **trois composants JustDummies** : `JustDummies`, son
 adaptateur xUnit v3 `JustDummies.Xunit`
-([ADR-0039](../adr/0039-adapt-dummies-to-xunit-v3-through-a-companion-package.fr.md)).
+([ADR-0039](../adr/0039-adapt-dummies-to-xunit-v3-through-a-companion-package.fr.md)),
+et les analyseurs livrés dans le package
+([ADR-0044](../adr/0044-ship-justdummies-analyzers.fr.md)).
 Sur une pull request, il ne mute que les fichiers modifiés par celle-ci et échoue
 si le score passe sous le seuil de la bibliothèque ; un balayage hebdomadaire
 mesure tout le reste. Ce que *sont* les tests de mutation, et pourquoi ce dépôt
@@ -51,8 +53,9 @@ toute façon besoin.
 mécanisme en entier : `changed` mute le diff depuis le point de fourche, `gate`
 regroupe la matrice sous un nom de check stable, `full` balaie tout avec le seuil
 désactivé. Les configurations Stryker sont
-[`build/stryker/justdummies.json`](../../../../build/stryker/justdummies.json) et
-[`build/stryker/justdummies-xunit.json`](../../../../build/stryker/justdummies-xunit.json).
+[`build/stryker/justdummies.json`](../../../../build/stryker/justdummies.json),
+[`build/stryker/justdummies-xunit.json`](../../../../build/stryker/justdummies-xunit.json)
+et [`build/stryker/justdummies-analyzers.json`](../../../../build/stryker/justdummies-analyzers.json).
 
 Deux points de cette page comptent ici plus qu'ailleurs :
 
@@ -89,6 +92,12 @@ bibliothèques l'ont été.
 `JustDummies.Xunit` n'appelle pas cette réserve : elle est assez petite pour que
 sa barre vienne d'un balayage complet comme les autres, et elle barre normalement.
 
+La branche des analyseurs part elle aussi avec `break` à **0**, pour une autre
+raison : ses survivants résiduels sont les mutants d'infrastructure d'analyseur et
+de chaînes de descripteurs que portent aussi les analyseurs FirstClassErrors —
+elle rapporte donc au lieu de bloquer
+([ADR-0044](../adr/0044-ship-justdummies-analyzers.fr.md)).
+
 ## Permissions & sécurité
 
 `contents: read` seulement. Le workflow fait un checkout, un build et lance des
@@ -99,14 +108,15 @@ tests ; il ne stocke aucun secret et n'a besoin d'aucun périmètre en écriture
 À emporter tel quel :
 
 - ce fichier de workflow, renommé `mutation.yml` là-bas (et son `name:` avec) ;
-- [`build/stryker/justdummies.json`](../../../../build/stryker/justdummies.json)
-  et [`build/stryker/justdummies-xunit.json`](../../../../build/stryker/justdummies-xunit.json) ;
+- [`build/stryker/justdummies.json`](../../../../build/stryker/justdummies.json),
+  [`build/stryker/justdummies-xunit.json`](../../../../build/stryker/justdummies-xunit.json)
+  et [`build/stryker/justdummies-analyzers.json`](../../../../build/stryker/justdummies-analyzers.json) ;
 - [`.config/dotnet-tools.json`](../../../../.config/dotnet-tools.json) —
   l'épinglage de Stryker ;
 - cette page, augmentée des sections partagées de [`mutation`](mutation.fr.md)
   repliées dedans, puisque la page à laquelle elle renvoie n'existera pas là-bas.
 
-Puis changer exactement une chose : le champ **`solution`** des deux
+Puis changer exactement une chose : le champ **`solution`** des trois
 configurations, qui nomme encore `FirstClassErrors.sln`. Les chemins `project` et
 `test-projects` sont déjà relatifs au dépôt et inchangés par la migration.
 
