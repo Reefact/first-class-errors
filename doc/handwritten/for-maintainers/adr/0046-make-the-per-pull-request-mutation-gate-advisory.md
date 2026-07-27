@@ -113,9 +113,14 @@ being self-contained in the workflow. Changing the job fixes both the block and 
   hundred-cases-per-property dominates per-mutant time, and its non-determinism is the very reason
   `coverage-analysis` is off), and/or splitting `JustDummies/Any.cs` so per-file `--since` selection
   stays small — are separate decisions, recorded here so they are not lost.
-* **Branch protection.** The gate check may stay listed as required (it now always passes) or be
-  removed; either is consistent with this decision. No change is required for the workflow to behave as
-  described.
+* **Branch protection — the gate must be *removed* from the required checks to actually stop the wait.**
+  Advisory removes the *false red*, not the *wait*: the `gate` job runs `needs: changed`, so it does not
+  report until the diff legs finish, and a **required check that is still pending blocks the merge** even
+  though it can no longer fail. So a required-and-always-green gate still holds a pull request for the
+  whole ~40-minute leg. Removing `JustDummies mutation gate` and `Mutation gate` from the required status
+  checks is what returns merge feedback to the other checks' few minutes; the legs keep running (advisory)
+  for the report. (An earlier draft of this ADR wrongly said keeping it required was equivalent — it is
+  not: pending blocks.)
 * Revisit re-enabling per-test coverage selection if stryker-net#3629 is fixed upstream — it would make
   a blocking, accurate, fast gate possible again and could supersede this decision.
 
