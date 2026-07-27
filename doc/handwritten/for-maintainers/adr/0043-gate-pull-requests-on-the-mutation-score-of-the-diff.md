@@ -72,9 +72,9 @@ checks individually — a matrix contributes one check name per leg.
 ## Decision
 
 Every pull request targeting `main` must clear a mutation-score threshold,
-measured by Stryker.NET over the mutants of the files it changed, for each of the
-five libraries the repository ships — enforced by two independent gates, split
-along the prospective repository boundary.
+measured by Stryker.NET over the mutants of the files it changed, for every
+project in the repository whose code is shipped or executed — enforced by two
+independent gates, split along the prospective repository boundary.
 
 ## Rationale
 
@@ -103,13 +103,17 @@ it merely touched. That is a real cost, and it is the acceptable direction of
 error: it pushes coverage of the weakest files up on contact, and the maintainer
 can always waive a leg.
 
-Restricting the scope to the **five shipped libraries** follows the same cost
-argument in the other direction. The `fce` tooling and the Roslyn analyzers are
-not linked into anyone's application; their tests drive Roslyn compilations and
-spawn processes, so their per-mutant cost is an order of magnitude higher, and
-their behaviour is already pinned end to end by dedicated workflows. Including
-them would multiply the gate's cost for the part of the codebase where a defect
-is cheapest to notice.
+The scope covers the **tooling and the analyzers as well as the libraries**. Their
+suites are the slow ones — they drive Roslyn compilations and snapshot
+comparisons, so their mutants are the expensive ones — but expense is a reason to
+put them in the weekly sweep, not a reason to leave them unmeasured: the sweep is
+precisely the run allowed to take as long as it takes. On the gate, the diff scope
+already bounds what they cost, since a pull request that does not touch the
+generator pays nothing for it. What is excluded is excluded for a reason other
+than cost: the `Usage` samples and the binder benchmarks are not shipped
+behaviour, and the documentation worker is a process entry point that no test
+exercises in process — mutating it would only manufacture survivors no test could
+ever kill.
 
 Enforcing it through **two gates rather than one** costs nothing today and buys
 the move. The JustDummies packages are already isolated from the rest by design,
@@ -168,12 +172,12 @@ Considered because it is the honest measurement: a score over the whole library
 is comparable between runs, and it cannot be gamed by touching a file's edges.
 
 Rejected on two counts. The first is cost: the per-mutant cost is a full run of
-the library's suite, so a complete sweep of the five libraries is a matter of
-tens of minutes at best — paid on every push, mostly to re-measure code nobody
-changed. The second is decisive on its own: **a whole-library score is far too
-insensitive to gate on**. The largest library carries several hundred mutants, so
-one newly added, unasserted behaviour moves its score by a fraction of a
-percent — well below any threshold that is not itself noise. The diff-scoped
+the project's suite, so a complete sweep of everything in scope runs into hours —
+paid on every push, mostly to re-measure code nobody changed. The second is
+decisive on its own: **a whole-project score is far too insensitive to gate on**.
+The largest library carries a few thousand mutants, so one newly added,
+unasserted behaviour moves its score by a fraction of a percent — well below any
+threshold that is not itself noise. The diff-scoped
 score is sensitive precisely because its denominator is small: a handful of new
 mutants, one of which survives, is a visible drop. The weekly sweep recovers the
 whole-library number where it belongs — as a trend, not as a gate.
@@ -198,17 +202,19 @@ measurement: it reports every mutant as survived, including mutants that
 demonstrably break the suite when applied by hand. Choosing it would mean either
 a permanently red gate or a threshold low enough to be meaningless.
 
-### Extend the gate to the tooling and the analyzers
+### Restrict the scope to the shipped libraries, leaving the tooling out
 
-Considered for uniformity — a single rule covering the whole repository is easier
-to defend than a list of five projects.
+Considered, and initially chosen, on cost: analyzer and generator tests compile
+code and spawn processes, so their mutants are an order of magnitude more
+expensive than a library's, and their externally visible behaviour is already
+pinned by the `analyzers`, `gendoc-docs` and `ci` floor jobs.
 
-Rejected because the cost is concentrated exactly where the value is lowest.
-Analyzer and generator tests compile code and spawn processes; their suites are
-the slow ones, so their mutants are the expensive ones. Their externally visible
-behaviour is already pinned by the `analyzers`, `gendoc-docs` and `ci` floor
-jobs, and a defect there surfaces as a broken build or a wrong document, not as a
-silently wrong answer inside a consumer's application.
+Rejected because the cost it avoids is cost the weekly sweep exists to absorb,
+and because the exclusion left a hole rather than a boundary: a pull request
+touching only the analyzers would have crossed no mutation gate at all. Measured
+before reversing the decision, the excluded projects carry about as many mutants
+again as the FirstClassErrors libraries already in scope, and Stryker runs on all
+of them — snapshot suites and process-spawning tests included.
 
 ## Consequences
 
@@ -235,6 +241,9 @@ silently wrong answer inside a consumer's application.
   one is a fix to both, and nothing enforces that.
 * Equivalent mutants make part of the remaining distance to 100 % unreachable, so
   the threshold is a judgement call rather than a derived value.
+* The weekly sweep is long — hours, dominated by the largest library and by the
+  tooling's slow suites. That is accepted deliberately; it is the reason the sweep
+  is weekly and advisory rather than a gate.
 
 ### Risks
 
@@ -268,9 +277,10 @@ silently wrong answer inside a consumer's application.
   covered mutants correctly.
 * Re-read the thresholds after each engine upgrade, and after any library is
   added to the scope.
-* Set the `JustDummies` threshold from the first weekly sweep. Its full sweep is
-  too long to run interactively, so no score was measured for it and its bar is
-  currently disabled — the one library the gate does not yet hold to a score.
+* Set a threshold for the projects that have none yet — `JustDummies`, the
+  analyzers, the documentation generator and the command line — from the first
+  weekly sweep. Their sweeps are too long to run interactively, so no score was
+  measured for them and their score gates ship disabled rather than guessed.
 
 ## References
 

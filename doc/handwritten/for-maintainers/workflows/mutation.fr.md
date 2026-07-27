@@ -25,10 +25,12 @@ les fichiers modifiés par la pull request** — c'est ce qui le rend assez peu
 coûteux pour être un check obligatoire ; un balayage hebdomadaire mesure tout le
 reste.
 
-Son périmètre, ce sont les **trois bibliothèques FirstClassErrors que le dépôt
-livre** : `FirstClassErrors`, `FirstClassErrors.Testing` et
-`FirstClassErrors.RequestBinder`. L'outillage `fce` et les analyseurs Roslyn en
-sont volontairement exclus ; voir *À manipuler avec précaution* plus bas.
+Son périmètre, c'est **tout projet FirstClassErrors dont le code est livré ou
+exécuté** : les trois bibliothèques (`FirstClassErrors`,
+`FirstClassErrors.Testing`, `FirstClassErrors.RequestBinder`) *et* l'outillage —
+la ligne de commande `fce`, le générateur de documentation, les analyseurs
+Roslyn. Ce qui en reste dehors, et pourquoi, est sous *À manipuler avec
+précaution* plus bas.
 
 **JustDummies n'est pas mesuré ici.** Il a son propre workflow et son propre
 barrage, [`justdummies-mutation`](justdummies-mutation.fr.md), parce qu'il est
@@ -62,7 +64,7 @@ invente de nouveaux mutants, ce qui déplace tous les scores à lui seul.
 
 ### `changed` — le diff, sur chaque pull request
 
-Une branche de matrice par bibliothèque livrée. Chaque branche :
+Une branche de matrice par projet du périmètre. Chaque branche :
 
 1. Fait un checkout avec **`fetch-depth: 0`** — le `--since` de Stryker compare à
    un commit, l'historique doit donc être présent.
@@ -79,9 +81,10 @@ Une branche de matrice par bibliothèque livrée. Chaque branche :
    montre chaque survivant *dans sa source*, ce que le tableau du résumé ne peut
    pas faire.
 
-Une branche dont la bibliothèque n'a pas été touchée par la pull request ne
-sélectionne aucun mutant, signale *« unable to calculate a mutation score »*, et
-sort en 0. C'est un succès.
+Une branche dont le projet n'a pas été touché par la pull request ne sélectionne
+aucun mutant, signale *« unable to calculate a mutation score »*, et sort en 0.
+C'est un succès — et c'est le cas courant, la plupart des pull requests ne
+touchant qu'un projet.
 
 ### `gate` — l'unique check obligatoire
 
@@ -96,8 +99,8 @@ comme un succès.
 
 ### `full` — le balayage hebdomadaire
 
-Les mêmes trois branches, filtre `--since` retiré : tous les mutants de toutes les
-bibliothèques du périmètre. Il est **consultatif par construction** — `--break-at 0`
+Les mêmes six branches, filtre `--since` retiré : tous les mutants de tous les
+projets du périmètre. Il est **consultatif par construction** — `--break-at 0`
 désactive le seuil — car son rôle est de publier une tendance, pas de faire virer
 `main` au rouge un lundi matin pour du code que personne n'a touché. Il se lit
 dans le rapport HTML uploadé.
@@ -139,9 +142,11 @@ comptés contre le score. Mesuré sur `Error.cs`, la même population score 75 %
 sélection activée et 100 % sélection coupée — et c'est le 100 % qui est le vrai
 chiffre.
 
-La couper ne coûte presque rien parce que ces suites sont rapides : chaque mutant
-rejoue toute la suite de la bibliothèque, et cela reste de l'ordre de la fraction
-de seconde à quelques secondes par mutant.
+La couper coûte peu sur les bibliothèques, dont les suites sont rapides — de la
+fraction de seconde à quelques secondes par mutant. Cela coûte davantage sur
+l'outillage, dont les suites compilent du Roslyn et comparent des snapshots. C'est
+une raison de garder ces branches hors du chemin critique, pas une raison de
+réactiver une sélection qui rapporte le mauvais chiffre.
 
 ## Le modèle de coût, et pourquoi le barrage est cantonné au diff
 
@@ -165,12 +170,20 @@ Cela explique aussi deux choses qui surprennent :
 
 ## D'où viennent les seuils
 
-Chaque bibliothèque porte son propre `break` dans `build/stryker/*.json`, et les
-valeurs diffèrent de l'une à l'autre à dessein. Elles ne traduisent **pas** un avis sur le
-niveau que telle bibliothèque devrait atteindre : chacune a été fixée à partir
-du score de balayage complet mesuré sur cette bibliothèque au moment de
-l'introduction du barrage, arrondi vers le bas, avec un peu de marge pour
-l'éventuel mutant équivalent.
+Chaque projet porte son propre `break` dans `build/stryker/*.json`, et les valeurs
+diffèrent de l'une à l'autre à dessein. Elles ne traduisent **pas** un avis sur le
+niveau que tel projet devrait atteindre : chacune a été fixée à partir du score de
+balayage complet mesuré sur ce projet au moment de l'introduction du barrage,
+arrondi vers le bas, avec un peu de marge pour l'éventuel mutant équivalent.
+
+**Quatre projets n'ont pas encore de barre** : les analyseurs, le générateur de
+documentation, la ligne de commande et `JustDummies`. Leurs balayages sont trop
+longs pour avoir été exécutés interactivement : aucun score n'a donc été mesuré
+pour eux, et une barre n'a **pas** été devinée — leur `break` vaut `0`. Leurs
+branches tournent quand même, échouent toujours sur un build cassé ou une suite en
+échec, et listent toujours leurs survivants ; elles ne refusent simplement pas
+encore une pull request sur un score. C'est le premier balayage hebdomadaire qui
+fournira ces quatre chiffres.
 
 Cela fait du barrage un **cliquet**, pas une aspiration. Il dit *ne descendez pas
 sous le niveau où cette bibliothèque est déjà* — une barre que toutes franchissent
@@ -241,12 +254,20 @@ tests ; il ne stocke aucun secret et n'a besoin d'aucun périmètre en écriture
 - **Les seuils vivent dans `build/stryker/*.json`, pas dans le YAML.** C'est ce
   qui garde un run local et la CI d'accord. `break` est la valeur qui fait échouer
   le build ; `high`/`low` ne colorent que le rapport.
-- **L'outillage et les analyseurs sont hors périmètre à dessein.** Leurs tests
-  pilotent des compilations Roslyn et lancent des processus : le coût par mutant y
-  est d'un ordre de grandeur au-dessus de celui des bibliothèques, et leur
-  comportement est déjà tenu de bout en bout par [`analyzers`](analyzers.fr.md),
-  `gendoc-docs` et le job `floor` de [`ci`](ci.fr.md). Les ajouter est une décision
-  de coût, pas un oubli.
+- **Trois choses restent hors périmètre, et aucune pour une raison de coût.** Les
+  échantillons `Usage` et les benchmarks du binder ne sont pas du comportement
+  livré — un échantillon et un harnais de mesure. `FirstClassErrors.GenDoc.Worker`
+  est un point d'entrée de processus qu'aucun test n'exerce *en processus* : il est
+  prouvé de bout en bout par le job `floor` de [`ci`](ci.fr.md), et le muter ne
+  fabriquerait que des survivants qu'aucun test ne pourrait tuer. Tout le reste de
+  ce qui se compile dans un artefact livré est mesuré.
+- **Les branches d'outillage sont les lentes.** Les suites d'analyseurs et de
+  générateur pilotent des compilations Roslyn et des comparaisons de snapshots :
+  chacun de leurs mutants coûte plus cher que celui d'une bibliothèque. C'est
+  pourquoi elles relèvent du balayage hebdomadaire — le run autorisé à durer le
+  temps qu'il faut — et pourquoi le cantonnement au diff compte plus pour elles
+  que partout ailleurs : une pull request qui ne touche pas le générateur ne paie
+  rien pour lui.
 - **Un survivant n'est pas automatiquement un bug**, et la réponse à un mutant
   équivalent est un commentaire `// Stryker disable once` avec sa raison, jamais un
   seuil abaissé — voir *Quand le survivant est un mutant équivalent* plus haut.

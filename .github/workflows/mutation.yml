@@ -47,10 +47,12 @@ jobs:
       # Run every leg to completion: a survivor in the binder is worth seeing even when core is red.
       fail-fast: false
       matrix:
-        # The three FirstClassErrors libraries this repository SHIPS. The `fce` tooling and the Roslyn
-        # analyzers are deliberately out of scope: their tests drive Roslyn compilations and spawn
-        # processes, so the per-mutant cost is an order of magnitude higher, and their behaviour is
-        # already pinned end to end by the `analyzers`, `gendoc-docs` and `ci` (floor) workflows.
+        # Every FirstClassErrors project whose code is compiled and shipped — the three libraries AND
+        # the tooling: the `fce` command line, the documentation generator, the Roslyn analyzers. The
+        # `Usage` samples and the binder benchmarks stay out (samples and a measurement harness, not
+        # shipped behaviour), and so does `GenDoc.Worker`: nothing unit-tests it in process — it is a
+        # process entry point, exercised end to end by the `floor` job of `ci` — so mutating it would
+        # report survivors that no test could ever kill.
         # JustDummies and JustDummies.Xunit live in `justdummies-mutation.yml`. See ADR-0043.
         include:
           - name: core
@@ -59,6 +61,12 @@ jobs:
             config: build/stryker/testing.json
           - name: binder
             config: build/stryker/binder.json
+          - name: analyzers
+            config: build/stryker/analyzers.json
+          - name: gendoc
+            config: build/stryker/gendoc.json
+          - name: cli
+            config: build/stryker/cli.json
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -182,9 +190,12 @@ jobs:
     name: Full sweep (${{ matrix.name }})
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    # The sweep runs the library's whole test suite once per mutant. `core` carries a few hundred of
-    # them, which is the reason the sweep is weekly and the gate is diff-scoped.
-    timeout-minutes: 180
+    # The sweep runs the project's whole test suite once per mutant, and the six projects together
+    # carry several thousand — the tooling's suites being the slow ones, since they drive Roslyn
+    # compilations and snapshot comparisons. That is the reason the sweep is weekly and the gate is
+    # diff-scoped. The cap sits just under the six-hour ceiling GitHub imposes on a job: this run is
+    # meant to take as long as it takes.
+    timeout-minutes: 350
     strategy:
       fail-fast: false
       matrix:
@@ -195,6 +206,12 @@ jobs:
             config: build/stryker/testing.json
           - name: binder
             config: build/stryker/binder.json
+          - name: analyzers
+            config: build/stryker/analyzers.json
+          - name: gendoc
+            config: build/stryker/gendoc.json
+          - name: cli
+            config: build/stryker/cli.json
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
