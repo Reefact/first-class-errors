@@ -16,6 +16,8 @@ public sealed class AnyWebUri : IAny<Uri>, IHasRandomSource {
     #endregion
 
     internal AnyWebUri(RandomSource source, UriSpec spec) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+        if (spec is null) { throw new ArgumentNullException(nameof(spec)); }
         _source = source;
         _spec   = spec;
     }

@@ -29,10 +29,14 @@ public sealed class AnyArray<T> : AnyCollection<T, T[], AnyArray<T>> {
     }
 
     private protected override AnyArray<T> With(CollectionState<T> state) {
+        if (state is null) { throw new ArgumentNullException(nameof(state)); }
+
         return new AnyArray<T>(SourceOrNull, state);
     }
 
     private protected override T[] Build(List<T> items) {
+        if (items is null) { throw new ArgumentNullException(nameof(items)); }
+
         return items.ToArray();
     }
 

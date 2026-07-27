@@ -33,6 +33,8 @@ public sealed class AnyStringOneOf : IAny<string>, IHasRandomSource, ICardinalit
     #endregion
 
     internal AnyStringOneOf(RandomSource source, IReadOnlyList<string> values) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+        if (values is null) { throw new ArgumentNullException(nameof(values)); }
         _source = source;
         _values = values;
     }

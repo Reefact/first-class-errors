@@ -34,9 +34,12 @@ public sealed class AnyOneOf<T> : IAny<T>, IHasRandomSource, ICardinalityHint<T>
 
     #region Statics members declarations
 
-    // Validates and deduplicates the caller's pool, then builds the generator. The array-null check belongs to the
-    // public factories (they own the parameter name); by the time we get here the pool is non-null and materialized.
+    // Validates and deduplicates the caller's pool, then builds the generator. As an internal boundary it guards its
+    // own arguments per the null-argument convention (ADR-0045); the public factories additionally reject a null
+    // array first, under the caller-facing parameter name, before delegating here.
     internal static AnyOneOf<T> FromPool(RandomSource source, IReadOnlyList<T> values) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+        if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Count == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
         if (values.Any(value => value is null)) { throw new ArgumentException("The values must not contain a null element; use OrNull() to make the whole generator nullable.", nameof(values)); }
 

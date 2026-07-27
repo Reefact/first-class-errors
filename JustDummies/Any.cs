@@ -550,6 +550,8 @@ public static class Any {
     /// <returns>A task that completes when <paramref name="body" /> completes, and faults with the body's exception.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="body" /> is <c>null</c>.</exception>
     public static Task ReproduciblyAsync(Func<Task> body, Action<string>? report = null) {
+        if (body is null) { throw new ArgumentNullException(nameof(body)); }
+
         return ReproduciblyAsync(AmbientRandomSource.NewSeed(), body, report);
     }
 
@@ -562,9 +564,15 @@ public static class Any {
     /// <param name="report">The sink the seed is written to on failure. Defaults to <see cref="Console.Error" /> when <c>null</c>.</param>
     /// <returns>A task that completes when <paramref name="body" /> completes.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="body" /> is <c>null</c>.</exception>
-    public static async Task ReproduciblyAsync(int seed, Func<Task> body, Action<string>? report = null) {
+    public static Task ReproduciblyAsync(int seed, Func<Task> body, Action<string>? report = null) {
         if (body is null) { throw new ArgumentNullException(nameof(body)); }
 
+        return RunReproduciblyAsync(seed, body, report);
+    }
+
+    // Kept separate from the public entry so the null-argument guard above throws synchronously at the call site,
+    // rather than being deferred into the returned task's fault — which a caller who forgets to await would miss.
+    private static async Task RunReproduciblyAsync(int seed, Func<Task> body, Action<string>? report) {
         using (AmbientRandomSource.UseSeed(seed)) {
             try {
                 await body().ConfigureAwait(false);

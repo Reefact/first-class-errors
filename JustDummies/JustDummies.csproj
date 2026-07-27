@@ -57,6 +57,14 @@
     <None Include="README.nuget.md" Pack="true" PackagePath="readme.md" />
   </ItemGroup>
 
+  <!-- Opens the internals to the contract suite so the null-argument guard convention (every public/internal member
+       validates its non-nullable reference arguments) can be enforced by reflection over the whole surface, including
+       the internal boundary (Create factories, internal constructors) the public API can never reach a null through.
+       This deliberately relaxes the previously black-box test posture; see ADR-0045. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="JustDummies.UnitTests" />
+  </ItemGroup>
+
   <!-- No runtime ProjectReference: JustDummies is a standalone, error-agnostic library. It must never depend on
        FirstClassErrors (or any other project in this repository) at runtime; the boundary is guarded by an
        architecture test in JustDummies.UnitTests. The build-only reference below (ReferenceOutputAssembly=false) is

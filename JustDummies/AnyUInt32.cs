@@ -17,6 +17,8 @@ public sealed class AnyUInt32 : IAny<uint>, IHasRandomSource, ICardinalityHint<u
     #region Statics members declarations
 
     internal static AnyUInt32 Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         return new AnyUInt32(source, OrdinalIntervalSpec.Unconstrained("UInt32", ordinal => V(Val(ordinal)), Ord(uint.MinValue), Ord(uint.MaxValue)));
     }
 

@@ -17,6 +17,8 @@ public sealed class AnySingle : IAny<float>, IHasRandomSource, ICardinalityHint<
     #region Statics members declarations
 
     internal static AnySingle Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         return new AnySingle(source, ContinuousIntervalSpec.Unconstrained("Single", value => V((float)value), value => (float)value, value => NextUp((float)value), -float.MaxValue, float.MaxValue));
     }
 

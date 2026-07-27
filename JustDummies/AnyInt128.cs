@@ -19,6 +19,8 @@ public sealed class AnyInt128 : IAny<Int128>, IHasRandomSource, ICardinalityHint
     #region Statics members declarations
 
     internal static AnyInt128 Create(RandomSource source) {
+        if (source is null) { throw new ArgumentNullException(nameof(source)); }
+
         return new AnyInt128(source, WideIntervalSpec.Unconstrained("Int128", ordinal => V(Val(ordinal)), Ord(Int128.MinValue), Ord(Int128.MaxValue)));
     }
 

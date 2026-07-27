@@ -25,6 +25,8 @@ internal sealed class DerivedAny<T> : IAny<T>, IHasRandomSource, IReproducibilit
     #endregion
 
     internal DerivedAny(RandomSource? source, bool drawsOnlyFromSource, Func<T> generate) {
+        if (generate is null) { throw new ArgumentNullException(nameof(generate)); }
+
         _source              = source;
         _drawsOnlyFromSource = drawsOnlyFromSource;
         _generate            = generate;
@@ -46,6 +48,8 @@ internal static class AnyDerivation {
 
     /// <summary>The random context of <paramref name="generator" />, when it is one of the library's own.</summary>
     internal static RandomSource? SourceOf<T>(IAny<T> generator) {
+        if (generator is null) { throw new ArgumentNullException(nameof(generator)); }
+
         return (generator as IHasRandomSource)?.Source;
     }
 
@@ -58,6 +62,8 @@ internal static class AnyDerivation {
     ///     replayed from that seed.
     /// </summary>
     internal static bool IsReproducible<T>(IAny<T> generator) {
+        if (generator is null) { throw new ArgumentNullException(nameof(generator)); }
+
         if (generator is IReproducibilityHint hint) { return hint.DrawsOnlyFromSource; }
 
         return SourceOf(generator) is not null;
@@ -80,6 +86,8 @@ internal static class AnyDerivation {
     ///     advertises one through <see cref="ICardinalityHint{T}" />; <c>null</c> when the domain is unbounded or unknown.
     /// </summary>
     internal static long? CardinalityOf<T>(IAny<T> generator) {
+        if (generator is null) { throw new ArgumentNullException(nameof(generator)); }
+
         return (generator as ICardinalityHint<T>)?.DistinctCardinality;
     }
 
@@ -91,6 +99,9 @@ internal static class AnyDerivation {
     ///     promising a full replay the seed cannot deliver. The library's own exceptions pass through untouched.
     /// </summary>
     internal static T Invoke<T>(Func<T> invoke, RandomSource? source, bool reproducible, string failure) {
+        if (invoke is null) { throw new ArgumentNullException(nameof(invoke)); }
+        if (failure is null) { throw new ArgumentNullException(nameof(failure)); }
+
         try {
             return invoke();
         } catch (AnyException) {
