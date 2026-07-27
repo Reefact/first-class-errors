@@ -40,6 +40,7 @@ internal sealed class DecimalIntervalSpec {
     private readonly decimal                 _ceiledMin;
     private readonly List<decimal>?          _effectiveAllowed;
     private readonly IReadOnlyList<decimal>  _excluded;
+    private readonly IReadOnlyList<(string Constraint, decimal[] Ordinals)> _exclusions;
     private readonly int                     _excludedOnLattice;
     private readonly decimal                 _flooredMax;
     private readonly bool                    _latticeHasPoint;
@@ -59,7 +60,7 @@ internal sealed class DecimalIntervalSpec {
                                 decimal min,      string? minConstraint,
                                 decimal max,      string? maxConstraint,
                                 IReadOnlyList<decimal>? allowed, string? allowedConstraint,
-                                IReadOnlyList<decimal>  excluded,
+                                IReadOnlyList<(string Constraint, decimal[] Ordinals)> exclusions,
                                 int     scale,    string? scaleConstraint) {
         _typeName          = typeName;
         _render            = render;
@@ -69,16 +70,19 @@ internal sealed class DecimalIntervalSpec {
         _maxConstraint     = maxConstraint;
         _allowed           = allowed;
         _allowedConstraint = allowedConstraint;
-        _excluded          = excluded;
+        _exclusions        = exclusions;
         _scale             = scale;
         _scaleConstraint   = scaleConstraint;
+        // The flat value set drives every draw-time decision; the provenance in _exclusions is consulted only
+        // when a conflict message must name the excluding constraint. Materialized once — "constrain once, draw many".
+        _excluded = exclusions.SelectMany(pair => pair.Ordinals).ToList();
         // Lattice-derived state, materialized once — "constrain once, draw many".
         if (scale >= 0) {
             _step            = 1m / Pow10(scale);
             _ceiledMin       = CeilToGrid(min, scale, _step);
             _flooredMax      = FloorToGrid(max, scale, _step);
             _latticeHasPoint = _ceiledMin <= _flooredMax;
-            _excludedOnLattice = excluded.Count(value => value >= min && value <= max && IsOnGrid(value, scale));
+            _excludedOnLattice = _excluded.Count(value => value >= min && value <= max && IsOnGrid(value, scale));
         } else {
             _step              = 0m;
             _ceiledMin         = min;
@@ -100,7 +104,7 @@ internal sealed class DecimalIntervalSpec {
             throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_maxConstraint} already requires values less than or equal to {_render(_max)}.");
         }
 
-        return Validated(new DecimalIntervalSpec(_typeName, _render, minimum, applying, _max, _maxConstraint, _allowed, _allowedConstraint, _excluded, _scale, _scaleConstraint), applying);
+        return Validated(new DecimalIntervalSpec(_typeName, _render, minimum, applying, _max, _maxConstraint, _allowed, _allowedConstraint, _exclusions, _scale, _scaleConstraint), applying);
     }
 
     /// <summary>Tightens the upper bound; a looser bound than the current one is a no-op.</summary>
@@ -113,7 +117,7 @@ internal sealed class DecimalIntervalSpec {
             throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_minConstraint} already requires values greater than or equal to {_render(_min)}.");
         }
 
-        return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, maximum, applying, _allowed, _allowedConstraint, _excluded, _scale, _scaleConstraint), applying);
+        return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, maximum, applying, _allowed, _allowedConstraint, _exclusions, _scale, _scaleConstraint), applying);
     }
 
     /// <summary>Tightens the lower bound to strictly above <paramref name="bound" /> — the inclusive bound plus a point exclusion.</summary>
@@ -132,15 +136,16 @@ internal sealed class DecimalIntervalSpec {
 
         decimal[] distinct = values.Distinct().ToArray();
 
-        return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, _max, _maxConstraint, distinct, applying, _excluded, _scale, _scaleConstraint), applying);
+        return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, _max, _maxConstraint, distinct, applying, _exclusions, _scale, _scaleConstraint), applying);
     }
 
     /// <summary>Adds values the generator must never produce.</summary>
     internal DecimalIntervalSpec WithExcluded(decimal[] values, string applying) {
-        List<decimal> excluded = new(_excluded);
-        excluded.AddRange(values);
+        // The applied constraint tags its own values, so a later exhaustion message can name the exclusion
+        // that actually emptied the domain rather than a bound that merely happens to border it.
+        List<(string Constraint, decimal[] Ordinals)> exclusions = new(_exclusions) { (applying, values) };
 
-        return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, excluded, _scale, _scaleConstraint), applying);
+        return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, exclusions, _scale, _scaleConstraint), applying);
     }
 
     /// <summary>
@@ -155,7 +160,7 @@ internal sealed class DecimalIntervalSpec {
             throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_scaleConstraint} is already defined.");
         }
 
-        return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, _excluded, scale, applying), applying);
+        return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, _exclusions, scale, applying), applying);
     }
 
     /// <summary>
@@ -324,7 +329,7 @@ internal sealed class DecimalIntervalSpec {
     private DecimalIntervalSpec Validated(DecimalIntervalSpec candidate, string applying) {
         if (candidate.IsSatisfiable()) { return candidate; }
 
-        throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {candidate.DescribeExhaustion()}.");
+        throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {candidate.DescribeExhaustion(applying)}.");
     }
 
     private bool IsSatisfiable() {
@@ -341,22 +346,81 @@ internal sealed class DecimalIntervalSpec {
         return !IsExcluded(_min);
     }
 
-    private string DescribeExhaustion() {
-        if (_allowed is not null) {
-            if (_excluded.Count > 0) {
-                return $"no value {_allowedConstraint} allows remains available";
-            }
+    private string DescribeExhaustion(string applying) {
+        IReadOnlyList<string> culprits = ExcludingConstraintsInEffect();
 
-            return $"none of the values {_allowedConstraint} allows satisfies the constraints already defined";
+        if (_allowed is not null) {
+            if (culprits.Count == 0) { return $"none of the values {_allowedConstraint} allows satisfies the constraints already defined"; }
+
+            // Only the allow-list values the bounds and scale lattice still permit can be forbidden by an exclusion;
+            // if some allowed value was already dropped by a bound or the grid, the exclusions do not forbid "every"
+            // allowed value, so the claim is qualified rather than overstated.
+            string allowed = _allowed.All(WouldAllowIgnoringExclusions)
+                                 ? $"every value {_allowedConstraint} allows"
+                                 : $"every value {_allowedConstraint} allows that the other constraints leave";
+
+            return $"{Forbids(culprits, applying)} {allowed}";
         }
 
         if (_scale >= 0) {
-            return $"no {_typeName} value {_scaleConstraint} allows remains between {_render(_min)} and {_render(_max)}";
+            if (!_latticeHasPoint || culprits.Count == 0) { return $"no {_typeName} value {_scaleConstraint} allows remains between {_render(_min)} and {_render(_max)}"; }
+
+            return $"{Forbids(culprits, applying)} every {_scaleConstraint} value between {_render(_min)} and {_render(_max)}";
         }
 
-        string pinning = _minConstraint ?? _maxConstraint ?? "the declared bounds";
+        if (culprits.Count == 0) {
+            string pinning = _minConstraint ?? _maxConstraint ?? "the declared bounds";
 
-        return $"{pinning} already pins the value to {_render(_min)}, which the exclusions forbid";
+            return $"{pinning} already pins the value to {_render(_min)}, which the exclusions forbid";
+        }
+
+        return $"{Forbids(culprits, applying)} {_render(_min)}, {PinningClause()}";
+    }
+
+    /// <summary>
+    ///     The distinct exclusion constraints that actually caused the exhaustion — those forbidding at least one
+    ///     value the interval, scale lattice and allow-list would otherwise permit. An exclusion whose values fall
+    ///     outside the surviving domain never bit, so naming it would mislead; first-declared order is preserved.
+    /// </summary>
+    private IReadOnlyList<string> ExcludingConstraintsInEffect() {
+        List<string> names = new();
+        foreach ((string constraint, decimal[] values) in _exclusions) {
+            if (names.Contains(constraint)) { continue; }
+            if (values.Any(WouldAllowIgnoringExclusions)) { names.Add(constraint); }
+        }
+
+        return names;
+    }
+
+    /// <summary>Whether <paramref name="value" /> would be in the domain if no exclusion were applied.</summary>
+    private bool WouldAllowIgnoringExclusions(decimal value) {
+        if (_allowed is not null && !_allowed.Contains(value)) { return false; }
+        if (_scale >= 0 && !IsOnGrid(value, _scale)) { return false; }
+
+        return value >= _min && value <= _max;
+    }
+
+    /// <summary>
+    ///     The subject of the exhaustion clause. A single culprit that is the constraint being applied becomes "it",
+    ///     so the message reads "Cannot apply DifferentFrom(1) because it forbids …" rather than repeating the
+    ///     constraint on both sides of "because".
+    /// </summary>
+    private static string Forbids(IReadOnlyList<string> names, string applying) {
+        if (names.Count == 1) { return names[0] == applying ? "it forbids" : $"{names[0]} forbids"; }
+
+        return $"{string.Join(", ", names)} forbid";
+    }
+
+    /// <summary>Names the bounds that pinned the domain to its single value, for the "forbids X, the only value ... leaves" form.</summary>
+    private string PinningClause() {
+        List<string> bounds = new();
+        if (_minConstraint is not null) { bounds.Add(_minConstraint); }
+        if (_maxConstraint is not null && _maxConstraint != _minConstraint) { bounds.Add(_maxConstraint); }
+
+        if (bounds.Count == 0) { return "the only value the declared bounds leave"; }
+        if (bounds.Count == 1) { return $"the only value {bounds[0]} leaves"; }
+
+        return $"the only value {string.Join(" and ", bounds)} leave";
     }
 
 }
