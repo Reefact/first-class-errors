@@ -144,6 +144,26 @@ Les deux tirent de la même source ambiante que `JustDummies.Any` : les exécute
 
 `JustDummies.Any.Reproducibly`, `Clock.UseAny` et `InstanceIds.UseAny` ne prennent effet que pour l’exécution ou le bloc `using` qu’ils enveloppent, et la source arbitraire est restaurée à leur sortie. Cette source est stockée dans un `AsyncLocal` : elle suit le flux d’exécution du test lui-même et ne fuit jamais dans d’autres tests s’exécutant en même temps.
 
+### À l’intérieur d’un test qui parallélise
+
+Suivre le flux d’exécution du test signifie aussi que la source atteint les threads que le test démarre lui-même — un `Parallel.For`, un `Task.WhenAll`. Y puiser depuis plusieurs d’entre eux à la fois est sûr : les valeurs restent arbitraires et bien formées, quel que soit le nombre de threads qui les tirent.
+
+Ce que le parallélisme coûte, c’est le *rejeu*. Les tirages concurrents s’entrelacent : une graine ne fixe plus quelle valeur atterrit dans quel appel, et une exécution parallélisée ne se reproduit pas à partir de sa seule graine. Si vous n’avez besoin que de dummies, il n’y a rien à faire. Si vous avez besoin que l’exécution rejoue, donnez à chaque unité de travail sa propre portée et dérivez sa graine de celle de l’exécution :
+
+```csharp
+// runSeed est le nombre que vous consignez à la main : gardez-le pour rejouer, changez-le pour explorer.
+const int runSeed = 20240501;
+
+Parallel.For(0, 64, index => {
+    // Une sous-graine déterministe et distincte par unité de travail. Compatible plancher : System.HashCode n'existe pas sur netstandard2.0.
+    using (Any.UseSeed(unchecked(runSeed * 397 ^ index))) {
+        sut.Handle(Any.String().NonEmpty().Generate());
+    }
+});
+```
+
+Chaque itération possède sa propre séquence, indexée sur son rang, donc l’exécution entière rejoue pour un `runSeed` donné. Il n’y a pas de `Any.Reproducibly` englobant ici : chaque tirage se fait dans une portée par unité de travail, si bien qu’une graine rapportée par un runner englobant ne rejouerait rien — c’est le `runSeed` consigné que vous gardez.
+
 ## Checklist de revue
 
 Avant de recourir à une valeur arbitraire, vérifiez que :

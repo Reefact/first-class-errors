@@ -134,7 +134,7 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Gui
     public Guid Generate() {
         if (_pinned is Guid pinned) { return pinned; }
 
-        Random random = _source.Current.Random;
+        SeededRandom random = _source.Current;
         if (_effectiveAllowed is not null) {
             return _effectiveAllowed[random.Next(_effectiveAllowed.Count)];
         }

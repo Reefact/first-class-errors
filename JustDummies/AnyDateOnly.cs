@@ -145,7 +145,7 @@ public sealed class AnyDateOnly : IAny<DateOnly>, IHasRandomSource, ICardinality
 
     /// <inheritdoc />
     public DateOnly Generate() {
-        return Val(_spec.GenerateOrdinal(_source.Current.Random));
+        return Val(_spec.GenerateOrdinal(_source.Current));
     }
 
 }

@@ -184,7 +184,7 @@ public sealed class AnyInt64 : IAny<long>, IHasRandomSource, ICardinalityHint<lo
 
     /// <inheritdoc />
     public long Generate() {
-        return Val(_spec.GenerateOrdinal(_source.Current.Random));
+        return Val(_spec.GenerateOrdinal(_source.Current));
     }
 
 }

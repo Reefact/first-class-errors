@@ -184,7 +184,7 @@ public sealed class AnySByte : IAny<sbyte>, IHasRandomSource, ICardinalityHint<s
 
     /// <inheritdoc />
     public sbyte Generate() {
-        return Val(_spec.GenerateOrdinal(_source.Current.Random));
+        return Val(_spec.GenerateOrdinal(_source.Current));
     }
 
 }

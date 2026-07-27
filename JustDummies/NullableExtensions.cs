@@ -39,7 +39,7 @@ public static class NullableExtensions {
         return new DerivedAny<T?>(source, reproducible, () => {
             RandomSource working = source ?? AmbientRandomSource.Instance;
 
-            return working.Current.Random.Next(2) == 0 ? (T?)null : generator.Generate();
+            return working.Current.Next(2) == 0 ? (T?)null : generator.Generate();
         });
     }
 
@@ -75,7 +75,7 @@ public static class NullableReferenceExtensions {
         return new DerivedAny<T?>(source, reproducible, () => {
             RandomSource working = source ?? AmbientRandomSource.Instance;
 
-            return working.Current.Random.Next(2) == 0 ? (T?)null : generator.Generate();
+            return working.Current.Next(2) == 0 ? (T?)null : generator.Generate();
         });
     }
 

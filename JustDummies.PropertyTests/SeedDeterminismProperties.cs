@@ -357,4 +357,51 @@ public sealed class SeedDeterminismProperties {
             .QuickCheckThrowOnFailure();
     }
 
+    [Fact(DisplayName = "A source drawn from concurrently keeps generating, for every seed.")]
+    public void ConcurrentDrawsNeverCollapseTheSource() {
+        // Issue #310. The seed is the input space: nothing about the collapse depended on which seed was pinned, so
+        // pinning three by hand in the example suite could only ever prove it for those three. What is asserted is
+        // survival, not distribution — an unsynchronized Random whose indices converge under contention returns zero
+        // for ever, so every draw settles on the minimum of its range and the source never recovers.
+        //
+        // No claim is made here about WHICH values come out, or in what order: with a per-primitive lock two threads
+        // interleave inside a multi-draw Generate(), so neither the sequence nor the multiset of generated values is
+        // stable across threads. That is the documented contract, and asserting more would over-promise it.
+        Prop.ForAll(Generators.Seed().ToArbitrary(),
+                    seed => {
+                        int[] drawn = ConcurrentBurst(Any.WithSeed(seed));
+
+                        return MostFrequent(drawn) < drawn.Length / 10;
+                    })
+            .QuickCheckThrowOnFailure();
+    }
+
+    #region Concurrency helpers
+
+    private const int BurstThreads        = 4;
+    private const int BurstDrawsPerThread = 1_500;
+
+    /// <summary>
+    ///     Draws from one context on every thread at once. Each worker writes its own slice, so the collection itself
+    ///     adds no synchronization that could mask the source's.
+    /// </summary>
+    private static int[] ConcurrentBurst(AnyContext context) {
+        int[] drawn = new int[BurstThreads * BurstDrawsPerThread];
+        Parallel.For(0, BurstThreads, new ParallelOptions { MaxDegreeOfParallelism = BurstThreads },
+                     worker => {
+                         int offset = worker * BurstDrawsPerThread;
+                         for (int index = 0; index < BurstDrawsPerThread; index++) {
+                             drawn[offset + index] = context.Int32().Generate();
+                         }
+                     });
+
+        return drawn;
+    }
+
+    private static int MostFrequent(IEnumerable<int> values) {
+        return values.GroupBy(value => value).Max(group => group.Count());
+    }
+
+    #endregion
+
 }

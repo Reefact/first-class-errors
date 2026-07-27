@@ -145,7 +145,7 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint<cha
 
     /// <inheritdoc />
     public char Generate() {
-        return _pool[_source.Current.Random.Next(_pool.Count)];
+        return _pool[_source.Current.Next(_pool.Count)];
     }
 
     private AnyChar WithCharset(CharacterSet charset, string applying) {

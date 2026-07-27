@@ -170,7 +170,7 @@ public sealed class AnyByte : IAny<byte>, IHasRandomSource, ICardinalityHint<byt
 
     /// <inheritdoc />
     public byte Generate() {
-        return Val(_spec.GenerateOrdinal(_source.Current.Random));
+        return Val(_spec.GenerateOrdinal(_source.Current));
     }
 
 }

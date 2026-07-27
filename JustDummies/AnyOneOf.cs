@@ -69,7 +69,7 @@ public sealed class AnyOneOf<T> : IAny<T>, IHasRandomSource, ICardinalityHint<T>
 
     /// <inheritdoc />
     public T Generate() {
-        return _values[_source.Current.Random.Next(_values.Count)];
+        return _values[_source.Current.Next(_values.Count)];
     }
 
 }
