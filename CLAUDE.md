@@ -29,11 +29,14 @@ errors should stay structured, documented, and close to the code.
   to apply it are in
   [`doc/handwritten/for-maintainers/WritingJustDummiesTests.en.md`](doc/handwritten/for-maintainers/WritingJustDummiesTests.en.md)
   (decision: ADR-0040). Read it before adding a JustDummies test.
-* Mutation testing gates every pull request on the files it changed, for every
+* Mutation testing measures every pull request on the files it changed, for every
   project whose code ships or runs, through two independent checks — one for the
   FirstClassErrors libraries and tooling, one for the JustDummies packages
-  (decision: ADR-0043). A test that *executes* new code without *asserting* it
-  will pass `dotnet test` and still fail that gate. Reproduce it on a branch with
+  (decisions: ADR-0043, and ADR-0046 which made the per-PR check **advisory** — it
+  reports the diff's score but does not block the merge; the enforced bar is the
+  weekly full sweep). A test that *executes* new code without *asserting* it will
+  pass `dotnet test` and still be reported as a survivor. Reproduce it on a branch
+  with
   `dotnet tool restore && dotnet stryker --config-file build/stryker/<project>.json --since:$(git merge-base origin/main HEAD)`;
   the configurations and the reasons behind them are in
   [`mutation.en.md`](doc/handwritten/for-maintainers/workflows/mutation.en.md) and
