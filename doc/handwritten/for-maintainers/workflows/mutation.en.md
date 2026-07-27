@@ -160,13 +160,14 @@ a project ought to be: each one was set from that project's measured full-sweep
 score at the time the gate was introduced, rounded down, with a little room left
 for the odd equivalent mutant.
 
-**Four projects have no bar yet** — the analyzers, the documentation generator,
-the command line and `JustDummies`. Their sweeps are too long to have been run
-interactively, so no score was ever measured for them, and a bar was **not**
-guessed: their `break` is `0`. Their legs still run, still fail on a broken build
-or a failing suite, and still list their survivors — they simply do not yet refuse
-a pull request over a score. The first weekly sweep is what supplies those four
-figures.
+**Five projects have no bar yet** — the analyzers, the documentation generator,
+the command line, `JustDummies`, and the JustDummies analyzers that shipped with
+[ADR-0044](../adr/0044-ship-justdummies-analyzers.md). No full-sweep score was
+ever measured for any of them — for most, because the sweep is too long to have
+been run interactively — and a bar was **not** guessed: their `break` is `0`.
+Their legs still run, still fail on a broken build or a failing suite, and still
+list their survivors — they simply do not yet refuse a pull request over a score.
+The first weekly sweep is what supplies those five figures.
 
 That makes the gate a **ratchet**, not an aspiration. It says *do not go below
 where this library already is* — a bar every library clears on day one, so the

@@ -9,8 +9,9 @@
 
 ## What it is for
 
-Mutation testing for the **two JustDummies packages** — `JustDummies` and its
-xUnit v3 adapter `JustDummies.Xunit` ([ADR-0039](../adr/0039-adapt-dummies-to-xunit-v3-through-a-companion-package.md)).
+Mutation testing for the **three JustDummies components** — `JustDummies`, its
+xUnit v3 adapter `JustDummies.Xunit` ([ADR-0039](../adr/0039-adapt-dummies-to-xunit-v3-through-a-companion-package.md)),
+and the analyzers that ship inside the package ([ADR-0044](../adr/0044-ship-justdummies-analyzers.md)).
 On a pull request it mutates only the files the pull request changed and fails
 when the score falls under the library's threshold; a weekly sweep measures
 everything else. What mutation testing *is*, and why this repository gates on
@@ -43,9 +44,10 @@ what two libraries at different levels of test maturity need anyway.
 Identically to [`mutation`](mutation.en.md), whose page documents the mechanism
 in full: `changed` mutates the diff from the fork point, `gate` collapses the
 matrix into one stable check name, `full` sweeps everything with the threshold
-disabled. The per-library Stryker configurations are
-[`build/stryker/justdummies.json`](../../../../build/stryker/justdummies.json)
-and [`build/stryker/justdummies-xunit.json`](../../../../build/stryker/justdummies-xunit.json).
+disabled. The per-component Stryker configurations are
+[`build/stryker/justdummies.json`](../../../../build/stryker/justdummies.json),
+[`build/stryker/justdummies-xunit.json`](../../../../build/stryker/justdummies-xunit.json)
+and [`build/stryker/justdummies-analyzers.json`](../../../../build/stryker/justdummies-analyzers.json).
 
 Two points from that page matter more here than anywhere else:
 
@@ -78,6 +80,11 @@ libraries' bars were set.
 `JustDummies.Xunit` needs no such caveat: it is small enough that its bar came
 from a full sweep like the rest, and it gates normally.
 
+The analyzers leg also ships with `break` at **0**, for a different reason: its
+residual survivors are the analyzer-infrastructure and descriptor-string mutants
+the FirstClassErrors analyzers carry too, so it reports rather than blocks
+([ADR-0044](../adr/0044-ship-justdummies-analyzers.md)).
+
 ## Permissions & security
 
 `contents: read` only. The workflow checks out, builds and runs tests; it stores
@@ -88,14 +95,15 @@ no secret and needs no write scope.
 Take, unchanged:
 
 - this workflow file, renamed to `mutation.yml` there (and its `name:` with it);
-- [`build/stryker/justdummies.json`](../../../../build/stryker/justdummies.json)
-  and [`build/stryker/justdummies-xunit.json`](../../../../build/stryker/justdummies-xunit.json);
+- [`build/stryker/justdummies.json`](../../../../build/stryker/justdummies.json),
+  [`build/stryker/justdummies-xunit.json`](../../../../build/stryker/justdummies-xunit.json)
+  and [`build/stryker/justdummies-analyzers.json`](../../../../build/stryker/justdummies-analyzers.json);
 - [`.config/dotnet-tools.json`](../../../../.config/dotnet-tools.json) — the
   Stryker pin;
 - this page, plus the shared sections of [`mutation`](mutation.en.md) folded into
   it, since the page it defers to will not exist over there.
 
-Then change exactly one thing: the **`solution`** field in the two
+Then change exactly one thing: the **`solution`** field in the three
 configurations, which still names `FirstClassErrors.sln`. The `project` and
 `test-projects` paths are already repository-relative and unchanged by the move.
 
