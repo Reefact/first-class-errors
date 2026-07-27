@@ -15,7 +15,7 @@ internal sealed class WideIntervalSpec {
         return new WideIntervalSpec(typeName, render, domainMin, domainMax, domainMin, null, domainMax, null, null, null, [], UInt128.One, UInt128.Zero, null);
     }
 
-    private static UInt128 NextUInt128(Random random) {
+    private static UInt128 NextUInt128(SeededRandom random) {
         return new UInt128(random.NextUInt64(), random.NextUInt64());
     }
 
@@ -220,7 +220,7 @@ internal sealed class WideIntervalSpec {
     }
 
     /// <summary>Draws one ordinal satisfying the whole specification — built directly, never generate-then-retry.</summary>
-    internal UInt128 GenerateOrdinal(Random random) {
+    internal UInt128 GenerateOrdinal(SeededRandom random) {
         if (_effectiveAllowed is not null) {
             return _effectiveAllowed[random.Next(_effectiveAllowed.Count)];
         }

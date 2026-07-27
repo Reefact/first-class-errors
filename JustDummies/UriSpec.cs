@@ -172,15 +172,15 @@ internal sealed class UriSpec {
     #region Generation
 
     internal Uri Generate(RandomSource source) {
-        Random    random = source.Current.Random;
-        UriFamily family = _family ?? DefaultFamilies[random.Next(DefaultFamilies.Length)];
+        SeededRandom random = source.Current;
+        UriFamily    family = _family ?? DefaultFamilies[random.Next(DefaultFamilies.Length)];
 
         return family == UriFamily.Relative
                    ? new Uri(BuildRelative(source), UriKind.Relative)
                    : new Uri(BuildAbsolute(family, random), UriKind.Absolute);
     }
 
-    private string BuildAbsolute(UriFamily family, Random random) {
+    private string BuildAbsolute(UriFamily family, SeededRandom random) {
         string        scheme  = ResolveScheme(family, random);
         StringBuilder builder = new();
         builder.Append(scheme).Append(':');
@@ -212,7 +212,7 @@ internal sealed class UriSpec {
     }
 
     private string BuildRelative(RandomSource source) {
-        Random        random  = source.Current.Random;
+        SeededRandom  random  = source.Current;
         StringBuilder builder = new();
         builder.Append(Path(random, leadingSlash: _rooted));
         if (_hasQuery) { builder.Append(Query(random)); }
@@ -235,7 +235,7 @@ internal sealed class UriSpec {
         return Draw(random, LowerAlphaNum, 1, 8);
     }
 
-    private string ResolveScheme(UriFamily family, Random random) {
+    private string ResolveScheme(UriFamily family, SeededRandom random) {
         if (_scheme is not null) { return _scheme; }
 
         return family switch {
@@ -247,7 +247,7 @@ internal sealed class UriSpec {
         };
     }
 
-    private string Path(Random random, bool leadingSlash) {
+    private string Path(SeededRandom random, bool leadingSlash) {
         int count = _pathMode switch {
             UriPathMode.Root  => 0,
             UriPathMode.Exact => _pathSegments,
@@ -265,7 +265,7 @@ internal sealed class UriSpec {
         return builder.ToString();
     }
 
-    private static string Query(Random random) {
+    private static string Query(SeededRandom random) {
         int           pairs   = random.Next(1, 3); // 1..2
         StringBuilder builder = new("?");
         for (int i = 0; i < pairs; i++) {
@@ -276,16 +276,16 @@ internal sealed class UriSpec {
         return builder.ToString();
     }
 
-    private static string Host(Random random) {
+    private static string Host(SeededRandom random) {
         return Label(random) + "." + Draw(random, LowerLetters, 2, 4);
     }
 
-    private static string Label(Random random) {
+    private static string Label(SeededRandom random) {
         // A DNS-safe label: starts with a letter, then letters/digits — no leading digit, no hyphen edges.
         return LowerLetters[random.Next(LowerLetters.Length)].ToString() + Draw(random, LowerAlphaNum, 0, 7);
     }
 
-    private static string Draw(Random random, string pool, int min, int max) {
+    private static string Draw(SeededRandom random, string pool, int min, int max) {
         int           length  = min == max ? min : random.Next(min, max + 1);
         StringBuilder builder = new(length);
         for (int i = 0; i < length; i++) { builder.Append(pool[random.Next(pool.Length)]); }

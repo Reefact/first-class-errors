@@ -187,7 +187,7 @@ public sealed class AnyTimeSpan : IAny<TimeSpan>, IHasRandomSource, ICardinality
 
     /// <inheritdoc />
     public TimeSpan Generate() {
-        return Val(_spec.GenerateOrdinal(_source.Current.Random));
+        return Val(_spec.GenerateOrdinal(_source.Current));
     }
 
 }

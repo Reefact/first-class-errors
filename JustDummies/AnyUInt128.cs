@@ -172,7 +172,7 @@ public sealed class AnyUInt128 : IAny<UInt128>, IHasRandomSource, ICardinalityHi
 
     /// <inheritdoc />
     public UInt128 Generate() {
-        return Val(_spec.GenerateOrdinal(_source.Current.Random));
+        return Val(_spec.GenerateOrdinal(_source.Current));
     }
 
 }

@@ -184,7 +184,7 @@ public sealed class AnyInt16 : IAny<short>, IHasRandomSource, ICardinalityHint<s
 
     /// <inheritdoc />
     public short Generate() {
-        return Val(_spec.GenerateOrdinal(_source.Current.Random));
+        return Val(_spec.GenerateOrdinal(_source.Current));
     }
 
 }

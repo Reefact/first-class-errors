@@ -257,7 +257,7 @@ internal sealed class OrdinalIntervalSpec {
     }
 
     /// <summary>Draws one ordinal satisfying the whole specification — built directly, never generate-then-retry.</summary>
-    internal ulong GenerateOrdinal(Random random) {
+    internal ulong GenerateOrdinal(SeededRandom random) {
         if (_effectiveAllowed is not null) {
             return _effectiveAllowed[random.Next(_effectiveAllowed.Count)];
         }

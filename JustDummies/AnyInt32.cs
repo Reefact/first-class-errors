@@ -200,7 +200,7 @@ public sealed class AnyInt32 : IAny<int>, IHasRandomSource, ICardinalityHint<int
 
     /// <inheritdoc />
     public int Generate() {
-        return Val(_spec.GenerateOrdinal(_source.Current.Random));
+        return Val(_spec.GenerateOrdinal(_source.Current));
     }
 
 }

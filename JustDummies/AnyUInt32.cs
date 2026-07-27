@@ -170,7 +170,7 @@ public sealed class AnyUInt32 : IAny<uint>, IHasRandomSource, ICardinalityHint<u
 
     /// <inheritdoc />
     public uint Generate() {
-        return Val(_spec.GenerateOrdinal(_source.Current.Random));
+        return Val(_spec.GenerateOrdinal(_source.Current));
     }
 
 }
