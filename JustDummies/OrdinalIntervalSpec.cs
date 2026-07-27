@@ -91,7 +91,7 @@ internal sealed class OrdinalIntervalSpec {
     private readonly ulong                 _domainMax;
     private readonly ulong                 _domainMin;
     private readonly List<ulong>?          _effectiveAllowed;
-    private readonly IReadOnlyList<ulong>  _excluded;
+    private readonly IReadOnlyList<(string Constraint, ulong[] Ordinals)> _exclusions;
     private readonly List<ulong>           _excludedInRange;
     private readonly List<ulong>           _excludedOnLattice;
     private readonly ulong                 _latticeFirst;
@@ -111,7 +111,7 @@ internal sealed class OrdinalIntervalSpec {
                                 ulong  min,     string? minConstraint,
                                 ulong  max,     string? maxConstraint,
                                 IReadOnlyList<ulong>? allowed, string? allowedConstraint,
-                                IReadOnlyList<ulong>  excluded,
+                                IReadOnlyList<(string Constraint, ulong[] Ordinals)> exclusions,
                                 ulong  step,    ulong anchor, string? stepConstraint) {
         _typeName          = typeName;
         _render            = render;
@@ -123,11 +123,14 @@ internal sealed class OrdinalIntervalSpec {
         _maxConstraint     = maxConstraint;
         _allowed           = allowed;
         _allowedConstraint = allowedConstraint;
-        _excluded          = excluded;
+        _exclusions        = exclusions;
         _step              = step;
         _anchor            = anchor;
         _stepConstraint    = stepConstraint;
-        // Materialized once here — "constrain once, draw many": GenerateOrdinal never refilters or resorts.
+        // The flat ordinal set drives every hot-path decision; the provenance in _exclusions is consulted only
+        // when a conflict message must name the excluding constraint. Materialized once here — "constrain once,
+        // draw many": GenerateOrdinal never refilters or resorts.
+        ulong[] excluded = exclusions.SelectMany(pair => pair.Ordinals).ToArray();
         _excludedInRange = excluded.Where(value => value >= min && value <= max).Distinct().ToList();
         _excludedInRange.Sort();
         // Lattice-derived state, kept alongside so the hot path is a straight index-and-stride.
@@ -156,7 +159,7 @@ internal sealed class OrdinalIntervalSpec {
             throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_maxConstraint} already requires values less than or equal to {_render(_max)}.");
         }
 
-        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, minimum, applying, _max, _maxConstraint, _allowed, _allowedConstraint, _excluded, _step, _anchor, _stepConstraint), applying);
+        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, minimum, applying, _max, _maxConstraint, _allowed, _allowedConstraint, _exclusions, _step, _anchor, _stepConstraint), applying);
     }
 
     /// <summary>Tightens the lower bound to strictly above <paramref name="bound" /> — the exclusive form of <see cref="WithMinimum" />.</summary>
@@ -176,7 +179,7 @@ internal sealed class OrdinalIntervalSpec {
             throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_minConstraint} already requires values greater than or equal to {_render(_min)}.");
         }
 
-        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, maximum, applying, _allowed, _allowedConstraint, _excluded, _step, _anchor, _stepConstraint), applying);
+        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, maximum, applying, _allowed, _allowedConstraint, _exclusions, _step, _anchor, _stepConstraint), applying);
     }
 
     /// <summary>Tightens the upper bound to strictly below <paramref name="bound" /> — the exclusive form of <see cref="WithMaximum" />.</summary>
@@ -192,15 +195,16 @@ internal sealed class OrdinalIntervalSpec {
 
         ulong[] distinct = ordinals.Distinct().ToArray();
 
-        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, distinct, applying, _excluded, _step, _anchor, _stepConstraint), applying);
+        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, distinct, applying, _exclusions, _step, _anchor, _stepConstraint), applying);
     }
 
     /// <summary>Adds values the generator must never produce.</summary>
     internal OrdinalIntervalSpec WithExcluded(ulong[] ordinals, string applying) {
-        List<ulong> excluded = new(_excluded);
-        excluded.AddRange(ordinals);
+        // The applied constraint tags its own ordinals, so a later exhaustion message can name the exclusion
+        // that actually emptied the domain rather than a bound that merely happens to border it.
+        List<(string Constraint, ulong[] Ordinals)> exclusions = new(_exclusions) { (applying, ordinals) };
 
-        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, excluded, _step, _anchor, _stepConstraint), applying);
+        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, exclusions, _step, _anchor, _stepConstraint), applying);
     }
 
     /// <summary>
@@ -217,7 +221,7 @@ internal sealed class OrdinalIntervalSpec {
             throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_stepConstraint} is already defined.");
         }
 
-        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, _excluded, step, anchor, applying), applying);
+        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, _exclusions, step, anchor, applying), applying);
     }
 
     /// <summary>
@@ -305,7 +309,7 @@ internal sealed class OrdinalIntervalSpec {
     private OrdinalIntervalSpec Validated(OrdinalIntervalSpec candidate, string applying) {
         if (candidate.IsSatisfiable()) { return candidate; }
 
-        throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {candidate.DescribeExhaustion()}.");
+        throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {candidate.DescribeExhaustion(applying)}.");
     }
 
     private bool IsSatisfiable() {
@@ -320,26 +324,87 @@ internal sealed class OrdinalIntervalSpec {
         return _max - _min + 1 - (ulong)_excludedInRange.Count > 0;
     }
 
-    private string DescribeExhaustion() {
-        if (_allowed is not null) {
-            if (_excluded.Count > 0) {
-                return $"no value {_allowedConstraint} allows remains available";
-            }
+    private string DescribeExhaustion(string applying) {
+        IReadOnlyList<string> culprits = ExcludingConstraintsInEffect();
 
-            return $"none of the values {_allowedConstraint} allows satisfies the constraints already defined";
+        if (_allowed is not null) {
+            if (culprits.Count == 0) { return $"none of the values {_allowedConstraint} allows satisfies the constraints already defined"; }
+
+            // Only the allow-list values the bounds and lattice still permit can be forbidden by an exclusion; if
+            // some allowed value was already dropped by a bound or the lattice, the exclusions do not forbid
+            // "every" allowed value, so the claim is qualified rather than overstated.
+            string allowed = _allowed.All(WouldAllowIgnoringExclusions)
+                                 ? $"every value {_allowedConstraint} allows"
+                                 : $"every value {_allowedConstraint} allows that the other constraints leave";
+
+            return $"{Forbids(culprits, applying)} {allowed}";
         }
 
         if (_step > 1UL) {
-            return $"no {_typeName} value {_stepConstraint} allows remains between {_render(_min)} and {_render(_max)}";
+            if (!_latticeHasPoint || culprits.Count == 0) { return $"no {_typeName} value {_stepConstraint} allows remains between {_render(_min)} and {_render(_max)}"; }
+
+            return $"{Forbids(culprits, applying)} every {_stepConstraint} value between {_render(_min)} and {_render(_max)}";
         }
 
         if (_min == _max) {
-            string pinning = _minConstraint ?? _maxConstraint ?? "the declared bounds";
+            if (culprits.Count == 0) {
+                string pinning = _minConstraint ?? _maxConstraint ?? "the declared bounds";
 
-            return $"{pinning} already pins the value to {_render(_min)}";
+                return $"{pinning} already pins the value to {_render(_min)}";
+            }
+
+            return $"{Forbids(culprits, applying)} {_render(_min)}, {PinningClause()}";
         }
 
-        return $"no value remains between {_render(_min)} and {_render(_max)} once the excluded values are removed";
+        if (culprits.Count == 0) { return $"no value remains between {_render(_min)} and {_render(_max)} once the excluded values are removed"; }
+
+        return $"{Forbids(culprits, applying)} every value between {_render(_min)} and {_render(_max)}";
+    }
+
+    /// <summary>
+    ///     The distinct exclusion constraints that actually caused the exhaustion — those forbidding at least one
+    ///     value the interval, lattice and allow-list would otherwise permit. An exclusion whose values fall outside
+    ///     the surviving domain never bit, so naming it would mislead; first-declared order is preserved.
+    /// </summary>
+    private IReadOnlyList<string> ExcludingConstraintsInEffect() {
+        List<string> names = new();
+        foreach ((string constraint, ulong[] ordinals) in _exclusions) {
+            if (names.Contains(constraint)) { continue; }
+            if (ordinals.Any(WouldAllowIgnoringExclusions)) { names.Add(constraint); }
+        }
+
+        return names;
+    }
+
+    /// <summary>Whether <paramref name="ordinal" /> would be in the domain if no exclusion were applied.</summary>
+    private bool WouldAllowIgnoringExclusions(ulong ordinal) {
+        if (_allowed is not null && !_allowed.Contains(ordinal)) { return false; }
+        if (_step > 1UL && !IsOnLattice(ordinal, _anchor, _step)) { return false; }
+
+        return ordinal >= _min && ordinal <= _max;
+    }
+
+    /// <summary>
+    ///     The subject of the exhaustion clause. A single culprit that is the constraint being applied becomes "it",
+    ///     so the message reads "Cannot apply Except(1) because it forbids …" rather than repeating the constraint on
+    ///     both sides of "because".
+    /// </summary>
+    private static string Forbids(IReadOnlyList<string> names, string applying) {
+        if (names.Count == 1) { return names[0] == applying ? "it forbids" : $"{names[0]} forbids"; }
+
+        return $"{string.Join(", ", names)} forbid";
+    }
+
+    /// <summary>Names the bounds that pinned the domain to its single value, for the "forbids X, the only value ... leaves" form.</summary>
+    private string PinningClause() {
+        List<string> bounds = new();
+        if (_minConstraint is not null) { bounds.Add(_minConstraint); }
+        if (_maxConstraint is not null && _maxConstraint != _minConstraint) { bounds.Add(_maxConstraint); }
+
+        if (bounds.Count == 0) { return "the only value the declared bounds leave"; }
+        if (bounds.Count == 1) { return $"the only value {bounds[0]} leaves"; }
+
+        return $"the only value {string.Join(" and ", bounds)} leave";
     }
 
 }

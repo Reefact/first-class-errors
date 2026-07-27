@@ -57,6 +57,7 @@ internal sealed class ContinuousIntervalSpec {
     private readonly string?                _allowedConstraint;
     private readonly List<double>?          _effectiveAllowed;
     private readonly IReadOnlyList<double>  _excluded;
+    private readonly IReadOnlyList<(string Constraint, double[] Ordinals)> _exclusions;
     private readonly Func<double, double>   _nextUp;
     private readonly double                 _max;
     private readonly string?                _maxConstraint;
@@ -72,7 +73,7 @@ internal sealed class ContinuousIntervalSpec {
                                    double  min,      string? minConstraint,
                                    double  max,      string? maxConstraint,
                                    IReadOnlyList<double>? allowed, string? allowedConstraint,
-                                   IReadOnlyList<double>  excluded) {
+                                   IReadOnlyList<(string Constraint, double[] Ordinals)> exclusions) {
         _typeName          = typeName;
         _render            = render;
         _quantize          = quantize;
@@ -83,8 +84,10 @@ internal sealed class ContinuousIntervalSpec {
         _maxConstraint     = maxConstraint;
         _allowed           = allowed;
         _allowedConstraint = allowedConstraint;
-        _excluded          = excluded;
-        // Materialized once here — "constrain once, draw many": Generate never refilters the allow-list.
+        _exclusions        = exclusions;
+        // The flat value set drives every draw-time decision; the provenance in _exclusions is consulted only
+        // when a conflict message must name the excluding constraint. Materialized once — "constrain once, draw many".
+        _excluded          = exclusions.SelectMany(pair => pair.Ordinals).ToList();
         _effectiveAllowed  = allowed?.Where(value => value >= min && value <= max && !IsExcluded(value)).ToList();
     }
 
@@ -99,7 +102,7 @@ internal sealed class ContinuousIntervalSpec {
             throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_maxConstraint} already requires values less than or equal to {_render(_max)}.");
         }
 
-        return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _nextUp, minimum, applying, _max, _maxConstraint, _allowed, _allowedConstraint, _excluded), applying);
+        return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _nextUp, minimum, applying, _max, _maxConstraint, _allowed, _allowedConstraint, _exclusions), applying);
     }
 
     /// <summary>Tightens the upper bound; a looser bound than the current one is a no-op.</summary>
@@ -113,7 +116,7 @@ internal sealed class ContinuousIntervalSpec {
             throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_minConstraint} already requires values greater than or equal to {_render(_min)}.");
         }
 
-        return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _nextUp, _min, _minConstraint, maximum, applying, _allowed, _allowedConstraint, _excluded), applying);
+        return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _nextUp, _min, _minConstraint, maximum, applying, _allowed, _allowedConstraint, _exclusions), applying);
     }
 
     /// <summary>Tightens the lower bound to strictly above <paramref name="bound" /> — via the type's next representable value.</summary>
@@ -132,15 +135,16 @@ internal sealed class ContinuousIntervalSpec {
 
         double[] distinct = values.Distinct().ToArray();
 
-        return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _nextUp, _min, _minConstraint, _max, _maxConstraint, distinct, applying, _excluded), applying);
+        return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _nextUp, _min, _minConstraint, _max, _maxConstraint, distinct, applying, _exclusions), applying);
     }
 
     /// <summary>Adds values the generator must never produce.</summary>
     internal ContinuousIntervalSpec WithExcluded(double[] values, string applying) {
-        List<double> excluded = new(_excluded);
-        excluded.AddRange(values);
+        // The applied constraint tags its own values, so a later exhaustion message can name the exclusion
+        // that actually emptied the domain rather than a bound that merely happens to border it.
+        List<(string Constraint, double[] Ordinals)> exclusions = new(_exclusions) { (applying, values) };
 
-        return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _nextUp, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, excluded), applying);
+        return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _nextUp, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, exclusions), applying);
     }
 
     /// <summary>
@@ -240,7 +244,7 @@ internal sealed class ContinuousIntervalSpec {
     private ContinuousIntervalSpec Validated(ContinuousIntervalSpec candidate, string applying) {
         if (candidate.IsSatisfiable()) { return candidate; }
 
-        throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {candidate.DescribeExhaustion()}.");
+        throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {candidate.DescribeExhaustion(applying)}.");
     }
 
     private bool IsSatisfiable() {
@@ -250,18 +254,74 @@ internal sealed class ContinuousIntervalSpec {
         return !IsExcluded(_min);
     }
 
-    private string DescribeExhaustion() {
-        if (_allowed is not null) {
-            if (_excluded.Count > 0) {
-                return $"no value {_allowedConstraint} allows remains available";
-            }
+    private string DescribeExhaustion(string applying) {
+        IReadOnlyList<string> culprits = ExcludingConstraintsInEffect();
 
-            return $"none of the values {_allowedConstraint} allows satisfies the constraints already defined";
+        if (_allowed is not null) {
+            if (culprits.Count == 0) { return $"none of the values {_allowedConstraint} allows satisfies the constraints already defined"; }
+
+            // Only the allow-list values the bounds still permit can be forbidden by an exclusion; if some allowed
+            // value was already dropped by a bound, the exclusions do not forbid "every" allowed value, so the claim
+            // is qualified rather than overstated.
+            string allowed = _allowed.All(WouldAllowIgnoringExclusions)
+                                 ? $"every value {_allowedConstraint} allows"
+                                 : $"every value {_allowedConstraint} allows that the other constraints leave";
+
+            return $"{Forbids(culprits, applying)} {allowed}";
         }
 
-        string pinning = _minConstraint ?? _maxConstraint ?? "the declared bounds";
+        if (culprits.Count == 0) {
+            string pinning = _minConstraint ?? _maxConstraint ?? "the declared bounds";
 
-        return $"{pinning} already pins the value to {_render(_min)}, which the exclusions forbid";
+            return $"{pinning} already pins the value to {_render(_min)}, which the exclusions forbid";
+        }
+
+        return $"{Forbids(culprits, applying)} {_render(_min)}, {PinningClause()}";
+    }
+
+    /// <summary>
+    ///     The distinct exclusion constraints that actually caused the exhaustion — those forbidding at least one
+    ///     value the interval and allow-list would otherwise permit. An exclusion whose values fall outside the
+    ///     surviving domain never bit, so naming it would mislead; first-declared order is preserved.
+    /// </summary>
+    private IReadOnlyList<string> ExcludingConstraintsInEffect() {
+        List<string> names = new();
+        foreach ((string constraint, double[] values) in _exclusions) {
+            if (names.Contains(constraint)) { continue; }
+            if (values.Any(WouldAllowIgnoringExclusions)) { names.Add(constraint); }
+        }
+
+        return names;
+    }
+
+    /// <summary>Whether <paramref name="value" /> would be in the domain if no exclusion were applied.</summary>
+    private bool WouldAllowIgnoringExclusions(double value) {
+        if (_allowed is not null && !_allowed.Contains(value)) { return false; }
+
+        return value >= _min && value <= _max;
+    }
+
+    /// <summary>
+    ///     The subject of the exhaustion clause. A single culprit that is the constraint being applied becomes "it",
+    ///     so the message reads "Cannot apply DifferentFrom(1) because it forbids …" rather than repeating the
+    ///     constraint on both sides of "because".
+    /// </summary>
+    private static string Forbids(IReadOnlyList<string> names, string applying) {
+        if (names.Count == 1) { return names[0] == applying ? "it forbids" : $"{names[0]} forbids"; }
+
+        return $"{string.Join(", ", names)} forbid";
+    }
+
+    /// <summary>Names the bounds that pinned the domain to its single value, for the "forbids X, the only value ... leaves" form.</summary>
+    private string PinningClause() {
+        List<string> bounds = new();
+        if (_minConstraint is not null) { bounds.Add(_minConstraint); }
+        if (_maxConstraint is not null && _maxConstraint != _minConstraint) { bounds.Add(_maxConstraint); }
+
+        if (bounds.Count == 0) { return "the only value the declared bounds leave"; }
+        if (bounds.Count == 1) { return $"the only value {bounds[0]} leaves"; }
+
+        return $"the only value {string.Join(" and ", bounds)} leave";
     }
 
 }
