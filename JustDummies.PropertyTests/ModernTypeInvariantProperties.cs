@@ -176,6 +176,24 @@ public sealed class ModernTypeInvariantProperties {
             .QuickCheckThrowOnFailure();
     }
 
+    [Fact(DisplayName = "Int128: every exclusion-caused conflict message makes only true claims, over the whole combination space.")]
+    public void Int128ConflictMessagesAreTruthful() {
+        // The 128-bit sibling of the ordinal engine; the shared oracle lives in ConflictMessageTruthfulnessProperties.
+        ConflictMessageTruthfulnessProperties.CheckEngine(BuildInt128, supportsLattice: true);
+    }
+
+    private static string? BuildInt128(bool hasBetween, int lo, int hi, int step, int[] allow, int[] excl) {
+        try {
+            AnyInt128 spec = Any.Int128();
+            if (hasBetween) { spec = spec.Between(lo, hi); }
+            if (step > 1)   { spec = spec.MultipleOf(step); }
+            if (allow.Length > 0) { spec = spec.OneOf(allow.Select(value => (Int128)value).ToArray()); }
+            if (excl.Length  > 0) { spec = spec.Except(excl.Select(value => (Int128)value).ToArray()); }
+
+            return null;
+        } catch (ConflictingAnyConstraintException exception) { return exception.Message; }
+    }
+
     [Fact(DisplayName = "Int128: Positive and Negative meet a bound on their own side of zero, and conflict with one on the other.")]
     public void Int128SignConstraintsMeetABoundOrConflict() {
         Prop.ForAll(Int128Values().ToArbitrary(),
