@@ -104,6 +104,22 @@ internal static class Expect {
     }
 
     /// <summary>
+    ///     Returns <c>true</c> when <paramref name="action" /> completes without throwing. The counterpart of
+    ///     <see cref="Throws{TException}" />, for a property whose subject is that ordinary use of a generated value
+    ///     stays uneventful — <c>decimal</c> arithmetic, which signals its overflow by throwing rather than by
+    ///     saturating.
+    /// </summary>
+    public static bool DoesNotThrow(Action action) {
+        try {
+            action();
+
+            return true;
+        } catch (Exception) {
+            return false;
+        }
+    }
+
+    /// <summary>
     ///     Draws <paramref name="count" /> values from <paramref name="generator" /> and returns <c>true</c> when every
     ///     one of them satisfies <paramref name="invariant" />. A generator is a recipe, not a value, so one draw per
     ///     FsCheck case would leave most of its randomness untested; a handful of draws per case multiplies the

@@ -240,7 +240,18 @@ internal sealed class DecimalIntervalSpec {
         // fraction in [0, 1], and no intermediate ever leaves the decimal range. The earlier midpoint form
         // (mid ± half) overflowed on the full domain — it is symmetric, so max/2 rounds up and half = max/2 - min/2
         // doubles to just past decimal.MaxValue, throwing on an unconstrained Any.Decimal().Generate().
-        decimal candidate = Clamped(_min * (1m - fraction) + _max * fraction);
+        // Draw from the ordinary window rather than the declared interval (ADR-0052): the window only ever clips,
+        // and it steps aside entirely when it would leave the declared interval empty. Without it an unconstrained
+        // decimal lands within a few decades of decimal.MaxValue, where a further multiplication throws
+        // OverflowException and a scale constraint has no fractional digits left to constrain.
+        decimal lower = Math.Max(_min, -OrdinaryMagnitude.AsDecimal);
+        decimal upper = Math.Min(_max, OrdinaryMagnitude.AsDecimal);
+        if (lower > upper) {
+            lower = _min;
+            upper = _max;
+        }
+
+        decimal candidate = Clamped(lower * (1m - fraction) + upper * fraction);
 
         if (_scale >= 0) {
             // Snap the draw onto the grid, then pull it inside the reachable grid window. A snapped point that
