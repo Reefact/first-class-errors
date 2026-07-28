@@ -276,7 +276,7 @@ public sealed class UriProperties {
                                                                    ? value.Scheme == (testCase.Secure.Value ? "wss" : "ws")
                                                                    : value.Scheme is "ws" or "wss")
                                                            && rendered.StartsWith(value.Scheme + "://" + testCase.Host, StringComparison.Ordinal)
-                                                           && (rendered.IndexOf('?') >= 0) == testCase.Query
+                                                           && rendered.Contains('?') == testCase.Query
                                                            && rendered.IndexOf('#') < 0
                                                            && rendered.IndexOf('@') < 0;
                                                 });
@@ -387,10 +387,10 @@ public sealed class UriProperties {
 
                                                     return !value.IsAbsoluteUri
                                                            && reference.Length > 0
-                                                           && (!testCase.Rooted || reference.StartsWith("/", StringComparison.Ordinal))
+                                                           && (!testCase.Rooted || reference.StartsWith('/'))
                                                            && (testCase.Segments.HasValue ? segments == testCase.Segments.Value : segments <= 2)
-                                                           && (reference.IndexOf('?') >= 0) == testCase.Query
-                                                           && (reference.IndexOf('#') >= 0) == testCase.Fragment;
+                                                           && reference.Contains('?') == testCase.Query
+                                                           && reference.Contains('#') == testCase.Fragment;
                                                 });
                     })
             .QuickCheckThrowOnFailure();
