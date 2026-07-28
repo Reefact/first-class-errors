@@ -38,7 +38,7 @@ namespace JustDummies;
 ///     </example>
 /// </remarks>
 // This file carries the façade's documentation and no member: every entry point lives in a sibling partial named
-// after its family (Any.Primitive.cs, Any.Pattern.cs, Any.Uri.cs, Any.Choice.cs, Any.Collections.cs, Any.Combine.cs,
+// after its family (Any.Primitive.cs, Any.Pattern.cs, Any.Uri.cs, Any.Choice.cs, Any.Collection.cs, Any.Combine.cs,
 // Any.Reproducibility.cs). A family gets its own file as soon as its entry point returns a *narrowing builder* rather
 // than a constrained scalar, however few members that leaves here — the file's weight is the surface it opens, not
 // its line count. Adding a member to any of them means mirroring it on AnyContext; SurfaceParityTests enforces that.
