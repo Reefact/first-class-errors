@@ -77,7 +77,7 @@ public static class CatalogDiffer {
         foreach (CatalogSnapshotEntry entry in snapshot.Errors) {
             if (string.IsNullOrWhiteSpace(entry.Code)) { continue; }
 
-            string code = entry.Code!.Trim();
+            string code = entry.Code.Trim();
             if (!byCode.ContainsKey(code)) { byCode.Add(code, entry); }
         }
 
@@ -126,7 +126,7 @@ public static class CatalogDiffer {
         foreach (CatalogSnapshotContextKey key in entry.Context) {
             if (string.IsNullOrWhiteSpace(key.Key)) { continue; }
 
-            string name = key.Key!.Trim();
+            string name = key.Key.Trim();
             if (!byKey.ContainsKey(name)) { byKey.Add(name, key); }
         }
 
@@ -159,7 +159,7 @@ public static class CatalogDiffer {
     }
 
     private static string? Normalize(string? value) {
-        return string.IsNullOrWhiteSpace(value) ? null : value!.Trim();
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
     private static string Quote(string? value) {

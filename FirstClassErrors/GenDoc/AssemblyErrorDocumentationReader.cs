@@ -108,7 +108,7 @@ public static class AssemblyErrorDocumentationReader {
                 failures.Add(new ErrorDocumentationExtractionFailure(assemblyName, null, "A referenced type could not be loaded.", loaderException.ToString()));
             }
 
-            return ex.Types.Where(type => type is not null).Select(type => type!);
+            return ex.Types.Where(type => type is not null);
         }
     }
 

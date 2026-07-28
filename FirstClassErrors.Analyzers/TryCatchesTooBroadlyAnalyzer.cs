@@ -46,7 +46,7 @@ public sealed class TryCatchesTooBroadlyAnalyzer : DiagnosticAnalyzer {
         context.ReportDiagnostic(Diagnostic.Create(
             Descriptors.TryCatchesTooBroadly,
             invocation.Syntax.GetLocation(),
-            caughtType!.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)));
+            caughtType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)));
     }
 
 }
