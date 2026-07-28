@@ -355,11 +355,7 @@ internal sealed class DecimalIntervalSpec {
     }
 
     private bool IsExcluded(decimal value) {
-        foreach (decimal excluded in _excluded) {
-            if (value == excluded) { return true; }
-        }
-
-        return false;
+        return _excluded.Any(excluded => value == excluded);
     }
 
     private DecimalIntervalSpec Validated(DecimalIntervalSpec candidate, string applying) {
@@ -382,11 +378,11 @@ internal sealed class DecimalIntervalSpec {
         return !IsExcluded(_min);
     }
 
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out",
-                                                 Justification =
-                                                     "The flagged lines are prose, not disabled code: the heuristic reads an equation, a bracketed range or a semicolon inside an " +
-                                                     "explanatory sentence as a statement. These comments carry the reasoning this codebase asks every comment to carry, so the " +
-                                                     "finding is recorded rather than the comment deleted.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out",
+                                                     Justification =
+                                                         "The flagged lines are prose, not disabled code: the heuristic reads an equation, a bracketed range or a semicolon inside an " +
+                                                         "explanatory sentence as a statement. These comments carry the reasoning this codebase asks every comment to carry, so the " +
+                                                         "finding is recorded rather than the comment deleted.")]
     private string DescribeExhaustion(string applying) {
         IReadOnlyList<string> culprits = ExcludingConstraintsInEffect();
 

@@ -309,11 +309,7 @@ internal sealed class ContinuousIntervalSpec {
                          "'a == b || (IsNaN(a) && IsNaN(b))'; the NaN arm is unreachable because EnsureFinite rejects NaN at " +
                          "every entry point, so this is plain exact equality with a defensive tail.")]
     private bool IsExcluded(double value) {
-        foreach (double excluded in _excluded) {
-            if (value.Equals(excluded)) { return true; }
-        }
-
-        return false;
+        return _excluded.Any(excluded => value.Equals(excluded));
     }
 
     private ContinuousIntervalSpec Validated(ContinuousIntervalSpec candidate, string applying) {

@@ -78,9 +78,7 @@ internal static class RegexAlphabet {
 
     private static char[] Where(Func<char, bool> keep) {
         List<char> characters = new(Printable.Length);
-        foreach (char character in Printable) {
-            if (keep(character)) { characters.Add(character); }
-        }
+        characters.AddRange(Printable.Where(keep));
 
         return characters.ToArray();
     }

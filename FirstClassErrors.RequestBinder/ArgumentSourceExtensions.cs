@@ -22,12 +22,12 @@ public static class ArgumentSourceExtensions {
     }
 
     /// <summary>Binds an argument sourced from the query string (<c>From("query", value)</c>).</summary>
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S4136:Method overloads should be grouped together",
-                                                 Justification =
-                                                     "Overloads are organized by SHAPE first — every scalar binder, then every list binder — and by source within each block, so " +
-                                                     "From*(value) reads as one family and From*(values) as another. The scalar pair of each source IS adjacent; what separates a name " +
-                                                     "from itself is the list block below. This shape-first grouping is deliberate, and matches how OutcomeTaskExtensions groups by " +
-                                                     "receiver type.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S4136:Method overloads should be grouped together",
+                                                     Justification =
+                                                         "Overloads are organized by SHAPE first — every scalar binder, then every list binder — and by source within each block, so " +
+                                                         "From*(value) reads as one family and From*(values) as another. The scalar pair of each source IS adjacent; what separates a name " +
+                                                         "from itself is the list block below. This shape-first grouping is deliberate, and matches how OutcomeTaskExtensions groups by " +
+                                                         "receiver type.")]
     public static SimplePropertyConverter<TArgument> FromQuery<TArgument>(this ArgumentSource argument, TArgument? value) {
         return Guarded(argument).From("query", value);
     }
@@ -38,12 +38,12 @@ public static class ArgumentSourceExtensions {
     }
 
     /// <summary>Binds an argument sourced from a request header (<c>From("header", value)</c>).</summary>
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S4136:Method overloads should be grouped together",
-                                                 Justification =
-                                                     "Overloads are organized by SHAPE first — every scalar binder, then every list binder — and by source within each block, so " +
-                                                     "From*(value) reads as one family and From*(values) as another. The scalar pair of each source IS adjacent; what separates a name " +
-                                                     "from itself is the list block below. This shape-first grouping is deliberate, and matches how OutcomeTaskExtensions groups by " +
-                                                     "receiver type.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S4136:Method overloads should be grouped together",
+                                                     Justification =
+                                                         "Overloads are organized by SHAPE first — every scalar binder, then every list binder — and by source within each block, so " +
+                                                         "From*(value) reads as one family and From*(values) as another. The scalar pair of each source IS adjacent; what separates a name " +
+                                                         "from itself is the list block below. This shape-first grouping is deliberate, and matches how OutcomeTaskExtensions groups by " +
+                                                         "receiver type.")]
     public static SimplePropertyConverter<TArgument> FromHeader<TArgument>(this ArgumentSource argument, TArgument? value) {
         return Guarded(argument).From("header", value);
     }
@@ -64,12 +64,12 @@ public static class ArgumentSourceExtensions {
     }
 
     /// <summary>Binds an argument sourced from a form field (<c>From("form", value)</c>).</summary>
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S4136:Method overloads should be grouped together",
-                                                 Justification =
-                                                     "Overloads are organized by SHAPE first — every scalar binder, then every list binder — and by source within each block, so " +
-                                                     "From*(value) reads as one family and From*(values) as another. The scalar pair of each source IS adjacent; what separates a name " +
-                                                     "from itself is the list block below. This shape-first grouping is deliberate, and matches how OutcomeTaskExtensions groups by " +
-                                                     "receiver type.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S4136:Method overloads should be grouped together",
+                                                     Justification =
+                                                         "Overloads are organized by SHAPE first — every scalar binder, then every list binder — and by source within each block, so " +
+                                                         "From*(value) reads as one family and From*(values) as another. The scalar pair of each source IS adjacent; what separates a name " +
+                                                         "from itself is the list block below. This shape-first grouping is deliberate, and matches how OutcomeTaskExtensions groups by " +
+                                                         "receiver type.")]
     public static SimplePropertyConverter<TArgument> FromForm<TArgument>(this ArgumentSource argument, TArgument? value) {
         return Guarded(argument).From("form", value);
     }

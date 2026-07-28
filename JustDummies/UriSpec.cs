@@ -412,6 +412,10 @@ internal sealed class UriSpec {
         return true;
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3267:Loops should be simplified with LINQ expressions",
+                                                     Justification =
+                                                         "The loop exists to name the FIRST offending element in the exception it throws. A Where clause discards which element failed, so " +
+                                                         "the message would have to re-find it, turning one pass into two and one statement into three.")]
     internal static string RequireUserInfoPart(string value, string parameterName) {
         if (value is null) { throw new ArgumentNullException(parameterName); }
         if (parameterName is null) { throw new ArgumentNullException(nameof(parameterName)); }

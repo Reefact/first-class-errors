@@ -33,11 +33,7 @@ public sealed class Tag : IEquatable<Tag> {
     }
 
     private static bool ContainsWhitespace(string raw) {
-        foreach (char c in raw) {
-            if (char.IsWhiteSpace(c)) { return true; }
-        }
-
-        return false;
+        return raw.Any(char.IsWhiteSpace);
     }
 
     #endregion

@@ -59,19 +59,15 @@ public sealed class SensitiveDataInErrorContextAnalyzer : DiagnosticAnalyzer {
 
     private static bool LooksSensitive(string name) {
         string compact = Compact(name);
-        foreach (string term in SensitiveSubstrings) {
-            if (compact.Contains(term)) { return true; }
-        }
-
-        foreach (string word in Tokenize(name)) {
-            if (SensitiveWholeWords.Contains(word)) { return true; }
-        }
-
-        return false;
+        return SensitiveSubstrings.Any(compact.Contains) || Tokenize(name).Any(SensitiveWholeWords.Contains);
     }
 
     // Lower-cases the name and drops every non-alphanumeric character, so "API_KEY", "ApiKey" and "api-key" all reduce
     // to "apikey" for substring matching.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3267:Loops should be simplified with LINQ expressions",
+                                                     Justification =
+                                                         "This runs inside a Roslyn analyzer, on every compilation and every keystroke in the IDE. The explicit loop allocates no closure, " +
+                                                         "no enumerator and no delegate; Roslyn's own analyzer guidance asks for exactly that on this path.")]
     private static string Compact(string name) {
         StringBuilder builder = new(name.Length);
         foreach (char character in name) {

@@ -245,6 +245,16 @@ internal sealed class WideIntervalSpec {
     }
 
     /// <summary>Draws one ordinal satisfying the whole specification — built directly, never generate-then-retry.</summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3267:Loops should be simplified with LINQ expressions",
+                                                     Justification =
+                                                         "The loop body advances the very accumulator the condition tests — each iteration changes what the next one compares against — so " +
+                                                         "the filter cannot be lifted out of the loop. A Where clause would evaluate every predicate against the value the accumulator " +
+                                                         "held on entry and silently skip exclusions.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3267:Loops should be simplified with LINQ expressions",
+                                                     Justification =
+                                                         "The loop body advances the very accumulator the condition tests — each iteration changes what the next one compares against — so " +
+                                                         "the filter cannot be lifted out of the loop. A Where clause would evaluate every predicate against the value the accumulator " +
+                                                         "held on entry and silently skip exclusions.")]
     internal UInt128 GenerateOrdinal(SeededRandom random) {
         if (random is null) { throw new ArgumentNullException(nameof(random)); }
 

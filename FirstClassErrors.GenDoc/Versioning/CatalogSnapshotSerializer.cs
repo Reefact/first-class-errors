@@ -66,6 +66,10 @@ public static class CatalogSnapshotSerializer {
     ///     Thrown when the document declares a schema newer than <see cref="CatalogSnapshot.CurrentSchema" /> (a
     ///     subtype of <see cref="InvalidOperationException" />).
     /// </exception>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3267:Loops should be simplified with LINQ expressions",
+                                                     Justification =
+                                                         "The null check is what gives the compiler the flow state the body relies on. Moving it into a Where clause loses that narrowing " +
+                                                         "and would need a null-forgiving operator to compile — the opposite of what this pass removed elsewhere.")]
     public static CatalogSnapshot Deserialize(string json) {
         if (json is null) { throw new ArgumentNullException(nameof(json)); }
 
@@ -122,14 +126,14 @@ public static class CatalogSnapshotSerializer {
     /// <summary>
     ///     The raw shape of a snapshot document, with a nullable schema so its absence is detectable at parse time.
     /// </summary>
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3459:Unassigned members should be removed",
-                                                 Justification =
-                                                     "SnapshotDocument is the wire shape System.Text.Json binds the baseline file to. Its setters are called by the deserializer " +
-                                                     "through reflection, which no static analysis sees, and removing them would make every property read back as null. S1144 reports " +
-                                                     "the same setters as unused private accessors, for the same reason.")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S1144:Unused private types or members should be removed",
-                                                 Justification =
-                                                     "See the S3459 justification above: these setters are the deserializer's entry point, invoked by reflection.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3459:Unassigned members should be removed",
+                                                     Justification =
+                                                         "SnapshotDocument is the wire shape System.Text.Json binds the baseline file to. Its setters are called by the deserializer " +
+                                                         "through reflection, which no static analysis sees, and removing them would make every property read back as null. S1144 reports " +
+                                                         "the same setters as unused private accessors, for the same reason.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S1144:Unused private types or members should be removed",
+                                                     Justification =
+                                                         "See the S3459 justification above: these setters are the deserializer's entry point, invoked by reflection.")]
     private sealed class SnapshotDocument {
 
         public int? Schema { get; set; }
