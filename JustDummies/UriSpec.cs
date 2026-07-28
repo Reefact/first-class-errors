@@ -122,6 +122,9 @@ internal sealed class UriSpec {
     internal UriSpec WithScheme(string scheme, string applying) {
         if (scheme is null) { throw new ArgumentNullException(nameof(scheme)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+        // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
+        // conflict: the second declaration asks for exactly what the first already guarantees.
+        if (string.Equals(_schemeConstraint, applying, StringComparison.Ordinal)) { return this; }
         if (_schemeConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_schemeConstraint} is already defined."); }
 
         return new UriSpec(_family, scheme, applying, _host, _hasUserInfo, _user, _password,
@@ -150,6 +153,9 @@ internal sealed class UriSpec {
 
     internal UriSpec WithPath(UriPathMode mode, int segments, string applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+        // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
+        // conflict: the second declaration asks for exactly what the first already guarantees.
+        if (string.Equals(_pathConstraint, applying, StringComparison.Ordinal)) { return this; }
         if (_pathConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_pathConstraint} is already defined."); }
 
         return new UriSpec(_family, _scheme, _schemeConstraint, _host, _hasUserInfo, _user, _password,

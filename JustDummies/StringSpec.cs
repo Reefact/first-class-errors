@@ -123,6 +123,9 @@ internal sealed class StringSpec {
     /// <summary>Fixes the exact length; declared once per generator.</summary>
     internal StringSpec WithExactLength(int length, string applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+        // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
+        // conflict: the second declaration asks for exactly what the first already guarantees.
+        if (string.Equals(_exactConstraint, applying, StringComparison.Ordinal)) { return this; }
         if (_exactConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_exactConstraint} is already defined."); }
 
         StringSpec candidate = new(length, applying, _minLength, _minConstraint, _maxLength, _maxConstraint,
@@ -160,6 +163,9 @@ internal sealed class StringSpec {
     internal StringSpec WithPrefix(string prefix, string applying) {
         if (prefix is null) { throw new ArgumentNullException(nameof(prefix)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+        // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
+        // conflict: the second declaration asks for exactly what the first already guarantees.
+        if (string.Equals(_prefixConstraint, applying, StringComparison.Ordinal)) { return this; }
         if (_prefixConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_prefixConstraint} is already defined."); }
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
@@ -173,6 +179,9 @@ internal sealed class StringSpec {
     internal StringSpec WithSuffix(string suffix, string applying) {
         if (suffix is null) { throw new ArgumentNullException(nameof(suffix)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+        // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
+        // conflict: the second declaration asks for exactly what the first already guarantees.
+        if (string.Equals(_suffixConstraint, applying, StringComparison.Ordinal)) { return this; }
         if (_suffixConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_suffixConstraint} is already defined."); }
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
@@ -198,6 +207,9 @@ internal sealed class StringSpec {
     /// <summary>Restricts the character family; declared once per generator.</summary>
     internal StringSpec WithCharset(CharacterSet charset, string applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+        // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
+        // conflict: the second declaration asks for exactly what the first already guarantees.
+        if (string.Equals(_charsetConstraint, applying, StringComparison.Ordinal)) { return this; }
         if (_charsetConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_charsetConstraint} is already defined."); }
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
@@ -216,7 +228,13 @@ internal sealed class StringSpec {
     internal StringSpec WithCharPool(string pool, string applying) {
         if (pool is null) { throw new ArgumentNullException(nameof(pool)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+        // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
+        // conflict: the second declaration asks for exactly what the first already guarantees.
+        if (string.Equals(_charsetConstraint, applying, StringComparison.Ordinal)) { return this; }
         if (_charsetConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_charsetConstraint} is already defined."); }
+        // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
+        // conflict: the second declaration asks for exactly what the first already guarantees.
+        if (string.Equals(_casingConstraint, applying, StringComparison.Ordinal)) { return this; }
         if (_casingConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_casingConstraint} is already defined."); }
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
@@ -229,6 +247,9 @@ internal sealed class StringSpec {
     /// <summary>Imposes a letter casing; declared once per generator.</summary>
     internal StringSpec WithCasing(LetterCasing casing, string applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+        // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
+        // conflict: the second declaration asks for exactly what the first already guarantees.
+        if (string.Equals(_casingConstraint, applying, StringComparison.Ordinal)) { return this; }
         if (_casingConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_casingConstraint} is already defined."); }
         if (_customPool is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_charsetConstraint} is already defined."); }
 

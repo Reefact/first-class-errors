@@ -75,6 +75,9 @@ internal sealed class CountSpec {
     /// <summary>Fixes the exact count; declared once per generator.</summary>
     internal CountSpec WithExactCount(int count, string applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+        // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
+        // conflict: the second declaration asks for exactly what the first already guarantees.
+        if (string.Equals(_exactConstraint, applying, StringComparison.Ordinal)) { return this; }
         if (_exactConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_exactConstraint} is already defined."); }
 
         return new CountSpec(count, applying, _min, _minConstraint, _max, _maxConstraint).Validated(applying);
