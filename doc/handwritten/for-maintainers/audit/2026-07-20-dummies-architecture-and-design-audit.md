@@ -304,7 +304,7 @@ mis-generation) and are cosmetic next to (c) and (d).
 
 ### 4.2 The "printable ASCII" claim is overstated in three places
 
-`RegexAlphabet.cs:3-9`, `AnyPattern.cs:15-16`, and `Any.cs:70` all claim every terminal resolves to
+`RegexAlphabet.cs:3-9`, `AnyPattern.cs:21`, and `Any.Pattern.cs:23` all claim every terminal resolves to
 printable ASCII (0x20–0x7E). The code — correctly — emits exactly the characters the pattern
 demands: `\t`, `\a`, `\cA`, `\0`, and `\uHHHH` literals can be non-printable or non-ASCII, and the
 library's own test asserts it (`AnyPatternTests` — `\a` → U+0007). The restriction genuinely
@@ -317,7 +317,8 @@ three doc sites should say precisely that (§11 item 6).
 Two mirror structures must agree method-for-method, and nothing checks either:
 
 * **`Any` ↔ `AnyContext`**: every scalar entry point exists twice (21 on the netstandard2.0 leg, 26
-  on net8.0, counting both `StringMatching` overloads) — `Any.cs:54-317` vs `AnyContext.cs:48-296`.
+  on net8.0, counting both `StringMatching` overloads) — `Any.Primitive.cs:11-224`,
+  `Any.Pattern.cs:34-52` and `Any.Uri.cs:13` vs `AnyContext.cs:51-305`.
   The mirror is legitimate design (composition and collections are deliberately *not* mirrored —
   they inherit a context through operand sources, which is elegant), but a new scalar type added to
   `Any` and forgotten on `AnyContext` would compile, pass all 222 tests, and ship a hole in the
@@ -509,7 +510,7 @@ the implementation reference.
 | 0006 (historical) | Superseded | **Compliant and exceeded.** The inherited seeding contract (context-local, opt-in determinism, seed reporting) is implemented faithfully; JustDummies adds the isolated `AnyContext` the original ADR only anticipated. |
 | 0011 | Accepted | **Compliant.** No FirstClassErrors reference; boundary machine-checked (`ArchitectureTests`); standalone identity, release train, and docs in place. Note: enforcement is *stronger* than the recorded decision (§5). |
 | 0013 | Accepted | **Compliant, verified in detail** — eager gate net of outside-domain `Containing` credits, conservative `ContainingAny` accounting, overflow-safe arithmetic, bounded budget, both failure channels. **One minor deviation:** the exhaustion message *unconditionally* promises `Any.Reproducibly({seed}, …)` replay (`CollectionState.cs:246-254`; the `seed is not null` guard is dead code — the seed can never be null there). For a **foreign** element generator whose draws ignore the ambient source, that promise is false; the ADR says failures are "explicit and reproducible". Qualify the message when the element generator carries no library source. |
-| 0015 | Accepted | **Compliant exactly** — arities 2–8, no more; suppressions localized with ADR-referencing justifications (`Any.cs:622-623`); ceiling documented on the arity-8 overload. |
+| 0015 | Accepted | **Compliant exactly** — arities 2–8, no more; suppressions localized with ADR-referencing justifications (`Any.Combine.cs:214-215`, `266-267`); ceiling documented on the arity-8 overload. |
 | 0020 | Accepted | **Fully compliant.** No implicit conversions anywhere; `Generate()` is the sole materialization; builders verified immutable (every fluent method returns a new instance). Residue: three test DisplayNames and one comment still *describe* the removed conversions (§4.3). |
 | 0022 | Accepted | **Partial for JustDummies.** The netstandard2.0 asset is loaded and driven on net472 only transitively through FirstClassErrors' floor job; JustDummies' own suite never runs there, and the package README states no .NET Framework floor at all (FirstClassErrors' README does). Close before first publication (§11 item 5). |
 | 0025 | Proposed | **Compliant on every major clause** (home-grown parser, first-class rejection, terminal generator, zero dependencies, printable-ASCII *default* universe, bounded unbounded-quantifier spread). The §4.1(c)/(d) defects are quality bugs *within* the decided scope, not deviations — with the caveat that (d) breaks the rejection *promise* the ADR records. One taxonomy edge: a well-formed negated class outside the printable universe raises `ArgumentException` ("malformed") instead of `UnsupportedRegexException`. |
@@ -587,7 +588,7 @@ complicate `WithSeed`; the honest restriction is the right V1).
 
 **(b) Seed reports can name a wrong or inapplicable seed in mixed/fixed-source composition.**
 `Combine` propagates the **first non-null** operand source for failure reporting
-(`Any.cs:446` et al.). `Any.Combine(Any.WithSeed(1).Int32(), Any.WithSeed(2).Int32(), throwing)`
+(`Any.Combine.cs:33` et al.). `Any.Combine(Any.WithSeed(1).Int32(), Any.WithSeed(2).Int32(), throwing)`
 fails with "seeded with 1; reproduce with `Any.Reproducibly(1, …)`" — doubly wrong: seed 2 goes
 unreported, and the instruction is inapplicable because `Reproducibly` pins the *ambient* source,
 which `FixedRandomSource`-backed generators ignore by design. This is an edge case (mixing seeded
