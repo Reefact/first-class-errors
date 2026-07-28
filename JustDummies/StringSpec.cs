@@ -293,10 +293,17 @@ internal sealed class StringSpec {
         int seed = source.Current.Seed;
         // A string generator draws only from its own source, so the seed replays the run fully — never the partial hint.
         string replay = source.ReplayGuidance(seed);
+        // The claim is the budget, not impossibility. The redraw is bounded, so an exhausted budget is overwhelming
+        // evidence that almost nothing survives the exclusions — and the usual cause really is a shape with no value
+        // left — but it is not a proof: a shape with one free value in a few hundred thousand exhausts the budget
+        // most of the time and is still satisfiable. Reporting "unsatisfiable" would send a caller hunting for a
+        // contradiction that need not exist.
         string message =
             $"Could not generate a string that satisfies the declared shape while excluding {DescribeExcluded()}: " +
-            $"no candidate survived {V(ExclusionRedrawBudget)} draws, so the exclusions leave the shape unsatisfiable " +
-            "(for example excluding every value a fixed short length allows). Loosen the exclusions or widen the shape. " +
+            $"no candidate survived {V(ExclusionRedrawBudget)} draws. The redraw is bounded, so this is an exhausted " +
+            "budget rather than a proof that no value remains — though the usual cause is a shape the exclusions " +
+            "leave nothing of (excluding every value a fixed short length allows). Loosen the exclusions or widen " +
+            "the shape. " +
             replay;
 
         return new AnyGenerationException(message, seed);

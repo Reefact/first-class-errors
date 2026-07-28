@@ -1,6 +1,6 @@
-# ADR-0048 | Drop the JustDummies generator from the per-pull-request mutation matrix
+# ADR-0049 | Drop the JustDummies generator from the per-pull-request mutation matrix
 
-🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0048-drop-the-justdummies-generator-from-the-per-pull-request-mutation-matrix.fr.md)
+🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0049-drop-the-justdummies-generator-from-the-per-pull-request-mutation-matrix.fr.md)
 
 **Status:** Proposed
 **Date:** 2026-07-28

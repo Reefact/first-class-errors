@@ -299,6 +299,25 @@ public sealed class AnyStringTests {
         Check.That(error.Message).Contains("Any.WithSeed(20260721)");
     }
 
+    [Fact(DisplayName = "An exhausted exclusion budget reports the budget, never a claim that the shape is unsatisfiable.")]
+    public void ExhaustedExclusionBudgetDoesNotClaimUnsatisfiability() {
+        // The redraw is bounded at 10,000 draws, and the message concluded from an exhausted budget that "the
+        // exclusions leave the shape unsatisfiable". That does not follow: the failure probability is
+        // (excluded / domain) ^ 10000, so a shape keeping one value free in a few hundred thousand exhausts the
+        // budget most of the time and is still satisfiable. Here the domain really is empty — that is what makes the
+        // case deterministic — but the message must state what was established, the budget, not a proof it never ran.
+        string[] everyLetter = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".Select(letter => letter.ToString()).ToArray();
+
+        AnyGenerationException error = Assert.Throws<AnyGenerationException>(
+            () => Any.WithSeed(20260721).String().WithLength(1).Alpha().Except(everyLetter).Generate());
+
+        Check.That(error.Message).Contains("10000 draws");
+        Check.That(error.Message).Contains("exhausted budget rather than a proof");
+        Check.That(error.Message).Not.Contains("so the exclusions leave the shape unsatisfiable");
+        // The actionable half stays: the caller still learns what to change.
+        Check.That(error.Message).Contains("Loosen the exclusions or widen the shape");
+    }
+
     [Fact(DisplayName = "A seeded exclusion is reproducible: the same seed yields the same value.")]
     public void SeededExclusionIsReproducible() {
         string first  = Any.WithSeed(4242).String().NonEmpty().Alpha().DifferentFrom("Q").Generate();

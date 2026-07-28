@@ -63,6 +63,18 @@ public sealed class PatternRoundTripProperties {
     private const int UnboundedExtra = 8;
 
     /// <summary>
+    ///     The character ceiling a generation may not cross — the library's own <c>AnyPattern.GenerationLimit</c>,
+    ///     restated here because it is private. A quantifier minimum above it can only be refused, never built.
+    /// </summary>
+    private const int GenerationLimit = 65536;
+
+    /// <summary>
+    ///     How many values the minimum-honouring property draws per case. Kept low because most of its cases ask for a
+    ///     minimum far above <see cref="GenerationLimit" />, and each such draw walks the ceiling before refusing.
+    /// </summary>
+    private const int MinimumHonouredDrawCount = 3;
+
+    /// <summary>
     ///     How many values the alternation-reachability property draws. Four branches missed by 120 uniform draws is a
     ///     one-in-a-quadrillion event, so the property is deterministic in practice while staying a genuine reachability
     ///     claim rather than a containment one.
@@ -380,6 +392,18 @@ public sealed class PatternRoundTripProperties {
                select quantifier.Length == 0 || lazy != 0 ? quantifier : quantifier + "?";
     }
 
+    /// <summary>
+    ///     A minimum for an unbounded quantifier, spread across the whole legal range rather than the small end alone.
+    ///     The three pinned regions are where the count arithmetic can go wrong: buildable minimums, the ceiling
+    ///     crossing, and the top of the int range where adding <see cref="UnboundedExtra" /> overflows.
+    /// </summary>
+    private static Gen<int> UnboundedMinimum() {
+        return Gen.Frequency<int>((4, Gen.Choose(0, UnboundedExtra)),
+                                  (2, Gen.Choose(GenerationLimit - UnboundedExtra, GenerationLimit + UnboundedExtra)),
+                                  (3, Gen.Choose(int.MaxValue - (2 * UnboundedExtra), int.MaxValue)),
+                                  (2, Gen.Choose(UnboundedExtra + 1, int.MaxValue)));
+    }
+
     /// <summary>A short literal word, the material of the alternation-reachability property's branches.</summary>
     private static Gen<string> Word() {
         return from characters in Gen.ArrayOf(Gen.Elements(AlphaNumericAlphabet.ToCharArray()), 3)
@@ -482,6 +506,37 @@ public sealed class PatternRoundTripProperties {
                         return Expect.EveryDraw(Any.StringMatching(quantified.Pattern),
                                                 value => value.Length >= quantified.Min
                                                          && value.Length <= quantified.Min + UnboundedExtra);
+                    })
+            .QuickCheckThrowOnFailure();
+    }
+
+    [Fact(DisplayName = "An unbounded quantifier never yields a value shorter than its minimum, whatever the minimum.")]
+    public void UnboundedQuantifiersNeverYieldAValueShorterThanTheirMinimum() {
+        Gen<(string Atom, int Min)> cases =
+            from atom in SingleCharacterAtom()
+            from minimum in UnboundedMinimum()
+            select (Atom: atom, Min: minimum);
+
+        Prop.ForAll(cases.ToArbitrary(),
+                    testCase => {
+                        // The companion property above pins the spread for minimums small enough to build. This one
+                        // states the half that holds for EVERY minimum, including those no generation can satisfy:
+                        // either a value of the promised length comes out, or the ceiling refuses — but a value
+                        // SHORTER than the minimum is not an outcome. That is the class the int-arithmetic overflow
+                        // fell into, where a minimum near int.MaxValue wrapped negative and yielded the empty string.
+                        AnyPattern generator = Any.StringMatching(testCase.Atom + "{" + Digits(testCase.Min) + ",}");
+
+                        for (int draw = 0; draw < MinimumHonouredDrawCount; draw++) {
+                            try {
+                                // The atom is one character wide, so the generated length IS the repetition count.
+                                int length = generator.Generate().Length;
+                                if (length < testCase.Min || length > (long)testCase.Min + UnboundedExtra) { return false; }
+                            } catch (AnyGenerationException) {
+                                // Overrunning the ceiling is the honest refusal for a minimum too large to build.
+                            }
+                        }
+
+                        return true;
                     })
             .QuickCheckThrowOnFailure();
     }

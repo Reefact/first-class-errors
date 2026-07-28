@@ -214,10 +214,17 @@ internal sealed class CollectionState<T> {
         if (_fixedContaining.Count == 0) { return 0; }
         // A fixed value the element generator could never produce extends the effective distinct domain; a value
         // already inside it does not. The cardinality snapshot came from this same generator, so whenever the eager
-        // check runs it also answers membership (cardinality and membership are one interface). The null branch is a
-        // defensive fallback: treat every fixed value as outside, so the check can only defer to the bounded draw,
-        // never falsely reject.
-        if (_item is not ICardinalityHint<T> hint) { return _fixedContaining.Count; }
+        // check runs it also answers membership (cardinality and membership are one interface). Both other branches
+        // are the same defensive fallback: treat every fixed value as outside, so the check can only defer to the
+        // bounded draw, never falsely reject.
+        //
+        // A custom comparer takes that fallback because the hint answers membership under the DEFAULT comparer, and a
+        // custom one can be stricter — reference equality over a type with value equality is the plain case. Two
+        // values the hint reports as one are then two values this collection keeps apart, so consulting it would call
+        // a pinned value already-inside when it genuinely extends the domain, and refuse a specification the
+        // collection can satisfy. The cardinality itself survives a comparer (a pool of n values is at most n
+        // distinct under any of them, so the bound only ever over-states); membership does not.
+        if (_comparer is not null || _item is not ICardinalityHint<T> hint) { return _fixedContaining.Count; }
 
         int outside = 0;
         foreach (T value in _fixedContaining) {

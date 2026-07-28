@@ -152,11 +152,16 @@ internal sealed class RegexRepeat : RegexNode {
 
     internal override void Append(RegexGenerationContext context) {
         if (context is null) { throw new ArgumentNullException(nameof(context)); }
-        int count = _max is int max
-                        ? context.Random.NextInt32Inclusive(_min, max)
-                        : _min + context.Random.Next(0, UnboundedExtra + 1);
+        // The unbounded count is widened to long before the extra repetitions are added: a minimum within
+        // UnboundedExtra of int.MaxValue would otherwise wrap negative, and a negative count writes nothing at all —
+        // silently yielding a value the pattern does not match, which is the one outcome generation must never
+        // produce. Widened, such a count simply walks until the generation ceiling reports the overrun, exactly as
+        // any other minimum too large to fit does.
+        long count = _max is int max
+                         ? context.Random.NextInt32Inclusive(_min, max)
+                         : (long)_min + context.Random.Next(0, UnboundedExtra + 1);
 
-        for (int repetition = 0; repetition < count; repetition++) { _child.Append(context); }
+        for (long repetition = 0; repetition < count; repetition++) { _child.Append(context); }
     }
 
 }
