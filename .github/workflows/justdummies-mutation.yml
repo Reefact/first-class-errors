@@ -36,30 +36,35 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
 
 jobs:
-  # The gate. One leg per shipped library, each mutating ONLY what the pull request changed
-  # (Stryker's `--since`), so the cost follows the diff and not the size of the library.
+  # The gate. One leg per shipped library the diff-scoped run can afford, each mutating ONLY what the
+  # pull request changed (Stryker's `--since`), so the cost follows the diff and not the size of the
+  # library — which holds for these two, and is exactly what stopped holding for the generator
+  # (ADR-0049): `--since` selects per FILE, so on a large source the cost follows the file instead.
   #
   # `gate` below aggregates these legs into the single check to mark as required on `main`.
   changed:
     name: Mutate the diff (${{ matrix.name }})
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    # A leg whose library the pull request did not touch finishes in ~2 min (analysis, build, initial
-    # test run, mutant generation). The cap covers the worst realistic case instead: `JustDummies` is
-    # the largest library in the repository, and Stryker selects per changed FILE, so touching one of
-    # its bigger generators puts that whole file's mutants on the gate.
-    timeout-minutes: 60
+    # Both remaining legs finish in about ninety seconds, touched or untouched. The cap is a runaway
+    # guard, not a budget: the leg that needed one — the generator's — no longer runs here (ADR-0049).
+    timeout-minutes: 20
     strategy:
       # Run both legs to completion: a survivor in the adapter is worth seeing even when the
-      # generator is red.
+      # analyzers are red.
       fail-fast: false
       matrix:
-        # What the JustDummies packages SHIP: the generator, its xUnit v3 adapter (ADR-0039), and the
-        # analyzers packed inside the generator package (ADR-0044). The FirstClassErrors libraries live
-        # in `mutation.yml`. See ADR-0043.
+        # The JustDummies packages' xUnit v3 adapter (ADR-0039) and the analyzers packed inside the
+        # generator package (ADR-0044). The FirstClassErrors libraries live in `mutation.yml`.
+        # See ADR-0043.
+        #
+        # The GENERATOR is deliberately absent (ADR-0049) — it is the only leg this matrix cannot
+        # afford. Stryker selects per changed FILE, not per changed line, so a diff of ~100 lines
+        # touching one of its bigger sources pulls in that whole file: measured at 844 mutants, still
+        # running after an hour, no score. Every in-tool lever tops out around -36% against the -95%
+        # such a leg would need, sharding is floored by the largest changed file, and line-scoped
+        # `mutate` patterns select nothing at all. The weekly `full` sweep below still measures it.
         include:
-          - name: justdummies
-            config: build/stryker/justdummies.json
           - name: justdummies-xunit
             config: build/stryker/justdummies-xunit.json
           - name: justdummies-analyzers

@@ -231,3 +231,4 @@ Optional supporting material:
 | [ADR-0046](0046-make-the-per-pull-request-mutation-gate-advisory.md) | Make the per-pull-request mutation gate advisory; the weekly full sweep is the enforced bar | Proposed |
 | [ADR-0047](0047-measure-justdummies-mutation-against-the-unit-suite-only.md) | Measure JustDummies mutation against the deterministic unit suite only; drop the FsCheck property suite from the oracle | Proposed |
 | [ADR-0048](0048-guarantee-a-generated-regex-value-matches-by-bounded-redraw.md) | Guarantee a generated regex value matches its pattern, by bounded redraw | Proposed |
+| [ADR-0049](0049-drop-the-justdummies-generator-from-the-per-pull-request-mutation-matrix.md) | Drop the JustDummies generator from the per-pull-request mutation matrix; its adapter and analyzers keep theirs, the weekly sweep keeps measuring it | Accepted |

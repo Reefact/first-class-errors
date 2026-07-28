@@ -12,11 +12,12 @@
 Mutation testing for the **three JustDummies components** — `JustDummies`, its
 xUnit v3 adapter `JustDummies.Xunit` ([ADR-0039](../adr/0039-adapt-dummies-to-xunit-v3-through-a-companion-package.md)),
 and the analyzers that ship inside the package ([ADR-0044](../adr/0044-ship-justdummies-analyzers.md)).
-On a pull request it mutates only the files the pull request changed and fails
-when the score falls under the library's threshold; a weekly sweep measures
-everything else. What mutation testing *is*, and why this repository gates on
-it, is explained once on the [`mutation`](mutation.en.md) page — this workflow is
-the same machine with a different matrix.
+On a pull request it mutates only the files the pull request changed, for the
+adapter and the analyzers; the generator is measured by the weekly sweep alone
+([ADR-0049](../adr/0049-drop-the-justdummies-generator-from-the-per-pull-request-mutation-matrix.md)).
+What mutation testing *is*, and why this repository gates on it, is explained once
+on the [`mutation`](mutation.en.md) page — this workflow is the same machine with
+a different matrix.
 
 ## Why it is a separate workflow
 
@@ -45,13 +46,24 @@ enforced bar for each is its weekly full sweep.
 
 ## How it runs
 
-Identically to [`mutation`](mutation.en.md), whose page documents the mechanism
-in full: `changed` mutates the diff from the fork point, `gate` collapses the
-matrix into one stable check name, `full` sweeps everything with the threshold
-disabled. The per-component Stryker configurations are
+Almost identically to [`mutation`](mutation.en.md), whose page documents the
+mechanism in full: `changed` mutates the diff from the fork point, `gate`
+collapses the matrix into one stable check name, `full` sweeps everything with the
+threshold disabled. The per-component Stryker configurations are
 [`build/stryker/justdummies.json`](../../../../build/stryker/justdummies.json),
 [`build/stryker/justdummies-xunit.json`](../../../../build/stryker/justdummies-xunit.json)
 and [`build/stryker/justdummies-analyzers.json`](../../../../build/stryker/justdummies-analyzers.json).
+
+**The one place the two workflows differ: the per-PR matrix is two legs, not
+three.** The generator is swept weekly but is **not** mutated per pull request
+([ADR-0049](../adr/0049-drop-the-justdummies-generator-from-the-per-pull-request-mutation-matrix.md)).
+Because `--since` selects per changed **file** rather than per changed line, a
+hundred-line diff touching one of the generator's larger sources pulls in that
+whole file: measured at 844 mutants, still running after an hour, producing no
+score at all. That is not a tuning gap — every lever Stryker exposes tops out
+around −36 % where such a leg would need −95 %, sharding cannot go below one
+file, and line-scoped `mutate` patterns select nothing. The adapter and the
+analyzers are small, finish in about ninety seconds, and keep their leg.
 
 Two points from that page matter more here than anywhere else:
 
