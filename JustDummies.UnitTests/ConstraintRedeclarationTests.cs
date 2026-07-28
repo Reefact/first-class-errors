@@ -45,6 +45,10 @@ public sealed class ConstraintRedeclarationTests {
         yield return ("Char().LowerCase()", () => Any.Char().LowerCase().LowerCase());
         yield return ("Guid().OneOf(pinned)", () => Any.Guid().OneOf(Pinned).OneOf(Pinned));
         yield return ("Uri().Web().WithPathSegments(2)", () => Any.Uri().Web().WithPathSegments(2).WithPathSegments(2));
+        yield return ("Uri().Web().WithHost(\"a.example\")", () => Any.Uri().Web().WithHost("a.example").WithHost("a.example"));
+        yield return ("Uri().Web().WithPort(8080)", () => Any.Uri().Web().WithPort(8080).WithPort(8080));
+        yield return ("Uri().Web().WithUserInfo(\"alice\")", () => Any.Uri().Web().WithUserInfo("alice").WithUserInfo("alice"));
+        yield return ("Uri().Mailto().WithDomain(\"a.example\")", () => Any.Uri().Mailto().WithDomain("a.example").WithDomain("a.example"));
         yield return ("ListOf().WithCount(3)", () => Any.ListOf(Any.Int32()).WithCount(3).WithCount(3));
         yield return ("DateTimeOffset().WithOffset(zero)", () => Any.DateTimeOffset().WithOffset(TimeSpan.Zero).WithOffset(TimeSpan.Zero));
     }
@@ -60,6 +64,11 @@ public sealed class ConstraintRedeclarationTests {
         yield return ("Decimal().WithScale(2).WithScale(4)", () => Any.Decimal().WithScale(2).WithScale(4));
         yield return ("Char().Alpha().Numeric()", () => Any.Char().Alpha().Numeric());
         yield return ("Uri().Web().WithPathSegments(2).WithPathSegments(3)", () => Any.Uri().Web().WithPathSegments(2).WithPathSegments(3));
+        yield return ("Uri().Web().WithHost(a).WithHost(b)", () => Any.Uri().Web().WithHost("first.example").WithHost("second.example"));
+        yield return ("Uri().Web().WithPort(8080).WithPort(9090)", () => Any.Uri().Web().WithPort(8080).WithPort(9090));
+        yield return ("Uri().Web().WithUserInfo(a).WithUserInfo(b)", () => Any.Uri().Web().WithUserInfo("alice").WithUserInfo("bob"));
+        yield return ("Uri().Ftp().WithPort().WithPort(21)", () => Any.Uri().Ftp().WithPort().WithPort(21));
+        yield return ("Uri().Mailto().WithDomain(a).WithDomain(b)", () => Any.Uri().Mailto().WithDomain("a.example").WithDomain("b.example"));
         yield return ("ListOf().WithCount(3).WithCount(4)", () => Any.ListOf(Any.Int32()).WithCount(3).WithCount(4));
         yield return ("DateTimeOffset().WithOffset(0h).WithOffset(1h)", () => Any.DateTimeOffset().WithOffset(TimeSpan.Zero).WithOffset(TimeSpan.FromHours(1)));
     }
@@ -102,6 +111,41 @@ public sealed class ConstraintRedeclarationTests {
              .That(accepted).IsEmpty();
     }
 
+    [Fact(DisplayName = "A second URI component pin names both sides instead of silently replacing the first.")]
+    public void ASecondComponentPinNamesBothSides() {
+        // Regression: WithHost, WithPort and WithUserInfo were plain setters — a second, different value replaced the
+        // first and the first vanished without a word, while WithPathSegments in the very same generator raised a
+        // conflict. A URI has one host, one port and one user-info, so a second declaration can never be honoured
+        // alongside the first; dropping it silently discards a constraint the caller wrote.
+        ConflictingAnyConstraintException host = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.Uri().Web().WithHost("first.example").WithHost("second.example"));
+
+        Check.That(host.Message).Contains("WithHost(\"second.example\")");
+        Check.That(host.Message).Contains("WithHost(\"first.example\")");
+
+        // The message names the PUBLIC call, so a mailto's WithDomain reads as WithDomain and not as the host setter
+        // it shares with the web families.
+        ConflictingAnyConstraintException domain = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.Uri().Mailto().WithDomain("a.example").WithDomain("b.example"));
+
+        Check.That(domain.Message).Contains("WithDomain(\"b.example\")");
+        Check.That(domain.Message).Not.Contains("WithHost");
+    }
+
+    [Fact(DisplayName = "A second, different Distinct comparer conflicts; the same one again is a no-op.")]
+    public void ASecondDistinctComparerConflicts() {
+        // One collection is distinct under one equality. Two different comparers cannot both be honoured, and the
+        // second was silently winning.
+        Check.ThatCode(() => Any.ListOf(Any.Int32()).Distinct(new ModuloComparer(10)).Distinct(new ModuloComparer(100)))
+             .Throws<ConflictingAnyConstraintException>();
+
+        IEqualityComparer<int> comparer = new ModuloComparer(10);
+
+        Check.ThatCode(() => Any.ListOf(Any.Int32()).Distinct(comparer).Distinct(comparer)).DoesNotThrow();
+        // Re-declaring distinctness without naming a comparer asks for the equality already in force.
+        Check.ThatCode(() => Any.ListOf(Any.Int32()).Distinct(comparer).Distinct()).DoesNotThrow();
+    }
+
     [Fact(DisplayName = "A no-op re-declaration leaves the generator's domain untouched.")]
     public void ANoOpRedeclarationDoesNotWidenTheDomain() {
         // The no-op must be a no-op: returning `this` rather than rebuilding means the second declaration cannot
@@ -112,5 +156,27 @@ public sealed class ConstraintRedeclarationTests {
             Check.That(Any.ListOf(Any.Int32()).WithCount(3).WithCount(3).Generate().Count).IsEqualTo(3);
         }
     }
+
+    #region Nested types
+
+    private sealed class ModuloComparer : IEqualityComparer<int> {
+
+        private readonly int _modulus;
+
+        public ModuloComparer(int modulus) {
+            _modulus = modulus;
+        }
+
+        public bool Equals(int x, int y) {
+            return x % _modulus == y % _modulus;
+        }
+
+        public int GetHashCode(int obj) {
+            return obj % _modulus;
+        }
+
+    }
+
+    #endregion
 
 }
