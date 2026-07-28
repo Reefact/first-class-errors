@@ -653,10 +653,17 @@ internal sealed class StringSpec {
         return null;
     }
 
+    /// <summary>
+    ///     The first character of <paramref name="fragment" /> the declared casing forbids. The test is the Unicode
+    ///     one, not an ASCII range: the constructive filler is ASCII, but an anchored fragment and a pooled value are
+    ///     the caller's own text, so an accented or non-Latin letter must be judged on its actual case rather than
+    ///     waved through — the constraint says "every alphabetic character", and a generator must not emit a value
+    ///     that violates the constraint it was given.
+    /// </summary>
     private static char? FirstAgainstCasing(string fragment, LetterCasing casing) {
         foreach (char character in fragment) {
-            if (casing == LetterCasing.Lower && character is >= 'A' and <= 'Z') { return character; }
-            if (casing == LetterCasing.Upper && character is >= 'a' and <= 'z') { return character; }
+            if (casing == LetterCasing.Lower && char.IsUpper(character)) { return character; }
+            if (casing == LetterCasing.Upper && char.IsLower(character)) { return character; }
         }
 
         return null;
