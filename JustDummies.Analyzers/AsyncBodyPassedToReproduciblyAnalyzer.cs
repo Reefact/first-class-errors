@@ -8,7 +8,7 @@ namespace JustDummies.Analyzers;
 
 /// <summary>
 ///     JD001 — reports an <c>async</c> lambda passed to the synchronous <c>Any.Reproducibly(Action)</c>. Bound to an
-///     <see cref="System.Action" /> it becomes <c>async void</c>, so the body's failures after the first <c>await</c>
+///     <see cref="Action" /> it becomes <c>async void</c>, so the body's failures after the first <c>await</c>
 ///     escape the reproducible scope entirely and never fail the test. Use <c>Any.ReproduciblyAsync(Func&lt;Task&gt;)</c>
 ///     and await it.
 /// </summary>

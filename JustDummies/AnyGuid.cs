@@ -2,9 +2,9 @@ namespace JustDummies;
 
 /// <summary>
 ///     A fluent generator of arbitrary <see cref="Guid" /> values, drawn from the seedable source — unlike
-///     <see cref="System.Guid.NewGuid" />, a generated identifier is reproducible inside an
+///     <see cref="Guid.NewGuid" />, a generated identifier is reproducible inside an
 ///     <c>Any.Reproducibly(...)</c> run. An unconstrained draw is, for every practical purpose, never
-///     <see cref="System.Guid.Empty" />; chain <see cref="NonEmpty" /> to make that requirement explicit, or
+///     <see cref="Guid.Empty" />; chain <see cref="NonEmpty" /> to make that requirement explicit, or
 ///     <see cref="Empty" /> to pin the empty identifier. Contradictory constraints fail eagerly with a
 ///     <see cref="ConflictingAnyConstraintException" /> naming both sides.
 /// </summary>
@@ -78,14 +78,14 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Gui
         return !_excluded.Contains(value);
     }
 
-    /// <summary>Requires an identifier different from <see cref="System.Guid.Empty" />.</summary>
+    /// <summary>Requires an identifier different from <see cref="Guid.Empty" />.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyGuid NonEmpty() {
         return WithExcluded([Guid.Empty], "NonEmpty()");
     }
 
-    /// <summary>Pins the identifier to <see cref="System.Guid.Empty" />.</summary>
+    /// <summary>Pins the identifier to <see cref="Guid.Empty" />.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyGuid Empty() {

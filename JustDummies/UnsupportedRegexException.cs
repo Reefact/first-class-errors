@@ -6,7 +6,7 @@ namespace JustDummies;
 ///     balancing group, a Unicode category, a word boundary. These constructs are either not regular (so no finite generator can honour
 ///     them) or deliberately out of scope; the library refuses to guess rather than silently emit a value that does
 ///     not actually match. A syntactically malformed pattern is a caller mistake and surfaces as an
-///     <see cref="System.ArgumentException" /> instead.
+///     <see cref="ArgumentException" /> instead.
 /// </summary>
 public sealed class UnsupportedRegexException : DummyException {
 
