@@ -357,9 +357,9 @@ public sealed class AnyStringTests {
         Check.That(second).IsEqualTo(first);
     }
 
-    [Fact(DisplayName = "OneOf cannot combine with an exclusion: it stays terminal.")]
-    public void OneOfCannotCombineWithAnExclusion() {
-        Check.ThatCode(() => Any.String().DifferentFrom("x").OneOf("a", "b")).Throws<ConflictingAnyConstraintException>();
+    [Fact(DisplayName = "An exclusion composes with OneOf, removing the excluded value from the set.")]
+    public void AnExclusionComposesWithOneOf() {
+        Check.That(Any.String().DifferentFrom("x").OneOf("a", "x").Generate()).IsEqualTo("a");
     }
 
     [Fact(DisplayName = "Exclusion arguments are validated as arguments, not as conflicts.")]

@@ -393,8 +393,8 @@ public sealed class StringShapeProperties {
             .QuickCheckThrowOnFailure();
     }
 
-    [Fact(DisplayName = "OneOf on an already constrained generator conflicts: it stays a terminal specification.")]
-    public void OneOfOnAConstrainedGeneratorConflicts() {
+    [Fact(DisplayName = "OneOf on an already constrained generator narrows it, and conflicts only when the values leave nothing.")]
+    public void OneOfOnAConstrainedGeneratorNarrowsOrConflicts() {
         Gen<string[]> pools = Gen.NonEmptyListOf(Affix(DefaultAlphabet, 6)).Select(values => values.Distinct().ToArray());
 
         Gen<(int Length, string[] Pool)> cases =
@@ -403,10 +403,49 @@ public sealed class StringShapeProperties {
             select (Length: length, Pool: pool);
 
         Prop.ForAll(cases.ToArbitrary(),
-                    // WithLength constrains the generator for every length, zero included, so the terminal set can
-                    // never be grafted onto it — whatever the pool.
-                    testCase => Expect.Throws<ConflictingAnyConstraintException>(
-                        () => Any.String().WithLength(testCase.Length).OneOf(testCase.Pool)))
+                    // The verdict follows the values, not the mere presence of a constraint: whatever the length and
+                    // the pool, the generator survives exactly when some pooled value has that length, and every
+                    // draw is then one of those values.
+                    testCase => {
+                        string[] surviving = testCase.Pool.Where(value => value.Length == testCase.Length).ToArray();
+
+                        return surviving.Length == 0
+                                   ? Expect.Throws<ConflictingAnyConstraintException>(
+                                       () => Any.String().WithLength(testCase.Length).OneOf(testCase.Pool))
+                                   : Expect.EveryDraw(Any.String().WithLength(testCase.Length).OneOf(testCase.Pool),
+                                                      value => surviving.Contains(value));
+                    })
+            .QuickCheckThrowOnFailure();
+    }
+
+    /// <remarks>
+    ///     Quantified over a <b>length</b> constraint on purpose. Order is immaterial for every constraint the
+    ///     constructive path accepts on its own, which is what this property covers; the one exception — a fragment
+    ///     combination the layout budget rejects before any value set can reinterpret it as a filter — is a decision,
+    ///     not an invariant, and belongs to the example suite that pins it.
+    /// </remarks>
+    [Fact(DisplayName = "A length constraint and a value set reach the same domain whichever is declared first.")]
+    public void OneOfIsOrderIndependentWithALengthConstraint() {
+        Gen<string[]> pools = Gen.NonEmptyListOf(Affix(DefaultAlphabet, 6)).Select(values => values.Distinct().ToArray());
+
+        Gen<(int Length, string[] Pool)> cases =
+            from length in Generators.Count(20)
+            from pool in pools
+            select (Length: length, Pool: pool);
+
+        Prop.ForAll(cases.ToArbitrary(),
+                    // Declaration order is a call-site accident; the domain it describes is not. Both orders conflict
+                    // together, or both draw from the same surviving values — the verdict alone would not catch an
+                    // order that survives with a different domain.
+                    testCase => {
+                        string[] surviving = testCase.Pool.Where(value => value.Length == testCase.Length).ToArray();
+
+                        return surviving.Length == 0
+                                   ? Expect.Throws<ConflictingAnyConstraintException>(() => Any.String().OneOf(testCase.Pool).WithLength(testCase.Length))
+                                     && Expect.Throws<ConflictingAnyConstraintException>(() => Any.String().WithLength(testCase.Length).OneOf(testCase.Pool))
+                                   : Expect.EveryDraw(Any.String().OneOf(testCase.Pool).WithLength(testCase.Length), value => surviving.Contains(value))
+                                     && Expect.EveryDraw(Any.String().WithLength(testCase.Length).OneOf(testCase.Pool), value => surviving.Contains(value));
+                    })
             .QuickCheckThrowOnFailure();
     }
 
