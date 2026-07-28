@@ -30,9 +30,11 @@ internal static class CountConstraints {
     }
 
     private static int RequireNonNegative(int count, string parameterName) {
-        if (count < 0) { throw new ArgumentOutOfRangeException(parameterName, count, "The count must not be negative."); }
+        return SizeGuard.RequireNonNegative(count, parameterName, "count");
+    }
 
-        return count;
+    private static int RequireProducible(int count, string parameterName) {
+        return SizeGuard.RequireProducible(count, parameterName, "count");
     }
 
     #endregion
@@ -54,20 +56,26 @@ internal static class CountConstraints {
     /// <summary>Fixes the exact number of elements.</summary>
     internal static CollectionState<T> WithCount<T>(CollectionState<T> state, int count) {
         if (state is null) { throw new ArgumentNullException(nameof(state)); }
-        RequireNonNegative(count, nameof(count));
+        RequireProducible(count, nameof(count));
 
         return state.WithExactCount(count, $"WithCount({V(count)})");
     }
 
-    /// <summary>Requires at least <paramref name="count" /> elements.</summary>
+    /// <summary>
+    ///     Requires at least <paramref name="count" /> elements. A minimum is the only one-sided count bound that
+    ///     enlarges the generated collection.
+    /// </summary>
     internal static CollectionState<T> WithMinCount<T>(CollectionState<T> state, int count) {
         if (state is null) { throw new ArgumentNullException(nameof(state)); }
-        RequireNonNegative(count, nameof(count));
+        RequireProducible(count, nameof(count));
 
         return state.WithMinCount(count, $"WithMinCount({V(count)})");
     }
 
-    /// <summary>Requires at most <paramref name="count" /> elements.</summary>
+    /// <summary>
+    ///     Requires at most <paramref name="count" /> elements. A maximum only ever narrows the draw — it never widens
+    ///     it beyond the default spread — so any non-negative value is accepted.
+    /// </summary>
     internal static CollectionState<T> WithMaxCount<T>(CollectionState<T> state, int count) {
         if (state is null) { throw new ArgumentNullException(nameof(state)); }
         RequireNonNegative(count, nameof(count));
@@ -75,10 +83,14 @@ internal static class CountConstraints {
         return state.WithMaxCount(count, $"WithMaxCount({V(count)})");
     }
 
-    /// <summary>Requires a number of elements within the inclusive range [<paramref name="minimum" />, <paramref name="maximum" />].</summary>
+    /// <summary>
+    ///     Requires a number of elements within the inclusive range [<paramref name="minimum" />,
+    ///     <paramref name="maximum" />]. Equivalent to declaring the two bounds separately: the minimum sets the size,
+    ///     the maximum only caps it.
+    /// </summary>
     internal static CollectionState<T> WithCountBetween<T>(CollectionState<T> state, int minimum, int maximum) {
         if (state is null) { throw new ArgumentNullException(nameof(state)); }
-        RequireNonNegative(minimum, nameof(minimum));
+        RequireProducible(minimum, nameof(minimum));
         RequireNonNegative(maximum, nameof(maximum));
         if (minimum > maximum) { throw new ArgumentException($"The minimum ({V(minimum)}) must be less than or equal to the maximum ({V(maximum)}).", nameof(minimum)); }
 

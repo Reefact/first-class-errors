@@ -38,6 +38,13 @@ public sealed class CollectionProperties {
     /// </summary>
     private const int DrawsPerShape = 4;
 
+    /// <summary>
+    ///     The number of elements a collection may reach above whatever its declared minimum is — the library's
+    ///     unconstrained spread, mirrored here because the suite is black-box. Smaller than a string's, since
+    ///     elements are themselves generated values.
+    /// </summary>
+    private const int DefaultCountSpread = 8;
+
     /// <summary>Negative counts, including the extremes an argument check that reasoned on magnitude would let through.</summary>
     private static Gen<int> NegativeCount() {
         return Generators.WithEdges(Gen.Choose(-30, -1), int.MinValue, int.MinValue + 1, -1);
@@ -60,6 +67,18 @@ public sealed class CollectionProperties {
     }
 
     #endregion
+
+    [Fact(DisplayName = "WithMaxCount only caps: it never widens the draw beyond the unconstrained spread.")]
+    public void WithMaxCountNeverWidensTheDraw() {
+        // ADR-0050: a maximum is a permission, not a size hint. It composes with the default spread instead of
+        // replacing it, so a loose cap must keep yielding the small unconstrained collection — which matters more
+        // here than for strings, since every extra element is itself a generated value.
+        Prop.ForAll(Generators.WithEdges(Generators.Count(200), 0, 1, DefaultCountSpread, DefaultCountSpread + 1, 200).ToArbitrary(),
+                    maximum => Expect.EveryDraw(Any.ListOf(Any.Int32()).WithMaxCount(maximum), list => list.Count <= Math.Min(maximum, DefaultCountSpread), DrawsPerShape)
+                               && Expect.EveryDraw(Any.ArrayOf(Any.Int32()).WithMaxCount(maximum), array => array.Length <= Math.Min(maximum, DefaultCountSpread), DrawsPerShape)
+                               && Expect.EveryDraw(Any.DictionaryOf(Any.Int32(), Any.Int32()).WithMaxCount(maximum), map => map.Count <= Math.Min(maximum, DefaultCountSpread), DrawsPerShape))
+            .QuickCheckThrowOnFailure();
+    }
 
     [Fact(DisplayName = "WithCount fixes the size exactly, for every count and every collection shape.")]
     public void WithCountFixesTheSize() {
