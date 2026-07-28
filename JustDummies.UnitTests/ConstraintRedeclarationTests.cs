@@ -36,6 +36,7 @@ public sealed class ConstraintRedeclarationTests {
         yield return ("String().WithChars(\"ab\")", () => Any.String().WithChars("ab").WithChars("ab"));
         yield return ("String().LowerCase()", () => Any.String().LowerCase().LowerCase());
         yield return ("String().UpperCase()", () => Any.String().UpperCase().UpperCase());
+        yield return ("String().OneOf(\"a\", \"b\")", () => Any.String().OneOf("a", "b").OneOf("a", "b"));
         yield return ("Int32().OneOf(1, 2)", () => Any.Int32().OneOf(1, 2).OneOf(1, 2));
         yield return ("Int32().MultipleOf(3)", () => Any.Int32().MultipleOf(3).MultipleOf(3));
         yield return ("Int64().OneOf(1L)", () => Any.Int64().OneOf(1L).OneOf(1L));
@@ -59,6 +60,7 @@ public sealed class ConstraintRedeclarationTests {
         yield return ("String().StartingWith(\"a\").StartingWith(\"b\")", () => Any.String().StartingWith("a").StartingWith("b"));
         yield return ("String().Alpha().Numeric()", () => Any.String().Alpha().Numeric());
         yield return ("String().LowerCase().UpperCase()", () => Any.String().LowerCase().UpperCase());
+        yield return ("String().OneOf(\"a\", \"b\").OneOf(\"c\", \"d\")", () => Any.String().OneOf("a", "b").OneOf("c", "d"));
         yield return ("Int32().OneOf(1, 2).OneOf(3, 4)", () => Any.Int32().OneOf(1, 2).OneOf(3, 4));
         yield return ("Int32().MultipleOf(2).MultipleOf(3)", () => Any.Int32().MultipleOf(2).MultipleOf(3));
         yield return ("Decimal().WithScale(2).WithScale(4)", () => Any.Decimal().WithScale(2).WithScale(4));
@@ -153,6 +155,7 @@ public sealed class ConstraintRedeclarationTests {
         for (int i = 0; i < 200; i++) {
             Check.That(Any.String().WithLength(4).WithLength(4).Generate().Length).IsEqualTo(4);
             Check.That(new[] { 7, 9 }).Contains(Any.Int32().OneOf(7, 9).OneOf(7, 9).Generate());
+            Check.That(new[] { "a", "b" }).Contains(Any.String().OneOf("a", "b").OneOf("a", "b").Generate());
             Check.That(Any.ListOf(Any.Int32()).WithCount(3).WithCount(3).Generate().Count).IsEqualTo(3);
         }
     }

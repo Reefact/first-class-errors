@@ -1,5 +1,6 @@
 #region Usings declarations
 
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 using NFluent;
@@ -307,6 +308,95 @@ public sealed class AnyPatternTests {
         string second = string.Join("|", Enumerable.Range(0, 20).Select(_ => Any.WithSeed(7).StringMatching(@"[A-Z]{3}-\d{4}").Generate()));
 
         Check.That(second).IsEqualTo(first);
+    }
+
+    [Fact(DisplayName = "DifferentFrom never yields the excluded value, and keeps the pattern's format.")]
+    public void DifferentFromNeverYieldsTheExcludedValue() {
+        const string pattern  = @"^ORD-\d{8}$";
+        const string existing = "ORD-12345678";
+
+        IAny<string> generator = Any.WithSeed(20260728).StringMatching(pattern).DifferentFrom(existing);
+
+        for (int i = 0; i < SampleCount; i++) {
+            string value = generator.Generate();
+            Check.That(value).IsNotEqualTo(existing);
+            AssertMatches(value, pattern);
+        }
+    }
+
+    [Fact(DisplayName = "Except removes every supplied value, and the exclusions accumulate across declarations.")]
+    public void ExceptRemovesEverySuppliedValue() {
+        // A four-word language with three words excluded: the surviving draw is forced, whichever declaration
+        // removed each word.
+        IAny<string> generator = Any.WithSeed(20260728).StringMatching("^[ab]{2}$").Except("ab", "ba").DifferentFrom("bb");
+
+        for (int i = 0; i < SampleCount; i++) {
+            Check.That(generator.Generate()).IsEqualTo("aa");
+        }
+    }
+
+    [Fact(DisplayName = "An exclusion is bounded and rejective: it keeps the draw reproducible under a seed.")]
+    public void AnExclusionStaysReproducibleUnderASeed() {
+        string first  = string.Join("|", Enumerable.Range(0, 20).Select(_ => Any.WithSeed(7).StringMatching(@"[A-Z]{3}-\d{4}").DifferentFrom("ABC-1234").Generate()));
+        string second = string.Join("|", Enumerable.Range(0, 20).Select(_ => Any.WithSeed(7).StringMatching(@"[A-Z]{3}-\d{4}").DifferentFrom("ABC-1234").Generate()));
+
+        Check.That(second).IsEqualTo(first);
+    }
+
+    [Fact(DisplayName = "An exhausted exclusion budget reports the budget, never a claim that the pattern matches nothing else.")]
+    public void AnExhaustedExclusionBudgetReportsTheBudget() {
+        // "^[ab]$" really is a two-word language and both words are excluded — yet the generator only ever built
+        // and rejected candidates, so the message may claim the spent budget and nothing stronger.
+        AnyGenerationException error = Assert.Throws<AnyGenerationException>(
+            () => Any.WithSeed(20260728).StringMatching("^[ab]$").Except("a", "b").Generate());
+
+        Check.That(error.Message).Contains("10000 draws");
+        Check.That(error.Message).Contains("exhausted budget rather than a proof");
+        Check.That(error.Message).Not.Contains("the pattern has no other value");
+        Check.That(error.Message).Contains("Loosen the exclusions or widen the pattern");
+    }
+
+    [Fact(DisplayName = "The exhaustion names the pattern, the excluded values and the seed that replays the run.")]
+    public void TheExhaustionCarriesTheSeed() {
+        AnyGenerationException error = Assert.Throws<AnyGenerationException>(
+            () => Any.WithSeed(20260728).StringMatching("^[ab]$").Except("a", "b").Generate());
+
+        Check.That(error.Message).Contains("\"^[ab]$\"");
+        Check.That(error.Message).Contains("\"a\", \"b\"");
+        Check.That(error.Message).Contains("Any.WithSeed(20260728)");
+        Check.That(error.Seed).IsEqualTo(20260728);
+    }
+
+    [Fact(DisplayName = "A value excluded twice is listed once: the exclusions collapse rather than accumulate.")]
+    public void RepeatedExclusionsCollapse() {
+        AnyGenerationException error = Assert.Throws<AnyGenerationException>(
+            () => Any.WithSeed(20260728).StringMatching("^[ab]$").Except("a").DifferentFrom("a").Except("a", "b").Generate());
+
+        Check.That(error.Message).Contains("excluding \"a\", \"b\":");
+        Check.That(error.Message).Not.Contains("\"a\", \"a\"");
+    }
+
+    [Fact(DisplayName = "A shape constraint stays refused: only the rejective pair is offered.")]
+    public void OnlyTheRejectivePairIsOffered() {
+        // Constructive constraints would mean building a value in the intersection of two regular languages, which
+        // the generator has no machinery for; the exclusion pair needs none, so it is the whole added surface.
+        string[] fluent = typeof(AnyPattern)
+                          .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                          .Where(method => method.ReturnType == typeof(AnyPattern) && !method.IsSpecialName)
+                          .Select(method => method.Name)
+                          .Distinct()
+                          .OrderBy(name => name, StringComparer.Ordinal)
+                          .ToArray();
+
+        Check.That(fluent).ContainsExactly("DifferentFrom", "Except");
+    }
+
+    [Fact(DisplayName = "The exclusion arguments are validated as arguments, not as conflicts.")]
+    public void ExclusionArgumentsAreValidated() {
+        Check.ThatCode(() => Any.StringMatching("a").Except(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => Any.StringMatching("a").Except()).Throws<ArgumentException>();
+        Check.ThatCode(() => Any.StringMatching("a").Except("a", null!)).Throws<ArgumentException>();
+        Check.ThatCode(() => Any.StringMatching("a").DifferentFrom(null!)).Throws<ArgumentNullException>();
     }
 
     [Fact(DisplayName = "Non-regular constructs are refused eagerly with UnsupportedRegexException.")]

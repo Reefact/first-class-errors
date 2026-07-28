@@ -179,12 +179,11 @@ public sealed class SurfaceParityTests {
         yield return [typeof(AnyChar), new[] { "Alpha", "AlphaNumeric", "Numeric", "UpperCase", "LowerCase", "OneOf", "Except", "DifferentFrom" }];
 
         // AnyString carries the exclusion pair Except/DifferentFrom (met by a bounded redraw, since strings are not
-        // ordinal-mapped). Its OneOf is terminal — it returns AnyStringOneOf, a different type, so it is not a
-        // self-returning constraint and does not appear in this fluent-method set.
+        // ordinal-mapped) and, like every other family, a composable OneOf that returns the builder itself.
         yield return [typeof(AnyString), new[] {
             "NonEmpty", "WithLength", "WithMinLength", "WithMaxLength", "WithLengthBetween",
             "StartingWith", "EndingWith", "Containing", "Alpha", "AlphaNumeric", "Numeric", "WithChars", "UpperCase", "LowerCase",
-            "Except", "DifferentFrom"
+            "OneOf", "Except", "DifferentFrom"
         }];
 
 #if NET8_0_OR_GREATER
