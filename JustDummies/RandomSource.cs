@@ -77,6 +77,16 @@ internal sealed class SeededRandom {
 
     #endregion
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Vulnerability", "S2245:Pseudorandom number generators (PRNGs) should not be used in security contexts",
+                                                     Justification =
+                                                         "S2245 is right that this generator is predictable; that predictability is the type's contract. A dummy is worth " +
+                                                         "generating only if the seed a failing run reports replays it, and a seeded System.Random is the one BCL generator " +
+                                                         "whose sequence a recorded seed reproduces. RandomNumberGenerator is seedless by design, so adopting it would delete " +
+                                                         "Any.Reproducibly, Any.WithSeed and Any.UseSeed outright, along with the seed every generation failure reports. It " +
+                                                         "would also break a checked contract: justdummies.yml compares the SEEDBATCH banner that tools/justdummies-check draws " +
+                                                         "from CrossTfmSeed byte-for-byte between the lib/netstandard2.0 and lib/net8.0 assets. No draw in this solution is " +
+                                                         "security material: SeededRandom is internal and reachable only through the Any.* test-data generators, and " +
+                                                         "README.nuget.md tells consumers never to draw a secret, key, token or nonce from Any.*.")]
     internal SeededRandom(int seed) {
         Seed    = seed;
         _random = new Random(seed);
