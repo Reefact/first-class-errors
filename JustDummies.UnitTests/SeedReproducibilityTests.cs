@@ -20,8 +20,6 @@ public sealed class SeedReproducibilityTests {
     #region Statics members declarations
 
     private static string Batch() {
-        // Explicitly typed locals: string.Join(params object[]) would otherwise box the generators and
-        // call their ToString() instead of triggering the implicit conversions.
         int      full     = Any.Int32().Generate();
         int      bounded  = Any.Int32().Between(1, 1000).Generate();
         string   free     = Any.String().Generate();
