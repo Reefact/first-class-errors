@@ -2,10 +2,12 @@
 
   <!--
     Shared packaging hardening for the NuGet packages this repository ships
-    (FirstClassErrors and FirstClassErrors.Testing).
+    (FirstClassErrors, FirstClassErrors.Testing, FirstClassErrors.RequestBinder,
+    FirstClassErrors.Cli, JustDummies and JustDummies.Xunit).
 
-    These properties only take effect during `pack`, so they are inert for the
-    non-packable projects (CLI, workers, tests, analyzers) that also import this file.
+    These properties only take effect during `pack`, so they are inert for every other
+    project that also imports this file (the documentation tooling, the workers, the
+    usage samples, the tests and the analyzers).
   -->
   <PropertyGroup>
     <!-- SourceLink lets debuggers step into the exact commit's sources from the published symbols.
