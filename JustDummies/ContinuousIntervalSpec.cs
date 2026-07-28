@@ -1,5 +1,6 @@
 #region Usings declarations
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 #endregion
@@ -182,6 +183,13 @@ internal sealed class ContinuousIntervalSpec {
     ///     engine does not carry), so it stays outside the eager cardinality perimeter and a distinct collection over
     ///     it falls back to the bounded draw. Feeds <see cref="ICardinalityHint{T}" />.
     /// </summary>
+    [SuppressMessage("Major Bug", "S1244:Floating point numbers should not be tested for equality",
+                     Justification =
+                         "Exact equality is the question, not an approximation of it: _min and _max are not measured " +
+                         "quantities but the bounds the constraint chain validated, and the test asks whether they are the " +
+                         "SAME representable value. A tolerance would answer a different question, and answer it wrongly: " +
+                         "[1.0, 1.0 + 1e-12] holds millions of representable doubles, so reporting a cardinality of 1 would " +
+                         "make ICardinalityHint promise a distinct collection of one element over a range that can serve many.")]
     internal long? Cardinality {
         get {
             if (_effectiveAllowed is not null) { return _effectiveAllowed.Count; }
@@ -203,6 +211,14 @@ internal sealed class ContinuousIntervalSpec {
     }
 
     /// <summary>Draws one value satisfying the whole specification.</summary>
+    [SuppressMessage("Major Bug", "S1244:Floating point numbers should not be tested for equality",
+                     Justification =
+                         "Exact equality detects the validated pin (the singleton domain Cardinality also reports) and " +
+                         "returns the only value the bounds leave; IsSatisfiable already proved that value is not excluded, " +
+                         "which is why this early return may skip the nudge walk. A tolerance would break both halves: it " +
+                         "would collapse every draw of a merely narrow interval such as [1.0, 1.0 + 1e-12] onto its lower " +
+                         "bound instead of sampling it, and it would take that exclusion-free shortcut for an interval whose " +
+                         "lower bound IS excluded, returning a value the constraints forbid.")]
     internal double Generate(RandomSource source) {
         if (source is null) { throw new ArgumentNullException(nameof(source)); }
 
@@ -279,6 +295,14 @@ internal sealed class ContinuousIntervalSpec {
         return quantized;
     }
 
+    [SuppressMessage("Major Bug", "S1244:Floating point numbers should not be tested for equality",
+                     Justification =
+                         "Exclusion-list membership is exact by definition: DifferentFrom(x) forbids the value x, not a " +
+                         "neighbourhood of it. Widening it to a tolerance would carve a band out of the continuum that no " +
+                         "constraint asked for, and Generate's nudge walk would have to step clear of that band, turning a " +
+                         "measure-zero collision into a systematic bias away from every excluded point. Equals(double) is " +
+                         "'a == b || (IsNaN(a) && IsNaN(b))'; the NaN arm is unreachable because EnsureFinite rejects NaN at " +
+                         "every entry point, so this is plain exact equality with a defensive tail.")]
     private bool IsExcluded(double value) {
         foreach (double excluded in _excluded) {
             if (value.Equals(excluded)) { return true; }
