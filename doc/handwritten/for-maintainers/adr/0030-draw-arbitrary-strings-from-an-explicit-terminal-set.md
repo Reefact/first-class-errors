@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0030-draw-arbitrary-strings-from-an-explicit-terminal-set.fr.md)
 
-**Status:** Accepted
+**Status:** Superseded by [ADR-0054](0054-decide-a-constraint-surface-by-constructive-versus-rejective.md)
 **Date:** 2026-07-21
 **Decision Makers:** Reefact
 
