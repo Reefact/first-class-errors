@@ -10,9 +10,10 @@ public static partial class Any {
 
     /// <summary>
     ///     Starts a generator of arbitrary strings that <b>match <paramref name="pattern" /></b>, drawing from the
-    ///     ambient random context. The pattern is the whole specification — the returned generator carries no further
-    ///     shape or length constraints; express those inside the pattern. It still composes through <c>As(...)</c>,
-    ///     <c>OrNull()</c>, <c>Combine(...)</c> and the collection generators.
+    ///     ambient random context. The pattern is the whole shape of the specification — the returned generator carries
+    ///     no further shape or length constraints; express those inside the pattern. It does carry the exclusion pair
+    ///     <c>Except</c>/<c>DifferentFrom</c>, which rejects rather than constructs, and it composes through
+    ///     <c>As(...)</c>, <c>OrNull()</c>, <c>Combine(...)</c> and the collection generators.
     /// </summary>
     /// <remarks>
     ///     Supported is the <b>regular</b> subset of the pattern language: literals and escapes (metacharacters,

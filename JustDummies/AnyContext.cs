@@ -325,13 +325,13 @@ public sealed class AnyContext {
     /// </summary>
     /// <param name="values">The pool the generated value is drawn from; duplicates are ignored.</param>
     /// <typeparam name="T">The type of the pooled values.</typeparam>
-    /// <returns>A terminal generator drawing uniformly from <paramref name="values" />.</returns>
+    /// <returns>A generator drawing uniformly from <paramref name="values" />.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="values" /> is <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="values" /> is empty or contains a <c>null</c> element.</exception>
     public AnyOneOf<T> OneOf<T>(params T[] values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
 
-        return AnyOneOf<T>.FromPool(_source, values);
+        return AnyOneOf<T>.FromPool(_source, values, "OneOf(...)");
     }
 
     /// <summary>
@@ -340,13 +340,13 @@ public sealed class AnyContext {
     /// </summary>
     /// <param name="values">The pool the generated value is drawn from; duplicates are ignored.</param>
     /// <typeparam name="T">The type of the pooled values.</typeparam>
-    /// <returns>A terminal generator drawing uniformly from <paramref name="values" />.</returns>
+    /// <returns>A generator drawing uniformly from <paramref name="values" />.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="values" /> is <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="values" /> is empty or contains a <c>null</c> element.</exception>
     public AnyOneOf<T> ElementOf<T>(IReadOnlyList<T> values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
 
-        return AnyOneOf<T>.FromPool(_source, values);
+        return AnyOneOf<T>.FromPool(_source, values, "ElementOf(...)");
     }
 
     /// <summary>
@@ -356,13 +356,13 @@ public sealed class AnyContext {
     /// </summary>
     /// <param name="values">The pool the generated value is drawn from; duplicates are ignored.</param>
     /// <typeparam name="T">The type of the pooled values.</typeparam>
-    /// <returns>A terminal generator drawing uniformly from <paramref name="values" />.</returns>
+    /// <returns>A generator drawing uniformly from <paramref name="values" />.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="values" /> is <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="values" /> is empty or contains a <c>null</c> element.</exception>
     public AnyOneOf<T> ElementOf<T>(IEnumerable<T> values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
 
-        return AnyOneOf<T>.FromPool(_source, values as IReadOnlyList<T> ?? values.ToArray());
+        return AnyOneOf<T>.FromPool(_source, values as IReadOnlyList<T> ?? values.ToArray(), "ElementOf(...)");
     }
 
 }

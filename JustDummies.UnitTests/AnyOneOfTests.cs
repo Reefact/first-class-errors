@@ -174,6 +174,105 @@ public sealed class AnyOneOfTests {
         Check.ThatCode(() => Any.ElementOf(new List<string> { "a", null! })).Throws<ArgumentException>();
     }
 
+    [Fact(DisplayName = "DifferentFrom removes a value from the pool — the idiom for drawing another element of a fixture.")]
+    public void DifferentFromRemovesTheValue() {
+        List<Percentage> orders = [Percentage.Create(10), Percentage.Create(20), Percentage.Create(30)];
+        Percentage       used   = orders[1];
+
+        foreach (Percentage value in Samples(Any.ElementOf(orders).DifferentFrom(used))) {
+            Check.That(value).IsNotEqualTo(used);
+            Check.That(orders.Contains(value)).IsTrue();
+        }
+    }
+
+    [Fact(DisplayName = "Except removes every supplied value, and the exclusions accumulate across declarations.")]
+    public void ExceptRemovesEveryValue() {
+        foreach (int value in Samples(Any.OneOf(1, 2, 3, 4).Except(2, 3))) {
+            Check.That(new[] { 1, 4 }).Contains(value);
+        }
+
+        foreach (int value in Samples(Any.OneOf(1, 2, 3, 4).Except(2).DifferentFrom(3).Except(4))) {
+            Check.That(value).IsEqualTo(1);
+        }
+    }
+
+    [Fact(DisplayName = "A value that is not in the pool removes nothing.")]
+    public void ExcludingAnAbsentValueRemovesNothing() {
+        HashSet<int> seen = new(Samples(Any.OneOf(1, 2).DifferentFrom(99)));
+
+        Check.That(seen).IsOnlyMadeOf(1, 2);
+        Check.That(seen).Contains(1, 2);
+    }
+
+    [Fact(DisplayName = "An exclusion that empties the pool conflicts at declaration, naming both sides.")]
+    public void AnExclusionEmptyingThePoolConflicts() {
+        ConflictingAnyConstraintException conflict = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.OneOf(1, 2).Except(1, 2));
+
+        Check.That(conflict.Message).IsEqualTo("Cannot apply Except(...) because it forbids every value OneOf(...) allows.");
+    }
+
+    [Fact(DisplayName = "The emptying conflict names the factory that declared the pool, on every entry point.")]
+    public void TheConflictNamesTheDeclaringFactory() {
+        // Each factory carries its own name into the pool, so a swapped or stale literal on any of the six entry
+        // points would send the caller looking for a declaration they never wrote.
+        static string Emptied(Func<object> declare) {
+            return Assert.Throws<ConflictingAnyConstraintException>(() => declare()).Message;
+        }
+
+        const string fromOneOf    = "Cannot apply DifferentFrom(...) because it forbids every value OneOf(...) allows.";
+        const string fromElement  = "Cannot apply DifferentFrom(...) because it forbids every value ElementOf(...) allows.";
+
+        Check.That(Emptied(() => Any.OneOf(7).DifferentFrom(7))).IsEqualTo(fromOneOf);
+        Check.That(Emptied(() => Any.WithSeed(1).OneOf(7).DifferentFrom(7))).IsEqualTo(fromOneOf);
+
+        Check.That(Emptied(() => Any.ElementOf(new List<int> { 7 }).DifferentFrom(7))).IsEqualTo(fromElement);
+        Check.That(Emptied(() => Any.ElementOf(new List<int> { 7 }.Select(value => value)).DifferentFrom(7))).IsEqualTo(fromElement);
+        Check.That(Emptied(() => Any.WithSeed(1).ElementOf(new List<int> { 7 }).DifferentFrom(7))).IsEqualTo(fromElement);
+        Check.That(Emptied(() => Any.WithSeed(1).ElementOf(new List<int> { 7 }.Select(value => value)).DifferentFrom(7))).IsEqualTo(fromElement);
+    }
+
+    [Fact(DisplayName = "An exclusion that leaves a declared value standing qualifies its claim instead of overstating it.")]
+    public void AnExclusionLeavingADeclaredValueQualifiesItsClaim() {
+        // DifferentFrom(2) does not forbid 1 — the first exclusion took that one — so it does not forbid *every*
+        // value the pool was declared with, only what the first one left. The message says exactly that.
+        ConflictingAnyConstraintException conflict = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.OneOf(1, 2).DifferentFrom(1).DifferentFrom(2));
+
+        Check.That(conflict.Message).IsEqualTo("Cannot apply DifferentFrom(...) because it forbids every value OneOf(...) allows that the exclusions already declared leave.");
+    }
+
+    [Fact(DisplayName = "An exclusion covering the whole declared pool is not qualified away by an earlier one.")]
+    public void AnExclusionCoveringTheWholePoolIsNotQualifiedAway() {
+        // Except(1, 2) forbids both declared values, so dropping the earlier exclusion could not help and the
+        // message must not suggest it: the claim stays the plain one, as it is without any prior narrowing.
+        ConflictingAnyConstraintException afterAnother = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.OneOf(1, 2).DifferentFrom(1).Except(1, 2));
+        ConflictingAnyConstraintException onItsOwn = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.OneOf(1, 2).Except(1, 2));
+
+        Check.That(afterAnother.Message).IsEqualTo("Cannot apply Except(...) because it forbids every value OneOf(...) allows.");
+        Check.That(afterAnother.Message).IsEqualTo(onItsOwn.Message);
+    }
+
+    [Fact(DisplayName = "A distinct set over an excluded pool is gated by the surviving cardinality.")]
+    public void CardinalityFollowsTheFilteredPool() {
+        // Three values minus one leaves two: a set of three no longer fits, a set of two does and holds exactly
+        // the survivors.
+        Check.ThatCode(() => Any.SetOf(Any.OneOf(1, 2, 3).DifferentFrom(2)).WithCount(3)).Throws<ConflictingAnyConstraintException>();
+
+        HashSet<int> set = Any.SetOf(Any.OneOf(1, 2, 3).DifferentFrom(2)).WithCount(2).Generate();
+        Check.That(set).IsOnlyMadeOf(1, 3);
+    }
+
+    [Fact(DisplayName = "The exclusion arguments are validated as arguments, not as conflicts.")]
+    public void ExclusionArgumentsAreValidated() {
+        Check.ThatCode(() => Any.OneOf("a", "b").Except(null!)).Throws<ArgumentNullException>();
+        Check.ThatCode(() => Any.OneOf("a", "b").Except()).Throws<ArgumentException>();
+        Check.ThatCode(() => Any.OneOf("a", "b").Except("a", null!)).Throws<ArgumentException>();
+        Check.ThatCode(() => Any.OneOf("a", "b").DifferentFrom(null!)).Throws<ArgumentNullException>();
+    }
+
     [Fact(DisplayName = "A seeded context makes OneOf and ElementOf deterministic — the mirrored surface draws from the context's seed.")]
     public void SeededContextIsDeterministic() {
         List<int> pool = new() { 10, 20, 30, 40 };

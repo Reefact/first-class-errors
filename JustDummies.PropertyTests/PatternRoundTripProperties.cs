@@ -426,6 +426,28 @@ public sealed class PatternRoundTripProperties {
             .QuickCheckThrowOnFailure();
     }
 
+    [Fact(DisplayName = "An excluded value is never generated, and what is generated still matches the pattern.")]
+    public void AnExcludedValueIsNeverGenerated() {
+        Prop.ForAll(SupportedPattern().ToArbitrary(),
+                    pattern => {
+                        Regex  oracle   = Anchored(pattern, RegexOptions.None);
+                        string existing = Any.StringMatching(pattern).Generate();
+
+                        try {
+                            // The exclusion is rejective: it removes a value without touching how the rest are built,
+                            // so the round trip must still hold for every draw that comes back.
+                            return Expect.EveryDraw(Any.StringMatching(pattern).DifferentFrom(existing),
+                                                    value => !string.Equals(value, existing, StringComparison.Ordinal) && oracle.IsMatch(value));
+                        } catch (AnyGenerationException) {
+                            // A pattern whose language the exclusion leaves nothing of — a single-word one, most
+                            // often. The bounded redraw reports its exhausted budget rather than ever returning the
+                            // excluded value, which is the invariant under test.
+                            return true;
+                        }
+                    })
+            .QuickCheckThrowOnFailure();
+    }
+
     [Fact(DisplayName = "Round trip under IgnoreCase: every value is matched by the very regex it was generated from.")]
     public void IgnoreCaseValuesAreMatchedByTheSameRegex() {
         Prop.ForAll(SupportedPattern().ToArbitrary(),
