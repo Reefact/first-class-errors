@@ -11,18 +11,30 @@ using NFluent;
 namespace JustDummies.UnitTests;
 
 /// <summary>
-///     Locks how a predefined type is spelled inside an XML documentation <c>cref</c>: with its C# keyword
-///     (<c>string</c>, <c>int</c>), never with its CLR name (<c>String</c>, <c>Int32</c>). Both bind to the same
-///     documentation ID, so the compiler stays silent and the generated XML is identical either way — which is
-///     precisely why the deviation drifts in unnoticed. It costs the source, not the package: the rest of the
-///     surface documents itself in keywords, and inside <see cref="Any" /> a generic argument written
-///     <c>Action{String}</c> reads as the <see cref="Any.String" /> factory rather than as the CLR string.
+///     Locks two spellings inside XML documentation <c>cref</c> attributes, both of which the compiler accepts in
+///     silence.
+///     <list type="number">
+///         <item>
+///             A predefined type is written with its C# keyword (<c>string</c>, <c>int</c>), never with its CLR
+///             name (<c>String</c>, <c>Int32</c>). Both bind to the same documentation ID, so the generated XML
+///             is identical either way and the deviation drifts in unnoticed. It costs the source, not the
+///             package: inside <see cref="Any" /> a generic argument written <c>Action{String}</c> reads as the
+///             <see cref="Any.String" /> factory rather than as the CLR string.
+///         </item>
+///         <item>
+///             Inside the two types that host the type-named factories, a cref meaning the BCL type is qualified
+///             with its namespace. A cref carrying no parameter list accepts a method as a target, so a bare
+///             <c>DateTime</c> written there binds to the factory instead of the type. Unlike the first rule this
+///             one is not cosmetic: the wrong target ships resolved in the package XML, and every reader follows
+///             it. Write <c>Any.DateTime</c> when the factory really is what is meant.
+///         </item>
+///     </list>
 /// </summary>
 /// <remarks>
-///     This is a text scan, not reflection: by the time a cref reaches the generated XML the compiler has
-///     resolved it to <c>System.String</c> and the spelling under test no longer exists. Reading the sources of
-///     the sibling projects creates no assembly reference, so the standalone boundary <c>ArchitectureTests</c>
-///     guards is untouched.
+///     The first rule is a text scan, not reflection: by the time a cref reaches the generated XML the compiler
+///     has resolved it to <c>System.String</c> and the spelling under test no longer exists. Reading the sources
+///     of the sibling projects creates no assembly reference, so the standalone boundary
+///     <c>ArchitectureTests</c> guards is untouched.
 /// </remarks>
 public sealed class XmlDocCrefConventionTests {
 
@@ -49,6 +61,10 @@ public sealed class XmlDocCrefConventionTests {
 
     private static readonly Regex CrefAttribute = new("cref=\"([^\"]*)\"", RegexOptions.Compiled);
     private static readonly Regex Identifier    = new("[A-Za-z_][A-Za-z0-9_]*", RegexOptions.Compiled);
+
+    // Any is partial across several files, so the hosts are found by what they declare rather than by name. The
+    // word boundary keeps AnyString, AnyContextTests and their like out.
+    private static readonly Regex FactoryHostDeclaration = new(@"\bclass\s+(Any|AnyContext)\b", RegexOptions.Compiled);
 
     [Fact(DisplayName = "Every cref spells a predefined type with its C# keyword, not its CLR name.")]
     public void CrefsSpellPredefinedTypesWithTheirCSharpKeyword() {
@@ -80,6 +96,55 @@ public sealed class XmlDocCrefConventionTests {
 
         Check.WithCustomMessage($"{offenders.Count} cref(s) name a CLR type where C# has a keyword:{Environment.NewLine}{string.Join(Environment.NewLine, offenders)}")
              .That(offenders).IsEmpty();
+    }
+
+    [Fact(DisplayName = "No cref inside Any or AnyContext is captured by a type-named factory.")]
+    public void CrefsInsideTheFactoryHostsNameTheTypeAndNotTheFactory() {
+        HashSet<string> factories = TypeNamedFactories();
+        List<string>    hosts     = SourceFiles().Where(DeclaresAFactoryHost).ToList();
+
+        // Guard the two queries: an empty factory set or a lost host would make the loop below assert nothing.
+        // The floors sit under the real counts — 24 factories on net10, 19 on the netstandard2.0 asset the net472
+        // floor loads (the modern generators are absent there), and six declaring files.
+        Check.WithCustomMessage($"Only {factories.Count} type-named factories found on Any; the reflection lost its target.")
+             .That(factories.Count).IsStrictlyGreaterThan(15);
+        Check.WithCustomMessage($"Only {hosts.Count} file(s) declare Any or AnyContext; the scan lost its target.")
+             .That(hosts.Count).IsStrictlyGreaterThan(4);
+
+        List<string> offenders = new();
+
+        foreach (string host in hosts) {
+            foreach (Match cref in CrefAttribute.Matches(File.ReadAllText(host))) {
+                string reference = cref.Groups[1].Value;
+                string head      = MemberPath(reference).Split('.')[0];
+
+                if (factories.Contains(head)) {
+                    offenders.Add($"{Path.GetFileName(host)}: cref \"{reference}\" binds to the Any.{head}() factory, not to the type it names; qualify it (System.{head}), or write Any.{head} when the factory is what is meant.");
+                }
+            }
+        }
+
+        Check.WithCustomMessage($"{offenders.Count} cref(s) bind to a factory instead of the type they name:{Environment.NewLine}{string.Join(Environment.NewLine, offenders)}")
+             .That(offenders).IsEmpty();
+    }
+
+    // Read off the surface rather than listed by hand: Any's public, static, non-generic, parameterless methods
+    // returning a builder. It is the same query FactoryNamingConventionTests uses to prove each one is named
+    // after the CLR type it produces — which is precisely what makes them collide with it here.
+    private static HashSet<string> TypeNamedFactories() {
+        IEnumerable<string> names = typeof(Any)
+                                   .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                                   .Where(method => !method.IsGenericMethod
+                                                 && method.GetParameters().Length == 0
+                                                 && method.ReturnType.GetInterfaces().Any(candidate => candidate.IsGenericType
+                                                                                                    && candidate.GetGenericTypeDefinition() == typeof(IAny<>)))
+                                   .Select(method => method.Name);
+
+        return new HashSet<string>(names, StringComparer.Ordinal);
+    }
+
+    private static bool DeclaresAFactoryHost(string file) {
+        return FactoryHostDeclaration.IsMatch(File.ReadAllText(file));
     }
 
     private static IEnumerable<string> ClrNamesIn(string cref) {

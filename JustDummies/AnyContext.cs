@@ -167,7 +167,7 @@ public sealed class AnyContext {
     }
 
     /// <summary>
-    ///     Starts an arbitrary <see cref="TimeSpan" /> generator drawing from this context — deterministic under this context's seed:
+    ///     Starts an arbitrary <see cref="System.TimeSpan" /> generator drawing from this context — deterministic under this context's seed:
     ///     full range unless constrained, negative durations included. Same constraint algebra as <see cref="AnyInt32" />.
     /// </summary>
     /// <returns>A generator to constrain fluently.</returns>
@@ -176,7 +176,7 @@ public sealed class AnyContext {
     }
 
     /// <summary>
-    ///     Starts an arbitrary <see cref="DateTime" /> generator drawing from this context — deterministic under this context's seed:
+    ///     Starts an arbitrary <see cref="System.DateTime" /> generator drawing from this context — deterministic under this context's seed:
     ///     any representable instant unless constrained; generated values carry Utc kind. Same constraint algebra as <see cref="AnyInt32" />.
     /// </summary>
     /// <returns>A generator to constrain fluently.</returns>
@@ -185,7 +185,7 @@ public sealed class AnyContext {
     }
 
     /// <summary>
-    ///     Starts an arbitrary <see cref="DateTimeOffset" /> generator drawing from this context — deterministic under this context's seed:
+    ///     Starts an arbitrary <see cref="System.DateTimeOffset" /> generator drawing from this context — deterministic under this context's seed:
     ///     any representable instant unless constrained; generated values carry a zero (UTC) offset. Same constraint algebra as <see cref="AnyInt32" />.
     /// </summary>
     /// <returns>A generator to constrain fluently.</returns>
