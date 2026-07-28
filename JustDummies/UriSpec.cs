@@ -67,6 +67,36 @@ internal sealed class UriSpec {
         return $"WithPathSegments({V(count)})";
     }
 
+    // Renders the PUBLIC call that pinned a component, so a conflict message names what the caller wrote rather
+    // than the internal setter it reached. The method name is supplied because one spec setter backs several
+    // public spellings — a mailto's WithDomain and a web URI's WithHost both pin the host.
+    internal static string Label(string method) {
+        if (method is null) { throw new ArgumentNullException(nameof(method)); }
+
+        return $"{method}()";
+    }
+
+    internal static string Label(string method, int value) {
+        if (method is null) { throw new ArgumentNullException(nameof(method)); }
+
+        return $"{method}({V(value)})";
+    }
+
+    internal static string Label(string method, string value) {
+        if (method is null) { throw new ArgumentNullException(nameof(method)); }
+        if (value is null) { throw new ArgumentNullException(nameof(value)); }
+
+        return $"{method}(\"{value}\")";
+    }
+
+    internal static string Label(string method, string first, string second) {
+        if (method is null) { throw new ArgumentNullException(nameof(method)); }
+        if (first is null) { throw new ArgumentNullException(nameof(first)); }
+        if (second is null) { throw new ArgumentNullException(nameof(second)); }
+
+        return $"{method}(\"{first}\", \"{second}\")";
+    }
+
     #endregion
 
     #region Fields declarations
@@ -75,6 +105,9 @@ internal sealed class UriSpec {
     private readonly string?      _scheme;           // pinned concrete scheme within the family (e.g. "https")
     private readonly string?      _schemeConstraint; // the call that pinned it, for a conflict message
     private readonly string?      _host;             // pinned host / mailto domain
+    private readonly string?      _hostConstraint;   // the call that pinned it, for a conflict message
+    private readonly string?      _userInfoConstraint;
+    private readonly string?      _portConstraint;
     private readonly bool         _hasUserInfo;
     private readonly string?      _user;
     private readonly string?      _password;
@@ -94,7 +127,8 @@ internal sealed class UriSpec {
                     bool hasPort, int? port,
                     UriPathMode pathMode, int pathSegments,
                     bool hasQuery, bool hasFragment, bool rooted,
-                    string? pathConstraint = null) {
+                    string? pathConstraint = null, string? hostConstraint = null,
+                    string? userInfoConstraint = null, string? portConstraint = null) {
         _family           = family;
         _scheme           = scheme;
         _schemeConstraint = schemeConstraint;
@@ -106,6 +140,9 @@ internal sealed class UriSpec {
         _port             = port;
         _pathMode         = pathMode;
         _pathConstraint   = pathConstraint;
+        _hostConstraint     = hostConstraint;
+        _userInfoConstraint = userInfoConstraint;
+        _portConstraint     = portConstraint;
         _pathSegments     = pathSegments;
         _hasQuery         = hasQuery;
         _hasFragment      = hasFragment;
@@ -116,7 +153,7 @@ internal sealed class UriSpec {
 
     internal UriSpec WithFamily(UriFamily family) {
         return new UriSpec(family, _scheme, _schemeConstraint, _host, _hasUserInfo, _user, _password,
-                           _hasPort, _port, _pathMode, _pathSegments, _hasQuery, _hasFragment, _rooted, _pathConstraint);
+                           _hasPort, _port, _pathMode, _pathSegments, _hasQuery, _hasFragment, _rooted, _pathConstraint, _hostConstraint, _userInfoConstraint, _portConstraint);
     }
 
     internal UriSpec WithScheme(string scheme, string applying) {
@@ -128,27 +165,43 @@ internal sealed class UriSpec {
         if (_schemeConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_schemeConstraint} is already defined."); }
 
         return new UriSpec(_family, scheme, applying, _host, _hasUserInfo, _user, _password,
-                           _hasPort, _port, _pathMode, _pathSegments, _hasQuery, _hasFragment, _rooted, _pathConstraint);
+                           _hasPort, _port, _pathMode, _pathSegments, _hasQuery, _hasFragment, _rooted, _pathConstraint, _hostConstraint, _userInfoConstraint, _portConstraint);
     }
 
     #endregion
 
     #region Component pins
 
-    internal UriSpec WithHost(string host) {
+    // A URI has ONE host, ONE user-info and ONE port, so a second declaration of any of them can never be
+    // satisfied alongside the first. Each is therefore declared once, exactly like the scheme and the path:
+    // silently keeping the last value would drop a constraint the caller wrote, which is the one outcome the
+    // eager check exists to prevent. Repeating the SAME declaration stays a no-op.
+    internal UriSpec WithHost(string host, string applying) {
         if (host is null) { throw new ArgumentNullException(nameof(host)); }
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+        if (string.Equals(_hostConstraint, applying, StringComparison.Ordinal)) { return this; }
+        if (_hostConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_hostConstraint} is already defined."); }
+
         return new UriSpec(_family, _scheme, _schemeConstraint, host, _hasUserInfo, _user, _password,
-                           _hasPort, _port, _pathMode, _pathSegments, _hasQuery, _hasFragment, _rooted, _pathConstraint);
+                           _hasPort, _port, _pathMode, _pathSegments, _hasQuery, _hasFragment, _rooted, _pathConstraint, applying, _userInfoConstraint, _portConstraint);
     }
 
-    internal UriSpec WithUserInfo(string? user, string? password) {
+    internal UriSpec WithUserInfo(string? user, string? password, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+        if (string.Equals(_userInfoConstraint, applying, StringComparison.Ordinal)) { return this; }
+        if (_userInfoConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_userInfoConstraint} is already defined."); }
+
         return new UriSpec(_family, _scheme, _schemeConstraint, _host, true, user, password,
-                           _hasPort, _port, _pathMode, _pathSegments, _hasQuery, _hasFragment, _rooted, _pathConstraint);
+                           _hasPort, _port, _pathMode, _pathSegments, _hasQuery, _hasFragment, _rooted, _pathConstraint, _hostConstraint, applying, _portConstraint);
     }
 
-    internal UriSpec WithPort(int? port) {
+    internal UriSpec WithPort(int? port, string applying) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+        if (string.Equals(_portConstraint, applying, StringComparison.Ordinal)) { return this; }
+        if (_portConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_portConstraint} is already defined."); }
+
         return new UriSpec(_family, _scheme, _schemeConstraint, _host, _hasUserInfo, _user, _password,
-                           true, port, _pathMode, _pathSegments, _hasQuery, _hasFragment, _rooted, _pathConstraint);
+                           true, port, _pathMode, _pathSegments, _hasQuery, _hasFragment, _rooted, _pathConstraint, _hostConstraint, _userInfoConstraint, applying);
     }
 
     internal UriSpec WithPath(UriPathMode mode, int segments, string applying) {
@@ -159,17 +212,17 @@ internal sealed class UriSpec {
         if (_pathConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_pathConstraint} is already defined."); }
 
         return new UriSpec(_family, _scheme, _schemeConstraint, _host, _hasUserInfo, _user, _password,
-                           _hasPort, _port, mode, segments, _hasQuery, _hasFragment, _rooted, applying);
+                           _hasPort, _port, mode, segments, _hasQuery, _hasFragment, _rooted, applying, _hostConstraint, _userInfoConstraint, _portConstraint);
     }
 
     internal UriSpec WithQuery() {
         return new UriSpec(_family, _scheme, _schemeConstraint, _host, _hasUserInfo, _user, _password,
-                           _hasPort, _port, _pathMode, _pathSegments, true, _hasFragment, _rooted, _pathConstraint);
+                           _hasPort, _port, _pathMode, _pathSegments, true, _hasFragment, _rooted, _pathConstraint, _hostConstraint, _userInfoConstraint, _portConstraint);
     }
 
     internal UriSpec WithFragment() {
         return new UriSpec(_family, _scheme, _schemeConstraint, _host, _hasUserInfo, _user, _password,
-                           _hasPort, _port, _pathMode, _pathSegments, _hasQuery, true, _rooted, _pathConstraint);
+                           _hasPort, _port, _pathMode, _pathSegments, _hasQuery, true, _rooted, _pathConstraint, _hostConstraint, _userInfoConstraint, _portConstraint);
     }
 
     internal UriSpec Rooted() {

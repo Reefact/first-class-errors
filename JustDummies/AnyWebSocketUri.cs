@@ -37,18 +37,18 @@ public sealed class AnyWebSocketUri : IAny<Uri>, IHasRandomSource {
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="host" /> is <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="host" /> is empty, non-ASCII or not a valid host name.</exception>
     public AnyWebSocketUri WithHost(string host) {
-        return new AnyWebSocketUri(_source, _spec.WithHost(UriSpec.RequireHost(host, nameof(host))));
+        return new AnyWebSocketUri(_source, _spec.WithHost(UriSpec.RequireHost(host, nameof(host)), UriSpec.Label("WithHost", host)));
     }
 
     /// <summary>Includes an arbitrary non-default port.</summary>
     public AnyWebSocketUri WithPort() {
-        return new AnyWebSocketUri(_source, _spec.WithPort(null));
+        return new AnyWebSocketUri(_source, _spec.WithPort(null, UriSpec.Label("WithPort")));
     }
 
     /// <summary>Includes the given <paramref name="port" />.</summary>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="port" /> is outside 1..65535.</exception>
     public AnyWebSocketUri WithPort(int port) {
-        return new AnyWebSocketUri(_source, _spec.WithPort(UriSpec.RequirePort(port, nameof(port))));
+        return new AnyWebSocketUri(_source, _spec.WithPort(UriSpec.RequirePort(port, nameof(port)), UriSpec.Label("WithPort", port)));
     }
 
     /// <summary>Fixes the path to exactly <paramref name="count" /> segments. Declared once per generator.</summary>

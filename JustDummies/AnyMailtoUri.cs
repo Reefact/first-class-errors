@@ -28,14 +28,14 @@ public sealed class AnyMailtoUri : IAny<Uri>, IHasRandomSource {
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="localPart" /> is <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="localPart" /> contains a non-unreserved character.</exception>
     public AnyMailtoUri WithLocalPart(string localPart) {
-        return new AnyMailtoUri(_source, _spec.WithUserInfo(UriSpec.RequireUserInfoPart(localPart, nameof(localPart)), null));
+        return new AnyMailtoUri(_source, _spec.WithUserInfo(UriSpec.RequireUserInfoPart(localPart, nameof(localPart)), null, UriSpec.Label("WithLocalPart", localPart)));
     }
 
     /// <summary>Pins the domain (the text after <c>@</c>). Must be an ASCII host name.</summary>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="domain" /> is <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="domain" /> is empty, non-ASCII or not a valid host name.</exception>
     public AnyMailtoUri WithDomain(string domain) {
-        return new AnyMailtoUri(_source, _spec.WithHost(UriSpec.RequireHost(domain, nameof(domain))));
+        return new AnyMailtoUri(_source, _spec.WithHost(UriSpec.RequireHost(domain, nameof(domain)), UriSpec.Label("WithDomain", domain)));
     }
 
     /// <summary>Includes an arbitrary header (e.g. <c>?subject=...</c>).</summary>

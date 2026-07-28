@@ -107,6 +107,13 @@ internal sealed class CollectionState<T> {
     /// <summary>Requires the elements to be pairwise distinct, optionally under <paramref name="comparer" />.</summary>
     internal CollectionState<T> AsDistinct(IEqualityComparer<T>? comparer, string applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+        // One collection is distinct under ONE equality, so a second, different comparer cannot be honoured
+        // alongside the first: keeping the last one silently would drop a constraint the caller wrote. Declaring
+        // the same comparer again, or re-declaring distinctness without one, asks for the equality already in
+        // force and stays a no-op.
+        if (comparer is not null && _comparer is not null && !ReferenceEquals(comparer, _comparer)) {
+            throw new ConflictingAnyConstraintException($"Cannot apply {applying} because a different comparer is already defined by an earlier {applying}.");
+        }
 
         return Rebuild(_count, true, comparer ?? _comparer, _fixedContaining, _generatedContaining, applying);
     }
