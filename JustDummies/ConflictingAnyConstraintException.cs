@@ -8,7 +8,7 @@ namespace JustDummies;
 ///     the library's contract: a contradiction in a test's <c>Arrange</c> is a defect of the test, and it should
 ///     read as one — not surface later as a puzzling generation failure.
 /// </summary>
-public sealed class ConflictingAnyConstraintException : AnyException {
+public sealed class ConflictingAnyConstraintException : DummyException {
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ConflictingAnyConstraintException" /> class.
