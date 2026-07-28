@@ -295,6 +295,29 @@ public sealed class CompositionProperties {
             .QuickCheckThrowOnFailure();
     }
 
+    [Fact(DisplayName = "Excluding part of a pool leaves exactly the complement; excluding all of it conflicts.")]
+    public void ExcludingAPoolLeavesItsComplement() {
+        Gen<(string[] Pool, string[] Excluded)> cases =
+            from pool in StringPools()
+            from taken in Gen.Choose(0, 24)
+            select (Pool: pool, Excluded: pool.Distinct().Take(taken).ToArray());
+
+        Prop.ForAll(cases.ToArbitrary(),
+                    // The verdict follows the values: the generator survives exactly when some pooled value escapes
+                    // the exclusion, and it then draws from the complement and nothing else. An exclusion carrying
+                    // no value at all is an argument error, not a domain question, so it is left to the example suite.
+                    testCase => {
+                        if (testCase.Excluded.Length == 0) { return true; }
+
+                        string[] surviving = testCase.Pool.Distinct().Except(testCase.Excluded).ToArray();
+
+                        return surviving.Length == 0
+                                   ? Expect.Throws<ConflictingAnyConstraintException>(() => Any.OneOf(testCase.Pool).Except(testCase.Excluded))
+                                   : Expect.EveryDraw(Any.OneOf(testCase.Pool).Except(testCase.Excluded), value => surviving.Contains(value));
+                    })
+            .QuickCheckThrowOnFailure();
+    }
+
     [Fact(DisplayName = "ElementOf materializes its sequence once, however many values are drawn from it.")]
     public void ElementOfMaterializesItsSequenceOnce() {
         Prop.ForAll((from pool in IntegerPools()

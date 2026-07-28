@@ -258,8 +258,12 @@ JustDummies.AnyMailtoUri.WithDomain(string! domain) -> JustDummies.AnyMailtoUri!
 JustDummies.AnyMailtoUri.WithHeaders() -> JustDummies.AnyMailtoUri!
 JustDummies.AnyMailtoUri.WithLocalPart(string! localPart) -> JustDummies.AnyMailtoUri!
 JustDummies.AnyOneOf<T>
+JustDummies.AnyOneOf<T>.DifferentFrom(T value) -> JustDummies.AnyOneOf<T>!
+JustDummies.AnyOneOf<T>.Except(params T[]! values) -> JustDummies.AnyOneOf<T>!
 JustDummies.AnyOneOf<T>.Generate() -> T
 JustDummies.AnyPattern
+JustDummies.AnyPattern.DifferentFrom(string! value) -> JustDummies.AnyPattern!
+JustDummies.AnyPattern.Except(params string![]! values) -> JustDummies.AnyPattern!
 JustDummies.AnyPattern.Generate() -> string!
 JustDummies.AnyRelativeUri
 JustDummies.AnyRelativeUri.Generate() -> System.Uri!
