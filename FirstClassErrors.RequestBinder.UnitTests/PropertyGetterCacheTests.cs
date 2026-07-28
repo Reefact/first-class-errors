@@ -28,10 +28,10 @@ public sealed class PropertyGetterCacheTests {
 
     [Fact(DisplayName = "Two DTO types sharing a property name bind through distinct getters, each reading its own type.")]
     public void SamePropertyNameOnDistinctDtoTypesDoesNotCollide() {
-        var bindFirst = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        RequestBinder bindFirst = Bind.Request(BookingEnvelopeError.CommandInvalid);
         RequiredField<string> first = bindFirst.PropertiesOf(new FirstDto("from-first")).SimpleProperty(d => d.Name).AsRequired();
 
-        var bindSecond = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        RequestBinder bindSecond = Bind.Request(BookingEnvelopeError.CommandInvalid);
         RequiredField<string> second = bindSecond.PropertiesOf(new SecondDto("from-second")).SimpleProperty(d => d.Name).AsRequired();
 
         Check.That(bindFirst.New(s => s.Get(first)).GetResultOrThrow()).IsEqualTo("from-first");
@@ -40,8 +40,8 @@ public sealed class PropertyGetterCacheTests {
 
     [Fact(DisplayName = "A property declared on a base type binds through a derived DTO.")]
     public void InheritedPropertyBindsThroughTheDerivedDto() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(new DerivedDto { Inherited = "base-value", Own = "own-value" });
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<DerivedDto> body = bind.PropertiesOf(new DerivedDto { Inherited = "base-value", Own = "own-value" });
 
         RequiredField<string> inherited = body.SimpleProperty(d => d.Inherited).AsRequired();
         RequiredField<string> own       = body.SimpleProperty(d => d.Own).AsRequired();
@@ -52,8 +52,8 @@ public sealed class PropertyGetterCacheTests {
 
     [Fact(DisplayName = "A non-nullable value-type property is rejected on every call — the guard is never cached away.")]
     public void NonNullableValueTypePropertyIsRejectedOnEveryCall() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(new MisdeclaredDto());
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<MisdeclaredDto> body = bind.PropertiesOf(new MisdeclaredDto());
 
         ArgumentException first = Assert.Throws<ArgumentException>(() => body.SimpleProperty(d => d.Count).AsRequired(PositiveIntFromInt));
         Check.That(first.Message).Contains("non-nullable value type");
@@ -65,8 +65,8 @@ public sealed class PropertyGetterCacheTests {
 
     [Fact(DisplayName = "A DTO getter that throws surfaces its own exception, not a reflection wrapper.")]
     public void ThrowingDtoGetterSurfacesTheRawException() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(new ThrowingDto());
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<ThrowingDto> body = bind.PropertiesOf(new ThrowingDto());
 
         // The binder's bug channel: a throwing property getter is a programming error and propagates as itself —
         // a compiled getter does not wrap it in TargetInvocationException the way PropertyInfo.GetValue did.
@@ -79,7 +79,7 @@ public sealed class PropertyGetterCacheTests {
         string?[] results = new string?[32];
 
         Parallel.For(0, results.Length, i => {
-            var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+            RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
             RequiredField<string> value = bind.PropertiesOf(new ConcurrencyDto($"value-{i}")).SimpleProperty(d => d.Value).AsRequired();
             results[i] = bind.New(s => s.Get(value)).GetResultOrThrow();
         });
@@ -91,8 +91,8 @@ public sealed class PropertyGetterCacheTests {
 
     [Fact(DisplayName = "A coercion selector between an enum property and its underlying type still binds, both ways.")]
     public void EnumUnderlyingCoercionSelectorStillBinds() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(new EnumDto(Channel.Web, 2));
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<EnumDto> body = bind.PropertiesOf(new EnumDto(Channel.Web, 2));
 
         // The reflection-based reader cast the boxed value to the selector's underlying type, which the CLR
         // accepts across an enum and its underlying integral — the compiled getter must keep accepting it.
@@ -105,11 +105,11 @@ public sealed class PropertyGetterCacheTests {
 
     [Fact(DisplayName = "A nullable value-type property still binds its value, and its absence, through the cached getter.")]
     public void NullableValueTypePropertyBindsThroughTheCache() {
-        var present = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        RequestBinder present = Bind.Request(BookingEnvelopeError.CommandInvalid);
         RequiredField<int> bound = present.PropertiesOf(new NullableIntDto(41)).SimpleProperty(d => d.Count).AsRequired(NextInt);
         Check.That(present.New(s => s.Get(bound)).GetResultOrThrow()).IsEqualTo(42);
 
-        var missing = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        RequestBinder missing = Bind.Request(BookingEnvelopeError.CommandInvalid);
         missing.PropertiesOf(new NullableIntDto(null)).SimpleProperty(d => d.Count).AsRequired(NextInt);
         Outcome<int> outcome = missing.New(_ => -1);
         Check.That(outcome.IsFailure).IsTrue();

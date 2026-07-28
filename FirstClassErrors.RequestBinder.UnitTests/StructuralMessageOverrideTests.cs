@@ -25,16 +25,16 @@ public sealed class StructuralMessageOverrideTests {
                                          ? Bind.Request(BookingEnvelopeError.CommandInvalid)
                                          : Bind.WithOptions(options).Request(BookingEnvelopeError.CommandInvalid);
 
-        var body = bind.PropertiesOf(MissingEmail());
+        PropertySource<BookingRequest> body = bind.PropertiesOf(MissingEmail());
         body.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
         return bind.New(_ => "x").Error!.InnerErrors.Single();
     }
 
     private static Error BindInvalidEmail(RequestBinderOptions options) {
-        var request = new BookingRequest("not-an-email", "REF-1", null, null, null, null, null);
-        var bind    = Bind.WithOptions(options).Request(BookingEnvelopeError.CommandInvalid);
-        var body    = bind.PropertiesOf(request);
+        BookingRequest request = new BookingRequest("not-an-email", "REF-1", null, null, null, null, null);
+        RequestBinder bind    = Bind.WithOptions(options).Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body    = bind.PropertiesOf(request);
         body.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
         return bind.New(_ => "x").Error!.InnerErrors.Single();
@@ -55,7 +55,7 @@ public sealed class StructuralMessageOverrideTests {
 
     [Fact(DisplayName = "Overriding only the messages changes the public text while keeping the default code.")]
     public void MessageOverrideKeepsDefaultCode() {
-        var options = new RequestBinderOptions(
+        RequestBinderOptions options = new RequestBinderOptions(
             RequestBinderOptions.Default.ArgumentNameProvider,
             RequestBindingError.DefaultArgumentRequired.WithMessage(
                 argumentPath => new BindingMessage("This field is mandatory.", $"Please provide '{argumentPath}'.")));
@@ -71,7 +71,7 @@ public sealed class StructuralMessageOverrideTests {
 
     [Fact(DisplayName = "A definition can carry a custom code and custom messages together; both flow to the raised error.")]
     public void CodeAndMessageOverrideTogether() {
-        var options = new RequestBinderOptions(
+        RequestBinderOptions options = new RequestBinderOptions(
             RequestBinderOptions.Default.ArgumentNameProvider,
             new BinderErrorDefinition(
                 ErrorCode.Create("ACME_REQUIRED"),
@@ -88,7 +88,7 @@ public sealed class StructuralMessageOverrideTests {
 
     [Fact(DisplayName = "The message builder is evaluated per emission, so one options instance localizes by ambient culture.")]
     public void MessageIsLocalizedPerEmission() {
-        var options = new RequestBinderOptions(
+        RequestBinderOptions options = new RequestBinderOptions(
             RequestBinderOptions.Default.ArgumentNameProvider,
             RequestBindingError.DefaultArgumentRequired.WithMessage(Localized));
 
@@ -114,7 +114,7 @@ public sealed class StructuralMessageOverrideTests {
 
     [Fact(DisplayName = "Overriding only the invalid message changes the public text, keeps the default code, and still wraps the cause.")]
     public void InvalidMessageOverrideKeepsCodeAndCause() {
-        var options = new RequestBinderOptions(
+        RequestBinderOptions options = new RequestBinderOptions(
             RequestBinderOptions.Default.ArgumentNameProvider,
             argumentInvalid: RequestBindingError.DefaultArgumentInvalid.WithMessage(
                 argumentPath => new BindingMessage("The value is malformed.", $"'{argumentPath}' could not be parsed.")));
@@ -129,7 +129,7 @@ public sealed class StructuralMessageOverrideTests {
 
     [Fact(DisplayName = "An invalid definition can carry a custom code and custom messages together; both flow, and the cause is still wrapped.")]
     public void InvalidCodeAndMessageOverrideTogether() {
-        var options = new RequestBinderOptions(
+        RequestBinderOptions options = new RequestBinderOptions(
             RequestBinderOptions.Default.ArgumentNameProvider,
             argumentInvalid: new BinderErrorDefinition(
                 ErrorCode.Create("ACME_INVALID"),
@@ -147,7 +147,7 @@ public sealed class StructuralMessageOverrideTests {
 
     [Fact(DisplayName = "Options built only for a naming policy keep the default code AND the default messages.")]
     public void CustomOptionsWithoutOverridesKeepDefaults() {
-        var namingOnly = new RequestBinderOptions(RequestBinderOptions.Default.ArgumentNameProvider);
+        RequestBinderOptions namingOnly = new RequestBinderOptions(RequestBinderOptions.Default.ArgumentNameProvider);
 
         Error error = BindMissingEmail(namingOnly);
 

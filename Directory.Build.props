@@ -48,6 +48,26 @@
   </PropertyGroup>
 
   <!--
+    Runs the Roslyn code-style analyzers (IDE*) as part of the build. Without this they exist only in the
+    IDE: the rules configured in .editorconfig are read, and then nothing reports them at build time —
+    measured, a solution build with the explicit-type rule configured emits ZERO diagnostics until this
+    property is set. It is the switch, .editorconfig is only the dial.
+
+    This is deliberately NOT scoped to CI, unlike the warning ratchet below. The point is to make the rule
+    visible to whoever writes the code — a human in an editor without ReSharper, or an agent that cannot
+    read FirstClassErrors.sln.DotSettings at all — at the moment they build, not once the pull request is
+    already open. In CI the same diagnostics are promoted to errors by TreatWarningsAsErrors, so the rule
+    is advisory locally and blocking on the way in.
+
+    Only the rules .editorconfig gives an explicit severity are enforced; everything else keeps its default
+    (silent or suggestion) and cannot break a build. Enabling this on the current tree costs nothing:
+    no IDE diagnostic fires beyond the one rule that is configured on purpose.
+  -->
+  <PropertyGroup>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+
+  <!--
     The Roslyn floor for the shipped analyzer. FirstClassErrors.Analyzers is compiled against this version
     of Microsoft.CodeAnalysis.*, which is the MINIMUM host compiler able to load it once it is packed into
     FirstClassErrors and delivered to consumers. A higher version makes the analyzer fail to load (CS8032)

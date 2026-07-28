@@ -32,7 +32,7 @@ public sealed class ErrorCodePropertyTests {
     [Fact(DisplayName = "Two ErrorCodes are equal if and only if their codes are ordinally equal.")]
     public void EqualityIsOrdinal() {
         Gen<string> code = Generators.NonBlank();
-        var pairs = (from left in code
+        Arbitrary<(string left, string right)> pairs = (from left in code
                      from right in code
                      select (left, right)).ToArbitrary();
 

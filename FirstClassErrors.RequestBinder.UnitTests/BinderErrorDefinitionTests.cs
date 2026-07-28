@@ -23,11 +23,11 @@ public sealed class BinderErrorDefinitionTests {
 
     [Fact(DisplayName = "BindingMessage carries the short and detailed messages; the detail defaults to null.")]
     public void BindingMessageCarriesBothMessages() {
-        var full = new BindingMessage("short", "detailed");
+        BindingMessage full = new BindingMessage("short", "detailed");
         Check.That(full.ShortMessage).IsEqualTo("short");
         Check.That(full.DetailedMessage).IsEqualTo("detailed");
 
-        var shortOnly = new BindingMessage("short");
+        BindingMessage shortOnly = new BindingMessage("short");
         Check.That(shortOnly.DetailedMessage).IsNull();
     }
 
@@ -40,7 +40,7 @@ public sealed class BinderErrorDefinitionTests {
 
     [Fact(DisplayName = "GetMessage invokes the builder with the argument path; Code exposes the code.")]
     public void GetMessageInvokesTheBuilder() {
-        var definition = new BinderErrorDefinition(SampleCode, Message);
+        BinderErrorDefinition definition = new BinderErrorDefinition(SampleCode, Message);
 
         BindingMessage message = definition.GetMessage("Guests[1].FirstName");
 
@@ -59,8 +59,8 @@ public sealed class BinderErrorDefinitionTests {
 
     [Fact(DisplayName = "WithCode swaps the code and keeps the message builder, without mutating the original.")]
     public void WithCodeSwapsCodeKeepsMessage() {
-        var original = new BinderErrorDefinition(SampleCode, Message);
-        var other    = ErrorCode.Create("OTHER_CODE");
+        BinderErrorDefinition original = new BinderErrorDefinition(SampleCode, Message);
+        ErrorCode other    = ErrorCode.Create("OTHER_CODE");
 
         BinderErrorDefinition derived = original.WithCode(other);
 
@@ -71,7 +71,7 @@ public sealed class BinderErrorDefinitionTests {
 
     [Fact(DisplayName = "WithMessage swaps the message builder and keeps the code, without mutating the original.")]
     public void WithMessageSwapsMessageKeepsCode() {
-        var original = new BinderErrorDefinition(SampleCode, Message);
+        BinderErrorDefinition original = new BinderErrorDefinition(SampleCode, Message);
 
         BinderErrorDefinition derived = original.WithMessage(argumentPath => new BindingMessage($"new {argumentPath}"));
 
@@ -82,7 +82,7 @@ public sealed class BinderErrorDefinitionTests {
 
     [Fact(DisplayName = "WithCode and WithMessage reject nulls.")]
     public void WithersRejectNulls() {
-        var definition = new BinderErrorDefinition(SampleCode, Message);
+        BinderErrorDefinition definition = new BinderErrorDefinition(SampleCode, Message);
 
         Check.ThatCode(() => definition.WithCode(null!)).Throws<ArgumentNullException>();
         Check.ThatCode(() => definition.WithMessage(null!)).Throws<ArgumentNullException>();

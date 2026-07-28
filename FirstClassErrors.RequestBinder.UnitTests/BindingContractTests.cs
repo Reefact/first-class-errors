@@ -382,7 +382,7 @@ public sealed class BindingContractTests {
             MethodInfo documentationMethod = typeof(RequestBindingError)
                 .GetMethod(documentationMethodName, BindingFlags.Static | BindingFlags.NonPublic)!;
 
-            var documentation = (ErrorDocumentation)documentationMethod.Invoke(null, null)!;
+            ErrorDocumentation documentation = (ErrorDocumentation)documentationMethod.Invoke(null, null)!;
 
             Check.That(documentation.Title).IsNotEmpty();
             Check.That(documentation.Examples).Not.IsEmpty();
@@ -393,7 +393,7 @@ public sealed class BindingContractTests {
     public void RequiredArgumentDocumentationClassifiesItsDiagnoses() {
         MethodInfo documentationMethod = typeof(RequestBindingError)
             .GetMethod("ArgumentRequiredDocumentation", BindingFlags.Static | BindingFlags.NonPublic)!;
-        var documentation = (ErrorDocumentation)documentationMethod.Invoke(null, null)!;
+        ErrorDocumentation documentation = (ErrorDocumentation)documentationMethod.Invoke(null, null)!;
 
         // Both causes are documented, and a client omitting an argument is an EXTERNAL fault while the name-provider
         // mismatch is INTERNAL. A dropped diagnosis or a flipped origin would mislead whoever triages the error.
@@ -405,7 +405,7 @@ public sealed class BindingContractTests {
     public void InvalidArgumentDocumentationClassifiesItsDiagnoses() {
         MethodInfo documentationMethod = typeof(RequestBindingError)
             .GetMethod("ArgumentInvalidDocumentation", BindingFlags.Static | BindingFlags.NonPublic)!;
-        var documentation = (ErrorDocumentation)documentationMethod.Invoke(null, null)!;
+        ErrorDocumentation documentation = (ErrorDocumentation)documentationMethod.Invoke(null, null)!;
 
         Check.That(documentation.Diagnostics.Select(d => d.Origin))
              .ContainsExactly(ErrorOrigin.External, ErrorOrigin.Internal);
