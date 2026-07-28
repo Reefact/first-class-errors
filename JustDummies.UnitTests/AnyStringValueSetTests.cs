@@ -272,6 +272,17 @@ public sealed class AnyStringValueSetTests {
         Check.That(setFirst.Message).IsEqualTo("Cannot apply WithLengthBetween(2, 3) because no value OneOf(\"a\", \"bbbb\") allows satisfies it.");
     }
 
+    [Fact(DisplayName = "A casing constraint judges a pooled value on its actual case, accents included.")]
+    public void CasingJudgesNonAsciiLettersToo() {
+        // The constructive filler is ASCII, but a supplied value is the caller's own text: 'É' is an uppercase
+        // letter, so LowerCase() must refuse it rather than wave it through and emit a value violating itself.
+        Check.ThatCode(() => Any.String().OneOf("É").LowerCase()).Throws<ConflictingAnyConstraintException>();
+        Check.ThatCode(() => Any.String().OneOf("é").UpperCase()).Throws<ConflictingAnyConstraintException>();
+
+        Check.That(Any.String().OneOf("é", "É").LowerCase().Generate()).IsEqualTo("é");
+        Check.That(Any.String().OneOf("é", "É").UpperCase().Generate()).IsEqualTo("É");
+    }
+
     [Fact(DisplayName = "Constraints that contradict each other on their own terms are still refused before a value set is declared.")]
     public void AContradictionIsRefusedBeforeTheValuesAreSeen() {
         // Declared first, the set is the specification and the two fragments are merely checked against "aba".
