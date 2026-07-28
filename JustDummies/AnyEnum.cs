@@ -268,11 +268,12 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinality
     private AnyEnum<TEnum> Validated(AnyEnum<TEnum> candidate, string applying) {
         if (candidate._pool.Count > 0) { return candidate; }
 
-        string pool = candidate._allowedConstraint is not null
-                          ? $"no value {candidate._allowedConstraint} allows remains available"
-                          : candidate._combinable
-                              ? $"no {typeof(TEnum).Name} combination remains available"
-                              : $"no declared {typeof(TEnum).Name} member remains available";
+        // Three exhausted pools, three different things to tell the reader: an allow-list that nothing survives, a
+        // flags enum whose combinations are all excluded, and a plain enum whose declared members are.
+        string pool;
+        if (candidate._allowedConstraint is not null) { pool = $"no value {candidate._allowedConstraint} allows remains available"; }
+        else if (candidate._combinable) { pool = $"no {typeof(TEnum).Name} combination remains available"; }
+        else { pool = $"no declared {typeof(TEnum).Name} member remains available"; }
 
         throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {pool}.");
     }
