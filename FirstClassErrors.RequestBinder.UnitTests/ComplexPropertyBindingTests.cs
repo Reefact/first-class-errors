@@ -23,8 +23,8 @@ public sealed class ComplexPropertyBindingTests {
 
     [Fact(DisplayName = "A required complex property binds through its nested binder when every field is valid.")]
     public void RequiredComplexBinds() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(RequestWith(new StayDto("2026-08-10", "2026-08-14")));
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(RequestWith(new StayDto("2026-08-10", "2026-08-14")));
 
         RequiredField<Stay> stay = body.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsRequired<Stay>(BindStay);
 
@@ -35,8 +35,8 @@ public sealed class ComplexPropertyBindingTests {
 
     [Fact(DisplayName = "A failed nested binding surfaces as its own envelope, whose inner paths are prefixed with the property name.")]
     public void NestedFailureSurfacesAsItsEnvelopeWithPrefixedPaths() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(RequestWith(new StayDto("not-a-date", null)));
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(RequestWith(new StayDto("not-a-date", null)));
 
         body.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsRequired<Stay>(BindStay);
 
@@ -56,8 +56,8 @@ public sealed class ComplexPropertyBindingTests {
 
     [Fact(DisplayName = "A required complex property that is missing records REQUEST_ARGUMENT_REQUIRED; its envelope is never invoked.")]
     public void RequiredComplexMissing() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(RequestWith(stay: null));
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(RequestWith(stay: null));
 
         body.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsRequired<Stay>(BindStay);
 
@@ -69,21 +69,21 @@ public sealed class ComplexPropertyBindingTests {
 
     [Fact(DisplayName = "An optional complex property yields null when absent — recording nothing — and binds when present.")]
     public void OptionalComplex() {
-        var absent     = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var absentBody = absent.PropertiesOf(RequestWith(stay: null));
+        RequestBinder absent     = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> absentBody = absent.PropertiesOf(RequestWith(stay: null));
         OptionalReferenceField<Stay> none = absentBody.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptionalReference<Stay>(BindStay);
         Check.That(absent.New(s => s.Get(none) is null).GetResultOrThrow()).IsTrue();
 
-        var present     = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var presentBody = present.PropertiesOf(RequestWith(new StayDto("2026-08-10", "2026-08-14")));
+        RequestBinder present     = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> presentBody = present.PropertiesOf(RequestWith(new StayDto("2026-08-10", "2026-08-14")));
         OptionalReferenceField<Stay> some = presentBody.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptionalReference<Stay>(BindStay);
         Check.That(present.New(s => s.Get(some)!.CheckOut.Value).GetResultOrThrow()).IsEqualTo(new DateOnly(2026, 8, 14));
     }
 
     [Fact(DisplayName = "An optional complex property that is present but invalid records its envelope.")]
     public void OptionalComplexPresentButInvalidRecords() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(RequestWith(new StayDto(null, null)));
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(RequestWith(new StayDto(null, null)));
 
         body.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsOptionalReference<Stay>(BindStay);
 

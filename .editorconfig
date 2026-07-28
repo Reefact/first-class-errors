@@ -1,10 +1,21 @@
-# EditorConfig — whitespace hygiene only.
+# EditorConfig — whitespace hygiene, plus the one style rule the compiler can enforce.
 #
-# Code style, naming, and inspection severities remain governed by
-# FirstClassErrors.sln.DotSettings (ReSharper/Rider), which is the single source
-# of truth for this repository. This file intentionally defines NO C# style rules
-# so the two configurations can never disagree; it only covers basic hygiene that
-# applies uniformly across editors (indentation, final newline, trailing whitespace).
+# FirstClassErrors.sln.DotSettings (ReSharper/Rider) remains the source of truth for
+# code style, naming and inspection severities. It is read by Rider and by nothing else:
+# no compiler, no CI job and no agent editing this repository can see it, so a rule
+# recorded only there is enforced only while a human has the solution open in Rider.
+# Explicit types drifted for exactly that reason.
+#
+# So one rule is restated here, in the only dialect the compiler understands, and paired
+# with EnforceCodeStyleInBuild in Directory.Build.props — without which IDE* rules are
+# inert at build time. Restating it is a deliberate duplication, kept honest by both
+# sides saying the same thing: CSharpVarKeywordUsage/* = UseExplicitType in the
+# DotSettings, csharp_style_var_* = false here. Change one, change the other.
+#
+# Every other rule stays Rider-only, because Roslyn has no equivalent: the file layout
+# patterns, the column alignment of consecutive declarations, the region conventions.
+# Note that the DotSettings sets EnableEditorConfigSupport=False, so Rider ignores this
+# file entirely — each tool reads its own side of the pair.
 #
 # charset is deliberately left unset: the repository mixes BOM and BOM-less files,
 # and pinning it here would rewrite existing files.
@@ -17,6 +28,18 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 indent_style = space
 indent_size = 4
+
+[*.cs]
+# Never `var`. The type is written out even when the initializer makes it obvious; the
+# only survivors are the declarations C# gives no choice about, such as anonymous types.
+# IDE0008 is the diagnostic that fires when `var` is used against this preference
+# (IDE0007 is its opposite and stays off). Severity is `warning`, which the CI ratchet in
+# Directory.Build.props promotes to an error — deliberately: a warning nothing acts on is
+# how the rule drifted in the first place.
+csharp_style_var_for_built_in_types = false
+csharp_style_var_when_type_is_apparent = false
+csharp_style_var_elsewhere = false
+dotnet_diagnostic.IDE0008.severity = warning
 
 [*.{csproj,props,targets,nuspec,config,xml}]
 indent_size = 2

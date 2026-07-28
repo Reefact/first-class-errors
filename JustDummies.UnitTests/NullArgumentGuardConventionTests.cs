@@ -271,7 +271,7 @@ public sealed class NullArgumentGuardConventionTests {
             if (definition == typeof(IEnumerable<>) || definition == typeof(IReadOnlyList<>) || definition == typeof(IReadOnlyCollection<>)
              || definition == typeof(IList<>) || definition == typeof(ICollection<>) || definition == typeof(List<>)) {
                 Type  listType = typeof(List<>).MakeGenericType(arguments[0]);
-                var   list     = (IList)Activator.CreateInstance(listType)!;
+                IList list     = (IList)Activator.CreateInstance(listType)!;
                 list.Add(Element(arguments[0]));
 
                 return list;
@@ -279,7 +279,7 @@ public sealed class NullArgumentGuardConventionTests {
 
             if (definition == typeof(IReadOnlyDictionary<,>) || definition == typeof(IDictionary<,>) || definition == typeof(Dictionary<,>)) {
                 Type dictionaryType = typeof(Dictionary<,>).MakeGenericType(arguments);
-                var  dictionary     = (IDictionary)Activator.CreateInstance(dictionaryType)!;
+                IDictionary dictionary     = (IDictionary)Activator.CreateInstance(dictionaryType)!;
                 dictionary[Element(arguments[0])!] = Element(arguments[1]);
 
                 return dictionary;

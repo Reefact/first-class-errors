@@ -26,7 +26,7 @@ public sealed class OutcomeMonadLawTests {
 
     [Fact(DisplayName = "Left identity: Success(a).Then(f) is equivalent to f(a).")]
     public void LeftIdentity() {
-        var inputs = (from value in Ints()
+        Arbitrary<(int value, (int Add, bool Fail, int Seed) step)> inputs = (from value in Ints()
                       from step in Steps()
                       select (value, step)).ToArbitrary();
 
@@ -47,7 +47,7 @@ public sealed class OutcomeMonadLawTests {
 
     [Fact(DisplayName = "Associativity: m.Then(f).Then(g) is equivalent to m.Then(x => f(x).Then(g)).")]
     public void Associativity() {
-        var inputs = (from outcome in Outcomes()
+        Arbitrary<(Outcome<int> outcome, (int Add, bool Fail, int Seed) first, (int Add, bool Fail, int Seed) second)> inputs = (from outcome in Outcomes()
                       from first in Steps()
                       from second in Steps()
                       select (outcome, first, second)).ToArbitrary();
@@ -83,7 +83,7 @@ public sealed class OutcomeMonadLawTests {
 
     [Fact(DisplayName = "The value-mapping Then is a special case of the outcome-returning Then: m.Then(f) equals m.Then(x => Success(f(x))).")]
     public void MapIsBindWithSuccess() {
-        var inputs = (from outcome in Outcomes()
+        Arbitrary<(Outcome<int> outcome, int delta)> inputs = (from outcome in Outcomes()
                       from delta in Ints()
                       select (outcome, delta)).ToArbitrary();
 

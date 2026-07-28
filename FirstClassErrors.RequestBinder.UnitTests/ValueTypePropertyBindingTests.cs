@@ -53,8 +53,8 @@ public sealed class ValueTypePropertyBindingTests {
 
     [Fact(DisplayName = "A nullable value-type property binds via a method-group converter over its underlying type.")]
     public void ValueTypeRequiredBindsViaMethodGroup() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(Request(quantity: 5));
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<ValueTypeRequest> body = bind.PropertiesOf(Request(quantity: 5));
 
         RequiredField<PositiveQty> qty = body.SimpleProperty(r => r.Quantity).AsRequired(PositiveQty.From);
 
@@ -65,8 +65,8 @@ public sealed class ValueTypePropertyBindingTests {
 
     [Fact(DisplayName = "A required value-type property that is absent records REQUEST_ARGUMENT_REQUIRED with its path.")]
     public void ValueTypeRequiredMissingRecords() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(Request(quantity: null));
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<ValueTypeRequest> body = bind.PropertiesOf(Request(quantity: null));
 
         body.SimpleProperty(r => r.Quantity).AsRequired(PositiveQty.From);
 
@@ -79,8 +79,8 @@ public sealed class ValueTypePropertyBindingTests {
 
     [Fact(DisplayName = "A present-but-invalid value-type property records REQUEST_ARGUMENT_INVALID wrapping the converter error.")]
     public void ValueTypeRequiredInvalidRecords() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(Request(quantity: -1));
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<ValueTypeRequest> body = bind.PropertiesOf(Request(quantity: -1));
 
         body.SimpleProperty(r => r.Quantity).AsRequired(PositiveQty.From);
 
@@ -92,21 +92,21 @@ public sealed class ValueTypePropertyBindingTests {
 
     [Fact(DisplayName = "AsOptionalValue on a value-type property yields the value when present and a real null when absent.")]
     public void ValueTypeOptionalValue() {
-        var present     = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var presentBody = present.PropertiesOf(Request(quantity: 7));
+        RequestBinder present     = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<ValueTypeRequest> presentBody = present.PropertiesOf(Request(quantity: 7));
         OptionalValueField<PositiveQty> some = presentBody.SimpleProperty(r => r.Quantity).AsOptionalValue(PositiveQty.From);
         Check.That(present.New(s => s.Get(some)!.Value.Value).GetResultOrThrow()).IsEqualTo(7);
 
-        var absent     = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var absentBody = absent.PropertiesOf(Request(quantity: null));
+        RequestBinder absent     = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<ValueTypeRequest> absentBody = absent.PropertiesOf(Request(quantity: null));
         OptionalValueField<PositiveQty> none = absentBody.SimpleProperty(r => r.Quantity).AsOptionalValue(PositiveQty.From);
         Check.That(absent.New(s => s.Get(none) is null).GetResultOrThrow()).IsTrue();
     }
 
     [Fact(DisplayName = "AsOptional with a fallback converts the underlying-typed fallback when the value-type property is absent.")]
     public void ValueTypeOptionalWithFallback() {
-        var absent = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body   = absent.PropertiesOf(Request(quantity: null));
+        RequestBinder absent = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<ValueTypeRequest> body   = absent.PropertiesOf(Request(quantity: null));
 
         RequiredField<PositiveQty> defaulted = body.SimpleProperty(r => r.Quantity).AsOptional(PositiveQty.From, 1);
 
@@ -115,8 +115,8 @@ public sealed class ValueTypePropertyBindingTests {
 
     [Fact(DisplayName = "The underlying-type inference is not int-specific: a bool? property binds the same way.")]
     public void ValueTypeWorksForBool() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(Request(flag: true));
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<ValueTypeRequest> body = bind.PropertiesOf(Request(flag: true));
 
         RequiredField<Consent> consent = body.SimpleProperty(r => r.Flag).AsRequired(Consent.From);
 
@@ -127,8 +127,8 @@ public sealed class ValueTypePropertyBindingTests {
 
     [Fact(DisplayName = "A list of nullable value types binds each element via a method-group converter over the underlying type.")]
     public void ValueTypeListRequiredBinds() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(Request(quantities: [1, 2, 3]));
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<ValueTypeRequest> body = bind.PropertiesOf(Request(quantities: [1, 2, 3]));
 
         RequiredField<IReadOnlyList<PositiveQty>> qtys = body.ListOfSimpleProperties(r => r.Quantities).AsRequired(PositiveQty.From);
 
@@ -139,8 +139,8 @@ public sealed class ValueTypePropertyBindingTests {
 
     [Fact(DisplayName = "A null element of a value-type list records REQUEST_ARGUMENT_REQUIRED under its indexed path.")]
     public void ValueTypeListNullElementRecords() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(Request(quantities: [1, null, 3]));
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<ValueTypeRequest> body = bind.PropertiesOf(Request(quantities: [1, null, 3]));
 
         body.ListOfSimpleProperties(r => r.Quantities).AsRequired(PositiveQty.From);
 
@@ -151,8 +151,8 @@ public sealed class ValueTypePropertyBindingTests {
 
     [Fact(DisplayName = "An invalid element of a value-type list records REQUEST_ARGUMENT_INVALID under its indexed path.")]
     public void ValueTypeListInvalidElementRecords() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(Request(quantities: [1, -2, 3]));
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<ValueTypeRequest> body = bind.PropertiesOf(Request(quantities: [1, -2, 3]));
 
         body.ListOfSimpleProperties(r => r.Quantities).AsRequired(PositiveQty.From);
 
@@ -163,21 +163,21 @@ public sealed class ValueTypePropertyBindingTests {
 
     [Fact(DisplayName = "An optional value-type list that is absent yields an empty list and records nothing; a required one records REQUEST_ARGUMENT_REQUIRED.")]
     public void ValueTypeListOptionalVsRequiredWhenAbsent() {
-        var optional     = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var optionalBody = optional.PropertiesOf(Request(quantities: null));
+        RequestBinder optional     = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<ValueTypeRequest> optionalBody = optional.PropertiesOf(Request(quantities: null));
         RequiredField<IReadOnlyList<PositiveQty>> empty = optionalBody.ListOfSimpleProperties(r => r.Quantities).AsOptional(PositiveQty.From);
         Check.That(optional.New(s => s.Get(empty).Count).GetResultOrThrow()).IsEqualTo(0);
 
-        var required     = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var requiredBody = required.PropertiesOf(Request(quantities: null));
+        RequestBinder required     = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<ValueTypeRequest> requiredBody = required.PropertiesOf(Request(quantities: null));
         requiredBody.ListOfSimpleProperties(r => r.Quantities).AsRequired(PositiveQty.From);
         Check.That(required.New(_ => "never").Error!.InnerErrors.Single().Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_REQUIRED");
     }
 
     [Fact(DisplayName = "A required value-type list that is present but empty is valid: it binds an empty list and records nothing.")]
     public void RequiredValueTypeListPresentButEmptyBindsEmpty() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(Request(quantities: []));
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<ValueTypeRequest> body = bind.PropertiesOf(Request(quantities: []));
 
         RequiredField<IReadOnlyList<PositiveQty>> quantities = body.ListOfSimpleProperties(r => r.Quantities).AsRequired(PositiveQty.From);
 
@@ -190,8 +190,8 @@ public sealed class ValueTypePropertyBindingTests {
 
     [Fact(DisplayName = "A string property still resolves to the reference overload — no ambiguity introduced by the value-type overload.")]
     public void StringPropertyStillBindsViaReferenceOverload() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(Request(note: "a@b.c"));
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<ValueTypeRequest> body = bind.PropertiesOf(Request(note: "a@b.c"));
 
         RequiredField<EmailAddress> email = body.SimpleProperty(r => r.Note).AsRequired(EmailAddress.Parse);
 
@@ -200,8 +200,8 @@ public sealed class ValueTypePropertyBindingTests {
 
     [Fact(DisplayName = "A list of strings still resolves to the reference list overload.")]
     public void StringListStillBindsViaReferenceOverload() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(Request(notes: ["a", "b"]));
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<ValueTypeRequest> body = bind.PropertiesOf(Request(notes: ["a", "b"]));
 
         RequiredField<IReadOnlyList<Tag>> tags = body.ListOfSimpleProperties(r => r.Notes).AsOptional(Tag.Parse);
 
@@ -210,8 +210,8 @@ public sealed class ValueTypePropertyBindingTests {
 
     [Fact(DisplayName = "A non-nullable value-type property still throws ArgumentException — the value-type overload does not bypass the guard.")]
     public void NonNullableValueTypeStillThrows() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(Request());
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<ValueTypeRequest> body = bind.PropertiesOf(Request());
 
         Check.ThatCode(() => body.SimpleProperty(r => r.Count)).Throws<ArgumentException>();
     }
