@@ -13,6 +13,17 @@ public sealed class AnyModernTypeTests {
     private static readonly DateOnly AnchorDate = new(2026, 1, 1);
     private static readonly TimeOnly AnchorTime = new(12, 0, 0);
 
+    [Fact(DisplayName = "Half is untouched by the ordinary-magnitude window: its whole domain is already ordinary.")]
+    public void HalfIsUnaffectedByTheOrdinaryWindow() {
+        // ADR-0052. Half stops at 65 504, well inside the window, so clipping to a window wider than the domain
+        // changes nothing — the rule narrows where a type is extravagant and stays silent where it is not. It lives
+        // in this file rather than beside the other continuous examples because Half is a .NET 5+ type, absent from
+        // the .NET Framework 4.7.2 floor leg this file is excluded from.
+        for (int i = 0; i < SampleCount; i++) {
+            Check.That((double)Any.Half().Generate()).IsStrictlyLessThan(65_505d);
+        }
+    }
+
     [Fact(DisplayName = "DateOnly: Between is inclusive and reached; After/Before are exclusive; conflicts surface.")]
     public void DateOnlyBehaves() {
         HashSet<DateOnly> seen = new();

@@ -102,6 +102,14 @@ matter — and that is the point.
 - **Conflicting constraints fail fast** with a clear, actionable
   `ConflictingAnyConstraintException` at the moment the conflicting constraint is
   declared — for example `Any.String().WithLength(3).StartingWith("ORD-")`.
+- **Dummies stay ordinary unless you ask for more.** An unconstrained `Any.Double()`,
+  `Single()` or `Decimal()` draws within a magnitude of a million, not across the type's
+  whole domain — so arithmetic on a dummy stays finite, `WithScale(2)` still has decimal
+  places to constrain, and the value sits where rounding and formatting defects actually
+  live. The window only ever *clips*: `Between(0, double.MaxValue)` permits a huge value
+  and still yields an ordinary one, while `Between(1e300, 1e308)` names a magnitude and
+  gets exactly it. `Half`, whose domain stops at 65 504, is unaffected. The integer
+  generators deliberately keep their full range — a large `int` is an ordinary `int`.
 - **Dummies stay small unless you ask for more.** A bound is a permission, not a
   request: `WithMaxLength`/`WithMaxCount` only ever *narrow* a draw, so
   `Any.String().WithMaxLength(100_000)` still yields the short unconstrained string

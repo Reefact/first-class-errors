@@ -35,6 +35,43 @@ public sealed class ContinuousIntervalProperties {
     /// </summary>
     private const int ReachabilityDrawCount = 300;
 
+    /// <summary>The magnitude an arbitrary number stays within unless the declared bounds leave no room (ADR-0052).</summary>
+    private const double OrdinaryMagnitude = 1_000_000d;
+
+    /// <summary>
+    ///     Finiteness, spelled the way the .NET Framework 4.7.2 floor leg understands: <c>double.IsFinite</c> arrived
+    ///     with .NET Core 3.0, and this suite is built against the support floor too.
+    /// </summary>
+    private static bool IsFinite(double value) {
+        return !double.IsNaN(value) && !double.IsInfinity(value);
+    }
+
+    /// <summary>
+    ///     The interval a generator actually draws from: the declared one clipped to the ordinary magnitude window,
+    ///     or the declared one untouched when that clip would leave nothing (ADR-0052).
+    /// </summary>
+    /// <remarks>
+    ///     Mirrored here so the two reachability properties can name the range they expect covered. The split of
+    ///     responsibility is deliberate: those properties own <i>the sampler covers the range it draws from</i> —
+    ///     issue #206 was a bit-level defect in assembling the fraction, magnitude-independent, and a fraction stuck
+    ///     below one half still fails them with this helper in place. That the range is the <i>right</i> one is owned
+    ///     by the windowing properties, which assert it against the API rather than against a mirror.
+    /// </remarks>
+    private static (double Min, double Max) DrawnFrom(double min, double max) {
+        double lower = Math.Max(min, -OrdinaryMagnitude);
+        double upper = Math.Min(max, OrdinaryMagnitude);
+
+        return lower > upper ? (min, max) : (lower, upper);
+    }
+
+    /// <summary>The <see cref="decimal" /> counterpart of <see cref="DrawnFrom(double,double)" />.</summary>
+    private static (decimal Min, decimal Max) DrawnFrom(decimal min, decimal max) {
+        decimal lower = Math.Max(min, -(decimal)OrdinaryMagnitude);
+        decimal upper = Math.Min(max, (decimal)OrdinaryMagnitude);
+
+        return lower > upper ? (min, max) : (lower, upper);
+    }
+
     /// <summary>Arbitrary finite <see cref="float" />s — the <c>Generators.Double()</c> recipe on the narrow type.</summary>
     private static Gen<float> Singles() {
         return Generators.WithEdges(ArbMap.Default.GeneratorFor<float>().Where(value => !float.IsNaN(value) && !float.IsInfinity(value)),
@@ -318,6 +355,45 @@ public sealed class ContinuousIntervalProperties {
             .QuickCheckThrowOnFailure();
     }
 
+    [Fact(DisplayName = "An unconstrained draw is an ordinary number, whatever the seed — arithmetic on it stays finite.")]
+    public void UnconstrainedDrawsAreOrdinary() {
+        // ADR-0052. Stated as arithmetic rather than as a magnitude on purpose: what a dummy owes its test is that
+        // using it does not sabotage the test. Before this, a sixth of Positive() doubles overflowed to Infinity on
+        // a single multiplication, and the decimal equivalent threw OverflowException.
+        Prop.ForAll(Generators.Seed().ToArbitrary(),
+                    seed => {
+                        AnyContext any = Any.WithSeed(seed);
+
+                        return Expect.EveryDraw(any.Double(), value => IsFinite(value * 1.2d))
+                            && Expect.EveryDraw(any.Double().Positive(), value => IsFinite(value * 1.2d) && value > 0d)
+                            && Expect.EveryDraw(any.Single(), value => IsFinite(value * 1.2f))
+                            && Expect.EveryDraw(any.Decimal(), value => Expect.DoesNotThrow(() => _ = value * 1.2m));
+                    })
+            .QuickCheckThrowOnFailure();
+    }
+
+    [Fact(DisplayName = "An interval that merely permits large values still yields ordinary ones, for every upper bound.")]
+    public void PermittingALargeValueIsNotRequestingOne() {
+        // The heart of ADR-0052: a bound is a permission, not a request. Any.Double().LessThan(huge) says what the
+        // value may not exceed, so widening that bound must not enlarge the draw — exactly as a size maximum does
+        // not enlarge a string under ADR-0050.
+        Prop.ForAll(Gen.Elements(1e7d, 1e50d, 1e200d, 1e308d, double.MaxValue).ToArbitrary(),
+                    permitted => Expect.EveryDraw(Any.Double().Between(0d, permitted), value => value <= OrdinaryMagnitude)
+                              && Expect.EveryDraw(Any.Double().LessThan(permitted), value => Math.Abs(value) <= OrdinaryMagnitude))
+            .QuickCheckThrowOnFailure();
+    }
+
+    [Fact(DisplayName = "An interval lying wholly beyond the ordinary window is drawn from as declared, for every such interval.")]
+    public void AnIntervalBeyondTheWindowIsHonouredAsDeclared() {
+        // The other half of the rule, and the one that keeps it from being a silent cap: a caller who names a
+        // magnitude gets that magnitude. Without this the window would not clip the draw, it would break the bound.
+        Prop.ForAll(Generators.OrderedPair(Gen.Elements(1e7d, 1e20d, 1e100d, 1e250d, 1e307d)).ToArbitrary(),
+                    bounds => bounds.Min == bounds.Max
+                           || Expect.EveryDraw(Any.Double().Between(bounds.Min, bounds.Max),
+                                               value => value >= bounds.Min && value <= bounds.Max))
+            .QuickCheckThrowOnFailure();
+    }
+
     [Fact(DisplayName = "Decimal: repeated draws over an arbitrary interval straddle its midpoint — neither half is unreachable.")]
     public void DecimalBetweenReachesBothHalves() {
         // Issue #206, generalized from its fixed 0..100 regression: the fraction was assembled from three
@@ -326,7 +402,8 @@ public sealed class ContinuousIntervalProperties {
         // caught it, and only a property over the interval itself proves it for intervals nobody thought to pin.
         Prop.ForAll(DecimalIntervals().ToArbitrary(),
                     interval => {
-                        decimal midpoint = interval.Min / 2m + interval.Max / 2m;
+                        (decimal Min, decimal Max) drawn = DrawnFrom(interval.Min, interval.Max);
+                        decimal midpoint = drawn.Min / 2m + drawn.Max / 2m;
 
                         List<decimal> values = Expect.Draws(Any.WithSeed(interval.Seed).Decimal().Between(interval.Min, interval.Max),
                                                             ReachabilityDrawCount);
@@ -342,7 +419,8 @@ public sealed class ContinuousIntervalProperties {
         // the decimal one — which is exactly why the guard is stated per engine instead of once for a representative.
         Prop.ForAll(DoubleIntervals().ToArbitrary(),
                     interval => {
-                        double midpoint = interval.Min / 2d + interval.Max / 2d;
+                        (double Min, double Max) drawn = DrawnFrom(interval.Min, interval.Max);
+                        double midpoint = drawn.Min / 2d + drawn.Max / 2d;
 
                         List<double> values = Expect.Draws(Any.WithSeed(interval.Seed).Double().Between(interval.Min, interval.Max),
                                                            ReachabilityDrawCount);
