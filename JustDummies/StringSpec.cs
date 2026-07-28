@@ -9,25 +9,36 @@ namespace JustDummies;
 
 /// <summary>
 ///     The immutable specification behind <see cref="AnyString" />: length bounds, anchored fragments (prefix,
-///     suffix, contained values), a character set, a letter casing and excluded values — each remembering the
-///     constraint that set it, so a conflict message can name both sides. Every mutation returns a new specification
-///     and cross-validates the whole eagerly: an <see cref="AnyString" /> that exists can always generate — save for
-///     an exclusion tight enough to leave the shape unsatisfiable, the one failure deferred to generation (see remarks).
+///     suffix, contained values), a character set, a letter casing, an optional allow-list (<c>OneOf</c>) and
+///     excluded values — each remembering the constraint that set it, so a conflict message can name both sides.
+///     Every mutation returns a new specification and cross-validates the whole eagerly: an <see cref="AnyString" />
+///     that exists can always generate — save for an exclusion tight enough to leave a <i>shaped</i> string
+///     unsatisfiable, the one failure deferred to generation (see remarks).
 /// </summary>
 /// <remarks>
 ///     <para>
-///         Fragments are laid out without overlap analysis: a generated string is
-///         <c>prefix + filler + contained values + filler + suffix</c>, so the length budget the fragments require is
-///         the plain sum of their lengths. A combination that only a cleverer overlapping layout could satisfy is
-///         reported as a conflict — a deliberate V1 simplification, kept explicit in the conflict messages.
+///         Without an allow-list the specification is <b>constructive</b>: a generated string is laid out as
+///         <c>prefix + filler + contained values + filler + suffix</c>, without overlap analysis, so the length budget
+///         the fragments require is the plain sum of their lengths. A combination that only a cleverer overlapping
+///         layout could satisfy is reported as a conflict — a deliberate V1 simplification, kept explicit in the
+///         conflict messages.
 ///     </para>
 ///     <para>
-///         Exclusions (<c>DifferentFrom</c>/<c>Except</c>) are the one constraint not met by construction: strings are
-///         not ordinal-mapped, so an excluded value is avoided by a <b>bounded</b> redraw of the constructive layout —
-///         expected collisions are ≈ 0 for any non-trivial shape, the same bounded escape a distinct collection uses to
-///         skip a duplicate. An exclusion tight enough to leave the shape unsatisfiable (for example excluding every
-///         character a single-character length allows) is therefore the one case that surfaces at generation, as a
-///         seed-bearing <see cref="AnyGenerationException" />, rather than eagerly at declaration.
+///         With an allow-list the specification is a <b>filter</b> instead: the caller supplied the values, so nothing
+///         is laid out and every other constraint is answered by testing each pooled value. The layout budget
+///         therefore does not apply — <c>Containing("ab").Containing("ba")</c> accepts the pooled <c>"aba"</c>, which
+///         the constructive path could not have built — and satisfiability is the plain question "does any pooled
+///         value survive every declared constraint?", answered eagerly at declaration. Exclusions are eager too on
+///         that path, since the domain is finite and enumerable.
+///     </para>
+///     <para>
+///         Exclusions (<c>DifferentFrom</c>/<c>Except</c>) on a <i>shaped</i> string are the one constraint not met by
+///         construction: strings are not ordinal-mapped, so an excluded value is avoided by a <b>bounded</b> redraw of
+///         the constructive layout — expected collisions are ≈ 0 for any non-trivial shape, the same bounded escape a
+///         distinct collection uses to skip a duplicate. An exclusion tight enough to leave the shape unsatisfiable
+///         (for example excluding every character a single-character length allows) is therefore the one case that
+///         surfaces at generation, as a seed-bearing <see cref="AnyGenerationException" />, rather than eagerly at
+///         declaration.
 ///     </para>
 ///     <para>
 ///         The default spread governs every draw, bounded or not (ADR-0050): a declared maximum composes with it
@@ -48,7 +59,8 @@ internal sealed class StringSpec {
 
     internal static readonly StringSpec Unconstrained = new(null, null, 0, null, null, null,
                                                             null, null, null, null, [],
-                                                            null, null, null, null, null, []);
+                                                            null, null, null, null, null, [],
+                                                            null, null);
 
     private static string V(int value) {
         return value.ToString(CultureInfo.InvariantCulture);
@@ -62,23 +74,27 @@ internal sealed class StringSpec {
 
     #region Fields declarations
 
-    private readonly LetterCasing?         _casing;
-    private readonly string?               _casingConstraint;
-    private readonly CharacterSet?         _charset;
-    private readonly string?               _charsetConstraint;
-    private readonly string?               _customPool;
-    private readonly int?                  _exactLength;
-    private readonly string?               _exactConstraint;
-    private readonly IReadOnlyList<string> _excluded;
-    private readonly IReadOnlyList<string> _fragments;
-    private readonly int?                  _maxLength;
-    private readonly string?               _maxConstraint;
-    private readonly int                   _minLength;
-    private readonly string?               _minConstraint;
-    private readonly string?               _prefix;
-    private readonly string?               _prefixConstraint;
-    private readonly string?               _suffix;
-    private readonly string?               _suffixConstraint;
+    private readonly IReadOnlyList<string>? _allowed;
+    private readonly string?                _allowedConstraint;
+    private readonly LetterCasing?          _casing;
+    private readonly string?                _casingConstraint;
+    private readonly CharacterSet?          _charset;
+    private readonly string?                _charsetConstraint;
+    private readonly string?                _customPool;
+    private readonly List<string>?          _effectiveAllowed;
+    private readonly int?                   _exactLength;
+    private readonly string?                _exactConstraint;
+    private readonly IReadOnlyList<string>  _excluded;
+    private readonly IReadOnlyList<(string Constraint, string[] Values)> _exclusions;
+    private readonly IReadOnlyList<string>  _fragments;
+    private readonly int?                   _maxLength;
+    private readonly string?                _maxConstraint;
+    private readonly int                    _minLength;
+    private readonly string?                _minConstraint;
+    private readonly string?                _prefix;
+    private readonly string?                _prefixConstraint;
+    private readonly string?                _suffix;
+    private readonly string?                _suffixConstraint;
 
     #endregion
 
@@ -90,35 +106,35 @@ internal sealed class StringSpec {
                        IReadOnlyList<string> fragments,
                        CharacterSet? charset, string? charsetConstraint, string? customPool,
                        LetterCasing? casing,  string? casingConstraint,
-                       IReadOnlyList<string> excluded) {
-        _exactLength      = exactLength;
-        _exactConstraint  = exactConstraint;
-        _excluded         = excluded;
-        _minLength        = minLength;
-        _minConstraint    = minConstraint;
-        _maxLength        = maxLength;
-        _maxConstraint    = maxConstraint;
-        _prefix           = prefix;
-        _prefixConstraint = prefixConstraint;
-        _suffix           = suffix;
-        _suffixConstraint = suffixConstraint;
-        _fragments        = fragments;
-        _charset          = charset;
+                       IReadOnlyList<(string Constraint, string[] Values)> exclusions,
+                       IReadOnlyList<string>? allowed, string? allowedConstraint) {
+        _exactLength       = exactLength;
+        _exactConstraint   = exactConstraint;
+        _minLength         = minLength;
+        _minConstraint     = minConstraint;
+        _maxLength         = maxLength;
+        _maxConstraint     = maxConstraint;
+        _prefix            = prefix;
+        _prefixConstraint  = prefixConstraint;
+        _suffix            = suffix;
+        _suffixConstraint  = suffixConstraint;
+        _fragments         = fragments;
+        _charset           = charset;
         _charsetConstraint = charsetConstraint;
-        _customPool       = customPool;
-        _casing           = casing;
-        _casingConstraint = casingConstraint;
+        _customPool        = customPool;
+        _casing            = casing;
+        _casingConstraint  = casingConstraint;
+        _exclusions        = exclusions;
+        _allowed           = allowed;
+        _allowedConstraint = allowedConstraint;
+        // The flat, deduplicated value list drives the redraw and the exhaustion message; the provenance in
+        // _exclusions is consulted only when a conflict message must name the excluding constraint. Materialized
+        // once here — "constrain once, draw many" — in first-declared order.
+        _excluded = exclusions.SelectMany(pair => pair.Values).Distinct(StringComparer.Ordinal).ToList();
+        // Same "constrain once, draw many" rule for the allow-list: the surviving pool is the exact domain the draw
+        // samples, the cardinality a distinct collection gates on, and the set a satisfiability check counts.
+        if (allowed is not null) { _effectiveAllowed = allowed.Where(Admits).ToList(); }
     }
-
-    /// <summary>
-    ///     Whether no constraint has been declared yet — the pristine state a generator from <see cref="Any.String" />
-    ///     starts in, before any fluent constraint narrows it. Used to keep a terminal constraint (<c>OneOf</c>) from
-    ///     being combined with the shaping ones (an exclusion counts as a declared constraint).
-    /// </summary>
-    internal bool IsUnconstrained =>
-        _exactLength is null && _minLength == 0 && _maxLength is null &&
-        _prefix is null && _suffix is null && _fragments.Count == 0 &&
-        _charset is null && _casing is null && _excluded.Count == 0 && _customPool is null;
 
     /// <summary>Fixes the exact length; declared once per generator.</summary>
     internal StringSpec WithExactLength(int length, string applying) {
@@ -130,9 +146,10 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(length, applying, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
-                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, _excluded);
+                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, _exclusions,
+                                   _allowed, _allowedConstraint);
 
-        return candidate.Validated(applying);
+        return candidate.Validated(applying, this);
     }
 
     /// <summary>Tightens the minimum length; a looser bound than the current one is a no-op.</summary>
@@ -142,9 +159,10 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, length, applying, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
-                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, _excluded);
+                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, _exclusions,
+                                   _allowed, _allowedConstraint);
 
-        return candidate.Validated(applying);
+        return candidate.Validated(applying, this);
     }
 
     /// <summary>Tightens the maximum length; a looser bound than the current one is a no-op.</summary>
@@ -154,9 +172,10 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, length, applying,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
-                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, _excluded);
+                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, _exclusions,
+                                   _allowed, _allowedConstraint);
 
-        return candidate.Validated(applying);
+        return candidate.Validated(applying, this);
     }
 
     /// <summary>Anchors a prefix; declared once per generator.</summary>
@@ -170,9 +189,10 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    prefix, applying, _suffix, _suffixConstraint, _fragments,
-                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, _excluded);
+                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, _exclusions,
+                                   _allowed, _allowedConstraint);
 
-        return candidate.Validated(applying);
+        return candidate.Validated(applying, this);
     }
 
     /// <summary>Anchors a suffix; declared once per generator.</summary>
@@ -186,9 +206,10 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, suffix, applying, _fragments,
-                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, _excluded);
+                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, _exclusions,
+                                   _allowed, _allowedConstraint);
 
-        return candidate.Validated(applying);
+        return candidate.Validated(applying, this);
     }
 
     /// <summary>Adds a value the generated string must contain.</summary>
@@ -199,9 +220,10 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, fragments,
-                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, _excluded);
+                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, _exclusions,
+                                   _allowed, _allowedConstraint);
 
-        return candidate.Validated(applying);
+        return candidate.Validated(applying, this);
     }
 
     /// <summary>Restricts the character family; declared once per generator.</summary>
@@ -214,9 +236,10 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
-                                   charset, applying, _customPool, _casing, _casingConstraint, _excluded);
+                                   charset, applying, _customPool, _casing, _casingConstraint, _exclusions,
+                                   _allowed, _allowedConstraint);
 
-        return candidate.Validated(applying);
+        return candidate.Validated(applying, this);
     }
 
     /// <summary>
@@ -239,9 +262,10 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
-                                   _charset, applying, pool, _casing, _casingConstraint, _excluded);
+                                   _charset, applying, pool, _casing, _casingConstraint, _exclusions,
+                                   _allowed, _allowedConstraint);
 
-        return candidate.Validated(applying);
+        return candidate.Validated(applying, this);
     }
 
     /// <summary>Imposes a letter casing; declared once per generator.</summary>
@@ -255,35 +279,84 @@ internal sealed class StringSpec {
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
-                                   _charset, _charsetConstraint, _customPool, casing, applying, _excluded);
+                                   _charset, _charsetConstraint, _customPool, casing, applying, _exclusions,
+                                   _allowed, _allowedConstraint);
 
-        return candidate.Validated(applying);
+        return candidate.Validated(applying, this);
     }
 
     /// <summary>Adds values the generated string must avoid; may be declared several times, the exclusions accumulate.</summary>
     internal StringSpec WithExcluded(IReadOnlyList<string> values, string applying) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
-        List<string> excluded = new(_excluded);
-        foreach (string value in values) {
-            if (!excluded.Contains(value, StringComparer.Ordinal)) { excluded.Add(value); }
-        }
+
+        // The applied constraint tags its own values, so a conflict message can name the exclusion that actually
+        // emptied an allow-list rather than a shape constraint that merely borders it.
+        List<(string Constraint, string[] Values)> exclusions = new(_exclusions) { (applying, values.ToArray()) };
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
-                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, excluded);
+                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, exclusions,
+                                   _allowed, _allowedConstraint);
 
-        return candidate.Validated(applying);
+        return candidate.Validated(applying, this);
     }
 
     /// <summary>
-    ///     Builds one string satisfying the whole specification — laid out directly, never generate-then-retry. The one
-    ///     redraw is to skip an excluded value: a bounded escape (expected collisions ≈ 0 for any non-trivial shape); an
-    ///     exhausted budget means the exclusions leave the shape unsatisfiable, reported with the seed to replay.
+    ///     Restricts the domain to an explicit allow-list; declared once per generator. From here on the specification
+    ///     is a filter over the supplied values rather than a layout to build, so every other constraint — those
+    ///     already declared and those declared later — narrows the pool instead of shaping a string.
+    /// </summary>
+    internal StringSpec WithAllowed(IReadOnlyList<string> values, string applying) {
+        if (values is null) { throw new ArgumentNullException(nameof(values)); }
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+        // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
+        // conflict: the second declaration asks for exactly what the first already guarantees.
+        if (string.Equals(_allowedConstraint, applying, StringComparison.Ordinal)) { return this; }
+        if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_allowedConstraint} is already defined."); }
+
+        string[] distinct = values.Distinct(StringComparer.Ordinal).ToArray();
+
+        StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
+                                   _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
+                                   _charset, _charsetConstraint, _customPool, _casing, _casingConstraint, _exclusions,
+                                   distinct, applying);
+
+        return candidate.Validated(applying, this);
+    }
+
+    /// <summary>
+    ///     The number of distinct values the specification can produce, or <c>null</c> when no allow-list bounds it —
+    ///     a shaped string draws from a domain too wide, and too dependent on the layout, to count. Feeds
+    ///     <see cref="ICardinalityHint{T}" />, so a distinct collection over a pooled generator fails eagerly.
+    /// </summary>
+    internal long? Cardinality => _effectiveAllowed?.Count;
+
+    /// <summary>
+    ///     Whether <paramref name="value" /> is one the specification could produce — the exact pool
+    ///     <see cref="Generate" /> draws from when an allow-list is in force. Without one the answer is <c>false</c>
+    ///     for every value: the two <see cref="ICardinalityHint{T}" /> members travel together, and a shaped string
+    ///     advertises no cardinality, so a distinct collection never consults membership on that path (it gates on the
+    ///     bound alone, then falls back to the bounded dedup draw). Answering "outside" is also the side the interface
+    ///     documents as safe — it can only defer, never refuse a satisfiable specification.
+    /// </summary>
+    internal bool Contains(string value) {
+        if (value is null) { throw new ArgumentNullException(nameof(value)); }
+
+        return _effectiveAllowed is not null && _effectiveAllowed.Contains(value, StringComparer.Ordinal);
+    }
+
+    /// <summary>
+    ///     Builds one string satisfying the whole specification. With an allow-list the draw is a uniform pick from
+    ///     the surviving pool — every constraint was already applied to it, so there is nothing to redraw. Without
+    ///     one the string is laid out directly, never generate-then-retry; the one redraw is to skip an excluded
+    ///     value, a bounded escape (expected collisions ≈ 0 for any non-trivial shape) whose exhausted budget is
+    ///     reported as the spent budget it is, with the seed to replay.
     /// </summary>
     internal string Generate(RandomSource source) {
         if (source is null) { throw new ArgumentNullException(nameof(source)); }
         SeededRandom random = source.Current;
+        if (_effectiveAllowed is not null) { return _effectiveAllowed[random.Next(_effectiveAllowed.Count)]; }
         if (_excluded.Count == 0) { return BuildCandidate(random); }
 
         for (int collisions = 0;;) {
@@ -342,16 +415,22 @@ internal sealed class StringSpec {
         return string.Join(", ", _excluded.Select(value => $"\"{value}\""));
     }
 
-    private static void AppendFiller(StringBuilder builder, SeededRandom random, string pool, int count) {
-        for (int i = 0; i < count; i++) {
-            builder.Append(pool[random.Next(pool.Length)]);
-        }
-    }
-
-    private StringSpec Validated(string applying) {
+    /// <summary>
+    ///     Cross-validates the whole specification. The layout checks belong to the constructive path only: once an
+    ///     allow-list is in force nothing is laid out, so the single satisfiability question is whether any pooled
+    ///     value survives every declared constraint. <paramref name="previous" /> is the specification this one was
+    ///     derived from — it tells a conflict message which side was already narrowed and which is the new one.
+    /// </summary>
+    private StringSpec Validated(string applying, StringSpec previous) {
         ValidateLengthBounds(applying);
-        ValidateFragmentBudget(applying);
-        ValidateFragmentCharacters(applying);
+        if (_allowed is null) {
+            ValidateFragmentBudget(applying);
+            ValidateFragmentCharacters(applying);
+
+            return this;
+        }
+
+        ValidateAllowedSurvives(applying, previous);
 
         return this;
     }
@@ -419,6 +498,113 @@ internal sealed class StringSpec {
         }
     }
 
+    /// <summary>
+    ///     Fails when no pooled value survives every declared constraint, with a message naming exactly the two sides
+    ///     in play and claiming only what the surviving pools establish.
+    /// </summary>
+    private void ValidateAllowedSurvives(string applying, StringSpec previous) {
+        if (_effectiveAllowed!.Count > 0) { return; }
+
+        throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {DescribeEmptyPool(applying, previous)}.");
+    }
+
+    private string DescribeEmptyPool(string applying, StringSpec previous) {
+        // The allow-list is the constraint being applied: the values are new, and the constraints already declared
+        // are the other side. Name those that reject every single value — the ones the caller must loosen — and stay
+        // generic when it took a combination of them, since no individual constraint is then the culprit.
+        if (previous._allowed is null) {
+            IReadOnlyList<string> culprits = previous.ConstraintsRejectingAll(_allowed!);
+            if (culprits.Count == 0) { return "no value it offers satisfies the constraints already declared"; }
+            if (culprits.Count == 1) { return $"{culprits[0]} allows none of its values"; }
+
+            return $"{string.Join(", ", culprits)} allow none of its values";
+        }
+
+        // The allow-list was already in force: it is the other side, and the constraint being applied is what
+        // emptied it. Qualify only when the applied constraint is not the whole story — it admits some value the
+        // allow-list declared, so the emptiness genuinely took the other constraints too. When it admits none of
+        // them, loosening the others cannot help, and the qualified form would send the caller at the wrong
+        // constraint, so the plain claim is both true and the useful one.
+        return _allowed!.Any(AdmittedBy(applying))
+                   ? $"no value {previous._allowedConstraint} allows that the other constraints leave satisfies it"
+                   : $"no value {previous._allowedConstraint} allows satisfies it";
+    }
+
+    /// <summary>
+    ///     The declared constraints that reject <b>every</b> value of <paramref name="values" />, in declaration
+    ///     order. A constraint some value satisfies is not a culprit — naming it would blame a constraint the caller
+    ///     could loosen without changing the verdict.
+    /// </summary>
+    private IReadOnlyList<string> ConstraintsRejectingAll(IReadOnlyList<string> values) {
+        List<string> culprits = new();
+        foreach ((string constraint, Func<string, bool> admits) in DeclaredConstraints()) {
+            if (!values.Any(admits)) { culprits.Add(constraint); }
+        }
+
+        return culprits;
+    }
+
+    /// <summary>
+    ///     The test a value must pass to satisfy <paramref name="constraint" /> <b>alone</b>. A constraint the
+    ///     specification does not carry admits everything, which keeps a message that cannot identify its own
+    ///     applied constraint on the weaker, still-true claim rather than the stronger one.
+    /// </summary>
+    private Func<string, bool> AdmittedBy(string constraint) {
+        Func<string, bool>[] tests = DeclaredConstraints()
+                                     .Where(entry => string.Equals(entry.Constraint, constraint, StringComparison.Ordinal))
+                                     .Select(entry => entry.Admits)
+                                     .ToArray();
+
+        return value => tests.All(test => test(value));
+    }
+
+    /// <summary>
+    ///     Every declared constraint paired with the test a value must pass to satisfy it — the single definition of
+    ///     what the specification demands of a value it did not build. It drives the pool filter, the culprit search
+    ///     and the blame qualification, so the three can never drift apart.
+    /// </summary>
+    /// <remarks>
+    ///     Entries are grouped by the constraint <b>as the caller wrote it</b>, and a group's tests are conjoined.
+    ///     One call can set two internal bounds — <c>WithLengthBetween(2, 3)</c> sets both, under one name — and the
+    ///     caller can only loosen the call: judging its halves separately would let a constraint that alone rejects
+    ///     every value escape the blame, because each half on its own admits one.
+    /// </remarks>
+    private IEnumerable<(string Constraint, Func<string, bool> Admits)> DeclaredConstraints() {
+        return Declarations()
+               .GroupBy(entry => entry.Constraint, StringComparer.Ordinal)
+               .Select(group => {
+                   Func<string, bool>[] tests = group.Select(entry => entry.Admits).ToArray();
+
+                   return (group.Key, (Func<string, bool>)(value => tests.All(test => test(value))));
+               });
+    }
+
+    private IEnumerable<(string Constraint, Func<string, bool> Admits)> Declarations() {
+        if (_exactLength is int exact) { yield return (_exactConstraint!, value => value.Length == exact); }
+        if (_minLength > 0) { yield return (_minConstraint!, value => value.Length >= _minLength); }
+        if (_maxLength is int max) { yield return (_maxConstraint!, value => value.Length <= max); }
+        if (_prefix is not null) { yield return (_prefixConstraint!, value => value.StartsWith(_prefix, StringComparison.Ordinal)); }
+        if (_suffix is not null) { yield return (_suffixConstraint!, value => value.EndsWith(_suffix, StringComparison.Ordinal)); }
+        foreach (string fragment in _fragments) {
+            // AnyString renders the constraint from the fragment itself, so it is reconstructed identically here.
+            yield return ($"Containing(\"{fragment}\")", value => value.IndexOf(fragment, StringComparison.Ordinal) >= 0);
+        }
+        if (_charsetConstraint is not null) { yield return (_charsetConstraint, value => FirstDisallowedCharacter(value) is null); }
+        if (_casing is LetterCasing casing) { yield return (_casingConstraint!, value => FirstAgainstCasing(value, casing) is null); }
+        foreach ((string constraint, string[] excluded) in _exclusions) {
+            yield return (constraint, value => !excluded.Contains(value, StringComparer.Ordinal));
+        }
+    }
+
+    /// <summary>Whether <paramref name="value" /> satisfies every declared constraint — the allow-list filter.</summary>
+    private bool Admits(string value) {
+        foreach ((string _, Func<string, bool> admits) in DeclaredConstraints()) {
+            if (!admits(value)) { return false; }
+        }
+
+        return true;
+    }
+
     private IEnumerable<(string Kind, string Fragment)> Fragments() {
         if (_prefix is not null) { yield return ("prefix", _prefix); }
         foreach (string fragment in _fragments) { yield return ("contained value", fragment); }
@@ -474,6 +660,12 @@ internal sealed class StringSpec {
         }
 
         return null;
+    }
+
+    private static void AppendFiller(StringBuilder builder, SeededRandom random, string pool, int count) {
+        for (int i = 0; i < count; i++) {
+            builder.Append(pool[random.Next(pool.Length)]);
+        }
     }
 
     private string FillerPool() {

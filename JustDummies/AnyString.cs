@@ -26,6 +26,14 @@ namespace JustDummies;
 ///         Unconstrained, the generator yields 0 to 16 ASCII letters and digits; an unconstrained draw can therefore
 ///         be empty — chain <see cref="NonEmpty" /> when the surrounding code requires content.
 ///     </para>
+///     <para>
+///         <see cref="OneOf(string[])" /> is the one constraint that replaces the layout rather than shaping it: the
+///         caller supplies the values, so the draw is a uniform pick from them and every other constraint narrows
+///         that set instead of building a string. The constraints still fail at declaration when they contradict
+///         each other — which is why a value set is best declared <b>first</b>: constraints that contradict each
+///         other on their own terms are refused the moment they are declared, before any value set can reinterpret
+///         them as a filter (see <see cref="OneOf(string[])" />).
+///     </para>
 ///     <example>
 ///         <code>
 ///         string code = Any.String().NonEmpty().WithMaxLength(50).StartingWith("ORD-").Generate();
@@ -34,7 +42,7 @@ namespace JustDummies;
 ///         </code>
 ///     </example>
 /// </remarks>
-public sealed class AnyString : IAny<string>, IHasRandomSource {
+public sealed class AnyString : IAny<string>, IHasRandomSource, ICardinalityHint<string> {
 
     #region Statics members declarations
 
@@ -78,6 +86,17 @@ public sealed class AnyString : IAny<string>, IHasRandomSource {
     }
 
     RandomSource? IHasRandomSource.Source => _source;
+
+    // Only a value set (OneOf) makes the domain small and countable: it is then the exact surviving pool, so a
+    // distinct collection gates on it eagerly. A shaped string has no such bound — the specification answers null,
+    // and membership is never consulted on that path (the two answers travel together on one interface).
+    long? ICardinalityHint<string>.DistinctCardinality => _spec.Cardinality;
+
+    // A distinct collection may pin a null value — an unlikely but legal Containing(null) — and asking whether the
+    // generator could produce it is a question, not a boundary violation: the answer is simply no, since a value set
+    // rejects a null element at declaration. The specification's own guard stays the internal boundary (ADR-0045);
+    // this membership answer must not turn a pinned null into an exception the pool generator never raises.
+    bool ICardinalityHint<string>.Contains(string value) => value is not null && _spec.Contains(value);
 
     /// <summary>Requires at least one character.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
@@ -254,15 +273,19 @@ public sealed class AnyString : IAny<string>, IHasRandomSource {
 
     /// <summary>
     ///     Requires the generated string to be none of the supplied <paramref name="values" />. May be declared several
-    ///     times; the exclusions accumulate. Unlike the shape constraints an exclusion is met by a <b>bounded</b> redraw
-    ///     of the constructed layout, so an exclusion tight enough to leave the shape unsatisfiable surfaces at
-    ///     <see cref="Generate" /> as a seed-bearing <see cref="AnyGenerationException" />, never as a declaration-time
-    ///     conflict. The empty string is a valid value to exclude; a <c>null</c> element is not.
+    ///     times; the exclusions accumulate. On a <i>shaped</i> string, and unlike the shape constraints, an exclusion
+    ///     is met by a <b>bounded</b> redraw of the constructed layout, so one tight enough to leave the shape
+    ///     unsatisfiable surfaces at <see cref="Generate" /> as a seed-bearing
+    ///     <see cref="AnyGenerationException" /> rather than as a declaration-time conflict. On a string drawn from a
+    ///     value set (<see cref="OneOf(string[])" />) there is nothing to redraw: the excluded values are removed from
+    ///     the set at once, and removing all of them is a conflict here and now. The empty string is a valid value to
+    ///     exclude; a <c>null</c> element is not.
     /// </summary>
     /// <param name="values">The values the generated string must differ from; duplicates are ignored.</param>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="values" /> is <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="values" /> is empty or contains a <c>null</c> element.</exception>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when a value set is in force and the exclusion leaves none of its values.</exception>
     public AnyString Except(params string[] values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
@@ -274,11 +297,13 @@ public sealed class AnyString : IAny<string>, IHasRandomSource {
     /// <summary>
     ///     Requires the generated string to differ from <paramref name="value" /> — typically an existing value the test
     ///     already holds, to exercise an inequality path while preserving the declared shape. Semantically equivalent to
-    ///     <see cref="Except(string[])" />; the name carries the intent at the call site.
+    ///     <see cref="Except(string[])" />, including when a value set is in force; the name carries the intent at the
+    ///     call site.
     /// </summary>
     /// <param name="value">The value the generated string must differ from.</param>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value" /> is <c>null</c>.</exception>
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when a value set is in force and <paramref name="value" /> is the only value it leaves.</exception>
     public AnyString DifferentFrom(string value) {
         if (value is null) { throw new ArgumentNullException(nameof(value)); }
 
@@ -288,37 +313,47 @@ public sealed class AnyString : IAny<string>, IHasRandomSource {
     /// <summary>
     ///     Draws the string from an explicit, fixed set of <paramref name="values" /> instead of shaping one — the
     ///     dummy for a value whose domain is a closed list the test does not assert on (a currency code, a well-known
-    ///     name). This is a <b>terminal</b> constraint: the supplied values are the whole specification, so it does not
-    ///     combine with the shape, length or character constraints — declare it directly on <see cref="Any.String" />.
-    ///     Duplicate values are collapsed; the generated string is one of the distinct values, drawn uniformly and
-    ///     reproducibly under a seed.
+    ///     name). Declared once per generator, and <b>composable</b> like every other family's <c>OneOf</c>: the other
+    ///     constraints keep their meaning and narrow the set rather than shaping a string, so
+    ///     <c>OneOf("abc", "de").WithLength(3)</c> yields <c>"abc"</c>. A constraint no supplied value satisfies is a
+    ///     <see cref="ConflictingAnyConstraintException" /> naming both sides, whichever order the two were declared
+    ///     in. Duplicate values are collapsed; the generated string is one of the surviving values, drawn uniformly
+    ///     and reproducibly under a seed.
     /// </summary>
+    /// <remarks>
+    ///     Declare it <b>first</b> when the values are the point. Constraints that contradict each other on their own
+    ///     terms are still refused the moment they are declared — the generator cannot know a value set is coming, and
+    ///     deferring that refusal would cost every shaped string its eager conflict. So
+    ///     <c>OneOf("aba").WithMaxLength(3).Containing("ab").Containing("ba")</c> yields <c>"aba"</c>, while the same
+    ///     constraints with <c>OneOf</c> last conflict on the layout budget before the values are ever seen: laid out
+    ///     side by side those two fragments need four characters, even though the supplied value contains both in
+    ///     three.
+    /// </remarks>
     /// <param name="values">The values the generated string is drawn from; duplicates are ignored.</param>
-    /// <returns>A terminal generator drawing from <paramref name="values" />.</returns>
+    /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="values" /> is <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="values" /> is empty or contains a <c>null</c> element.</exception>
-    /// <exception cref="ConflictingAnyConstraintException">Thrown when a constraint is already declared: a terminal value set cannot be combined with another constraint.</exception>
-    public AnyStringOneOf OneOf(params string[] values) {
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    public AnyString OneOf(params string[] values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
         if (values.Any(value => value is null)) { throw new ArgumentException("The values must not contain a null element; use OrNull() to make the whole generator nullable.", nameof(values)); }
-        if (!_spec.IsUnconstrained) { throw new ConflictingAnyConstraintException("Cannot apply OneOf(...) because it is a terminal specification: the supplied values are the whole specification and cannot be combined with the constraints already declared. Declare OneOf(...) directly on Any.String()."); }
 
-        return new AnyStringOneOf(_source, values.Distinct(StringComparer.Ordinal).ToArray());
+        return new AnyString(_source, _spec.WithAllowed(values, $"OneOf({Join(values)})"));
     }
 
     /// <summary>
     ///     Draws the string from an explicit, fixed set of <paramref name="values" /> — the
     ///     <see cref="IEnumerable{T}" /> counterpart of <see cref="OneOf(string[])" />, for a set already held as a
-    ///     sequence (a list, a LINQ result, values loaded at test setup). Same terminal contract: the values are the
-    ///     whole specification, duplicates collapse, and the draw is uniform and reproducible under a seed.
+    ///     sequence (a list, a LINQ result, values loaded at test setup). Same contract: the set composes with the
+    ///     other constraints, duplicates collapse, and the draw is uniform and reproducible under a seed.
     /// </summary>
     /// <param name="values">The values the generated string is drawn from; duplicates are ignored.</param>
-    /// <returns>A terminal generator drawing from <paramref name="values" />.</returns>
+    /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="values" /> is <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="values" /> is empty or contains a <c>null</c> element.</exception>
-    /// <exception cref="ConflictingAnyConstraintException">Thrown when a constraint is already declared: a terminal value set cannot be combined with another constraint.</exception>
-    public AnyStringOneOf OneOf(IEnumerable<string> values) {
+    /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    public AnyString OneOf(IEnumerable<string> values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
 
         return OneOf(values as string[] ?? values.ToArray());

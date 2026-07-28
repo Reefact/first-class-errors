@@ -267,8 +267,8 @@ JustDummies.AnyString.Generate() -> string!
 JustDummies.AnyString.LowerCase() -> JustDummies.AnyString!
 JustDummies.AnyString.NonEmpty() -> JustDummies.AnyString!
 JustDummies.AnyString.Numeric() -> JustDummies.AnyString!
-JustDummies.AnyString.OneOf(params string![]! values) -> JustDummies.AnyStringOneOf!
-JustDummies.AnyString.OneOf(System.Collections.Generic.IEnumerable<string!>! values) -> JustDummies.AnyStringOneOf!
+JustDummies.AnyString.OneOf(params string![]! values) -> JustDummies.AnyString!
+JustDummies.AnyString.OneOf(System.Collections.Generic.IEnumerable<string!>! values) -> JustDummies.AnyString!
 JustDummies.AnyString.StartingWith(string! prefix) -> JustDummies.AnyString!
 JustDummies.AnyString.UpperCase() -> JustDummies.AnyString!
 JustDummies.AnyString.WithChars(string! pool) -> JustDummies.AnyString!
@@ -276,8 +276,6 @@ JustDummies.AnyString.WithLength(int length) -> JustDummies.AnyString!
 JustDummies.AnyString.WithLengthBetween(int minimum, int maximum) -> JustDummies.AnyString!
 JustDummies.AnyString.WithMaxLength(int length) -> JustDummies.AnyString!
 JustDummies.AnyString.WithMinLength(int length) -> JustDummies.AnyString!
-JustDummies.AnyStringOneOf
-JustDummies.AnyStringOneOf.Generate() -> string!
 JustDummies.AnyTimeSpan
 JustDummies.AnyTimeSpan.Between(System.TimeSpan minimum, System.TimeSpan maximum) -> JustDummies.AnyTimeSpan!
 JustDummies.AnyTimeSpan.DifferentFrom(System.TimeSpan value) -> JustDummies.AnyTimeSpan!
