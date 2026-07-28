@@ -84,8 +84,8 @@ public sealed class AnySignedIntegerTests {
         Check.ThatCode(() => Any.Int64().Except(null!)).Throws<ArgumentNullException>();
     }
 
-    [Fact(DisplayName = "Signed integers convert implicitly to their value type.")]
-    public void ImplicitConversions() {
+    [Fact(DisplayName = "Every signed integer generator materializes its own value type through Generate().")]
+    public void MaterializesEachValueType() {
         sbyte small = Any.SByte().Positive().Generate();
         short mid   = Any.Int16().Negative().Generate();
         long  wide  = Any.Int64().Between(1L, 10L).Generate();
