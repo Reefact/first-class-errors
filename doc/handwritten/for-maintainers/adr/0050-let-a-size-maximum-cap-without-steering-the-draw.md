@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0050-let-a-size-maximum-cap-without-steering-the-draw.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-07-28
 **Decision Makers:** Reefact
 
