@@ -153,9 +153,6 @@ JustDummies.AnyEnum<TEnum>.DifferentFrom(TEnum value) -> JustDummies.AnyEnum<TEn
 JustDummies.AnyEnum<TEnum>.Except(params TEnum[]! values) -> JustDummies.AnyEnum<TEnum>!
 JustDummies.AnyEnum<TEnum>.Generate() -> TEnum
 JustDummies.AnyEnum<TEnum>.OneOf(params TEnum[]! values) -> JustDummies.AnyEnum<TEnum>!
-JustDummies.AnyException
-JustDummies.AnyException.AnyException(string! message) -> void
-JustDummies.AnyException.AnyException(string! message, System.Exception! innerException) -> void
 JustDummies.AnyExtensions
 JustDummies.AnyFtpUri
 JustDummies.AnyFtpUri.Generate() -> System.Uri!
@@ -436,6 +433,9 @@ JustDummies.AnyWebUri.WithUserInfo(string! user) -> JustDummies.AnyWebUri!
 JustDummies.AnyWebUri.WithUserInfo(string! user, string! password) -> JustDummies.AnyWebUri!
 JustDummies.ConflictingAnyConstraintException
 JustDummies.ConflictingAnyConstraintException.ConflictingAnyConstraintException(string! message) -> void
+JustDummies.DummyException
+JustDummies.DummyException.DummyException(string! message) -> void
+JustDummies.DummyException.DummyException(string! message, System.Exception! innerException) -> void
 JustDummies.IAny<T>
 JustDummies.IAny<T>.Generate() -> T
 JustDummies.NullableExtensions

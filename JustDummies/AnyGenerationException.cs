@@ -13,7 +13,7 @@ namespace JustDummies;
 ///     usually means the constraints declared on the generator were weaker than the invariant the factory enforces;
 ///     the fix is to tighten the constraints so they express that invariant.
 /// </remarks>
-public sealed class AnyGenerationException : AnyException {
+public sealed class AnyGenerationException : DummyException {
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="AnyGenerationException" /> class.
