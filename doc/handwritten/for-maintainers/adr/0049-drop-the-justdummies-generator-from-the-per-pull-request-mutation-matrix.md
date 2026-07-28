@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0049-drop-the-justdummies-generator-from-the-per-pull-request-mutation-matrix.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-07-28
 **Decision Makers:** Reefact
 
