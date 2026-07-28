@@ -33,7 +33,8 @@ public static partial class Any {
 
     /// <summary>
     ///     Starts an arbitrary <see cref="byte" /> generator drawing from the ambient random context:
-    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />, less <c>Positive()</c>
+    ///     and <c>Negative()</c>, which an unsigned type cannot express.
     /// </summary>
     /// <returns>A generator to constrain fluently.</returns>
     public static AnyByte Byte() {
@@ -51,7 +52,8 @@ public static partial class Any {
 
     /// <summary>
     ///     Starts an arbitrary <see cref="ushort" /> generator drawing from the ambient random context:
-    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />, less <c>Positive()</c>
+    ///     and <c>Negative()</c>, which an unsigned type cannot express.
     /// </summary>
     /// <returns>A generator to constrain fluently.</returns>
     public static AnyUInt16 UInt16() {
@@ -60,7 +62,8 @@ public static partial class Any {
 
     /// <summary>
     ///     Starts an arbitrary <see cref="uint" /> generator drawing from the ambient random context:
-    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />, less <c>Positive()</c>
+    ///     and <c>Negative()</c>, which an unsigned type cannot express.
     /// </summary>
     /// <returns>A generator to constrain fluently.</returns>
     public static AnyUInt32 UInt32() {
@@ -78,7 +81,8 @@ public static partial class Any {
 
     /// <summary>
     ///     Starts an arbitrary <see cref="ulong" /> generator drawing from the ambient random context:
-    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />, less <c>Positive()</c>
+    ///     and <c>Negative()</c>, which an unsigned type cannot express.
     /// </summary>
     /// <returns>A generator to constrain fluently.</returns>
     public static AnyUInt64 UInt64() {
@@ -87,7 +91,8 @@ public static partial class Any {
 
     /// <summary>
     ///     Starts an arbitrary <see cref="System.TimeSpan" /> generator drawing from the ambient random context:
-    ///     full range unless constrained, negative durations included. Same constraint algebra as <see cref="AnyInt32" />.
+    ///     full range unless constrained, negative durations included. Same constraint algebra as <see cref="AnyInt32"
+    ///     />, less <c>MultipleOf(...)</c> and plus <c>WithGranularity(...)</c>.
     /// </summary>
     /// <returns>A generator to constrain fluently.</returns>
     public static AnyTimeSpan TimeSpan() {
@@ -96,7 +101,9 @@ public static partial class Any {
 
     /// <summary>
     ///     Starts an arbitrary <see cref="System.DateTime" /> generator drawing from the ambient random context:
-    ///     any representable instant unless constrained; generated values carry Utc kind. Same constraint algebra as <see cref="AnyInt32" />.
+    ///     any representable instant unless constrained; generated values carry Utc kind. Same constraint algebra as
+    ///     <see cref="AnyInt32" /> with the bounds renamed <c>After(...)</c>/<c>Before(...)</c>: no sign or zero
+    ///     constraint, no <c>MultipleOf(...)</c>, plus <c>WithGranularity(...)</c>.
     /// </summary>
     /// <returns>A generator to constrain fluently.</returns>
     public static AnyDateTime DateTime() {
@@ -105,7 +112,9 @@ public static partial class Any {
 
     /// <summary>
     ///     Starts an arbitrary <see cref="System.DateTimeOffset" /> generator drawing from the ambient random context:
-    ///     any representable instant unless constrained; generated values carry a zero (UTC) offset. Same constraint algebra as <see cref="AnyInt32" />.
+    ///     any representable instant unless constrained; generated values carry a zero (UTC) offset. Same constraint
+    ///     algebra as <see cref="AnyInt32" /> with the bounds renamed <c>After(...)</c>/<c>Before(...)</c>: no sign or
+    ///     zero constraint, no <c>MultipleOf(...)</c>, plus <c>WithGranularity(...)</c> and <c>WithOffset(...)</c>.
     /// </summary>
     /// <returns>A generator to constrain fluently.</returns>
     public static AnyDateTimeOffset DateTimeOffset() {
@@ -114,7 +123,8 @@ public static partial class Any {
 
     /// <summary>
     ///     Starts an arbitrary <see cref="double" /> generator drawing from the ambient random context:
-    ///     finite values only — NaN and infinities are never generated. Same constraint algebra as <see cref="AnyInt32" />.
+    ///     finite values only — NaN and infinities are never generated. Same constraint algebra as <see cref="AnyInt32"
+    ///     />, less <c>MultipleOf(...)</c>.
     /// </summary>
     /// <returns>A generator to constrain fluently.</returns>
     public static AnyDouble Double() {
@@ -123,7 +133,8 @@ public static partial class Any {
 
     /// <summary>
     ///     Starts an arbitrary <see cref="float" /> generator drawing from the ambient random context:
-    ///     finite values only — NaN and infinities are never generated. Same constraint algebra as <see cref="AnyInt32" />.
+    ///     finite values only — NaN and infinities are never generated. Same constraint algebra as <see cref="AnyInt32"
+    ///     />, less <c>MultipleOf(...)</c>.
     /// </summary>
     /// <returns>A generator to constrain fluently.</returns>
     public static AnySingle Single() {
@@ -132,7 +143,8 @@ public static partial class Any {
 
     /// <summary>
     ///     Starts an arbitrary <see cref="decimal" /> generator drawing from the ambient random context:
-    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />.
+    ///     full range unless constrained. Same constraint algebra as <see cref="AnyInt32" />, less
+    ///     <c>MultipleOf(...)</c> and plus <c>WithScale(...)</c>.
     /// </summary>
     /// <returns>A generator to constrain fluently.</returns>
     public static AnyDecimal Decimal() {
