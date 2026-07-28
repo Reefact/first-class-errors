@@ -541,6 +541,10 @@ internal sealed class RegexParser {
                                                          "pattern is the public parameter the consumer passed to Any.Pattern(...); this private factory only assembles the exception the " +
                                                          "parser throws on its behalf. Its own reason parameter names the diagnosis, not the argument at fault, so pointing the exception " +
                                                          "at it would send the caller to the wrong place.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2208:Instantiate argument exceptions correctly",
+                                                     Justification =
+                                                         "Same reason as the S3928 suppression above: pattern is the public parameter the consumer passed to Any.Pattern(...), " +
+                                                         "which is the argument they must fix. This private factory only assembles the exception on the parser's behalf.")]
     private ArgumentException Malformed(string reason) {
         return new ArgumentException($"The regular expression pattern \"{_pattern}\" is invalid: {reason} (at position {_index}).", "pattern");
     }
