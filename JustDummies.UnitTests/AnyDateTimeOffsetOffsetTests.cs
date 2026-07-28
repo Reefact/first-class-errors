@@ -69,19 +69,51 @@ public sealed class AnyDateTimeOffsetOffsetTests {
         Check.ThatCode(() => Any.DateTimeOffset().WithOffsetBetween(TimeSpan.FromHours(2), TimeSpan.FromHours(-2))).Throws<ArgumentException>();
     }
 
-    [Fact(DisplayName = "WithOffset: OneOf returns its values verbatim, offset included, in either order.")]
-    public void OneOfKeepsItsOwnOffset() {
-        // The accepted risk recorded in ADR-0037: OneOf is a terminal enumeration of exact values, so the offset
-        // dimension governs only the CONSTRUCTED draw and never rewrites a supplied value's own offset. Pinned here so
-        // the divergence stays a decision rather than becoming an unnoticed regression in either direction.
-        DateTimeOffset pinned    = new(2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        TimeSpan       requested = TimeSpan.FromHours(5);
+    [Fact(DisplayName = "WithOffset filters the OneOf pool instead of being ignored, in either order.")]
+    public void OneOfIsFilteredByTheDeclaredOffset() {
+        // ADR-0050 supersedes ADR-0037's accepted risk. A pooled value is still returned verbatim, offset included —
+        // rebuilding it from the instant would normalize the offset to UTC — but the offset dimension now decides
+        // WHICH pooled values may be drawn, rather than being silently dropped. The public contract of WithOffset says
+        // every generated value carries exactly that offset; it now does.
+        DateTimeOffset utc      = new(2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        DateTimeOffset plusFive = new(2021, 1, 1, 0, 0, 0, TimeSpan.FromHours(5));
 
         for (int i = 0; i < SampleCount; i++) {
-            Check.That(Any.DateTimeOffset().WithOffset(requested).OneOf(pinned).Generate()).IsEqualTo(pinned);
-            Check.That(Any.DateTimeOffset().WithOffset(requested).OneOf(pinned).Generate().Offset).IsEqualTo(pinned.Offset);
-            Check.That(Any.DateTimeOffset().OneOf(pinned).WithOffset(requested).Generate().Offset).IsEqualTo(pinned.Offset);
+            Check.That(Any.DateTimeOffset().WithOffset(TimeSpan.Zero).OneOf(utc, plusFive).Generate()).IsEqualTo(utc);
+            Check.That(Any.DateTimeOffset().OneOf(utc, plusFive).WithOffset(TimeSpan.Zero).Generate()).IsEqualTo(utc);
+            Check.That(Any.DateTimeOffset().OneOf(utc, plusFive).WithOffset(TimeSpan.FromHours(5)).Generate()).IsEqualTo(plusFive);
         }
+    }
+
+    [Fact(DisplayName = "WithOffset: an offset no pooled value carries is a conflict, in either order.")]
+    public void AnOffsetNoPooledValueCarriesConflicts() {
+        // The other half of the filter. Under the old behaviour both of these silently returned the UTC value,
+        // honouring neither the pool's offset nor the one the caller asked for.
+        DateTimeOffset utc       = new(2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        TimeSpan       requested = TimeSpan.FromHours(5);
+
+        ConflictingAnyConstraintException afterPool = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.DateTimeOffset().OneOf(utc).WithOffset(requested));
+        ConflictingAnyConstraintException beforePool = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.DateTimeOffset().WithOffset(requested).OneOf(utc));
+
+        Check.That(afterPool.Message).Contains("no pooled value carries an offset it admits");
+        Check.That(beforePool.Message).Contains("no pooled value carries an offset it admits");
+    }
+
+    [Fact(DisplayName = "Without an offset constraint, OneOf still returns every pooled value with its own offset.")]
+    public void AnUnconstrainedOneOfKeepsEveryOffset() {
+        // The filter must only fire when an offset is actually declared: an unconstrained pool is unchanged, and that
+        // half of ADR-0037 stands.
+        DateTimeOffset utc      = new(2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        DateTimeOffset plusFive = new(2021, 1, 1, 0, 0, 0, TimeSpan.FromHours(5));
+
+        HashSet<TimeSpan> seen = new();
+        for (int i = 0; i < SampleCount; i++) {
+            seen.Add(Any.DateTimeOffset().OneOf(utc, plusFive).Generate().Offset);
+        }
+
+        Check.That(seen).Contains(TimeSpan.Zero, TimeSpan.FromHours(5));
     }
 
     [Fact(DisplayName = "WithOffset: a second, different offset is rejected as already declared.")]
