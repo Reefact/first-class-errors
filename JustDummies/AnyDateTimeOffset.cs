@@ -206,14 +206,21 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
+        string applying = $"OneOf({Join(values)})";
+        // A pooled value is returned as given, offset included — rebuilding it from the ordinal would normalize the
+        // offset to UTC. So when an offset constraint is already in force, the pool is FILTERED by it rather than
+        // the constraint being ignored: a value carrying a different offset is one this generator must not produce.
+        DateTimeOffset[] admitted = _offsetDeclared ? values.Where(SatisfiesDeclaredOffset).ToArray() : values;
+        if (admitted.Length == 0) { throw OffsetExcludesEveryPooledValue(applying, _offsetMinMinutes, _offsetMaxMinutes); }
+
         // Remember the supplied values by instant, so generation returns them as given: the ordinal space
         // only carries the instant, and rebuilding from it would silently normalize the offset to UTC.
         Dictionary<ulong, DateTimeOffset> originals = new();
-        foreach (DateTimeOffset value in values) {
+        foreach (DateTimeOffset value in admitted) {
             if (!originals.ContainsKey(Ord(value))) { originals.Add(Ord(value), value); }
         }
 
-        return new AnyDateTimeOffset(_source, _spec.WithAllowed(values.Select(Ord).ToArray(), $"OneOf({Join(values)})"), originals, _offsetDeclared, _offsetMinMinutes, _offsetMaxMinutes);
+        return new AnyDateTimeOffset(_source, _spec.WithAllowed(admitted.Select(Ord).ToArray(), applying), originals, _offsetDeclared, _offsetMinMinutes, _offsetMaxMinutes);
     }
 
     /// <summary>Requires the instant to be none of the supplied values (compared by instant).</summary>
@@ -278,7 +285,39 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
 
         OrdinalIntervalSpec spec = _spec.WithMinimum(lowerUtc, applying).WithMaximum(upperUtc, applying);
 
+        // The mirror of OneOf's filter, so the two orders reach the same verdict: an offset declared AFTER a pool
+        // narrows that pool to the values it admits, and contradicts when it admits none.
+        if (_allowedOriginals is not null) {
+            Dictionary<ulong, DateTimeOffset> admitted = _allowedOriginals
+                                                         .Where(entry => SatisfiesOffset(entry.Value, minMinutes, maxMinutes))
+                                                         .ToDictionary(entry => entry.Key, entry => entry.Value);
+            if (admitted.Count == 0) { throw OffsetExcludesEveryPooledValue(applying, minMinutes, maxMinutes); }
+
+            return new AnyDateTimeOffset(_source, spec.NarrowingAllowed(admitted.Keys.ToArray(), applying), admitted, true, minMinutes, maxMinutes);
+        }
+
         return new AnyDateTimeOffset(_source, spec, _allowedOriginals, true, minMinutes, maxMinutes);
+    }
+
+    /// <summary>Whether <paramref name="value" /> carries an offset the declared offset dimension admits.</summary>
+    private bool SatisfiesDeclaredOffset(DateTimeOffset value) {
+        return SatisfiesOffset(value, _offsetMinMinutes, _offsetMaxMinutes);
+    }
+
+    private static bool SatisfiesOffset(DateTimeOffset value, int minMinutes, int maxMinutes) {
+        double minutes = value.Offset.TotalMinutes;
+
+        return minutes >= minMinutes && minutes <= maxMinutes;
+    }
+
+    // The range is passed in rather than read off the fields: when an offset is declared AFTER a pool, the fields
+    // still hold the previous (undeclared) state at the point the contradiction is detected.
+    private static ConflictingAnyConstraintException OffsetExcludesEveryPooledValue(string applying, int minMinutes, int maxMinutes) {
+        string admitted = minMinutes == maxMinutes
+                              ? Render(TimeSpan.FromMinutes(minMinutes))
+                              : $"{Render(TimeSpan.FromMinutes(minMinutes))} to {Render(TimeSpan.FromMinutes(maxMinutes))}";
+
+        return new ConflictingAnyConstraintException($"Cannot apply {applying} because no pooled value carries an offset it admits ({admitted}).");
     }
 
 }

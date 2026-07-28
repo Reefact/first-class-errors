@@ -210,6 +210,20 @@ internal sealed class OrdinalIntervalSpec {
         return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, distinct, applying, _exclusions, _step, _anchor, _stepConstraint), applying);
     }
 
+    /// <summary>
+    ///     Narrows an allow-list already in force to a subset of itself, keeping the constraint that declared it.
+    ///     This is not a second declaration — the caller is removing values another constraint forbids — so it does
+    ///     not trip the declared-once guard, and the original provenance stays the one a later conflict names.
+    /// </summary>
+    internal OrdinalIntervalSpec NarrowingAllowed(ulong[] kept, string applying) {
+        if (kept is null) { throw new ArgumentNullException(nameof(kept)); }
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+
+        ulong[] distinct = kept.Distinct().ToArray();
+
+        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, distinct, _allowedConstraint ?? applying, _exclusions, _step, _anchor, _stepConstraint), applying);
+    }
+
     /// <summary>Adds values the generator must never produce.</summary>
     internal OrdinalIntervalSpec WithExcluded(ulong[] ordinals, string applying) {
         if (ordinals is null) { throw new ArgumentNullException(nameof(ordinals)); }
