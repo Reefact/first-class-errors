@@ -122,6 +122,14 @@ public static class CatalogSnapshotSerializer {
     /// <summary>
     ///     The raw shape of a snapshot document, with a nullable schema so its absence is detectable at parse time.
     /// </summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3459:Unassigned members should be removed",
+                                                 Justification =
+                                                     "SnapshotDocument is the wire shape System.Text.Json binds the baseline file to. Its setters are called by the deserializer " +
+                                                     "through reflection, which no static analysis sees, and removing them would make every property read back as null. S1144 reports " +
+                                                     "the same setters as unused private accessors, for the same reason.")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S1144:Unused private types or members should be removed",
+                                                 Justification =
+                                                     "See the S3459 justification above: these setters are the deserializer's entry point, invoked by reflection.")]
     private sealed class SnapshotDocument {
 
         public int? Schema { get; set; }

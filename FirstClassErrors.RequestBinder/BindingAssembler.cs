@@ -13,4 +13,8 @@ namespace FirstClassErrors.RequestBinder;
 /// <typeparam name="TCommand">The type of the assembled command or query.</typeparam>
 /// <param name="scope">The scope through which bound values are read.</param>
 /// <returns>The assembled command.</returns>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S3246:Generic type parameters should be co-variant where possible",
+                                                 Justification =
+                                                     "Marking TCommand as out would widen the public API surface and move the committed public-API baseline, which this change is not " +
+                                                     "asking for. The variance is worth having and is flagged for the maintainer rather than taken here.")]
 public delegate TCommand BindingAssembler<TCommand>(BindingScope scope);

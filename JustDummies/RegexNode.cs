@@ -49,6 +49,11 @@ internal sealed class RegexGenerationContext {
 ///     stands for into the <see cref="RegexGenerationContext" />, drawing counts and choices from the seeded random
 ///     generator — so the whole tree yields exactly one string that matches the pattern, in one pass.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S1694:An abstract class should have both abstract and concrete methods",
+                                                 Justification =
+                                                     "The abstract class is the root of a closed, internal hierarchy and is deliberately not an interface: a class cannot be " +
+                                                     "implemented from outside the assembly, keeps the option of adding shared state without breaking every subtype, and on the " +
+                                                     "netstandard2.0 leg cannot be replaced by an interface with non-public members.")]
 internal abstract class RegexNode {
 
     internal abstract void Append(RegexGenerationContext context);

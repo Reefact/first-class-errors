@@ -369,6 +369,11 @@ internal sealed class RegexParser {
         }
     }
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out",
+                                                 Justification =
+                                                     "The flagged lines are prose, not disabled code: the heuristic reads an equation, a bracketed range or a semicolon inside an " +
+                                                     "explanatory sentence as a statement. These comments carry the reasoning this codebase asks every comment to carry, so the " +
+                                                     "finding is recorded rather than the comment deleted.")]
     private RegexNode ParseEscape() {
         int position = _index;
         _index++; // consume '\'
@@ -530,6 +535,11 @@ internal sealed class RegexParser {
         return new RegexCharacters(RegexAlphabet.WithBothCases(character).Distinct().ToArray());
     }
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S3928:Parameter names used into ArgumentException constructors should match an existing one",
+                                                 Justification =
+                                                     "pattern is the public parameter the consumer passed to Any.Pattern(...); this private factory only assembles the exception the " +
+                                                     "parser throws on its behalf. Its own reason parameter names the diagnosis, not the argument at fault, so pointing the exception " +
+                                                     "at it would send the caller to the wrong place.")]
     private ArgumentException Malformed(string reason) {
         return new ArgumentException($"The regular expression pattern \"{_pattern}\" is invalid: {reason} (at position {_index}).", "pattern");
     }

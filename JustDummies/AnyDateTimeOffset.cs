@@ -269,6 +269,11 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
         return new AnyDateTimeOffset(_source, spec, _allowedOriginals, _offsetDeclared, _offsetMinMinutes, _offsetMaxMinutes);
     }
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out",
+                                                 Justification =
+                                                     "The flagged lines are prose, not disabled code: the heuristic reads an equation, a bracketed range or a semicolon inside an " +
+                                                     "explanatory sentence as a statement. These comments carry the reasoning this codebase asks every comment to carry, so the " +
+                                                     "finding is recorded rather than the comment deleted.")]
     private AnyDateTimeOffset WithOffsetRange(int minMinutes, int maxMinutes, string applying) {
         if (_offsetDeclared) {
             if (_offsetMinMinutes == minMinutes && _offsetMaxMinutes == maxMinutes) { return this; }
