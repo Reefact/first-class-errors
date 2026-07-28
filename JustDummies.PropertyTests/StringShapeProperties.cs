@@ -93,7 +93,7 @@ public sealed class StringShapeProperties {
             0 => IsAsciiLetter(character),
             1 => IsAsciiDigit(character),
             2 => IsAsciiLetter(character) || IsAsciiDigit(character),
-            _ => pool.IndexOf(character) >= 0
+            _ => pool.Contains(character)
         };
     }
 
@@ -218,7 +218,7 @@ public sealed class StringShapeProperties {
                     fragment => Expect.EveryDraw(Any.String().Containing(fragment),
                                                  // string.Contains(string, StringComparison) is not on the netstandard2.0
                                                  // floor; IndexOf carries the same ordinal comparison.
-                                                 value => value.IndexOf(fragment, StringComparison.Ordinal) >= 0))
+                                                 value => value.Contains(fragment, StringComparison.Ordinal)))
             .QuickCheckThrowOnFailure();
     }
 

@@ -116,7 +116,7 @@ public sealed class AnySetTypeTests {
         for (int i = 0; i < SampleCount; i++) {
             OrderStatus value = Any.Enum<OrderStatus>().Generate();
             seen.Add(value);
-            Check.That(System.Enum.IsDefined(typeof(OrderStatus), value)).IsTrue();
+            Check.That(System.Enum.IsDefined(value)).IsTrue();
         }
         Check.That(seen.Count).IsEqualTo(3);
     }

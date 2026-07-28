@@ -348,7 +348,7 @@ internal sealed class RegexParser {
         // A '-' marks a balancing group; it manipulates the capture stack (the backreference family), so it is
         // non-regular and refused here even when its target is undefined (see SkipGroupName for why the divergence
         // from the real engine's malformed-pattern verdict on that case is accepted).
-        if (name.IndexOf('-') >= 0) { throw Unsupported("a balancing group '(?<name1-name2>…)'", position); }
+        if (name.Contains("-")) { throw Unsupported("a balancing group '(?<name1-name2>…)'", position); }
 
         // A name opening with a digit is an explicit capture number: the real engine accepts it only as a positive
         // integer with no leading zero, so '0', '01' and '1a' are refused while '1' and '10' pass.

@@ -29,7 +29,7 @@ public sealed class EmailAddress : IEquatable<EmailAddress> {
     ///     enough to show the failure path, not to be a production e-mail parser.
     /// </summary>
     public static Outcome<EmailAddress> Parse(string raw) {
-        if (string.IsNullOrWhiteSpace(raw) || raw.IndexOf('@') <= 0 || raw.IndexOf('@') != raw.LastIndexOf('@') || raw.EndsWith("@", StringComparison.Ordinal)) {
+        if (string.IsNullOrWhiteSpace(raw) || raw.IndexOf('@') <= 0 || raw.IndexOf('@') != raw.LastIndexOf('@') || raw.EndsWith('@')) {
             return Outcome<EmailAddress>.Failure(InvalidEmailAddressError.Malformed(raw));
         }
 
