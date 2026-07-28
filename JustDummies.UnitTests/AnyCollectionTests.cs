@@ -1,5 +1,8 @@
 #region Usings declarations
 
+using System.Globalization;
+using System.Runtime.CompilerServices;
+
 using NFluent;
 
 #endregion
@@ -201,6 +204,43 @@ public sealed class AnyCollectionTests {
         Check.ThatCode(() => Any.ListOf(Any.Int32().OneOf(1, 2)).WithCount(3).Containing(1).Distinct()).Throws<ConflictingAnyConstraintException>();
         Check.ThatCode(() => Any.ListOf(Any.Int32().OneOf(1, 2)).Distinct().Containing(1).WithCount(3)).Throws<ConflictingAnyConstraintException>();
         Check.ThatCode(() => Any.ListOf(Any.Int32().OneOf(1, 2)).Containing(1).WithCount(3).Distinct()).Throws<ConflictingAnyConstraintException>();
+    }
+
+    [Fact(DisplayName = "Containing: a comparer stricter than the default one does not turn a satisfiable spec into a conflict.")]
+    public void AComparerStricterThanTheDefaultDoesNotCauseAFalseConflict() {
+        // Regression: FixedOutsideCount asked the element generator's cardinality hint whether a pinned value was
+        // already inside its domain, and that hint answers under the DEFAULT comparer. Under reference equality the
+        // two Tag(1) below are two distinct values, so { pooled, pinned } is a legal two-element distinct list — but
+        // the hint reported the pinned one as already-inside, the effective domain stayed at one, and the declaration
+        // was refused for a specification the collection can satisfy. The comment defending it claimed a custom
+        // comparer "can only merge values, never create new ones"; a stricter one splits them instead.
+        Tag pooled = new(1);
+        Tag pinned = new(1);
+
+        Check.That(pooled).IsEqualTo(pinned);                     // equal by value
+        Check.That(ReferenceEquals(pooled, pinned)).IsFalse();    // distinct by reference
+
+        List<Tag> list = Any.ListOf(Any.OneOf(pooled))
+                            .Distinct(new ReferenceComparer())
+                            .Containing(pinned)
+                            .WithCount(2)
+                            .Generate();
+
+        Check.That(list.Count).IsEqualTo(2);
+        Check.That(list.Count(element => ReferenceEquals(element, pinned))).IsEqualTo(1);
+        Check.That(list.Count(element => ReferenceEquals(element, pooled))).IsEqualTo(1);
+    }
+
+    [Fact(DisplayName = "Containing: the default comparer still refuses a pinned value the element generator already covers.")]
+    public void TheDefaultComparerStillRefusesAnInDomainPinnedValue() {
+        // The other side of the same guard: relaxing the eager check under a CUSTOM comparer must not relax it when
+        // there is none. Without a comparer the hint answers under the very equality the collection will use, so a
+        // pinned value inside the domain does not extend it and the conflict is still caught at declaration.
+        Tag pooled = new(1);
+        Tag pinned = new(1);
+
+        Check.ThatCode(() => Any.ListOf(Any.OneOf(pooled)).Distinct().Containing(pinned).WithCount(2))
+             .Throws<ConflictingAnyConstraintException>();
     }
 
     [Fact(DisplayName = "Containing: a near-maximum element cardinality plus an out-of-domain value does not overflow into a false conflict.")]
@@ -503,6 +543,44 @@ public sealed class AnyCollectionTests {
     }
 
     #region Nested types
+
+    // A value-equal reference type: two Tag(1) are equal under the default comparer and distinct under reference
+    // equality. That is the whole point — it is the ordinary shape of a domain value object, and the pair it forms
+    // with ReferenceComparer is what makes a comparer STRICTER than the default one observable.
+    private sealed class Tag {
+
+        public Tag(int value) {
+            Value = value;
+        }
+
+        private int Value { get; }
+
+        public override bool Equals(object? other) {
+            return other is Tag tag && tag.Value == Value;
+        }
+
+        public override int GetHashCode() {
+            return Value;
+        }
+
+        public override string ToString() {
+            return $"Tag({Value.ToString(CultureInfo.InvariantCulture)})";
+        }
+
+    }
+
+    private sealed class ReferenceComparer : IEqualityComparer<Tag> {
+
+        // Stricter than EqualityComparer<Tag>.Default: it splits value-equal instances rather than merging them.
+        public bool Equals(Tag? x, Tag? y) {
+            return ReferenceEquals(x, y);
+        }
+
+        public int GetHashCode(Tag obj) {
+            return RuntimeHelpers.GetHashCode(obj);
+        }
+
+    }
 
     private sealed class ModuloComparer : IEqualityComparer<int> {
 

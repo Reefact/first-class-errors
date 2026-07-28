@@ -37,7 +37,7 @@ public static partial class Any {
             T1 firstValue  = first.Generate();
             T2 secondValue = second.Generate();
 
-            return AnyDerivation.Invoke(() => compose(firstValue, secondValue), source, reproducible, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)})");
+            return AnyDerivation.Invoke(() => compose(firstValue, secondValue), source, reproducible, () => $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)})");
         });
     }
 
@@ -69,7 +69,7 @@ public static partial class Any {
             T2 secondValue = second.Generate();
             T3 thirdValue  = third.Generate();
 
-            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue), source, reproducible, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)})");
+            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue), source, reproducible, () => $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)})");
         });
     }
 
@@ -104,7 +104,7 @@ public static partial class Any {
             T3 thirdValue  = third.Generate();
             T4 fourthValue = fourth.Generate();
 
-            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue), source, reproducible, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)})");
+            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue), source, reproducible, () => $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)})");
         });
     }
 
@@ -143,7 +143,7 @@ public static partial class Any {
             T4 fourthValue = fourth.Generate();
             T5 fifthValue  = fifth.Generate();
 
-            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue, fifthValue), source, reproducible, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)}, {AnyDerivation.Display(fifthValue)})");
+            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue, fifthValue), source, reproducible, () => $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)}, {AnyDerivation.Display(fifthValue)})");
         });
     }
 
@@ -186,7 +186,7 @@ public static partial class Any {
             T5 fifthValue  = fifth.Generate();
             T6 sixthValue  = sixth.Generate();
 
-            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue, fifthValue, sixthValue), source, reproducible, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)}, {AnyDerivation.Display(fifthValue)}, {AnyDerivation.Display(sixthValue)})");
+            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue, fifthValue, sixthValue), source, reproducible, () => $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)}, {AnyDerivation.Display(fifthValue)}, {AnyDerivation.Display(sixthValue)})");
         });
     }
 
@@ -235,7 +235,7 @@ public static partial class Any {
             T6 sixthValue   = sixth.Generate();
             T7 seventhValue = seventh.Generate();
 
-            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue, fifthValue, sixthValue, seventhValue), source, reproducible, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)}, {AnyDerivation.Display(fifthValue)}, {AnyDerivation.Display(sixthValue)}, {AnyDerivation.Display(seventhValue)})");
+            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue, fifthValue, sixthValue, seventhValue), source, reproducible, () => $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)}, {AnyDerivation.Display(fifthValue)}, {AnyDerivation.Display(sixthValue)}, {AnyDerivation.Display(seventhValue)})");
         });
     }
 
@@ -289,7 +289,7 @@ public static partial class Any {
             T7 seventhValue = seventh.Generate();
             T8 eighthValue  = eighth.Generate();
 
-            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue, fifthValue, sixthValue, seventhValue, eighthValue), source, reproducible, $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)}, {AnyDerivation.Display(fifthValue)}, {AnyDerivation.Display(sixthValue)}, {AnyDerivation.Display(seventhValue)}, {AnyDerivation.Display(eighthValue)})");
+            return AnyDerivation.Invoke(() => compose(firstValue, secondValue, thirdValue, fourthValue, fifthValue, sixthValue, seventhValue, eighthValue), source, reproducible, () => $"the composer passed to Combine(...) threw for the generated values ({AnyDerivation.Display(firstValue)}, {AnyDerivation.Display(secondValue)}, {AnyDerivation.Display(thirdValue)}, {AnyDerivation.Display(fourthValue)}, {AnyDerivation.Display(fifthValue)}, {AnyDerivation.Display(sixthValue)}, {AnyDerivation.Display(seventhValue)}, {AnyDerivation.Display(eighthValue)})");
         });
     }
 

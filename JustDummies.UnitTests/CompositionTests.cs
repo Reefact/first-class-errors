@@ -211,6 +211,52 @@ public sealed class CompositionTests {
         Check.That(caught.InnerException).IsInstanceOf<InvalidOperationException>();
     }
 
+    [Fact(DisplayName = "A generated value whose ToString() throws does not break a succeeding As or Combine.")]
+    public void AThrowingToStringDoesNotBreakASucceedingDerivation() {
+        // Regression: the failure sentence handed to the derivation plumbing was an interpolated string, so rendering
+        // the generated value ran on EVERY draw — successful ones included. A domain object whose ToString() throws
+        // (state a fixture never set, most often) therefore killed a derivation that had nothing wrong with it: the
+        // factory below is never even reached. The sentence is a thunk now, so nothing renders unless it fails.
+        IAny<string> derived = Any.ElementOf(new[] { new Unrenderable() }).As(_ => "built");
+
+        Check.That(derived.Generate()).IsEqualTo("built");
+
+        IAny<string> combined = Any.Combine(Any.ElementOf(new[] { new Unrenderable() }),
+                                            Any.Int32().Between(1, 3),
+                                            (_, number) => "built " + number);
+
+        Check.That(combined.Generate()).StartsWith("built ");
+    }
+
+    [Fact(DisplayName = "A factory failure over a value whose ToString() throws still reports the wrapped diagnostic.")]
+    public void AThrowingToStringStillYieldsTheWrappedDiagnostic() {
+        // The other half: once the factory does fail, rendering the value is attempted — and must not replace the
+        // diagnostic being built with the ToString() failure. The message degrades to the type name; the caller still
+        // gets an AnyGenerationException naming As(...) and carrying the real cause.
+        IAny<string> failing = Any.ElementOf(new[] { new Unrenderable() })
+                                  .As<Unrenderable, string>(_ => throw new InvalidOperationException("rejected"));
+
+        AnyGenerationException caught = Assert.Throws<AnyGenerationException>(() => failing.Generate());
+
+        Check.That(caught.Message).Contains("As(...)");
+        Check.That(caught.Message).Contains(nameof(Unrenderable));       // the fallback rendering
+        Check.That(caught.Message).Not.Contains("ToString() exploded");  // never the renderer's own failure
+        Check.That(caught.InnerException).IsInstanceOf<InvalidOperationException>();
+    }
+
+    [Fact(DisplayName = "A collection constraint over a value whose ToString() throws reports the conflict, not the rendering.")]
+    public void AThrowingToStringDoesNotMaskACollectionConflict() {
+        // Display also renders values into constraint-conflict messages, built eagerly by design at declaration time.
+        // The same guard has to hold there: the caller must read the conflict, not the renderer's accident.
+        Unrenderable value = new();
+
+        ConflictingAnyConstraintException caught = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.ListOf(Any.ElementOf(new[] { value })).Distinct().Containing(value).Containing(value));
+
+        Check.That(caught.Message).Contains(nameof(Unrenderable));
+        Check.That(caught.Message).Not.Contains("ToString() exploded");
+    }
+
     [Fact(DisplayName = "Generic inference flows through IAny<T> without relying on implicit conversions.")]
     public void GenericInferenceFlowsThroughIAny() {
         string text  = Materialize(Any.String().NonEmpty().WithMaxLength(50));
@@ -241,6 +287,16 @@ public sealed class CompositionTests {
     }
 
     #region Nested types
+
+    private sealed class Unrenderable {
+
+        // A domain object whose ToString() throws: the ordinary shape of it is a renderer reaching for state the
+        // fixture never set. Diagnostics must survive it, and a successful draw must never trigger it at all.
+        public override string ToString() {
+            throw new InvalidOperationException("ToString() exploded");
+        }
+
+    }
 
     private sealed class ForeignInt : IAny<int> {
 
