@@ -18,8 +18,10 @@ namespace JustDummies;
 ///     <para>
 ///         The pattern is parsed once, when the generator is created; each <see cref="Generate" /> then walks the
 ///         parsed tree, drawing every choice and repetition count from the generator's random context — so a run is
-///         reproducible under a seed, exactly like every other generator. Values are drawn from <b>printable ASCII</b>
-///         and built directly rather than generated-and-filtered.
+///         reproducible under a seed, exactly like every other generator. Wherever the pattern leaves a character
+///         free, values are drawn from <b>printable ASCII</b> (<c>\s</c> may also yield a tab); a character the pattern
+///         names explicitly is emitted as written, control characters included. Values are built directly rather than
+///         generated-and-filtered.
 ///     </para>
 ///     <para>
 ///         A built value is then checked against the real .NET engine and, on the rare miss, redrawn. The structural
