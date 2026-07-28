@@ -37,6 +37,12 @@ public sealed class StringShapeProperties {
     /// <summary>The alphabet an unconstrained generator draws from: ASCII letters and digits.</summary>
     private const string DefaultAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
+    /// <summary>
+    ///     The number of characters a string may reach above whatever its declared minimum is — the library's
+    ///     unconstrained spread, mirrored here because the suite is black-box.
+    /// </summary>
+    private const int DefaultLengthSpread = 16;
+
     /// <summary>The digits alone, so an affix can be drawn from inside <c>Numeric()</c>'s own charset.</summary>
     private const string DigitAlphabet = "0123456789";
 
@@ -132,6 +138,29 @@ public sealed class StringShapeProperties {
     public void WithMaxLengthIsAnInclusiveCeiling() {
         Prop.ForAll(Generators.Count(40).ToArbitrary(),
                     maximum => Expect.EveryDraw(Any.String().WithMaxLength(maximum), value => value.Length <= maximum))
+            .QuickCheckThrowOnFailure();
+    }
+
+    [Fact(DisplayName = "WithMaxLength only caps: it never widens the draw beyond the unconstrained spread.")]
+    public void WithMaxLengthNeverWidensTheDraw() {
+        // ADR-0050: a maximum is a permission, not a size hint. It composes with the default spread instead of
+        // replacing it, so declaring a loose cap must keep yielding the small unconstrained string. The maxima
+        // generated here straddle the spread on both sides — that is where the old "maximum becomes the target"
+        // behaviour and this one disagree.
+        Prop.ForAll(Generators.WithEdges(Generators.Count(200), 0, 1, DefaultLengthSpread, DefaultLengthSpread + 1, 200).ToArbitrary(),
+                    maximum => Expect.EveryDraw(Any.String().WithMaxLength(maximum),
+                                                value => value.Length <= Math.Min(maximum, DefaultLengthSpread)))
+            .QuickCheckThrowOnFailure();
+    }
+
+    [Fact(DisplayName = "A minimum, not a maximum, is what enlarges a string: the draw spans the spread above it.")]
+    public void WithMinLengthIsWhatEnlargesTheDraw() {
+        // The counterpart of the property above: since a maximum cannot widen the draw, a minimum is the only
+        // one-sided bound that can. Its draw stays within the spread above it, so asking for large strings costs
+        // exactly what was asked for and nothing more.
+        Prop.ForAll(Generators.WithEdges(Generators.Count(200), 0, 1, 200).ToArbitrary(),
+                    minimum => Expect.EveryDraw(Any.String().WithMinLength(minimum),
+                                                value => value.Length >= minimum && value.Length <= minimum + DefaultLengthSpread))
             .QuickCheckThrowOnFailure();
     }
 

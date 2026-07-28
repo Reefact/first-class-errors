@@ -232,4 +232,5 @@ Optional supporting material:
 | [ADR-0047](0047-measure-justdummies-mutation-against-the-unit-suite-only.md) | Measure JustDummies mutation against the deterministic unit suite only; drop the FsCheck property suite from the oracle | Proposed |
 | [ADR-0048](0048-guarantee-a-generated-regex-value-matches-by-bounded-redraw.md) | Guarantee a generated regex value matches its pattern, by bounded redraw | Proposed |
 | [ADR-0049](0049-drop-the-justdummies-generator-from-the-per-pull-request-mutation-matrix.md) | Drop the JustDummies generator from the per-pull-request mutation matrix; its adapter and analyzers keep theirs, the weekly sweep keeps measuring it | Accepted |
-| [ADR-0050](0050-filter-the-datetimeoffset-pool-by-the-declared-offset.md) | Filter the DateTimeOffset pool by the declared offset; supersedes ADR-0037 | Accepted |
+| [ADR-0050](0050-let-a-size-maximum-cap-without-steering-the-draw.md) | Let a size maximum cap without steering the draw, and ceiling an explicitly demanded size | Accepted |
+| [ADR-0051](0051-filter-the-datetimeoffset-pool-by-the-declared-offset.md) | Filter the DateTimeOffset pool by the declared offset; supersedes ADR-0037 | Accepted |

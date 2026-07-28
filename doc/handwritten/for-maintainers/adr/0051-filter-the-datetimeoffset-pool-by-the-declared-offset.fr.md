@@ -1,6 +1,6 @@
-# ADR-0050 | Filtrer le pool DateTimeOffset par le décalage déclaré
+# ADR-0051 | Filtrer le pool DateTimeOffset par le décalage déclaré
 
-🌍 🇫🇷 Français (ce fichier) · 🇬🇧 [English](0050-filter-the-datetimeoffset-pool-by-the-declared-offset.md)
+🌍 🇫🇷 Français (ce fichier) · 🇬🇧 [English](0051-filter-the-datetimeoffset-pool-by-the-declared-offset.md)
 
 **Statut :** Accepté
 **Date :** 2026-07-28

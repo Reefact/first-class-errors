@@ -1,6 +1,6 @@
-# ADR-0050 | Filter the DateTimeOffset pool by the declared offset
+# ADR-0051 | Filter the DateTimeOffset pool by the declared offset
 
-🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0050-filter-the-datetimeoffset-pool-by-the-declared-offset.fr.md)
+🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0051-filter-the-datetimeoffset-pool-by-the-declared-offset.fr.md)
 
 **Status:** Accepted
 **Date:** 2026-07-28
