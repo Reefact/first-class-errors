@@ -45,7 +45,7 @@ internal static class BaselineStore {
     /// <summary>Writes the snapshot to the given path in its canonical form (creating parent directories as needed).</summary>
     public static void Save(string path, CatalogSnapshot snapshot) {
         string? directory = Path.GetDirectoryName(path);
-        if (string.IsNullOrEmpty(directory) is false) { Directory.CreateDirectory(directory); }
+        if (!string.IsNullOrEmpty(directory)) { Directory.CreateDirectory(directory); }
 
         File.WriteAllText(path, CatalogSnapshotSerializer.Serialize(snapshot));
     }

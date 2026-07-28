@@ -23,7 +23,7 @@ internal static class CatalogSourceResolver {
     public static (string? Solution, string[] Assemblies) Resolve(string? solutionOption, IReadOnlyList<string> assemblyOptions, CliConfiguration configuration) {
         string?  solution;
         string[] assemblies;
-        if (string.IsNullOrWhiteSpace(solutionOption) is false || assemblyOptions.Count > 0) {
+        if (!string.IsNullOrWhiteSpace(solutionOption) || assemblyOptions.Count > 0) {
             solution   = solutionOption;
             assemblies = assemblyOptions.ToArray();
         } else {
@@ -31,13 +31,13 @@ internal static class CatalogSourceResolver {
             assemblies = configuration.Assemblies?.ToArray() ?? [];
         }
 
-        bool hasSolution   = string.IsNullOrWhiteSpace(solution) is false;
+        bool hasSolution   = !string.IsNullOrWhiteSpace(solution);
         bool hasAssemblies = assemblies.Length > 0;
         if (hasSolution && hasAssemblies) {
             throw new InvalidOperationException("Specify either a solution or assemblies, not both.");
         }
 
-        if (hasSolution is false && hasAssemblies is false) {
+        if (!hasSolution && !hasAssemblies) {
             throw new InvalidOperationException("No source: pass --solution/--assemblies, or set 'solution'/'assemblies' in the configuration.");
         }
 
@@ -51,8 +51,8 @@ internal static class CatalogSourceResolver {
     ///     configuration" precedence applied to a single option.
     /// </summary>
     public static string? FirstNonEmpty(string? primary, string? fallback) {
-        if (string.IsNullOrWhiteSpace(primary) is false) { return primary; }
-        if (string.IsNullOrWhiteSpace(fallback) is false) { return fallback; }
+        if (!string.IsNullOrWhiteSpace(primary)) { return primary; }
+        if (!string.IsNullOrWhiteSpace(fallback)) { return fallback; }
 
         return null;
     }

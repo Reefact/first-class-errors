@@ -44,8 +44,8 @@ public static class CatalogDiffer {
 
         List<CatalogChange> changes = [];
 
-        List<KeyValuePair<string, CatalogSnapshotEntry>> removed = baselineByCode.Where(pair => currentByCode.ContainsKey(pair.Key) is false).ToList();
-        List<KeyValuePair<string, CatalogSnapshotEntry>> added   = currentByCode.Where(pair => baselineByCode.ContainsKey(pair.Key) is false).ToList();
+        List<KeyValuePair<string, CatalogSnapshotEntry>> removed = baselineByCode.Where(pair => !currentByCode.ContainsKey(pair.Key)).ToList();
+        List<KeyValuePair<string, CatalogSnapshotEntry>> added   = currentByCode.Where(pair => !baselineByCode.ContainsKey(pair.Key)).ToList();
 
         foreach (KeyValuePair<string, CatalogSnapshotEntry> pair in removed) {
             changes.Add(new CatalogChange(CatalogChangeKind.ErrorRemoved, CatalogChangeImpact.Breaking, pair.Key, DescribeRemoval(pair.Value, added)));
@@ -56,7 +56,7 @@ public static class CatalogDiffer {
         }
 
         foreach (KeyValuePair<string, CatalogSnapshotEntry> pair in baselineByCode) {
-            if (currentByCode.TryGetValue(pair.Key, out CatalogSnapshotEntry? after) is false) { continue; }
+            if (!currentByCode.TryGetValue(pair.Key, out CatalogSnapshotEntry? after)) { continue; }
 
             CompareEntry(pair.Key, pair.Value, after, changes);
         }
@@ -78,7 +78,7 @@ public static class CatalogDiffer {
             if (string.IsNullOrWhiteSpace(entry.Code)) { continue; }
 
             string code = entry.Code!.Trim();
-            if (byCode.ContainsKey(code) is false) { byCode.Add(code, entry); }
+            if (!byCode.ContainsKey(code)) { byCode.Add(code, entry); }
         }
 
         return byCode;
@@ -99,7 +99,7 @@ public static class CatalogDiffer {
         Dictionary<string, CatalogSnapshotContextKey> afterKeys  = IndexByKey(after);
 
         foreach (KeyValuePair<string, CatalogSnapshotContextKey> pair in beforeKeys) {
-            if (afterKeys.TryGetValue(pair.Key, out CatalogSnapshotContextKey? counterpart) is false) {
+            if (!afterKeys.TryGetValue(pair.Key, out CatalogSnapshotContextKey? counterpart)) {
                 changes.Add(new CatalogChange(CatalogChangeKind.ContextKeyRemoved, CatalogChangeImpact.Breaking, code,
                                               $"context key '{pair.Key}' removed"));
 
@@ -113,7 +113,7 @@ public static class CatalogDiffer {
         }
 
         foreach (KeyValuePair<string, CatalogSnapshotContextKey> pair in afterKeys) {
-            if (beforeKeys.ContainsKey(pair.Key) is false) {
+            if (!beforeKeys.ContainsKey(pair.Key)) {
                 changes.Add(new CatalogChange(CatalogChangeKind.ContextKeyAdded, CatalogChangeImpact.Compatible, code,
                                               $"context key '{pair.Key}' added ({pair.Value.ValueType ?? "unknown type"})"));
             }
@@ -127,7 +127,7 @@ public static class CatalogDiffer {
             if (string.IsNullOrWhiteSpace(key.Key)) { continue; }
 
             string name = key.Key!.Trim();
-            if (byKey.ContainsKey(name) is false) { byKey.Add(name, key); }
+            if (!byKey.ContainsKey(name)) { byKey.Add(name, key); }
         }
 
         return byKey;
@@ -155,7 +155,7 @@ public static class CatalogDiffer {
     }
 
     private static bool Differs(string? before, string? after) {
-        return string.Equals(Normalize(before), Normalize(after), StringComparison.Ordinal) is false;
+        return !string.Equals(Normalize(before), Normalize(after), StringComparison.Ordinal);
     }
 
     private static string? Normalize(string? value) {
