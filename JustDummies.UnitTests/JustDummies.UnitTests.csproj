@@ -34,6 +34,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The repository root, for XmlDocCrefConventionTests. That guard reads SOURCE text, which nothing on the
+         compiled assembly can carry: by the time a cref reaches the generated XML the compiler has resolved it to
+         a documentation ID and the spelling under test is gone. The path is baked in here rather than derived
+         from [CallerFilePath], which CI rewrites to /_/ under the DeterministicSourcePaths that
+         ContinuousIntegrationBuild turns on. -->
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>RepositoryRoot</_Parameter1>
+      <_Parameter2>$(MSBuildThisFileDirectory)..</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 

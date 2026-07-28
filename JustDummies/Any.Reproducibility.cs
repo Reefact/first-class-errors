@@ -6,7 +6,7 @@ public static partial class Any {
     ///     Creates an isolated, deterministic generation context: every generator created from it draws from a
     ///     dedicated source seeded with <paramref name="seed" />, independent of the ambient context. Two contexts
     ///     created with the same seed yield the same sequence of values. Prefer
-    ///     <see cref="Reproducibly(Action, Action{String})" /> inside tests — it keeps the arbitrary-by-default
+    ///     <see cref="Reproducibly(Action, Action{string})" /> inside tests — it keeps the arbitrary-by-default
     ///     behavior and reports the seed only when the test fails; reach for <see cref="WithSeed" /> when you need an
     ///     explicit generator object, for example outside a test body.
     /// </summary>
@@ -23,13 +23,13 @@ public static partial class Any {
 
     /// <summary>
     ///     Pins the ambient random context to <paramref name="seed" /> until the returned handle is disposed — the
-    ///     scope form of <see cref="Reproducibly(int, Action, Action{String})" />, for a caller that cannot wrap the
+    ///     scope form of <see cref="Reproducibly(int, Action, Action{string})" />, for a caller that cannot wrap the
     ///     code it pins in a delegate. A test-framework adapter is the case this exists for: it observes a test through
     ///     hooks that run before and after it, so it opens the scope in one and disposes it in the other.
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///         Inside a test body, prefer <see cref="Reproducibly(Action, Action{String})" />: it also reports the seed
+    ///         Inside a test body, prefer <see cref="Reproducibly(Action, Action{string})" />: it also reports the seed
     ///         when the body fails, which this handle does not — whoever opens the scope owns telling the reader which
     ///         seed to replay. Prefer <see cref="WithSeed" /> when an explicit generator object fits better than an
     ///         ambient scope.
@@ -129,7 +129,7 @@ public static partial class Any {
 
     /// <summary>
     ///     Replays <paramref name="body" /> with the ambient random context pinned to <paramref name="seed" />, so a
-    ///     run first seen through the parameterless <see cref="Reproducibly(Action, Action{String})" /> overload can
+    ///     run first seen through the parameterless <see cref="Reproducibly(Action, Action{string})" /> overload can
     ///     be reproduced exactly. If the body throws, the seed is reported before the exception propagates.
     /// </summary>
     /// <param name="seed">The seed to replay — typically the one a previous failure reported.</param>
@@ -151,14 +151,14 @@ public static partial class Any {
     }
 
     /// <summary>
-    ///     Asynchronous counterpart of <see cref="Reproducibly(Action, Action{String})" />: awaits
+    ///     Asynchronous counterpart of <see cref="Reproducibly(Action, Action{string})" />: awaits
     ///     <paramref name="body" /> under a fresh seed and reports it if the body faults.
     /// </summary>
     /// <remarks>
     ///     <b>The returned task must be awaited.</b> Dropping it silences the body's failures — the assertions run
     ///     on a continuation after the caller has already moved on, and a discarded fault never reaches the test
     ///     runner. Discarding it is a compile error (diagnostic <c>JD002</c>); passing an asynchronous body to the
-    ///     synchronous <see cref="Reproducibly(Action, Action{String})" /> instead is a compile error (<c>JD001</c>).
+    ///     synchronous <see cref="Reproducibly(Action, Action{string})" /> instead is a compile error (<c>JD001</c>).
     /// </remarks>
     /// <param name="body">The asynchronous test body to run under a reproducible random context.</param>
     /// <param name="report">The sink the seed is written to on failure. Defaults to <see cref="Console.Error" /> when <c>null</c>.</param>
@@ -171,7 +171,7 @@ public static partial class Any {
     }
 
     /// <summary>
-    ///     Asynchronous counterpart of <see cref="Reproducibly(int, Action, Action{String})" />: awaits
+    ///     Asynchronous counterpart of <see cref="Reproducibly(int, Action, Action{string})" />: awaits
     ///     <paramref name="body" /> under <paramref name="seed" /> and reports it if the body faults.
     /// </summary>
     /// <param name="seed">The seed to replay — typically the one a previous failure reported.</param>
