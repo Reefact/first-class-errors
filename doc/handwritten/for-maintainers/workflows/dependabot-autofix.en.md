@@ -43,9 +43,10 @@ the model's say-so, and it **never merges** anything itself.
   through (`ci`, `sonar`, `analyzers`, `commit-lint`, `justdummies`,
   `dependency-review`, `codeql`). Any one completing re-runs it against the head
   commit's **combined** check status.
-- Gated to **Dependabot's own pull requests from a branch in this repository**
-  (`workflow_run.actor == 'dependabot[bot]'`, non-fork head). Human and fork PRs are
-  ignored.
+- Gated to **Dependabot's own pull requests from a branch in this repository**. The
+  job-level `if:` is structural only (a `pull_request` run, a non-fork head, a
+  `dependabot/*` branch); identity is settled in the resolve step, against the API.
+  Human and fork PRs are ignored.
 
 ## How it runs
 
@@ -69,8 +70,11 @@ Everything is **best-effort and safe-by-omission**: a patch that does not apply,
 rebase that conflicts, an API error, a non-JSON reply — each leaves the PR
 untouched and degrades to a *suggested-fix* or *needs-a-human* comment rather than
 pushing a broken change or failing red. A **loop guard** stops it acting twice on
-the same push: once the head commit's *committer* is `github-actions[bot]`, it waits
-for the next Dependabot push before acting again.
+the same push, and it is checked **twice**: the resolve step requires the branch tip
+to still be Dependabot's own signed commit — so the `ci` run that our own PAT-pushed
+fix re-triggers never reaches the model or the comment — and `apply-fix.sh` checks
+the head commit's *committer* again before pushing. Either way it waits for the next
+Dependabot push before acting again.
 
 ## Permissions & security
 
@@ -112,8 +116,15 @@ context.
 - **It never changes a dependency version**, and failures that are not code-fixable
   (`sonar`/coverage without a secret, a `dependency-review`/CodeQL policy block) are
   *diagnosed*, not fixed.
-- **The loop guard and the actor/non-fork guard matter.** They keep it from acting
-  twice on one push and keep the write path off human and fork PRs.
+- **The loop guard and the author/non-fork guard matter.** They keep it from acting
+  twice on one push and keep the write path off human and fork PRs. Both halves are
+  read from the API on purpose: `workflow_run.actor` is the *initial* run's actor and
+  still says `dependabot[bot]` after someone with push access has committed to the
+  branch and re-run a check, so it can authenticate nothing. The pull request's author
+  says who opened it (`dependabot[bot]` is unregistrable — `[` and `]` are illegal in
+  user names), and the branch tip's GitHub signature says who wrote the code the job
+  is about to read, patch and force-push. Commit author and committer *names* are
+  `git config` values and forge freely; the signature does not.
 
 ## Related
 
