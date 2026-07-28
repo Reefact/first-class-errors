@@ -232,6 +232,10 @@ Optional supporting material:
 | [ADR-0047](0047-measure-justdummies-mutation-against-the-unit-suite-only.md) | Measure JustDummies mutation against the deterministic unit suite only; drop the FsCheck property suite from the oracle | Proposed |
 <<<<<<< 4c286a6d2e0017d21f7b7272e2a38dc3e0bb7585
 | [ADR-0048](0048-guarantee-a-generated-regex-value-matches-by-bounded-redraw.md) | Guarantee a generated regex value matches its pattern, by bounded redraw | Proposed |
+<<<<<<< ebb3d2dd8e374a159c2f65c972bd1135c4bed42b
 =======
 | [ADR-0048](0048-drop-the-justdummies-generator-from-the-per-pull-request-mutation-matrix.md) | Drop the JustDummies generator from the per-pull-request mutation matrix; its adapter and analyzers keep theirs, the weekly sweep keeps measuring it | Proposed |
 >>>>>>> 902f0a9a0dd2b34658b87f423eb424a2bcf5322b
+=======
+| [ADR-0049](0049-drop-the-justdummies-generator-from-the-per-pull-request-mutation-matrix.md) | Drop the JustDummies generator from the per-pull-request mutation matrix; its adapter and analyzers keep theirs, the weekly sweep keeps measuring it | Accepted |
+>>>>>>> c306410ed530d4051647da45b793c47488a90cba
