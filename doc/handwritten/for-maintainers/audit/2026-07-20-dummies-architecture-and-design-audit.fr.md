@@ -327,7 +327,7 @@ sont cosmétiques à côté de (c) et (d).
 
 ### 4.2 L'affirmation « ASCII imprimable » est exagérée en trois endroits
 
-`RegexAlphabet.cs:3-9`, `AnyPattern.cs:15-16` et `Any.cs:70` affirment tous que chaque terminal se
+`RegexAlphabet.cs:3-9`, `AnyPattern.cs:21` et `Any.Pattern.cs:23` affirment tous que chaque terminal se
 résout en ASCII imprimable (0x20–0x7E). Le code — correctement — émet exactement les caractères que le
 motif exige : `\t`, `\a`, `\cA`, `\0` et les littéraux `\uHHHH` peuvent être non imprimables ou
 non-ASCII, et le propre test de la bibliothèque l'assertit (`AnyPatternTests` — `\a` → U+0007). La
@@ -342,7 +342,8 @@ Deux structures miroir doivent s'accorder méthode par méthode, et rien ne cont
 
 * **`Any` ↔ `AnyContext`** : chaque point d'entrée scalaire existe deux fois (21 sur la cible
   netstandard2.0, 26 sur net8.0, en comptant les deux surcharges de `StringMatching`) —
-  `Any.cs:54-317` face à `AnyContext.cs:48-296`. Le miroir est une conception légitime (la composition
+  `Any.Primitive.cs:11-224`, `Any.Pattern.cs:34-52` et `Any.Uri.cs:13` face à `AnyContext.cs:51-305`.
+  Le miroir est une conception légitime (la composition
   et les collections ne sont délibérément *pas* recopiées — elles héritent d'un contexte via les sources
   de leurs opérandes, ce qui est élégant), mais un nouveau type scalaire ajouté à `Any` et oublié sur
   `AnyContext` compilerait, passerait les 222 tests, et livrerait un trou dans la surface déterministe.
@@ -545,7 +546,7 @@ les deux relèvent d'une courte note dans la référence d'implémentation.
 | 0006 (historique) | Remplacée | **Conforme et dépassée.** Le contrat de graine hérité (local au contexte, déterminisme optionnel, rapport de graine) est implémenté fidèlement ; JustDummies ajoute l'`AnyContext` isolé que l'ADR d'origine ne faisait qu'anticiper. |
 | 0011 | Acceptée | **Conforme.** Aucune référence à FirstClassErrors ; frontière vérifiée par machine (`ArchitectureTests`) ; identité autonome, train de release et docs en place. Note : l'application est *plus forte* que la décision consignée (§5). |
 | 0013 | Acceptée | **Conforme, vérifiée en détail** — gate immédiat net des crédits `Containing` hors domaine, comptage conservateur de `ContainingAny`, arithmétique à l'abri du débordement, budget borné, les deux canaux d'échec. **Une déviation mineure :** le message de saturation promet *inconditionnellement* le rejeu `Any.Reproducibly({seed}, …)` (`CollectionState.cs:246-254` ; la garde `seed is not null` est du code mort — la graine n'y peut jamais être nulle). Pour un générateur d'éléments **étranger** dont les tirages ignorent la source ambiante, cette promesse est fausse ; l'ADR dit que les échecs sont « explicites et reproductibles ». Qualifier le message quand le générateur d'éléments ne porte aucune source de la bibliothèque. |
-| 0015 | Acceptée | **Conforme exactement** — arités 2–8, pas plus ; suppressions localisées avec justifications renvoyant à l'ADR (`Any.cs:622-623`) ; plafond documenté sur la surcharge d'arité 8. |
+| 0015 | Acceptée | **Conforme exactement** — arités 2–8, pas plus ; suppressions localisées avec justifications renvoyant à l'ADR (`Any.Combine.cs:214-215`, `266-267`) ; plafond documenté sur la surcharge d'arité 8. |
 | 0020 | Acceptée | **Pleinement conforme.** Aucune conversion implicite nulle part ; `Generate()` est la seule matérialisation ; générateurs vérifiés immuables (chaque méthode fluide renvoie une nouvelle instance). Résidu : trois DisplayName de test et un commentaire *décrivent* encore les conversions supprimées (§4.3). |
 | 0022 | Acceptée | **Partielle pour JustDummies.** L'asset netstandard2.0 n'est chargé et exercé sur net472 que transitivement via le job de plancher de FirstClassErrors ; la propre suite de JustDummies n'y tourne jamais, et le README du paquet n'énonce aucun plancher .NET Framework (celui de FirstClassErrors le fait). À solder avant la première publication (§11 point 5). |
 | 0025 | Proposée | **Conforme sur chaque clause majeure** (analyseur maison, refus de première classe, générateur terminal, zéro dépendance, univers ASCII imprimable *par défaut*, spread borné des quantificateurs non bornés). Les défauts §4.1(c)/(d) sont des bugs de qualité *à l'intérieur* du périmètre décidé, pas des déviations — avec la réserve que (d) rompt la *promesse* de refus que l'ADR consigne. Un bord de taxonomie : une classe négative bien formée hors de l'univers imprimable lève `ArgumentException` (« malformée ») au lieu d'`UnsupportedRegexException`. |
@@ -627,7 +628,7 @@ séquence et compliquerait `WithSeed` ; la restriction honnête est la bonne V1)
 
 **(b) Les rapports de graine peuvent nommer une graine erronée ou inapplicable dans une composition à
 source mixte/fixe.** `Combine` propage la source d'opérande **première non nulle** pour le rapport
-d'échec (`Any.cs:446` et al.). `Any.Combine(Any.WithSeed(1).Int32(), Any.WithSeed(2).Int32(), throwing)`
+d'échec (`Any.Combine.cs:33` et al.). `Any.Combine(Any.WithSeed(1).Int32(), Any.WithSeed(2).Int32(), throwing)`
 échoue avec « seeded with 1; reproduce with `Any.Reproducibly(1, …)` » — doublement faux : la graine 2
 n'est pas rapportée, et l'instruction est inapplicable parce que `Reproducibly` épingle la source
 *ambiante*, que les générateurs adossés à `FixedRandomSource` ignorent par conception. C'est un cas
