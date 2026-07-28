@@ -45,9 +45,10 @@ jamais rien lui-même.
   traverse (`ci`, `sonar`, `analyzers`, `commit-lint`, `justdummies`,
   `dependency-review`, `codeql`). Chacun qui se termine le relance sur l'état
   **combiné** des checks du commit de tête.
-- Restreint aux **pull requests de Dependabot issues d'une branche de ce dépôt**
-  (`workflow_run.actor == 'dependabot[bot]'`, tête hors fork). Les PR humaines et de
-  fork sont ignorées.
+- Restreint aux **pull requests de Dependabot issues d'une branche de ce dépôt**. Le
+  `if:` au niveau du job est purement structurel (un run `pull_request`, une tête hors
+  fork, une branche `dependabot/*`) ; l'identité est tranchée dans l'étape de
+  résolution, via l'API. Les PR humaines et de fork sont ignorées.
 
 ## Comment il s'exécute
 
@@ -74,9 +75,12 @@ Tout est **best-effort et sûr par omission** : un patch qui ne s'applique pas, 
 rebase en conflit, une erreur d'API, une réponse non-JSON — chacun laisse la PR
 intacte et se rabat sur un commentaire *correctif suggéré* ou *nécessite un humain*
 plutôt que de pousser un changement cassé ou d'échouer en rouge. Un **garde
-anti-boucle** l'empêche d'agir deux fois sur le même push : dès que le *committer* du
-commit de tête est `github-actions[bot]`, il attend le prochain push de Dependabot
-avant d'agir à nouveau.
+anti-boucle** l'empêche d'agir deux fois sur le même push, et il est vérifié **deux
+fois** : l'étape de résolution exige que la pointe de branche soit encore le commit
+signé de Dependabot — pour que le run `ci` relancé par notre propre push via le PAT
+n'atteigne ni le modèle ni le commentaire — et `apply-fix.sh` revérifie le *committer*
+du commit de tête avant de pousser. Dans les deux cas, il attend le prochain push de
+Dependabot avant d'agir à nouveau.
 
 ## Permissions & sécurité
 
@@ -122,9 +126,17 @@ dans son propre contexte Dependabot en lecture seule.
 - **Il ne change jamais une version de dépendance**, et les échecs non corrigeables
   par le code (`sonar`/couverture sans secret, un blocage de politique
   `dependency-review`/CodeQL) sont *diagnostiqués*, pas corrigés.
-- **Le garde anti-boucle et le garde acteur/hors-fork comptent.** Ils l'empêchent
+- **Le garde anti-boucle et le garde auteur/hors-fork comptent.** Ils l'empêchent
   d'agir deux fois sur un push et tiennent le chemin en écriture à l'écart des PR
-  humaines et de fork.
+  humaines et de fork. Les deux moitiés sont lues via l'API à dessein :
+  `workflow_run.actor` est l'acteur du run *initial* et annonce encore
+  `dependabot[bot]` après qu'un tiers ayant le droit de push a committé sur la branche
+  et relancé un check — il n'authentifie donc rien. L'auteur de la pull request dit qui
+  l'a ouverte (`dependabot[bot]` est inenregistrable : `[` et `]` sont interdits dans
+  les noms d'utilisateur), et la signature GitHub de la pointe de branche dit qui a
+  écrit le code que le job s'apprête à lire, corriger et force-pusher. Les *noms*
+  d'auteur et de committer d'un commit sont des valeurs `git config` et se forgent
+  librement ; la signature, non.
 
 ## Liens connexes
 
