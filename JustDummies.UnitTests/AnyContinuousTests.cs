@@ -172,8 +172,8 @@ public sealed class AnyContinuousTests {
         Check.That(highest).IsStrictlyGreaterThan(99m); // and up to near the inclusive maximum
     }
 
-    [Fact(DisplayName = "Continuous generators convert implicitly to their value type.")]
-    public void ImplicitConversions() {
+    [Fact(DisplayName = "Every continuous generator materializes its own value type through Generate().")]
+    public void MaterializesEachValueType() {
         double  d = Any.Double().Between(1d, 2d).Generate();
         float   f = Any.Single().Between(1f, 2f).Generate();
         decimal m = Any.Decimal().Between(1m, 2m).Generate();
