@@ -14,7 +14,17 @@ namespace FirstClassErrors.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class InvalidErrorCodeFormatAnalyzer : DiagnosticAnalyzer {
 
-    private static readonly Regex UpperSnakeCase = new("^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$", RegexOptions.CultureInvariant);
+    // The timeout is a ceiling, not a repair: '_' is excluded from '[A-Z0-9]', so the mandatory separator pins the
+    // start of every '(_[A-Z0-9]+)' iteration to a position the input alone determines. The decomposition is unique,
+    // giving back characters inside one iteration can never open a different one, and the match stays linear — the
+    // catastrophic backtracking this rule guards against is unreachable here, and the code is a compile-time constant
+    // the developer wrote (ErrorCodeFacts.TryGetNonEmptyLiteralCode), never attacker-supplied input. The ceiling is
+    // there so that no later edit of the pattern, and no regex engine in a host compiler we do not control, can turn
+    // a per-invocation convention check into a hung build. One second is orders of magnitude above the microseconds a
+    // real error code costs, so it can only fire on a genuine pathology; letting the resulting RegexMatchTimeoutException
+    // escape is deliberate — Roslyn wraps every analyzer action and surfaces it as AD0001 instead of crashing the
+    // compiler, so a catch here would only add unreachable, untestable code.
+    private static readonly Regex UpperSnakeCase = new("^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
