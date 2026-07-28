@@ -1,9 +1,12 @@
 namespace JustDummies;
 
 /// <summary>
-///     The bounded, readable character universe the regex generator draws from. Every terminal — a literal, a class,
-///     a shorthand (<c>\d \w \s</c> and their negations), the dot — resolves to a set of <b>printable ASCII</b>
-///     characters (0x20–0x7E). Restricting the universe keeps generated dummies legible instead of scattering
+///     The bounded, readable character universe the regex generator draws from wherever the pattern leaves a
+///     character <b>free</b> — a shorthand (<c>\d \w \s</c> and their negations), the dot, a negated class. Those
+///     positions resolve to <b>printable ASCII</b> (0x20–0x7E), with one deliberate exception: <c>\s</c> draws from a
+///     readable pair that includes a tab. A character the pattern names <b>explicitly</b> — a literal, an escape, a
+///     member of a positive class — is emitted exactly as written and may fall outside this universe, control
+///     characters included. Restricting the free positions keeps generated dummies legible instead of scattering
 ///     arbitrary Unicode, and it keeps every generated character a genuine member of the class it stands for, so the
 ///     output always matches the source pattern.
 /// </summary>

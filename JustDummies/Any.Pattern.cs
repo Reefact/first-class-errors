@@ -20,7 +20,9 @@ public static partial class Any {
     ///     (ranges, negation), the quantifiers <c>? * + {n} {n,} {n,m}</c> (an unbounded quantifier draws its minimum
     ///     plus 0 to 8 repetitions), alternation, grouping (capturing, non-capturing and named), the dot, and the
     ///     anchors <c>^ $</c> at the start and end of the pattern or of a top-level alternation branch (no-ops there,
-    ///     since a whole matching string is generated). Values are drawn from printable ASCII. A well-formed but
+    ///     since a whole matching string is generated). Wherever the pattern leaves a character free, values are drawn
+    ///     from printable ASCII (<c>\s</c> may also yield a tab); a character the pattern names explicitly is emitted as
+    ///     written, control characters included. A well-formed but
     ///     non-regular or not-generatable construct — a lookaround, a backreference, a word boundary, a Unicode
     ///     category, an atomic group, a class subtraction, an anchor placed where it could never match — raises an
     ///     <see cref="UnsupportedRegexException" />; a malformed pattern raises an <see cref="ArgumentException" />,
