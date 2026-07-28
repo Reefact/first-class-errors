@@ -71,6 +71,31 @@ public sealed class AnyCollectionTests {
         Check.ThatCode(() => Any.ListOf<int>(null!)).Throws<ArgumentNullException>();
     }
 
+    [Fact(DisplayName = "A produced count is refused above the ceiling; the bound just below it is accepted.")]
+    public void ProducedCountsAreCeilinged() {
+        // ADR-0050, at the two coordinates a mis-written comparison would pass: the ceiling and the first value past it.
+        Check.ThatCode(() => Any.ListOf(Any.Int32()).WithCount(1_000_001)).Throws<ArgumentOutOfRangeException>();
+        Check.ThatCode(() => Any.ListOf(Any.Int32()).WithMinCount(1_000_001)).Throws<ArgumentOutOfRangeException>();
+        Check.ThatCode(() => Any.SetOf(Any.Int32()).WithCountBetween(1_000_001, 2_000_000)).Throws<ArgumentOutOfRangeException>();
+
+        Check.ThatCode(() => Any.ListOf(Any.Int32()).WithCount(1_000_000)).DoesNotThrow();
+    }
+
+    [Fact(DisplayName = "An enormous count names the caller's parameter instead of exhausting memory.")]
+    public void AnEnormousCountNamesTheCallersParameter() {
+        // Regression: WithCount(int.MaxValue) used to fail on the allocation itself, and WithMaxCount(int.MaxValue)
+        // to grind for minutes filling a collection sized after the cap. Both are now decided at declaration.
+        ArgumentOutOfRangeException error = Assert.Throws<ArgumentOutOfRangeException>(() => Any.ListOf(Any.Int32()).WithCount(int.MaxValue));
+
+        Check.That(error.ParamName).IsEqualTo("count");
+    }
+
+    [Fact(DisplayName = "A maximum accepts any non-negative count and still yields a small collection.")]
+    public void AMaximumIsACapNotASizeHint() {
+        Check.That(Any.ListOf(Any.Int32()).WithMaxCount(int.MaxValue).Generate().Count).IsStrictlyLessThan(9);
+        Check.That(Any.ArrayOf(Any.Int32()).WithMaxCount(4_000_000).Generate().Length).IsStrictlyLessThan(9);
+    }
+
     [Fact(DisplayName = "Distinct: a wide-domain distinct list holds only distinct elements.")]
     public void DistinctOverAWideDomain() {
         for (int i = 0; i < SampleCount; i++) {

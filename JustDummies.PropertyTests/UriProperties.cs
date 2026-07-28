@@ -122,6 +122,16 @@ public sealed class UriProperties {
         return segments.HasValue ? generator.WithPathSegments(segments.Value) : generator.WithoutPath();
     }
 
+    /// <summary>
+    ///     Projects a path declaration onto a positive segment count for the relative leg, which has no
+    ///     <c>WithoutPath()</c>. Injective on purpose — <c>null</c> and <c>0</c> are two different declarations and must
+    ///     stay two different counts — and never zero, because a relative reference with no segment, query, fragment or
+    ///     root is the empty string, which is not a valid URI reference.
+    /// </summary>
+    private static int RelativeSegments(int? declared) {
+        return declared is null ? 1 : declared.Value + 2;
+    }
+
     #endregion
 
     [Fact(DisplayName = "Every unconstrained draw is a valid URI of an emittable family, whatever the seed.")]
@@ -435,33 +445,46 @@ public sealed class UriProperties {
             .QuickCheckThrowOnFailure();
     }
 
-    [Fact(DisplayName = "A second scheme pin conflicts, whichever pair and whichever order.")]
-    public void SecondSchemePinConflicts() {
+    [Fact(DisplayName = "A second scheme pin conflicts unless it repeats the first, whichever pair and whichever order.")]
+    public void SecondSchemePinConflictsUnlessItRepeatsTheFirst() {
         Gen<(bool First, bool Second)> cases = from first in Gen.Elements(true, false)
                                                from second in Gen.Elements(true, false)
                                                select (first, second);
 
         Prop.ForAll(cases.ToArbitrary(),
-                    testCase => Expect.Throws<ConflictingAnyConstraintException>(
-                                    () => PinScheme(PinScheme(Any.Uri().Web(), testCase.First), testCase.Second))
-                                && Expect.Throws<ConflictingAnyConstraintException>(
-                                    () => PinScheme(PinScheme(Any.Uri().WebSocket(), testCase.First), testCase.Second)))
+                    // Pinning the same scheme twice asks for the scheme already in force, so it is a no-op and the
+                    // generator still produces it; pinning the other one contradicts it.
+                    testCase => testCase.First == testCase.Second
+                                    ? Expect.EveryDraw(PinScheme(PinScheme(Any.Uri().Web(), testCase.First), testCase.Second), uri => uri.IsAbsoluteUri)
+                                      && Expect.EveryDraw(PinScheme(PinScheme(Any.Uri().WebSocket(), testCase.First), testCase.Second), uri => uri.IsAbsoluteUri)
+                                    : Expect.Throws<ConflictingAnyConstraintException>(
+                                          () => PinScheme(PinScheme(Any.Uri().Web(), testCase.First), testCase.Second))
+                                      && Expect.Throws<ConflictingAnyConstraintException>(
+                                          () => PinScheme(PinScheme(Any.Uri().WebSocket(), testCase.First), testCase.Second)))
             .QuickCheckThrowOnFailure();
     }
 
-    [Fact(DisplayName = "A second path constraint conflicts, whichever pair and whichever segment counts.")]
-    public void SecondPathConstraintConflicts() {
+    [Fact(DisplayName = "A second path constraint conflicts unless it repeats the first, whichever pair and whichever segment counts.")]
+    public void SecondPathConstraintConflictsUnlessItRepeatsTheFirst() {
         // null stands for WithoutPath(), a count for WithPathSegments(count): all four ordered pairs conflict.
         Gen<(int? First, int? Second)> cases = from first in Optional(Generators.Count(6))
                                                from second in Optional(Generators.Count(6))
                                                select (first, second);
 
         Prop.ForAll(cases.ToArbitrary(),
-                    testCase => Expect.Throws<ConflictingAnyConstraintException>(
-                                    () => PinPath(PinPath(Any.Uri().Web(), testCase.First), testCase.Second))
-                                // A relative reference has no WithoutPath(), so only the doubled segment count applies.
-                                && Expect.Throws<ConflictingAnyConstraintException>(
-                                    () => Any.Uri().Relative().WithPathSegments(testCase.First ?? 0).WithPathSegments(testCase.Second ?? 0)))
+                    // Repeating the SAME path declaration is a no-op; any other pair contradicts. The relative leg has
+                    // no WithoutPath(), so it only ever exercises the doubled segment count.
+                    testCase => testCase.First == testCase.Second
+                                    ? Expect.EveryDraw(PinPath(PinPath(Any.Uri().Web(), testCase.First), testCase.Second), uri => uri.IsAbsoluteUri)
+                                      // Shifted off zero: a relative reference with no segment, query, fragment or root
+                                      // is the empty string, which is not a valid URI reference — a pre-existing refusal
+                                      // this property is not about.
+                                      && Expect.EveryDraw(Any.Uri().Relative().WithPathSegments(RelativeSegments(testCase.First)).WithPathSegments(RelativeSegments(testCase.Second)),
+                                                          uri => !uri.IsAbsoluteUri)
+                                    : Expect.Throws<ConflictingAnyConstraintException>(
+                                          () => PinPath(PinPath(Any.Uri().Web(), testCase.First), testCase.Second))
+                                      && Expect.Throws<ConflictingAnyConstraintException>(
+                                          () => Any.Uri().Relative().WithPathSegments(RelativeSegments(testCase.First)).WithPathSegments(RelativeSegments(testCase.Second))))
             .QuickCheckThrowOnFailure();
     }
 

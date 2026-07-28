@@ -200,11 +200,28 @@ internal sealed class OrdinalIntervalSpec {
     internal OrdinalIntervalSpec WithAllowed(ulong[] ordinals, string applying) {
         if (ordinals is null) { throw new ArgumentNullException(nameof(ordinals)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+        // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
+        // conflict: the second declaration asks for exactly what the first already guarantees.
+        if (string.Equals(_allowedConstraint, applying, StringComparison.Ordinal)) { return this; }
         if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_allowedConstraint} is already defined."); }
 
         ulong[] distinct = ordinals.Distinct().ToArray();
 
         return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, distinct, applying, _exclusions, _step, _anchor, _stepConstraint), applying);
+    }
+
+    /// <summary>
+    ///     Narrows an allow-list already in force to a subset of itself, keeping the constraint that declared it.
+    ///     This is not a second declaration — the caller is removing values another constraint forbids — so it does
+    ///     not trip the declared-once guard, and the original provenance stays the one a later conflict names.
+    /// </summary>
+    internal OrdinalIntervalSpec NarrowingAllowed(ulong[] kept, string applying) {
+        if (kept is null) { throw new ArgumentNullException(nameof(kept)); }
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+
+        ulong[] distinct = kept.Distinct().ToArray();
+
+        return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, distinct, _allowedConstraint ?? applying, _exclusions, _step, _anchor, _stepConstraint), applying);
     }
 
     /// <summary>Adds values the generator must never produce.</summary>

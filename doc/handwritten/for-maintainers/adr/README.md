@@ -219,7 +219,7 @@ Optional supporting material:
 | [ADR-0034](0034-require-a-scope-on-the-version-driving-commit-types.md) | Require a scope on the version-driving commit types | Accepted |
 | [ADR-0035](0035-enforce-structural-any-conflicts-at-compile-time.md) | Enforce structural Any conflicts at compile time, value-dependent ones at run time | Accepted |
 | [ADR-0036](0036-draw-lattice-constrained-scalars-on-the-grid.md) | Draw lattice-constrained scalars on the grid | Accepted |
-| [ADR-0037](0037-vary-the-datetimeoffset-offset-dimension.md) | Vary the DateTimeOffset offset dimension | Accepted |
+| [ADR-0037](0037-vary-the-datetimeoffset-offset-dimension.md) | Vary the DateTimeOffset offset dimension | Superseded |
 | [ADR-0038](0038-open-the-ambient-seed-scope-to-adapters.md) | Open the ambient seed scope to test-framework adapters | Accepted |
 | [ADR-0039](0039-adapt-dummies-to-xunit-v3-through-a-companion-package.md) | Adapt JustDummies to xUnit v3 through a companion package | Accepted |
 | [ADR-0040](0040-split-the-justdummies-test-bed-between-example-and-property-suites.md) | Split the JustDummies test bed between an example suite and a property suite | Accepted |
@@ -232,3 +232,5 @@ Optional supporting material:
 | [ADR-0047](0047-measure-justdummies-mutation-against-the-unit-suite-only.md) | Measure JustDummies mutation against the deterministic unit suite only; drop the FsCheck property suite from the oracle | Proposed |
 | [ADR-0048](0048-guarantee-a-generated-regex-value-matches-by-bounded-redraw.md) | Guarantee a generated regex value matches its pattern, by bounded redraw | Proposed |
 | [ADR-0049](0049-drop-the-justdummies-generator-from-the-per-pull-request-mutation-matrix.md) | Drop the JustDummies generator from the per-pull-request mutation matrix; its adapter and analyzers keep theirs, the weekly sweep keeps measuring it | Accepted |
+| [ADR-0050](0050-let-a-size-maximum-cap-without-steering-the-draw.md) | Let a size maximum cap without steering the draw, and ceiling an explicitly demanded size | Accepted |
+| [ADR-0051](0051-filter-the-datetimeoffset-pool-by-the-declared-offset.md) | Filter the DateTimeOffset pool by the declared offset; supersedes ADR-0037 | Accepted |

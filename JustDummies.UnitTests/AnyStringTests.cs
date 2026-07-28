@@ -249,6 +249,37 @@ public sealed class AnyStringTests {
         Check.ThatCode(() => Any.String().WithLengthBetween(5, 3)).Throws<ArgumentException>();
     }
 
+    [Fact(DisplayName = "A produced length is refused above the ceiling; the bound just below it is accepted.")]
+    public void ProducedLengthsAreCeilinged() {
+        // ADR-0050. The two coordinates that matter are the ceiling itself and the first value past it: a guard
+        // written with the wrong comparison passes every other length and fails exactly here.
+        Check.ThatCode(() => Any.String().WithLength(1_000_001)).Throws<ArgumentOutOfRangeException>();
+        Check.ThatCode(() => Any.String().WithMinLength(1_000_001)).Throws<ArgumentOutOfRangeException>();
+        Check.ThatCode(() => Any.String().WithLengthBetween(1_000_001, 2_000_000)).Throws<ArgumentOutOfRangeException>();
+
+        Check.ThatCode(() => Any.String().WithLength(1_000_000)).DoesNotThrow();
+        Check.ThatCode(() => Any.String().WithMinLength(1_000_000)).DoesNotThrow();
+    }
+
+    [Fact(DisplayName = "An enormous length names the caller's parameter instead of leaking an internal one.")]
+    public void AnEnormousLengthNamesTheCallersParameter() {
+        // Regression: WithLength(int.MaxValue) used to surface an ArgumentOutOfRangeException from inside the draw,
+        // naming System.Random's own 'maxValue' parameter after an arithmetic overflow — a message about internals
+        // for a mistake the caller made in the Arrange.
+        ArgumentOutOfRangeException error = Assert.Throws<ArgumentOutOfRangeException>(() => Any.String().WithLength(int.MaxValue));
+
+        Check.That(error.ParamName).IsEqualTo("length");
+    }
+
+    [Fact(DisplayName = "A maximum accepts any non-negative length and still yields a small string.")]
+    public void AMaximumIsACapNotASizeHint() {
+        // Regression: WithMaxLength(int.MaxValue) used to return a string of about 130 MB, because a declared
+        // maximum replaced the default spread instead of composing with it. A maximum is a permission, so it is
+        // never ceilinged — and it never enlarges the draw either.
+        Check.That(Any.String().WithMaxLength(int.MaxValue).Generate().Length).IsStrictlyLessThan(17);
+        Check.That(Any.String().WithMaxLength(4_000_000).Generate().Length).IsStrictlyLessThan(17);
+    }
+
     [Fact(DisplayName = "Fragment arguments are validated as arguments, not as conflicts.")]
     public void FragmentArgumentsAreValidated() {
         Check.ThatCode(() => Any.String().StartingWith(null!)).Throws<ArgumentNullException>();

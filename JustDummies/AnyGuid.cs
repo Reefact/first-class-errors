@@ -103,6 +103,9 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Gui
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
         string constraint = $"OneOf({Join(values)})";
+        // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
+        // conflict: the second declaration asks for exactly what the first already guarantees.
+        if (string.Equals(_allowedConstraint, constraint, StringComparison.Ordinal)) { return this; }
         if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {constraint} because {_allowedConstraint} is already defined."); }
 
         return Validated(new AnyGuid(_source, _pinned, _pinnedConstraint, values.Distinct().ToArray(), constraint, _excluded), constraint);
