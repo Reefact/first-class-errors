@@ -61,7 +61,7 @@ internal sealed class CatalogUpdateCommand : Command<CatalogUpdateSettings> {
             CatalogSnapshot current      = _snapshotSource.Extract(settings, configuration, logger, cancellationToken);
             string          baselinePath = BaselineStore.Resolve(settings.BaselinePath, configuration.Baseline, configDir);
 
-            if (BaselineStore.Exists(baselinePath) is false) {
+            if (!BaselineStore.Exists(baselinePath)) {
                 BaselineStore.Save(baselinePath, current);
                 _output.WriteLine($"Baseline created at '{baselinePath}', tracking {current.Errors.Count} error(s).");
 

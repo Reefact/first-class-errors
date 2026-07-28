@@ -50,7 +50,7 @@ public sealed class CatalogSnapshot {
         if (catalog is null) { throw new ArgumentNullException(nameof(catalog)); }
 
         List<CatalogSnapshotEntry> entries = catalog
-                                            .Where(error => string.IsNullOrWhiteSpace(error.Code) is false)
+                                            .Where(error => !string.IsNullOrWhiteSpace(error.Code))
                                              // Order by code, then a deterministic tie-breaker (source, then title), so
                                              // that when several factories share a code the surviving entry — group.First()
                                              // below — is chosen independently of the (reflection-driven) input order.
@@ -67,7 +67,7 @@ public sealed class CatalogSnapshot {
 
     private static CatalogSnapshotEntry ToEntry(string code, ErrorDocumentation error) {
         List<CatalogSnapshotContextKey> contextKeys = error.Context
-                                                           .Where(entry => string.IsNullOrWhiteSpace(entry.Key) is false)
+                                                           .Where(entry => !string.IsNullOrWhiteSpace(entry.Key))
                                                            .OrderBy(entry => entry.Key, StringComparer.Ordinal)
                                                            .GroupBy(entry => entry.Key!.Trim(), StringComparer.Ordinal)
                                                            .Select(group => new CatalogSnapshotContextKey {
