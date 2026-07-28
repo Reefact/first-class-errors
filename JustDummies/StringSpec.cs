@@ -29,6 +29,11 @@ namespace JustDummies;
 ///         character a single-character length allows) is therefore the one case that surfaces at generation, as a
 ///         seed-bearing <see cref="AnyGenerationException" />, rather than eagerly at declaration.
 ///     </para>
+///     <para>
+///         The default spread governs every draw, bounded or not (ADR-0050): a declared maximum composes with it
+///         rather than replacing it, so an upper bound only narrows the draw and never widens it. Only a minimum, an
+///         exact length or required fragments enlarge a string.
+///     </para>
 /// </remarks>
 internal sealed class StringSpec {
 
@@ -270,13 +275,16 @@ internal sealed class StringSpec {
     private string BuildCandidate(SeededRandom random) {
         int required     = RequiredLength();
         int effectiveMin = Math.Max(_minLength, required);
-        // Long arithmetic: a huge declared minimum must saturate instead of overflowing past int.MaxValue.
-        int effectiveMax = _maxLength ?? (int)Math.Min((long)effectiveMin + DefaultLengthSpread, int.MaxValue);
-        int length       = _exactLength ?? random.NextInt32Inclusive(effectiveMin, effectiveMax);
+        // A declared maximum composes with the default spread instead of replacing it (ADR-0050): it may only narrow
+        // the draw, never widen it, so a loose cap still yields the small unconstrained string. Long arithmetic: a
+        // huge required length must saturate instead of overflowing past int.MaxValue.
+        long spreadCeiling = (long)effectiveMin + DefaultLengthSpread;
+        int  effectiveMax  = (int)Math.Min(_maxLength is int declared ? Math.Min(spreadCeiling, declared) : spreadCeiling, int.MaxValue);
+        int  length        = _exactLength ?? random.NextInt32Inclusive(effectiveMin, effectiveMax);
 
         string pool         = FillerPool();
         int    fillerLength = length - required;
-        int    before       = random.Next(fillerLength + 1);
+        int    before       = random.NextInt32Inclusive(0, fillerLength);
         int    after        = fillerLength - before;
 
         StringBuilder builder = new(length);

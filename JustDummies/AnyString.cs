@@ -54,9 +54,11 @@ public sealed class AnyString : IAny<string>, IHasRandomSource {
     }
 
     private static int RequireNonNegative(int length, string parameterName) {
-        if (length < 0) { throw new ArgumentOutOfRangeException(parameterName, length, "The length must not be negative."); }
+        return SizeGuard.RequireNonNegative(length, parameterName, "length");
+    }
 
-        return length;
+    private static int RequireProducible(int length, string parameterName) {
+        return SizeGuard.RequireProducible(length, parameterName, "length");
     }
 
     #endregion
@@ -87,26 +89,34 @@ public sealed class AnyString : IAny<string>, IHasRandomSource {
     /// <summary>Fixes the exact length. Declared once per generator.</summary>
     /// <param name="length">The exact number of characters.</param>
     /// <returns>A new generator carrying the added constraint.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="length" /> is negative.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="length" /> is negative or exceeds 1000000, the largest length a generator is asked to produce.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyString WithLength(int length) {
-        RequireNonNegative(length, nameof(length));
+        RequireProducible(length, nameof(length));
 
         return new AnyString(_source, _spec.WithExactLength(length, $"WithLength({V(length)})"));
     }
 
-    /// <summary>Requires at least <paramref name="length" /> characters.</summary>
+    /// <summary>
+    ///     Requires at least <paramref name="length" /> characters. A minimum is the only one-sided length bound that
+    ///     enlarges the generated string: the draw spans <paramref name="length" /> to <paramref name="length" /> plus
+    ///     the default spread.
+    /// </summary>
     /// <param name="length">The inclusive minimum number of characters.</param>
     /// <returns>A new generator carrying the added constraint.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="length" /> is negative.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="length" /> is negative or exceeds 1000000, the largest length a generator is asked to produce.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyString WithMinLength(int length) {
-        RequireNonNegative(length, nameof(length));
+        RequireProducible(length, nameof(length));
 
         return new AnyString(_source, _spec.WithMinLength(length, $"WithMinLength({V(length)})"));
     }
 
-    /// <summary>Requires at most <paramref name="length" /> characters.</summary>
+    /// <summary>
+    ///     Requires at most <paramref name="length" /> characters. A maximum only ever narrows the draw: it never
+    ///     widens it beyond the default spread, so a loose cap still yields the small unconstrained string rather than
+    ///     one sized after the cap. Any non-negative value is accepted, since nothing has to be produced to honour it.
+    /// </summary>
     /// <param name="length">The inclusive maximum number of characters.</param>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="length" /> is negative.</exception>
@@ -117,15 +127,20 @@ public sealed class AnyString : IAny<string>, IHasRandomSource {
         return new AnyString(_source, _spec.WithMaxLength(length, $"WithMaxLength({V(length)})"));
     }
 
-    /// <summary>Requires a length within the inclusive range [<paramref name="minimum" />, <paramref name="maximum" />].</summary>
+    /// <summary>
+    ///     Requires a length within the inclusive range [<paramref name="minimum" />, <paramref name="maximum" />].
+    ///     Equivalent to declaring the two bounds separately, and behaves as they do: the minimum sets the size, the
+    ///     maximum only caps it. A range whose minimum is 0 therefore yields the default spread, not values spread
+    ///     across the whole range — raise <paramref name="minimum" /> to ask for larger strings.
+    /// </summary>
     /// <param name="minimum">The inclusive minimum number of characters.</param>
     /// <param name="maximum">The inclusive maximum number of characters.</param>
     /// <returns>A new generator carrying the added constraint.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when a bound is negative.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when a bound is negative, or when <paramref name="minimum" /> exceeds 1000000, the largest length a generator is asked to produce.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="minimum" /> is greater than <paramref name="maximum" />.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyString WithLengthBetween(int minimum, int maximum) {
-        RequireNonNegative(minimum, nameof(minimum));
+        RequireProducible(minimum, nameof(minimum));
         RequireNonNegative(maximum, nameof(maximum));
         if (minimum > maximum) { throw new ArgumentException($"The minimum ({V(minimum)}) must be less than or equal to the maximum ({V(maximum)}).", nameof(minimum)); }
 

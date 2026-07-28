@@ -99,6 +99,18 @@ matter — and that is the point.
 - **Conflicting constraints fail fast** with a clear, actionable
   `ConflictingAnyConstraintException` at the moment the conflicting constraint is
   declared — for example `Any.String().WithLength(3).StartingWith("ORD-")`.
+- **Dummies stay small unless you ask for more.** A bound is a permission, not a
+  request: `WithMaxLength`/`WithMaxCount` only ever *narrow* a draw, so
+  `Any.String().WithMaxLength(100_000)` still yields the short unconstrained string
+  rather than one sized after the cap. Only a minimum, an exact size or a required
+  fragment enlarges a value — `WithMinLength(90_000)` is how you ask for a large one.
+  `WithLengthBetween(a, b)` is exactly its two bounds declared separately, so a range
+  starting at zero reads as a limit, not as a request to spread across it. A size the
+  generator must actually produce is capped at 1 000 000: past that,
+  `WithLength`/`WithMinLength`/`WithCount`/`WithMinCount` raise an
+  `ArgumentOutOfRangeException` naming your own parameter, instead of hanging or
+  exhausting memory. A pure maximum is never capped — mirror a four-million-character
+  column limit if you like; it costs nothing to honour.
 - **Composition without reflection**: `.As(factory)` turns a constrained primitive
   into a domain value object; `Any.Combine(...)` assembles larger objects through
   constructor lambdas — from two up to eight constrained parts.
