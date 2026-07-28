@@ -110,7 +110,7 @@ internal static class AnyDerivation {
 
         try {
             return invoke();
-        } catch (AnyException) {
+        } catch (DummyException) {
             throw;
         } catch (Exception exception) {
             int?   seed    = source?.Current.Seed;

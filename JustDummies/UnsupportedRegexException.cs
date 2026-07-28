@@ -8,7 +8,7 @@ namespace JustDummies;
 ///     not actually match. A syntactically malformed pattern is a caller mistake and surfaces as an
 ///     <see cref="System.ArgumentException" /> instead.
 /// </summary>
-public sealed class UnsupportedRegexException : AnyException {
+public sealed class UnsupportedRegexException : DummyException {
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="UnsupportedRegexException" /> class.
