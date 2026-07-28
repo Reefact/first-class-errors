@@ -1,3 +1,9 @@
+#region Usings declarations
+
+using System.Globalization;
+
+#endregion
+
 namespace FirstClassErrors.RequestBinder.Usage.Model;
 
 /// <summary>
@@ -24,7 +30,7 @@ public sealed class BookingDate : IEquatable<BookingDate>, IComparable<BookingDa
     ///     with a documented <see cref="InvalidBookingDateError" />.
     /// </summary>
     public static Outcome<BookingDate> Parse(string raw) {
-        if (!DateOnly.TryParseExact(raw, "yyyy-MM-dd", out DateOnly parsed)) {
+        if (!DateOnly.TryParseExact(raw, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly parsed)) {
             return Outcome<BookingDate>.Failure(InvalidBookingDateError.Malformed(raw));
         }
 
@@ -60,7 +66,7 @@ public sealed class BookingDate : IEquatable<BookingDate>, IComparable<BookingDa
 
     /// <inheritdoc />
     public override string ToString() {
-        return Value.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+        return Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
     }
 
 }
