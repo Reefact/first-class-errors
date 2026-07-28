@@ -39,7 +39,10 @@ matter — and that is the point.
   that match a regular expression — the dummy for a format-validated value object.
   Home-grown (zero dependencies) over the regular subset of the pattern language; a
   non-regular construct (a lookaround, a backreference) is refused with a clear error
-  rather than a silently non-matching value.
+  rather than a silently non-matching value. The pattern is the whole shape — express a
+  length or a prefix inside it, since building a value in the intersection of two regular
+  languages is not something the library does — but the exclusion pair is there:
+  `Any.StringMatching(@"^ORD-\d{8}$").DifferentFrom(existing)` never yields `existing`.
 - **Custom alphabets**: `Any.String().WithChars("αβγδε")` draws the string from an
   explicit character pool — the general form of the built-in `Alpha`/`Numeric`/
   `AlphaNumeric` sets, and the way to reach non-ASCII text (accents, Greek, Cyrillic,
@@ -50,17 +53,23 @@ matter — and that is the point.
   declaration.
 - **Strings from an explicit set**: `Any.String().OneOf("EUR", "USD", "GBP")` draws from
   a fixed, closed list — the dummy for a value whose domain is a short enumeration (a
-  currency code, a well-known name). A *terminal* generator, like `StringMatching`: the
-  set is the whole specification, duplicates collapse, and the draw is uniform and
-  reproducible under a seed.
+  currency code, a well-known name). Composable like every other family's `OneOf`: the
+  other constraints narrow the set rather than shape a string, so
+  `Any.String().OneOf("abc", "de").WithLength(3)` yields `"abc"` and a constraint no
+  supplied value satisfies is a conflict naming both sides, whichever order the two were
+  declared in. Duplicates collapse, and the draw is uniform and reproducible under a
+  seed.
 - **Any value from an explicit pool**: `Any.OneOf(eur, usd, gbp)` draws one value from a
   caller-supplied set of arbitrary values or domain objects, and `Any.ElementOf(orders)`
   does the same from a collection already held (a list, a LINQ result). This is the
   seed-aware answer to "any of these" — replacing a hand-rolled
   `pool[new Random().Next(...)]` that would ignore the seed and break `Reproducibly`.
-  Terminal and uniform like the string set: duplicates collapse under the default
-  comparer, the pool's distinct count gates distinct collections, and a `null` element is
-  refused — make the whole draw optional with `.OrNull()` instead.
+  Uniform like the string set: duplicates collapse under the default comparer, the pool's
+  distinct count gates distinct collections, and a `null` element is refused — make the
+  whole draw optional with `.OrNull()` instead. The element type is opaque to the
+  library, so the pool is the whole shape of the specification; what it does offer is the
+  exclusion pair, and `Any.ElementOf(orders).DifferentFrom(theOneAlreadyUsed)` is the
+  idiom for drawing *another* element of a fixture.
 - **URIs by family**: `Any.Uri()` yields an arbitrary yet valid `System.Uri` — an
   absolute web (`http`/`https`), WebSocket (`ws`/`wss`), FTP or mailto URI, or a relative
   reference. Narrow it to a family and each returns a builder exposing only that family's
@@ -93,12 +102,16 @@ matter — and that is the point.
   keep their own offset rather than being rewritten — and an offset none of them carries is a
   conflict, whichever of the two is declared first.
 - **Values built to satisfy the constraints** — a scalar is constructed directly,
-  never generated-then-filtered. The one exception is excluding values from a string
-  (`Any.String().DifferentFrom(...)`/`Except(...)`): a string has no ordinal mapping to
-  build the exclusion into, so it is met by a **bounded** redraw — the same escape a
-  *distinct* collection uses to skip a duplicate, never an unbounded retry loop. An
-  exclusion tight enough to leave the shape unsatisfiable surfaces at generation as a
-  seed-bearing `AnyGenerationException`.
+  never generated-then-filtered. The one exception is excluding values from a string or a
+  pattern (`Any.String().DifferentFrom(...)`/`Except(...)`,
+  `Any.StringMatching(p).DifferentFrom(...)`): neither has an ordinal mapping to build the
+  exclusion into, so it is met by a **bounded** redraw — the same escape a *distinct*
+  collection uses to skip a duplicate, never an unbounded retry loop. An exclusion tight
+  enough to leave nothing surfaces at generation as a seed-bearing
+  `AnyGenerationException`, whose message reports the budget it spent rather than claiming
+  no value remains — the search is bounded, so it never established that. An exclusion on
+  an explicit value set needs no redraw at all: the domain is finite, so the values are
+  removed at declaration and emptying it is a conflict there.
 - **Conflicting constraints fail fast** with a clear, actionable
   `ConflictingAnyConstraintException` at the moment the conflicting constraint is
   declared — for example `Any.String().WithLength(3).StartingWith("ORD-")`.
