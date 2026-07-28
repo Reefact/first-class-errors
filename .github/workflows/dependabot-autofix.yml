@@ -61,12 +61,17 @@ jobs:
     # Read a few API endpoints, one Anthropic call, and some git operations; cap a
     # hung run well below the 6-hour default.
     timeout-minutes: 15
-    # Only Dependabot's own pull requests, from a branch in THIS repository (never a
-    # fork). `workflow_run.actor` is who raised the run that triggered us.
+    # A cheap STRUCTURAL filter only — a pull-request run, on a branch in THIS repository
+    # (never a fork), named the way Dependabot names its branches. Identity is deliberately
+    # NOT asserted here: every value the event payload carries is a label attached to the
+    # run, not an authentication of it, and `workflow_run.actor` in particular names the
+    # actor of the INITIAL run and keeps saying `dependabot[bot]` after someone else has
+    # pushed to the branch and re-run a check (Sonar githubactions:S8232). The checks that
+    # actually decide are in the resolve step below, answered by the API.
     if: >-
       github.event.workflow_run.event == 'pull_request' &&
-      github.event.workflow_run.actor.login == 'dependabot[bot]' &&
-      github.event.workflow_run.head_repository.full_name == github.repository
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      startsWith(github.event.workflow_run.head_branch, 'dependabot/')
     permissions:
       contents: write         # push the fix; disable auto-merge on a code fix
       pull-requests: write     # comment, retitle, toggle auto-merge
@@ -96,6 +101,32 @@ jobs:
           fi
           if [ -z "$num" ]; then
             echo "No open pull request for ${HEAD_BRANCH}; nothing to do."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Identity is settled against the API, never against the event payload. TWO things
+          # must hold, and someone with push access can claim neither:
+          #   - Dependabot OPENED the pull request. `[` and `]` are illegal in GitHub user
+          #     names, so `dependabot[bot]` is unregistrable.
+          #   - The branch TIP — the commit this job reads, feeds to the model, amends and
+          #     force-pushes — is still Dependabot's own signed commit. The author check
+          #     alone would not be enough: pushing to a pull request does not change who
+          #     opened it, so without this second check anyone with push access could put
+          #     arbitrary content in front of the model in a job holding `contents: write`,
+          #     ANTHROPIC_API_KEY and DEPENDABOT_AUTOFIX_TOKEN. Commit author/committer
+          #     NAMES are `git config` values and forge freely; GitHub's own signature on a
+          #     Dependabot commit does not, which is why `verified` is the load-bearing half.
+          # This doubles as the loop guard: our own fix is pushed with a PAT precisely so
+          # `ci` re-runs, and that completion re-enters this workflow. The tip is then the
+          # bot's unsigned commit, so the run stops here — before the model is called and
+          # before the "auto-merge disabled" comment could be rewritten or deleted. Once
+          # Dependabot pushes again, the tip is its own once more and repair resumes.
+          # Fail closed: anything unreadable skips, like every other degraded path here.
+          author="$(gh api "repos/${GH_REPO}/pulls/${num}" --jq '.user.login' 2>/dev/null || true)"
+          tip="$(gh api "repos/${GH_REPO}/commits/${HEAD_BRANCH}" \
+            --jq '"\(.author.login // "")|\(.commit.verification.verified)"' 2>/dev/null || true)"
+          if [ "$author" != "dependabot[bot]" ] || [ "$tip" != "dependabot[bot]|true" ]; then
+            echo "Pull request #${num}: author='${author:-unknown}', tip='${tip:-unknown}' — not a Dependabot pull request at a Dependabot-signed tip; nothing to do."
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi

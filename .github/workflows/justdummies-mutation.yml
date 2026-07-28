@@ -25,8 +25,9 @@ concurrency:
   group: justdummies-mutation-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Least privilege: this workflow only checks out, builds and runs tests, so the token
-# needs nothing beyond read access to the repository contents.
+# Least-privilege FLOOR for the jobs below: this workflow only checks out, builds and runs tests, so
+# the token needs nothing beyond read access to the repository contents. A job that needs LESS narrows
+# it itself — see the advisory `gate`, which checks nothing out and therefore declares no scope at all.
 permissions:
   contents: read
 
@@ -173,6 +174,14 @@ jobs:
     needs: changed
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # Narrower than the workflow-level floor, not wider: this job checks nothing out and calls no API.
+    # `needs.changed.result` is substituted by GitHub before the shell runs, and `::warning::` is a
+    # runner workflow command written to stdout, not a REST call. A job-level block REPLACES the
+    # inherited value rather than merging with it, so `{}` — GitHub's explicit "no scopes" form — leaves
+    # this job's token with nothing at all (Sonar githubactions:S8264). It must stay the explicit flow
+    # mapping: a bare `permissions:` is a null, not an empty map. Widen it if a checkout or a `gh` call
+    # is ever added here, or that step will fail on a 403.
+    permissions: {}
     steps:
       - name: Report the mutation legs
         # `needs.changed.result` is the matrix's aggregate: 'success' only when every leg succeeded,

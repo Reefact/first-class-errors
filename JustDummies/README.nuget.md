@@ -162,6 +162,13 @@ matter — and that is the point.
 No realistic fake data (names, emails, addresses), no object-graph auto-filling, no
 reflection. Small, deterministic, explicit.
 
+And not a source of security material. Every draw comes from a seeded `System.Random`,
+because a dummy is only worth generating if the seed a failing run reports replays it —
+the very property that makes the sequence predictable to anyone who learns the seed.
+Never draw a password, token, key, salt, nonce, or any identifier that has to be
+unguessable from `Any.*`; reach for
+`System.Security.Cryptography.RandomNumberGenerator` for those.
+
 ## Documentation
 
 Full documentation on GitHub:

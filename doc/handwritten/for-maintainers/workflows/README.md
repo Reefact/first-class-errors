@@ -36,7 +36,11 @@ here instead of being repeated on every page.
   is the least privilege the workflow needs (usually `contents: read`); a job
   that must write something (upload SARIF, publish a release, enable auto-merge)
   re-declares a `permissions:` block that adds *only* that scope. Never widen the
-  top-level block to satisfy one job.
+  top-level block to satisfy one job. A job that needs *nothing* does the reverse:
+  it declares `permissions: {}` — the explicit empty mapping, since a bare
+  `permissions:` is a null and not an empty map — so the inherited floor does not
+  reach it. The advisory `gate` jobs of `mutation` and `justdummies-mutation` are
+  that case: they check nothing out and call no API.
 - **Every job sets `timeout-minutes`.** The GitHub default is six hours; a hung
   step would otherwise hold a runner for that long. Each cap is set a few times
   the observed run time, noted in a comment next to it.
