@@ -151,7 +151,7 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
 
         if (!string.IsNullOrWhiteSpace(error.Explanation)) {
             // A paragraph: keep author line breaks intact.
-            markdown.Append(error.Explanation!.Trim()).Append("\n\n");
+            markdown.Append(error.Explanation.Trim()).Append("\n\n");
         }
 
         if (!string.IsNullOrWhiteSpace(error.BusinessRule)) {
@@ -216,11 +216,11 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
 
         json.Append($"  \"title\": \"{JsonString(example.ShortMessage)}\"");
         if (!string.IsNullOrWhiteSpace(example.DetailedMessage)) {
-            json.Append($",\n  \"detail\": \"{JsonString(example.DetailedMessage!)}\"");
+            json.Append($",\n  \"detail\": \"{JsonString(example.DetailedMessage)}\"");
         }
 
         if (!string.IsNullOrWhiteSpace(code)) {
-            json.Append($",\n  \"code\": \"{JsonString(code!.Trim())}\"");
+            json.Append($",\n  \"code\": \"{JsonString(code.Trim())}\"");
         }
 
         json.Append("\n}");
@@ -243,12 +243,12 @@ public sealed class MarkdownErrorDocumentationRenderer : IErrorDocumentationRend
         StringBuilder line = new();
         line.Append($"{SampleLogTimestamp} ERROR");
         if (!string.IsNullOrWhiteSpace(source)) {
-            line.Append($" [{source!.Trim()}]");
+            line.Append($" [{source.Trim()}]");
         }
 
         line.Append($" {Inline(example.DiagnosticMessage)}");
         if (!string.IsNullOrWhiteSpace(code)) {
-            line.Append($" error.code={code!.Trim()}");
+            line.Append($" error.code={code.Trim()}");
         }
 
         return line.ToString();

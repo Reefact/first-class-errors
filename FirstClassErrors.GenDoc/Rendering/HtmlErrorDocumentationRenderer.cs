@@ -217,11 +217,11 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
         html.Append($"<p class=\"error-subtitle\">{Text(entry.Title)}</p>\n");
 
         if (!string.IsNullOrWhiteSpace(error.Explanation)) {
-            html.Append($"<section class=\"doc\"><{hSub}>{Text(strings.DocumentationHeading)}</{hSub}><p>{Text(error.Explanation!.Trim())}</p></section>\n");
+            html.Append($"<section class=\"doc\"><{hSub}>{Text(strings.DocumentationHeading)}</{hSub}><p>{Text(error.Explanation.Trim())}</p></section>\n");
         }
 
         if (!string.IsNullOrWhiteSpace(error.BusinessRule)) {
-            html.Append($"<blockquote class=\"rule\"><strong>{Text(strings.BusinessRuleLabel)}</strong> {Text(error.BusinessRule!.Trim())}</blockquote>\n");
+            html.Append($"<blockquote class=\"rule\"><strong>{Text(strings.BusinessRuleLabel)}</strong> {Text(error.BusinessRule.Trim())}</blockquote>\n");
         }
 
         if (error.Diagnostics.Count > 0) {
@@ -299,11 +299,11 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
 
         json.Append($"  \"title\": \"{JsonString(example.ShortMessage)}\"");
         if (!string.IsNullOrWhiteSpace(example.DetailedMessage)) {
-            json.Append($",\n  \"detail\": \"{JsonString(example.DetailedMessage!)}\"");
+            json.Append($",\n  \"detail\": \"{JsonString(example.DetailedMessage)}\"");
         }
 
         if (!string.IsNullOrWhiteSpace(code)) {
-            json.Append($",\n  \"code\": \"{JsonString(code!.Trim())}\"");
+            json.Append($",\n  \"code\": \"{JsonString(code.Trim())}\"");
         }
 
         json.Append("\n}");
@@ -318,10 +318,10 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
     private static string DiagnosticLogLine(ErrorDescription example, string? code, string? source) {
         StringBuilder line = new();
         line.Append("2026-07-04T13:42:18.734Z ERROR");
-        if (!string.IsNullOrWhiteSpace(source)) { line.Append($" [{source!.Trim()}]"); }
+        if (!string.IsNullOrWhiteSpace(source)) { line.Append($" [{source.Trim()}]"); }
 
         line.Append($" {Inline(example.DiagnosticMessage)}");
-        if (!string.IsNullOrWhiteSpace(code)) { line.Append($" error.code={code!.Trim()}"); }
+        if (!string.IsNullOrWhiteSpace(code)) { line.Append($" error.code={code.Trim()}"); }
 
         return line.ToString();
     }
@@ -489,7 +489,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
     }
 
     private static string CodeCell(string? value) {
-        return string.IsNullOrWhiteSpace(value) ? string.Empty : $"<code>{Text(value!.Trim())}</code>";
+        return string.IsNullOrWhiteSpace(value) ? string.Empty : $"<code>{Text(value.Trim())}</code>";
     }
 
     private static string ExampleValuesCell(IReadOnlyList<string?> values) {
@@ -518,7 +518,7 @@ public sealed class HtmlErrorDocumentationRenderer : IErrorDocumentationRenderer
 
             ErrorDescription? first = error.Examples.Count > 0 ? error.Examples[0] : null;
             Summary    = first?.ShortMessage ?? title;
-            Source     = string.IsNullOrWhiteSpace(error.Source) ? null : error.Source!.Trim();
+            Source     = string.IsNullOrWhiteSpace(error.Source) ? null : error.Source.Trim();
             SearchText = BuildSearchText(error, code, title);
         }
 

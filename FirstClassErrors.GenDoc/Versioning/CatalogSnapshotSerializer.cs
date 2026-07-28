@@ -102,7 +102,7 @@ public static class CatalogSnapshotSerializer {
 
             // Identities are normalized here, once, so the differ can rely on trimmed codes and key names even for
             // hand-edited baselines.
-            entry.Code = entry.Code!.Trim();
+            entry.Code = entry.Code.Trim();
 
             // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
             if (entry.Context is null) { entry.Context = []; }
