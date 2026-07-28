@@ -153,6 +153,9 @@ internal sealed class ContinuousIntervalSpec {
     internal ContinuousIntervalSpec WithAllowed(double[] values, string applying) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+        // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
+        // conflict: the second declaration asks for exactly what the first already guarantees.
+        if (string.Equals(_allowedConstraint, applying, StringComparison.Ordinal)) { return this; }
         if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_allowedConstraint} is already defined."); }
 
         double[] distinct = values.Distinct().ToArray();

@@ -283,8 +283,8 @@ public sealed class StringShapeProperties {
             .QuickCheckThrowOnFailure();
     }
 
-    [Fact(DisplayName = "A second character family conflicts, whichever two are combined.")]
-    public void ASecondCharacterFamilyConflicts() {
+    [Fact(DisplayName = "A second character family conflicts unless it repeats the first, whichever two are combined.")]
+    public void ASecondCharacterFamilyConflictsUnlessItRepeatsTheFirst() {
         Gen<(int First, int Second, string Pool)> cases =
             from first in Gen.Choose(0, 3)
             from second in Gen.Choose(0, 3)
@@ -292,41 +292,58 @@ public sealed class StringShapeProperties {
             select (First: first, Second: second, Pool: pool);
 
         Prop.ForAll(cases.ToArbitrary(),
-                    // The pair may name the same family twice: the slot is declared once, so repeating it conflicts too.
-                    testCase => Expect.Throws<ConflictingAnyConstraintException>(
-                        () => ApplyCharacterFamily(ApplyCharacterFamily(Any.String(), testCase.First, testCase.Pool),
-                                                   testCase.Second, testCase.Pool)))
+                    // The pair may name the same family twice. Repeating it asks for the alphabet already in force, so
+                    // it is a no-op and the alphabet still holds; naming a different family contradicts it. Both halves
+                    // in one property, because the verdict follows the argument and not the call shape.
+                    testCase => testCase.First == testCase.Second
+                                    ? Expect.EveryDraw(ApplyCharacterFamily(ApplyCharacterFamily(Any.String(), testCase.First, testCase.Pool),
+                                                                            testCase.Second, testCase.Pool).NonEmpty(),
+                                                       value => value.All(character => AllowedByFamily(character, testCase.First, testCase.Pool)))
+                                    : Expect.Throws<ConflictingAnyConstraintException>(
+                                        () => ApplyCharacterFamily(ApplyCharacterFamily(Any.String(), testCase.First, testCase.Pool),
+                                                                   testCase.Second, testCase.Pool)))
             .QuickCheckThrowOnFailure();
     }
 
-    [Fact(DisplayName = "A second casing conflicts, whichever two are combined.")]
-    public void ASecondCasingConflicts() {
+    [Fact(DisplayName = "A second casing conflicts unless it repeats the first, whichever two are combined.")]
+    public void ASecondCasingConflictsUnlessItRepeatsTheFirst() {
         Gen<(bool First, bool Second)> cases =
             from first in Gen.Elements(new[] { false, true })
             from second in Gen.Elements(new[] { false, true })
             select (First: first, Second: second);
 
         Prop.ForAll(cases.ToArbitrary(),
-                    testCase => Expect.Throws<ConflictingAnyConstraintException>(
-                        () => ApplyCasing(ApplyCasing(Any.String(), testCase.First), testCase.Second)))
+                    // Value-dependent legality: the same call is a no-op or a conflict depending on its argument, so
+                    // the property branches on the value rather than on the call shape. Re-declaring the same casing
+                    // asks for exactly the domain already in force; asking for the other one contradicts it.
+                    testCase => testCase.First == testCase.Second
+                                    ? Expect.EveryDraw(ApplyCasing(ApplyCasing(Any.String(), testCase.First), testCase.Second).NonEmpty(),
+                                                       value => value.All(character => testCase.First ? !char.IsLower(character) : !char.IsUpper(character)))
+                                    : Expect.Throws<ConflictingAnyConstraintException>(
+                                        () => ApplyCasing(ApplyCasing(Any.String(), testCase.First), testCase.Second)))
             .QuickCheckThrowOnFailure();
     }
 
-    [Fact(DisplayName = "A second exact length conflicts, even when it repeats the first.")]
-    public void ASecondExactLengthConflicts() {
+    [Fact(DisplayName = "A second exact length conflicts unless it repeats the first, whatever the two lengths.")]
+    public void ASecondExactLengthConflictsUnlessItRepeatsTheFirst() {
         Gen<(int First, int Second)> cases =
             from first in Generators.Count(40)
             from second in Generators.Count(40)
             select (First: first, Second: second);
 
         Prop.ForAll(cases.ToArbitrary(),
-                    testCase => Expect.Throws<ConflictingAnyConstraintException>(
-                        () => Any.String().WithLength(testCase.First).WithLength(testCase.Second)))
+                    // Repeating the same length is not a contradiction — the domain asked for is the one already in
+                    // force — so it is a no-op, and the generator still produces exactly that length.
+                    testCase => testCase.First == testCase.Second
+                                    ? Expect.EveryDraw(Any.String().WithLength(testCase.First).WithLength(testCase.Second),
+                                                       value => value.Length == testCase.First)
+                                    : Expect.Throws<ConflictingAnyConstraintException>(
+                                        () => Any.String().WithLength(testCase.First).WithLength(testCase.Second)))
             .QuickCheckThrowOnFailure();
     }
 
-    [Fact(DisplayName = "A second prefix or a second suffix conflicts, whatever the two values.")]
-    public void ASecondPrefixOrSuffixConflicts() {
+    [Fact(DisplayName = "A second prefix or a second suffix conflicts unless it repeats the first, whatever the two values.")]
+    public void ASecondPrefixOrSuffixConflictsUnlessItRepeatsTheFirst() {
         Gen<(bool AsSuffix, string First, string Second)> cases =
             from asSuffix in Gen.Elements(new[] { false, true })
             from first in Affix(DefaultAlphabet, 6)
@@ -334,9 +351,16 @@ public sealed class StringShapeProperties {
             select (AsSuffix: asSuffix, First: first, Second: second);
 
         Prop.ForAll(cases.ToArbitrary(),
-                    testCase => Expect.Throws<ConflictingAnyConstraintException>(
-                        () => ApplyAffix(ApplyAffix(Any.String(), testCase.AsSuffix, testCase.First),
-                                         testCase.AsSuffix, testCase.Second)))
+                    // Same rule, on the two affix slots: an identical re-declaration is a no-op and the affix still
+                    // holds; a different value for the same slot is the contradiction.
+                    testCase => testCase.First == testCase.Second
+                                    ? Expect.EveryDraw(ApplyAffix(ApplyAffix(Any.String(), testCase.AsSuffix, testCase.First),
+                                                                  testCase.AsSuffix, testCase.Second),
+                                                       value => testCase.AsSuffix ? value.EndsWith(testCase.First, StringComparison.Ordinal)
+                                                                                  : value.StartsWith(testCase.First, StringComparison.Ordinal))
+                                    : Expect.Throws<ConflictingAnyConstraintException>(
+                                        () => ApplyAffix(ApplyAffix(Any.String(), testCase.AsSuffix, testCase.First),
+                                                         testCase.AsSuffix, testCase.Second)))
             .QuickCheckThrowOnFailure();
     }
 

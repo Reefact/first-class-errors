@@ -116,6 +116,9 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint<cha
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
         string constraint = $"OneOf({Join(values)})";
+        // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
+        // conflict: the second declaration asks for exactly what the first already guarantees.
+        if (string.Equals(_allowedConstraint, constraint, StringComparison.Ordinal)) { return this; }
         if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {constraint} because {_allowedConstraint} is already defined."); }
 
         return Validated(new AnyChar(_source, _charset, _charsetConstraint, _casing, _casingConstraint, values.Distinct().ToArray(), constraint, _excluded), constraint);
@@ -151,12 +154,18 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint<cha
     }
 
     private AnyChar WithCharset(CharacterSet charset, string applying) {
+        // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
+        // conflict: the second declaration asks for exactly what the first already guarantees.
+        if (string.Equals(_charsetConstraint, applying, StringComparison.Ordinal)) { return this; }
         if (_charsetConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_charsetConstraint} is already defined."); }
 
         return Validated(new AnyChar(_source, charset, applying, _casing, _casingConstraint, _allowed, _allowedConstraint, _excluded), applying);
     }
 
     private AnyChar WithCasing(LetterCasing casing, string applying) {
+        // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
+        // conflict: the second declaration asks for exactly what the first already guarantees.
+        if (string.Equals(_casingConstraint, applying, StringComparison.Ordinal)) { return this; }
         if (_casingConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_casingConstraint} is already defined."); }
 
         return Validated(new AnyChar(_source, _charset, _charsetConstraint, casing, applying, _allowed, _allowedConstraint, _excluded), applying);
