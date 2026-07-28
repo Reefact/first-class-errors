@@ -230,4 +230,8 @@ Optional supporting material:
 | [ADR-0045](0045-guard-public-and-internal-arguments-against-null.md) | Guard public and internal arguments against null, enforced by a reflection convention | Accepted |
 | [ADR-0046](0046-make-the-per-pull-request-mutation-gate-advisory.md) | Make the per-pull-request mutation gate advisory; the weekly full sweep is the enforced bar | Proposed |
 | [ADR-0047](0047-measure-justdummies-mutation-against-the-unit-suite-only.md) | Measure JustDummies mutation against the deterministic unit suite only; drop the FsCheck property suite from the oracle | Proposed |
+<<<<<<< 4c286a6d2e0017d21f7b7272e2a38dc3e0bb7585
 | [ADR-0048](0048-guarantee-a-generated-regex-value-matches-by-bounded-redraw.md) | Guarantee a generated regex value matches its pattern, by bounded redraw | Proposed |
+=======
+| [ADR-0048](0048-drop-the-justdummies-generator-from-the-per-pull-request-mutation-matrix.md) | Drop the JustDummies generator from the per-pull-request mutation matrix; its adapter and analyzers keep theirs, the weekly sweep keeps measuring it | Proposed |
+>>>>>>> 902f0a9a0dd2b34658b87f423eb424a2bcf5322b
