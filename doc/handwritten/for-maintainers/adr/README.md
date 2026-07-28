@@ -212,7 +212,7 @@ Optional supporting material:
 | [ADR-0027](0027-repair-dependabot-pull-requests-within-a-risk-boundary.md) | Repair Dependabot pull requests within a risk boundary | Accepted |
 | [ADR-0028](0028-bridge-throwing-code-into-outcomes-through-a-guarded-try.md) | Bridge throwing code into outcomes through a guarded Try | Accepted |
 | [ADR-0029](0029-complete-the-outcome-try-async-surface-with-token-less-overloads.md) | Complete the Outcome.Try async surface with token-less overloads | Accepted |
-| [ADR-0030](0030-draw-arbitrary-strings-from-an-explicit-terminal-set.md) | Draw arbitrary strings from an explicit, terminal value set | Accepted |
+| [ADR-0030](0030-draw-arbitrary-strings-from-an-explicit-terminal-set.md) | Draw arbitrary strings from an explicit, terminal value set | Superseded |
 | [ADR-0031](0031-name-any-factories-after-their-clr-type.md) | Name Any's scalar factories after their CLR type | Accepted |
 | [ADR-0032](0032-draw-arbitrary-values-from-an-explicit-top-level-pool.md) | Draw arbitrary values from an explicit, top-level choice pool | Accepted |
 | [ADR-0033](0033-meet-string-exclusions-with-a-bounded-redraw.md) | Meet string exclusions with a bounded redraw | Accepted |
@@ -236,5 +236,5 @@ Optional supporting material:
 | [ADR-0051](0051-filter-the-datetimeoffset-pool-by-the-declared-offset.md) | Filter the DateTimeOffset pool by the declared offset; supersedes ADR-0037 | Accepted |
 | [ADR-0052](0052-draw-arbitrary-numbers-within-an-ordinary-magnitude.md) | Draw arbitrary numbers within an ordinary magnitude; the integer generators keep their full range | Accepted |
 | [ADR-0053](0053-unify-discrete-generation-in-one-ordinal-space.md) | Unify discrete generation in one ordinal space, with a dedicated engine only where the arithmetic substrate forces one | Accepted |
-| [ADR-0054](0054-decide-a-constraint-surface-by-constructive-versus-rejective.md) | Decide a generator's constraint surface by constructive versus rejective, not by terminality; supersedes ADR-0030 | Proposed |
+| [ADR-0054](0054-decide-a-constraint-surface-by-constructive-versus-rejective.md) | Decide a generator's constraint surface by constructive versus rejective, not by terminality; supersedes ADR-0030 | Accepted |
 | [ADR-0055](0055-enforce-the-style-rules-the-compiler-can-express.md) | Enforce the style rules the compiler can express, and keep the DotSettings authoritative for the rest | Proposed |

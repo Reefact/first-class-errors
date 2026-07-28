@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0054-decide-a-constraint-surface-by-constructive-versus-rejective.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-07-28
 **Decision Makers:** Reefact
 
