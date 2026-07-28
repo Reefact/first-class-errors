@@ -12,7 +12,7 @@ namespace JustDummies;
 ///         A generator is an <b>immutable recipe</b>, not a value: each fluent constraint returns a new generator, and
 ///         randomness is drawn only when <see cref="Generate" /> runs, from the random context the generator was
 ///         created with — the ambient context for the static <see cref="Any" /> entry points (see
-///         <see cref="Any.Reproducibly(Action, Action{String})" />), or the isolated context of
+///         <see cref="Any.Reproducibly(Action, Action{string})" />), or the isolated context of
 ///         <see cref="Any.WithSeed" />. The same recipe can therefore be generated from several times, yielding a
 ///         fresh value each time.
 ///     </para>
