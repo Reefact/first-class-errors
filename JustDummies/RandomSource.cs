@@ -180,7 +180,7 @@ internal sealed class AmbientRandomSource : RandomSource {
     ///     and each is replayed differently.
     /// </summary>
     private static string ReplaySnippet(int seed) {
-        return State.Value?.ReplaySnippet ?? $"Any.Reproducibly({seed}, ...)";
+        return State.Value?.Snippet ?? $"Any.Reproducibly({seed}, ...)";
     }
 
     #region Nested types
@@ -197,15 +197,21 @@ internal sealed class AmbientRandomSource : RandomSource {
         internal AmbientState(SeededRandom random, string? replaySnippet, AmbientState? parent) {
             if (random is null) { throw new ArgumentNullException(nameof(random)); }
 
-            Random        = random;
-            ReplaySnippet = replaySnippet;
-            Parent        = parent;
+            Random  = random;
+            Snippet = replaySnippet;
+            Parent  = parent;
         }
 
-        internal SeededRandom  Random        { get; }
-        internal string?       ReplaySnippet { get; }
-        internal AmbientState? Parent        { get; }
-        internal bool          Disposed      { get; set; }
+        internal SeededRandom  Random   { get; }
+
+        /// <summary>
+        ///     The replay snippet the opener of this scope supplied, if any — the fragment, never the whole guidance
+        ///     sentence. Named <c>Snippet</c> rather than <c>ReplaySnippet</c> so it does not shadow the enclosing
+        ///     <see cref="AmbientRandomSource.ReplaySnippet(int)" />, which reads it.
+        /// </summary>
+        internal string?       Snippet  { get; }
+        internal AmbientState? Parent   { get; }
+        internal bool          Disposed { get; set; }
 
     }
 
