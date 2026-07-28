@@ -3,7 +3,7 @@
 🌍 🇬🇧 [English](0025-generate-strings-from-a-home-grown-regular-subset.md) · 🇫🇷 Français (ce fichier)
 
 **Statut :** Accepté
-**Date :** 2026-07-18
+**Date :** 2026-07-26
 **Décideurs :** Reefact
 
 ## Contexte
@@ -49,10 +49,12 @@ bien formé mais non régulier ou hors périmètre — plutôt que de dépendre 
   raccourcis courants, quantifieurs, alternation, groupes et ancres expriment les formats que les objets-valeurs
   valident réellement ; les constructs exclus servent à l'analyse, pas aux formats à forme fixe que vise cette
   fonctionnalité.
-* **Les choix de forme restants suivent le reste de la bibliothèque.** Les terminaux puisent dans l'ASCII imprimable
-  pour qu'un dummy reste lisible et que chaque caractère émis soit un vrai membre de sa classe ; un quantifieur non
-  borné tire son minimum plus un petit intervalle borné, le même défaut « 0 à une poignée » qu'utilisent déjà les
-  générateurs de chaînes et de collections.
+* **Les choix de forme restants suivent le reste de la bibliothèque.** Là où le motif laisse un caractère libre — un
+  raccourci, le point, une classe négative —, les terminaux puisent dans l'ASCII imprimable pour qu'un dummy reste
+  lisible et que chaque caractère émis soit un vrai membre de sa classe, `\s` puisant dans une paire lisible qui
+  inclut la tabulation ; un caractère que le motif nomme explicitement est émis tel quel, caractères de contrôle
+  compris. Un quantifieur non borné tire son minimum plus un petit intervalle borné, le même défaut
+  « 0 à une poignée » qu'utilisent déjà les générateurs de chaînes et de collections.
 
 ## Alternatives considérées
 
@@ -94,7 +96,7 @@ via `As`, `OrNull`, `Combine` et les générateurs de collections — tous défi
   qu'elle contienne — et sa correction repose sur la suite de tests (un property test vérifie les valeurs générées
   contre le vrai moteur .NET).
 * Le dialecte supporté est un **contrat** : l'élargir ou le restreindre plus tard est un changement pertinent pour
-  la compatibilité, et l'univers ASCII imprimable comme l'intervalle du quantifieur non borné sont des comportements
+  la compatibilité, et l'univers de caractères comme l'intervalle du quantifieur non borné sont des comportements
   sur lesquels des consommateurs peuvent finir par compter.
 
 ### Risques

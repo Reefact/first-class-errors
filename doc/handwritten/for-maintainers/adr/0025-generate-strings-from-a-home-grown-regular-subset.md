@@ -3,7 +3,7 @@
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0025-generate-strings-from-a-home-grown-regular-subset.fr.md)
 
 **Status:** Accepted
-**Date:** 2026-07-18
+**Date:** 2026-07-26
 **Decision Makers:** Reefact
 
 ## Context
@@ -47,9 +47,12 @@ generates from it — refusing a well-formed but non-regular or out-of-scope con
 * **The regular subset is the whole useful surface for format validation.** Literals, classes, the common
   shorthands, quantifiers, alternation, grouping and anchors express the formats value objects actually validate;
   the excluded constructs are used for parsing, not for the fixed-shape formats this feature targets.
-* **The remaining shaping choices follow the rest of the library.** Terminals draw from printable ASCII so a dummy
-  stays legible and every emitted character is a genuine class member; an unbounded quantifier draws its minimum
-  plus a small bounded spread, the same "0 to a handful" default the string and collection generators already use.
+* **The remaining shaping choices follow the rest of the library.** Where the pattern leaves a character free — a
+  shorthand, the dot, a negated class — terminals draw from printable ASCII so a dummy stays legible and every
+  emitted character is a genuine class member, `\s` drawing from a readable pair that includes a tab; a character
+  the pattern names explicitly is emitted as written, control characters included. An unbounded quantifier draws
+  its minimum plus a small bounded spread, the same "0 to a handful" default the string and collection generators
+  already use.
 
 ## Alternatives Considered
 
@@ -88,7 +91,7 @@ of contradictory combinations entirely and keeps the surface small, while compos
   it — and its correctness rests on the test suite (a property test checks generated values against the real .NET
   engine).
 * The supported dialect is a **contract**: widening or narrowing it later is a compatibility-relevant change, and
-  the printable-ASCII universe and the unbounded-quantifier spread are behaviours consumers may come to rely on.
+  the character universe and the unbounded-quantifier spread are behaviours consumers may come to rely on.
 
 ### Risks
 
