@@ -401,7 +401,7 @@ internal sealed class UriSpec {
     }
 
     private static bool IsCanonicalIpv4(string host) {
-        string[] parts = host.Split(new[] { '.' });
+        string[] parts = host.Split('.');
         if (parts.Length != 4) { return false; }
         foreach (string part in parts) {
             if (part.Length is 0 or > 3) { return false; }

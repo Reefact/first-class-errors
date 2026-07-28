@@ -29,12 +29,12 @@ internal static class CountConstraints {
         return value.ToString(CultureInfo.InvariantCulture);
     }
 
-    private static int RequireNonNegative(int count, string parameterName) {
-        return SizeGuard.RequireNonNegative(count, parameterName, "count");
+    private static void RequireNonNegative(int count, string parameterName) {
+        SizeGuard.RequireNonNegative(count, parameterName, "count");
     }
 
-    private static int RequireProducible(int count, string parameterName) {
-        return SizeGuard.RequireProducible(count, parameterName, "count");
+    private static void RequireProducible(int count, string parameterName) {
+        SizeGuard.RequireProducible(count, parameterName, "count");
     }
 
     #endregion
