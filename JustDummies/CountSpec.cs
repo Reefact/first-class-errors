@@ -19,6 +19,11 @@ namespace JustDummies;
 ///     content. The spread is deliberately smaller than <see cref="AnyString" />'s (which is 16): a collection's
 ///     elements are themselves generated values, heavier than a string's characters, so a smaller default keeps a
 ///     dummy collection cheap while still exercising the multi-element path.
+///     <para>
+///         That spread governs every draw, bounded or not (ADR-0050): a declared maximum composes with it rather than
+///         replacing it, so an upper bound only narrows the draw and never widens it. Only a minimum, an exact count
+///         or required elements enlarge a collection.
+///     </para>
 /// </remarks>
 internal sealed class CountSpec {
 
@@ -102,8 +107,11 @@ internal sealed class CountSpec {
         if (_exact is int exact) { return exact; }
 
         int min = Math.Max(_min, requiredMin);
-        // Long arithmetic: a huge declared minimum must saturate instead of overflowing past int.MaxValue.
-        int max = _max ?? (int)Math.Min((long)min + DefaultCountSpread, int.MaxValue);
+        // A declared maximum composes with the default spread instead of replacing it (ADR-0050): it may only narrow
+        // the draw, never widen it, so a loose cap still yields the small unconstrained collection. Long arithmetic: a
+        // huge required minimum must saturate instead of overflowing past int.MaxValue.
+        long spreadCeiling = (long)min + DefaultCountSpread;
+        int  max           = (int)Math.Min(_max is int declared ? Math.Min(spreadCeiling, declared) : spreadCeiling, int.MaxValue);
         if (cap is int ceiling && ceiling < max) { max = ceiling; }
         if (max < min) { max = min; }
 
