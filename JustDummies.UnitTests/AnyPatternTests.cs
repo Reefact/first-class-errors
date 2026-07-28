@@ -450,4 +450,17 @@ public sealed class AnyPatternTests {
         AssertMatches(await run, pattern);
     }
 
+    [Fact(DisplayName = "A nullable alternative under a quantifier never yields a value the pattern rejects (regression #335).")]
+    public void ANullableAlternativeUnderAQuantifierNeverYieldsAnUnmatchedValue() {
+        // #335: the structural generator picked the zero-width \S{0} branch and emitted "", but the real .NET
+        // engine refuses "" for this shape — an arcane, order- and form-dependent empty-match behaviour the
+        // generator cannot mirror. Every draw must match the pattern the value was generated from.
+        const string pattern    = @"(?:r{1,2}|\S{0}){1,2}";
+        IAny<string> generator = Any.StringMatching(pattern);
+
+        for (int i = 0; i < 1000; i++) {
+            AssertMatches(generator.Generate(), pattern);
+        }
+    }
+
 }
