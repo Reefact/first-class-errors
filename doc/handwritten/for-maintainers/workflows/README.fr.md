@@ -38,7 +38,11 @@ documentées une seule fois ici plutôt que répétées sur chaque page.
   `contents: read`) ; un job qui doit écrire quelque chose (uploader un SARIF,
   publier une release, activer l'auto-merge) redéclare un bloc `permissions:` qui
   ajoute *uniquement* ce périmètre. N'élargissez jamais le bloc de haut niveau
-  pour satisfaire un seul job.
+  pour satisfaire un seul job. À l'inverse, un job qui n'a besoin de *rien* fait le
+  contraire : il déclare `permissions: {}` — le mapping vide explicite, car un
+  `permissions:` nu est un null et non un mapping vide — pour que le plancher hérité
+  ne l'atteigne pas. Les jobs `gate` consultatifs de `mutation` et
+  `justdummies-mutation` sont ce cas : ils ne récupèrent rien et n'appellent aucune API.
 - **Chaque job fixe `timeout-minutes`.** Le défaut GitHub est de six heures ; une
   étape bloquée retiendrait sinon un runner tout ce temps. Chaque plafond est
   fixé à quelques fois le temps observé, noté en commentaire à côté.
