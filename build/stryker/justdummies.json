@@ -3,8 +3,7 @@
     "solution": "FirstClassErrors.sln",
     "project": "JustDummies.csproj",
     "test-projects": [
-      "JustDummies.UnitTests/JustDummies.UnitTests.csproj",
-      "JustDummies.PropertyTests/JustDummies.PropertyTests.csproj"
+      "JustDummies.UnitTests/JustDummies.UnitTests.csproj"
     ],
     "test-runner": "mtp",
     "coverage-analysis": "off",

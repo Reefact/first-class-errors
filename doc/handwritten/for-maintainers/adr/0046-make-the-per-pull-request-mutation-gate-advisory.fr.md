@@ -124,9 +124,15 @@ autonome dans le workflow. Changer le job corrige le blocage et le bruit au mêm
   non-déterminisme est la raison même du `coverage-analysis: off`), et/ou découper `JustDummies/Any.cs`
   pour que la sélection `--since` par fichier reste petite — sont des décisions séparées, consignées ici
   pour ne pas les perdre.
-* **Protection de branche.** Le check de la porte peut rester listé comme requis (il passe désormais
-  toujours) ou être retiré ; les deux sont cohérents avec cette décision. Aucun changement n'est requis
-  pour que le workflow se comporte comme décrit.
+* **Protection de branche — il faut *retirer* la porte des checks requis pour vraiment stopper
+  l'attente.** Le consultatif supprime le *faux rouge*, pas l'*attente* : le job `gate` tourne
+  `needs: changed`, donc il ne rapporte qu'après la fin des legs du diff, et un **check requis encore en
+  attente bloque le merge** même s'il ne peut plus échouer. Une porte requise-et-toujours-verte retient
+  donc quand même une pull request pendant tout le leg de ~40 minutes. Retirer `JustDummies mutation gate`
+  et `Mutation gate` des required status checks est ce qui ramène le feedback de merge aux quelques
+  minutes des autres checks ; les legs continuent de tourner (consultatifs) pour le rapport. (Un brouillon
+  antérieur de cet ADR disait à tort que le garder requis était équivalent — ce n'est pas le cas :
+  l'attente bloque.)
 * Réexaminer la réactivation de la sélection de couverture par test si stryker-net#3629 est corrigé en
   amont — elle rendrait à nouveau possible une porte bloquante, exacte et rapide, et pourrait remplacer
   cette décision.
