@@ -67,6 +67,14 @@ La génération de collections distinctes compare d'abord le nombre demandé à 
 
 La matérialisation s'effectue uniquement par `Generate()`. Les opérations du builder décrivent la génération et ne produisent pas d'effets de bord cachés.
 
+## Fabriques de valeurs arbitraires de Testing
+
+Décision liée : [ADR-0026](../adr/0026-rebase-testing-arbitrary-values-on-dummies.fr.md).
+
+Les fabriques du vocabulaire d'erreur que `FirstClassErrors.Testing` conserve — `ErrorCodeFactory`, `TransienceFactory`, `DiagnosticMessageFactory` et leurs pairs — renvoient aujourd'hui uniquement des valeurs matérialisées. Le compagnon `IAny<T>` prévu par la décision, exposé par une méthode distincte pour la minorité de points d'appel qui composent, est différé jusqu'à ce que l'un d'eux en démontre le besoin : aucune telle méthode n'existe à ce jour, et `IAny` n'apparaît nulle part dans le projet. L'ajouter plus tard est un ajout non cassant, donc attendre ne coûte rien.
+
+Le risque de double assemblage que consigne la décision est réel, mais il ne vient pas de l'API publique : aucun type JustDummies n'apparaît sur la surface publique de `Testing`. Il vient de ce que `Testing` embarque `JustDummies.dll` dans la sortie de son propre package. La référence de projet est en `PrivateAssets="all"`, si bien que le package ne déclare aucune dépendance JustDummies et que la copie embarquée est la seule qu'un consommateur restaure ; une fois JustDummies publié et cette référence devenue une véritable dépendance NuGet, un consommateur référençant les deux packages détiendrait sinon deux assemblages de même identité et d'origines distinctes. C'est la suppression de l'embarquement qui referme le risque.
+
 ## Surfaces publiques uniquement destinées à la documentation
 
 Décision liée : [ADR-0019](../adr/0019-document-overridden-binder-errors-in-the-consumers-catalog.fr.md).

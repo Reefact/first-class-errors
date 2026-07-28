@@ -67,6 +67,14 @@ Distinct collection generation first compares the requested count against the el
 
 Materialization occurs only through `Generate()`. Builder operations describe generation and do not produce hidden side effects.
 
+## Testing's arbitrary-value factories
+
+Related decision: [ADR-0026](../adr/0026-rebase-testing-arbitrary-values-on-dummies.md).
+
+The error-vocabulary factories `FirstClassErrors.Testing` still owns — `ErrorCodeFactory`, `TransienceFactory`, `DiagnosticMessageFactory` and their peers — currently return materialized values only. The `IAny<T>` companion the decision provides for, exposed through a distinct method for the minority of call sites that compose, is deferred until one demonstrates the need: no such method exists today, and `IAny` appears nowhere in the project. Adding one later is a non-breaking addition, so waiting costs nothing.
+
+The double-assembly hazard the decision records is real, but it does not arise from the public API: no JustDummies type appears on `Testing`'s public surface. It arises from `Testing` carrying `JustDummies.dll` inside its own package output. The project reference is `PrivateAssets="all"`, so the package declares no JustDummies dependency and the embedded copy is the only one a consumer restores; once JustDummies is published and that reference becomes a real NuGet dependency, a consumer referencing both packages would otherwise hold two assemblies of the same identity and distinct origin. Removing the embedding is what closes the hazard.
+
 ## Documentation-only public surfaces
 
 Related decision: [ADR-0019](../adr/0019-document-overridden-binder-errors-in-the-consumers-catalog.md).
