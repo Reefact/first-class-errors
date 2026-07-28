@@ -1,3 +1,9 @@
+#region Usings declarations
+
+using System.Globalization;
+
+#endregion
+
 namespace FirstClassErrors.GenDoc;
 
 /// <summary>
@@ -23,7 +29,7 @@ internal static class DocumentationToolchainError {
     internal static SecondaryPortError ProjectEnumerationFailed(string solutionPath, int exitCode, string errorOutput) {
         return SecondaryPortError.Create(
                                      Code.ProjectEnumerationFailed,
-                                     FormattableString.Invariant($"Failed to list the projects of solution '{solutionPath}' (exit code {exitCode}).\n{errorOutput}"),
+                                     string.Create(CultureInfo.InvariantCulture, $"Failed to list the projects of solution '{solutionPath}' (exit code {exitCode}).\n{errorOutput}"),
                                      Transience.NonTransient,
                                      ctx => {
                                          ctx.Add(ErrCtxKey.SolutionPath, solutionPath);
@@ -39,7 +45,7 @@ internal static class DocumentationToolchainError {
     internal static SecondaryPortError SolutionBuildFailed(string solutionPath, int exitCode, string buildOutput) {
         return SecondaryPortError.Create(
                                      Code.SolutionBuildFailed,
-                                     FormattableString.Invariant($"dotnet build failed for solution '{solutionPath}' (exit code {exitCode}).\n{buildOutput}"),
+                                     string.Create(CultureInfo.InvariantCulture, $"dotnet build failed for solution '{solutionPath}' (exit code {exitCode}).\n{buildOutput}"),
                                      Transience.NonTransient,
                                      ctx => {
                                          ctx.Add(ErrCtxKey.SolutionPath, solutionPath);
@@ -72,7 +78,7 @@ internal static class DocumentationToolchainError {
     internal static SecondaryPortError ProcessTimedOut(string command, string target, TimeSpan timeout, string capturedOutput) {
         return SecondaryPortError.Create(
                                      Code.ProcessTimedOut,
-                                     FormattableString.Invariant($"Process '{command}' timed out after {timeout} and was killed.\n{capturedOutput}"),
+                                     string.Create(CultureInfo.InvariantCulture, $"Process '{command}' timed out after {timeout} and was killed.\n{capturedOutput}"),
                                      Transience.Transient,
                                      ctx => {
                                          ctx.Add(ErrCtxKey.Command, command);
@@ -116,7 +122,7 @@ internal static class DocumentationToolchainError {
     internal static SecondaryPortError WorkerFailed(string assemblyPath, int exitCode, string errorOutput) {
         return SecondaryPortError.Create(
                                      Code.WorkerFailed,
-                                     FormattableString.Invariant($"The documentation worker failed (exit code {exitCode}) for '{assemblyPath}'.\n{errorOutput}"),
+                                     string.Create(CultureInfo.InvariantCulture, $"The documentation worker failed (exit code {exitCode}) for '{assemblyPath}'.\n{errorOutput}"),
                                      Transience.NonTransient,
                                      ctx => {
                                          ctx.Add(ErrCtxKey.AssemblyPath, assemblyPath);
