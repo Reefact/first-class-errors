@@ -33,11 +33,7 @@ public sealed class Currency : IEquatable<Currency> {
     }
 
     private static bool IsThreeUpperCaseLetters(string raw) {
-        foreach (char c in raw) {
-            if (c is < 'A' or > 'Z') { return false; }
-        }
-
-        return true;
+        return raw.All(c => c is >= 'A' and <= 'Z');
     }
 
     #endregion

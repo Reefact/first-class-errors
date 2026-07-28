@@ -198,6 +198,10 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinality
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="values" /> is <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="values" /> is empty or contains a value outside the generator's universe.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3267:Loops should be simplified with LINQ expressions",
+                                                     Justification =
+                                                         "The loop exists to name the FIRST offending element in the exception it throws. A Where clause discards which element failed, so " +
+                                                         "the message would have to re-find it, turning one pass into two and one statement into three.")]
     public AnyEnum<TEnum> OneOf(params TEnum[] values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }

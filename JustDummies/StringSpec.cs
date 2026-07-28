@@ -291,6 +291,10 @@ internal sealed class StringSpec {
     }
 
     /// <summary>Adds values the generated string must avoid; may be declared several times, the exclusions accumulate.</summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3267:Loops should be simplified with LINQ expressions",
+                                                     Justification =
+                                                         "The condition reads the collection the body mutates. Where is lazily evaluated, so lifting the filter out would run each " +
+                                                         "predicate against a snapshot taken before the additions it is meant to see, and let duplicates through.")]
     internal StringSpec WithExcluded(IReadOnlyList<string> values, string applying) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }

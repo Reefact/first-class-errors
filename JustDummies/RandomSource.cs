@@ -322,11 +322,11 @@ internal static class RandomSampling {
     ///     <c>Random.NextInt64(long, long)</c> instance method — whose upper bound is EXCLUSIVE — would win
     ///     overload resolution over a same-named extension and silently change the semantics.
     /// </summary>
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out",
-                                                 Justification =
-                                                     "The flagged lines are prose, not disabled code. The heuristic reads an equation, a bracketed range or a semicolon inside an " +
-                                                     "explanatory sentence as a statement. These comments carry the WHY this codebase asks for and deleting them would lose the " +
-                                                     "reasoning, so the finding is recorded here instead.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out",
+                                                     Justification =
+                                                         "The flagged lines are prose, not disabled code. The heuristic reads an equation, a bracketed range or a semicolon inside an " +
+                                                         "explanatory sentence as a statement. These comments carry the WHY this codebase asks for and deleting them would lose the " +
+                                                         "reasoning, so the finding is recorded here instead.")]
     internal static long NextInt64Inclusive(this SeededRandom random, long minInclusive, long maxInclusive) {
         if (random is null) { throw new ArgumentNullException(nameof(random)); }
         if (minInclusive > maxInclusive) { throw new ArgumentOutOfRangeException(nameof(maxInclusive), "The maximum must be greater than or equal to the minimum."); }

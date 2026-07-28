@@ -134,6 +134,10 @@ internal sealed class CollectionState<T> {
     }
 
     /// <summary>Builds one collection satisfying the whole specification — laid out directly, never generate-then-retry.</summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3267:Loops should be simplified with LINQ expressions",
+                                                     Justification =
+                                                         "The condition reads the collection the body mutates. Where is lazily evaluated, so lifting the filter out would run each " +
+                                                         "predicate against a snapshot taken before the additions it is meant to see, and let duplicates through.")]
     internal List<T> Materialize(RandomSource source) {
         if (source is null) { throw new ArgumentNullException(nameof(source)); }
 
@@ -233,12 +237,7 @@ internal sealed class CollectionState<T> {
         // distinct under any of them, so the bound only ever over-states); membership does not.
         if (_comparer is not null || _item is not ICardinalityHint<T> hint) { return _fixedContaining.Count; }
 
-        int outside = 0;
-        foreach (T value in _fixedContaining) {
-            if (!hint.Contains(value)) { outside++; }
-        }
-
-        return outside;
+        return _fixedContaining.Count(value => !hint.Contains(value));
     }
 
     private T DrawFresh(IAny<T> generator, HashSet<T> seen, RandomSource source, int target) {

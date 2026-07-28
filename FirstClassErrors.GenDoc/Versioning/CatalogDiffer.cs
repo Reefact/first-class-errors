@@ -112,11 +112,9 @@ public static class CatalogDiffer {
             }
         }
 
-        foreach (KeyValuePair<string, CatalogSnapshotContextKey> pair in afterKeys) {
-            if (!beforeKeys.ContainsKey(pair.Key)) {
-                changes.Add(new CatalogChange(CatalogChangeKind.ContextKeyAdded, CatalogChangeImpact.Compatible, code,
-                                              $"context key '{pair.Key}' added ({pair.Value.ValueType ?? "unknown type"})"));
-            }
+        foreach (KeyValuePair<string, CatalogSnapshotContextKey> pair in afterKeys.Where(pair => !beforeKeys.ContainsKey(pair.Key))) {
+            changes.Add(new CatalogChange(CatalogChangeKind.ContextKeyAdded, CatalogChangeImpact.Compatible, code,
+                                          $"context key '{pair.Key}' added ({pair.Value.ValueType ?? "unknown type"})"));
         }
     }
 
