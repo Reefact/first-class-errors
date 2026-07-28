@@ -64,6 +64,8 @@ for sha in $commits; do
       fatal="${fatal}  - ${short}  (autosquash placeholder, rejected by CI)
 "
       continue ;;
+    # Any other subject is not an autosquash placeholder; it still faces the linter below.
+    *) ;;
   esac
 
   if [ -x "$linter" ] && ! git log -1 --format=%B "$sha" | "$linter" --ci - >/dev/null 2>&1; then
@@ -80,6 +82,8 @@ for sha in $commits; do
     *'fix review'*|*'apply review'*|*'self review'*|*'self-review'*|*'pr feedback'*)
       soft="${soft}  - ${short}
 " ;;
+    # Anything else reads as a real subject; nothing to flag.
+    *) ;;
   esac
 done
 
