@@ -73,8 +73,8 @@ public sealed class AnyUnsignedIntegerTests {
         Check.ThatCode(() => Any.UInt64().Between(10UL, 1UL)).Throws<ArgumentException>();
     }
 
-    [Fact(DisplayName = "Unsigned integers convert implicitly to their value type.")]
-    public void ImplicitConversions() {
+    [Fact(DisplayName = "Every unsigned integer generator materializes its own value type through Generate().")]
+    public void MaterializesEachValueType() {
         byte   tiny = Any.Byte().Between(1, 10).Generate();
         ushort mid  = Any.UInt16().NonZero().Generate();
         uint   wide = Any.UInt32().Between(1u, 10u).Generate();
