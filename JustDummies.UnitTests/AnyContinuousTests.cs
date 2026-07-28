@@ -17,6 +17,56 @@ public sealed class AnyContinuousTests {
 
     private const int SampleCount = 200;
 
+    [Fact(DisplayName = "An unconstrained draw survives ordinary arithmetic, on every continuous type.")]
+    public void UnconstrainedDrawsSurviveOrdinaryArithmetic() {
+        // Regression, ADR-0052. Measured before the ordinary-magnitude window existed: uniform sampling over a
+        // type's whole domain put 16.1 % of Positive() doubles where a single multiplication overflows to
+        // Infinity, and 17.1 % of decimals where the same multiplication throws OverflowException. Neither was a
+        // defect of the code under test — the dummy itself was breaking the Arrange.
+        for (int i = 0; i < SampleCount; i++) {
+            Check.That(IsFinite(Any.Double().Generate() * 1.2d)).IsTrue();
+            Check.That(IsFinite(Any.Double().Positive().Generate() * 1.2d)).IsTrue();
+            Check.That(IsFinite(Any.Single().Generate() * 1.2f)).IsTrue();
+            Check.ThatCode(() => Any.Decimal().Generate() * 1.2m).DoesNotThrow();
+        }
+    }
+
+    /// <summary>
+    ///     Finiteness, spelled the way the .NET Framework 4.7.2 floor leg understands: <c>double.IsFinite</c> arrived
+    ///     with .NET Core 3.0, and this suite is built against the support floor too.
+    /// </summary>
+    private static bool IsFinite(double value) {
+        return !double.IsNaN(value) && !double.IsInfinity(value);
+    }
+
+    [Fact(DisplayName = "A scale constraint still constrains: an unconstrained decimal has room for its fraction.")]
+    public void AScaleConstraintKeepsItsMeaning() {
+        // ADR-0052 restores what the old default emptied out. Near decimal.MaxValue a value has no fractional
+        // digits left, so WithScale(2) was satisfied by every draw and constrained none of them: 5000/5000
+        // "honoured", every one of them a 29-digit integer.
+        bool anyFraction = false;
+        for (int i = 0; i < SampleCount; i++) {
+            decimal value = Any.Decimal().WithScale(2).Generate();
+
+            Check.That(value).IsEqualTo(Math.Round(value, 2));
+            if (value != Math.Truncate(value)) { anyFraction = true; }
+        }
+
+        Check.WithCustomMessage("No draw carried a fractional part, so WithScale(2) constrained nothing.")
+             .That(anyFraction)
+             .IsTrue();
+    }
+
+    [Fact(DisplayName = "A named magnitude is honoured; a merely permitted one is not targeted.")]
+    public void ANamedMagnitudeIsHonouredAndAPermittedOneIsNot() {
+        // The two named coordinates of the rule, at the extremes the property suite deliberately leaves to an
+        // example: asking for a magnitude and merely allowing one.
+        Check.That(Any.Double().Between(1e300d, 1e308d).Generate()).IsStrictlyGreaterThan(1e300d * 0.99d);
+        Check.That(Any.Double().GreaterThan(1e300d).Generate()).IsStrictlyGreaterThan(1e300d);
+
+        Check.That(Math.Abs(Any.Double().Between(0d, double.MaxValue).Generate())).IsStrictlyLessThan(1.000001e6d);
+    }
+
     [Fact(DisplayName = "Double: sign constraints are strict, Zero pins, NonZero excludes.")]
     public void DoubleSignFamily() {
         for (int i = 0; i < SampleCount; i++) {

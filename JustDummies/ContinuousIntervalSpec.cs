@@ -214,9 +214,19 @@ internal sealed class ContinuousIntervalSpec {
 
         if (_min == _max) { return _min; }
 
+        // Draw from the ordinary window rather than the declared interval (ADR-0052): the window only ever clips,
+        // and it steps aside entirely when it would leave the declared interval empty — a caller who asked for a
+        // magnitude gets it, a caller who merely permitted one does not.
+        double lower = Math.Max(_min, -OrdinaryMagnitude.AsDouble);
+        double upper = Math.Min(_max, OrdinaryMagnitude.AsDouble);
+        if (lower > upper) {
+            lower = _min;
+            upper = _max;
+        }
+
         // Sample around the midpoint so the span (max - min) never overflows to infinity on wide ranges.
-        double mid       = _min / 2 + _max / 2;
-        double half      = _max / 2 - _min / 2;
+        double mid       = lower / 2 + upper / 2;
+        double half      = upper / 2 - lower / 2;
         double candidate = Quantized(mid + (2 * random.NextDouble() - 1) * half);
 
         // A draw colliding with an excluded point (a measure-zero event) is nudged to the nearest
