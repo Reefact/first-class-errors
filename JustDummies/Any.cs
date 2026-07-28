@@ -16,7 +16,7 @@ namespace JustDummies;
 ///     <para>
 ///         Every value is drawn from a pseudo-random source. By default that source is unseeded, so each run produces
 ///         fresh values — which surfaces a test that secretly depends on one. Wrap a value-sensitive test in
-///         <see cref="Reproducibly(Action, Action{String})" /> to make a failing run replayable: the source flows with
+///         <see cref="Reproducibly(Action, Action{string})" /> to make a failing run replayable: the source flows with
 ///         the current execution context, so it never leaks across tests running in parallel. For an explicit,
 ///         isolated deterministic context — for example outside a test body — use <see cref="WithSeed" />.
 ///     </para>

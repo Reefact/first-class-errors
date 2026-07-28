@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.Operations;
 namespace JustDummies.Analyzers;
 
 /// <summary>
-///     JD002 — reports a call to <c>Any.ReproduciblyAsync(...)</c> whose returned <see cref="System.Threading.Tasks.Task" />
+///     JD002 — reports a call to <c>Any.ReproduciblyAsync(...)</c> whose returned <see cref="Task" />
 ///     is discarded (the call stands alone as a statement, or is assigned to <c>_</c>). The task faults with the body's
 ///     exception; discarding it lets a failing test pass green. Await it.
 /// </summary>
