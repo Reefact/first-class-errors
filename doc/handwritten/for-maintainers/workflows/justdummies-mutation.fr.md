@@ -14,9 +14,11 @@ adaptateur xUnit v3 `JustDummies.Xunit`
 ([ADR-0039](../adr/0039-adapt-dummies-to-xunit-v3-through-a-companion-package.fr.md)),
 et les analyseurs livrés dans le package
 ([ADR-0044](../adr/0044-ship-justdummies-analyzers.fr.md)).
-Sur une pull request, il ne mute que les fichiers modifiés par celle-ci et échoue
-si le score passe sous le seuil de la bibliothèque ; un balayage hebdomadaire
-mesure tout le reste. Ce que *sont* les tests de mutation, et pourquoi ce dépôt
+Sur une pull request, il ne mute que les fichiers modifiés par celle-ci, pour
+l'adaptateur et les analyseurs ; le générateur est mesuré par le seul balayage
+hebdomadaire
+([ADR-0049](../adr/0049-drop-the-justdummies-generator-from-the-per-pull-request-mutation-matrix.fr.md)).
+Ce que *sont* les tests de mutation, et pourquoi ce dépôt
 en fait un barrage, est expliqué une seule fois sur la page
 [`mutation`](mutation.fr.md) — ce workflow est la même machine avec une matrice
 différente.
@@ -52,13 +54,27 @@ niveau imposé de chacun est son balayage complet hebdomadaire.
 
 ## Comment il s'exécute
 
-À l'identique de [`mutation`](mutation.fr.md), dont la page documente le
+Presque à l'identique de [`mutation`](mutation.fr.md), dont la page documente le
 mécanisme en entier : `changed` mute le diff depuis le point de fourche, `gate`
 regroupe la matrice sous un nom de check stable, `full` balaie tout avec le seuil
 désactivé. Les configurations Stryker sont
 [`build/stryker/justdummies.json`](../../../../build/stryker/justdummies.json),
 [`build/stryker/justdummies-xunit.json`](../../../../build/stryker/justdummies-xunit.json)
 et [`build/stryker/justdummies-analyzers.json`](../../../../build/stryker/justdummies-analyzers.json).
+
+**Le seul point où les deux workflows diffèrent : la matrice par PR compte deux
+pattes, pas trois.** Le générateur est balayé chaque semaine mais **n'est pas**
+muté par pull request
+([ADR-0049](../adr/0049-drop-the-justdummies-generator-from-the-per-pull-request-mutation-matrix.fr.md)).
+Comme `--since` sélectionne par **fichier** changé et non par ligne changée, un
+diff d'une centaine de lignes touchant l'une des grosses sources du générateur
+entraîne ce fichier entier : mesuré à 844 mutants, encore en cours après une
+heure, sans produire aucun score. Ce n'est pas un défaut de réglage — chaque
+levier exposé par Stryker plafonne vers −36 % là où une telle patte aurait besoin
+de −95 %, le sharding ne peut pas descendre sous un fichier, et les motifs
+`mutate` limités aux lignes ne sélectionnent rien. L'adaptateur et les analyseurs
+sont petits, terminent en quatre-vingt-dix secondes environ, et gardent leur
+patte.
 
 Deux points de cette page comptent ici plus qu'ailleurs :
 
