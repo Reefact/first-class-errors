@@ -71,7 +71,7 @@ internal sealed class RequestBinding {
     internal void Record(PrimaryPortError error) {
         // Created on first failure only: an all-valid binding — including every nested and per-element binding —
         // never allocates its error list.
-        (_errors ??= new List<PrimaryPortError>()).Add(error);
+        (_errors ??= []).Add(error);
     }
 
     /// <summary>
@@ -113,7 +113,7 @@ internal sealed class RequestBinding {
         // itself deliberately stays a plain foreach: an indexed fast path would swap enumeration for indexer calls
         // on caller-owned collections — silencing, for example, the List<T> version check that loudly reports a
         // converter mutating the list it is binding.
-        List<TProperty> converted = values is ICollection<TStored> sized ? new List<TProperty>(sized.Count) : new List<TProperty>();
+        List<TProperty> converted = values is ICollection<TStored> sized ? new List<TProperty>(sized.Count) : [];
 
         int index = 0;
         foreach (TStored element in values) {

@@ -57,7 +57,7 @@ public sealed class UriProperties {
     ///     The schemes the library is allowed to emit. <c>file</c> is deliberately absent: a file path does not
     ///     round-trip identically across target frameworks, so the unconstrained draw must never reach it.
     /// </summary>
-    private static readonly HashSet<string> EmittableSchemes = new() { "http", "https", "ws", "wss", "ftp", "mailto" };
+    private static readonly HashSet<string> EmittableSchemes = ["http", "https", "ws", "wss", "ftp", "mailto"];
 
     /// <summary>
     ///     Arbitrary hosts the library accepts, drawn from the very alphabet <c>UriSpec</c> draws its own hosts from: a
@@ -158,7 +158,7 @@ public sealed class UriProperties {
                     seed => {
                         // One family in five per draw, so 120 draws leave a miss far below any rate that could make
                         // this flaky, while a hand-written test can only ever assert it for the one seed it picked.
-                        HashSet<string> seen = new();
+                        HashSet<string> seen = [];
                         foreach (Uri value in Expect.Draws(Any.WithSeed(seed).Uri(), 120)) {
                             seen.Add(value.IsAbsoluteUri ? value.Scheme : "relative");
                         }

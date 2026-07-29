@@ -98,7 +98,7 @@ public sealed class ContinuousExclusionNudgeTests {
         double max = 1d;
         for (int step = 0; step < 400; step++) { max = Math.BitIncrement(max); }
 
-        List<double> excluded = new();
+        List<double> excluded = [];
         double       value    = Math.BitIncrement(min);
         for (int step = 0; step < 399; step++) {
             excluded.Add(value);

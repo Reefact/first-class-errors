@@ -28,7 +28,7 @@ public sealed class AnyCollectionTests {
 
     [Fact(DisplayName = "ListOf: unconstrained draws vary in size, stay within 0..8, and hold elements from the item generator.")]
     public void ListOfUnconstrained() {
-        HashSet<int> sizes = new();
+        HashSet<int> sizes = [];
         for (int i = 0; i < SampleCount; i++) {
             List<int> list = Any.ListOf(Any.Int32().Between(1, 9)).Generate();
             sizes.Add(list.Count);
@@ -189,7 +189,7 @@ public sealed class AnyCollectionTests {
         // run through the very same CollectionState path, so the correction reaches them too, now exercised directly
         // through AnyDictionary.ContainingKey (see DictionaryContainingKeyOutsideDomainExtendsCardinality).
         for (int i = 0; i < SampleCount; i++) {
-            HashSet<int> list = new(Any.ListOf(Any.Int32().OneOf(1, 2)).Containing(3).WithCount(3).Distinct().Generate());
+            HashSet<int> list = [.. Any.ListOf(Any.Int32().OneOf(1, 2)).Containing(3).WithCount(3).Distinct().Generate()];
             Check.That(list).Contains(1, 2, 3);
 
             HashSet<int> quad = Any.SetOf(Any.Int32().OneOf(1, 2)).Containing(3).Containing(4).WithCount(4).Generate();

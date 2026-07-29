@@ -29,7 +29,7 @@ public sealed class AnyTimeTests {
     public void TimeSpanBounds() {
         Check.That(Any.TimeSpan().Zero().Generate()).IsEqualTo(TimeSpan.Zero);
 
-        HashSet<long> ticks = new();
+        HashSet<long> ticks = [];
         for (int i = 0; i < SampleCount; i++) {
             TimeSpan value = Any.TimeSpan().Between(TimeSpan.FromTicks(1), TimeSpan.FromTicks(3)).Generate();
             ticks.Add(value.Ticks);

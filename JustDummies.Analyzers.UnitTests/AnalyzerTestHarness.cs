@@ -41,7 +41,7 @@ internal static class AnalyzerTestHarness {
     }
 
     private static ImmutableArray<MetadataReference> BuildReferences() {
-        List<MetadataReference> references = new();
+        List<MetadataReference> references = [];
 
         // Reference the running runtime's assemblies so snippets resolve System types without pinning a ref pack.
         string trustedAssemblies = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string ?? string.Empty;

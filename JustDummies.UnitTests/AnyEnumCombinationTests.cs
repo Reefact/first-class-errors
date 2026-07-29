@@ -57,7 +57,7 @@ public sealed class AnyEnumCombinationTests {
 
     [Fact(DisplayName = "A [Flags] enum still draws only declared members until combinations are allowed.")]
     public void FlagsEnumDrawsDeclaredMembersByDefault() {
-        HashSet<Permissions> seen = new();
+        HashSet<Permissions> seen = [];
         for (int i = 0; i < SampleCount; i++) { seen.Add(Any.Enum<Permissions>().Generate()); }
 
         // The contract the opt-in exists to leave untouched: the default never depends on the [Flags] attribute, so a
@@ -67,7 +67,7 @@ public sealed class AnyEnumCombinationTests {
 
     [Fact(DisplayName = "AllowingCombinations: the universe is every combination, and the declared zero value.")]
     public void CombinationsCoverTheWholeUniverse() {
-        HashSet<Permissions> seen = new();
+        HashSet<Permissions> seen = [];
         for (int i = 0; i < SampleCount; i++) { seen.Add(Any.Enum<Permissions>().AllowingCombinations().Generate()); }
 
         Check.That(seen.Count).IsEqualTo(8);
@@ -76,7 +76,7 @@ public sealed class AnyEnumCombinationTests {
 
     [Fact(DisplayName = "AllowingCombinations: an enum declaring no zero member never yields the empty combination.")]
     public void CombinationsOmitZeroWhenItIsNotDeclared() {
-        HashSet<Sides> seen = new();
+        HashSet<Sides> seen = [];
         for (int i = 0; i < SampleCount; i++) { seen.Add(Any.Enum<Sides>().AllowingCombinations().Generate()); }
 
         Check.That(seen).IsOnlyMadeOf(Sides.Left, Sides.Right, Sides.Left | Sides.Right);
@@ -84,7 +84,7 @@ public sealed class AnyEnumCombinationTests {
 
     [Fact(DisplayName = "AllowingCombinations: a declared composite adds nothing — it already is a combination.")]
     public void DeclaredCompositeDoesNotWidenTheUniverse() {
-        HashSet<Access> seen = new();
+        HashSet<Access> seen = [];
         for (int i = 0; i < SampleCount; i++) { seen.Add(Any.Enum<Access>().AllowingCombinations().Generate()); }
 
         Check.That(seen).IsOnlyMadeOf(Access.Read, Access.Write, Access.ReadWrite);
@@ -104,7 +104,7 @@ public sealed class AnyEnumCombinationTests {
     public void CombinationsAreIdempotent() {
         AnyEnum<Permissions> generator = Any.Enum<Permissions>().AllowingCombinations().AllowingCombinations();
 
-        HashSet<Permissions> seen = new();
+        HashSet<Permissions> seen = [];
         for (int i = 0; i < SampleCount; i++) { seen.Add(generator.Generate()); }
 
         // Idempotent, not cumulative: the universe is the same eight values a single application yields.
@@ -125,7 +125,7 @@ public sealed class AnyEnumCombinationTests {
                                             .AllowingCombinations()
                                             .OneOf(Permissions.Read | Permissions.Write, Permissions.Exec);
 
-        HashSet<Permissions> seen = new();
+        HashSet<Permissions> seen = [];
         for (int i = 0; i < SampleCount; i++) { seen.Add(generator.Generate()); }
 
         Check.That(seen).IsOnlyMadeOf(Permissions.Read | Permissions.Write, Permissions.Exec);
@@ -135,7 +135,7 @@ public sealed class AnyEnumCombinationTests {
     public void ExclusionsCompareByEquality() {
         AnyEnum<Permissions> generator = Any.Enum<Permissions>().AllowingCombinations().Except(Permissions.Read);
 
-        HashSet<Permissions> seen = new();
+        HashSet<Permissions> seen = [];
         for (int i = 0; i < SampleCount; i++) { seen.Add(generator.Generate()); }
 
         // Read itself is gone; Read | Write is a different value and stays drawable — Except is not a bit mask.

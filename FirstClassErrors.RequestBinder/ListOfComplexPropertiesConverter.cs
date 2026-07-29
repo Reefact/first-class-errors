@@ -73,7 +73,7 @@ public sealed class ListOfComplexPropertiesConverter<TArgument> : IElementPathSo
         if (bindElement is null) { throw new ArgumentNullException(nameof(bindElement)); }
 
         if (_isMissing) {
-            IReadOnlyList<TProperty> empty = new List<TProperty>();
+            IReadOnlyList<TProperty> empty = [];
 
             return new RequiredField<IReadOnlyList<TProperty>>(_binding, empty);
         }

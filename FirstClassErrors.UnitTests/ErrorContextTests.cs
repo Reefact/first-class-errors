@@ -87,7 +87,7 @@ public sealed class ErrorContextTests : IDisposable {
     public void MissingKeyCannotBeRetrievedFromAnErrorContext() {
         // Setup
         ErrorContextKey<string> correlationIdKey = ErrorContextKey.Create<string>("CorrelationId");
-        ErrorContext            context          = new(new Dictionary<ErrorContextKey, object?>());
+        ErrorContext            context          = new([]);
 
         // Exercise
         bool found = context.TryGet(correlationIdKey, out string? value);

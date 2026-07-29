@@ -48,7 +48,7 @@ public sealed class AnyStringValueSetTests {
 
     [Fact(DisplayName = "OneOf eventually reaches every supplied value.")]
     public void ReachesEverySuppliedValue() {
-        HashSet<string> seen = new(Samples(Any.String().OneOf("EUR", "USD", "GBP")));
+        HashSet<string> seen = [.. Samples(Any.String().OneOf("EUR", "USD", "GBP"))];
 
         Check.That(seen).Contains("EUR", "USD", "GBP");
     }
@@ -62,14 +62,14 @@ public sealed class AnyStringValueSetTests {
 
     [Fact(DisplayName = "OneOf varies from draw to draw when the set holds more than one value.")]
     public void VariesAcrossDraws() {
-        HashSet<string> seen = new(Samples(Any.String().OneOf("a", "b", "c", "d")));
+        HashSet<string> seen = [.. Samples(Any.String().OneOf("a", "b", "c", "d"))];
 
         Check.That(seen.Count).IsStrictlyGreaterThan(1);
     }
 
     [Fact(DisplayName = "Duplicate values are collapsed: both distinct values are still drawn, nothing else.")]
     public void DuplicatesAreCollapsed() {
-        HashSet<string> seen = new(Samples(Any.String().OneOf("a", "a", "b")));
+        HashSet<string> seen = [.. Samples(Any.String().OneOf("a", "a", "b"))];
 
         Check.That(seen).IsOnlyMadeOf("a", "b");
         Check.That(seen).Contains("a", "b");
@@ -103,7 +103,7 @@ public sealed class AnyStringValueSetTests {
     public void OrNullIsSometimesNull() {
         IAny<string?> generator = Any.WithSeed(20260721).String().OneOf("a", "b").OrNull();
 
-        List<string?> values = new();
+        List<string?> values = [];
         for (int i = 0; i < SampleCount; i++) {
             values.Add(generator.Generate());
         }
@@ -337,9 +337,9 @@ public sealed class AnyStringValueSetTests {
 
     [Fact(DisplayName = "OneOf accepts a sequence, drawing only from its values.")]
     public void AcceptsASequence() {
-        IEnumerable<string> vendors = new List<string> { "Apple", "Microsoft", "Google" };
+        IEnumerable<string> vendors = ["Apple", "Microsoft", "Google"];
 
-        HashSet<string> seen = new(Samples(Any.String().OneOf(vendors)));
+        HashSet<string> seen = [.. Samples(Any.String().OneOf(vendors))];
 
         Check.That(seen).IsOnlyMadeOf("Apple", "Microsoft", "Google");
         Check.That(seen.Count).IsStrictlyGreaterThan(1);

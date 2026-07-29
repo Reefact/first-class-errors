@@ -48,18 +48,6 @@ csharp_style_var_when_type_is_apparent = false
 csharp_style_var_elsewhere = false
 dotnet_diagnostic.IDE0008.severity = warning
 
-# Declined: collection expressions. IDE0028 and its family ask that `new()` and
-# `new List<T> { ... }` initializers be rewritten as `[...]`. The preference itself is turned
-# off rather than the report merely silenced — that is the honest statement ("we do not want
-# this"), and it covers the whole family (IDE0300-IDE0305) instead of the one member that
-# happened to fire. The explicit IDE0028 severity backs it up, because the option's accepted
-# spellings changed across SDKs and the preference alone is version-sensitive. Declined on two
-# grounds: 147 sites across 13 projects for no behaviour change, and target-typed forms such as
-# `IReadOnlyList<int> x = [1, 2, 3];` hand the choice of concrete type to the compiler, which
-# the current `new List<int>` states outright.
-dotnet_style_prefer_collection_expression = false
-dotnet_diagnostic.IDE0028.severity = none
-
 # Declined: concrete return types for performance. CA1859 asks that non-public members typed
 # `IReadOnlyList<T>` / `IEnumerable<T>` be retyped to the concrete collection they happen to
 # return, trading an interface dispatch for a direct call. In this codebase the interface IS

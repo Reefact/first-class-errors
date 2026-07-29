@@ -177,8 +177,7 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint<cha
     }
 
     private AnyChar WithExcluded(char[] values, string applying) {
-        List<char> excluded = new(_excluded);
-        excluded.AddRange(values);
+        List<char> excluded = [.. _excluded, .. values];
 
         return Validated(new AnyChar(_source, _charset, _charsetConstraint, _casing, _casingConstraint, _allowed, _allowedConstraint, excluded), applying);
     }

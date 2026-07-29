@@ -37,7 +37,7 @@ public sealed class AnyOneOfTests {
 
     [Fact(DisplayName = "OneOf eventually reaches every supplied value.")]
     public void ReachesEverySuppliedValue() {
-        HashSet<int> seen = new(Samples(Any.OneOf(1, 2, 3)));
+        HashSet<int> seen = [.. Samples(Any.OneOf(1, 2, 3))];
 
         Check.That(seen).Contains(1, 2, 3);
     }
@@ -51,14 +51,14 @@ public sealed class AnyOneOfTests {
 
     [Fact(DisplayName = "OneOf varies from draw to draw when the pool holds more than one value.")]
     public void VariesAcrossDraws() {
-        HashSet<int> seen = new(Samples(Any.OneOf(1, 2, 3, 4)));
+        HashSet<int> seen = [.. Samples(Any.OneOf(1, 2, 3, 4))];
 
         Check.That(seen.Count).IsStrictlyGreaterThan(1);
     }
 
     [Fact(DisplayName = "Duplicate values are collapsed under the default comparer: both distinct values are still drawn, nothing else.")]
     public void DuplicatesAreCollapsed() {
-        HashSet<int> seen = new(Samples(Any.OneOf(1, 1, 2)));
+        HashSet<int> seen = [.. Samples(Any.OneOf(1, 1, 2))];
 
         Check.That(seen).IsOnlyMadeOf(1, 2);
         Check.That(seen).Contains(1, 2);
@@ -89,7 +89,7 @@ public sealed class AnyOneOfTests {
         Percentage       two       = Percentage.Create(2);
         IAny<Percentage?> generator = Any.WithSeed(20260721).OneOf(one, two).OrNull();
 
-        List<Percentage?> values = new();
+        List<Percentage?> values = [];
         for (int i = 0; i < SampleCount; i++) {
             values.Add(generator.Generate());
         }
@@ -138,9 +138,9 @@ public sealed class AnyOneOfTests {
 
     [Fact(DisplayName = "ElementOf draws only from the list it is given.")]
     public void ElementOfDrawsFromTheList() {
-        IReadOnlyList<int> pool = new List<int> { 1, 2, 3 };
+        IReadOnlyList<int> pool = [1, 2, 3];
 
-        HashSet<int> seen = new(Samples(Any.ElementOf(pool)));
+        HashSet<int> seen = [.. Samples(Any.ElementOf(pool))];
 
         Check.That(seen).IsOnlyMadeOf(1, 2, 3);
         Check.That(seen.Count).IsStrictlyGreaterThan(1);
@@ -171,7 +171,7 @@ public sealed class AnyOneOfTests {
         Check.ThatCode(() => Any.ElementOf((IEnumerable<int>)null!)).Throws<ArgumentNullException>();
         Check.ThatCode(() => Any.ElementOf(new List<int>())).Throws<ArgumentException>();
         Check.ThatCode(() => Any.ElementOf(Enumerable.Empty<int>())).Throws<ArgumentException>();
-        Check.ThatCode(() => Any.ElementOf(new List<string> { "a", null! })).Throws<ArgumentException>();
+        Check.ThatCode(() => Any.ElementOf(["a", null!])).Throws<ArgumentException>();
     }
 
     [Fact(DisplayName = "DifferentFrom removes a value from the pool — the idiom for drawing another element of a fixture.")]
@@ -198,7 +198,7 @@ public sealed class AnyOneOfTests {
 
     [Fact(DisplayName = "A value that is not in the pool removes nothing.")]
     public void ExcludingAnAbsentValueRemovesNothing() {
-        HashSet<int> seen = new(Samples(Any.OneOf(1, 2).DifferentFrom(99)));
+        HashSet<int> seen = [.. Samples(Any.OneOf(1, 2).DifferentFrom(99))];
 
         Check.That(seen).IsOnlyMadeOf(1, 2);
         Check.That(seen).Contains(1, 2);
@@ -226,9 +226,9 @@ public sealed class AnyOneOfTests {
         Check.That(Emptied(() => Any.OneOf(7).DifferentFrom(7))).IsEqualTo(fromOneOf);
         Check.That(Emptied(() => Any.WithSeed(1).OneOf(7).DifferentFrom(7))).IsEqualTo(fromOneOf);
 
-        Check.That(Emptied(() => Any.ElementOf(new List<int> { 7 }).DifferentFrom(7))).IsEqualTo(fromElement);
+        Check.That(Emptied(() => Any.ElementOf([7]).DifferentFrom(7))).IsEqualTo(fromElement);
         Check.That(Emptied(() => Any.ElementOf(new List<int> { 7 }.Select(value => value)).DifferentFrom(7))).IsEqualTo(fromElement);
-        Check.That(Emptied(() => Any.WithSeed(1).ElementOf(new List<int> { 7 }).DifferentFrom(7))).IsEqualTo(fromElement);
+        Check.That(Emptied(() => Any.WithSeed(1).ElementOf([7]).DifferentFrom(7))).IsEqualTo(fromElement);
         Check.That(Emptied(() => Any.WithSeed(1).ElementOf(new List<int> { 7 }.Select(value => value)).DifferentFrom(7))).IsEqualTo(fromElement);
     }
 
@@ -275,7 +275,7 @@ public sealed class AnyOneOfTests {
 
     [Fact(DisplayName = "A seeded context makes OneOf and ElementOf deterministic — the mirrored surface draws from the context's seed.")]
     public void SeededContextIsDeterministic() {
-        List<int> pool = new() { 10, 20, 30, 40 };
+        List<int> pool = [10, 20, 30, 40];
 
         string oneOfFirst  = string.Join("|", Samples(Any.WithSeed(11).OneOf(10, 20, 30, 40)).Take(20));
         string oneOfSecond = string.Join("|", Samples(Any.WithSeed(11).OneOf(10, 20, 30, 40)).Take(20));

@@ -69,7 +69,7 @@ public sealed class ListOfSimplePropertiesConverter<TArgument> : IElementPathSou
         if (convertElement is null) { throw new ArgumentNullException(nameof(convertElement)); }
 
         if (_isMissing) {
-            IReadOnlyList<TProperty> empty = new List<TProperty>();
+            IReadOnlyList<TProperty> empty = [];
 
             return new RequiredField<IReadOnlyList<TProperty>>(_binding, empty);
         }

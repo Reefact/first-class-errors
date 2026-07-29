@@ -20,7 +20,7 @@ public sealed class AnySetTypeTests {
 
     [Fact(DisplayName = "Boolean: unconstrained draws hit both values; pins pin; contradictory pins conflict.")]
     public void BooleanBehaves() {
-        HashSet<bool> seen = new();
+        HashSet<bool> seen = [];
         for (int i = 0; i < SampleCount; i++) { seen.Add(Any.Boolean().Generate()); }
         Check.That(seen.Count).IsEqualTo(2);
 
@@ -41,7 +41,7 @@ public sealed class AnySetTypeTests {
 
     [Fact(DisplayName = "Guid: unconstrained draws are non-empty, varied, and reproducible under a context seed.")]
     public void GuidBehaves() {
-        HashSet<Guid> seen = new();
+        HashSet<Guid> seen = [];
         for (int i = 0; i < SampleCount; i++) {
             Guid value = Any.Guid().Generate();
             seen.Add(value);
@@ -112,7 +112,7 @@ public sealed class AnySetTypeTests {
 
     [Fact(DisplayName = "Enum: unconstrained draws yield only declared members and reach all of them.")]
     public void EnumDrawsDeclaredMembers() {
-        HashSet<OrderStatus> seen = new();
+        HashSet<OrderStatus> seen = [];
         for (int i = 0; i < SampleCount; i++) {
             OrderStatus value = Any.Enum<OrderStatus>().Generate();
             seen.Add(value);

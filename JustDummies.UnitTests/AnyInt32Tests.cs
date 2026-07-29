@@ -63,7 +63,7 @@ public sealed class AnyInt32Tests {
 
     [Fact(DisplayName = "Between eventually reaches both inclusive bounds.")]
     public void BetweenReachesItsBounds() {
-        HashSet<int> seen = new(Samples(Any.Int32().Between(1, 3)));
+        HashSet<int> seen = [.. Samples(Any.Int32().Between(1, 3))];
 
         Check.That(seen.Contains(1)).IsTrue();
         Check.That(seen.Contains(3)).IsTrue();

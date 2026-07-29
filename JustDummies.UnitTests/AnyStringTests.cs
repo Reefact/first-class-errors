@@ -60,7 +60,7 @@ public sealed class AnyStringTests {
 
     [Fact(DisplayName = "WithLengthBetween bounds the length inclusively and reaches its bounds.")]
     public void WithLengthBetweenIsInclusive() {
-        HashSet<int> lengths = new();
+        HashSet<int> lengths = [];
         foreach (string value in Samples(Any.String().WithLengthBetween(2, 4))) {
             lengths.Add(value.Length);
             Check.That(value.Length).IsGreaterOrEqualThan(2);
@@ -381,7 +381,7 @@ public sealed class AnyStringTests {
     [Fact(DisplayName = "WithChars reaches every character in the pool.")]
     public void WithCharsReachesEveryCharacter() {
         const string  pool = "ACGT";
-        HashSet<char> seen = new();
+        HashSet<char> seen = [];
         foreach (string value in Samples(Any.String().WithChars(pool).WithLength(8))) {
             foreach (char character in value) { seen.Add(character); }
         }

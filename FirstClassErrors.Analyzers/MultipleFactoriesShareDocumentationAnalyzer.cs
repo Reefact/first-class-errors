@@ -44,7 +44,7 @@ public sealed class MultipleFactoriesShareDocumentationAnalyzer : DiagnosticAnal
             if (string.IsNullOrEmpty(targetName)) { continue; }
 
             if (!referencesByTarget.TryGetValue(targetName!, out List<AttributeData>? references)) {
-                references                     = new List<AttributeData>();
+                references                     = [];
                 referencesByTarget[targetName!] = references;
             }
 

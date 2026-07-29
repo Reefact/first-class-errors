@@ -26,7 +26,7 @@ public sealed class AnyModernTypeTests {
 
     [Fact(DisplayName = "DateOnly: Between is inclusive and reached; After/Before are exclusive; conflicts surface.")]
     public void DateOnlyBehaves() {
-        HashSet<DateOnly> seen = new();
+        HashSet<DateOnly> seen = [];
         for (int i = 0; i < SampleCount; i++) {
             DateOnly value = Any.DateOnly().Between(AnchorDate, AnchorDate.AddDays(2)).Generate();
             seen.Add(value);
@@ -65,7 +65,7 @@ public sealed class AnyModernTypeTests {
 
     [Fact(DisplayName = "Int128: signs, pins, full-width variety, extremes and conflicts.")]
     public void Int128Behaves() {
-        HashSet<Int128> seen = new();
+        HashSet<Int128> seen = [];
         for (int i = 0; i < SampleCount; i++) {
             seen.Add(Any.Int128().Generate());
             Check.That(Any.Int128().Positive().Generate() > 0).IsTrue();
@@ -83,7 +83,7 @@ public sealed class AnyModernTypeTests {
 
     [Fact(DisplayName = "UInt128: bounds, exclusivity and full-width variety.")]
     public void UInt128Behaves() {
-        HashSet<UInt128> seen = new();
+        HashSet<UInt128> seen = [];
         for (int i = 0; i < SampleCount; i++) {
             seen.Add(Any.UInt128().Generate());
 

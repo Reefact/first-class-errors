@@ -111,7 +111,7 @@ public sealed class AnyPatternTests {
     public void GeneratedValuesVary() {
         foreach (string pattern in new[] { @"\d{8}", @"[A-Z]{3}", @"(EUR|USD|GBP)", @"[A-Za-z0-9_]+", @"a{2,4}b*c+" }) {
             AnyPattern      generator = Any.WithSeed(4242).StringMatching(pattern);
-            HashSet<string> seen      = new();
+            HashSet<string> seen      = [];
             for (int i = 0; i < SampleCount; i++) { seen.Add(generator.Generate()); }
             Check.That(seen.Count).IsStrictlyGreaterThan(1);
         }
@@ -129,7 +129,7 @@ public sealed class AnyPatternTests {
 
     [Fact(DisplayName = "Alternation draws each branch and only declared branches.")]
     public void Alternation() {
-        HashSet<string> seen = new();
+        HashSet<string> seen = [];
         for (int i = 0; i < SampleCount; i++) {
             string value = Any.StringMatching("(EUR|USD|GBP)").Generate();
             Check.That(value == "EUR" || value == "USD" || value == "GBP").IsTrue();
@@ -150,9 +150,9 @@ public sealed class AnyPatternTests {
 
     [Fact(DisplayName = "Bounded quantifiers stay within their bounds; unbounded ones draw the minimum plus 0 to 8.")]
     public void QuantifierBounds() {
-        HashSet<int> starLengths = new();
-        HashSet<int> plusLengths = new();
-        HashSet<int> openLengths = new();
+        HashSet<int> starLengths = [];
+        HashSet<int> plusLengths = [];
+        HashSet<int> openLengths = [];
 
         for (int i = 0; i < SampleCount; i++) {
             int bounded = (Any.StringMatching("a{2,4}").Generate()).Length;

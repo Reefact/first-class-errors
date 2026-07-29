@@ -42,7 +42,7 @@ public sealed class ConcurrentDrawTests {
 
     /// <summary>Runs <paramref name="draw" /> on every thread at once and collects everything it produced.</summary>
     private static List<T> Storm<T>(Func<T> draw) {
-        ConcurrentBag<T> drawn = new();
+        ConcurrentBag<T> drawn = [];
         Parallel.For(0, Threads, new ParallelOptions { MaxDegreeOfParallelism = Threads },
                      _ => {
                          for (int index = 0; index < DrawsPerThread; index++) { drawn.Add(draw()); }

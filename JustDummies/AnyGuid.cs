@@ -61,7 +61,7 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Gui
         _excluded          = excluded;
         // Materialized once here — "constrain once, draw many": Generate never refilters the allow-list, and
         // the exclusion walk tests membership against a set rather than rescanning the list on every step.
-        _excludedSet       = new HashSet<Guid>(excluded);
+        _excludedSet       = [.. excluded];
         _effectiveAllowed  = allowed?.Where(value => !_excludedSet.Contains(value)).ToList();
     }
 
@@ -161,8 +161,7 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Gui
     }
 
     private AnyGuid WithExcluded(Guid[] values, string applying) {
-        List<Guid> excluded = new(_excluded);
-        excluded.AddRange(values);
+        List<Guid> excluded = [.. _excluded, .. values];
 
         return Validated(new AnyGuid(_source, _pinned, _pinnedConstraint, _allowed, _allowedConstraint, excluded), applying);
     }

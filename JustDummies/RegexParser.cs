@@ -61,7 +61,7 @@ internal sealed class RegexParser {
     }
 
     private static HashSet<char> ExpandCase(HashSet<char> set) {
-        HashSet<char> expanded = new();
+        HashSet<char> expanded = [];
         foreach (char character in set) {
             foreach (char variant in RegexAlphabet.WithBothCases(character)) { expanded.Add(variant); }
         }
@@ -120,14 +120,14 @@ internal sealed class RegexParser {
     }
 
     private RegexNode ParseAlternation() {
-        List<RegexNode> branches = new() { ParseSequence() };
+        List<RegexNode> branches = [ParseSequence()];
         while (Eat('|')) { branches.Add(ParseSequence()); }
 
         return branches.Count == 1 ? branches[0] : new RegexAlternation(branches.ToArray());
     }
 
     private RegexNode ParseSequence() {
-        List<RegexNode> parts = new();
+        List<RegexNode> parts = [];
         while (!AtEnd && Peek() != '|' && Peek() != ')') {
             // Anchors are no-ops for a whole-string generator, but only where they are guaranteed to match:
             // '^' at the start and '$' at the end of the pattern or of a top-level alternation branch. A run of
@@ -445,7 +445,7 @@ internal sealed class RegexParser {
         int position = _index;
         _index++; // consume '['
         bool          negated = Eat('^');
-        HashSet<char> set     = new();
+        HashSet<char> set     = [];
         bool          first   = true;
 
         while (true) {

@@ -197,9 +197,9 @@ public sealed class ErrorDefensiveTests : IDisposable {
     [Fact(DisplayName = "Inner errors are stored as a defensive copy of the provided collection.")]
     public void InnerErrorsAreStoredAsADefensiveCopyOfTheProvidedCollection() {
         // Setup
-        List<DomainError> innerErrors = new() {
+        List<DomainError> innerErrors = [
             ErrorFactory.Domain(ErrorCode.Unspecified, "first")
-        };
+        ];
         DomainError error = DomainError.Create(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any(), innerErrors).WithPublicMessage(ShortMessageFactory.Any());
 
         // Exercise
@@ -212,11 +212,11 @@ public sealed class ErrorDefensiveTests : IDisposable {
     [Fact(DisplayName = "Null entries in the provided inner errors collection are filtered out.")]
     public void NullEntriesInTheProvidedInnerErrorsCollectionAreFilteredOut() {
         // Setup
-        List<DomainError> innerErrors = new() {
+        List<DomainError> innerErrors = [
             ErrorFactory.Domain(ErrorCode.Unspecified, "first"),
             null!,
             ErrorFactory.Domain(ErrorCode.Unspecified, "second")
-        };
+        ];
 
         // Exercise
         DomainError error = DomainError.Create(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any(), innerErrors).WithPublicMessage(ShortMessageFactory.Any());
@@ -229,7 +229,7 @@ public sealed class ErrorDefensiveTests : IDisposable {
     [Fact(DisplayName = "A collection made only of null inner errors yields an empty inner errors list.")]
     public void ACollectionMadeOnlyOfNullInnerErrorsYieldsAnEmptyInnerErrorsList() {
         // Setup
-        List<DomainError> innerErrors = new() { null!, null! };
+        List<DomainError> innerErrors = [null!, null!];
 
         // Exercise
         DomainError error = DomainError.Create(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any(), innerErrors).WithPublicMessage(ShortMessageFactory.Any());

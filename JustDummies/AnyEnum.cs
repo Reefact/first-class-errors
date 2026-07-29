@@ -63,7 +63,7 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinality
             if (_combinations is not null) { return _combinations; }
 
             ulong[]        generators = Declared.Select(ToUInt64).Where(bits => bits != 0UL).ToArray();
-            HashSet<ulong> reachable  = new();
+            HashSet<ulong> reachable  = [];
             foreach (ulong generator in generators) {
                 // Union of what was reachable, what becomes reachable by adding this generator to it, and the
                 // generator alone — the OR-closure, built without enumerating the 2^k subsets that collapse.
@@ -263,8 +263,7 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinality
     }
 
     private AnyEnum<TEnum> WithExcluded(TEnum[] values, string applying) {
-        List<TEnum> excluded = new(_excluded);
-        excluded.AddRange(values);
+        List<TEnum> excluded = [.. _excluded, .. values];
 
         return Validated(new AnyEnum<TEnum>(_source, _universe, _combinable, _allowed, _allowedConstraint, excluded), applying);
     }

@@ -48,7 +48,7 @@ public sealed class MaterializationTests {
     public void EachGenerateDrawsAFreshValue() {
         AnyInt32 generator = Any.Int32().Between(0, int.MaxValue);
 
-        HashSet<int> seen = new();
+        HashSet<int> seen = [];
         for (int i = 0; i < 20; i++) {
             seen.Add(generator.Generate());
         }

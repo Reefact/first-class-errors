@@ -219,7 +219,7 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
 
         // Remember the supplied values by instant, so generation returns them as given: the ordinal space
         // only carries the instant, and rebuilding from it would silently normalize the offset to UTC.
-        Dictionary<ulong, DateTimeOffset> originals = new();
+        Dictionary<ulong, DateTimeOffset> originals = [];
         foreach (DateTimeOffset value in admitted) {
             if (!originals.ContainsKey(Ord(value))) { originals.Add(Ord(value), value); }
         }
