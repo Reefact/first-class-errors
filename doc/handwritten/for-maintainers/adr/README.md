@@ -63,8 +63,13 @@ should not need editing.
 **Decision Makers:** {Names or team}
 ```
 
-The date is the day the decision reached its current status. A *Superseded*
-ADR links to the ADR that supersedes it, next to the status.
+The date is the day the decision reached its current status: the day it was
+proposed while *Proposed*, the day it was accepted once *Accepted*.
+
+A supersession is the exception — **it does not move the date**. The decision
+was taken when it was taken, and that is what the record keeps; the new date
+belongs to the successor. What connects the two is the link, not the date: a
+*Superseded* ADR links to the ADR that supersedes it, next to the status.
 
 ### Context
 
