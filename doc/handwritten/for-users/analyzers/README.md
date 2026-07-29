@@ -57,6 +57,17 @@ These rules ship in the **`JustDummies`** package (not FirstClassErrors) and kee
 |------|----------|---------|-------------|
 | [JD001 AsyncBodyPassedToReproducibly](JD001.en.md) | 🔴 Error | on | An async lambda is passed to the synchronous Any.Reproducibly(Action); bound to an Action it becomes async void and its failures never fail the test. Use Any.ReproduciblyAsync and await it. |
 | [JD002 DiscardedReproduciblyAsyncResult](JD002.en.md) | 🔴 Error | on | The task returned by Any.ReproduciblyAsync is discarded (a bare statement, or `_ =`); the body's failures are lost. Await it. |
+| [JD003 AwaitableBodyPassedToReproducibly](JD003.en.md) | 🔴 Error | on | A synchronous lambda whose body drops a task, or an async void method group, reaches Any.Reproducibly; the scope returns before the assertions run, and CS4014 does not fire. |
+| [JD004 DiscardedSeedingResult](JD004.en.md) | 🔴 Error | on | The handle returned by Any.UseSeed is discarded, leaving the seed pinned for whatever runs next — or Any.WithSeed is called for effect, which pins nothing at all. |
+
+## JustDummies — Usage
+
+A generator is an immutable *recipe*, and `Generate()` is the only thing that materializes a value from it. These rules close the two ways that distinction is lost silently.
+
+| Rule | Severity | Default | Description |
+|------|----------|---------|-------------|
+| [JD005 GeneratorRenderedAsText](JD005.en.md) | 🔴 Error | on | A generator is interpolated, concatenated or ToString()'d instead of generated from; no generator overrides ToString(), so the text is the builder's type name. |
+| [JD006 DiscardedGeneratorResult](JD006.en.md) | 🟠 Warning | on | The generator returned by a constraint is discarded as a bare statement; generators are immutable, so the declared invariant is silently lost. |
 
 ## Configuring
 

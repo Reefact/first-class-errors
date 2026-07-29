@@ -57,6 +57,17 @@ Ces règles sont incluses dans le package **`JustDummies`** (pas FirstClassError
 |-------|----------|--------|-------------|
 | [JD001 AsyncBodyPassedToReproducibly](JD001.fr.md) | 🔴 Erreur | on | Une lambda async est passée à `Any.Reproducibly(Action)` synchrone ; liée à une Action elle devient async void et ses échecs ne font jamais échouer le test. Utilisez `Any.ReproduciblyAsync` et faites `await`. |
 | [JD002 DiscardedReproduciblyAsyncResult](JD002.fr.md) | 🔴 Erreur | on | Le `Task` retourné par `Any.ReproduciblyAsync` est jeté (instruction isolée ou `_ =`) ; les échecs du corps sont perdus. Faites `await`. |
+| [JD003 AwaitableBodyPassedToReproducibly](JD003.fr.md) | 🔴 Erreur | on | Une lambda synchrone dont le corps abandonne une tâche, ou un groupe de méthodes `async void`, atteint `Any.Reproducibly` ; la portée retourne avant l'exécution des assertions, et `CS4014` ne se déclenche pas. |
+| [JD004 DiscardedSeedingResult](JD004.fr.md) | 🔴 Erreur | on | La poignée retournée par `Any.UseSeed` est jetée, laissant la graine épinglée pour la suite — ou `Any.WithSeed` est appelé pour son effet, alors qu'il n'épingle rien. |
+
+## JustDummies — Usage
+
+Un générateur est une *recette* immuable, et `Generate()` est la seule chose qui en matérialise une valeur. Ces règles ferment les deux façons dont cette distinction se perd silencieusement.
+
+| Règle | Sévérité | Défaut | Description |
+|-------|----------|--------|-------------|
+| [JD005 GeneratorRenderedAsText](JD005.fr.md) | 🔴 Erreur | on | Un générateur est interpolé, concaténé ou passé à `ToString()` au lieu d'être généré ; aucun générateur ne surcharge `ToString()`, donc le texte obtenu est le nom de type du constructeur. |
+| [JD006 DiscardedGeneratorResult](JD006.fr.md) | 🟠 Avertissement | on | Le générateur retourné par une contrainte est jeté en instruction isolée ; les générateurs étant immuables, l'invariant déclaré est silencieusement perdu. |
 
 ## Configuration
 
