@@ -22,4 +22,9 @@ internal static class DiagnosticIds {
     public const string DrawInStaticInitializer    = "JD009";
     public const string ReproducibleOnNonTestMethod = "JD010";
 
+    // Category: Usage — a recipe reaching a position that wanted the value
+    public const string GeneratorWhereValueExpected = "JD011";
+    public const string GeneratorPooledAsValue      = "JD012";
+    public const string HeldCollectionPassedToOneOf = "JD013";
+
 }
