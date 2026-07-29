@@ -3,7 +3,8 @@
 🌍 🇬🇧 [English](0023-keep-expression-tree-selectors-for-the-v1-binder-api.md) · 🇫🇷 Français (ce fichier)
 
 **Statut :** Accepté
-**Date :** 2026-07-19
+**Proposé :** 2026-07-19
+**Accepté :** 2026-07-19
 **Décideurs :** Reefact
 
 ## Contexte

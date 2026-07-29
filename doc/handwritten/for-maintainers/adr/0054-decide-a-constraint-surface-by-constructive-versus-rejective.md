@@ -3,7 +3,8 @@
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0054-decide-a-constraint-surface-by-constructive-versus-rejective.fr.md)
 
 **Status:** Accepted
-**Date:** 2026-07-28
+**Proposed:** 2026-07-28
+**Accepted:** 2026-07-28
 **Decision Makers:** Reefact
 
 Supersedes [ADR-0030](0030-draw-arbitrary-strings-from-an-explicit-terminal-set.md).

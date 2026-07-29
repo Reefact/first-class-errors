@@ -3,7 +3,8 @@
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0009-report-the-toolings-failures-as-first-class-errors.fr.md)
 
 **Status:** Accepted
-**Date:** 2026-07-17
+**Proposed:** 2026-07-17
+**Accepted:** 2026-07-17
 **Decision Makers:** Reefact
 
 ## Context

@@ -3,7 +3,8 @@
 🌍 🇬🇧 [English](0035-enforce-structural-any-conflicts-at-compile-time.md) · 🇫🇷 Français (ce fichier)
 
 **Statut :** Accepté
-**Date :** 2026-07-26
+**Proposé :** 2026-07-26
+**Accepté :** 2026-07-26
 **Décideurs :** Reefact
 
 ## Contexte

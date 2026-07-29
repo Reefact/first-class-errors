@@ -3,7 +3,8 @@
 🌍 🇬🇧 [English](0019-document-overridden-binder-errors-in-the-consumers-catalog.md) · 🇫🇷 Français (ce fichier)
 
 **Statut :** Accepté
-**Date :** 2026-07-18
+**Proposé :** 2026-07-18
+**Accepté :** 2026-07-18
 **Décideurs :** Reefact
 
 ## Contexte

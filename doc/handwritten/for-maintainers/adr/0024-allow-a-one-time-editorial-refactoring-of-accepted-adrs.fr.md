@@ -3,7 +3,8 @@
 🌍 🇫🇷 Français (ce fichier) · 🇬🇧 [English](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md)
 
 **Statut :** Accepté
-**Date :** 2026-07-19
+**Proposé :** 2026-07-19
+**Accepté :** 2026-07-19
 **Décideurs :** Reefact
 
 ## Contexte

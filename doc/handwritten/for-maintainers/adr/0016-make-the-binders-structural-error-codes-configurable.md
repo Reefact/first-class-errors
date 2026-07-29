@@ -3,7 +3,8 @@
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0016-make-the-binders-structural-error-codes-configurable.fr.md)
 
 **Status:** Superseded by [ADR-0018](0018-bundle-the-binders-structural-error-code-and-messages.md)
-**Date:** 2026-07-18
+**Proposed:** 2026-07-18
+**Accepted:** 2026-07-18
 **Decision Makers:** Reefact
 
 ## Context

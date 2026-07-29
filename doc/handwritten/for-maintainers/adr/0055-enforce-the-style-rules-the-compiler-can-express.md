@@ -2,8 +2,9 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0055-enforce-the-style-rules-the-compiler-can-express.fr.md)
 
-**Status:** Proposed
-**Date:** 2026-07-28
+**Status:** Accepted
+**Proposed:** 2026-07-28
+**Accepted:** 2026-07-29
 **Decision Makers:** Reefact
 
 ## Context

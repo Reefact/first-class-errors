@@ -3,7 +3,8 @@
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0044-ship-justdummies-analyzers.fr.md)
 
 **Status:** Accepted
-**Date:** 2026-07-27
+**Proposed:** 2026-07-27
+**Accepted:** 2026-07-27
 **Decision Makers:** Reefact
 
 ## Context

@@ -59,17 +59,31 @@ should not need editing.
 # ADR-{number} | {Short Title}
 
 **Status:** Proposed | Accepted | Superseded | Deprecated
-**Date:** YYYY-MM-DD
+**Proposed:** YYYY-MM-DD
+**Accepted:** YYYY-MM-DD
 **Decision Makers:** {Names or team}
 ```
 
-The date is the day the decision reached its current status: the day it was
-proposed while *Proposed*, the day it was accepted once *Accepted*.
+The header carries **one dated line per state the decision actually reached in
+this repository**, and no date is ever overwritten (decision: ADR-0057). A record
+drafted as *Proposed* carries `Proposed:` alone; accepting it adds `Accepted:`
+below and leaves the first line untouched. Both dates then stay for good: when
+the thinking happened and when it was ratified are different facts, and a log
+that keeps only the second cannot say how long a decision waited, nor which ones
+were ratified on sight.
 
-A supersession is the exception — **it does not move the date**. The decision
-was taken when it was taken, and that is what the record keeps; the new date
-belongs to the successor. What connects the two is the link, not the date: a
+A supersession adds nothing — **it moves no date and introduces none**. The
+decision was taken when it was taken, and that is what the record keeps; the new
+date belongs to the successor. What connects the two is the link, not the date: a
 *Superseded* ADR links to the ADR that supersedes it, next to the status.
+
+Records written before this format carried a single `Date:` line and have been
+converted, so the whole base reads the same way. Where that single date is all
+the base ever held — most of these were entered already *Accepted*, having never
+been *Proposed* here — it is written to both lines. Two identical dates therefore
+say "one date is known, and it stands for both states", not that a proposal and
+an acceptance were separately recorded a day apart. Nothing was invented to fill
+a gap; the gap is stated by the repetition.
 
 ### Context
 
@@ -242,5 +256,6 @@ Optional supporting material:
 | [ADR-0052](0052-draw-arbitrary-numbers-within-an-ordinary-magnitude.md) | Draw arbitrary numbers within an ordinary magnitude; the integer generators keep their full range | Accepted |
 | [ADR-0053](0053-unify-discrete-generation-in-one-ordinal-space.md) | Unify discrete generation in one ordinal space, with a dedicated engine only where the arithmetic substrate forces one | Accepted |
 | [ADR-0054](0054-decide-a-constraint-surface-by-constructive-versus-rejective.md) | Decide a generator's constraint surface by constructive versus rejective, not by terminality; supersedes ADR-0030 | Accepted |
-| [ADR-0055](0055-enforce-the-style-rules-the-compiler-can-express.md) | Enforce the style rules the compiler can express, and keep the DotSettings authoritative for the rest | Proposed |
-| [ADR-0056](0056-state-the-coding-rules-where-an-agent-can-act-on-them.md) | State the coding rules where an agent can act on them, and check them at the edit | Proposed |
+| [ADR-0055](0055-enforce-the-style-rules-the-compiler-can-express.md) | Enforce the style rules the compiler can express, and keep the DotSettings authoritative for the rest | Accepted |
+| [ADR-0056](0056-state-the-coding-rules-where-an-agent-can-act-on-them.md) | State the coding rules where an agent can act on them, and check them at the edit | Accepted |
+| [ADR-0057](0057-keep-one-dated-line-per-state-an-adr-reached.md) | Keep one dated line per state an ADR reached, and never overwrite one | Accepted |

@@ -3,7 +3,8 @@
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0052-draw-arbitrary-numbers-within-an-ordinary-magnitude.fr.md)
 
 **Status:** Accepted
-**Date:** 2026-07-28
+**Proposed:** 2026-07-28
+**Accepted:** 2026-07-28
 **Decision Makers:** Reefact
 
 ## Context

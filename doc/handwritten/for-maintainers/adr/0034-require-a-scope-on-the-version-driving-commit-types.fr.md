@@ -3,7 +3,8 @@
 🌍 🇬🇧 [English](0034-require-a-scope-on-the-version-driving-commit-types.md) · 🇫🇷 Français (ce fichier)
 
 **Statut :** Accepté
-**Date :** 2026-07-23
+**Proposé :** 2026-07-23
+**Accepté :** 2026-07-23
 **Décideurs :** Reefact
 
 ## Contexte

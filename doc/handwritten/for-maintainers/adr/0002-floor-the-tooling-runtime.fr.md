@@ -3,7 +3,8 @@
 🌍 🇬🇧 [English](0002-floor-the-tooling-runtime.md) · 🇫🇷 Français (ce fichier)
 
 **Statut :** Accepté
-**Date :** 2026-07-13
+**Proposé :** 2026-07-13
+**Accepté :** 2026-07-13
 **Décideurs :** Reefact
 
 ## Contexte
