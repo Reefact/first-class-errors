@@ -125,6 +125,17 @@ context.
   user names), and the branch tip's GitHub signature says who wrote the code the job
   is about to read, patch and force-push. Commit author and committer *names* are
   `git config` values and forge freely; the signature does not.
+- **A workflow-security audit reports the trigger itself, and the answer is in the
+  file.** `zizmor`'s `dangerous-triggers` flags `workflow_run` as a
+  privilege-escalation vector, which the pattern generally is. It is kept because the
+  trigger is not replaceable — a `pull_request` run raised by Dependabot has a
+  read-only token and no secrets, so it could neither read the API key nor push — and
+  because the escalation is already closed by the three properties above: base-only
+  checkout, no build of the bumped dependency, and API-settled identity down to the
+  signed tip. That is stricter than `dependabot/fetch-metadata`, which validates the
+  *first* commit rather than the tip. The refusal is recorded as an inline
+  `# zizmor: ignore[dangerous-triggers]` carrying its reason (ADR-0060), so it is
+  answered where it fires rather than re-litigated on each run.
 
 ## Related
 

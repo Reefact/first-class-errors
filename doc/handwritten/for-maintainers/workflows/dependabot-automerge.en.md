@@ -22,15 +22,22 @@ here.
 ## When it runs
 
 - On every **pull request targeting `main`**, but the job is gated on
-  `github.actor == 'dependabot[bot]'`, so it acts only on Dependabot's PRs.
+  `github.event.pull_request.user.login == 'dependabot[bot]'` — the pull
+  request's **author** — so it acts only on Dependabot's PRs. That is
+  deliberately not `github.actor`; see *Handle with care*.
 
 ## How it runs
 
 One job, `automerge`:
 
 1. `dependabot/fetch-metadata` reads the update type (patch / minor / major).
-2. For **patch or minor** updates, `gh pr merge --auto` enables auto-merge. Major
-   updates fall through the condition and stay open.
+2. The **head commit of this event** is inspected and classified: Dependabot's
+   own GitHub-signed commit, Dependabot-authored but unsigned, or foreign.
+3. For a **signed** head and a **patch or minor** update, `gh pr merge --auto`
+   enables auto-merge. Major updates fall through the condition and stay open.
+4. For a **foreign** head, auto-merge is **withdrawn** (`--disable-auto`). An
+   unsigned Dependabot-authored head — what `dependabot-autofix` leaves behind
+   after a reword or a rebase — is left exactly as it is.
 
 ## Permissions & security
 
@@ -48,9 +55,27 @@ Workflow default `contents: read`; the job widens to `contents: write` and
 - **The `major` exclusion is intentional.** Only `semver-patch` and
   `semver-minor` get auto-merge; majors are left for a human because they are the
   ones most likely to break. Do not broaden the condition to majors.
-- **The actor guard matters.** `if: github.actor == 'dependabot[bot]'` keeps the
-  elevated `contents: write` / `pull-requests: write` path from running on
-  human PRs.
+- **The guard is the pull request's AUTHOR, and it must not go back to
+  `github.actor`.** Both keep the elevated `contents: write` /
+  `pull-requests: write` path off human PRs, but `github.actor` names whoever
+  triggered the run, so a push by someone else made the job *skip*. Auto-merge
+  survives later pushes to the head branch, so skipping left it armed on a tip
+  nobody re-checked. The author of a pull request never changes, so the job now
+  runs on every event of a Dependabot PR — which is exactly when it needs to act.
+- **The two head guards are asymmetric on purpose.** *Arming* requires
+  Dependabot's own GitHub-signed commit: commit author names are `git config`
+  values and forge freely, GitHub's signature does not. *Withdrawing* triggers on
+  the weaker signal — an author that is not Dependabot — because withdrawing is
+  the fail-safe direction; at worst a human merges by hand. Do not "tidy" this
+  into one symmetric check: keying the withdrawal on the signature would fight
+  [`dependabot-autofix`](dependabot-autofix.en.md), whose `--amend` and `rebase`
+  keep Dependabot as the author but drop the signature, and which deliberately
+  keeps auto-merge on after a trivial fix.
+- **`dependabot/fetch-metadata` is a second gate, but not this one.** It
+  re-checks the PR author, the **first** commit's author and that commit's
+  signature, never consults `github.actor`, and fails closed by emitting no
+  outputs (both its `skip-*-verification` inputs default to `false`). What it
+  does not check is the **tip** — and the tip is what auto-merge merges.
 
 ## Related
 
