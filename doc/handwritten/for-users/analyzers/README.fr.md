@@ -72,6 +72,9 @@ Un générateur est une *recette* immuable, et `Generate()` est la seule chose q
 |-------|----------|--------|-------------|
 | [JD005 GeneratorRenderedAsText](JD005.fr.md) | 🔴 Erreur | on | Un générateur est interpolé, concaténé ou passé à `ToString()` au lieu d'être généré ; aucun générateur ne surcharge `ToString()`, donc le texte obtenu est le nom de type du constructeur. |
 | [JD006 DiscardedGeneratorResult](JD006.fr.md) | 🟠 Avertissement | on | Le générateur retourné par une contrainte est jeté en instruction isolée ; les générateurs étant immuables, l'invariant déclaré est silencieusement perdu. |
+| [JD011 GeneratorWhereValueExpected](JD011.fr.md) | 🟠 Avertissement | opt-in | Un générateur atteint une position `object`, `dynamic` ou `params object[]` : c'est la recette qui est stockée, comparée ou assérée, pas la valeur. |
+| [JD012 GeneratorPooledAsValue](JD012.fr.md) | 🟠 Avertissement | on | `Any.OneOf` reçoit des générateurs et infère un ensemble de recettes ; y tirer produit une recette plutôt qu'une valeur. |
+| [JD013 HeldCollectionPassedToOneOf](JD013.fr.md) | 🟠 Avertissement | on | Une collection tenue passée à `Any.OneOf` lie `T` au type de la collection, formant un ensemble d'un seul élément ; `Any.ElementOf` tire parmi ses éléments. |
 
 ## Configuration
 

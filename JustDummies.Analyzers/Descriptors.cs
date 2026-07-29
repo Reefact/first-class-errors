@@ -107,4 +107,39 @@ internal static class Descriptors {
         description: "The adapter's hooks are collected from a test method, its declaring class and the assembly. On a helper — or on a method whose [Fact] was removed during a refactor — the attribute is never read: it pins no seed and reports none. Because a working [Reproducible] is silent on a passing test by design, nothing else distinguishes the inert form from the working one.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.ReproducibleOnNonTestMethod));
 
+    public static readonly DiagnosticDescriptor GeneratorWhereValueExpected = new(
+        id: DiagnosticIds.GeneratorWhereValueExpected,
+        title: "A generator reaches a position that expected its value",
+        messageFormat: "Call Generate() on the {0}: passed where an object is expected, the recipe itself is stored, compared or asserted on, never the value it would draw",
+        category: DiagnosticCategories.Usage,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        // Opt-in, on the evidence ADR-0059's follow-up asked for rather than on intuition: dogfooded over this
+        // repository's suites the rule found no true positive and two false ones, both in a convention test that
+        // collects generators into a List<object> on purpose. That shape is indistinguishable from the theory-row
+        // mistake this rule exists to catch, so it cannot be narrowed away. The rule earns its keep in a consumer
+        // suite, where object-typed assertion helpers are common and reflection over generators is not.
+        isEnabledByDefault: false,
+        description: "Generators are reference types, so an object, dynamic or params object[] position accepts one with no conversion — the residue the removal of the implicit conversions could not close. An assertion helper taking object then inspects the recipe (Assert.NotNull(Any.String()) is green for ever), a theory row carries the recipe into the code under test, and Equals against a value is false for every run and every seed. Opt-in: a suite that manipulates generators as objects on purpose would see this fire on legitimate code.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.GeneratorWhereValueExpected));
+
+    public static readonly DiagnosticDescriptor GeneratorPooledAsValue = new(
+        id: DiagnosticIds.GeneratorPooledAsValue,
+        title: "A choice pool is built from generators rather than values",
+        messageFormat: "Call Generate() on each pooled generator: Any.{0} inferred a pool of recipes, so drawing from it yields a recipe rather than a value",
+        category: DiagnosticCategories.Usage,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Any.OneOf(Any.Int32(), Any.Int32()) compiles and infers the builder type as the pool's element type, so the pool holds recipes. What makes this a trap rather than an obvious mistake is that the surface is inconsistent about it: pooling generators of different types fails type inference and the compiler catches it, while two of the same type bind cleanly.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.GeneratorPooledAsValue));
+
+    public static readonly DiagnosticDescriptor HeldCollectionPassedToOneOf = new(
+        id: DiagnosticIds.HeldCollectionPassedToOneOf,
+        title: "A held collection is passed to Any.OneOf, making a pool of one",
+        messageFormat: "Use Any.ElementOf to draw from the collection's elements: passed to OneOf it binds T to {0}, so the pool holds one item and every draw returns the same one",
+        category: DiagnosticCategories.Usage,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Any.OneOf takes params T[], so a single collection argument binds T to the collection type itself rather than to its elements. The call compiles, draws succeed, and every one of them returns the same collection — the arbitrary choice the test claims to make never varies. Any.ElementOf is the entry point that draws from a collection's elements; an explicit type argument states the opposite intent and is left alone.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.HeldCollectionPassedToOneOf));
+
 }
