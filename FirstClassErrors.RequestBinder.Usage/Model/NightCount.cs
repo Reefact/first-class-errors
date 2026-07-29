@@ -38,6 +38,30 @@ public readonly struct NightCount : IEquatable<NightCount> {
 
     #endregion
 
+    /// <summary>
+    ///     Determines whether two <see cref="NightCount" /> instances are equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="NightCount" /> instance to compare.</param>
+    /// <param name="right">The second <see cref="NightCount" /> instance to compare.</param>
+    /// <returns>
+    ///     <c>true</c> if the specified <see cref="NightCount" /> instances are equal; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool operator ==(NightCount left, NightCount right) {
+        return left.Equals(right);
+    }
+
+    /// <summary>
+    ///     Determines whether two <see cref="NightCount" /> instances are not equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="NightCount" /> instance to compare.</param>
+    /// <param name="right">The second <see cref="NightCount" /> instance to compare.</param>
+    /// <returns>
+    ///     <c>true</c> if the specified <see cref="NightCount" /> instances are not equal; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool operator !=(NightCount left, NightCount right) {
+        return !left.Equals(right);
+    }
+
     /// <inheritdoc />
     public bool Equals(NightCount other) {
         return Value == other.Value;

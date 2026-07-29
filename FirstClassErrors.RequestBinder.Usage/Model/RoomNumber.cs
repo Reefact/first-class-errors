@@ -42,6 +42,30 @@ public readonly struct RoomNumber : IEquatable<RoomNumber> {
 
     #endregion
 
+    /// <summary>
+    ///     Determines whether two <see cref="RoomNumber" /> instances are equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="RoomNumber" /> instance to compare.</param>
+    /// <param name="right">The second <see cref="RoomNumber" /> instance to compare.</param>
+    /// <returns>
+    ///     <c>true</c> if the specified <see cref="RoomNumber" /> instances are equal; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool operator ==(RoomNumber left, RoomNumber right) {
+        return left.Equals(right);
+    }
+
+    /// <summary>
+    ///     Determines whether two <see cref="RoomNumber" /> instances are not equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="RoomNumber" /> instance to compare.</param>
+    /// <param name="right">The second <see cref="RoomNumber" /> instance to compare.</param>
+    /// <returns>
+    ///     <c>true</c> if the specified <see cref="RoomNumber" /> instances are not equal; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool operator !=(RoomNumber left, RoomNumber right) {
+        return !left.Equals(right);
+    }
+
     /// <inheritdoc />
     public bool Equals(RoomNumber other) {
         return Value == other.Value;
