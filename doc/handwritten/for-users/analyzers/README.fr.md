@@ -59,6 +59,10 @@ Ces règles sont incluses dans le package **`JustDummies`** (pas FirstClassError
 | [JD002 DiscardedReproduciblyAsyncResult](JD002.fr.md) | 🔴 Erreur | on | Le `Task` retourné par `Any.ReproduciblyAsync` est jeté (instruction isolée ou `_ =`) ; les échecs du corps sont perdus. Faites `await`. |
 | [JD003 AwaitableBodyPassedToReproducibly](JD003.fr.md) | 🔴 Erreur | on | Une lambda synchrone dont le corps abandonne une tâche, ou un groupe de méthodes `async void`, atteint `Any.Reproducibly` ; la portée retourne avant l'exécution des assertions, et `CS4014` ne se déclenche pas. |
 | [JD004 DiscardedSeedingResult](JD004.fr.md) | 🔴 Erreur | on | La poignée retournée par `Any.UseSeed` est jetée, laissant la graine épinglée pour la suite — ou `Any.WithSeed` est appelé pour son effet, alors qu'il n'épingle rien. |
+| [JD007 DrawOutsideThePinnedScope](JD007.fr.md) | 🟠 Avertissement | on | Une valeur est tirée pendant la construction d'une classe de test `[Reproducible]`, qu'xUnit exécute avant l'ouverture de la portée de graine ; la graine rapportée ne la rejoue pas. |
+| [JD008 ArbitraryValueInTheoryData](JD008.fr.md) | 🟠 Avertissement | on | Le fournisseur de données d'une théorie tire une valeur à la découverte, avant tout épinglage ; tous les cas partagent cette unique valeur. |
+| [JD009 DrawInStaticInitializer](JD009.fr.md) | 🟠 Avertissement | on | Un initialiseur statique tire une seule fois pour toute la suite, sous le premier test exécuté, rendant les tests dépendants de l'ordre et rejouables depuis aucune graine. |
+| [JD010 ReproducibleOnNonTestMethod](JD010.fr.md) | 🟠 Avertissement | on | `[Reproducible]` sur une méthode qu'xUnit ne traite jamais comme un test ; il n'épingle rien, et ressemble exactement à la forme active. |
 
 ## JustDummies — Usage
 

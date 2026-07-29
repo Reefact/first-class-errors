@@ -11,3 +11,7 @@ JD003   | JustDummies.Reproducibility | Error    | AwaitableBodyPassedToReproduc
 JD004   | JustDummies.Reproducibility | Error    | DiscardedSeedingResultAnalyzer
 JD005   | JustDummies.Usage           | Error    | GeneratorRenderedAsTextAnalyzer
 JD006   | JustDummies.Usage           | Warning  | DiscardedGeneratorResultAnalyzer
+JD007   | JustDummies.Reproducibility | Warning  | DrawOutsideThePinnedScopeAnalyzer
+JD008   | JustDummies.Reproducibility | Warning  | ArbitraryValueInTheoryDataAnalyzer
+JD009   | JustDummies.Reproducibility | Warning  | DrawInStaticInitializerAnalyzer
+JD010   | JustDummies.Reproducibility | Warning  | ReproducibleOnNonTestMethodAnalyzer

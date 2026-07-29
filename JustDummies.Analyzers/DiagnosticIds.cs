@@ -16,4 +16,10 @@ internal static class DiagnosticIds {
     public const string GeneratorRenderedAsText   = "JD005";
     public const string DiscardedGeneratorResult  = "JD006";
 
+    // Category: Reproducibility — draws that escape the pinned seed scope
+    public const string DrawOutsideThePinnedScope  = "JD007";
+    public const string ArbitraryValueInTheoryData = "JD008";
+    public const string DrawInStaticInitializer    = "JD009";
+    public const string ReproducibleOnNonTestMethod = "JD010";
+
 }

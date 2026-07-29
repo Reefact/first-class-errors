@@ -28,6 +28,9 @@
     <ProjectReference Include="..\JustDummies.Analyzers\JustDummies.Analyzers.csproj" />
     <!-- The core is referenced so JustDummies.Any resolves inside the snippets the harness compiles. -->
     <ProjectReference Include="..\JustDummies\JustDummies.csproj" />
+    <!-- The adapter is referenced so [Reproducible] resolves in the snippets the lifecycle rules are tested against.
+         The analyzers themselves never reference it — they resolve it by metadata name, and stay silent without it. -->
+    <ProjectReference Include="..\JustDummies.Xunit\JustDummies.Xunit.csproj" />
   </ItemGroup>
 
   <ItemGroup>
