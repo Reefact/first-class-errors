@@ -49,16 +49,16 @@ public sealed class EnumUniverseViolationAnalyzer : DiagnosticAnalyzer {
         if (factory.TargetMethod.TypeArguments.Length != 1 || factory.TargetMethod.TypeArguments[0] is not INamedTypeSymbol enumType) { return; }
         if (NegativeTestGuard.IsSoleBodyOfLambdaArgument(invocation.Syntax)) { return; }
 
-        HashSet<object?> declared = new(enumType.GetMembers()
+        HashSet<object?> declared = [.. enumType.GetMembers()
                                                 .OfType<IFieldSymbol>()
                                                 .Where(field => field.HasConstantValue)
-                                                .Select(field => field.ConstantValue));
+                                                .Select(field => field.ConstantValue)];
 
         if (declared.Count == 0) { return; }
 
         bool combinationsAllowed = constraints.Any(constraint => constraint.TargetMethod.Name == "AllowingCombinations");
 
-        HashSet<object?> excluded = new();
+        HashSet<object?> excluded = [];
 
         foreach (IInvocationOperation constraint in constraints) {
             string name = constraint.TargetMethod.Name;

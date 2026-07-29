@@ -57,7 +57,7 @@ public sealed class StringConstraintsAdmitNoValueAnalyzer : DiagnosticAnalyzer {
         bool                               requireUpper = false;
         bool                               requireLower = false;
         bool                               hasValueSet  = false;
-        List<(string Text, IOperation At)> fragments   = new();
+        List<(string Text, IOperation At)> fragments   = [];
         int?                               fixedLength = null;
         int?                               maximum     = null;
 
