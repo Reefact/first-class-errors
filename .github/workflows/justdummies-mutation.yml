@@ -25,11 +25,11 @@ concurrency:
   group: justdummies-mutation-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Least-privilege FLOOR for the jobs below: this workflow only checks out, builds and runs tests, so
-# the token needs nothing beyond read access to the repository contents. A job that needs LESS narrows
-# it itself — see the advisory `gate`, which checks nothing out and therefore declares no scope at all.
-permissions:
-  contents: read
+# Least privilege is declared PER JOB below rather than here. A workflow-level grant reaches every
+# job, including any added later that does not need it, so each job states the narrowest scope it can:
+# `changed` and `full` check the repository out and take `contents: read`, the advisory `gate` checks
+# nothing out and declares none at all (Sonar githubactions:S8264). A job added here MUST carry its own
+# `permissions` block — with none it inherits the repository default instead of a floor set here.
 
 env:
   DOTNET_NOLOGO: 'true'
@@ -47,6 +47,9 @@ jobs:
     name: Mutate the diff (${{ matrix.name }})
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    # Checks the repository out, builds and runs tests; it calls no API and writes nothing back.
+    permissions:
+      contents: read
     # Both remaining legs finish in about ninety seconds, touched or untouched. The cap is a runaway
     # guard, not a budget: the leg that needed one — the generator's — no longer runs here (ADR-0049).
     timeout-minutes: 20
@@ -174,13 +177,13 @@ jobs:
     needs: changed
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    # Narrower than the workflow-level floor, not wider: this job checks nothing out and calls no API.
+    # The narrowest of the three: this job checks nothing out and calls no API.
     # `needs.changed.result` is substituted by GitHub before the shell runs, and `::warning::` is a
-    # runner workflow command written to stdout, not a REST call. A job-level block REPLACES the
-    # inherited value rather than merging with it, so `{}` — GitHub's explicit "no scopes" form — leaves
-    # this job's token with nothing at all (Sonar githubactions:S8264). It must stay the explicit flow
-    # mapping: a bare `permissions:` is a null, not an empty map. Widen it if a checkout or a `gh` call
-    # is ever added here, or that step will fail on a 403.
+    # runner workflow command written to stdout, not a REST call. A job-level block REPLACES whatever
+    # the job would otherwise inherit rather than merging with it, so `{}` — GitHub's explicit "no
+    # scopes" form — leaves this job's token with nothing at all (Sonar githubactions:S8264). It must
+    # stay the explicit flow mapping: a bare `permissions:` is a null, not an empty map. Widen it if a
+    # checkout or a `gh` call is ever added here, or that step will fail on a 403.
     permissions: {}
     steps:
       - name: Report the mutation legs
@@ -202,6 +205,9 @@ jobs:
     name: Full sweep (${{ matrix.name }})
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    # Same scope as `changed`: checkout, build, test — nothing written back.
+    permissions:
+      contents: read
     # The sweep runs the library's whole test suite once per mutant, and `JustDummies` carries a few
     # thousand of them — this is the longest job in the repository, and the reason the sweep is
     # weekly and the gate is diff-scoped. Measured locally on four cores, it runs well past an hour;
