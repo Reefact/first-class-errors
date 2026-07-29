@@ -57,6 +57,10 @@ public sealed class AnyOneOfTests {
     }
 
     [Fact(DisplayName = "Duplicate values are collapsed under the default comparer: both distinct values are still drawn, nothing else.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("JustDummies.Constraints", "JD025:The same value is listed twice in a pool",
+                                                     Justification =
+                                                         "The duplicate IS the subject. This pins the collapsing JD025 reports: without it there is nothing to collapse and the test " +
+                                                         "asserts nothing.")]
     public void DuplicatesAreCollapsed() {
         HashSet<int> seen = [.. Samples(Any.OneOf(1, 1, 2))];
 

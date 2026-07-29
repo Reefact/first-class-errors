@@ -2,8 +2,9 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0061-run-the-justdummies-analyzers-on-the-repository-s-own-code.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Proposed:** 2026-07-29
+**Accepted:** 2026-07-29
 **Decision Makers:** Reefact
 
 ## Context

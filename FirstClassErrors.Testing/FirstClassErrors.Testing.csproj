@@ -60,6 +60,14 @@
          reference it privately and embed its assembly in this package (see the pack target below);
          switch to a NuGet PackageReference once JustDummies is published. -->
     <ProjectReference Include="..\JustDummies\JustDummies.csproj" PrivateAssets="all" />
+
+    <!-- Run the JustDummies analyzers on this project (ADR-0061): OutputItemType=Analyzer loads them at
+         build and in the IDE, ReferenceOutputAssembly=false keeps them off the runtime graph, and
+         PrivateAssets=all stops the reference from reaching a consumer of this project. -->
+    <ProjectReference Include="..\JustDummies.Analyzers\JustDummies.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all" />
   </ItemGroup>
 
   <!-- While JustDummies is unpublished, carry JustDummies.dll inside this package's lib/ so a consumer restores it

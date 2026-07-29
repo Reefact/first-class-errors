@@ -28,6 +28,12 @@
     <ProjectReference Include="..\JustDummies.Analyzers\JustDummies.Analyzers.csproj" />
     <!-- The core is referenced so JustDummies.Any resolves inside the snippets the harness compiles. -->
     <ProjectReference Include="..\JustDummies\JustDummies.csproj" />
+
+    <!-- Deliberately NOT wired for the JustDummies analyzers, unlike every other JustDummies consumer here
+         (ADR-0061). This project's own subject is those analyzers: loading them into the compilation that
+         builds and instantiates them makes the analyzer under test also the analyzer running, and a rule
+         changed here would then report on the very source that defines it. The rules are exercised against
+         realistic code in the projects the ADR names; this one exercises them against snippets instead. -->
     <!-- The adapter is referenced so [Reproducible] resolves in the snippets the lifecycle rules are tested against.
          The analyzers themselves never reference it — they resolve it by metadata name, and stay silent without it. -->
     <ProjectReference Include="..\JustDummies.Xunit\JustDummies.Xunit.csproj" />

@@ -262,4 +262,4 @@ Optional supporting material:
 | [ADR-0058](0058-suppress-ca1510-while-the-netstandard-floor-stands.md) | Suppress CA1510 while the pre-.NET-6 floor stands | Accepted |
 | [ADR-0059](0059-guard-the-recipe-versus-value-boundary-with-analyzers.md) | Guard the recipe-versus-value boundary with analyzers where the type system cannot reach it | Proposed |
 | [ADR-0060](0060-let-stated-intent-outrank-generic-analyzer-advice.md) | Let stated intent outrank generic analyzer advice, and record the refusal beside the rule | Proposed |
-| [ADR-0061](0061-run-the-justdummies-analyzers-on-the-repository-s-own-code.md) | Run the JustDummies analyzers on the repository's own code, so the rules are verified against code not written to please them | Proposed |
+| [ADR-0061](0061-run-the-justdummies-analyzers-on-the-repository-s-own-code.md) | Run the JustDummies analyzers on the repository's own code, so the rules are verified against code not written to please them | Accepted |

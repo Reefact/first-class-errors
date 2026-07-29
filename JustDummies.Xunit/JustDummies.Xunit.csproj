@@ -69,6 +69,14 @@
     <!-- JustDummies only. This package exists precisely because JustDummies cannot reference a test framework
          itself (ADR-0011); it must not acquire a FirstClassErrors dependency either. -->
     <ProjectReference Include="..\JustDummies\JustDummies.csproj" />
+
+    <!-- Run the JustDummies analyzers on this project (ADR-0061): OutputItemType=Analyzer loads them at
+         build and in the IDE, ReferenceOutputAssembly=false keeps them off the runtime graph, and
+         PrivateAssets=all stops the reference from reaching a consumer of this project. -->
+    <ProjectReference Include="..\JustDummies.Analyzers\JustDummies.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
