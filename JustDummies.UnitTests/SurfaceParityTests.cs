@@ -150,49 +150,53 @@ public sealed class SurfaceParityTests {
         "Between", "OneOf", "Except", "DifferentFrom", "WithGranularity", "WithOffset", "WithOffsetBetween"
     ];
 
-    public static IEnumerable<object[]> Builders() {
+    public static TheoryData<Type, string[]> Builders() {
+        TheoryData<Type, string[]> data = new();
+
         // Signed integers carry MultipleOf; the binary floats do not; Decimal carries WithScale; TimeSpan (a signed
         // magnitude) carries WithGranularity — the lattice constraint is what forks the former shared signed family.
-        yield return [typeof(AnyInt32), SignedIntegerAlgebra];
-        yield return [typeof(AnySByte), SignedIntegerAlgebra];
-        yield return [typeof(AnyInt16), SignedIntegerAlgebra];
-        yield return [typeof(AnyInt64), SignedIntegerAlgebra];
-        yield return [typeof(AnyDouble), FloatingPointAlgebra];
-        yield return [typeof(AnySingle), FloatingPointAlgebra];
-        yield return [typeof(AnyDecimal), DecimalAlgebra];
-        yield return [typeof(AnyTimeSpan), TimeSpanAlgebra];
+        data.Add(typeof(AnyInt32), SignedIntegerAlgebra);
+        data.Add(typeof(AnySByte), SignedIntegerAlgebra);
+        data.Add(typeof(AnyInt16), SignedIntegerAlgebra);
+        data.Add(typeof(AnyInt64), SignedIntegerAlgebra);
+        data.Add(typeof(AnyDouble), FloatingPointAlgebra);
+        data.Add(typeof(AnySingle), FloatingPointAlgebra);
+        data.Add(typeof(AnyDecimal), DecimalAlgebra);
+        data.Add(typeof(AnyTimeSpan), TimeSpanAlgebra);
 
-        yield return [typeof(AnyByte), UnsignedIntegerAlgebra];
-        yield return [typeof(AnyUInt16), UnsignedIntegerAlgebra];
-        yield return [typeof(AnyUInt32), UnsignedIntegerAlgebra];
-        yield return [typeof(AnyUInt64), UnsignedIntegerAlgebra];
+        data.Add(typeof(AnyByte), UnsignedIntegerAlgebra);
+        data.Add(typeof(AnyUInt16), UnsignedIntegerAlgebra);
+        data.Add(typeof(AnyUInt32), UnsignedIntegerAlgebra);
+        data.Add(typeof(AnyUInt64), UnsignedIntegerAlgebra);
 
-        yield return [typeof(AnyDateTime), InstantWithGranularityAlgebra];
-        yield return [typeof(AnyDateTimeOffset), InstantWithGranularityAndOffsetAlgebra];
+        data.Add(typeof(AnyDateTime), InstantWithGranularityAlgebra);
+        data.Add(typeof(AnyDateTimeOffset), InstantWithGranularityAndOffsetAlgebra);
 
         // The remaining scalar builders each carry their own deliberate set.
-        yield return [typeof(AnyBoolean), new[] { "True", "False", "DifferentFrom" }];
-        yield return [typeof(AnyGuid), new[] { "NonEmpty", "Empty", "OneOf", "Except", "DifferentFrom" }];
+        data.Add(typeof(AnyBoolean), new[] { "True", "False", "DifferentFrom" });
+        data.Add(typeof(AnyGuid), new[] { "NonEmpty", "Empty", "OneOf", "Except", "DifferentFrom" });
         // AnyEnum adds AllowingCombinations, the opt-in widening the draw from the declared members to their
         // combinations — meaningful only for a [Flags] enum, hence a constraint rather than a second factory.
-        yield return [typeof(AnyEnum<DayOfWeek>), new[] { "AllowingCombinations", "OneOf", "Except", "DifferentFrom" }];
-        yield return [typeof(AnyChar), new[] { "Alpha", "AlphaNumeric", "Numeric", "UpperCase", "LowerCase", "OneOf", "Except", "DifferentFrom" }];
+        data.Add(typeof(AnyEnum<DayOfWeek>), new[] { "AllowingCombinations", "OneOf", "Except", "DifferentFrom" });
+        data.Add(typeof(AnyChar), new[] { "Alpha", "AlphaNumeric", "Numeric", "UpperCase", "LowerCase", "OneOf", "Except", "DifferentFrom" });
 
         // AnyString carries the exclusion pair Except/DifferentFrom (met by a bounded redraw, since strings are not
         // ordinal-mapped) and, like every other family, a composable OneOf that returns the builder itself.
-        yield return [typeof(AnyString), new[] {
+        data.Add(typeof(AnyString), new[] {
             "NonEmpty", "WithLength", "WithMinLength", "WithMaxLength", "WithLengthBetween",
             "StartingWith", "EndingWith", "Containing", "Alpha", "AlphaNumeric", "Numeric", "WithChars", "UpperCase", "LowerCase",
             "OneOf", "Except", "DifferentFrom"
-        }];
+        });
 
 #if NET8_0_OR_GREATER
-        yield return [typeof(AnyInt128), SignedIntegerAlgebra];
-        yield return [typeof(AnyHalf), FloatingPointAlgebra];
-        yield return [typeof(AnyUInt128), UnsignedIntegerAlgebra];
-        yield return [typeof(AnyDateOnly), InstantAlgebra];
-        yield return [typeof(AnyTimeOnly), InstantWithGranularityAlgebra];
+        data.Add(typeof(AnyInt128), SignedIntegerAlgebra);
+        data.Add(typeof(AnyHalf), FloatingPointAlgebra);
+        data.Add(typeof(AnyUInt128), UnsignedIntegerAlgebra);
+        data.Add(typeof(AnyDateOnly), InstantAlgebra);
+        data.Add(typeof(AnyTimeOnly), InstantWithGranularityAlgebra);
 #endif
+
+        return data;
     }
 
     [Theory(DisplayName = "Each builder exposes exactly its family's constraint method set.")]
