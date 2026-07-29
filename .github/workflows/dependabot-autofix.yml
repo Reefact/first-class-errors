@@ -29,7 +29,22 @@ name: dependabot-autofix
 #     is still pushed, but the checks must be re-triggered by hand.
 # See doc/handwritten/for-maintainers/workflows/dependabot-autofix.en.md.
 
-on:
+# A workflow-security audit (zizmor `dangerous-triggers`) reports this trigger as a
+# privilege-escalation vector, and the pattern generally is one: `workflow_run` runs in the
+# base context with the repository secrets and a writable token, off the completion of a run
+# that may have executed untrusted code. It is kept, because the escalation it describes is
+# already closed here and the trigger is not replaceable:
+#   - Not replaceable — a `pull_request` run raised by Dependabot gets a READ-ONLY token and
+#     NO secrets, so it could neither read ANTHROPIC_API_KEY nor push the repair. There is no
+#     other trigger that grants both.
+#   - The untrusted code is never run — the checkout below is the BASE, never the pull
+#     request, and the repair does only git operations. The bumped dependency is never built,
+#     so the write token and the API key never meet freshly bumped third-party code.
+#   - The identity is settled against the API, not the event payload, and the branch TIP must
+#     be Dependabot's own GitHub-signed commit (see the resolve step). That is a stricter
+#     check than `dependabot/fetch-metadata` performs, which validates the FIRST commit.
+# Recorded rather than silenced, per ADR-0060: the refusal belongs next to what it refuses.
+on: # zizmor: ignore[dangerous-triggers]
   workflow_run:
     # Every gating workflow a Dependabot PR passes through. Any completion re-runs
     # the triage against the head commit's current, combined check status.
