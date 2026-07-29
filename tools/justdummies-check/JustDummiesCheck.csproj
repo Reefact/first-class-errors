@@ -76,6 +76,12 @@
          version is pinned EXACTLY, not floated, and nuget.config maps the id to the local feed only, so a future
          stable JustDummies on nuget.org can never be substituted for the artifact under test. -->
     <PackageReference Include="JustDummies" Version="$(JustDummiesCheckVersion)" />
+
+    <!-- Deliberately NOT wired for the JustDummies analyzers, unlike the repository's other JustDummies
+         consumers (ADR-0061). Wiring them would need a ProjectReference, which the comment above explains this
+         project must never take: it consumes the PACKED package precisely so asset selection is exercised as a
+         real consumer sees it. The one contract checked here is which asset NuGet resolves, and a diagnostic
+         about how the library is called says nothing about that. -->
   </ItemGroup>
 
 </Project>
