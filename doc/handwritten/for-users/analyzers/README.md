@@ -72,6 +72,9 @@ A generator is an immutable *recipe*, and `Generate()` is the only thing that ma
 |------|----------|---------|-------------|
 | [JD005 GeneratorRenderedAsText](JD005.en.md) | 🔴 Error | on | A generator is interpolated, concatenated or ToString()'d instead of generated from; no generator overrides ToString(), so the text is the builder's type name. |
 | [JD006 DiscardedGeneratorResult](JD006.en.md) | 🟠 Warning | on | The generator returned by a constraint is discarded as a bare statement; generators are immutable, so the declared invariant is silently lost. |
+| [JD011 GeneratorWhereValueExpected](JD011.en.md) | 🟠 Warning | opt-in | A generator reaches an object, dynamic or params object[] position, so the recipe is stored, compared or asserted on instead of the value. |
+| [JD012 GeneratorPooledAsValue](JD012.en.md) | 🟠 Warning | on | Any.OneOf is given generators, inferring a pool of recipes; drawing from it yields a recipe rather than a value. |
+| [JD013 HeldCollectionPassedToOneOf](JD013.en.md) | 🟠 Warning | on | A held collection passed to Any.OneOf binds T to the collection type, making a pool of one; Any.ElementOf draws from its elements. |
 
 ## Configuring
 

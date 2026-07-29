@@ -15,3 +15,6 @@ JD007   | JustDummies.Reproducibility | Warning  | DrawOutsideThePinnedScopeAnal
 JD008   | JustDummies.Reproducibility | Warning  | ArbitraryValueInTheoryDataAnalyzer
 JD009   | JustDummies.Reproducibility | Warning  | DrawInStaticInitializerAnalyzer
 JD010   | JustDummies.Reproducibility | Warning  | ReproducibleOnNonTestMethodAnalyzer
+JD011   | JustDummies.Usage           | Disabled | GeneratorWhereValueExpectedAnalyzer
+JD012   | JustDummies.Usage           | Warning  | GeneratorPooledAsValueAnalyzer
+JD013   | JustDummies.Usage           | Warning  | HeldCollectionPassedToOneOfAnalyzer
