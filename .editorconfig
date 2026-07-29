@@ -24,6 +24,14 @@
 # follow; they are switched off here so the compiler stops emitting them, which is also what
 # removes them from the SonarQube Cloud report — the scanner reports what the build emits.
 #
+# It is also where the EXCEPTIONS to the Sonar rules are written. build/sonar-profile.globalconfig
+# is generated from the SonarCloud quality profile and puts every rule it activates at `warning`,
+# so the default is enforce and the CI ratchet does the rest. This file overrides it, and only
+# ever downwards: `suggestion` for a rule whose existing violations are not cleared yet, `none`
+# for one this codebase refuses, with its reason. Membership is generated; every exception is
+# written here, and the backlog below is a list that shrinks by deletion. Full procedure:
+# doc/handwritten/for-maintainers/workflows/sonar-profile.en.md (decision: ADR-0062).
+#
 # charset is deliberately left unset: the repository mixes BOM and BOM-less files,
 # and pinning it here would rewrite existing files.
 
@@ -57,6 +65,56 @@ dotnet_diagnostic.IDE0008.severity = warning
 # test-generator paths. Same trade the repository already refused when it kept its value
 # objects as validating classes rather than structs.
 dotnet_diagnostic.CA1859.severity = none
+
+# --- Sonar rules not yet enforced: the backlog -------------------------------------------------
+#
+# build/sonar-profile.globalconfig is generated from the SonarCloud quality profile and puts every
+# rule it activates at `warning`, so the default is ENFORCE. The 33 rules below are the
+# exceptions: each still has violations in this tree, and promoting it now would turn unrelated
+# pull requests red. They are demoted to `suggestion` — active, non-blocking — with the number of
+# sites measured when this landed.
+#
+# This block IS the backlog, and it shrinks by DELETION: clear a rule's sites, delete its line,
+# and the generated file enforces it from the next build with nothing further to write. A rule
+# this codebase means to refuse outright does not belong here — it belongs with the declines
+# above, at `none`, with its reason (ADR-0060). `suggestion` means "not yet", never "no".
+#
+# The other 342 rules the profile activates have zero violations here and are
+# enforced as of this commit. Total outstanding: 135 sites. Decision: ADR-0062.
+
+dotnet_diagnostic.S3776.severity = suggestion  #  19 — Cognitive Complexity of methods should not be too high
+dotnet_diagnostic.S1244.severity = suggestion  #  15 — Floating point numbers should not be tested for equality
+dotnet_diagnostic.S3267.severity = suggestion  #  14 — Loops should be simplified with "LINQ" expressions
+dotnet_diagnostic.S3878.severity = suggestion  #  14 — Arrays should not be created for params parameters
+dotnet_diagnostic.S8969.severity = suggestion  #  14 — Null-forgiving operators should not be redundant
+dotnet_diagnostic.S3218.severity = suggestion  #   8 — Inner class members should not shadow outer class "static" or type members
+dotnet_diagnostic.S107.severity = suggestion  #   6 — Methods should not have too many parameters
+dotnet_diagnostic.S1481.severity = suggestion  #   5 — Unused local variables should be removed
+dotnet_diagnostic.S1854.severity = suggestion  #   4 — Unused assignments should be removed
+dotnet_diagnostic.S4144.severity = suggestion  #   3 — Methods should not have identical implementations
+dotnet_diagnostic.S1066.severity = suggestion  #   2 — Mergeable "if" statements should be combined
+dotnet_diagnostic.S108.severity = suggestion  #   2 — Nested blocks of code should not be left empty
+dotnet_diagnostic.S1192.severity = suggestion  #   2 — String literals should not be duplicated
+dotnet_diagnostic.S125.severity = suggestion  #   2 — Sections of code should not be commented out
+dotnet_diagnostic.S1905.severity = suggestion  #   2 — Redundant casts should not be used
+dotnet_diagnostic.S2326.severity = suggestion  #   2 — Unused type parameters should be removed
+dotnet_diagnostic.S3220.severity = suggestion  #   2 — Method calls should not resolve ambiguously to overloads with "params"
+dotnet_diagnostic.S3358.severity = suggestion  #   2 — Ternary operators should not be nested
+dotnet_diagnostic.S6966.severity = suggestion  #   2 — Awaitable method should be used
+dotnet_diagnostic.S927.severity = suggestion  #   2 — Parameter names should match base declaration and other partial definitions
+dotnet_diagnostic.S1144.severity = suggestion  #   1 — Unused private types or members should be removed
+dotnet_diagnostic.S1172.severity = suggestion  #   1 — Unused method parameters should be removed
+dotnet_diagnostic.S2219.severity = suggestion  #   1 — Runtime type checking should be simplified
+dotnet_diagnostic.S2342.severity = suggestion  #   1 — Enumeration types should comply with a naming convention
+dotnet_diagnostic.S2692.severity = suggestion  #   1 — "IndexOf" checks should not be for positive numbers
+dotnet_diagnostic.S3376.severity = suggestion  #   1 — Attribute, EventArgs, and Exception type names should end with the type being extended
+dotnet_diagnostic.S3459.severity = suggestion  #   1 — Unassigned members should be removed
+dotnet_diagnostic.S3871.severity = suggestion  #   1 — Exception types should be "public"
+dotnet_diagnostic.S3877.severity = suggestion  #   1 — Exceptions should not be thrown from unexpected methods
+dotnet_diagnostic.S3881.severity = suggestion  #   1 — "IDisposable" should be implemented correctly
+dotnet_diagnostic.S4136.severity = suggestion  #   1 — Method overloads should be grouped together
+dotnet_diagnostic.S6580.severity = suggestion  #   1 — Use a format provider when parsing date and time
+dotnet_diagnostic.S6608.severity = suggestion  #   1 — Prefer indexing instead of "Enumerable" methods on types implementing "IList"
 
 # Test projects only. `*Tests` matches the thirteen test projects and no shipping one —
 # FirstClassErrors.Testing ends in `Testing`, so the rule below does not reach it.
