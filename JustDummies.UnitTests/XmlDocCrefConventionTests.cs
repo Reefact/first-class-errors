@@ -183,6 +183,11 @@ public sealed class XmlDocCrefConventionTests {
         return positions.ToString();
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1870:Use a cached 'SearchValues' instance",
+                                                     Justification =
+                                                         "SearchValues<T> arrived in .NET 8 and this suite also runs on the .NET Framework 4.7.2 support floor " +
+                                                         "(ADR-0022), where the type does not exist. IndexOfAny over two characters, run once per cref in a " +
+                                                         "convention test, is not the cost this rule exists to remove.")]
     private static string MemberPath(string cref) {
         int end = cref.IndexOfAny(new[] { '{', '(' });
 

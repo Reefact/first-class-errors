@@ -93,7 +93,7 @@ public sealed class StringShapeProperties {
             0 => IsAsciiLetter(character),
             1 => IsAsciiDigit(character),
             2 => IsAsciiLetter(character) || IsAsciiDigit(character),
-            _ => pool.IndexOf(character) >= 0
+            _ => pool.Contains(character)
         };
     }
 
@@ -213,6 +213,11 @@ public sealed class StringShapeProperties {
     }
 
     [Fact(DisplayName = "Containing embeds the value, whatever the value.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2249:Consider using String.Contains instead of String.IndexOf",
+                                                     Justification =
+                                                         "string.Contains(string, StringComparison) is not on the netstandard2.0 / net472 floor this suite runs " +
+                                                         "against (ADR-0022); IndexOf with the same StringComparison.Ordinal carries the identical comparison and " +
+                                                         "compiles on every leg. The rule is right on net10.0 only.")]
     public void ContainingEmbedsTheValue() {
         Prop.ForAll(Affix(DefaultAlphabet, 8).ToArbitrary(),
                     fragment => Expect.EveryDraw(Any.String().Containing(fragment),

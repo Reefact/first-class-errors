@@ -276,9 +276,9 @@ public sealed class UriProperties {
                                                                    ? value.Scheme == (testCase.Secure.Value ? "wss" : "ws")
                                                                    : value.Scheme is "ws" or "wss")
                                                            && rendered.StartsWith(value.Scheme + "://" + testCase.Host, StringComparison.Ordinal)
-                                                           && (rendered.IndexOf('?') >= 0) == testCase.Query
-                                                           && rendered.IndexOf('#') < 0
-                                                           && rendered.IndexOf('@') < 0;
+                                                           && rendered.Contains('?') == testCase.Query
+                                                           && !rendered.Contains('#')
+                                                           && !rendered.Contains('@');
                                                 });
                     })
             .QuickCheckThrowOnFailure();
@@ -357,6 +357,17 @@ public sealed class UriProperties {
     }
 
     [Fact(DisplayName = "A relative draw is a relative reference carrying exactly the declared path, query and fragment.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1870:Use a cached 'SearchValues' instance",
+                                                     Justification =
+                                                         "SearchValues<T> arrived in .NET 8 and this suite also runs on the .NET Framework 4.7.2 support floor " +
+                                                         "(ADR-0022, build/Net472TestFloor.props), where the type does not exist. The rule is right on net10.0 only; " +
+                                                         "IndexOfAny over a two-character array carries the same meaning on both legs. Same downlevel wall as " +
+                                                         "SYSLIB1045 and CA1510 (ADR-0058).")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1865:Use char overload",
+                                                     Justification =
+                                                         "string.StartsWith(char) is not on the .NET Framework 4.7.2 support floor this suite also runs on " +
+                                                         "(ADR-0022): measured, the net472 leg rejects it with CS1503, cannot convert from 'char' to 'string'. " +
+                                                         "The explicit StringComparison.Ordinal overload compiles on both legs and states the comparison it uses.")]
     public void RelativeDrawsAreRelativeReferences() {
         Gen<(int? Segments, bool Rooted, bool Query, bool Fragment)> cases =
             from segments in Optional(Generators.Count(6))
@@ -389,8 +400,8 @@ public sealed class UriProperties {
                                                            && reference.Length > 0
                                                            && (!testCase.Rooted || reference.StartsWith("/", StringComparison.Ordinal))
                                                            && (testCase.Segments.HasValue ? segments == testCase.Segments.Value : segments <= 2)
-                                                           && (reference.IndexOf('?') >= 0) == testCase.Query
-                                                           && (reference.IndexOf('#') >= 0) == testCase.Fragment;
+                                                           && reference.Contains('?') == testCase.Query
+                                                           && reference.Contains('#') == testCase.Fragment;
                                                 });
                     })
             .QuickCheckThrowOnFailure();
