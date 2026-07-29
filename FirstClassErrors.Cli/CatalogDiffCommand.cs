@@ -94,7 +94,7 @@ internal sealed class CatalogDiffCommand : Command<CatalogDiffSettings> {
             }
 
             string baselinePath = BaselineStore.Resolve(settings.BaselinePath, configuration.Baseline, configDir);
-            if (BaselineStore.Exists(baselinePath) is false) {
+            if (!BaselineStore.Exists(baselinePath)) {
                 logger.Error($"No baseline at '{baselinePath}'. Run 'fce catalog update' to create it.");
 
                 return 1;
@@ -115,7 +115,7 @@ internal sealed class CatalogDiffCommand : Command<CatalogDiffSettings> {
 
             bool violated = failOn switch {
                 "breaking" => diff.HasChangesAtOrAbove(CatalogChangeImpact.Breaking),
-                "any"      => diff.IsEmpty is false,
+                "any"      => !diff.IsEmpty,
                 _          => false
             };
 

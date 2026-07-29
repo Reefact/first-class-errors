@@ -20,14 +20,14 @@ internal static class ConfigRelativePath {
     /// <param name="configuredPath">The value from the configuration file, if any (resolved against <paramref name="configDirectory" />).</param>
     /// <param name="configDirectory">The directory containing the configuration file.</param>
     public static string? Resolve(string? optionPath, string? configuredPath, string configDirectory) {
-        if (string.IsNullOrWhiteSpace(optionPath) is false) {
-            return Path.GetFullPath(optionPath!);
+        if (!string.IsNullOrWhiteSpace(optionPath)) {
+            return Path.GetFullPath(optionPath);
         }
 
-        if (string.IsNullOrWhiteSpace(configuredPath) is false) {
+        if (!string.IsNullOrWhiteSpace(configuredPath)) {
             return Path.IsPathRooted(configuredPath)
-                       ? Path.GetFullPath(configuredPath!)
-                       : Path.GetFullPath(Path.Combine(configDirectory, configuredPath!));
+                       ? Path.GetFullPath(configuredPath)
+                       : Path.GetFullPath(Path.Combine(configDirectory, configuredPath));
         }
 
         return null;

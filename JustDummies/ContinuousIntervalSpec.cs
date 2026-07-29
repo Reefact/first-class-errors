@@ -84,6 +84,11 @@ internal sealed class ContinuousIntervalSpec {
 
     #endregion
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S107:Methods should not have too many parameters",
+                                                     Justification =
+                                                         "This private constructor carries the engine's whole immutable state: the 'constrain once, draw many' design rebuilds the spec on " +
+                                                         "every With* call, so every field has to be threaded through it. A parameter object would only rename the same list, and the " +
+                                                         "constructor is private — no caller ever writes this argument list.")]
     private ContinuousIntervalSpec(string  typeName, Func<double, string> render, Func<double, double> quantize, Func<double, double> nextUp,
                                    double  min,      string? minConstraint,
                                    double  max,      string? maxConstraint,
@@ -304,11 +309,7 @@ internal sealed class ContinuousIntervalSpec {
                          "'a == b || (IsNaN(a) && IsNaN(b))'; the NaN arm is unreachable because EnsureFinite rejects NaN at " +
                          "every entry point, so this is plain exact equality with a defensive tail.")]
     private bool IsExcluded(double value) {
-        foreach (double excluded in _excluded) {
-            if (value.Equals(excluded)) { return true; }
-        }
-
-        return false;
+        return _excluded.Any(excluded => value.Equals(excluded));
     }
 
     private ContinuousIntervalSpec Validated(ContinuousIntervalSpec candidate, string applying) {

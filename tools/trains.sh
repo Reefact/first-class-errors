@@ -39,6 +39,10 @@ _train_field() {
       scopes)    printf '%s\n' "$scopes" ;;
       changelog) printf '%s\n' "$changelog" ;;
       package)   printf '%s\n' "$package" ;;
+      # A caller asking for a field this row format does not carry is a bug in the caller, not a
+      # missing value: say so on stderr rather than returning the empty string an unknown TRAIN
+      # returns, which require_train reads as "no such train".
+      *)         printf 'trains.sh: unknown field "%s"\n' "$_tf_field" >&2 ;;
     esac
   done
 }

@@ -59,6 +59,11 @@ internal sealed class DecimalIntervalSpec {
 
     #endregion
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S107:Methods should not have too many parameters",
+                                                     Justification =
+                                                         "This private constructor carries the engine's whole immutable state: the 'constrain once, draw many' design rebuilds the spec on " +
+                                                         "every With* call, so every field has to be threaded through it. A parameter object would only rename the same list, and the " +
+                                                         "constructor is private — no caller ever writes this argument list.")]
     private DecimalIntervalSpec(string  typeName, Func<decimal, string> render,
                                 decimal min,      string? minConstraint,
                                 decimal max,      string? maxConstraint,
@@ -350,11 +355,7 @@ internal sealed class DecimalIntervalSpec {
     }
 
     private bool IsExcluded(decimal value) {
-        foreach (decimal excluded in _excluded) {
-            if (value == excluded) { return true; }
-        }
-
-        return false;
+        return _excluded.Any(excluded => value == excluded);
     }
 
     private DecimalIntervalSpec Validated(DecimalIntervalSpec candidate, string applying) {
@@ -377,6 +378,11 @@ internal sealed class DecimalIntervalSpec {
         return !IsExcluded(_min);
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out",
+                                                     Justification =
+                                                         "The flagged lines are prose, not disabled code: the heuristic reads an equation, a bracketed range or a semicolon inside an " +
+                                                         "explanatory sentence as a statement. These comments carry the reasoning this codebase asks every comment to carry, so the " +
+                                                         "finding is recorded rather than the comment deleted.")]
     private string DescribeExhaustion(string applying) {
         IReadOnlyList<string> culprits = ExcludingConstraintsInEffect();
 

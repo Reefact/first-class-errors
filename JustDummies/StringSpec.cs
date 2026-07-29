@@ -98,6 +98,11 @@ internal sealed class StringSpec {
 
     #endregion
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S107:Methods should not have too many parameters",
+                                                     Justification =
+                                                         "This private constructor carries the engine's whole immutable state: the 'constrain once, draw many' design rebuilds the spec on " +
+                                                         "every With* call, so every field has to be threaded through it. A parameter object would only rename the same list, and the " +
+                                                         "constructor is private — no caller ever writes this argument list.")]
     private StringSpec(int?    exactLength, string? exactConstraint,
                        int     minLength,   string? minConstraint,
                        int?    maxLength,   string? maxConstraint,
@@ -286,6 +291,10 @@ internal sealed class StringSpec {
     }
 
     /// <summary>Adds values the generated string must avoid; may be declared several times, the exclusions accumulate.</summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3267:Loops should be simplified with LINQ expressions",
+                                                     Justification =
+                                                         "The condition reads the collection the body mutates. Where is lazily evaluated, so lifting the filter out would run each " +
+                                                         "predicate against a snapshot taken before the additions it is meant to see, and let duplicates through.")]
     internal StringSpec WithExcluded(IReadOnlyList<string> values, string applying) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }

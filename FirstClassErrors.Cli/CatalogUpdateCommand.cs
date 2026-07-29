@@ -10,6 +10,11 @@ using Spectre.Console.Cli;
 namespace FirstClassErrors.Cli;
 
 /// <summary>Settings for <c>fce catalog update</c>.</summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S2094:Classes should not be empty",
+                                                 Justification =
+                                                     "Spectre.Console binds a command to its settings type, so each command needs a distinct type even when it adds no option of its " +
+                                                     "own. Collapsing this into CatalogSettings would make two commands share one settings identity; making it an interface would not " +
+                                                     "bind at all.")]
 internal sealed class CatalogUpdateSettings : CatalogSettings { }
 
 /// <summary>
@@ -61,7 +66,7 @@ internal sealed class CatalogUpdateCommand : Command<CatalogUpdateSettings> {
             CatalogSnapshot current      = _snapshotSource.Extract(settings, configuration, logger, cancellationToken);
             string          baselinePath = BaselineStore.Resolve(settings.BaselinePath, configuration.Baseline, configDir);
 
-            if (BaselineStore.Exists(baselinePath) is false) {
+            if (!BaselineStore.Exists(baselinePath)) {
                 BaselineStore.Save(baselinePath, current);
                 _output.WriteLine($"Baseline created at '{baselinePath}', tracking {current.Errors.Count} error(s).");
 

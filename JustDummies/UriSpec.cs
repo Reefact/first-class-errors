@@ -122,6 +122,11 @@ internal sealed class UriSpec {
 
     #endregion
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S107:Methods should not have too many parameters",
+                                                     Justification =
+                                                         "This private constructor carries the engine's whole immutable state: the 'constrain once, draw many' design rebuilds the spec on " +
+                                                         "every With* call, so every field has to be threaded through it. A parameter object would only rename the same list, and the " +
+                                                         "constructor is private — no caller ever writes this argument list.")]
     private UriSpec(UriFamily? family, string? scheme, string? schemeConstraint, string? host,
                     bool hasUserInfo, string? user, string? password,
                     bool hasPort, int? port,
@@ -396,7 +401,7 @@ internal sealed class UriSpec {
     }
 
     private static bool IsCanonicalIpv4(string host) {
-        string[] parts = host.Split(new[] { '.' });
+        string[] parts = host.Split('.');
         if (parts.Length != 4) { return false; }
         foreach (string part in parts) {
             if (part.Length is 0 or > 3) { return false; }
@@ -407,6 +412,10 @@ internal sealed class UriSpec {
         return true;
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3267:Loops should be simplified with LINQ expressions",
+                                                     Justification =
+                                                         "The loop exists to name the FIRST offending element in the exception it throws. A Where clause discards which element failed, so " +
+                                                         "the message would have to re-find it, turning one pass into two and one statement into three.")]
     internal static string RequireUserInfoPart(string value, string parameterName) {
         if (value is null) { throw new ArgumentNullException(parameterName); }
         if (parameterName is null) { throw new ArgumentNullException(nameof(parameterName)); }

@@ -62,6 +62,16 @@ internal static class PropertyGetters<TDto, TValue> {
         return Cache.GetOrAdd(property, CompileValidated);
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S3928:Parameter names used into ArgumentException constructors should match an existing one",
+                                                     Justification =
+                                                         "The name handed to ArgumentException is the one the CALLER wrote, not a parameter of this private helper: every public " +
+                                                         "PropertySource method takes the lambda as selector, and that is the argument the consumer must fix. Naming property here would " +
+                                                         "point at a reflection detail no caller can see.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3220:Method calls should not resolve ambiguously to overloads with params",
+                                                     Justification =
+                                                         "Expression.Block(IEnumerable<ParameterExpression>, params Expression[]) is the overload intended and the one the compiler picks: " +
+                                                         "the first argument is a ParameterExpression array declaring the block variable, not a third expression. Dropping it would build " +
+                                                         "a block with no variable and fail at run time.")]
     private static Func<TDto, TValue> CompileValidated(PropertyInfo property) {
         // A non-nullable value-type property can never be null, so a missing argument (deserialized to default(T) —
         // 0, false, ...) is indistinguishable from a legitimately-sent default: absence would be silently lost. The

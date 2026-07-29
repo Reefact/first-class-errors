@@ -54,19 +54,17 @@ public sealed class AnyString : IAny<string>, IHasRandomSource, ICardinalityHint
         return string.Join(", ", values.Select(value => $"\"{value}\""));
     }
 
-    private static string RequireText(string value, string parameterName) {
+    private static void RequireText(string value, string parameterName) {
         if (value is null) { throw new ArgumentNullException(parameterName); }
         if (value.Length == 0) { throw new ArgumentException("The value must not be empty.", parameterName); }
-
-        return value;
     }
 
-    private static int RequireNonNegative(int length, string parameterName) {
-        return SizeGuard.RequireNonNegative(length, parameterName, "length");
+    private static void RequireNonNegative(int length, string parameterName) {
+        SizeGuard.RequireNonNegative(length, parameterName, "length");
     }
 
-    private static int RequireProducible(int length, string parameterName) {
-        return SizeGuard.RequireProducible(length, parameterName, "length");
+    private static void RequireProducible(int length, string parameterName) {
+        SizeGuard.RequireProducible(length, parameterName, "length");
     }
 
     #endregion

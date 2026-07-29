@@ -344,19 +344,20 @@ internal sealed class RegexParser {
         ValidateGroupName(name, position);
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3267:Loops should be simplified with LINQ expressions",
+                                                     Justification =
+                                                         "The loop exists to name the FIRST offending element in the exception it throws. A Where clause discards which element failed, so " +
+                                                         "the message would have to re-find it, turning one pass into two and one statement into three.")]
     private void ValidateGroupName(string name, int position) {
         // A '-' marks a balancing group; it manipulates the capture stack (the backreference family), so it is
         // non-regular and refused here even when its target is undefined (see SkipGroupName for why the divergence
         // from the real engine's malformed-pattern verdict on that case is accepted).
-        if (name.IndexOf('-') >= 0) { throw Unsupported("a balancing group '(?<name1-name2>…)'", position); }
+        if (name.Contains("-")) { throw Unsupported("a balancing group '(?<name1-name2>…)'", position); }
 
         // A name opening with a digit is an explicit capture number: the real engine accepts it only as a positive
         // integer with no leading zero, so '0', '01' and '1a' are refused while '1' and '10' pass.
         if (name[0] is >= '0' and <= '9') {
-            bool validNumber = name[0] != '0';
-            foreach (char character in name) {
-                if (character is < '0' or > '9') { validNumber = false; }
-            }
+            bool validNumber = name[0] != '0' && name.All(character => character is >= '0' and <= '9');
 
             if (!validNumber) { throw Malformed($"a group name starting with a digit must be a group number with no leading zero, but '{name}' is not"); }
 
@@ -369,6 +370,11 @@ internal sealed class RegexParser {
         }
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out",
+                                                     Justification =
+                                                         "The flagged lines are prose, not disabled code: the heuristic reads an equation, a bracketed range or a semicolon inside an " +
+                                                         "explanatory sentence as a statement. These comments carry the reasoning this codebase asks every comment to carry, so the " +
+                                                         "finding is recorded rather than the comment deleted.")]
     private RegexNode ParseEscape() {
         int position = _index;
         _index++; // consume '\'
@@ -530,6 +536,15 @@ internal sealed class RegexParser {
         return new RegexCharacters(RegexAlphabet.WithBothCases(character).Distinct().ToArray());
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S3928:Parameter names used into ArgumentException constructors should match an existing one",
+                                                     Justification =
+                                                         "pattern is the public parameter the consumer passed to Any.Pattern(...); this private factory only assembles the exception the " +
+                                                         "parser throws on its behalf. Its own reason parameter names the diagnosis, not the argument at fault, so pointing the exception " +
+                                                         "at it would send the caller to the wrong place.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2208:Instantiate argument exceptions correctly",
+                                                     Justification =
+                                                         "Same reason as the S3928 suppression above: pattern is the public parameter the consumer passed to Any.Pattern(...), " +
+                                                         "which is the argument they must fix. This private factory only assembles the exception on the parser's behalf.")]
     private ArgumentException Malformed(string reason) {
         return new ArgumentException($"The regular expression pattern \"{_pattern}\" is invalid: {reason} (at position {_index}).", "pattern");
     }

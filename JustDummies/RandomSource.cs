@@ -7,6 +7,11 @@ namespace JustDummies;
 ///     time — which is what lets a recipe built outside an <c>Any.Reproducibly(...)</c> scope generate
 ///     deterministically inside one.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S1694:An abstract class should have both abstract and concrete methods",
+                                                 Justification =
+                                                     "The abstract class is the root of a closed, internal hierarchy and is deliberately not an interface: a class cannot be " +
+                                                     "implemented from outside the assembly, keeps the option of adding shared state without breaking every subtype, and on the " +
+                                                     "netstandard2.0 leg cannot be replaced by an interface with non-public members.")]
 internal abstract class RandomSource {
 
     /// <summary>The seeded generator to draw from right now. Every draw goes through it, serialized on its own lock.</summary>
@@ -180,7 +185,7 @@ internal sealed class AmbientRandomSource : RandomSource {
     ///     and each is replayed differently.
     /// </summary>
     private static string ReplaySnippet(int seed) {
-        return State.Value?.ReplaySnippet ?? $"Any.Reproducibly({seed}, ...)";
+        return State.Value?.Snippet ?? $"Any.Reproducibly({seed}, ...)";
     }
 
     #region Nested types
@@ -197,15 +202,21 @@ internal sealed class AmbientRandomSource : RandomSource {
         internal AmbientState(SeededRandom random, string? replaySnippet, AmbientState? parent) {
             if (random is null) { throw new ArgumentNullException(nameof(random)); }
 
-            Random        = random;
-            ReplaySnippet = replaySnippet;
-            Parent        = parent;
+            Random  = random;
+            Snippet = replaySnippet;
+            Parent  = parent;
         }
 
-        internal SeededRandom  Random        { get; }
-        internal string?       ReplaySnippet { get; }
-        internal AmbientState? Parent        { get; }
-        internal bool          Disposed      { get; set; }
+        internal SeededRandom  Random   { get; }
+
+        /// <summary>
+        ///     The replay snippet the opener of this scope supplied, if any — the fragment, never the whole guidance
+        ///     sentence. Named <c>Snippet</c> rather than <c>ReplaySnippet</c> so it does not shadow the enclosing
+        ///     <see cref="AmbientRandomSource.ReplaySnippet(int)" />, which reads it.
+        /// </summary>
+        internal string?       Snippet  { get; }
+        internal AmbientState? Parent   { get; }
+        internal bool          Disposed { get; set; }
 
     }
 
@@ -311,6 +322,11 @@ internal static class RandomSampling {
     ///     <c>Random.NextInt64(long, long)</c> instance method — whose upper bound is EXCLUSIVE — would win
     ///     overload resolution over a same-named extension and silently change the semantics.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out",
+                                                     Justification =
+                                                         "The flagged lines are prose, not disabled code. The heuristic reads an equation, a bracketed range or a semicolon inside an " +
+                                                         "explanatory sentence as a statement. These comments carry the WHY this codebase asks for and deleting them would lose the " +
+                                                         "reasoning, so the finding is recorded here instead.")]
     internal static long NextInt64Inclusive(this SeededRandom random, long minInclusive, long maxInclusive) {
         if (random is null) { throw new ArgumentNullException(nameof(random)); }
         if (minInclusive > maxInclusive) { throw new ArgumentOutOfRangeException(nameof(maxInclusive), "The maximum must be greater than or equal to the minimum."); }

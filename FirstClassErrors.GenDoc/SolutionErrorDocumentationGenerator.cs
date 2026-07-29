@@ -61,7 +61,7 @@ public static class SolutionErrorDocumentationGenerator {
                 if (string.IsNullOrWhiteSpace(targetPath)) { continue; }
 
                 if (!File.Exists(targetPath)) {
-                    HandleFailure(options, DocumentationRequestError.TargetAssemblyNotFound(projectPath, targetPath!));
+                    HandleFailure(options, DocumentationRequestError.TargetAssemblyNotFound(projectPath, targetPath));
 
                     continue;
                 }
@@ -213,7 +213,7 @@ public static class SolutionErrorDocumentationGenerator {
     }
 
     private static string ResolveTargetFrameworkMoniker(string projectPath, SolutionGenerationOptions options) {
-        if (!string.IsNullOrWhiteSpace(options.TargetFramework)) { return options.TargetFramework!; }
+        if (!string.IsNullOrWhiteSpace(options.TargetFramework)) { return options.TargetFramework; }
 
         string? single = ReadMsBuildProperty(projectPath, "TargetFramework");
         if (!string.IsNullOrWhiteSpace(single)) { return single; }
@@ -546,10 +546,10 @@ public static class SolutionErrorDocumentationGenerator {
     private static string ResolveWorkerAssemblyPath(SolutionGenerationOptions options) {
         if (!string.IsNullOrWhiteSpace(options.WorkerAssemblyPath)) {
             if (!File.Exists(options.WorkerAssemblyPath)) {
-                throw new SolutionDocumentationGenerationException(DocumentationRequestError.WorkerPathInvalid(options.WorkerAssemblyPath!));
+                throw new SolutionDocumentationGenerationException(DocumentationRequestError.WorkerPathInvalid(options.WorkerAssemblyPath));
             }
 
-            return options.WorkerAssemblyPath!;
+            return options.WorkerAssemblyPath;
         }
 
         // Convention: the worker is deployed next to the tool (copied into its output directory).

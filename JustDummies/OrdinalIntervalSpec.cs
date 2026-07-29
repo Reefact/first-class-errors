@@ -110,6 +110,11 @@ internal sealed class OrdinalIntervalSpec {
 
     #endregion
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S107:Methods should not have too many parameters",
+                                                     Justification =
+                                                         "This private constructor carries the engine's whole immutable state: the 'constrain once, draw many' design rebuilds the spec on " +
+                                                         "every With* call, so every field has to be threaded through it. A parameter object would only rename the same list, and the " +
+                                                         "constructor is private — no caller ever writes this argument list.")]
     private OrdinalIntervalSpec(string typeName, Func<ulong, string> render, ulong domainMin, ulong domainMax,
                                 ulong  min,     string? minConstraint,
                                 ulong  max,     string? maxConstraint,
@@ -291,6 +296,16 @@ internal sealed class OrdinalIntervalSpec {
     }
 
     /// <summary>Draws one ordinal satisfying the whole specification — built directly, never generate-then-retry.</summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3267:Loops should be simplified with LINQ expressions",
+                                                     Justification =
+                                                         "The loop body advances the very accumulator the condition tests — each iteration changes what the next one compares against — so " +
+                                                         "the filter cannot be lifted out of the loop. A Where clause would evaluate every predicate against the value the accumulator " +
+                                                         "held on entry and silently skip exclusions.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3267:Loops should be simplified with LINQ expressions",
+                                                     Justification =
+                                                         "The loop body advances the very accumulator the condition tests — each iteration changes what the next one compares against — so " +
+                                                         "the filter cannot be lifted out of the loop. A Where clause would evaluate every predicate against the value the accumulator " +
+                                                         "held on entry and silently skip exclusions.")]
     internal ulong GenerateOrdinal(SeededRandom random) {
         if (random is null) { throw new ArgumentNullException(nameof(random)); }
 

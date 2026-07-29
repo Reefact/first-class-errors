@@ -36,7 +36,7 @@ internal sealed class SolutionCatalogSnapshotSource : ICatalogSnapshotSource {
         bool    strict      = settings.Strict  || (configuration.Strict ?? false);
 
         SolutionGenerationOptions options = new() {
-            BuildSolution      = noBuild is false,
+            BuildSolution      = !noBuild,
             Configuration      = buildConfig,
             TargetFramework    = framework,
             FailureBehavior    = strict ? FailureBehavior.Stop : FailureBehavior.Continue,

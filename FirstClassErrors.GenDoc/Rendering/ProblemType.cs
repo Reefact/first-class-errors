@@ -49,7 +49,7 @@ internal static class ProblemType {
     private static string Slugify(string? value) {
         if (string.IsNullOrWhiteSpace(value)) { return string.Empty; }
 
-        StringBuilder builder  = new(value!.Length);
+        StringBuilder builder  = new(value.Length);
         bool          lastDash = false;
         foreach (char character in value.Trim().ToLowerInvariant()) {
             if (character is (>= 'a' and <= 'z') or (>= '0' and <= '9')) {

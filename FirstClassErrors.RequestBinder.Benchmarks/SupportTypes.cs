@@ -238,6 +238,11 @@ public sealed class Guest {
 
 public sealed class PlaceBookingCommand {
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S107:Methods should not have too many parameters",
+                                                     Justification =
+                                                         "A request DTO mirrors the shape of the request it binds; the parameter count is the payload's, not a design choice. This type " +
+                                                         "exists to BE that payload in the binder benchmarks, so trimming it would measure something other than the case the benchmark is " +
+                                                         "about.")]
     public PlaceBookingCommand(EmailAddress               guestEmail,
                                string                     reference,
                                Currency                   currency,
