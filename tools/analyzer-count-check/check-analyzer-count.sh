@@ -68,6 +68,7 @@ fi
 
 if [ "$status" -ne 0 ]; then
   printf '\nUpdate the bullet in FirstClassErrors/README.nuget.md to read:\n' >&2
+  # shellcheck disable=SC2016  # the backticks are Markdown code spans in the format string, not command substitution
   printf '  **%s Roslyn analyzers in the box (`%s`-`%s`).**\n' "$count" "$low" "$high" >&2
   exit 1
 fi

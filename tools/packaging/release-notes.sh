@@ -30,6 +30,7 @@ end_ref="${3:-$current_tag}"
 
 # Tag prefix and train scopes come from tools/trains.sh (the single source of truth
 # shared with the changelog tooling), so the two can never disagree on the partition.
+# shellcheck source=tools/trains.sh
 . "$(dirname "$0")/../trains.sh"
 prefix="$(prefix_of "$scope")"
 train_scopes="$(scopes_of "$scope")"

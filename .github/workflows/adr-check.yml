@@ -123,6 +123,7 @@ jobs:
           if [ "$needs" = "true" ] && [ -n "$report" ]; then
             printf '%s\n' "$report" >> "$GITHUB_STEP_SUMMARY"
           else
+            # shellcheck disable=SC2016  # the backticks are Markdown, not command substitution
             printf '### 🏛️ ADR check (advisory)\n\nNo architectural decision detected on `%s` versus `%s`. Nothing to flag.\n' \
               "$BRANCH" "$BASE" >> "$GITHUB_STEP_SUMMARY"
           fi
