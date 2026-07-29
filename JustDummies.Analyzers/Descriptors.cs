@@ -182,4 +182,56 @@ internal static class Descriptors {
         description: "Any.Enum<T>() draws uniformly across T's declared members and never an undeclared numeric value. That is deliberate and surprising: on a [Flags] enum, writing a combination in OneOf is the natural thing to do and the generator refuses it unless AllowingCombinations() is declared. An exclusion that removes every declared member is the same category error from the other side.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.EnumUniverseViolation));
 
+    public static readonly DiagnosticDescriptor NestedReproducibilityScope = new(
+        id: DiagnosticIds.NestedReproducibilityScope,
+        title: "A reproducibility scope is nested inside another",
+        messageFormat: "This Any.Reproducibly runs inside {0}, whose reported seed then replays nothing: the inner scope draws a fresh seed on every run",
+        category: DiagnosticCategories.Reproducibility,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Any.Reproducibly takes its seed from Guid.NewGuid().GetHashCode(), not from the ambient source, so an inner scope ignores whatever the outer one pinned and draws afresh every run. The outer mechanism still reports its own seed, so the failure names a seed that reproduces nothing — a wrong instruction rather than a wrong result. The seeded overload is left alone: pinning a chosen seed inside is deliberate.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.NestedReproducibilityScope));
+
+    public static readonly DiagnosticDescriptor CommittedReplaySeed = new(
+        id: DiagnosticIds.CommittedReplaySeed,
+        title: "A replay seed is pinned in committed code",
+        messageFormat: "Seed {0} is pinned: the values stop varying between runs, so the test no longer surfaces a dependency on one particular value",
+        category: DiagnosticCategories.Reproducibility,
+        defaultSeverity: DiagnosticSeverity.Info,
+        // Opt-in, and it must be: this repository's own maintainer guide instructs the opposite for a whole class of
+        // tests ("Pin a seed for anything statistical"), so a rule enabled by default would fight documented practice.
+        isEnabledByDefault: false,
+        description: "The seeded overloads exist to replay a run a failure reported — correct while reproducing, wrong once committed, because the test then draws the same values for ever and stops surfacing the coupling the library exists to reveal. Opt-in: a statistical test legitimately pins a seed, and this repository's maintainer guide says so, which makes the rule a pre-release sweep rather than a standing check.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.CommittedReplaySeed));
+
+    public static readonly DiagnosticDescriptor SharedStaticAnyContext = new(
+        id: DiagnosticIds.SharedStaticAnyContext,
+        title: "An AnyContext is shared through a static field",
+        messageFormat: "Give each unit of work its own context: '{0}' is shared, and interleaved draws make neither the sequence nor the multiset stable across runs",
+        category: DiagnosticCategories.Reproducibility,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        description: "AnyContext's own documentation states the hazard: a context is safe to draw from concurrently, but sharing one across threads costs the replay rather than the values. A static context looks maximally deterministic — a literal seed, right there in the source — while a parallel suite gets a different value per test per run from it.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.SharedStaticAnyContext));
+
+    public static readonly DiagnosticDescriptor BlankReplaySnippet = new(
+        id: DiagnosticIds.BlankReplaySnippet,
+        title: "Any.UseSeed is given a blank replay snippet",
+        messageFormat: "Pass the code a reader copies to replay the run, or drop the argument: a blank snippet is rejected at run time",
+        category: DiagnosticCategories.Reproducibility,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Any.UseSeed(int, string) rejects a blank snippet. Because that scope is normally opened from a test-framework adapter's hook, the throw surfaces as an infrastructure failure on every test in the suite rather than as one failing assertion — a disproportionately expensive way to learn about a typo the compiler can already see.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.BlankReplaySnippet));
+
+    public static readonly DiagnosticDescriptor ParallelDrawWithoutPerItemSeed = new(
+        id: DiagnosticIds.ParallelDrawWithoutPerItemSeed,
+        title: "A parallel work item draws without its own seed scope",
+        messageFormat: "Open an Any.UseSeed scope inside the work item: the ambient scope reaches every worker, so the draws interleave and the run replays nothing",
+        category: DiagnosticCategories.Reproducibility,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        description: "The ambient seed scope flows with the execution context, so a scope opened around a parallel loop reaches every worker and their draws interleave: neither the sequence nor the multiset is stable across runs. A scope opened inside the loop body gives each unit of work its own sequence, and the whole run replays — the shape the library's documentation names.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.ParallelDrawWithoutPerItemSeed));
+
 }

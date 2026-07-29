@@ -63,6 +63,11 @@ Ces règles sont incluses dans le package **`JustDummies`** (pas FirstClassError
 | [JD008 ArbitraryValueInTheoryData](JD008.fr.md) | 🟠 Avertissement | on | Le fournisseur de données d'une théorie tire une valeur à la découverte, avant tout épinglage ; tous les cas partagent cette unique valeur. |
 | [JD009 DrawInStaticInitializer](JD009.fr.md) | 🟠 Avertissement | on | Un initialiseur statique tire une seule fois pour toute la suite, sous le premier test exécuté, rendant les tests dépendants de l'ordre et rejouables depuis aucune graine. |
 | [JD010 ReproducibleOnNonTestMethod](JD010.fr.md) | 🟠 Avertissement | on | `[Reproducible]` sur une méthode qu'xUnit ne traite jamais comme un test ; il n'épingle rien, et ressemble exactement à la forme active. |
+| [JD018 NestedReproducibilityScope](JD018.fr.md) | 🟠 Avertissement | on | Une portée de reproductibilité imbriquée dans une autre ; l'interne tire une graine neuve, donc la graine rapportée par l'externe ne rejoue rien. |
+| [JD021 BlankReplaySnippet](JD021.fr.md) | 🟠 Avertissement | on | `Any.UseSeed` reçoit un snippet de rejeu vide, que la garde rejette — depuis un hook d'adaptateur, faisant échouer toute la suite. |
+| [JD019 CommittedReplaySeed](JD019.fr.md) | 🔵 Info | opt-in | Une graine de rejeu constante est épinglée dans du code committé : le test cesse de varier d'une exécution à l'autre. |
+| [JD020 SharedStaticAnyContext](JD020.fr.md) | 🔵 Info | on | Un `AnyContext` tenu dans un champ statique ; les tirages entrelacés ne rendent stables ni la séquence ni le multiensemble. |
+| [JD022 ParallelDrawWithoutPerItemSeed](JD022.fr.md) | 🔵 Info | on | Une unité de travail parallèle tire sans sa propre portée de graine : les tirages s'entrelacent et l'exécution ne rejoue rien. |
 
 ## JustDummies — Usage
 
