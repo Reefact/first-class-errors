@@ -22,6 +22,14 @@ namespace FirstClassErrors.GenDoc;
                    Description = "The toolchain the documentation generator drives: the .NET SDK commands it spawns and the extraction worker process it launches per assembly.")]
 internal static class DocumentationToolchainError {
 
+    #region Constants
+
+    // The assembly path shown in every worker-failure example. One value, so the generated documentation
+    // illustrates the four errors with the same subject rather than four paths that only look alike.
+    private const string ExampleAssemblyPath = "/src/app/bin/Release/net8.0/Application.dll";
+
+    #endregion
+
     #region Statics members declarations
 
     /// <summary>'dotnet sln list' failed, so the solution's projects could not be enumerated.</summary>
@@ -251,7 +259,7 @@ internal static class DocumentationToolchainError {
                             .AndDiagnostic("A documentation method or example factory of the target threw while the worker executed it.",
                                            ErrorOrigin.External,
                                            "Read the worker's error output; run the target's documentation methods in a unit test to reproduce.")
-                            .WithExamples(() => WorkerFailed("/src/app/bin/Release/net8.0/Application.dll", 1, "Fatal error while extracting documentation."));
+                            .WithExamples(() => WorkerFailed(ExampleAssemblyPath, 1, "Fatal error while extracting documentation."));
     }
 
     private static ErrorDocumentation WorkerOutputMissingDocumentation() {
@@ -261,7 +269,7 @@ internal static class DocumentationToolchainError {
                             .WithDiagnostic("The temporary directory is not writable, or an antivirus or cleanup job removed the file between the worker's exit and its harvesting.",
                                             ErrorOrigin.External,
                                             "Check the permissions and free space of the temporary directory used by the generation.")
-                            .WithExamples(() => WorkerOutputMissing("/src/app/bin/Release/net8.0/Application.dll"));
+                            .WithExamples(() => WorkerOutputMissing(ExampleAssemblyPath));
     }
 
     private static ErrorDocumentation WorkerOutputUnreadableDocumentation() {
@@ -271,7 +279,7 @@ internal static class DocumentationToolchainError {
                             .WithDiagnostic("The worker and the generator come from different tool versions and no longer agree on the result format.",
                                             ErrorOrigin.Internal,
                                             "Check that the worker next to the tool belongs to the same installation; reinstall the tool if in doubt.")
-                            .WithExamples(() => WorkerOutputUnreadable("/src/app/bin/Release/net8.0/Application.dll"));
+                            .WithExamples(() => WorkerOutputUnreadable(ExampleAssemblyPath));
     }
 
     private static ErrorDocumentation WorkerRunFailedDocumentation() {
@@ -281,7 +289,7 @@ internal static class DocumentationToolchainError {
                             .WithDiagnostic("A file-system or permission problem around the temporary result file or the worker binary.",
                                             ErrorOrigin.InternalOrExternal,
                                             "Read the inner exception attached to the failure; check the temporary directory and the tool's installation directory.")
-                            .WithExamples(() => WorkerRunFailed("/src/app/bin/Release/net8.0/Application.dll"));
+                            .WithExamples(() => WorkerRunFailed(ExampleAssemblyPath));
     }
 
     #endregion
