@@ -7,7 +7,13 @@ namespace JustDummies.Analyzers;
 internal static class DiagnosticIds {
 
     // Category: Reproducibility
-    public const string AsyncBodyPassedToReproducibly   = "JD001";
-    public const string DiscardedReproduciblyAsyncResult = "JD002";
+    public const string AsyncBodyPassedToReproducibly     = "JD001";
+    public const string DiscardedReproduciblyAsyncResult  = "JD002";
+    public const string AwaitableBodyPassedToReproducibly = "JD003";
+    public const string DiscardedSeedingResult            = "JD004";
+
+    // Category: Usage
+    public const string GeneratorRenderedAsText   = "JD005";
+    public const string DiscardedGeneratorResult  = "JD006";
 
 }

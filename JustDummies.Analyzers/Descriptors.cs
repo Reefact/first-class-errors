@@ -27,4 +27,44 @@ internal static class Descriptors {
         description: "Any.ReproduciblyAsync returns a Task that faults with the body's exception. Discarding it (as a bare statement or via '_ =') lets a failing test pass green. Await it.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.DiscardedReproduciblyAsyncResult));
 
+    public static readonly DiagnosticDescriptor AwaitableBodyPassedToReproducibly = new(
+        id: DiagnosticIds.AwaitableBodyPassedToReproducibly,
+        title: "An asynchronous body reaches Any.Reproducibly without being awaited",
+        messageFormat: "Pass the asynchronous body to Any.ReproduciblyAsync and await it: bound to Any.Reproducibly's Action the body is never awaited, so the scope returns before the assertions run and their failures never reach the test",
+        category: DiagnosticCategories.Reproducibility,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "Any.Reproducibly takes a synchronous Action. A synchronous lambda whose body produces a task drops that task, and an 'async void' method group bound to the Action raises its failures outside the scope entirely. Neither is reported by the compiler — CS4014 does not fire when the enclosing lambda is not itself async. Use Any.ReproduciblyAsync(Func<Task>) and await it.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.AwaitableBodyPassedToReproducibly));
+
+    public static readonly DiagnosticDescriptor DiscardedSeedingResult = new(
+        id: DiagnosticIds.DiscardedSeedingResult,
+        title: "The result of a seeding call is discarded",
+        messageFormat: "Do not discard the result of Any.{0}: {1}",
+        category: DiagnosticCategories.Reproducibility,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "Any.UseSeed returns the handle that closes the scope it opened; dropping it leaves the seed pinned for whatever runs next in the same execution context, silently making later tests replay one fixed sequence. Any.WithSeed returns an isolated context and pins nothing, so discarding it is dead code at a call site that reads as if the run had been seeded.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.DiscardedSeedingResult));
+
+    public static readonly DiagnosticDescriptor GeneratorRenderedAsText = new(
+        id: DiagnosticIds.GeneratorRenderedAsText,
+        title: "A generator is rendered as text instead of the value it would draw",
+        messageFormat: "Call Generate() on the {0}: rendered as text a generator yields its own type name, not an arbitrary value",
+        category: DiagnosticCategories.Usage,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "A generator is an immutable recipe, and no JustDummies generator overrides ToString(). Interpolating, concatenating or calling ToString() on one therefore produces the builder's type name — a non-empty, plausible, run-invariant string that flows into the code under test as if it were an arbitrary value. Materialize the value with Generate().",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.GeneratorRenderedAsText));
+
+    public static readonly DiagnosticDescriptor DiscardedGeneratorResult = new(
+        id: DiagnosticIds.DiscardedGeneratorResult,
+        title: "The generator returned by a constraint is discarded",
+        messageFormat: "Assign the result of {0} back: a generator is an immutable recipe, so a constraint whose result is discarded constrains nothing",
+        category: DiagnosticCategories.Usage,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Every constraint returns a new generator rather than mutating the receiver. A discarded result therefore silently drops the invariant the arrangement declared, and the generator keeps drawing from the wider domain — so the test passes on most runs and fails on the one that draws outside it, with a value nobody can reproduce.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.DiscardedGeneratorResult));
+
 }
