@@ -8,29 +8,20 @@
 
 ## Context
 
-The SonarQube Cloud report for this project carries 255 open findings. Five
-rules account for 212 of them — 83% of everything left — and they fall into two
-families, distinguished by where the finding is produced.
+The SonarQube Cloud report for this project carries 255 open findings. Four of
+its rules flag code that is not defective but deliberate, and together they
+account for 65 of those findings. They fall into two families, distinguished by
+where the finding is produced.
 
-Three arrive under the `external_roslyn` namespace, meaning they are not
+Two arrive under the `external_roslyn` namespace, meaning they are not
 SonarQube's own analysis: they are diagnostics the .NET compiler and the BCL
 analyzers emit during the build, which the scanner observes through MSBuild and
 republishes. A rule configured to `none` is never emitted, so the report loses
-it at the source. The remaining two are SonarQube's own shell analysis, which no
+it at the source. The other two are SonarQube's own shell analysis, which no
 build setting can reach — nothing the compiler does produces or suppresses them.
 
-The five rules, and what the flagged code does today:
+The four rules, and what the flagged code does today:
 
-* **`IDE0028` — 147 findings across 13 projects.** Asks that collection
-  initializers written `new()` or `new List<T> { ... }` be rewritten as
-  collection expressions, `[...]`. The repository is already mixed on this
-  point: 85 sites use the bracket form and 147 use the other, and both appear
-  inside the same projects — `JustDummies.UnitTests` alone holds 32 of the
-  first and 64 of the second. The rule fires at its default severity; it has
-  never failed a build. Some of the rewrites are not purely syntactic: on a
-  target-typed declaration such as `IReadOnlyList<int> pool = [1, 2, 3];` the
-  compiler selects the concrete type that gets instantiated, where the present
-  `new List<int>` names it.
 * **`CA1859` — 22 findings.** Asks that non-public members typed
   `IReadOnlyList<T>` or `IEnumerable<T>` be retyped to the concrete collection
   they are observed to return, so callers make a direct call instead of an
@@ -107,8 +98,8 @@ outranking micro-performance unless a measured need is recorded.
 * **Scope follows the reason, not convenience.** `CA1861`'s justification is
   about tests, and every one of its findings is in a test project, so it is
   declined for test projects and left live for shipping code, where a hot path
-  can genuinely want it. `CA1859` and `IDE0028` are declined repository-wide
-  because their justifications hold everywhere they fire. This keeps ADR-0058's
+  can genuinely want it. `CA1859` and the two shell rules are declined across
+  the code they reach, because their justifications hold everywhere they fire. This keeps ADR-0058's
   principle — a project that can honour a rule keeps it — while recognising
   that here the reason to decline is uniform rather than a platform accident.
 * **The performance limb is a trade this repository has already made.** Both
@@ -116,36 +107,35 @@ outranking micro-performance unless a measured need is recorded.
   nothing has asked for. The value-objects-as-classes rule settled the same
   trade the same way. Deciding it once, generally, stops it being re-argued at
   each finding.
-* **`IDE0028` is the weakest of the three, and still not worth applying.** Its
-  advice is defensible and its target syntax is widely adopted; what argues
-  against it is cost and reach, not correctness — 147 edits across 13 projects
-  that change no behaviour, in a repository whose per-pull-request mutation
-  check measures every file a change touches. Its findings are also the least
-  informative: the codebase already disagrees with itself here, so applying the
-  rule would be adopting a convention, not fixing a defect, and adopting a
-  convention is a decision to take deliberately rather than by exhausting an
-  analyzer's backlog.
+* **Declining is for advice the code contradicts, not for advice that costs.**
+  The same report carried a fifth candidate, `IDE0028`, with 147 findings —
+  by far the largest group and the cheapest to make disappear. It is being
+  applied instead, because its findings marked a genuine drift (the codebase
+  spelled collection initializers both ways, 85 sites against 147) rather than
+  a deliberate choice. Volume is not an argument for declining a rule, and this
+  ADR does not want to be read as one.
 
 ## Alternatives Considered
 
-### Apply all three rules
+### Apply all four rules
 
-Clears 191 findings by complying, and leaves no suppression to explain.
+Clears 65 findings by complying, and leaves no suppression to explain.
 
-Rejected because it inverts the point of the exercise. Two of the three would
-degrade the code they touch — one by widening a read-only contract into a
-mutable one, the other by separating test data from the assertion that reads
-it — to buy performance nothing has asked for. The third is a 147-site
-cosmetic rewrite whose only benefit is a smaller report.
+Rejected because it inverts the point of the exercise. Every one of the four
+would degrade the code it touches: widening a read-only contract into a mutable
+one, separating test data from the assertion that reads it, adding a `return`
+that either masks a failure or restates the default, and introducing a
+non-POSIX `local` into scripts that declare `#!/bin/sh`.
 
 ### Suppress per site with `[SuppressMessage]` and a justification
 
 The finest possible scope, and each suppression carries its reason at the exact
 line that raised it.
 
-Rejected on volume and on message. 191 attributes would add more lines than the
-fixes they replace, and repeating one argument 147 times states it 147 times
-without ever stating it once. The reason here is a policy, not a local
+Rejected on volume, on message, and on reach. Sixty-five attributes would add
+more lines than the fixes they replace, repeating one argument once per site
+states it many times without ever stating it once, and the shell rules have no
+such mechanism available at all. The reason here is a policy, not a local
 exception, and a policy belongs in one place.
 
 ### Mark the findings "won't fix" in SonarQube Cloud
@@ -168,21 +158,11 @@ shipping code inside a loop, the rule's own argument wins instead. Declining it
 where it is not justified would trade a precise decision for a tidy one, and
 would remove the nudge in the only place it could matter.
 
-### Converge on collection expressions instead of declining `IDE0028`
-
-Faces the fact that the codebase is already mixed, and resolves it in the
-direction Roslyn and the wider ecosystem prefer.
-
-Rejected for now on cost rather than merit: it is the same 147-site churn, and
-the choice of a repository-wide spelling convention deserves to be made on its
-own terms — not as a by-product of clearing an analyzer backlog. Nothing in
-this ADR prevents it being made later.
-
 ## Consequences
 
 ### Positive
 
-* 212 of 255 findings clear, and every future occurrence clears with them
+* 65 of 255 findings clear, and every future occurrence clears with them
   rather than accumulating.
 * The reasoning lives beside the effect — in `.editorconfig` for the rules the
   build produces, in the scanner invocation for the two it does not — readable
@@ -194,15 +174,11 @@ this ADR prevents it being made later.
 
 ### Negative
 
-* The mixed spelling of collection initializers is frozen: 85 bracket sites and
-  147 others coexist, and the analyzer that would have converged them is off.
-  Anyone wanting a single convention now has to decide it deliberately.
 * No analyzer will nudge a genuinely hot shipping path toward a concrete return
   type any more, since `CA1859` is off everywhere. That judgement now rests
   entirely with the author and the reviewer.
-* Five declined rules is a list that can grow, and it now lives in two files.
-  Each addition needs the same justification, and nothing but review enforces
-  that.
+* Four declined rules is a list that can grow, and it lives in two files. Each
+  addition needs the same justification, and nothing but review enforces that.
 
 ### Risks
 
@@ -210,7 +186,7 @@ this ADR prevents it being made later.
   here is a recorded policy and a report that shows only what is worth acting
   on.
 * A contributor may read the declined-rules sections as licence to switch off
-  any inconvenient analyzer. They are scoped to five named rule ids, each
+  any inconvenient analyzer. They are scoped to four named rule ids, each
   carrying its reason, precisely so that reading is hard to sustain.
 * If a performance requirement is ever recorded against a path these rules
   cover, the decision has to be revisited there rather than assumed still
@@ -218,8 +194,6 @@ this ADR prevents it being made later.
 
 ## Follow-up Actions
 
-* Decide the collection-initializer convention on its own merits if the mixed
-  spelling becomes a nuisance, and record it as a separate decision.
 * Re-examine the `CA1859` decision for any code path that acquires a measured
   performance requirement.
 
