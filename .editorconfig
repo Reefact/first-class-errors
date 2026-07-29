@@ -1,4 +1,5 @@
-# EditorConfig — whitespace hygiene, plus the one style rule the compiler can enforce.
+# EditorConfig — whitespace hygiene, the one style rule the compiler can enforce, and the
+# analyzer rules this repository declines.
 #
 # FirstClassErrors.sln.DotSettings (ReSharper/Rider) remains the source of truth for
 # code style, naming and inspection severities. It is read by Rider and by nothing else:
@@ -16,6 +17,12 @@
 # patterns, the column alignment of consecutive declarations, the region conventions.
 # Note that the DotSettings sets EnableEditorConfigSupport=False, so Rider ignores this
 # file entirely — each tool reads its own side of the pair.
+#
+# The file also carries the analyzer rules the repository declines, each next to the reason
+# it is declined (decision: ADR-0060). Those are not style preferences mirrored from the
+# DotSettings but generic Roslyn/analyzer advice that this codebase deliberately does not
+# follow; they are switched off here so the compiler stops emitting them, which is also what
+# removes them from the SonarQube Cloud report — the scanner reports what the build emits.
 #
 # charset is deliberately left unset: the repository mixes BOM and BOM-less files,
 # and pinning it here would rewrite existing files.
@@ -40,6 +47,40 @@ csharp_style_var_for_built_in_types = false
 csharp_style_var_when_type_is_apparent = false
 csharp_style_var_elsewhere = false
 dotnet_diagnostic.IDE0008.severity = warning
+
+# Declined: collection expressions. IDE0028 and its family ask that `new()` and
+# `new List<T> { ... }` initializers be rewritten as `[...]`. The preference itself is turned
+# off rather than the report merely silenced — that is the honest statement ("we do not want
+# this"), and it covers the whole family (IDE0300-IDE0305) instead of the one member that
+# happened to fire. The explicit IDE0028 severity backs it up, because the option's accepted
+# spellings changed across SDKs and the preference alone is version-sensitive. Declined on two
+# grounds: 147 sites across 13 projects for no behaviour change, and target-typed forms such as
+# `IReadOnlyList<int> x = [1, 2, 3];` hand the choice of concrete type to the compiler, which
+# the current `new List<int>` states outright.
+dotnet_style_prefer_collection_expression = false
+dotnet_diagnostic.IDE0028.severity = none
+
+# Declined: concrete return types for performance. CA1859 asks that non-public members typed
+# `IReadOnlyList<T>` / `IEnumerable<T>` be retyped to the concrete collection they happen to
+# return, trading an interface dispatch for a direct call. In this codebase the interface IS
+# the contract — "read this, do not mutate it" — and the rule only ever fires on non-public
+# members, so its whole domain is plumbing where the abstraction was chosen on purpose.
+# Honouring it would hand `.Add()` to every caller to buy nanoseconds on error-message and
+# test-generator paths. Same trade the repository already refused when it kept its value
+# objects as validating classes rather than structs.
+dotnet_diagnostic.CA1859.severity = none
+
+# Test projects only. `*Tests` matches the thirteen test projects and no shipping one —
+# FirstClassErrors.Testing ends in `Testing`, so the rule below does not reach it.
+[*Tests/**.cs]
+# Declined in tests: hoisting constant array arguments. CA1861 asks that a literal array
+# passed to a method — the expected values of an assertion, the cases of a generator — be
+# lifted into a static readonly field so it is allocated once instead of per call. In a test
+# the literal sitting next to its assertion IS the statement being made; hoisting it moves the
+# expected values away from the check that reads them, to save an allocation that happens a
+# few hundred times in a suite. The rule stays ON for shipping code, where a hot path can
+# genuinely want it — which is why this is scoped here rather than switched off repository-wide.
+dotnet_diagnostic.CA1861.severity = none
 
 [*.{csproj,props,targets,nuspec,config,xml}]
 indent_size = 2

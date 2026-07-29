@@ -1,0 +1,210 @@
+# ADR-0060 | Let stated intent outrank generic analyzer advice
+
+🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0060-let-stated-intent-outrank-generic-analyzer-advice.fr.md)
+
+**Status:** Proposed
+**Proposed:** 2026-07-29
+**Decision Makers:** Reefact
+
+## Context
+
+The SonarQube Cloud report for this project carries 255 open findings. Three
+rules account for 191 of them — 75% of everything left — and all three arrive
+under the `external_roslyn` namespace, meaning they are not SonarQube's own
+analysis: they are diagnostics the .NET compiler and the BCL analyzers emit
+during the build, which the scanner observes through MSBuild and republishes.
+A rule configured to `none` is never emitted, so the report loses it at the
+source rather than having it dismissed in the server's UI.
+
+The three rules, and what the flagged code does today:
+
+* **`IDE0028` — 147 findings across 13 projects.** Asks that collection
+  initializers written `new()` or `new List<T> { ... }` be rewritten as
+  collection expressions, `[...]`. The repository is already mixed on this
+  point: 85 sites use the bracket form and 147 use the other, and both appear
+  inside the same projects — `JustDummies.UnitTests` alone holds 32 of the
+  first and 64 of the second. The rule fires at its default severity; it has
+  never failed a build. Some of the rewrites are not purely syntactic: on a
+  target-typed declaration such as `IReadOnlyList<int> pool = [1, 2, 3];` the
+  compiler selects the concrete type that gets instantiated, where the present
+  `new List<int>` names it.
+* **`CA1859` — 22 findings.** Asks that non-public members typed
+  `IReadOnlyList<T>` or `IEnumerable<T>` be retyped to the concrete collection
+  they are observed to return, so callers make a direct call instead of an
+  interface dispatch. The rule fires only on non-public members. In the flagged
+  code the interface expresses a contract — a helper building an error message
+  returns `IReadOnlyList<string>` so its callers cannot mutate the result, and
+  the test helpers take `IAny<T>` precisely because the public abstraction is
+  what is under test.
+* **`CA1861` — 22 findings, every one of them in a test project.** Asks that a
+  constant array passed as an argument be hoisted into a static readonly field,
+  so it is allocated once rather than per call. The flagged arguments are the
+  expected values of assertions and the case lists of property generators,
+  written inline next to the check that reads them.
+
+The code these rules flag is on error-construction paths, documentation
+tooling, and test suites. None of it is a measured hot path, and no performance
+requirement is recorded against any of it.
+
+The repository already holds the two precedents this decision sits between.
+ADR-0055 established that a style rule the compiler can express is restated in
+`.editorconfig` and enforced at build time, with the DotSettings authoritative
+for everything Roslyn cannot express. ADR-0058 declined `CA1510` and chose a
+per-project suppression over a repository-wide one, on the express ground that
+projects able to honour a rule should keep it. Separately, the repository's
+coding rules already resolve one performance-versus-invariant trade in favour
+of the invariant: value objects and results stay validating classes rather than
+becoming structs, because correctness outranks allocation on error paths.
+
+## Decision
+
+Generic analyzer advice is declined — in writing, next to the reason, and at
+the narrowest scope that covers the finding — wherever the code it flags is a
+deliberate expression of intent, with readability and stated contracts
+outranking micro-performance unless a measured need is recorded.
+
+## Rationale
+
+* **The rules are generic; the code is specific.** Each of the three is sound
+  where it was written for, and wrong here for a reason the analyzer cannot
+  see. `CA1859` cannot tell an incidental abstraction from a contract, so it
+  reads `IReadOnlyList<string>` as an oversight when it is the whole point:
+  honouring it would hand `.Add()` to every caller in exchange for nanoseconds
+  on a path that runs once per validation conflict. `CA1861` cannot tell a hot
+  loop from an assertion, so it would move the expected values of a test away
+  from the check that reads them to save an allocation occurring a few hundred
+  times in a suite. Suppressing them is not evading the advice; it is answering
+  it.
+* **Declining in the configuration beats declining in the report.** These
+  findings originate in the build, so a severity of `none` stops them being
+  produced at all. That places the decision in a file that lives in the
+  repository, is read by the compiler and by every contributor including
+  agents, and carries its reason inline — where marking them "won't fix" on the
+  SonarQube server would put the reasoning somewhere the code never shows it.
+* **Scope follows the reason, not convenience.** `CA1861`'s justification is
+  about tests, and every one of its findings is in a test project, so it is
+  declined for test projects and left live for shipping code, where a hot path
+  can genuinely want it. `CA1859` and `IDE0028` are declined repository-wide
+  because their justifications hold everywhere they fire. This keeps ADR-0058's
+  principle — a project that can honour a rule keeps it — while recognising
+  that here the reason to decline is uniform rather than a platform accident.
+* **The performance limb is a trade this repository has already made.** Both
+  performance rules ask for the same currency: legibility spent on speed that
+  nothing has asked for. The value-objects-as-classes rule settled the same
+  trade the same way. Deciding it once, generally, stops it being re-argued at
+  each finding.
+* **`IDE0028` is the weakest of the three, and still not worth applying.** Its
+  advice is defensible and its target syntax is widely adopted; what argues
+  against it is cost and reach, not correctness — 147 edits across 13 projects
+  that change no behaviour, in a repository whose per-pull-request mutation
+  check measures every file a change touches. Its findings are also the least
+  informative: the codebase already disagrees with itself here, so applying the
+  rule would be adopting a convention, not fixing a defect, and adopting a
+  convention is a decision to take deliberately rather than by exhausting an
+  analyzer's backlog.
+
+## Alternatives Considered
+
+### Apply all three rules
+
+Clears 191 findings by complying, and leaves no suppression to explain.
+
+Rejected because it inverts the point of the exercise. Two of the three would
+degrade the code they touch — one by widening a read-only contract into a
+mutable one, the other by separating test data from the assertion that reads
+it — to buy performance nothing has asked for. The third is a 147-site
+cosmetic rewrite whose only benefit is a smaller report.
+
+### Suppress per site with `[SuppressMessage]` and a justification
+
+The finest possible scope, and each suppression carries its reason at the exact
+line that raised it.
+
+Rejected on volume and on message. 191 attributes would add more lines than the
+fixes they replace, and repeating one argument 147 times states it 147 times
+without ever stating it once. The reason here is a policy, not a local
+exception, and a policy belongs in one place.
+
+### Mark the findings "won't fix" in SonarQube Cloud
+
+Costs nothing in the repository and clears the report immediately.
+
+Rejected because it puts the decision outside the code. The build would keep
+emitting the diagnostics, every new occurrence would have to be dismissed by
+hand, and a contributor reading the source would find no trace of the reasoning
+— exactly the failure ADR-0056 recorded when a rule lived only where the code's
+readers could not see it.
+
+### Decline `CA1861` repository-wide as well
+
+Simpler and symmetrical with the other two.
+
+Rejected because the justification does not reach that far. The argument is
+that a literal beside its assertion is clearer than a hoisted field; in
+shipping code inside a loop, the rule's own argument wins instead. Declining it
+where it is not justified would trade a precise decision for a tidy one, and
+would remove the nudge in the only place it could matter.
+
+### Converge on collection expressions instead of declining `IDE0028`
+
+Faces the fact that the codebase is already mixed, and resolves it in the
+direction Roslyn and the wider ecosystem prefer.
+
+Rejected for now on cost rather than merit: it is the same 147-site churn, and
+the choice of a repository-wide spelling convention deserves to be made on its
+own terms — not as a by-product of clearing an analyzer backlog. Nothing in
+this ADR prevents it being made later.
+
+## Consequences
+
+### Positive
+
+* 191 of 255 findings clear, and every future occurrence clears with them
+  rather than accumulating.
+* The reasoning lives in `.editorconfig`, beside the effect, readable by the
+  compiler and by anyone — human or agent — editing the repository.
+* The two limbs of the policy are stated once and can be cited, so the same
+  argument is not re-run at each new analyzer finding.
+* `CA1861` remains live where it could genuinely pay, so the decision keeps its
+  own escape hatch.
+
+### Negative
+
+* The mixed spelling of collection initializers is frozen: 85 bracket sites and
+  147 others coexist, and the analyzer that would have converged them is off.
+  Anyone wanting a single convention now has to decide it deliberately.
+* No analyzer will nudge a genuinely hot shipping path toward a concrete return
+  type any more, since `CA1859` is off everywhere. That judgement now rests
+  entirely with the author and the reviewer.
+* Three declined rules is a list that can grow. Each addition needs the same
+  justification, and nothing but review enforces that.
+
+### Risks
+
+* Reading the count alone overstates the change: no code improved. The value
+  here is a recorded policy and a report that shows only what is worth acting
+  on.
+* A contributor may read the declined-rules section as licence to switch off
+  any inconvenient analyzer. It is scoped to three rule ids, each carrying its
+  reason, precisely so that reading is hard to sustain.
+* If a performance requirement is ever recorded against a path these rules
+  cover, the decision has to be revisited there rather than assumed still
+  valid.
+
+## Follow-up Actions
+
+* Decide the collection-initializer convention on its own merits if the mixed
+  spelling becomes a nuisance, and record it as a separate decision.
+* Re-examine the `CA1859` decision for any code path that acquires a measured
+  performance requirement.
+
+## References
+
+* ADR-0055 — restating the compiler-expressible style rules in `.editorconfig`
+  and enforcing them at build time.
+* ADR-0056 — stating the coding rules where an agent can act on them, the
+  reason a decision recorded out of the code's reach does not hold.
+* ADR-0058 — declining `CA1510`, and the scoping principle this ADR follows.
+* `.editorconfig` — where the three declined rules live, each with its reason.
+* `CONTRIBUTING.md`, `CLAUDE.md` — the coding rules, including the
+  value-objects-as-classes trade cited in the Rationale.
