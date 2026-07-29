@@ -234,4 +234,24 @@ internal static class Descriptors {
         description: "The ambient seed scope flows with the execution context, so a scope opened around a parallel loop reaches every worker and their draws interleave: neither the sequence nor the multiset is stable across runs. A scope opened inside the loop body gives each unit of work its own sequence, and the whole run replays — the shape the library's documentation names.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.ParallelDrawWithoutPerItemSeed));
 
+    public static readonly DiagnosticDescriptor ScalarChainAdmitsNoValue = new(
+        id: DiagnosticIds.ScalarChainAdmitsNoValue,
+        title: "The declared scalar constraints admit no value",
+        messageFormat: "No value satisfies this chain once {0} is applied",
+        category: DiagnosticCategories.Constraints,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "The constant constraints narrow the domain to nothing, so the chain throws a ConflictingAnyConstraintException the moment the arrange line runs. The library computes this with one emptiness test over bounds, lattice and allow-list; this rule runs the same test over the constants written at the call site, and stays silent for every argument it cannot fold.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.ScalarChainAdmitsNoValue));
+
+    public static readonly DiagnosticDescriptor ConstraintWithNoEffect = new(
+        id: DiagnosticIds.ConstraintWithNoEffect,
+        title: "A constraint narrows nothing",
+        messageFormat: "This constraint changes nothing: {0}",
+        category: DiagnosticCategories.Constraints,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        description: "The constraint is legal and inert: the domain it produces is the one that already existed. This is the only member of the constraint family the run time NEVER reports — every other contradiction throws eventually and loudly, while an inert constraint leaves the test green and exercising a domain the author did not write. The dangerous case is an exclusion of a sentinel the generator could never draw: it silently misses, and starts mattering the day someone widens the range.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.ConstraintWithNoEffect));
+
 }

@@ -27,3 +27,5 @@ JD019   | JustDummies.Reproducibility | Disabled | CommittedReplaySeedAnalyzer
 JD020   | JustDummies.Reproducibility | Info     | SharedStaticAnyContextAnalyzer
 JD021   | JustDummies.Reproducibility | Warning  | BlankReplaySnippetAnalyzer
 JD022   | JustDummies.Reproducibility | Info     | ParallelDrawWithoutPerItemSeedAnalyzer
+JD023   | JustDummies.Constraints     | Warning  | ScalarChainAdmitsNoValueAnalyzer
+JD024   | JustDummies.Constraints     | Info     | ScalarChainAdmitsNoValueAnalyzer
