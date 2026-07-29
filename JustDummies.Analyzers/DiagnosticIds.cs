@@ -40,4 +40,7 @@ internal static class DiagnosticIds {
     public const string BlankReplaySnippet            = "JD021";
     public const string ParallelDrawWithoutPerItemSeed = "JD022";
 
+    public const string ScalarChainAdmitsNoValue = "JD023";
+    public const string ConstraintWithNoEffect   = "JD024";
+
 }
