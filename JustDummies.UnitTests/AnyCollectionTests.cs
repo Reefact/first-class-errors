@@ -127,6 +127,21 @@ public sealed class AnyCollectionTests {
         Check.ThatCode(() => Any.SetOf(opaque).WithCount(5).Generate()).Throws<AnyGenerationException>();
     }
 
+    [Fact(DisplayName = "Distinct: over an element type without value equality the requirement is inert, and the collection holds repeats.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("JustDummies.Composition", "JD028:Distinctness is declared over an element type that has no value equality",
+                                                     Justification =
+                                                         "The inert distinctness IS the subject. This pins the silent behaviour JD028 reports, which the library cannot report itself: from " +
+                                                         "its side the requirement is met, because the draws really are pairwise unequal under the comparer it was given.")]
+    public void DistinctOverReferenceEqualityIsInert() {
+        // Percentage has no value equality, and '.As' builds a NEW instance per draw, so the default comparer can
+        // never call two of them equal. Six 'distinct' elements over a two-value domain therefore succeed — and hold
+        // repeats. The count is not statistical: six draws from a domain of two cannot show more than two values.
+        List<Percentage> percentages = Any.ListOf(Any.Int32().Between(1, 2).As(Percentage.Create)).Distinct().WithCount(6).Generate();
+
+        Check.That(percentages.Count).IsEqualTo(6);
+        Check.That(percentages.Select(percentage => percentage.Value).Distinct().Count()).IsStrictlyLessThan(3);
+    }
+
     [Fact(DisplayName = "SetOf: elements are always distinct and drawn from the item generator.")]
     public void SetOfIsDistinct() {
         for (int i = 0; i < SampleCount; i++) {
