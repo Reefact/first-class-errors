@@ -27,4 +27,8 @@ internal static class DiagnosticIds {
     public const string GeneratorPooledAsValue      = "JD012";
     public const string HeldCollectionPassedToOneOf = "JD013";
 
+    // Category: Constraints — decidable from compile-time constants
+    public const string RejectedConstantArgument      = "JD014";
+    public const string StringConstraintsAdmitNoValue = "JD015";
+
 }

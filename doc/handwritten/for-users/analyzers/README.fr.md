@@ -76,6 +76,15 @@ Un générateur est une *recette* immuable, et `Generate()` est la seule chose q
 | [JD012 GeneratorPooledAsValue](JD012.fr.md) | 🟠 Avertissement | on | `Any.OneOf` reçoit des générateurs et infère un ensemble de recettes ; y tirer produit une recette plutôt qu'une valeur. |
 | [JD013 HeldCollectionPassedToOneOf](JD013.fr.md) | 🟠 Avertissement | on | Une collection tenue passée à `Any.OneOf` lie `T` au type de la collection, formant un ensemble d'un seul élément ; `Any.ElementOf` tire parmi ses éléments. |
 
+## JustDummies — Contraintes
+
+Ces règles anticipent, à la compilation, le sous-ensemble des vérifications de contraintes de la bibliothèque qui est décidable depuis des constantes. Les vérifications d'exécution demeurent : elles couvrent tous les arguments que celles-ci ne peuvent pas voir.
+
+| Règle | Sévérité | Défaut | Description |
+|-------|----------|--------|-------------|
+| [JD014 RejectedConstantArgument](JD014.fr.md) | 🟠 Avertissement | on | Un argument de contrainte est une constante que la garde du générateur refuse : l'appel lève à chaque exécution. |
+| [JD015 StringConstraintsAdmitNoValue](JD015.fr.md) | 🟠 Avertissement | on | Les contraintes constantes d'une chaîne `AnyString` n'admettent aucune valeur — un fragment hors de la famille de caractères ou de la casse déclarée, ou des fragments qui ne peuvent pas tenir dans la longueur déclarée. |
+
 ## Configuration
 
 La sévérité de chaque règle se règle dans `.editorconfig`, par exemple :
