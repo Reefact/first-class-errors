@@ -81,8 +81,30 @@ fact several times; check it every time a `.csproj` is added.
   as `Transience` and `ErrorOrigin` are the legitimate value-type case — they carry
   no invariant to bypass.)
 * Preserve compatibility with **.NET Standard 2.0**.
-* Code style and inspection severities are defined in `FirstClassErrors.sln.DotSettings`
-  (ReSharper/Rider). Follow it; do not reformat code against these settings.
+
+## Coding rules
+
+Rules you must apply to code you write. They are written out here, rather than
+delegated to `FirstClassErrors.sln.DotSettings`, because that file is a
+ReSharper/Rider artifact: Rider reads it and nothing else can — no compiler, no CI
+job, and no agent. Pointing at it read like an instruction without being one, and
+the explicit-type rule below drifted to 203 violations under that arrangement
+(decision: ADR-0056). This list is the extensible home for such rules; each one
+states how it is checked, so none of them rests on attention alone.
+
+* **Write the type; never `var`.** The only exception is a declaration C# gives no
+  other spelling, which in practice means an anonymous type (`new { ... }`). This
+  is checked twice: `.claude/hooks/coding-rules.sh` reports it on the edit itself,
+  and the build reports it as `IDE0008`, which CI turns into an error (ADR-0055).
+  A pull request carrying one does not merge.
+
+* **Do not reformat code you did not change.** The repository's layout — the
+  column alignment of consecutive declarations, the file layout patterns, the
+  region conventions — comes from the `.DotSettings`, and no tool available to you
+  can reproduce it. Reformatting therefore does not converge on the repository's
+  style; it drifts away from it while burying the real change. Touch the lines the
+  task requires and leave their neighbours alone, even when the surrounding
+  alignment already looks stale.
 
 ## Error and documentation conventions
 
