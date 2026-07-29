@@ -374,7 +374,7 @@ public sealed class AnyStringTests {
     public void WithCharsDrawsFromThePool() {
         const string pool = "0123456789ABCDEF";
         foreach (string value in Samples(Any.String().WithChars(pool).NonEmpty())) {
-            Check.That(value.All(character => pool.Contains(character))).IsTrue();
+            Check.That(value.All(character => pool.IndexOf(character) >= 0)).IsTrue();
         }
     }
 
@@ -393,7 +393,7 @@ public sealed class AnyStringTests {
     public void WithCharsReachesNonAscii() {
         const string pool = "àâäéèêëîïôùûüç";
         foreach (string value in Samples(Any.String().WithChars(pool).NonEmpty())) {
-            Check.That(value.All(character => pool.Contains(character))).IsTrue();
+            Check.That(value.All(character => pool.IndexOf(character) >= 0)).IsTrue();
         }
     }
 
