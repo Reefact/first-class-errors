@@ -28,6 +28,7 @@ set -eu
 component="${1:-}"
 # Tag prefix and train scopes come from tools/trains.sh (the single source of truth
 # shared with release-notes.sh), so the changelog and the release notes never diverge.
+# shellcheck source=tools/trains.sh
 . "$(dirname "$0")/../trains.sh"
 prefix="$(prefix_of "$component")"
 train_scopes="$(scopes_of "$component")"

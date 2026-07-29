@@ -302,13 +302,16 @@ jobs:
               patch="$(jq -r '.patch // ""' verdict.json)"
               msg="$(jq -r '.commit_message // ""' verdict.json)"
               if [ -n "$patch" ]; then
+                # shellcheck disable=SC2016  # the backticks are Markdown, not command substitution
                 printf 'Apply it yourself:\n\n```diff\n%s\n```\n\n' "$patch"
+                # shellcheck disable=SC2016  # the backticks are Markdown, not command substitution
                 [ -n "$msg" ] && printf 'Commit it as:\n\n```\n%s\n```\n\n' "$msg"
               fi
             else
               printf '**🧑 Needs a human** — %s.\n\n' "$category"
               [ -n "$explanation" ] && printf '%s\n\n' "$explanation"
             fi
+            # shellcheck disable=SC2016  # the backticks are Markdown, not command substitution
             printf '_No dependency version was changed. See `%s`._\n' "$doc"
           } > comment-body.md
 
