@@ -3,7 +3,8 @@
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0012-fix-the-binder-options-before-binding-begins.fr.md)
 
 **Status:** Accepted
-**Date:** 2026-07-18
+**Proposed:** 2026-07-18
+**Accepted:** 2026-07-18
 **Decision Makers:** Reefact
 
 ## Context

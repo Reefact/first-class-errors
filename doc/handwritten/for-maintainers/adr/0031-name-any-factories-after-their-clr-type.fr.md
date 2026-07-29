@@ -3,7 +3,8 @@
 🌍 🇬🇧 [English](0031-name-any-factories-after-their-clr-type.md) · 🇫🇷 Français (ce fichier)
 
 **Statut :** Accepté
-**Date :** 2026-07-21
+**Proposé :** 2026-07-21
+**Accepté :** 2026-07-21
 **Décideurs :** Reefact
 
 ## Contexte

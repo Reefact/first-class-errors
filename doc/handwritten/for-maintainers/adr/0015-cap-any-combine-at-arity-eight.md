@@ -3,7 +3,8 @@
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0015-cap-any-combine-at-arity-eight.fr.md)
 
 **Status:** Accepted
-**Date:** 2026-07-19
+**Proposed:** 2026-07-19
+**Accepted:** 2026-07-19
 **Decision Makers:** Reefact
 
 ## Context

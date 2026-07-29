@@ -3,7 +3,8 @@
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0029-complete-the-outcome-try-async-surface-with-token-less-overloads.fr.md)
 
 **Status:** Accepted
-**Date:** 2026-07-21
+**Proposed:** 2026-07-21
+**Accepted:** 2026-07-21
 **Decision Makers:** Reefact
 
 ## Context

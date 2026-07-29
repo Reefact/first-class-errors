@@ -3,7 +3,7 @@
 🌍 🇫🇷 Français (ce fichier) · 🇬🇧 [English](0046-make-the-per-pull-request-mutation-gate-advisory.md)
 
 **Statut :** Proposé
-**Date :** 2026-07-27
+**Proposé :** 2026-07-27
 **Décideurs :** Reefact
 
 ## Contexte

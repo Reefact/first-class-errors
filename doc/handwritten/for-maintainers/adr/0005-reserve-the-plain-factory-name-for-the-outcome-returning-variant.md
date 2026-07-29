@@ -3,7 +3,8 @@
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0005-reserve-the-plain-factory-name-for-the-outcome-returning-variant.fr.md)
 
 **Status:** Accepted
-**Date:** 2026-07-16
+**Proposed:** 2026-07-16
+**Accepted:** 2026-07-16
 **Decision Makers:** Reefact
 
 ## Context

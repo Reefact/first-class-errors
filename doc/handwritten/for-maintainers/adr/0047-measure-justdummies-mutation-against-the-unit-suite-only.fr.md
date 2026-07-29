@@ -3,7 +3,7 @@
 🌍 🇫🇷 Français (ce fichier) · 🇬🇧 [English](0047-measure-justdummies-mutation-against-the-unit-suite-only.md)
 
 **Statut :** Proposé
-**Date :** 2026-07-27
+**Proposé :** 2026-07-27
 **Décideurs :** Reefact
 
 ## Contexte

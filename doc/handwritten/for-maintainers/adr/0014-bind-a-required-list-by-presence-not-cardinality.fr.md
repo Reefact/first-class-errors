@@ -3,7 +3,8 @@
 🌍 🇬🇧 [English](0014-bind-a-required-list-by-presence-not-cardinality.md) · 🇫🇷 Français (ce fichier)
 
 **Statut :** Accepté
-**Date :** 2026-07-18
+**Proposé :** 2026-07-18
+**Accepté :** 2026-07-18
 **Décideurs :** Reefact
 
 ## Contexte

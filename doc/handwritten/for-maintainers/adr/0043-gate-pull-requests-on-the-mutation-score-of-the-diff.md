@@ -3,7 +3,8 @@
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0043-gate-pull-requests-on-the-mutation-score-of-the-diff.fr.md)
 
 **Status:** Accepted
-**Date:** 2026-07-27
+**Proposed:** 2026-07-27
+**Accepted:** 2026-07-27
 **Decision Makers:** Reefact
 
 ## Context

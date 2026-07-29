@@ -3,7 +3,8 @@
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0018-bundle-the-binders-structural-error-code-and-messages.fr.md)
 
 **Status:** Accepted
-**Date:** 2026-07-18
+**Proposed:** 2026-07-18
+**Accepted:** 2026-07-18
 **Decision Makers:** Reefact
 
 ## Context

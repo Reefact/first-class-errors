@@ -3,7 +3,8 @@
 🌍 🇫🇷 Français (ce fichier) · 🇬🇧 [English](0053-unify-discrete-generation-in-one-ordinal-space.md)
 
 **Statut :** Accepté
-**Date :** 2026-07-28
+**Proposé :** 2026-07-28
+**Accepté :** 2026-07-28
 **Décideurs :** Reefact
 
 ## Contexte

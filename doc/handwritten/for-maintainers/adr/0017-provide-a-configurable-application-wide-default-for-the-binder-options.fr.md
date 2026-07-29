@@ -3,7 +3,8 @@
 🌍 🇬🇧 [English](0017-provide-a-configurable-application-wide-default-for-the-binder-options.md) · 🇫🇷 Français (ce fichier)
 
 **Statut :** Accepté
-**Date :** 2026-07-18
+**Proposé :** 2026-07-18
+**Accepté :** 2026-07-18
 **Décideurs :** Reefact
 
 ## Contexte

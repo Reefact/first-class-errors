@@ -3,7 +3,8 @@
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0021-bind-out-of-dto-arguments-as-peers-through-a-source-agnostic-entry.fr.md)
 
 **Status:** Accepted
-**Date:** 2026-07-19
+**Proposed:** 2026-07-19
+**Accepted:** 2026-07-19
 **Decision Makers:** Reefact
 
 ## Context

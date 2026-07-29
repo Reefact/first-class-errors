@@ -3,7 +3,8 @@
 🌍 🇬🇧 [English](0010-treat-gendocs-error-catalog-as-a-versioned-contract.md) · 🇫🇷 Français (ce fichier)
 
 **Statut :** Accepté
-**Date :** 2026-07-17
+**Proposé :** 2026-07-17
+**Accepté :** 2026-07-17
 **Décideurs :** Reefact
 
 ## Contexte
