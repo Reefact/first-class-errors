@@ -33,4 +33,11 @@ internal static class DiagnosticIds {
     public const string CollectionConstraintsAdmitNoValue = "JD016";
     public const string EnumUniverseViolation             = "JD017";
 
+    // Category: Reproducibility — the seeding long tail
+    public const string NestedReproducibilityScope    = "JD018";
+    public const string CommittedReplaySeed           = "JD019";
+    public const string SharedStaticAnyContext        = "JD020";
+    public const string BlankReplaySnippet            = "JD021";
+    public const string ParallelDrawWithoutPerItemSeed = "JD022";
+
 }
