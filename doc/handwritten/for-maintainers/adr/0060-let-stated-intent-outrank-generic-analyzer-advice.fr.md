@@ -8,11 +8,12 @@
 
 ## Contexte
 
-Le rapport SonarQube Cloud du projet porte 255 constats ouverts. Cinq règles en
-représentent 212 — 83 % de ce qui reste — et elles se répartissent en deux
-familles, selon l'endroit où le constat est produit.
+Le rapport SonarQube Cloud du projet porte 255 constats ouverts. Quatre de ses
+règles signalent du code qui n'est pas défectueux mais délibéré, et représentent
+ensemble 65 de ces constats. Elles se répartissent en deux familles, selon
+l'endroit où le constat est produit.
 
-Trois arrivent sous l'espace de noms `external_roslyn`, c'est-à-dire qu'elles ne
+Deux arrivent sous l'espace de noms `external_roslyn`, c'est-à-dire qu'elles ne
 relèvent pas de l'analyse propre à SonarQube : ce sont des diagnostics émis par
 le compilateur .NET et par les analyseurs de la BCL pendant la compilation, que
 le scanner observe via MSBuild et republie. Une règle réglée sur `none` n'est
@@ -20,18 +21,8 @@ jamais émise ; le rapport la perd donc à la source. Les deux autres relèvent 
 l'analyse shell propre à SonarQube, qu'aucun réglage de compilation n'atteint —
 rien de ce que fait le compilateur ne les produit ni ne les supprime.
 
-Les cinq règles, et ce que fait aujourd'hui le code qu'elles signalent :
+Les quatre règles, et ce que fait aujourd'hui le code qu'elles signalent :
 
-* **`IDE0028` — 147 constats sur 13 projets.** Demande que les initialiseurs de
-  collection écrits `new()` ou `new List<T> { ... }` soient réécrits en
-  expressions de collection, `[...]`. Le dépôt est déjà mixte sur ce point :
-  85 sites emploient la forme à crochets et 147 l'autre, et les deux coexistent
-  au sein des mêmes projets — `JustDummies.UnitTests` à lui seul en compte 32 de
-  la première et 64 de la seconde. La règle se déclenche à sa sévérité par
-  défaut ; elle n'a jamais fait échouer une compilation. Certaines réécritures ne
-  sont pas purement syntaxiques : sur une déclaration typée par la cible telle que
-  `IReadOnlyList<int> pool = [1, 2, 3];`, c'est le compilateur qui choisit le
-  type concret instancié, là où le `new List<int>` actuel le nomme.
 * **`CA1859` — 22 constats.** Demande que les membres non publics typés
   `IReadOnlyList<T>` ou `IEnumerable<T>` soient retypés vers la collection
   concrète qu'on les observe retourner, afin que les appelants fassent un appel
@@ -112,9 +103,9 @@ primant la micro-performance tant qu'aucun besoin mesuré n'est consigné.
 * **La portée suit la raison, non la commodité.** La justification de `CA1861`
   porte sur les tests, et tous ses constats sont dans des projets de test : elle
   est donc déclinée pour les projets de test et laissée active pour le code
-  livré, où un chemin chaud peut réellement la vouloir. `CA1859` et `IDE0028`
-  sont déclinées à l'échelle du dépôt parce que leurs justifications valent
-  partout où elles se déclenchent. Le principe de l'ADR-0058 — un projet capable
+  livré, où un chemin chaud peut réellement la vouloir. `CA1859` et les deux
+  règles shell sont déclinées sur tout le code qu'elles atteignent, parce que
+  leurs justifications valent partout où elles se déclenchent. Le principe de l'ADR-0058 — un projet capable
   d'honorer une règle la conserve — est ainsi préservé, tout en reconnaissant
   qu'ici la raison de décliner est uniforme plutôt qu'un accident de plateforme.
 * **Le volet performance est un arbitrage que ce dépôt a déjà rendu.** Les deux
@@ -122,40 +113,39 @@ primant la micro-performance tant qu'aucun besoin mesuré n'est consigné.
   pour une vitesse que personne n'a demandée. La règle des objets valeur en
   classes a tranché le même arbitrage dans le même sens. Le décider une fois, de
   façon générale, évite de le rejouer à chaque constat.
-* **`IDE0028` est la plus faible des trois, et ne vaut toujours pas d'être
-  appliquée.** Son conseil est défendable et sa syntaxe cible largement adoptée ;
-  ce qui joue contre elle est le coût et la portée, non la justesse — 147
-  modifications sur 13 projets sans aucun changement de comportement, dans un
-  dépôt dont le contrôle de mutation par *pull request* mesure chaque fichier
-  qu'un changement touche. Ses constats sont aussi les moins instructifs : le
-  code se contredit déjà lui-même sur ce point, si bien qu'appliquer la règle
-  reviendrait à adopter une convention, non à corriger un défaut — et l'adoption
-  d'une convention se décide délibérément, pas en épuisant l'arriéré d'un
-  analyseur.
+* **On décline le conseil que le code contredit, pas celui qui coûte cher.** Le
+  même rapport portait un cinquième candidat, `IDE0028`, avec 147 constats — de
+  loin le plus gros groupe et le moins cher à faire disparaître. Il est appliqué
+  au contraire, parce que ses constats signalaient une dérive réelle (le code
+  écrivait les initialiseurs de collection des deux façons, 85 sites contre 147)
+  et non un choix délibéré. Le volume n'est pas un argument pour décliner une
+  règle, et cette ADR ne veut pas être lue comme s'il l'était.
 
 ## Alternatives envisagées
 
-### Appliquer les trois règles
+### Appliquer les quatre règles
 
-Élimine 191 constats en s'y conformant, et ne laisse aucune suppression à
+Élimine 65 constats en s'y conformant, et ne laisse aucune suppression à
 expliquer.
 
-Rejetée parce qu'elle inverse le propos de l'exercice. Deux des trois
-dégraderaient le code qu'elles touchent — l'une en élargissant un contrat de
-lecture seule en contrat mutable, l'autre en séparant les données d'un test de
-l'assertion qui les lit — pour acheter une performance que personne n'a
-demandée. La troisième est une réécriture cosmétique de 147 sites dont le seul
-bénéfice est un rapport plus court.
+Rejetée parce qu'elle inverse le propos de l'exercice. Chacune des quatre
+dégraderait le code qu'elle touche : élargir un contrat de lecture seule en
+contrat mutable, séparer les données d'un test de l'assertion qui les lit,
+ajouter un `return` qui soit masque un échec soit redit le comportement par
+défaut, et introduire un `local` non POSIX dans des scripts qui déclarent
+`#!/bin/sh`.
 
 ### Supprimer site par site avec `[SuppressMessage]` et une justification
 
 La portée la plus fine possible, chaque suppression portant sa raison à la ligne
 exacte qui l'a levée.
 
-Rejetée sur le volume et sur le message. 191 attributs ajouteraient plus de
-lignes que les corrections qu'ils remplacent, et répéter un argument 147 fois
-l'énonce 147 fois sans jamais l'énoncer une seule. La raison est ici une
-politique, non une exception locale, et une politique tient en un seul endroit.
+Rejetée sur le volume, sur le message et sur la portée. Soixante-cinq attributs
+ajouteraient plus de lignes que les corrections qu'ils remplacent, répéter un
+argument une fois par site l'énonce de nombreuses fois sans jamais l'énoncer une
+seule, et les règles shell ne disposent d'aucun mécanisme de ce genre. La raison
+est ici une politique, non une exception locale, et une politique tient en un
+seul endroit.
 
 ### Marquer les constats « ne sera pas corrigé » dans SonarQube Cloud
 
@@ -178,22 +168,11 @@ La décliner là où elle n'est pas justifiée échangerait une décision préci
 contre une décision ordonnée, et retirerait le rappel au seul endroit où il
 pourrait compter.
 
-### Converger vers les expressions de collection plutôt que décliner `IDE0028`
-
-Prend acte du caractère déjà mixte du code et le résout dans le sens que
-préfèrent Roslyn et l'écosystème.
-
-Rejetée pour l'instant sur le coût plutôt que sur le fond : c'est le même
-remue-ménage de 147 sites, et le choix d'une convention d'écriture à l'échelle du
-dépôt mérite d'être fait pour lui-même — non comme sous-produit de la
-liquidation d'un arriéré d'analyseur. Rien dans cette ADR n'empêche de le faire
-plus tard.
-
 ## Conséquences
 
 ### Positives
 
-* 212 constats sur 255 disparaissent, et toute occurrence future disparaît avec
+* 65 constats sur 255 disparaissent, et toute occurrence future disparaît avec
   eux au lieu de s'accumuler.
 * Le raisonnement vit à côté de son effet — dans `.editorconfig` pour les règles
   que la compilation produit, dans l'invocation du scanner pour les deux qu'elle
@@ -205,16 +184,12 @@ plus tard.
 
 ### Négatives
 
-* L'écriture mixte des initialiseurs de collection est gelée : 85 sites à
-  crochets et 147 autres coexistent, et l'analyseur qui les aurait fait converger
-  est éteint. Qui voudra une convention unique devra désormais la décider
-  délibérément.
 * Plus aucun analyseur n'orientera un chemin livré réellement chaud vers un type
   de retour concret, puisque `CA1859` est éteinte partout. Ce jugement repose
   désormais entièrement sur l'auteur et le relecteur.
-* Cinq règles déclinées, c'est une liste qui peut croître, et elle vit désormais
-  dans deux fichiers. Chaque ajout exige la même justification, et rien d'autre
-  que la relecture ne l'impose.
+* Quatre règles déclinées, c'est une liste qui peut croître, et elle vit dans
+  deux fichiers. Chaque ajout exige la même justification, et rien d'autre que la
+  relecture ne l'impose.
 
 ### Risques
 
@@ -222,7 +197,7 @@ plus tard.
   La valeur tient ici à une politique consignée et à un rapport qui ne montre
   plus que ce sur quoi il vaut la peine d'agir.
 * Un contributeur pourrait lire les sections de règles déclinées comme une
-  licence d'éteindre tout analyseur gênant. Elles sont bornées à cinq
+  licence d'éteindre tout analyseur gênant. Elles sont bornées à quatre
   identifiants de règle nommés, chacun portant sa raison, précisément pour
   rendre cette lecture difficile à tenir.
 * Si une exigence de performance venait à être consignée sur un chemin couvert
@@ -231,8 +206,6 @@ plus tard.
 
 ## Actions de suivi
 
-* Décider la convention d'initialiseurs de collection pour elle-même si
-  l'écriture mixte devient gênante, et la consigner comme une décision distincte.
 * Réexaminer la décision sur `CA1859` pour tout chemin de code qui acquerrait une
   exigence de performance mesurée.
 
