@@ -1,0 +1,86 @@
+name: lint
+
+# Static analysis for the files the C# compiler never sees: the POSIX shell scripts under
+# tools/ and .claude/hooks/, and the workflow definitions themselves.
+#
+# Why this workflow exists. Every other analysis in this repository runs inside a build —
+# the Roslyn analyzers, the style rule ADR-0055 restated in .editorconfig, the warning
+# ratchet in Directory.Build.props — so a contributor meets it at the moment they write the
+# code. Shell and YAML had no such moment: the only thing reading them was the SonarQube
+# Cloud scan, which reports AFTER the merge and enforces nothing (its workflow is green as
+# soon as the upload succeeds, whatever the Quality Gate says). Two findings typed
+# VULNERABILITY reached `main` that way. This closes the gap with tools that run on our own
+# runners, so the signal does not depend on a third-party service being up.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Cancel superseded runs on the same branch / PR.
+concurrency:
+  group: lint-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scripts-and-workflows:
+    name: Lint scripts and workflows
+    runs-on: ubuntu-latest
+    # Both tools are static and finish in seconds; the cap only guards a hung download.
+    timeout-minutes: 10
+    # Declared per job rather than at workflow level, so a job added later inherits nothing
+    # it did not ask for (Sonar githubactions:S8264). This job only reads the checkout.
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Lint the shell scripts
+        # shellcheck ships preinstalled on the ubuntu runner image, so there is nothing to
+        # fetch and no third-party action in the supply chain. The version is printed so a
+        # future failure caused by a runner-image upgrade is readable from the log alone.
+        #
+        # Every script here is `#!/bin/sh`; shellcheck reads the shebang and applies the
+        # POSIX dialect, which is what should be checked — `local`, arrays and `[[` are not
+        # available on the shells these run on (decision on the POSIX rules: ADR-0060).
+        #
+        # The bar is ZERO findings at every severity, `info` included. The tree is clean at
+        # that bar today: the two SC1091 findings were fixed with `source=` directives, and
+        # the SC2016/SC2317 false positives carry an inline `disable` naming its reason. A
+        # lower bar would let `info` accumulate exactly the way the Sonar report did.
+        run: |
+          shellcheck --version | sed -n 's/^version: /shellcheck /p'
+          find . -name '*.sh' -not -path './.git/*' -not -path '*/bin/*' -not -path '*/obj/*' \
+            -print0 | xargs -0 --no-run-if-empty shellcheck
+
+      - name: Lint the workflow definitions
+        # actionlint checks what YAML alone cannot: `${{ }}` expression types, action inputs
+        # against each action's own schema, `needs`/matrix references, cron syntax, and the
+        # shell of every `run:` block (it embeds shellcheck, which is why the run blocks
+        # carry the same inline `disable` directives the scripts do).
+        #
+        # Pinned to a release tarball and verified by checksum rather than run through a
+        # third-party action: an unpinned action is exactly what OpenSSF Scorecard's
+        # Pinned-Dependencies check counts against this repository. Bump both lines together.
+        #
+        # NOT covered by this step: actionlint audits correctness, not security posture. It
+        # does not flag over-broad permissions, spoofable actor checks or dangerous triggers
+        # — the class that produced this repository's two VULNERABILITY findings. A dedicated
+        # auditor (zizmor) is the tool for that and is a separate decision.
+        env:
+          ACTIONLINT_VERSION: '1.7.7'
+          ACTIONLINT_SHA256: '023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757'
+        run: |
+          set -eu
+          archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl -sSfL -o "$archive" \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${archive}"
+          echo "${ACTIONLINT_SHA256}  ${archive}" | sha256sum --check --strict
+          tar xzf "$archive" actionlint
+          ./actionlint --version
+          ./actionlint -color
