@@ -43,4 +43,11 @@ internal static class DiagnosticIds {
     public const string ScalarChainAdmitsNoValue = "JD023";
     public const string ConstraintWithNoEffect   = "JD024";
 
+    public const string DuplicatePoolValue = "JD025";
+    public const string EmptyRelativeUri   = "JD026";
+
+    // Category: Composition — a part that reaches no result, a constraint that cannot bind
+    public const string UnusedCombineOperand = "JD027";
+    public const string InertDistinctness    = "JD028";
+
 }

@@ -165,7 +165,7 @@ public class Jd006DiscardedGeneratorResultTests {
     [Fact]
     public async Task Does_not_report_when_JustDummies_is_absent_from_the_compilation() {
         const string source = """
-            public static class Other {
+            public sealed class Other {
                 public static Other NonEmpty() => new();
             }
 

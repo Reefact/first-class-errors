@@ -204,6 +204,22 @@ public sealed class AnyOneOfTests {
         Check.That(seen).Contains(1, 2);
     }
 
+    [Fact(DisplayName = "A held collection passed to OneOf is one pool member: the draw is the collection itself, not a value from it.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("JustDummies.Usage", "JD013:A held collection is passed to Any.OneOf, making a pool of one",
+                                                     Justification =
+                                                         "The one-member pool IS the subject. This pins the behaviour JD013 reports: inference binds T to the collection, so the call is " +
+                                                         "legal, the draw succeeds, and what comes back is the whole list.")]
+    public void AHeldCollectionPassedToOneOfIsOnePoolMember() {
+        IReadOnlyList<int> held = new[] { 1, 2, 3 };
+
+        IReadOnlyList<int> drawn = Any.OneOf(held).Generate();
+
+        Check.That(ReferenceEquals(drawn, held)).IsTrue();
+
+        // ElementOf is the overload that draws FROM the collection — the same argument, a different pool.
+        Check.That(held.Contains(Any.ElementOf(held).Generate())).IsTrue();
+    }
+
     [Fact(DisplayName = "An exclusion that empties the pool conflicts at declaration, naming both sides.")]
     public void AnExclusionEmptyingThePoolConflicts() {
         ConflictingAnyConstraintException conflict = Assert.Throws<ConflictingAnyConstraintException>(

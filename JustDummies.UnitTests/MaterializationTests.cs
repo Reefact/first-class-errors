@@ -65,4 +65,33 @@ public sealed class MaterializationTests {
         Check.That(value).IsStrictlyGreaterThan(0);
     }
 
+    [Fact(DisplayName = "Building a generator draws nothing at all, which is why a chain left unmaterialized is silent.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("JustDummies.Usage", "JD006:The generator returned by a constraint is discarded",
+                                                     Justification =
+                                                         "The discarded generator IS the subject. This pins the behaviour JD006 reports: the arrange line reads like it did something, " +
+                                                         "and drew nothing.")]
+    public void BuildingAGeneratorDrawsNothing() {
+        int draws = 0;
+
+        Any.Int32().As(value => {
+            draws++;
+
+            return value;
+        });
+
+        Check.That(draws).IsEqualTo(0);
+    }
+
+    [Fact(DisplayName = "A generator interpolated into text renders its type name, never a value it could draw.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("JustDummies.Usage", "JD005:A generator is rendered as text instead of the value it would draw",
+                                                     Justification =
+                                                         "The rendered generator IS the subject. This pins the behaviour JD005 reports, and the deliberate absence of a ToString override " +
+                                                         "that would mask it — an override returning a drawn value would make this test red, which is the point.")]
+    public void AGeneratorRendersAsItsTypeName() {
+        string rendered = $"{Any.Int32()}";
+
+        Check.That(rendered).IsEqualTo(typeof(AnyInt32).ToString());
+        Check.That(int.TryParse(rendered, out int _)).IsFalse();
+    }
+
 }

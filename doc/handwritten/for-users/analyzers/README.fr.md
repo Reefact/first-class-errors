@@ -93,6 +93,17 @@ Ces règles anticipent, à la compilation, le sous-ensemble des vérifications d
 | [JD017 EnumUniverseViolation](JD017.fr.md) | 🟠 Avertissement | on | Une contrainte d'enum sort des membres déclarés — une combinaison de drapeaux sans `AllowingCombinations()`, ou une exclusion qui vide l'univers. |
 | [JD023 ScalarChainAdmitsNoValue](JD023.fr.md) | 🟠 Avertissement | on | Les contraintes constantes d'une chaîne entière réduisent le domaine à rien — bornes, treillis ou liste d'autorisation. |
 | [JD024 ConstraintWithNoEffect](JD024.fr.md) | 🔵 Info | on | Une contrainte ne rétrécit rien : exclusion d'une valeur que le domaine ne pouvait pas produire, ou borne déjà impliquée. La seule famille de contraintes que l'exécution ne signale jamais. |
+| [JD025 DuplicatePoolValue](JD025.fr.md) | 🟠 Avertissement | on | La même constante figure deux fois dans un réservoir ; les doublons sont écrasés, donc le réservoir est plus petit d'une valeur qu'il n'y paraît et le doublon ne pondère rien. |
+| [JD026 EmptyRelativeUri](JD026.fr.md) | 🟠 Avertissement | on | Une URI relative à zéro segment, sans requête, fragment ni racine est la référence vide — la seule chaîne dont l'échec atterrit au moment de l'act plutôt que sur la ligne d'arrange. |
+
+## JustDummies — Composition
+
+Ces règles concernent l'assemblage de générateurs en générateurs plus gros — les opérandes de `Combine`, et le contrat d'élément sur lequel s'appuie un générateur de collection. Leur point commun : rien ne va de travers. Le générateur composé se construit, tire et rend une valeur. Ce n'est simplement pas la valeur que le site d'appel décrit.
+
+| Règle | Sévérité | Défaut | Description |
+|-------|----------|--------|-------------|
+| [JD027 UnusedCombineOperand](JD027.fr.md) | 🟠 Avertissement | on | Un opérande de `Combine` est tiré puis jeté parce que le composeur ne lit jamais son paramètre. Nommer le paramètre `_` pour dire que le tirage est délibéré. |
+| [JD028 InertDistinctness](JD028.fr.md) | 🟠 Avertissement | on | La distinction est déclarée sur un type d'élément sans égalité de valeur : elle est satisfaite par construction et la collection peut quand même contenir deux fois la même valeur. |
 
 ## Configuration
 

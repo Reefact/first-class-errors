@@ -29,3 +29,7 @@ JD021   | JustDummies.Reproducibility | Warning  | BlankReplaySnippetAnalyzer
 JD022   | JustDummies.Reproducibility | Info     | ParallelDrawWithoutPerItemSeedAnalyzer
 JD023   | JustDummies.Constraints     | Warning  | ScalarChainAdmitsNoValueAnalyzer
 JD024   | JustDummies.Constraints     | Info     | ScalarChainAdmitsNoValueAnalyzer
+JD025   | JustDummies.Constraints     | Warning  | DuplicatePoolValueAnalyzer
+JD026   | JustDummies.Constraints     | Warning  | EmptyRelativeUriAnalyzer
+JD027   | JustDummies.Composition     | Warning  | UnusedCombineOperandAnalyzer
+JD028   | JustDummies.Composition     | Warning  | InertDistinctnessAnalyzer

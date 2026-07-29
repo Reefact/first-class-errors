@@ -196,6 +196,32 @@ public sealed class CompositionTests {
         }
     }
 
+    [Fact(DisplayName = "Combine draws every operand before composing, including one the composer never reads.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("JustDummies.Composition", "JD027:A Combine operand never reaches the composed value",
+                                                     Justification =
+                                                         "The ignored operand IS the subject. This pins the behaviour JD027 reports: the operand is generated in full — constraints built, " +
+                                                         "conflict checks run — and then dropped, with nothing failing.")]
+    public void CombineDrawsAnOperandTheComposerIgnores() {
+        int drawnFirst  = 0;
+        int drawnSecond = 0;
+
+        IAny<int> first = Any.Int32().As(value => {
+            drawnFirst++;
+
+            return value;
+        });
+        IAny<int> second = Any.Int32().As(value => {
+            drawnSecond++;
+
+            return value;
+        });
+
+        _ = Any.Combine(first, second, (a, b) => a).Generate();
+
+        Check.That(drawnFirst).IsEqualTo(1);
+        Check.That(drawnSecond).IsEqualTo(1);
+    }
+
     [Fact(DisplayName = "A higher-arity Combine validates its arguments and wraps composer failures.")]
     public void HigherArityCombineValidatesAndWraps() {
         Check.ThatCode(() => Any.Combine(Any.Int32(), Any.Int32(), Any.Int32(), Any.Int32(), (Func<int, int, int, int, int>)null!)).Throws<ArgumentNullException>();

@@ -254,4 +254,44 @@ internal static class Descriptors {
         description: "The constraint is legal and inert: the domain it produces is the one that already existed. This is the only member of the constraint family the run time NEVER reports — every other contradiction throws eventually and loudly, while an inert constraint leaves the test green and exercising a domain the author did not write. The dangerous case is an exclusion of a sentinel the generator could never draw: it silently misses, and starts mattering the day someone widens the range.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.ConstraintWithNoEffect));
 
+    public static readonly DiagnosticDescriptor DuplicatePoolValue = new(
+        id: DiagnosticIds.DuplicatePoolValue,
+        title: "The same value is listed twice in a pool",
+        messageFormat: "This value is already in the pool; a duplicate neither weights it nor widens the domain",
+        category: DiagnosticCategories.Constraints,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "A pool is deduplicated under the default equality when it is built, so a value listed twice contributes exactly once. The library declines to weight a pool on purpose — writing a value twice therefore cannot mean 'draw this more often', and the pool is one value smaller than it reads. That gap surfaces far from here, when a distinct collection over the pool gates against the real distinct count and reports a number the author cannot find in their source.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.DuplicatePoolValue));
+
+    public static readonly DiagnosticDescriptor EmptyRelativeUri = new(
+        id: DiagnosticIds.EmptyRelativeUri,
+        title: "The declared relative URI is empty",
+        messageFormat: "A relative URI with exactly 0 path segments and no query, fragment or root is empty, which is not a valid URI reference",
+        category: DiagnosticCategories.Constraints,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "The chain describes the empty reference, which no URI can be. The library reports it, but only at Generate() — this is the one constraint family member whose failure lands at act time rather than at the arrange line, so the stack points at the code under test instead of at the declaration that is wrong. Add WithQuery(), WithFragment(), Rooted(), or a positive segment count.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.EmptyRelativeUri));
+
+    public static readonly DiagnosticDescriptor UnusedCombineOperand = new(
+        id: DiagnosticIds.UnusedCombineOperand,
+        title: "A Combine operand never reaches the composed value",
+        messageFormat: "This generator is drawn and thrown away: the composer never reads its parameter '{0}'",
+        category: DiagnosticCategories.Composition,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Combine draws every operand before calling the composer, so an operand the composer ignores is still generated — constraints, conflict checks and all — and then dropped. Nothing fails: the composed value is well-formed, and simply does not carry the part the call site says it carries. The usual causes are a constructor argument forgotten during a refactor and a composer whose parameters no longer line up with its operands. Rename the parameter to '_' to say the draw is deliberate.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.UnusedCombineOperand));
+
+    public static readonly DiagnosticDescriptor InertDistinctness = new(
+        id: DiagnosticIds.InertDistinctness,
+        title: "Distinctness is declared over an element type that has no value equality",
+        messageFormat: "Distinctness cannot bind here: '{0}' inherits reference equality, so every freshly generated element already counts as distinct",
+        category: DiagnosticCategories.Composition,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "The element type neither overrides Equals nor implements IEquatable, so the default comparer falls back to reference equality — and every element the generator produces is a new instance. Distinctness is therefore satisfied by construction and constrains nothing: the collection can hold the same value several times, which is precisely what the declaration asks it not to. The library cannot report this, because from its side the requirement is met. Give the type value equality, or pass an explicit comparer.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.InertDistinctness));
+
 }
