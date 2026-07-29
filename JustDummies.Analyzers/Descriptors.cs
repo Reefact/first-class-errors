@@ -67,4 +67,44 @@ internal static class Descriptors {
         description: "Every constraint returns a new generator rather than mutating the receiver. A discarded result therefore silently drops the invariant the arrangement declared, and the generator keeps drawing from the wider domain — so the test passes on most runs and fails on the one that draws outside it, with a value nobody can reproduce.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.DiscardedGeneratorResult));
 
+    public static readonly DiagnosticDescriptor DrawOutsideThePinnedScope = new(
+        id: DiagnosticIds.DrawOutsideThePinnedScope,
+        title: "An arbitrary value is drawn before [Reproducible] pins the seed",
+        messageFormat: "Draw this value inside the test body: {0} runs before [Reproducible] opens the seed scope, so the seed the failure reports does not replay it",
+        category: DiagnosticCategories.Reproducibility,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "xUnit constructs the test-class instance, and awaits IAsyncLifetime.InitializeAsync, before running the hooks the adapter pins the seed from. A value drawn there comes from the unseeded ambient source, so the test advertises full reproducibility while part of its arrangement is unpinned: pinning the reported seed does not bring the failure back.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.DrawOutsideThePinnedScope));
+
+    public static readonly DiagnosticDescriptor ArbitraryValueInTheoryData = new(
+        id: DiagnosticIds.ArbitraryValueInTheoryData,
+        title: "A theory's data provider draws an arbitrary value",
+        messageFormat: "Draw this value in the test body, or let the provider yield the generator: theory data is produced at discovery, before any seed is pinned, and every case shares the one value",
+        category: DiagnosticCategories.Reproducibility,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "xUnit evaluates a theory's data provider at discovery time, once for the whole run and outside every seed scope. The drawn value is therefore shared by every case of the theory, replayable from no reported seed, and constant where the theory reads as if it enumerated arbitrary cases.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.ArbitraryValueInTheoryData));
+
+    public static readonly DiagnosticDescriptor DrawInStaticInitializer = new(
+        id: DiagnosticIds.DrawInStaticInitializer,
+        title: "An arbitrary value is drawn in a static initializer",
+        messageFormat: "Hold the generator rather than the value: a static initializer draws once for the whole suite, under whichever test happened to run first",
+        category: DiagnosticCategories.Reproducibility,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "A type initializer runs once, lazily, when the first test touches the type. The value is drawn under whatever ambient context that test had pinned, is shared by every other test in the class, and is replayable from none of their reported seeds — so the tests become order-dependent and stop varying between runs. Store the generator in the static field and call Generate() per test.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.DrawInStaticInitializer));
+
+    public static readonly DiagnosticDescriptor ReproducibleOnNonTestMethod = new(
+        id: DiagnosticIds.ReproducibleOnNonTestMethod,
+        title: "[Reproducible] is applied to a method that is not a test",
+        messageFormat: "Remove [Reproducible] from '{0}' or make it a test: xUnit collects the attribute from the test method, its class and the assembly only, so here it pins nothing",
+        category: DiagnosticCategories.Reproducibility,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "The adapter's hooks are collected from a test method, its declaring class and the assembly. On a helper — or on a method whose [Fact] was removed during a refactor — the attribute is never read: it pins no seed and reports none. Because a working [Reproducible] is silent on a passing test by design, nothing else distinguishes the inert form from the working one.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.ReproducibleOnNonTestMethod));
+
 }

@@ -59,6 +59,10 @@ These rules ship in the **`JustDummies`** package (not FirstClassErrors) and kee
 | [JD002 DiscardedReproduciblyAsyncResult](JD002.en.md) | 🔴 Error | on | The task returned by Any.ReproduciblyAsync is discarded (a bare statement, or `_ =`); the body's failures are lost. Await it. |
 | [JD003 AwaitableBodyPassedToReproducibly](JD003.en.md) | 🔴 Error | on | A synchronous lambda whose body drops a task, or an async void method group, reaches Any.Reproducibly; the scope returns before the assertions run, and CS4014 does not fire. |
 | [JD004 DiscardedSeedingResult](JD004.en.md) | 🔴 Error | on | The handle returned by Any.UseSeed is discarded, leaving the seed pinned for whatever runs next — or Any.WithSeed is called for effect, which pins nothing at all. |
+| [JD007 DrawOutsideThePinnedScope](JD007.en.md) | 🟠 Warning | on | A value is drawn during a [Reproducible] test class's construction, which xUnit runs before the seed scope opens; the reported seed does not replay it. |
+| [JD008 ArbitraryValueInTheoryData](JD008.en.md) | 🟠 Warning | on | A theory's data provider draws a value at discovery, before any seed is pinned; every case shares the one value. |
+| [JD009 DrawInStaticInitializer](JD009.en.md) | 🟠 Warning | on | A static initializer draws once for the whole suite, under whichever test ran first, making the tests order-dependent and replayable from no seed. |
+| [JD010 ReproducibleOnNonTestMethod](JD010.en.md) | 🟠 Warning | on | [Reproducible] on a method xUnit never treats as a test; it pins nothing, and looks exactly like the working form. |
 
 ## JustDummies — Usage
 
