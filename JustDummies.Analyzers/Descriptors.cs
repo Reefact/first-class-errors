@@ -162,4 +162,24 @@ internal static class Descriptors {
         description: "The constraints contradict each other for the constants written at the call site, so the chain throws a ConflictingAnyConstraintException the moment the arrange line runs. This is the case ADR-0035 names as the one an analyzer should carry: Numeric().StartingWith(\"ORD-\") conflicts while Numeric().StartingWith(\"123\") does not, from identical call sites and identical static types — only the argument value tells them apart.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.StringConstraintsAdmitNoValue));
 
+    public static readonly DiagnosticDescriptor CollectionConstraintsAdmitNoValue = new(
+        id: DiagnosticIds.CollectionConstraintsAdmitNoValue,
+        title: "The declared collection constraints admit no value",
+        messageFormat: "No collection satisfies this chain: {0}",
+        category: DiagnosticCategories.Constraints,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "The count constraints contradict each other for the constants written at the call site, or the chain asks for more distinct elements than its element generator can produce — the cardinality gate ADR-0013 records. Both throw at declaration time, so the value here is a build-time red rather than an arrange-time one: the chain usually sits in a helper several call frames away from the test that dies on it.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.CollectionConstraintsAdmitNoValue));
+
+    public static readonly DiagnosticDescriptor EnumUniverseViolation = new(
+        id: DiagnosticIds.EnumUniverseViolation,
+        title: "An enum constraint steps outside the generator's universe",
+        messageFormat: "Any.Enum draws only declared members: {0}",
+        category: DiagnosticCategories.Constraints,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Any.Enum<T>() draws uniformly across T's declared members and never an undeclared numeric value. That is deliberate and surprising: on a [Flags] enum, writing a combination in OneOf is the natural thing to do and the generator refuses it unless AllowingCombinations() is declared. An exclusion that removes every declared member is the same category error from the other side.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.EnumUniverseViolation));
+
 }
