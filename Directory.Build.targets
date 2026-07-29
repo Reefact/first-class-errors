@@ -1,5 +1,0 @@
-<Project>
-  <ItemGroup Condition="'$(SonarProbe)' == 'true'">
-    <Analyzer Include="/root/.nuget/packages/sonaranalyzer.csharp/10.30.0.144632/analyzers/SonarAnalyzer.CSharp.dll" />
-  </ItemGroup>
-</Project>
