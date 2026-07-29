@@ -35,6 +35,14 @@ internal static class AnalyzerTestHarness {
             references: References,
             options: options);
 
+        // A snippet that does not compile binds no operations, so every rule stands down and an "expects nothing"
+        // assertion passes for the wrong reason. That is not hypothetical: a JD027 test omitted the type arguments a
+        // throw-only lambda cannot infer, went green, and hid a live false positive. Fail loudly instead.
+        ImmutableArray<Diagnostic> compilerErrors = [.. compilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)];
+        if (compilerErrors.Length > 0) {
+            throw new InvalidOperationException($"The test snippet does not compile, so no rule could have run:{Environment.NewLine}{string.Join(Environment.NewLine, compilerErrors)}");
+        }
+
         CompilationWithAnalyzers withAnalyzers = compilation.WithAnalyzers(ImmutableArray.Create(analyzer));
 
         return await withAnalyzers.GetAnalyzerDiagnosticsAsync();
