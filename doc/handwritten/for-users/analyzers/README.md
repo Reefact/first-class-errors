@@ -84,6 +84,8 @@ These rules front-load, to build time, the subset of the library's run-time cons
 |------|----------|---------|-------------|
 | [JD014 RejectedConstantArgument](JD014.en.md) | 🟠 Warning | on | A constraint argument is a compile-time constant the generator's own guard refuses, so the call throws every time it runs. |
 | [JD015 StringConstraintsAdmitNoValue](JD015.en.md) | 🟠 Warning | on | An AnyString chain's constant constraints admit no value — a fragment outside the declared character family or casing, or fragments that cannot fit the declared length. |
+| [JD016 CollectionConstraintsAdmitNoValue](JD016.en.md) | 🟠 Warning | on | A collection chain's count constraints cannot all hold, or it asks for more distinct elements than its element generator can produce. |
+| [JD017 EnumUniverseViolation](JD017.en.md) | 🟠 Warning | on | An enum constraint steps outside the declared members — a flag combination without AllowingCombinations(), or an exclusion that empties the universe. |
 
 ## Configuring
 

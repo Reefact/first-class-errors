@@ -29,6 +29,8 @@ internal static class DiagnosticIds {
 
     // Category: Constraints — decidable from compile-time constants
     public const string RejectedConstantArgument      = "JD014";
-    public const string StringConstraintsAdmitNoValue = "JD015";
+    public const string StringConstraintsAdmitNoValue     = "JD015";
+    public const string CollectionConstraintsAdmitNoValue = "JD016";
+    public const string EnumUniverseViolation             = "JD017";
 
 }

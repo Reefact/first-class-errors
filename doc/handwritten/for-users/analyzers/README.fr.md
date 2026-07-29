@@ -84,6 +84,8 @@ Ces règles anticipent, à la compilation, le sous-ensemble des vérifications d
 |-------|----------|--------|-------------|
 | [JD014 RejectedConstantArgument](JD014.fr.md) | 🟠 Avertissement | on | Un argument de contrainte est une constante que la garde du générateur refuse : l'appel lève à chaque exécution. |
 | [JD015 StringConstraintsAdmitNoValue](JD015.fr.md) | 🟠 Avertissement | on | Les contraintes constantes d'une chaîne `AnyString` n'admettent aucune valeur — un fragment hors de la famille de caractères ou de la casse déclarée, ou des fragments qui ne peuvent pas tenir dans la longueur déclarée. |
+| [JD016 CollectionConstraintsAdmitNoValue](JD016.fr.md) | 🟠 Avertissement | on | Les contraintes de cardinal d'une chaîne de collection ne peuvent pas toutes tenir, ou elle réclame plus d'éléments distincts que son générateur d'éléments ne peut en produire. |
+| [JD017 EnumUniverseViolation](JD017.fr.md) | 🟠 Avertissement | on | Une contrainte d'enum sort des membres déclarés — une combinaison de drapeaux sans `AllowingCombinations()`, ou une exclusion qui vide l'univers. |
 
 ## Configuration
 
