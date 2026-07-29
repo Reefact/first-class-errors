@@ -47,7 +47,7 @@ public sealed class CatalogSnapshot {
     /// </remarks>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="catalog" /> is <c>null</c>.</exception>
     public static CatalogSnapshot FromCatalog(IEnumerable<ErrorDocumentation> catalog) {
-        if (catalog is null) { throw new ArgumentNullException(nameof(catalog)); }
+        ArgumentNullException.ThrowIfNull(catalog);
 
         List<CatalogSnapshotEntry> entries = catalog
                                             .Where(error => !string.IsNullOrWhiteSpace(error.Code))

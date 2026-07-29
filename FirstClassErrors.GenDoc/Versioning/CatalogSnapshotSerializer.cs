@@ -39,7 +39,7 @@ public static class CatalogSnapshotSerializer {
     /// <returns>The canonical JSON text, ending with a single newline.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="snapshot" /> is <c>null</c>.</exception>
     public static string Serialize(CatalogSnapshot snapshot) {
-        if (snapshot is null) { throw new ArgumentNullException(nameof(snapshot)); }
+        ArgumentNullException.ThrowIfNull(snapshot);
 
         // Normalize line endings to \n rather than relying on JsonSerializerOptions.NewLine, which is .NET 9+ only:
         // the documentation tooling must also build on the .NET 8 floor, and the committed baseline must stay
@@ -71,7 +71,7 @@ public static class CatalogSnapshotSerializer {
                                                          "The null check is what gives the compiler the flow state the body relies on. Moving it into a Where clause loses that narrowing " +
                                                          "and would need a null-forgiving operator to compile — the opposite of what this pass removed elsewhere.")]
     public static CatalogSnapshot Deserialize(string json) {
-        if (json is null) { throw new ArgumentNullException(nameof(json)); }
+        ArgumentNullException.ThrowIfNull(json);
 
         SnapshotDocument? document;
         try {

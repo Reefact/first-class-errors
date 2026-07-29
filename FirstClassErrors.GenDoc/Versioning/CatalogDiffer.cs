@@ -34,8 +34,8 @@ public static class CatalogDiffer {
     ///     Thrown when <paramref name="baseline" /> or <paramref name="current" /> is <c>null</c>.
     /// </exception>
     public static CatalogDiff Diff(CatalogSnapshot baseline, CatalogSnapshot current) {
-        if (baseline is null) { throw new ArgumentNullException(nameof(baseline)); }
-        if (current is null) { throw new ArgumentNullException(nameof(current)); }
+        ArgumentNullException.ThrowIfNull(baseline);
+        ArgumentNullException.ThrowIfNull(current);
 
         // Every comparison below goes through the indexes, whose keys are the normalized identities — never through
         // the raw entry properties — so trimming rules apply symmetrically to both sides.
