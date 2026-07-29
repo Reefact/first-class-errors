@@ -3,7 +3,8 @@
 🌍 🇬🇧 [English](0033-meet-string-exclusions-with-a-bounded-redraw.md) · 🇫🇷 Français (ce fichier)
 
 **Statut :** Accepté
-**Date :** 2026-07-22
+**Proposé :** 2026-07-22
+**Accepté :** 2026-07-22
 **Décideurs :** Reefact
 
 ## Contexte

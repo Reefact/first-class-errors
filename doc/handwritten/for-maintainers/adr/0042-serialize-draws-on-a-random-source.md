@@ -3,7 +3,8 @@
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0042-serialize-draws-on-a-random-source.fr.md)
 
 **Status:** Accepted
-**Date:** 2026-07-27
+**Proposed:** 2026-07-27
+**Accepted:** 2026-07-27
 **Decision Makers:** Reefact
 
 ## Context

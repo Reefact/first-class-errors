@@ -3,7 +3,8 @@
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0022-floor-the-library-on-net-framework-4-7-2.fr.md)
 
 **Status:** Accepted
-**Date:** 2026-07-19
+**Proposed:** 2026-07-19
+**Accepted:** 2026-07-19
 **Decision Makers:** Reefact
 
 ## Context

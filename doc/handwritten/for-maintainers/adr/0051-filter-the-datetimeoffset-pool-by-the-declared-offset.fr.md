@@ -3,7 +3,8 @@
 🌍 🇫🇷 Français (ce fichier) · 🇬🇧 [English](0051-filter-the-datetimeoffset-pool-by-the-declared-offset.md)
 
 **Statut :** Accepté
-**Date :** 2026-07-28
+**Proposé :** 2026-07-28
+**Accepté :** 2026-07-28
 **Décideurs :** Reefact
 
 Supersède l'[ADR-0037](0037-vary-the-datetimeoffset-offset-dimension.fr.md).

@@ -3,7 +3,8 @@
 🌍 🇬🇧 [English](0004-check-every-pull-request-against-the-adr-base.md) · 🇫🇷 Français (ce fichier)
 
 **Statut :** Accepté
-**Date :** 2026-07-15
+**Proposé :** 2026-07-15
+**Accepté :** 2026-07-15
 **Décideurs :** Reefact
 
 ## Contexte

@@ -3,7 +3,8 @@
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0010-treat-gendocs-error-catalog-as-a-versioned-contract.fr.md)
 
 **Status:** Accepted
-**Date:** 2026-07-17
+**Proposed:** 2026-07-17
+**Accepted:** 2026-07-17
 **Decision Makers:** Reefact
 
 ## Context

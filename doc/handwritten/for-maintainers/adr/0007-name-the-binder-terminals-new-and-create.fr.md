@@ -3,7 +3,8 @@
 🌍 🇬🇧 [English](0007-name-the-binder-terminals-new-and-create.md) · 🇫🇷 Français (ce fichier)
 
 **Statut :** Accepté
-**Date :** 2026-07-16
+**Proposé :** 2026-07-16
+**Accepté :** 2026-07-16
 **Décideurs :** Reefact
 
 ## Contexte

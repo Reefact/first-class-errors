@@ -9,8 +9,12 @@
      See doc/handwritten/for-maintainers/adr/README.md. -->
 
 **Status:** Proposed
-**Date:** YYYY-MM-DD
+**Proposed:** YYYY-MM-DD
 **Decision Makers:** {Names or team}
+
+<!-- Accepting this ADR ADDS a `**Accepted:** YYYY-MM-DD` line below `Proposed:`
+     and leaves `Proposed:` untouched; no date is ever overwritten. A supersession
+     adds no date at all. See README.md, "Title and header" (ADR-0057). -->
 
 ## Context
 

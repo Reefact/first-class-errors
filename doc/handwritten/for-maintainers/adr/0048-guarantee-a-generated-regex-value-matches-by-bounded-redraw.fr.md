@@ -3,7 +3,7 @@
 🌍 🇫🇷 Français (ce fichier) · 🇬🇧 [English](0048-guarantee-a-generated-regex-value-matches-by-bounded-redraw.md)
 
 **Statut :** Proposé
-**Date :** 2026-07-27
+**Proposé :** 2026-07-27
 **Décideurs :** Reefact
 
 ## Contexte

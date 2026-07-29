@@ -3,7 +3,8 @@
 🌍 🇬🇧 [English](0006-supply-arbitrary-test-values-from-a-seedable-source.md) · 🇫🇷 Français (ce fichier)
 
 **Statut :** Remplacé par [ADR-0026](0026-rebase-testing-arbitrary-values-on-dummies.fr.md)
-**Date :** 2026-07-19
+**Proposé :** 2026-07-19
+**Accepté :** 2026-07-19
 **Décideurs :** Reefact
 
 ## Contexte

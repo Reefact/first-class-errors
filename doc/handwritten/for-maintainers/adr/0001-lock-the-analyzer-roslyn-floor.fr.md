@@ -3,7 +3,8 @@
 🌍 🇬🇧 [English](0001-lock-the-analyzer-roslyn-floor.md) · 🇫🇷 Français (ce fichier)
 
 **Statut :** Accepté
-**Date :** 2026-07-10
+**Proposé :** 2026-07-10
+**Accepté :** 2026-07-10
 **Décideurs :** Reefact
 
 ## Contexte

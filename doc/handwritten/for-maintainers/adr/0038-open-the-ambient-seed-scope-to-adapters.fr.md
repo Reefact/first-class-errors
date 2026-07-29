@@ -3,7 +3,8 @@
 🌍 🇬🇧 [English](0038-open-the-ambient-seed-scope-to-adapters.md) · 🇫🇷 Français (ce fichier)
 
 **Statut :** Accepté
-**Date :** 2026-07-26
+**Proposé :** 2026-07-26
+**Accepté :** 2026-07-26
 **Décideurs :** Reefact
 
 ## Contexte
