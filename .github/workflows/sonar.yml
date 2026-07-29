@@ -72,6 +72,18 @@ jobs:
       # The Benchmarks project is a measurement harness, never shipped and never unit-tested: excluding it from
       # COVERAGE (not from analysis) keeps the new-code coverage gate about the library, while its code still
       # gets the SonarAnalyzer pass.
+      #
+      # Two shell rules are declined for every *.sh in the repository (policy: ADR-0060). They are ignored HERE,
+      # rather than in .editorconfig like the declined Roslyn rules, because they are SonarQube's own analysis
+      # rather than compiler diagnostics the scanner republishes — nothing the build does can silence them.
+      #   S7682 ("add an explicit return at the end of the function") — every function it flags ends with the
+      #     command whose status IS the function's result: a `cat` heredoc, an `awk` invocation, a `printf`, or
+      #     in one case an `exit`, after which a return is unreachable. `return 0` would mask those failures and
+      #     a bare `return` restates the default, so the rule can only make the scripts worse or longer.
+      #   S7679 ("assign this positional parameter to a local variable") — every script here is `#!/bin/sh`, and
+      #     `local` is not POSIX. tools/trains.sh already shows the price of obeying without it: the one helper
+      #     that needed named parameters carries `_tf_`-prefixed globals instead. Paying that in every two-line
+      #     helper, to name a `$1` sitting one line below the function's own name, buys nothing.
       - name: Begin analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -84,6 +96,11 @@ jobs:
           /d:sonar.cs.opencover.reportsPaths="artifacts/coverage/**/coverage.opencover.xml"
           /d:sonar.exclusions="**/*.verified.*"
           /d:sonar.coverage.exclusions="FirstClassErrors.RequestBinder.Benchmarks/**"
+          /d:sonar.issue.ignore.multicriteria="s7682,s7679"
+          /d:sonar.issue.ignore.multicriteria.s7682.ruleKey="shelldre:S7682"
+          /d:sonar.issue.ignore.multicriteria.s7682.resourceKey="**/*.sh"
+          /d:sonar.issue.ignore.multicriteria.s7679.ruleKey="shelldre:S7679"
+          /d:sonar.issue.ignore.multicriteria.s7679.resourceKey="**/*.sh"
 
       - name: Build
         # Disable the CI warning ratchet (Directory.Build.props) for the analysis build only. The scanner
