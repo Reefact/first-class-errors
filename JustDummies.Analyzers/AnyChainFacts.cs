@@ -35,7 +35,12 @@ internal static class AnyChainFacts {
             outermost = parent;
         }
 
-        for (IInvocationOperation? current = outermost; current is not null;) {
+        // Unbounded on purpose, and it terminates: every branch below either returns or steps `current` one
+        // link down the receiver chain, which a syntax tree makes finite. Written `;;` rather than with a
+        // `current is not null` guard because that guard could never be false — `next` is pattern-matched
+        // non-null — which left the exit path unreachable (Sonar csharpsquid:S2583). Same shape as the
+        // redraw loop in AnyPattern.
+        for (IInvocationOperation current = outermost;;) {
             if (current.Instance is null) {
                 // A static call roots the chain: it is the factory when it belongs to Any, otherwise this is not a
                 // JustDummies chain at all.
@@ -64,8 +69,6 @@ internal static class AnyChainFacts {
             collected.Add(current);
             current = next;
         }
-
-        return false;
     }
 
     private static bool IsFactoryOwner(INamedTypeSymbol? type, KnownSymbols symbols) {
