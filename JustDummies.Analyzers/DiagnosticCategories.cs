@@ -13,4 +13,10 @@ internal static class DiagnosticCategories {
     /// </summary>
     public const string Usage = "JustDummies.Usage";
 
+    /// <summary>
+    ///     Rules that front-load, to build time, the subset of the library's run-time constraint checks that is
+    ///     decidable from compile-time constants. The run-time checks stay: they cover every argument these cannot see.
+    /// </summary>
+    public const string Constraints = "JustDummies.Constraints";
+
 }

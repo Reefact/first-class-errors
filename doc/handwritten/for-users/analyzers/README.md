@@ -59,6 +59,15 @@ These rules ship in the **`JustDummies`** package (not FirstClassErrors) and kee
 | [JD002 DiscardedReproduciblyAsyncResult](JD002.en.md) | 🔴 Error | on | The task returned by Any.ReproduciblyAsync is discarded (a bare statement, or `_ =`); the body's failures are lost. Await it. |
 | [JD003 AwaitableBodyPassedToReproducibly](JD003.en.md) | 🔴 Error | on | A synchronous lambda whose body drops a task, or an async void method group, reaches Any.Reproducibly; the scope returns before the assertions run, and CS4014 does not fire. |
 | [JD004 DiscardedSeedingResult](JD004.en.md) | 🔴 Error | on | The handle returned by Any.UseSeed is discarded, leaving the seed pinned for whatever runs next — or Any.WithSeed is called for effect, which pins nothing at all. |
+| [JD007 DrawOutsideThePinnedScope](JD007.en.md) | 🟠 Warning | on | A value is drawn during a [Reproducible] test class's construction, which xUnit runs before the seed scope opens; the reported seed does not replay it. |
+| [JD008 ArbitraryValueInTheoryData](JD008.en.md) | 🟠 Warning | on | A theory's data provider draws a value at discovery, before any seed is pinned; every case shares the one value. |
+| [JD009 DrawInStaticInitializer](JD009.en.md) | 🟠 Warning | on | A static initializer draws once for the whole suite, under whichever test ran first, making the tests order-dependent and replayable from no seed. |
+| [JD010 ReproducibleOnNonTestMethod](JD010.en.md) | 🟠 Warning | on | [Reproducible] on a method xUnit never treats as a test; it pins nothing, and looks exactly like the working form. |
+| [JD018 NestedReproducibilityScope](JD018.en.md) | 🟠 Warning | on | A reproducibility scope nested inside another; the inner one draws a fresh seed, so the outer's reported seed replays nothing. |
+| [JD021 BlankReplaySnippet](JD021.en.md) | 🟠 Warning | on | Any.UseSeed is given a blank replay snippet, which the guard rejects — from an adapter hook, failing the whole suite. |
+| [JD019 CommittedReplaySeed](JD019.en.md) | 🔵 Info | opt-in | A constant replay seed is pinned in committed code, so the test stops varying between runs. |
+| [JD020 SharedStaticAnyContext](JD020.en.md) | 🔵 Info | on | An AnyContext held in a static field; interleaved draws make neither the sequence nor the multiset stable. |
+| [JD022 ParallelDrawWithoutPerItemSeed](JD022.en.md) | 🔵 Info | on | A parallel work item draws without its own seed scope, so the draws interleave and the run replays nothing. |
 
 ## JustDummies — Usage
 
@@ -68,6 +77,20 @@ A generator is an immutable *recipe*, and `Generate()` is the only thing that ma
 |------|----------|---------|-------------|
 | [JD005 GeneratorRenderedAsText](JD005.en.md) | 🔴 Error | on | A generator is interpolated, concatenated or ToString()'d instead of generated from; no generator overrides ToString(), so the text is the builder's type name. |
 | [JD006 DiscardedGeneratorResult](JD006.en.md) | 🟠 Warning | on | The generator returned by a constraint is discarded as a bare statement; generators are immutable, so the declared invariant is silently lost. |
+| [JD011 GeneratorWhereValueExpected](JD011.en.md) | 🟠 Warning | opt-in | A generator reaches an object, dynamic or params object[] position, so the recipe is stored, compared or asserted on instead of the value. |
+| [JD012 GeneratorPooledAsValue](JD012.en.md) | 🟠 Warning | on | Any.OneOf is given generators, inferring a pool of recipes; drawing from it yields a recipe rather than a value. |
+| [JD013 HeldCollectionPassedToOneOf](JD013.en.md) | 🟠 Warning | on | A held collection passed to Any.OneOf binds T to the collection type, making a pool of one; Any.ElementOf draws from its elements. |
+
+## JustDummies — Constraints
+
+These rules front-load, to build time, the subset of the library's run-time constraint checks that is decidable from compile-time constants. The run-time checks stay: they cover every argument these cannot see.
+
+| Rule | Severity | Default | Description |
+|------|----------|---------|-------------|
+| [JD014 RejectedConstantArgument](JD014.en.md) | 🟠 Warning | on | A constraint argument is a compile-time constant the generator's own guard refuses, so the call throws every time it runs. |
+| [JD015 StringConstraintsAdmitNoValue](JD015.en.md) | 🟠 Warning | on | An AnyString chain's constant constraints admit no value — a fragment outside the declared character family or casing, or fragments that cannot fit the declared length. |
+| [JD016 CollectionConstraintsAdmitNoValue](JD016.en.md) | 🟠 Warning | on | A collection chain's count constraints cannot all hold, or it asks for more distinct elements than its element generator can produce. |
+| [JD017 EnumUniverseViolation](JD017.en.md) | 🟠 Warning | on | An enum constraint steps outside the declared members — a flag combination without AllowingCombinations(), or an exclusion that empties the universe. |
 
 ## Configuring
 
