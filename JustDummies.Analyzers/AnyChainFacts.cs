@@ -25,7 +25,7 @@ internal static class AnyChainFacts {
     ///     completely.
     /// </summary>
     public static bool TryGetChain(IInvocationOperation invocation, KnownSymbols symbols, out IReadOnlyList<IInvocationOperation> constraints, out IInvocationOperation? factory) {
-        List<IInvocationOperation> collected = new();
+        List<IInvocationOperation> collected = [];
         constraints = collected;
         factory     = null;
 
