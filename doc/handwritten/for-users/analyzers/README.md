@@ -63,6 +63,11 @@ These rules ship in the **`JustDummies`** package (not FirstClassErrors) and kee
 | [JD008 ArbitraryValueInTheoryData](JD008.en.md) | 🟠 Warning | on | A theory's data provider draws a value at discovery, before any seed is pinned; every case shares the one value. |
 | [JD009 DrawInStaticInitializer](JD009.en.md) | 🟠 Warning | on | A static initializer draws once for the whole suite, under whichever test ran first, making the tests order-dependent and replayable from no seed. |
 | [JD010 ReproducibleOnNonTestMethod](JD010.en.md) | 🟠 Warning | on | [Reproducible] on a method xUnit never treats as a test; it pins nothing, and looks exactly like the working form. |
+| [JD018 NestedReproducibilityScope](JD018.en.md) | 🟠 Warning | on | A reproducibility scope nested inside another; the inner one draws a fresh seed, so the outer's reported seed replays nothing. |
+| [JD021 BlankReplaySnippet](JD021.en.md) | 🟠 Warning | on | Any.UseSeed is given a blank replay snippet, which the guard rejects — from an adapter hook, failing the whole suite. |
+| [JD019 CommittedReplaySeed](JD019.en.md) | 🔵 Info | opt-in | A constant replay seed is pinned in committed code, so the test stops varying between runs. |
+| [JD020 SharedStaticAnyContext](JD020.en.md) | 🔵 Info | on | An AnyContext held in a static field; interleaved draws make neither the sequence nor the multiset stable. |
+| [JD022 ParallelDrawWithoutPerItemSeed](JD022.en.md) | 🔵 Info | on | A parallel work item draws without its own seed scope, so the draws interleave and the run replays nothing. |
 
 ## JustDummies — Usage
 
