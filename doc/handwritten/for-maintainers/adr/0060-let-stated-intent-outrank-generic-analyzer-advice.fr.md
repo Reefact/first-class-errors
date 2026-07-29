@@ -8,16 +8,19 @@
 
 ## Contexte
 
-Le rapport SonarQube Cloud du projet porte 255 constats ouverts. Trois règles en
-représentent 191 — 75 % de ce qui reste — et toutes trois arrivent sous l'espace
-de noms `external_roslyn`, c'est-à-dire qu'elles ne relèvent pas de l'analyse
-propre à SonarQube : ce sont des diagnostics émis par le compilateur .NET et par
-les analyseurs de la BCL pendant la compilation, que le scanner observe via
-MSBuild et republie. Une règle réglée sur `none` n'est jamais émise ; le rapport
-la perd donc à la source, au lieu qu'elle soit écartée dans l'interface du
-serveur.
+Le rapport SonarQube Cloud du projet porte 255 constats ouverts. Cinq règles en
+représentent 212 — 83 % de ce qui reste — et elles se répartissent en deux
+familles, selon l'endroit où le constat est produit.
 
-Les trois règles, et ce que fait aujourd'hui le code qu'elles signalent :
+Trois arrivent sous l'espace de noms `external_roslyn`, c'est-à-dire qu'elles ne
+relèvent pas de l'analyse propre à SonarQube : ce sont des diagnostics émis par
+le compilateur .NET et par les analyseurs de la BCL pendant la compilation, que
+le scanner observe via MSBuild et republie. Une règle réglée sur `none` n'est
+jamais émise ; le rapport la perd donc à la source. Les deux autres relèvent de
+l'analyse shell propre à SonarQube, qu'aucun réglage de compilation n'atteint —
+rien de ce que fait le compilateur ne les produit ni ne les supprime.
+
+Les cinq règles, et ce que fait aujourd'hui le code qu'elles signalent :
 
 * **`IDE0028` — 147 constats sur 13 projets.** Demande que les initialiseurs de
   collection écrits `new()` ou `new List<T> { ... }` soient réécrits en
@@ -43,11 +46,24 @@ Les trois règles, et ce que fait aujourd'hui le code qu'elles signalent :
   n'être alloué qu'une fois au lieu d'une fois par appel. Les arguments signalés
   sont les valeurs attendues d'assertions et les listes de cas de générateurs de
   propriétés, écrites en ligne à côté de la vérification qui les lit.
+* **`S7682` — 12 constats**, dans l'outillage shell du dépôt et les *hooks*
+  Claude. Demande un `return` explicite à la fin d'une fonction shell. Chaque
+  fonction signalée se termine par la commande dont le code de sortie est le
+  résultat voulu de la fonction — un `cat` avec document en ligne, un appel à
+  `awk`, un `printf` — et l'une d'elles se termine par `exit`, après quoi un
+  `return` est inatteignable.
+* **`S7679` — 9 constats**, dans les mêmes scripts. Demande qu'un paramètre
+  positionnel soit affecté à une variable locale. Tous les scripts du dépôt
+  déclarent `#!/bin/sh`, et `local` ne fait pas partie de POSIX ;
+  `tools/trains.sh` montre déjà ce que coûte l'obéissance sans lui, puisque la
+  seule aide qui y avait besoin de paramètres nommés porte des variables
+  globales préfixées `_tf_`. Les autres fonctions signalées sont des aides d'une
+  ou deux lignes dont le `$1` se trouve une ligne sous le nom de la fonction.
 
 Le code visé par ces règles se trouve sur des chemins de construction d'erreurs,
-dans l'outillage de documentation et dans les suites de tests. Rien de tout cela
-n'est un chemin chaud mesuré, et aucune exigence de performance n'est consignée
-à son encontre.
+dans l'outillage de documentation, dans les suites de tests et dans les scripts
+du dépôt. Rien de tout cela n'est un chemin chaud mesuré, et aucune exigence de
+performance n'est consignée à son encontre.
 
 Le dépôt porte déjà les deux précédents entre lesquels cette décision s'inscrit.
 L'ADR-0055 a établi qu'une règle de style que le compilateur sait exprimer est
@@ -80,12 +96,19 @@ primant la micro-performance tant qu'aucun besoin mesuré n'est consigné.
   pour économiser une allocation survenant quelques centaines de fois dans une
   suite. Les désactiver n'est pas esquiver le conseil, c'est y répondre.
 * **Décliner dans la configuration vaut mieux que décliner dans le rapport.**
-  Ces constats naissent de la compilation ; une sévérité `none` les empêche donc
-  d'être produits. La décision se place ainsi dans un fichier qui vit dans le
-  dépôt, que lisent le compilateur et tous les contributeurs — agents compris —
-  et qui porte sa raison en ligne, là où un « ne sera pas corrigé » sur le
-  serveur SonarQube mettrait le raisonnement à un endroit que le code ne montre
-  jamais.
+  Partout où un constat naît de la compilation, une sévérité `none` l'empêche
+  d'être produit ; là où ce n'est pas le cas — les deux règles shell — c'est la
+  configuration du scanner qui porte le refus. Dans les deux cas la décision
+  atterrit dans un fichier qui vit dans le dépôt et porte sa raison en ligne, là
+  où un « ne sera pas corrigé » sur le serveur SonarQube mettrait le
+  raisonnement à un endroit que le code ne montre jamais.
+* **L'endroit où le refus est écrit suit l'endroit où le constat est produit.**
+  Les règles Roslyn sont déclinées dans `.editorconfig`, que lit le compilateur :
+  la compilation cesse de les émettre et chaque contributeur rencontre la raison
+  là même où la règle se serait déclenchée. Les règles shell ne sont pas
+  joignables ainsi et sont déclinées dans l'invocation du scanner. Les séparer
+  n'est pas une incohérence, mais le seul agencement où chaque refus siège là où
+  vit sa règle.
 * **La portée suit la raison, non la commodité.** La justification de `CA1861`
   porte sur les tests, et tous ses constats sont dans des projets de test : elle
   est donc déclinée pour les projets de test et laissée active pour le code
@@ -170,10 +193,11 @@ plus tard.
 
 ### Positives
 
-* 191 constats sur 255 disparaissent, et toute occurrence future disparaît avec
+* 212 constats sur 255 disparaissent, et toute occurrence future disparaît avec
   eux au lieu de s'accumuler.
-* Le raisonnement vit dans `.editorconfig`, à côté de son effet, lisible par le
-  compilateur et par quiconque — humain ou agent — édite le dépôt.
+* Le raisonnement vit à côté de son effet — dans `.editorconfig` pour les règles
+  que la compilation produit, dans l'invocation du scanner pour les deux qu'elle
+  ne produit pas — lisible par quiconque, humain ou agent, édite le dépôt.
 * Les deux volets de la politique sont énoncés une fois et peuvent être cités,
   si bien que le même argument n'est pas rejoué à chaque nouveau constat.
 * `CA1861` reste active là où elle pourrait réellement payer : la décision
@@ -188,18 +212,19 @@ plus tard.
 * Plus aucun analyseur n'orientera un chemin livré réellement chaud vers un type
   de retour concret, puisque `CA1859` est éteinte partout. Ce jugement repose
   désormais entièrement sur l'auteur et le relecteur.
-* Trois règles déclinées, c'est une liste qui peut croître. Chaque ajout exige la
-  même justification, et rien d'autre que la relecture ne l'impose.
+* Cinq règles déclinées, c'est une liste qui peut croître, et elle vit désormais
+  dans deux fichiers. Chaque ajout exige la même justification, et rien d'autre
+  que la relecture ne l'impose.
 
 ### Risques
 
 * S'en tenir au décompte surestime le changement : aucun code n'a été amélioré.
   La valeur tient ici à une politique consignée et à un rapport qui ne montre
   plus que ce sur quoi il vaut la peine d'agir.
-* Un contributeur pourrait lire la section des règles déclinées comme une licence
-  d'éteindre tout analyseur gênant. Elle est bornée à trois identifiants de
-  règle, chacun portant sa raison, précisément pour rendre cette lecture
-  difficile à tenir.
+* Un contributeur pourrait lire les sections de règles déclinées comme une
+  licence d'éteindre tout analyseur gênant. Elles sont bornées à cinq
+  identifiants de règle nommés, chacun portant sa raison, précisément pour
+  rendre cette lecture difficile à tenir.
 * Si une exigence de performance venait à être consignée sur un chemin couvert
   par ces règles, la décision devrait y être réexaminée plutôt que supposée
   toujours valide.
@@ -218,6 +243,9 @@ plus tard.
 * ADR-0056 — énoncer les règles de codage là où un agent peut s'en saisir, et
   pourquoi une décision consignée hors de portée du code ne tient pas.
 * ADR-0058 — le refus de `CA1510`, et le principe de portée que cette ADR suit.
-* `.editorconfig` — où vivent les trois règles déclinées, chacune avec sa raison.
+* `.editorconfig` — où vivent les trois règles Roslyn déclinées, chacune avec sa
+  raison.
+* `.github/workflows/sonar.yml` — où vivent les deux règles shell déclinées, pour
+  la même raison et au seul endroit qui puisse la porter.
 * `CONTRIBUTING.md`, `CLAUDE.md` — les règles de codage, dont l'arbitrage
   « objets valeur en classes » cité dans la Justification.

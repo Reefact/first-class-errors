@@ -8,15 +8,18 @@
 
 ## Context
 
-The SonarQube Cloud report for this project carries 255 open findings. Three
-rules account for 191 of them — 75% of everything left — and all three arrive
-under the `external_roslyn` namespace, meaning they are not SonarQube's own
-analysis: they are diagnostics the .NET compiler and the BCL analyzers emit
-during the build, which the scanner observes through MSBuild and republishes.
-A rule configured to `none` is never emitted, so the report loses it at the
-source rather than having it dismissed in the server's UI.
+The SonarQube Cloud report for this project carries 255 open findings. Five
+rules account for 212 of them — 83% of everything left — and they fall into two
+families, distinguished by where the finding is produced.
 
-The three rules, and what the flagged code does today:
+Three arrive under the `external_roslyn` namespace, meaning they are not
+SonarQube's own analysis: they are diagnostics the .NET compiler and the BCL
+analyzers emit during the build, which the scanner observes through MSBuild and
+republishes. A rule configured to `none` is never emitted, so the report loses
+it at the source. The remaining two are SonarQube's own shell analysis, which no
+build setting can reach — nothing the compiler does produces or suppresses them.
+
+The five rules, and what the flagged code does today:
 
 * **`IDE0028` — 147 findings across 13 projects.** Asks that collection
   initializers written `new()` or `new List<T> { ... }` be rewritten as
@@ -41,10 +44,22 @@ The three rules, and what the flagged code does today:
   so it is allocated once rather than per call. The flagged arguments are the
   expected values of assertions and the case lists of property generators,
   written inline next to the check that reads them.
+* **`S7682` — 12 findings**, in the repository's shell tooling and Claude hooks.
+  Asks for an explicit `return` at the end of a shell function. Every function
+  it flags ends with the command whose exit status is the function's intended
+  result — a `cat` heredoc, an `awk` invocation, a `printf` — and one of them
+  ends with `exit`, after which a `return` is unreachable.
+* **`S7679` — 9 findings**, in the same scripts. Asks that a positional
+  parameter be assigned to a local variable. Every script in the repository
+  declares `#!/bin/sh`, and `local` is not part of POSIX; `tools/trains.sh`
+  already shows what obeying costs without it, since the one helper there
+  needing named parameters carries `_tf_`-prefixed globals instead. The
+  remaining flagged functions are one- and two-line helpers whose `$1` sits a
+  line below the function's own name.
 
 The code these rules flag is on error-construction paths, documentation
-tooling, and test suites. None of it is a measured hot path, and no performance
-requirement is recorded against any of it.
+tooling, test suites and repository scripts. None of it is a measured hot path,
+and no performance requirement is recorded against any of it.
 
 The repository already holds the two precedents this decision sits between.
 ADR-0055 established that a style rule the compiler can express is restated in
@@ -75,12 +90,20 @@ outranking micro-performance unless a measured need is recorded.
   from the check that reads them to save an allocation occurring a few hundred
   times in a suite. Suppressing them is not evading the advice; it is answering
   it.
-* **Declining in the configuration beats declining in the report.** These
-  findings originate in the build, so a severity of `none` stops them being
-  produced at all. That places the decision in a file that lives in the
-  repository, is read by the compiler and by every contributor including
-  agents, and carries its reason inline — where marking them "won't fix" on the
-  SonarQube server would put the reasoning somewhere the code never shows it.
+* **Declining in the configuration beats declining in the report.** Wherever a
+  finding originates in the build, a severity of `none` stops it being produced
+  at all; where it does not — the two shell rules — the scanner's own
+  configuration carries the refusal. Either way the decision lands in a file
+  that lives in the repository and carries its reason inline, where marking the
+  findings "won't fix" on the SonarQube server would put the reasoning
+  somewhere the code never shows it.
+* **Where the refusal is written follows where the finding is produced.** The
+  Roslyn rules are declined in `.editorconfig`, which the compiler reads, so
+  the build stops emitting them and every contributor meets the reason at the
+  same place the rule would have fired. The shell rules cannot be reached that
+  way and are declined in the scanner invocation instead. Splitting them is not
+  an inconsistency but the only arrangement in which each refusal sits where
+  its rule lives.
 * **Scope follows the reason, not convenience.** `CA1861`'s justification is
   about tests, and every one of its findings is in a test project, so it is
   declined for test projects and left live for shipping code, where a hot path
@@ -159,10 +182,11 @@ this ADR prevents it being made later.
 
 ### Positive
 
-* 191 of 255 findings clear, and every future occurrence clears with them
+* 212 of 255 findings clear, and every future occurrence clears with them
   rather than accumulating.
-* The reasoning lives in `.editorconfig`, beside the effect, readable by the
-  compiler and by anyone — human or agent — editing the repository.
+* The reasoning lives beside the effect — in `.editorconfig` for the rules the
+  build produces, in the scanner invocation for the two it does not — readable
+  by anyone, human or agent, editing the repository.
 * The two limbs of the policy are stated once and can be cited, so the same
   argument is not re-run at each new analyzer finding.
 * `CA1861` remains live where it could genuinely pay, so the decision keeps its
@@ -176,17 +200,18 @@ this ADR prevents it being made later.
 * No analyzer will nudge a genuinely hot shipping path toward a concrete return
   type any more, since `CA1859` is off everywhere. That judgement now rests
   entirely with the author and the reviewer.
-* Three declined rules is a list that can grow. Each addition needs the same
-  justification, and nothing but review enforces that.
+* Five declined rules is a list that can grow, and it now lives in two files.
+  Each addition needs the same justification, and nothing but review enforces
+  that.
 
 ### Risks
 
 * Reading the count alone overstates the change: no code improved. The value
   here is a recorded policy and a report that shows only what is worth acting
   on.
-* A contributor may read the declined-rules section as licence to switch off
-  any inconvenient analyzer. It is scoped to three rule ids, each carrying its
-  reason, precisely so that reading is hard to sustain.
+* A contributor may read the declined-rules sections as licence to switch off
+  any inconvenient analyzer. They are scoped to five named rule ids, each
+  carrying its reason, precisely so that reading is hard to sustain.
 * If a performance requirement is ever recorded against a path these rules
   cover, the decision has to be revisited there rather than assumed still
   valid.
@@ -205,6 +230,9 @@ this ADR prevents it being made later.
 * ADR-0056 — stating the coding rules where an agent can act on them, the
   reason a decision recorded out of the code's reach does not hold.
 * ADR-0058 — declining `CA1510`, and the scoping principle this ADR follows.
-* `.editorconfig` — where the three declined rules live, each with its reason.
+* `.editorconfig` — where the three declined Roslyn rules live, each with its
+  reason.
+* `.github/workflows/sonar.yml` — where the two declined shell rules live, for
+  the same reason and in the only place that can carry it.
 * `CONTRIBUTING.md`, `CLAUDE.md` — the coding rules, including the
   value-objects-as-classes trade cited in the Rationale.
