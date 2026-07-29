@@ -73,6 +73,7 @@ here instead of being repeated on every page.
 | [`analyzers`](analyzers.en.md) | Dogfood the bundled Roslyn analyzers, including on the oldest supported compiler (the Roslyn floor). |
 | [`commit-lint`](commit-lint.en.md) | Enforce the Conventional Commits convention on every PR commit, using the same script as the local hook. |
 | [`lint`](lint.en.md) | shellcheck and actionlint over the files the C# compiler never sees — the POSIX scripts and the workflow definitions. Zero findings, `info` included. |
+| [`sonar-profile`](sonar-profile.en.md) | Nightly: fails when the committed Sonar C# rule list has drifted from the SonarCloud quality profile. Reports, never repairs. |
 | [`adr-check`](adr-check.en.md) | Advisory, manual dispatch: check a branch against the ADR base (new decision / supersede / conflict). The fallback for contributors without Claude Code; never blocks. |
 
 ### Security & supply chain
