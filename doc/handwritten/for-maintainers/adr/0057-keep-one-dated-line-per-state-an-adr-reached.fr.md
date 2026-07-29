@@ -2,8 +2,9 @@
 
 🌍 🇫🇷 Français (ce fichier) · 🇬🇧 [English](0057-keep-one-dated-line-per-state-an-adr-reached.md)
 
-**Statut :** Proposé
+**Statut :** Accepté
 **Proposé :** 2026-07-29
+**Accepté :** 2026-07-29
 **Décideurs :** Reefact
 
 ## Contexte
