@@ -20,6 +20,15 @@
             "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/hooks/history-hygiene.sh\" post-commit"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/hooks/coding-rules.sh\""
+          }
+        ]
       }
     ]
   }

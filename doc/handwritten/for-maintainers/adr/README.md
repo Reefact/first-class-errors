@@ -238,3 +238,4 @@ Optional supporting material:
 | [ADR-0053](0053-unify-discrete-generation-in-one-ordinal-space.md) | Unify discrete generation in one ordinal space, with a dedicated engine only where the arithmetic substrate forces one | Accepted |
 | [ADR-0054](0054-decide-a-constraint-surface-by-constructive-versus-rejective.md) | Decide a generator's constraint surface by constructive versus rejective, not by terminality; supersedes ADR-0030 | Accepted |
 | [ADR-0055](0055-enforce-the-style-rules-the-compiler-can-express.md) | Enforce the style rules the compiler can express, and keep the DotSettings authoritative for the rest | Proposed |
+| [ADR-0056](0056-state-the-coding-rules-where-an-agent-can-act-on-them.md) | State the coding rules where an agent can act on them, and check them at the edit | Proposed |
