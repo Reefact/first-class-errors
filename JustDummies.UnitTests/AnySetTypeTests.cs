@@ -116,7 +116,11 @@ public sealed class AnySetTypeTests {
         for (int i = 0; i < SampleCount; i++) {
             OrderStatus value = Any.Enum<OrderStatus>().Generate();
             seen.Add(value);
-            Check.That(System.Enum.IsDefined(value)).IsTrue();
+            // The non-generic overload on purpose: this suite also runs on the .NET Framework 4.7.2 support
+            // floor (ADR-0022, build/Net472TestFloor.props), where Enum.IsDefined<TEnum>(TEnum) does not exist.
+            // CA2263 suggests the generic one and is right on net10.0 only, so it is answered here rather than
+            // taken — the same downlevel trap as string.Contains(char) elsewhere in this repository.
+            Check.That(System.Enum.IsDefined(typeof(OrderStatus), value)).IsTrue();
         }
         Check.That(seen.Count).IsEqualTo(3);
     }
