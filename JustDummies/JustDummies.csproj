@@ -12,6 +12,14 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
 
+    <!-- CA1510 asks every `if (x is null) throw new ArgumentNullException(...)` to become
+         ArgumentNullException.ThrowIfNull(x). That helper arrived in .NET 6, so the rule only fires on this
+         project's MODERN leg while the same source must still compile on the pre-.NET-6 one — and it cannot be
+         polyfilled: ThrowIfNull is a static method on an existing BCL type, and C# has no static extension
+         methods, so supplying it would mean shadowing System.ArgumentNullException itself. Suppressed for as
+         long as this project targets below .NET 6; see ADR-0058. -->
+    <NoWarn>$(NoWarn);CA1510</NoWarn>
+
     <!-- XML documentation -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 

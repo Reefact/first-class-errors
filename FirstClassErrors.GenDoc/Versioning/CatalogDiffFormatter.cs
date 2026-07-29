@@ -30,7 +30,7 @@ public static class CatalogDiffFormatter {
     /// <returns>The plain-text report; a single line when the diff is empty.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="diff" /> is <c>null</c>.</exception>
     public static string ToText(CatalogDiff diff) {
-        if (diff is null) { throw new ArgumentNullException(nameof(diff)); }
+        ArgumentNullException.ThrowIfNull(diff);
 
         if (diff.IsEmpty) { return "No catalog changes." + "\n"; }
 
@@ -49,7 +49,7 @@ public static class CatalogDiffFormatter {
     /// <returns>The Markdown report; a single line when the diff is empty.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="diff" /> is <c>null</c>.</exception>
     public static string ToMarkdown(CatalogDiff diff) {
-        if (diff is null) { throw new ArgumentNullException(nameof(diff)); }
+        ArgumentNullException.ThrowIfNull(diff);
 
         StringBuilder report = new();
         report.Append("## Error catalog changes\n");
@@ -75,7 +75,7 @@ public static class CatalogDiffFormatter {
     /// <returns>The JSON report, ending with a single newline.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="diff" /> is <c>null</c>.</exception>
     public static string ToJson(CatalogDiff diff) {
-        if (diff is null) { throw new ArgumentNullException(nameof(diff)); }
+        ArgumentNullException.ThrowIfNull(diff);
 
         // A curated projection: the anonymous shape fixes exactly which fields are published and their names,
         // without exposing the internal model (same approach as the JSON documentation renderer).
