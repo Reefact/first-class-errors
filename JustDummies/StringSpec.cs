@@ -588,6 +588,11 @@ internal sealed class StringSpec {
                });
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2249:Consider using String.Contains instead of String.IndexOf",
+                                                     Justification =
+                                                         "string.Contains(string, StringComparison) does not exist on netstandard2.0, which this library targets " +
+                                                         "(ADR-0022). IndexOf with StringComparison.Ordinal is the same comparison and the only spelling that " +
+                                                         "compiles on the shipped asset. Same downlevel wall as CA1510 (ADR-0058).")]
     private IEnumerable<(string Constraint, Func<string, bool> Admits)> Declarations() {
         if (_exactLength is int exact) { yield return (_exactConstraint!, value => value.Length == exact); }
         if (_minLength > 0) { yield return (_minConstraint!, value => value.Length >= _minLength); }

@@ -111,6 +111,12 @@ public sealed class AnySetTypeTests {
     }
 
     [Fact(DisplayName = "Enum: unconstrained draws yield only declared members and reach all of them.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2263:Prefer generic overload when type is known",
+                                                     Justification =
+                                                         "Enum.IsDefined<TEnum>(TEnum) arrived in .NET 5 and this suite also runs on the .NET Framework 4.7.2 " +
+                                                         "support floor (ADR-0022, build/Net472TestFloor.props), where it does not exist. The non-generic overload " +
+                                                         "is the only spelling that compiles on both legs; the reason is restated at the call site so a reader meets " +
+                                                         "it there too.")]
     public void EnumDrawsDeclaredMembers() {
         HashSet<OrderStatus> seen = [];
         for (int i = 0; i < SampleCount; i++) {
