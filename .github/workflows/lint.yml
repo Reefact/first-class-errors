@@ -78,7 +78,12 @@ jobs:
         run: |
           set -eu
           archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
-          curl -sSfL -o "$archive" \
+          # --proto '=https' --proto-redir '=https' refuse anything but HTTPS, on the initial request
+          # AND on every redirect. Without them -L would follow a redirect to plaintext http, which is
+          # what Sonar's githubactions:S6506 flags, correctly: a release URL is attacker-influenced the
+          # moment DNS or the CDN is. The checksum below would still catch tampering, but only after the
+          # bytes had crossed the network in clear.
+          curl --proto '=https' --proto-redir '=https' -sSfL -o "$archive" \
             "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${archive}"
           echo "${ACTIONLINT_SHA256}  ${archive}" | sha256sum --check --strict
           tar xzf "$archive" actionlint
