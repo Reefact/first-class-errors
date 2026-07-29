@@ -18,3 +18,5 @@ JD010   | JustDummies.Reproducibility | Warning  | ReproducibleOnNonTestMethodAn
 JD011   | JustDummies.Usage           | Disabled | GeneratorWhereValueExpectedAnalyzer
 JD012   | JustDummies.Usage           | Warning  | GeneratorPooledAsValueAnalyzer
 JD013   | JustDummies.Usage           | Warning  | HeldCollectionPassedToOneOfAnalyzer
+JD014   | JustDummies.Constraints     | Warning  | RejectedConstantArgumentAnalyzer
+JD015   | JustDummies.Constraints     | Warning  | StringConstraintsAdmitNoValueAnalyzer

@@ -142,4 +142,24 @@ internal static class Descriptors {
         description: "Any.OneOf takes params T[], so a single collection argument binds T to the collection type itself rather than to its elements. The call compiles, draws succeed, and every one of them returns the same collection — the arbitrary choice the test claims to make never varies. Any.ElementOf is the entry point that draws from a collection's elements; an explicit type argument states the opposite intent and is left alone.",
         helpLinkUri: HelpLinks.For(DiagnosticIds.HeldCollectionPassedToOneOf));
 
+    public static readonly DiagnosticDescriptor RejectedConstantArgument = new(
+        id: DiagnosticIds.RejectedConstantArgument,
+        title: "A constant argument is one the generator rejects",
+        messageFormat: "{0} throws for this argument: {1}",
+        category: DiagnosticCategories.Constraints,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "The argument is a compile-time constant the generator's own guard refuses, so the call throws every time it runs. Nothing is decided at run time that is not already decided here, and the failure otherwise surfaces late — inside an arrange helper shared by many tests, where it reads as a library problem rather than as the transposition typo it usually is. The run-time guards stay for every argument this cannot see.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.RejectedConstantArgument));
+
+    public static readonly DiagnosticDescriptor StringConstraintsAdmitNoValue = new(
+        id: DiagnosticIds.StringConstraintsAdmitNoValue,
+        title: "The declared string constraints admit no value",
+        messageFormat: "No string satisfies this chain: {0}",
+        category: DiagnosticCategories.Constraints,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "The constraints contradict each other for the constants written at the call site, so the chain throws a ConflictingAnyConstraintException the moment the arrange line runs. This is the case ADR-0035 names as the one an analyzer should carry: Numeric().StartingWith(\"ORD-\") conflicts while Numeric().StartingWith(\"123\") does not, from identical call sites and identical static types — only the argument value tells them apart.",
+        helpLinkUri: HelpLinks.For(DiagnosticIds.StringConstraintsAdmitNoValue));
+
 }

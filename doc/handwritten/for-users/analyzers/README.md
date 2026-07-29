@@ -76,6 +76,15 @@ A generator is an immutable *recipe*, and `Generate()` is the only thing that ma
 | [JD012 GeneratorPooledAsValue](JD012.en.md) | 🟠 Warning | on | Any.OneOf is given generators, inferring a pool of recipes; drawing from it yields a recipe rather than a value. |
 | [JD013 HeldCollectionPassedToOneOf](JD013.en.md) | 🟠 Warning | on | A held collection passed to Any.OneOf binds T to the collection type, making a pool of one; Any.ElementOf draws from its elements. |
 
+## JustDummies — Constraints
+
+These rules front-load, to build time, the subset of the library's run-time constraint checks that is decidable from compile-time constants. The run-time checks stay: they cover every argument these cannot see.
+
+| Rule | Severity | Default | Description |
+|------|----------|---------|-------------|
+| [JD014 RejectedConstantArgument](JD014.en.md) | 🟠 Warning | on | A constraint argument is a compile-time constant the generator's own guard refuses, so the call throws every time it runs. |
+| [JD015 StringConstraintsAdmitNoValue](JD015.en.md) | 🟠 Warning | on | An AnyString chain's constant constraints admit no value — a fragment outside the declared character family or casing, or fragments that cannot fit the declared length. |
+
 ## Configuring
 
 Every rule's severity can be tuned in `.editorconfig`, for example:
