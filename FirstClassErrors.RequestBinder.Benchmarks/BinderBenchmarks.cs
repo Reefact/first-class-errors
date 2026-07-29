@@ -250,6 +250,11 @@ public class BinderBenchmarks {
     // -----------------------------------------------------------------------------------------------------------------
 
     [Benchmark]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static",
+                                                     Justification =
+                                                         "BenchmarkDotNet discovers [Benchmark] methods and drives them on an instance it owns, alongside the fixture the other " +
+                                                         "benchmarks in this class share. These two measure only the allocation of a selector at the call site, so they touch no field — " +
+                                                         "but making two members of a comparison set static would set them apart from the very benchmarks they are measured against.")]
     public Expression<Func<OneScalarDto, string?>> Micro_ExpressionTreeSelector_Allocation() {
         Expression<Func<OneScalarDto, string?>> selector = d => d.First;
 
@@ -257,6 +262,11 @@ public class BinderBenchmarks {
     }
 
     [Benchmark]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static",
+                                                     Justification =
+                                                         "BenchmarkDotNet discovers [Benchmark] methods and drives them on an instance it owns, alongside the fixture the other " +
+                                                         "benchmarks in this class share. These two measure only the allocation of a selector at the call site, so they touch no field — " +
+                                                         "but making two members of a comparison set static would set them apart from the very benchmarks they are measured against.")]
     public Func<OneScalarDto, string?> Micro_CachedDelegateSelector_Allocation() {
         Func<OneScalarDto, string?> selector = static d => d.First;
 

@@ -20,6 +20,16 @@ public sealed class BookingEndpoint {
     ///     Binds the request into a command. The returned <see cref="Outcome{T}" /> rejoins the caller's own pipeline —
     ///     see <see cref="Place" /> for a transport-shaped example.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static",
+                                                     Justification =
+                                                         "BookingEndpoint exists to show what a transport handler looks like, and a handler is an instance a container resolves — not a " +
+                                                         "static entry point. Place calls this on the instance, and the method is public, so making it static would both misrepresent " +
+                                                         "the shape the sample teaches and change the sample's public surface.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S2325:Methods and properties that do not access instance data should be static",
+                                                     Justification =
+                                                         "BookingEndpoint exists to show what a transport handler looks like, and a handler is an instance a container resolves — not a " +
+                                                         "static entry point. Place calls this on the instance, and the method is public, so making it static would both misrepresent " +
+                                                         "the shape the sample teaches and change the sample's public surface.")]
     public Outcome<PlaceBookingCommand> Handle(BookingRequest request) {
         return BookingBinder.BindBooking(request);
     }

@@ -158,6 +158,14 @@ public sealed class PropertyGetterCacheTests {
 
     private sealed class ThrowingDto {
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static",
+                                                         Justification =
+                                                             "Boom is a bindable property on a DTO the binder reads through a compiled getter. A static property is not part of the bindable " +
+                                                             "surface, so making it static would delete the throwing-getter path this fixture exists to exercise.")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S2325:Methods and properties that do not access instance data should be static",
+                                                         Justification =
+                                                             "Boom is a bindable property on a DTO the binder reads through a compiled getter. A static property is not part of the bindable " +
+                                                             "surface, so making it static would delete the throwing-getter path this fixture exists to exercise.")]
         public string? Boom => throw new InvalidOperationException("getter bug");
 
     }
