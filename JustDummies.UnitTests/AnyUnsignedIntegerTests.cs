@@ -12,7 +12,7 @@ public sealed class AnyUnsignedIntegerTests {
 
     [Fact(DisplayName = "Byte: Between is inclusive and reaches both bounds; extremes are generable.")]
     public void ByteBounds() {
-        HashSet<byte> seen = new();
+        HashSet<byte> seen = [];
         for (int i = 0; i < SampleCount; i++) {
             byte value = Any.Byte().Between(1, 3).Generate();
             seen.Add(value);
@@ -51,7 +51,7 @@ public sealed class AnyUnsignedIntegerTests {
 
     [Fact(DisplayName = "UInt64: the full-width sampling path yields varied values and honors exclusions.")]
     public void UInt64FullWidth() {
-        HashSet<ulong> seen = new();
+        HashSet<ulong> seen = [];
         for (int i = 0; i < SampleCount; i++) { seen.Add(Any.UInt64().Generate()); }
         Check.That(seen.Count).IsStrictlyGreaterThan(1);
 

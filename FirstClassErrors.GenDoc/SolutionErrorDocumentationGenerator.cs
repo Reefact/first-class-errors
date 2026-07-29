@@ -94,7 +94,7 @@ public static class SolutionErrorDocumentationGenerator {
 
         options.Logger.Info($"Starting documentation generation from {assemblyPaths.Count} assembly path(s).");
 
-        List<string> resolved = new();
+        List<string> resolved = [];
         foreach (string assemblyPath in assemblyPaths) {
             string fullPath = Path.GetFullPath(assemblyPath);
             if (!File.Exists(fullPath)) {
@@ -128,7 +128,7 @@ public static class SolutionErrorDocumentationGenerator {
                     : DocumentationToolchainError.ProjectEnumerationFailed(solutionPath, result.ExitCode, result.StandardError));
         }
 
-        List<string> projects = new();
+        List<string> projects = [];
 
         foreach (string rawLine in result.StandardOutput.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)) {
             string line = rawLine.Trim();
@@ -147,9 +147,7 @@ public static class SolutionErrorDocumentationGenerator {
     }
 
     internal static IReadOnlyList<string> FilterProjects(IReadOnlyList<string> projectPaths, SolutionGenerationOptions options) {
-        List<string> included = new();
-
-        included.AddRange(projectPaths.Where(projectPath => ShouldIncludeProject(projectPath, options)));
+        List<string> included = [.. projectPaths.Where(projectPath => ShouldIncludeProject(projectPath, options))];
 
         // An opt-in declared only in a shared build file (Directory.Build.props, an import) reads as absent in every
         // .csproj — per project, that is indistinguishable from a genuine absence, so it cannot be diagnosed above. The
@@ -491,7 +489,7 @@ public static class SolutionErrorDocumentationGenerator {
     private static IEnumerable<ErrorDocumentation> ExtractFromAssemblies(IReadOnlyList<string> assemblyPaths, SolutionGenerationOptions options) {
         string workerAssemblyPath = ResolveWorkerAssemblyPath(options);
 
-        List<ErrorDocumentation> results = new();
+        List<ErrorDocumentation> results = [];
 
         foreach (string assemblyPath in assemblyPaths) {
             // Stop launching new workers as soon as cancellation is requested; the running one (if any) is already
@@ -516,7 +514,7 @@ public static class SolutionErrorDocumentationGenerator {
     }
 
     internal static IReadOnlyList<ErrorDocumentation> DeduplicateAcrossAssemblies(IReadOnlyList<ErrorDocumentation> documentation, IGenerationLogger logger) {
-        List<ErrorDocumentation> catalog = new();
+        List<ErrorDocumentation> catalog = [];
 
         foreach (IGrouping<string?, ErrorDocumentation> group in documentation.GroupBy(doc => doc.Code, StringComparer.OrdinalIgnoreCase)) {
             ErrorDocumentation survivor = group.First();

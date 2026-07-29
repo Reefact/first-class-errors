@@ -25,7 +25,7 @@ public sealed class AnySignedIntegerTests {
 
     [Fact(DisplayName = "SByte: Between is inclusive and reaches both bounds; extremes are generable.")]
     public void SByteBounds() {
-        HashSet<sbyte> seen = new();
+        HashSet<sbyte> seen = [];
         for (int i = 0; i < SampleCount; i++) { seen.Add(Any.SByte().Between(-1, 1).Generate()); }
         Check.That(seen.Contains(-1)).IsTrue();
         Check.That(seen.Contains(1)).IsTrue();
@@ -54,7 +54,7 @@ public sealed class AnySignedIntegerTests {
 
     [Fact(DisplayName = "Int64: full-range generation works and crossed bounds conflict naming both sides.")]
     public void Int64RangeAndConflicts() {
-        HashSet<long> seen = new();
+        HashSet<long> seen = [];
         for (int i = 0; i < SampleCount; i++) { seen.Add(Any.Int64().Generate()); }
         Check.That(seen.Count).IsStrictlyGreaterThan(1);
 

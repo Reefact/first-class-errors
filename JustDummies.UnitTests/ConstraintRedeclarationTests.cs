@@ -82,7 +82,7 @@ public sealed class ConstraintRedeclarationTests {
         // A constraint declared twice with the same argument is not a contradiction: the domain the second declaration
         // asks for is exactly the one the first already produced. Refusing it made the fluent reject a specification it
         // can satisfy — the one thing the eager check exists to avoid.
-        List<string> refused = new();
+        List<string> refused = [];
         foreach ((string label, Func<object> redeclare) in IdenticalRedeclarations()) {
             try {
                 redeclare();
@@ -99,7 +99,7 @@ public sealed class ConstraintRedeclarationTests {
     public void ContradictoryRedeclarationStillConflicts() {
         // The other half, and the reason the fix compares the rendered declaration rather than simply dropping the
         // guard: tolerating an identical re-declaration must not tolerate a contradictory one.
-        List<string> accepted = new();
+        List<string> accepted = [];
         foreach ((string label, Func<object> contradict) in ContradictoryRedeclarations()) {
             try {
                 contradict();

@@ -188,7 +188,7 @@ public sealed class AnyPattern : IAny<string>, IHasRandomSource {
     }
 
     private AnyPattern Excluding(IReadOnlyList<string> values) {
-        List<string> excluded = new(_excluded);
+        List<string> excluded = [.. _excluded];
         foreach (string value in values) {
             if (!excluded.Contains(value, StringComparer.Ordinal)) { excluded.Add(value); }
         }

@@ -576,7 +576,7 @@ public sealed class PatternRoundTripProperties {
                         // then states both halves at once: no branch is dead, and nothing outside the declared set
                         // can come out.
                         AnyPattern      generator = Any.WithSeed(testCase.Seed).StringMatching(string.Join("|", testCase.Branches));
-                        HashSet<string> seen      = new(Expect.Draws(generator, BranchSampleCount));
+                        HashSet<string> seen      = [.. Expect.Draws(generator, BranchSampleCount)];
 
                         return seen.SetEquals(testCase.Branches);
                     })

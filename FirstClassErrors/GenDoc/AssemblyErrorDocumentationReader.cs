@@ -42,8 +42,8 @@ public static class AssemblyErrorDocumentationReader {
     public static ErrorDocumentationExtractionResult GetErrorDocumentationFrom(Assembly assembly) {
         if (assembly is null) { throw new ArgumentNullException(nameof(assembly)); }
 
-        List<ErrorDocumentation>                  documentation = new();
-        List<ErrorDocumentationExtractionFailure> failures      = new();
+        List<ErrorDocumentation>                  documentation = [];
+        List<ErrorDocumentationExtractionFailure> failures      = [];
 
         foreach (Type type in GetLoadableTypes(assembly, failures)) {
             if (!IsExtractableType(type)) { continue; }
@@ -51,7 +51,7 @@ public static class AssemblyErrorDocumentationReader {
             ExtractFromType(type, documentation, failures);
         }
 
-        List<ErrorDocumentation> deduplicated = new();
+        List<ErrorDocumentation> deduplicated = [];
 
         // Order before grouping so that, when several factories share the same Code, the surviving documentation is
         // chosen deterministically (reflection ordering is not guaranteed).

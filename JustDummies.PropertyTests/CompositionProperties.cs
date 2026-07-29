@@ -42,7 +42,7 @@ public sealed class CompositionProperties {
     ///     length), so the null-element rejection is exercised at every position rather than only at the end.
     /// </summary>
     private static string[] Poisoned(string[] pool, int index) {
-        List<string> poisoned = new(pool);
+        List<string> poisoned = [.. pool];
         poisoned.Insert(Math.Min(index, poisoned.Count), null!);
 
         return poisoned.ToArray();
@@ -279,8 +279,8 @@ public sealed class CompositionProperties {
                      from seed in Generators.Seed()
                      select (pool, seed)).ToArbitrary(),
                     testCase => {
-                        HashSet<int> distinct = new(testCase.pool);
-                        HashSet<int> drawn    = new(Expect.Draws(Any.WithSeed(testCase.seed).OneOf(testCase.pool), 96));
+                        HashSet<int> distinct = [.. testCase.pool];
+                        HashSet<int> drawn    = [.. Expect.Draws(Any.WithSeed(testCase.seed).OneOf(testCase.pool), 96)];
 
                         return drawn.SetEquals(distinct);
                     })

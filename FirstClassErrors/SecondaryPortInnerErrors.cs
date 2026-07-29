@@ -18,7 +18,7 @@ public sealed class SecondaryPortInnerErrors {
 
     #region Fields declarations
 
-    private readonly List<Error> _errors = new();
+    private readonly List<Error> _errors = [];
 
     #endregion
 

@@ -51,12 +51,12 @@ public class BinderBenchmarks {
             Nights      = 3,
             MaxNights   = 10,
             Stay        = new StayDto { CheckIn = "2026-08-01", CheckOut = "2026-08-04" },
-            Tags        = new List<string?> { "beach", "family", "late-checkout" },
-            RoomNumbers = new List<int?> { 101, 102, 210 },
-            Guests      = new List<GuestDto?> {
+            Tags        = ["beach", "family", "late-checkout"],
+            RoomNumbers = [101, 102, 210],
+            Guests      = [
                 new GuestDto { FirstName = "Ada", Email = "ada@example.org" },
                 new GuestDto { FirstName = "Blaise", Email = null },
-            },
+            ],
         };
         _fiveScalars = new FiveScalarsDto {
             First  = "guest@example.org",
@@ -74,7 +74,7 @@ public class BinderBenchmarks {
         };
         _oneScalar      = new OneScalarDto { First      = "guest@example.org" };
         _oneNullableInt = new OneNullableIntDto { Count = 3 };
-        _listOfTen      = new ListOnlyDto { Items       = new List<string?> { "a1", "b2", "c3", "d4", "e5", "f6", "g7", "h8", "i9", "j10" } };
+        _listOfTen      = new ListOnlyDto { Items       = ["a1", "b2", "c3", "d4", "e5", "f6", "g7", "h8", "i9", "j10"] };
         _stay           = new StayDto { CheckIn         = "2026-08-01", CheckOut = "2026-08-04" };
         _routeBookingId = "bk_0123456789";
     }

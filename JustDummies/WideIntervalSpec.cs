@@ -116,7 +116,7 @@ internal sealed class WideIntervalSpec {
         }
 
         if (allowed is not null) {
-            HashSet<UInt128> forbidden = new(excluded);
+            HashSet<UInt128> forbidden = [.. excluded];
             _effectiveAllowed = allowed.Where(value => value >= min && value <= max && !forbidden.Contains(value) && (step <= UInt128.One || IsOnLattice(value, anchor, step))).ToList();
         }
     }
@@ -186,7 +186,7 @@ internal sealed class WideIntervalSpec {
 
         // The applied constraint tags its own ordinals, so a later exhaustion message can name the exclusion
         // that actually emptied the domain rather than a bound that merely happens to border it.
-        List<(string Constraint, UInt128[] Ordinals)> exclusions = new(_exclusions) { (applying, ordinals) };
+        List<(string Constraint, UInt128[] Ordinals)> exclusions = [.. _exclusions, (applying, ordinals)];
 
         return Validated(new WideIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, exclusions, _step, _anchor, _stepConstraint), applying);
     }
@@ -374,7 +374,7 @@ internal sealed class WideIntervalSpec {
     ///     the surviving domain never bit, so naming it would mislead; first-declared order is preserved.
     /// </summary>
     private IReadOnlyList<string> ExcludingConstraintsInEffect() {
-        List<string> names = new();
+        List<string> names = [];
         foreach ((string constraint, UInt128[] ordinals) in _exclusions) {
             if (names.Contains(constraint)) { continue; }
             if (ordinals.Any(WouldAllowIgnoringExclusions)) { names.Add(constraint); }
@@ -404,7 +404,7 @@ internal sealed class WideIntervalSpec {
 
     /// <summary>Names the bounds that pinned the domain to its single value, for the "forbids X, the only value ... leaves" form.</summary>
     private string PinningClause() {
-        List<string> bounds = new();
+        List<string> bounds = [];
         if (_minConstraint is not null) { bounds.Add(_minConstraint); }
         if (_maxConstraint is not null && _maxConstraint != _minConstraint) { bounds.Add(_maxConstraint); }
 

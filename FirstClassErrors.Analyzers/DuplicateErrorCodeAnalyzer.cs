@@ -53,7 +53,7 @@ public sealed class DuplicateErrorCodeAnalyzer : DiagnosticAnalyzer {
         // Non-literal codes are FCE003's concern, empty ones FCE002's; only real codes can collide.
         if (!ErrorCodeFacts.TryGetNonEmptyLiteralCode(argument, out string code)) { return; }
 
-        occurrences.GetOrAdd(code, _ => new ConcurrentBag<Location>()).Add(argument.Syntax.GetLocation());
+        occurrences.GetOrAdd(code, _ => []).Add(argument.Syntax.GetLocation());
     }
 
     private static void Report(

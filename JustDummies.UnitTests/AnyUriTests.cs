@@ -57,7 +57,7 @@ public sealed class AnyUriTests {
 
     [Fact(DisplayName = "The unconstrained generator reaches every family.")]
     public void UnconstrainedReachesEveryFamily() {
-        HashSet<string> seen = new();
+        HashSet<string> seen = [];
         foreach (Uri value in Sample(Seeded(context => context.Uri()))) {
             seen.Add(value.IsAbsoluteUri ? value.Scheme : "relative");
         }
@@ -71,7 +71,7 @@ public sealed class AnyUriTests {
 
     [Fact(DisplayName = "Web reaches both http and https; each generated value is one of them.")]
     public void WebReachesBothSchemes() {
-        HashSet<string> seen = new();
+        HashSet<string> seen = [];
         foreach (Uri value in Sample(Seeded(context => context.Uri().Web()))) {
             seen.Add(value.Scheme);
             Check.That(value.Scheme is "http" or "https").IsTrue();
@@ -83,7 +83,7 @@ public sealed class AnyUriTests {
 
     [Fact(DisplayName = "WebSocket reaches both ws and wss.")]
     public void WebSocketReachesBothSchemes() {
-        HashSet<string> seen = new();
+        HashSet<string> seen = [];
         foreach (Uri value in Sample(Seeded(context => context.Uri().WebSocket()))) {
             seen.Add(value.Scheme);
             Check.That(value.Scheme is "ws" or "wss").IsTrue();

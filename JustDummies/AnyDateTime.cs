@@ -147,7 +147,7 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource, ICardinality
 
         // Remember the supplied values by instant, so generation returns them as given: the ordinal space
         // only carries the ticks, and rebuilding from it would silently normalize the Kind to Utc.
-        Dictionary<ulong, DateTime> originals = new();
+        Dictionary<ulong, DateTime> originals = [];
         foreach (DateTime value in values) {
             if (!originals.ContainsKey(Ord(value))) { originals.Add(Ord(value), value); }
         }

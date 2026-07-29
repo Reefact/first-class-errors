@@ -165,7 +165,7 @@ internal sealed class DecimalIntervalSpec {
 
         // The applied constraint tags its own values, so a later exhaustion message can name the exclusion
         // that actually emptied the domain rather than a bound that merely happens to border it.
-        List<(string Constraint, decimal[] Ordinals)> exclusions = new(_exclusions) { (applying, values) };
+        List<(string Constraint, decimal[] Ordinals)> exclusions = [.. _exclusions, (applying, values)];
 
         return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, exclusions, _scale, _scaleConstraint), applying);
     }
@@ -434,7 +434,7 @@ internal sealed class DecimalIntervalSpec {
     ///     outside the surviving domain never bit, so naming it would mislead; first-declared order is preserved.
     /// </summary>
     private IReadOnlyList<string> ExcludingConstraintsInEffect() {
-        List<string> names = new();
+        List<string> names = [];
         foreach ((string constraint, decimal[] values) in _exclusions) {
             if (names.Contains(constraint)) { continue; }
             if (values.Any(WouldAllowIgnoringExclusions)) { names.Add(constraint); }
@@ -464,7 +464,7 @@ internal sealed class DecimalIntervalSpec {
 
     /// <summary>Names the bounds that pinned the domain to its single value, for the "forbids X, the only value ... leaves" form.</summary>
     private string PinningClause() {
-        List<string> bounds = new();
+        List<string> bounds = [];
         if (_minConstraint is not null) { bounds.Add(_minConstraint); }
         if (_maxConstraint is not null && _maxConstraint != _minConstraint) { bounds.Add(_maxConstraint); }
 

@@ -176,7 +176,7 @@ internal sealed class ContinuousIntervalSpec {
 
         // The applied constraint tags its own values, so a later exhaustion message can name the exclusion
         // that actually emptied the domain rather than a bound that merely happens to border it.
-        List<(string Constraint, double[] Ordinals)> exclusions = new(_exclusions) { (applying, values) };
+        List<(string Constraint, double[] Ordinals)> exclusions = [.. _exclusions, (applying, values)];
 
         return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _nextUp, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, exclusions), applying);
     }
@@ -370,7 +370,7 @@ internal sealed class ContinuousIntervalSpec {
     ///     surviving domain never bit, so naming it would mislead; first-declared order is preserved.
     /// </summary>
     private IReadOnlyList<string> ExcludingConstraintsInEffect() {
-        List<string> names = new();
+        List<string> names = [];
         foreach ((string constraint, double[] values) in _exclusions) {
             if (names.Contains(constraint)) { continue; }
             if (values.Any(WouldAllowIgnoringExclusions)) { names.Add(constraint); }
@@ -399,7 +399,7 @@ internal sealed class ContinuousIntervalSpec {
 
     /// <summary>Names the bounds that pinned the domain to its single value, for the "forbids X, the only value ... leaves" form.</summary>
     private string PinningClause() {
-        List<string> bounds = new();
+        List<string> bounds = [];
         if (_minConstraint is not null) { bounds.Add(_minConstraint); }
         if (_maxConstraint is not null && _maxConstraint != _minConstraint) { bounds.Add(_maxConstraint); }
 

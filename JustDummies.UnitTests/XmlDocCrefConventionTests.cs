@@ -76,7 +76,7 @@ public sealed class XmlDocCrefConventionTests {
         Check.WithCustomMessage($"Only {files.Count} source file(s) found under the JustDummies projects; the scan lost its target.")
              .That(files.Count).IsStrictlyGreaterThan(100);
 
-        List<string> offenders = new();
+        List<string> offenders = [];
         int          scanned   = 0;
 
         foreach (string file in files) {
@@ -111,7 +111,7 @@ public sealed class XmlDocCrefConventionTests {
         Check.WithCustomMessage($"Only {hosts.Count} file(s) declare Any or AnyContext; the scan lost its target.")
              .That(hosts.Count).IsStrictlyGreaterThan(4);
 
-        List<string> offenders = new();
+        List<string> offenders = [];
 
         foreach (string host in hosts) {
             foreach (Match cref in CrefAttribute.Matches(File.ReadAllText(host))) {

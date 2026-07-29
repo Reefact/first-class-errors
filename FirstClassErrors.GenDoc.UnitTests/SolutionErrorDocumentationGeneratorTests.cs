@@ -131,7 +131,7 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
 
     private sealed class RecordingGenerationLogger : IGenerationLogger {
 
-        public List<string> Warnings { get; } = new();
+        public List<string> Warnings { get; } = [];
 
         public void Info(string    message) { }
         public void Warning(string message) { Warnings.Add(message); }
@@ -208,11 +208,11 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
     public void CrossAssemblyDeduplicationWarnsAboutTheCollision() {
         // Setup: the same code declared by two different sources (i.e. two different assemblies' workers).
         RecordingLogger logger = new();
-        List<ErrorDocumentation> documentation = new() {
+        List<ErrorDocumentation> documentation = [
             new ErrorDocumentation { Code = "SHARED", Title = "From A", Source = "AssemblyA" },
             new ErrorDocumentation { Code = "SHARED", Title = "From B", Source = "AssemblyB" },
             new ErrorDocumentation { Code = "UNIQUE", Title = "Alone",  Source = "AssemblyA" }
-        };
+        ];
 
         // Exercise
         IReadOnlyList<ErrorDocumentation> catalog =
@@ -232,10 +232,10 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
     public void CrossAssemblyDeduplicationStaysSilentWithoutDuplicates() {
         // Setup
         RecordingLogger logger = new();
-        List<ErrorDocumentation> documentation = new() {
+        List<ErrorDocumentation> documentation = [
             new ErrorDocumentation { Code = "A", Source = "AssemblyA" },
             new ErrorDocumentation { Code = "B", Source = "AssemblyB" }
-        };
+        ];
 
         // Exercise
         IReadOnlyList<ErrorDocumentation> catalog =
@@ -633,7 +633,7 @@ public sealed class SolutionErrorDocumentationGeneratorTests {
 
     private sealed class RecordingLogger : IGenerationLogger {
 
-        public List<string> Warnings { get; } = new();
+        public List<string> Warnings { get; } = [];
 
         public void Info(string    message) { }
         public void Warning(string message) { Warnings.Add(message); }

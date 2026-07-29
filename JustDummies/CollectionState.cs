@@ -40,7 +40,7 @@ internal sealed class CollectionState<T> {
     }
 
     private static IReadOnlyList<TItem> Append<TItem>(IReadOnlyList<TItem> list, TItem value) {
-        List<TItem> copy = new(list) { value };
+        List<TItem> copy = [.. list, value];
 
         return copy;
     }
