@@ -76,6 +76,7 @@ documentées une seule fois ici plutôt que répétées sur chaque page.
 | [`justdummies-mutation`](justdummies-mutation.fr.md) | Idem pour les packages JustDummies, avec son propre check obligatoire — séparé pour que la future séparation de dépôt soit un déplacement de fichier. |
 | [`analyzers`](analyzers.fr.md) | Dogfood des analyzers Roslyn embarqués, y compris sur le plus vieux compilateur supporté (le floor Roslyn). |
 | [`commit-lint`](commit-lint.fr.md) | Impose la convention Conventional Commits sur chaque commit de PR, via le même script que le hook local. |
+| [`lint`](lint.fr.md) | shellcheck et actionlint sur les fichiers que le compilateur C# ne voit jamais — les scripts POSIX et les définitions de workflow. Zéro constat, `info` compris. |
 | [`adr-check`](adr-check.fr.md) | Consultatif, dispatch manuel : confronte une branche à la base d'ADR (nouvelle décision / remplacement / conflit). Le repli pour les contributeurs sans Claude Code ; ne bloque jamais. |
 
 ### Sécurité & chaîne d'approvisionnement
