@@ -25,6 +25,9 @@ out="${GITHUB_OUTPUT:-/dev/stdout}"
 
 report() { printf '%s\n' "$@" >> "$out"; }
 skip()   { echo "apply-fix: skipping — $1"; report "applied=false" "reason=$1"; exit 0; }
+# The counterpart to skip: every outcome the workflow reads goes out through one of the two,
+# so `applied` is written in exactly two places rather than once per branch of the case.
+applied() { report "applied=true" "impact=$1" "summary=$2"; }
 
 action="$(jq -r '.action // "none"' "$verdict")"
 [ "$action" = "none" ] && skip "no actionable fix"
@@ -45,7 +48,7 @@ case "$action" in
     title="$(jq -r '.pr_title // ""' "$verdict")"
     [ -z "$title" ] && skip "retitle_pr without a pr_title"
     gh pr edit "$pr" --repo "$repo" --title "$title" || skip "gh pr edit failed"
-    report "applied=true" "impact=trivial" "summary=retitled the pull request"
+    applied trivial "retitled the pull request"
     ;;
 
   rewrite_commit_message)
@@ -53,7 +56,7 @@ case "$action" in
     [ -s .da-msg.txt ] || skip "rewrite_commit_message without a commit_message"
     git commit --amend -F .da-msg.txt || skip "git commit --amend failed"
     git push --force-with-lease origin "HEAD:${branch}" || skip "force-push failed"
-    report "applied=true" "impact=trivial" "summary=rewrote the commit header"
+    applied trivial "rewrote the commit header"
     ;;
 
   rebase)
@@ -63,7 +66,7 @@ case "$action" in
       skip "rebase onto main hit conflicts (needs a human)"
     fi
     git push --force-with-lease origin "HEAD:${branch}" || skip "force-push failed"
-    report "applied=true" "impact=trivial" "summary=rebased onto main"
+    applied trivial "rebased onto main"
     ;;
 
   apply_patch)
@@ -77,7 +80,7 @@ case "$action" in
     git commit -F .da-msg.txt || skip "git commit failed"
     # A new commit on top of Dependabot's: a fast-forward, no force needed.
     git push origin "HEAD:${branch}" || skip "push failed"
-    report "applied=true" "impact=code" "summary=applied a code patch"
+    applied code "applied a code patch"
     ;;
 
   *)
