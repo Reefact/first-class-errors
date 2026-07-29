@@ -1,0 +1,223 @@
+# ADR-0060 | Faire primer l'intention énoncée sur le conseil générique d'un analyseur
+
+🌍 🇫🇷 Français (ce fichier) · 🇬🇧 [English](0060-let-stated-intent-outrank-generic-analyzer-advice.md)
+
+**Statut :** Proposé
+**Proposé :** 2026-07-29
+**Décideurs :** Reefact
+
+## Contexte
+
+Le rapport SonarQube Cloud du projet porte 255 constats ouverts. Trois règles en
+représentent 191 — 75 % de ce qui reste — et toutes trois arrivent sous l'espace
+de noms `external_roslyn`, c'est-à-dire qu'elles ne relèvent pas de l'analyse
+propre à SonarQube : ce sont des diagnostics émis par le compilateur .NET et par
+les analyseurs de la BCL pendant la compilation, que le scanner observe via
+MSBuild et republie. Une règle réglée sur `none` n'est jamais émise ; le rapport
+la perd donc à la source, au lieu qu'elle soit écartée dans l'interface du
+serveur.
+
+Les trois règles, et ce que fait aujourd'hui le code qu'elles signalent :
+
+* **`IDE0028` — 147 constats sur 13 projets.** Demande que les initialiseurs de
+  collection écrits `new()` ou `new List<T> { ... }` soient réécrits en
+  expressions de collection, `[...]`. Le dépôt est déjà mixte sur ce point :
+  85 sites emploient la forme à crochets et 147 l'autre, et les deux coexistent
+  au sein des mêmes projets — `JustDummies.UnitTests` à lui seul en compte 32 de
+  la première et 64 de la seconde. La règle se déclenche à sa sévérité par
+  défaut ; elle n'a jamais fait échouer une compilation. Certaines réécritures ne
+  sont pas purement syntaxiques : sur une déclaration typée par la cible telle que
+  `IReadOnlyList<int> pool = [1, 2, 3];`, c'est le compilateur qui choisit le
+  type concret instancié, là où le `new List<int>` actuel le nomme.
+* **`CA1859` — 22 constats.** Demande que les membres non publics typés
+  `IReadOnlyList<T>` ou `IEnumerable<T>` soient retypés vers la collection
+  concrète qu'on les observe retourner, afin que les appelants fassent un appel
+  direct plutôt qu'une répartition par interface. La règle ne se déclenche que
+  sur des membres non publics. Dans le code signalé, l'interface exprime un
+  contrat : une aide construisant un message d'erreur retourne
+  `IReadOnlyList<string>` pour que ses appelants ne puissent pas muter le
+  résultat, et les aides de test prennent `IAny<T>` précisément parce que c'est
+  l'abstraction publique qui est sous test.
+* **`CA1861` — 22 constats, tous dans un projet de test.** Demande qu'un tableau
+  constant passé en argument soit hissé dans un champ `static readonly`, pour
+  n'être alloué qu'une fois au lieu d'une fois par appel. Les arguments signalés
+  sont les valeurs attendues d'assertions et les listes de cas de générateurs de
+  propriétés, écrites en ligne à côté de la vérification qui les lit.
+
+Le code visé par ces règles se trouve sur des chemins de construction d'erreurs,
+dans l'outillage de documentation et dans les suites de tests. Rien de tout cela
+n'est un chemin chaud mesuré, et aucune exigence de performance n'est consignée
+à son encontre.
+
+Le dépôt porte déjà les deux précédents entre lesquels cette décision s'inscrit.
+L'ADR-0055 a établi qu'une règle de style que le compilateur sait exprimer est
+redite dans `.editorconfig` et appliquée à la compilation, le fichier DotSettings
+restant la référence pour tout ce que Roslyn ne sait pas exprimer. L'ADR-0058 a
+décliné `CA1510` et choisi une suppression par projet plutôt qu'à l'échelle du
+dépôt, au motif exprès que les projets capables d'honorer une règle doivent la
+conserver. Par ailleurs, les règles de codage du dépôt tranchent déjà un
+arbitrage performance-contre-invariant en faveur de l'invariant : les objets
+valeur et les résultats restent des classes validantes plutôt que des structures,
+parce que la correction prime l'allocation sur les chemins d'erreur.
+
+## Décision
+
+Le conseil générique d'un analyseur est décliné — par écrit, à côté de sa raison,
+et à la portée la plus étroite qui couvre le constat — partout où le code
+signalé exprime délibérément une intention, la lisibilité et les contrats énoncés
+primant la micro-performance tant qu'aucun besoin mesuré n'est consigné.
+
+## Justification
+
+* **Les règles sont génériques ; le code est spécifique.** Chacune des trois est
+  juste là où elle a été écrite, et fausse ici pour une raison que l'analyseur ne
+  peut pas voir. `CA1859` ne sait pas distinguer une abstraction fortuite d'un
+  contrat : elle lit `IReadOnlyList<string>` comme un oubli alors que c'est tout
+  le propos, et l'honorer offrirait `.Add()` à chaque appelant contre quelques
+  nanosecondes sur un chemin parcouru une fois par conflit de validation.
+  `CA1861` ne sait pas distinguer une boucle chaude d'une assertion : elle
+  éloignerait les valeurs attendues d'un test de la vérification qui les lit,
+  pour économiser une allocation survenant quelques centaines de fois dans une
+  suite. Les désactiver n'est pas esquiver le conseil, c'est y répondre.
+* **Décliner dans la configuration vaut mieux que décliner dans le rapport.**
+  Ces constats naissent de la compilation ; une sévérité `none` les empêche donc
+  d'être produits. La décision se place ainsi dans un fichier qui vit dans le
+  dépôt, que lisent le compilateur et tous les contributeurs — agents compris —
+  et qui porte sa raison en ligne, là où un « ne sera pas corrigé » sur le
+  serveur SonarQube mettrait le raisonnement à un endroit que le code ne montre
+  jamais.
+* **La portée suit la raison, non la commodité.** La justification de `CA1861`
+  porte sur les tests, et tous ses constats sont dans des projets de test : elle
+  est donc déclinée pour les projets de test et laissée active pour le code
+  livré, où un chemin chaud peut réellement la vouloir. `CA1859` et `IDE0028`
+  sont déclinées à l'échelle du dépôt parce que leurs justifications valent
+  partout où elles se déclenchent. Le principe de l'ADR-0058 — un projet capable
+  d'honorer une règle la conserve — est ainsi préservé, tout en reconnaissant
+  qu'ici la raison de décliner est uniforme plutôt qu'un accident de plateforme.
+* **Le volet performance est un arbitrage que ce dépôt a déjà rendu.** Les deux
+  règles de performance réclament la même monnaie : de la lisibilité dépensée
+  pour une vitesse que personne n'a demandée. La règle des objets valeur en
+  classes a tranché le même arbitrage dans le même sens. Le décider une fois, de
+  façon générale, évite de le rejouer à chaque constat.
+* **`IDE0028` est la plus faible des trois, et ne vaut toujours pas d'être
+  appliquée.** Son conseil est défendable et sa syntaxe cible largement adoptée ;
+  ce qui joue contre elle est le coût et la portée, non la justesse — 147
+  modifications sur 13 projets sans aucun changement de comportement, dans un
+  dépôt dont le contrôle de mutation par *pull request* mesure chaque fichier
+  qu'un changement touche. Ses constats sont aussi les moins instructifs : le
+  code se contredit déjà lui-même sur ce point, si bien qu'appliquer la règle
+  reviendrait à adopter une convention, non à corriger un défaut — et l'adoption
+  d'une convention se décide délibérément, pas en épuisant l'arriéré d'un
+  analyseur.
+
+## Alternatives envisagées
+
+### Appliquer les trois règles
+
+Élimine 191 constats en s'y conformant, et ne laisse aucune suppression à
+expliquer.
+
+Rejetée parce qu'elle inverse le propos de l'exercice. Deux des trois
+dégraderaient le code qu'elles touchent — l'une en élargissant un contrat de
+lecture seule en contrat mutable, l'autre en séparant les données d'un test de
+l'assertion qui les lit — pour acheter une performance que personne n'a
+demandée. La troisième est une réécriture cosmétique de 147 sites dont le seul
+bénéfice est un rapport plus court.
+
+### Supprimer site par site avec `[SuppressMessage]` et une justification
+
+La portée la plus fine possible, chaque suppression portant sa raison à la ligne
+exacte qui l'a levée.
+
+Rejetée sur le volume et sur le message. 191 attributs ajouteraient plus de
+lignes que les corrections qu'ils remplacent, et répéter un argument 147 fois
+l'énonce 147 fois sans jamais l'énoncer une seule. La raison est ici une
+politique, non une exception locale, et une politique tient en un seul endroit.
+
+### Marquer les constats « ne sera pas corrigé » dans SonarQube Cloud
+
+Ne coûte rien dans le dépôt et vide le rapport immédiatement.
+
+Rejetée parce qu'elle place la décision hors du code. La compilation continuerait
+d'émettre les diagnostics, chaque nouvelle occurrence devrait être écartée à la
+main, et un contributeur lisant les sources ne trouverait aucune trace du
+raisonnement — exactement l'échec que l'ADR-0056 a consigné lorsqu'une règle ne
+vivait que là où les lecteurs du code ne pouvaient pas la voir.
+
+### Décliner `CA1861` à l'échelle du dépôt également
+
+Plus simple, et symétrique des deux autres.
+
+Rejetée parce que la justification ne porte pas si loin. L'argument est qu'un
+littéral à côté de son assertion est plus clair qu'un champ hissé ; dans du code
+livré à l'intérieur d'une boucle, c'est l'argument de la règle qui l'emporte.
+La décliner là où elle n'est pas justifiée échangerait une décision précise
+contre une décision ordonnée, et retirerait le rappel au seul endroit où il
+pourrait compter.
+
+### Converger vers les expressions de collection plutôt que décliner `IDE0028`
+
+Prend acte du caractère déjà mixte du code et le résout dans le sens que
+préfèrent Roslyn et l'écosystème.
+
+Rejetée pour l'instant sur le coût plutôt que sur le fond : c'est le même
+remue-ménage de 147 sites, et le choix d'une convention d'écriture à l'échelle du
+dépôt mérite d'être fait pour lui-même — non comme sous-produit de la
+liquidation d'un arriéré d'analyseur. Rien dans cette ADR n'empêche de le faire
+plus tard.
+
+## Conséquences
+
+### Positives
+
+* 191 constats sur 255 disparaissent, et toute occurrence future disparaît avec
+  eux au lieu de s'accumuler.
+* Le raisonnement vit dans `.editorconfig`, à côté de son effet, lisible par le
+  compilateur et par quiconque — humain ou agent — édite le dépôt.
+* Les deux volets de la politique sont énoncés une fois et peuvent être cités,
+  si bien que le même argument n'est pas rejoué à chaque nouveau constat.
+* `CA1861` reste active là où elle pourrait réellement payer : la décision
+  conserve donc sa propre porte de sortie.
+
+### Négatives
+
+* L'écriture mixte des initialiseurs de collection est gelée : 85 sites à
+  crochets et 147 autres coexistent, et l'analyseur qui les aurait fait converger
+  est éteint. Qui voudra une convention unique devra désormais la décider
+  délibérément.
+* Plus aucun analyseur n'orientera un chemin livré réellement chaud vers un type
+  de retour concret, puisque `CA1859` est éteinte partout. Ce jugement repose
+  désormais entièrement sur l'auteur et le relecteur.
+* Trois règles déclinées, c'est une liste qui peut croître. Chaque ajout exige la
+  même justification, et rien d'autre que la relecture ne l'impose.
+
+### Risques
+
+* S'en tenir au décompte surestime le changement : aucun code n'a été amélioré.
+  La valeur tient ici à une politique consignée et à un rapport qui ne montre
+  plus que ce sur quoi il vaut la peine d'agir.
+* Un contributeur pourrait lire la section des règles déclinées comme une licence
+  d'éteindre tout analyseur gênant. Elle est bornée à trois identifiants de
+  règle, chacun portant sa raison, précisément pour rendre cette lecture
+  difficile à tenir.
+* Si une exigence de performance venait à être consignée sur un chemin couvert
+  par ces règles, la décision devrait y être réexaminée plutôt que supposée
+  toujours valide.
+
+## Actions de suivi
+
+* Décider la convention d'initialiseurs de collection pour elle-même si
+  l'écriture mixte devient gênante, et la consigner comme une décision distincte.
+* Réexaminer la décision sur `CA1859` pour tout chemin de code qui acquerrait une
+  exigence de performance mesurée.
+
+## Références
+
+* ADR-0055 — la redite dans `.editorconfig` des règles de style exprimables par
+  le compilateur, et leur application à la compilation.
+* ADR-0056 — énoncer les règles de codage là où un agent peut s'en saisir, et
+  pourquoi une décision consignée hors de portée du code ne tient pas.
+* ADR-0058 — le refus de `CA1510`, et le principe de portée que cette ADR suit.
+* `.editorconfig` — où vivent les trois règles déclinées, chacune avec sa raison.
+* `CONTRIBUTING.md`, `CLAUDE.md` — les règles de codage, dont l'arbitrage
+  « objets valeur en classes » cité dans la Justification.
