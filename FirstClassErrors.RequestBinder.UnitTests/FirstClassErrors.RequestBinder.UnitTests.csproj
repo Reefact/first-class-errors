@@ -29,6 +29,14 @@
     <!-- Direct reference: Testing references JustDummies privately (PrivateAssets=all), so it does not flow
          transitively; this project uses JustDummies.Any.* directly for arbitrary primitives. -->
     <ProjectReference Include="..\JustDummies\JustDummies.csproj" />
+
+    <!-- Run the JustDummies analyzers on this project (ADR-0061): OutputItemType=Analyzer loads them at
+         build and in the IDE, ReferenceOutputAssembly=false keeps them off the runtime graph, and
+         PrivateAssets=all stops the reference from reaching a consumer of this project. -->
+    <ProjectReference Include="..\JustDummies.Analyzers\JustDummies.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

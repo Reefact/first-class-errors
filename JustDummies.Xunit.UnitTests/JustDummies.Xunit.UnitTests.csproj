@@ -31,6 +31,14 @@
     <!-- The adapter under test, and JustDummies for the values it pins. Deliberately no FirstClassErrors
          reference: the standalone boundary of the package under test stays visible in its own test bed. -->
     <ProjectReference Include="..\JustDummies.Xunit\JustDummies.Xunit.csproj" />
+
+    <!-- Run the JustDummies analyzers on this project (ADR-0061): OutputItemType=Analyzer loads them at
+         build and in the IDE, ReferenceOutputAssembly=false keeps them off the runtime graph, and
+         PrivateAssets=all stops the reference from reaching a consumer of this project. -->
+    <ProjectReference Include="..\JustDummies.Analyzers\JustDummies.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
