@@ -137,6 +137,18 @@ dans son propre contexte Dependabot en lecture seule.
   écrit le code que le job s'apprête à lire, corriger et force-pusher. Les *noms*
   d'auteur et de committer d'un commit sont des valeurs `git config` et se forgent
   librement ; la signature, non.
+- **Un audit de sécurité des workflows signale le déclencheur lui-même, et la réponse
+  est dans le fichier.** La règle `dangerous-triggers` de `zizmor` signale
+  `workflow_run` comme vecteur d'escalade de privilèges, ce que le motif est en
+  général. Il est conservé parce qu'il n'est pas remplaçable — un run `pull_request`
+  levé par Dependabot n'a qu'un token en lecture seule et aucun secret, il ne pourrait
+  ni lire la clé d'API ni pousser — et parce que l'escalade est déjà fermée par les
+  trois propriétés ci-dessus : checkout de la base uniquement, aucune compilation de la
+  dépendance bumpée, identité établie via l'API jusqu'à la pointe signée. C'est plus
+  strict que `dependabot/fetch-metadata`, qui valide le *premier* commit et non la
+  pointe. Le refus est consigné par un `# zizmor: ignore[dangerous-triggers]` en ligne
+  portant sa raison (ADR-0060), pour être répondu là où il se déclenche plutôt que
+  rejoué à chaque exécution.
 
 ## Liens connexes
 
