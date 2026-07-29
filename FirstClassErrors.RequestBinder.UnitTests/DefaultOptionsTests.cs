@@ -19,7 +19,7 @@ public sealed class DefaultOptionsTests {
     }
 
     private static Error BindMissingEmail(RequestBinder bind) {
-        var body = bind.PropertiesOf(MissingEmail());
+        PropertySource<BookingRequest> body = bind.PropertiesOf(MissingEmail());
         body.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
 
         return bind.New(_ => "x").Error!.InnerErrors.Single();
@@ -29,7 +29,7 @@ public sealed class DefaultOptionsTests {
 
     [Fact(DisplayName = "Bind.Request binds with the configured default options — naming and structural codes — without WithOptions.")]
     public void BindRequestUsesTheConfiguredDefault() {
-        var configured = new RequestBinderOptions(new SnakeCaseNameProvider(),
+        RequestBinderOptions configured = new RequestBinderOptions(new SnakeCaseNameProvider(),
                                                   RequestBindingError.DefaultArgumentRequired.WithCode(ErrorCode.Create("ACME_ARGUMENT_REQUIRED")),
                                                   RequestBindingError.DefaultArgumentInvalid.WithCode(ErrorCode.Create("ACME_ARGUMENT_INVALID")));
 
@@ -53,10 +53,10 @@ public sealed class DefaultOptionsTests {
 
     [Fact(DisplayName = "A per-call Bind.WithOptions overrides the configured default.")]
     public void WithOptionsWinsOverTheConfiguredDefault() {
-        var appDefault = new RequestBinderOptions(new SnakeCaseNameProvider(),
+        RequestBinderOptions appDefault = new RequestBinderOptions(new SnakeCaseNameProvider(),
                                                   RequestBindingError.DefaultArgumentRequired.WithCode(ErrorCode.Create("DEFAULT_REQUIRED")),
                                                   RequestBindingError.DefaultArgumentInvalid.WithCode(ErrorCode.Create("DEFAULT_INVALID")));
-        var perCall = new RequestBinderOptions(new SnakeCaseNameProvider(),
+        RequestBinderOptions perCall = new RequestBinderOptions(new SnakeCaseNameProvider(),
                                                RequestBindingError.DefaultArgumentRequired.WithCode(ErrorCode.Create("PERCALL_REQUIRED")),
                                                RequestBindingError.DefaultArgumentInvalid.WithCode(ErrorCode.Create("PERCALL_INVALID")));
 

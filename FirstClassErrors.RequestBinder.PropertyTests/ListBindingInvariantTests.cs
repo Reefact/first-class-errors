@@ -60,8 +60,8 @@ public sealed class ListBindingInvariantTests {
     /// <summary>Binds the generated tokens as a <b>required</b> list and returns the whole outcome.</summary>
     private static Outcome<IReadOnlyList<Token>> BindTokens((string? Raw, bool Fails)[] slots) {
         TokenListRequest request = new(slots.Select(slot => slot.Raw).ToArray());
-        var              binder  = Bind.Request(CommandError.Invalid);
-        var              body    = binder.PropertiesOf(request);
+        RequestBinder binder  = Bind.Request(CommandError.Invalid);
+        PropertySource<TokenListRequest> body    = binder.PropertiesOf(request);
 
         RequiredField<IReadOnlyList<Token>> tokens = body.ListOfSimpleProperties(r => r.Tokens).AsRequired(Token.Parse);
 

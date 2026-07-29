@@ -19,8 +19,8 @@ public sealed class DeferredArgumentPathTests {
     [Fact(DisplayName = "An all-valid bind of scalar and list properties never consults the name provider.")]
     public void AllValidScalarsAndListsNeverConsultTheProvider() {
         CountingNameProvider provider = new();
-        var bind = Bind.WithOptions(new RequestBinderOptions(provider)).Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(new BookingRequest("alice@example.org", "REF-1", "EUR", "3", Stay: null, Tags: new[] { "sea", "spa" }, Guests: null));
+        RequestBinder bind = Bind.WithOptions(new RequestBinderOptions(provider)).Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(new BookingRequest("alice@example.org", "REF-1", "EUR", "3", Stay: null, Tags: new[] { "sea", "spa" }, Guests: null));
 
         RequiredField<EmailAddress>       email    = body.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
         RequiredField<string>             refField = body.SimpleProperty(r => r.Reference).AsRequired();
@@ -36,8 +36,8 @@ public sealed class DeferredArgumentPathTests {
     [Fact(DisplayName = "A failing bind consults the name provider once per failing argument only.")]
     public void FailingBindConsultsTheProviderOncePerFailingArgument() {
         CountingNameProvider provider = new();
-        var bind = Bind.WithOptions(new RequestBinderOptions(provider)).Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(new BookingRequest(GuestEmail: null, "REF-1", "not-a-currency", "3", Stay: null, Tags: null, Guests: null));
+        RequestBinder bind = Bind.WithOptions(new RequestBinderOptions(provider)).Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(new BookingRequest(GuestEmail: null, "REF-1", "not-a-currency", "3", Stay: null, Tags: null, Guests: null));
 
         body.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse); // missing  -> 1 call
         body.SimpleProperty(r => r.Reference).AsRequired();                    // valid    -> 0 calls
@@ -56,8 +56,8 @@ public sealed class DeferredArgumentPathTests {
     [Fact(DisplayName = "A list with one invalid element resolves the list name once; valid elements never build a path.")]
     public void PartiallyInvalidListResolvesTheListNameOnce() {
         CountingNameProvider provider = new();
-        var bind = Bind.WithOptions(new RequestBinderOptions(provider)).Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(new BookingRequest("alice@example.org", "REF-1", "EUR", "3", Stay: null, Tags: new[] { "sea", "not a tag", "spa" }, Guests: null));
+        RequestBinder bind = Bind.WithOptions(new RequestBinderOptions(provider)).Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(new BookingRequest("alice@example.org", "REF-1", "EUR", "3", Stay: null, Tags: new[] { "sea", "not a tag", "spa" }, Guests: null));
 
         body.SimpleProperty(r => r.GuestEmail).AsRequired(EmailAddress.Parse);
         body.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
@@ -72,8 +72,8 @@ public sealed class DeferredArgumentPathTests {
     [Fact(DisplayName = "A bound complex property resolves its prefix segment exactly once, valid or not.")]
     public void ComplexPropertyResolvesItsPrefixOnce() {
         CountingNameProvider provider = new();
-        var bind = Bind.WithOptions(new RequestBinderOptions(provider)).Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(new BookingRequest("alice@example.org", "REF-1", "EUR", "3", new StayDto("2026-08-01", "2026-08-04"), Tags: null, Guests: null));
+        RequestBinder bind = Bind.WithOptions(new RequestBinderOptions(provider)).Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(new BookingRequest("alice@example.org", "REF-1", "EUR", "3", new StayDto("2026-08-01", "2026-08-04"), Tags: null, Guests: null));
 
         RequiredField<Stay> stay = body.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsRequired(BindStay);
 
@@ -88,8 +88,8 @@ public sealed class DeferredArgumentPathTests {
     [Fact(DisplayName = "Failing nested properties still carry their full, prefixed paths.")]
     public void FailingNestedPropertiesCarryPrefixedPaths() {
         CountingNameProvider provider = new();
-        var bind = Bind.WithOptions(new RequestBinderOptions(provider)).Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(new BookingRequest("alice@example.org", "REF-1", "EUR", "3", new StayDto(CheckIn: null, "not-a-date"), Tags: null, Guests: null));
+        RequestBinder bind = Bind.WithOptions(new RequestBinderOptions(provider)).Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(new BookingRequest("alice@example.org", "REF-1", "EUR", "3", new StayDto(CheckIn: null, "not-a-date"), Tags: null, Guests: null));
 
         body.ComplexProperty(r => r.Stay).FailWith(BookingEnvelopeError.StayInvalid).AsRequired(BindStay);
 
@@ -106,8 +106,8 @@ public sealed class DeferredArgumentPathTests {
 
     [Fact(DisplayName = "A complex-list element failing deep inside carries its indexed, prefixed path.")]
     public void FailingComplexListElementCarriesIndexedPrefixedPath() {
-        var bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
-        var body = bind.PropertiesOf(new BookingRequest("alice@example.org", "REF-1", "EUR", "3", Stay: null, Tags: null,
+        RequestBinder bind = Bind.Request(BookingEnvelopeError.CommandInvalid);
+        PropertySource<BookingRequest> body = bind.PropertiesOf(new BookingRequest("alice@example.org", "REF-1", "EUR", "3", Stay: null, Tags: null,
                                                         Guests: new GuestDto?[] { new("Ada", "ada@example.org"), new(FirstName: null, "no-at-sign") }));
 
         body.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired(BindGuest);
@@ -122,7 +122,7 @@ public sealed class DeferredArgumentPathTests {
     #region Helpers & fixtures
 
     private static Outcome<Stay> BindStay(RequestBinder binder, StayDto dto) {
-        var stay = binder.PropertiesOf(dto);
+        PropertySource<StayDto> stay = binder.PropertiesOf(dto);
 
         RequiredField<BookingDate> checkIn  = stay.SimpleProperty(s => s.CheckIn).AsRequired(BookingDate.Parse);
         RequiredField<BookingDate> checkOut = stay.SimpleProperty(s => s.CheckOut).AsRequired(BookingDate.Parse);
@@ -131,7 +131,7 @@ public sealed class DeferredArgumentPathTests {
     }
 
     private static Outcome<Guest> BindGuest(RequestBinder binder, GuestDto dto) {
-        var guest = binder.PropertiesOf(dto);
+        PropertySource<GuestDto> guest = binder.PropertiesOf(dto);
 
         RequiredField<string>                firstName = guest.SimpleProperty(g => g.FirstName).AsRequired();
         OptionalReferenceField<EmailAddress> email     = guest.SimpleProperty(g => g.Email).AsOptionalReference(EmailAddress.Parse);

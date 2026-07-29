@@ -20,7 +20,7 @@ public sealed class ErrorDescriptionPropertyTests {
     [Fact(DisplayName = "The mandatory messages are trimmed and never keep surrounding whitespace.")]
     public void MandatoryMessagesAreTrimmed() {
         Gen<string> text = Generators.NonBlank();
-        var inputs = (from shortMessage in text
+        Arbitrary<(string shortMessage, string diagnostic)> inputs = (from shortMessage in text
                       from diagnostic in text
                       select (shortMessage, diagnostic)).ToArbitrary();
 
@@ -39,7 +39,7 @@ public sealed class ErrorDescriptionPropertyTests {
     [Fact(DisplayName = "Re-describing with already-trimmed messages is idempotent.")]
     public void NormalizationIsIdempotent() {
         Gen<string> text = Generators.NonBlank();
-        var inputs = (from shortMessage in text
+        Arbitrary<(string shortMessage, string diagnostic)> inputs = (from shortMessage in text
                       from diagnostic in text
                       select (shortMessage, diagnostic)).ToArbitrary();
 
@@ -59,7 +59,7 @@ public sealed class ErrorDescriptionPropertyTests {
         Gen<string?> optionalDetail = Gen.OneOf(Generators.NonBlank().Select(value => (string?)value),
                                                 Generators.Blank().Select(value => (string?)value),
                                                 Gen.Constant((string?)null));
-        var inputs = (from shortMessage in text
+        Arbitrary<(string shortMessage, string diagnostic, string detail)> inputs = (from shortMessage in text
                       from diagnostic in text
                       from detail in optionalDetail
                       select (shortMessage, diagnostic, detail)).ToArbitrary();
