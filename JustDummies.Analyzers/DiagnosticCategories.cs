@@ -19,4 +19,11 @@ internal static class DiagnosticCategories {
     /// </summary>
     public const string Constraints = "JustDummies.Constraints";
 
+    /// <summary>
+    ///     Rules about assembling generators into bigger ones — <c>Combine</c>'s operands, and the element contract a
+    ///     collection generator relies on. What they share is that nothing goes wrong: the composed generator builds,
+    ///     draws and returns a value. It is simply not the value the call site describes.
+    /// </summary>
+    public const string Composition = "JustDummies.Composition";
+
 }

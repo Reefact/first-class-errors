@@ -93,6 +93,17 @@ These rules front-load, to build time, the subset of the library's run-time cons
 | [JD017 EnumUniverseViolation](JD017.en.md) | 🟠 Warning | on | An enum constraint steps outside the declared members — a flag combination without AllowingCombinations(), or an exclusion that empties the universe. |
 | [JD023 ScalarChainAdmitsNoValue](JD023.en.md) | 🟠 Warning | on | An integer chain's constant constraints narrow the domain to nothing — bounds, lattice or allow-list. |
 | [JD024 ConstraintWithNoEffect](JD024.en.md) | 🔵 Info | on | A constraint narrows nothing: an exclusion of a value the domain could never produce, or a bound already implied. The only constraint family the run time never reports. |
+| [JD025 DuplicatePoolValue](JD025.en.md) | 🟠 Warning | on | The same constant is listed twice in a pool; duplicates collapse, so the pool is one value smaller than it reads and the duplicate weights nothing. |
+| [JD026 EmptyRelativeUri](JD026.en.md) | 🟠 Warning | on | A relative URI with zero path segments and no query, fragment or root is the empty reference — the one chain whose failure lands at act time rather than at the arrange line. |
+
+## JustDummies — Composition
+
+These rules are about assembling generators into bigger ones — `Combine`'s operands, and the element contract a collection generator relies on. What they share is that nothing goes wrong: the composed generator builds, draws and returns a value. It is simply not the value the call site describes.
+
+| Rule | Severity | Default | Description |
+|------|----------|---------|-------------|
+| [JD027 UnusedCombineOperand](JD027.en.md) | 🟠 Warning | on | A Combine operand is drawn and thrown away because the composer never reads its parameter. Name the parameter `_` to say the draw is deliberate. |
+| [JD028 InertDistinctness](JD028.en.md) | 🟠 Warning | on | Distinctness is declared over an element type with no value equality, so it is satisfied by construction and the collection can still hold the same value twice. |
 
 ## Configuring
 
