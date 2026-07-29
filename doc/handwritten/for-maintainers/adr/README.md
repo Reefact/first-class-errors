@@ -260,3 +260,4 @@ Optional supporting material:
 | [ADR-0056](0056-state-the-coding-rules-where-an-agent-can-act-on-them.md) | State the coding rules where an agent can act on them, and check them at the edit | Accepted |
 | [ADR-0057](0057-keep-one-dated-line-per-state-an-adr-reached.md) | Keep one dated line per state an ADR reached, and never overwrite one | Accepted |
 | [ADR-0058](0058-suppress-ca1510-while-the-netstandard-floor-stands.md) | Suppress CA1510 while the pre-.NET-6 floor stands | Accepted |
+| [ADR-0059](0059-guard-the-recipe-versus-value-boundary-with-analyzers.md) | Guard the recipe-versus-value boundary with analyzers where the type system cannot reach it | Proposed |
