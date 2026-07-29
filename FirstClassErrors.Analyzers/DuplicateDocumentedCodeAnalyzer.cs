@@ -52,7 +52,7 @@ public sealed class DuplicateDocumentedCodeAnalyzer : DiagnosticAnalyzer {
         if (create is null) { return; }
 
         if (TryGetCodeField(create.Arguments[0].Value, out ISymbol? codeField)) {
-            usagesByCodeField.GetOrAdd(codeField!, _ => new ConcurrentBag<Location>())
+            usagesByCodeField.GetOrAdd(codeField!, _ => [])
                              .Add(method.Locations.FirstOrDefault() ?? Location.None);
         }
     }

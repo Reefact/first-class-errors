@@ -161,7 +161,7 @@ public sealed class CollectionConstraintsAdmitNoValueAnalyzer : DiagnosticAnalyz
             if (argument.ArgumentKind != ArgumentKind.ParamArray) { continue; }
             if (argument.Value is not IArrayCreationOperation { Initializer: { } initializer }) { return false; }
 
-            HashSet<object?> distinct = new();
+            HashSet<object?> distinct = [];
             foreach (IOperation element in initializer.ElementValues) {
                 Optional<object?> constant = GeneratorFacts.Unwrap(element).ConstantValue;
                 if (!constant.HasValue) { return false; }

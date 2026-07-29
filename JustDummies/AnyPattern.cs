@@ -187,8 +187,13 @@ public sealed class AnyPattern : IAny<string>, IHasRandomSource {
         }
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S3267:Loops should be simplified using the \"Where\" LINQ method",
+                                                     Justification =
+                                                         "The loop body MUTATES the very list its condition reads: each accepted value is appended to `excluded`, " +
+                                                         "so a later duplicate in `values` is rejected against the values already taken. A Where clause would read " +
+                                                         "as a filter over a fixed collection, which is precisely what this is not.")]
     private AnyPattern Excluding(IReadOnlyList<string> values) {
-        List<string> excluded = new(_excluded);
+        List<string> excluded = [.. _excluded];
         foreach (string value in values) {
             if (!excluded.Contains(value, StringComparer.Ordinal)) { excluded.Add(value); }
         }

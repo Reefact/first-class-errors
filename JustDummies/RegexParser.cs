@@ -61,7 +61,7 @@ internal sealed class RegexParser {
     }
 
     private static HashSet<char> ExpandCase(HashSet<char> set) {
-        HashSet<char> expanded = new();
+        HashSet<char> expanded = [];
         foreach (char character in set) {
             foreach (char variant in RegexAlphabet.WithBothCases(character)) { expanded.Add(variant); }
         }
@@ -120,14 +120,14 @@ internal sealed class RegexParser {
     }
 
     private RegexNode ParseAlternation() {
-        List<RegexNode> branches = new() { ParseSequence() };
+        List<RegexNode> branches = [ParseSequence()];
         while (Eat('|')) { branches.Add(ParseSequence()); }
 
         return branches.Count == 1 ? branches[0] : new RegexAlternation(branches.ToArray());
     }
 
     private RegexNode ParseSequence() {
-        List<RegexNode> parts = new();
+        List<RegexNode> parts = [];
         while (!AtEnd && Peek() != '|' && Peek() != ')') {
             // Anchors are no-ops for a whole-string generator, but only where they are guaranteed to match:
             // '^' at the start and '$' at the end of the pattern or of a top-level alternation branch. A run of
@@ -352,7 +352,7 @@ internal sealed class RegexParser {
         // A '-' marks a balancing group; it manipulates the capture stack (the backreference family), so it is
         // non-regular and refused here even when its target is undefined (see SkipGroupName for why the divergence
         // from the real engine's malformed-pattern verdict on that case is accepted).
-        if (name.Contains("-")) { throw Unsupported("a balancing group '(?<name1-name2>…)'", position); }
+        if (name.Contains('-')) { throw Unsupported("a balancing group '(?<name1-name2>…)'", position); }
 
         // A name opening with a digit is an explicit capture number: the real engine accepts it only as a positive
         // integer with no leading zero, so '0', '01' and '1a' are refused while '1' and '10' pass.
@@ -445,7 +445,7 @@ internal sealed class RegexParser {
         int position = _index;
         _index++; // consume '['
         bool          negated = Eat('^');
-        HashSet<char> set     = new();
+        HashSet<char> set     = [];
         bool          first   = true;
 
         while (true) {

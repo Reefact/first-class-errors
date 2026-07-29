@@ -71,7 +71,7 @@ internal sealed class ErrorDocumentationBuilder :
     #region Fields declarations
 
     private readonly ErrorDocumentation    _doc         = new();
-    private readonly List<ErrorDiagnostic> _diagnostics = new();
+    private readonly List<ErrorDiagnostic> _diagnostics = [];
 
     #endregion
 

@@ -78,7 +78,7 @@ public static class CatalogDiffer {
             if (string.IsNullOrWhiteSpace(entry.Code)) { continue; }
 
             string code = entry.Code.Trim();
-            if (!byCode.ContainsKey(code)) { byCode.Add(code, entry); }
+            byCode.TryAdd(code, entry);
         }
 
         return byCode;
@@ -125,7 +125,7 @@ public static class CatalogDiffer {
             if (string.IsNullOrWhiteSpace(key.Key)) { continue; }
 
             string name = key.Key.Trim();
-            if (!byKey.ContainsKey(name)) { byKey.Add(name, key); }
+            byKey.TryAdd(name, key);
         }
 
         return byKey;

@@ -34,7 +34,7 @@ public sealed class AnyDateTimeOffsetOffsetTests {
     public void WithOffsetBetweenBounds() {
         TimeSpan          min  = TimeSpan.FromHours(-5);
         TimeSpan          max  = TimeSpan.FromHours(5);
-        HashSet<TimeSpan> seen = new();
+        HashSet<TimeSpan> seen = [];
         for (int i = 0; i < SampleCount; i++) {
             DateTimeOffset value = Any.DateTimeOffset().WithOffsetBetween(min, max).Generate();
             Check.That(value.Offset >= min && value.Offset <= max).IsTrue();
@@ -108,7 +108,7 @@ public sealed class AnyDateTimeOffsetOffsetTests {
         DateTimeOffset utc      = new(2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
         DateTimeOffset plusFive = new(2021, 1, 1, 0, 0, 0, TimeSpan.FromHours(5));
 
-        HashSet<TimeSpan> seen = new();
+        HashSet<TimeSpan> seen = [];
         for (int i = 0; i < SampleCount; i++) {
             seen.Add(Any.DateTimeOffset().OneOf(utc, plusFive).Generate().Offset);
         }

@@ -40,6 +40,14 @@ internal sealed class CatalogDiffSettings : CatalogSettings {
 /// </remarks>
 internal sealed class CatalogDiffCommand : Command<CatalogDiffSettings> {
 
+    #region Constants
+
+    // The default --fail-on policy, and the value the exit code and the error message are both decided against.
+    // Named because the three readings must agree: parse, decide, report.
+    private const string FailOnBreaking = "breaking";
+
+    #endregion
+
     #region Fields
 
     private readonly ICatalogSnapshotSource        _snapshotSource;
@@ -79,8 +87,8 @@ internal sealed class CatalogDiffCommand : Command<CatalogDiffSettings> {
             string           configDir     = Path.GetDirectoryName(configPath) ?? Directory.GetCurrentDirectory();
 
             // Validate the policy and report options before the (expensive) extraction runs, so a typo fails fast.
-            string failOn = (settings.FailOn ?? "breaking").Trim().ToLowerInvariant();
-            if (failOn is not ("breaking" or "any" or "none")) {
+            string failOn = (settings.FailOn ?? FailOnBreaking).Trim().ToLowerInvariant();
+            if (failOn is not (FailOnBreaking or "any" or "none")) {
                 logger.Error($"Unknown --fail-on value '{settings.FailOn}'. Use breaking, any or none.");
 
                 return 1;
@@ -114,13 +122,13 @@ internal sealed class CatalogDiffCommand : Command<CatalogDiffSettings> {
             });
 
             bool violated = failOn switch {
-                "breaking" => diff.HasChangesAtOrAbove(CatalogChangeImpact.Breaking),
-                "any"      => !diff.IsEmpty,
-                _          => false
+                FailOnBreaking => diff.HasChangesAtOrAbove(CatalogChangeImpact.Breaking),
+                "any"          => !diff.IsEmpty,
+                _              => false
             };
 
             if (violated) {
-                logger.Error(failOn == "breaking"
+                logger.Error(failOn == FailOnBreaking
                                  ? $"The catalog has {diff.BreakingChanges.Count} breaking change(s) against the baseline. Fix them, or accept them deliberately with 'fce catalog update'."
                                  : $"The catalog has {diff.Changes.Count} change(s) against the baseline. Accept them with 'fce catalog update'.");
 

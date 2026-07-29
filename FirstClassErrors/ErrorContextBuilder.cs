@@ -11,7 +11,7 @@ public sealed class ErrorContextBuilder {
 
     #region Fields
 
-    private readonly Dictionary<ErrorContextKey, object?> _values = new();
+    private readonly Dictionary<ErrorContextKey, object?> _values = [];
 
     #endregion
 

@@ -157,10 +157,10 @@ internal sealed class CancellingSnapshotSource : ICatalogSnapshotSource {
 /// <summary>A logger that records each message per level, so tests can assert what the command reported.</summary>
 internal sealed class RecordingLogger : IGenerationLogger {
 
-    public List<string> Infos    { get; } = new();
-    public List<string> Warnings { get; } = new();
-    public List<string> Errors   { get; } = new();
-    public List<string> Debugs   { get; } = new();
+    public List<string> Infos    { get; } = [];
+    public List<string> Warnings { get; } = [];
+    public List<string> Errors   { get; } = [];
+    public List<string> Debugs   { get; } = [];
 
     public void Info(string    message) { Infos.Add(message); }
     public void Warning(string message) { Warnings.Add(message); }
@@ -172,8 +172,8 @@ internal sealed class RecordingLogger : IGenerationLogger {
 /// <summary>An output sink that records what would have been written, instead of touching the console or disk.</summary>
 internal sealed class RecordingOutputSink : IOutputSink {
 
-    public List<string>               StandardOutput { get; } = new();
-    public Dictionary<string, string> Files          { get; } = new();
+    public List<string>               StandardOutput { get; } = [];
+    public Dictionary<string, string> Files          { get; } = [];
 
     public void WriteStandardOutput(string content) {
         StandardOutput.Add(content);

@@ -28,7 +28,7 @@ public sealed class AnyLatticeConstraintTests {
 
     [Fact(DisplayName = "MultipleOf: draws on the grid within the declared range and reaches both ends.")]
     public void MultipleOfHonoursRangeAndReachesBounds() {
-        HashSet<int> seen = new();
+        HashSet<int> seen = [];
         for (int i = 0; i < SampleCount; i++) {
             int value = Any.Int32().Between(0, 1000).MultipleOf(100).Generate();
             Check.That(value % 100).IsEqualTo(0);
@@ -51,7 +51,7 @@ public sealed class AnyLatticeConstraintTests {
 
     [Fact(DisplayName = "MultipleOf: composes with Except, never yielding an excluded grid point.")]
     public void MultipleOfComposesWithExcept() {
-        HashSet<int> seen = new();
+        HashSet<int> seen = [];
         for (int i = 0; i < SampleCount; i++) {
             int value = Any.Int32().Between(0, 30).MultipleOf(10).Except(10, 20).Generate();
             Check.That(value % 10).IsEqualTo(0);
@@ -98,7 +98,7 @@ public sealed class AnyLatticeConstraintTests {
 
     [Fact(DisplayName = "MultipleOf: a distinct collection sees the grid cardinality.")]
     public void MultipleOfFeedsCardinality() {
-        HashSet<int> seen = new();
+        HashSet<int> seen = [];
         for (int i = 0; i < SampleCount; i++) { seen.Add(Any.Int32().Between(0, 20).MultipleOf(10).Generate()); }
 
         // Exactly the three grid points are reachable — the cardinality hint a distinct collection relies on.
@@ -123,7 +123,7 @@ public sealed class AnyLatticeConstraintTests {
 
     [Fact(DisplayName = "WithScale: reaches both ends of a narrow grid.")]
     public void WithScaleReachesBounds() {
-        HashSet<decimal> seen = new();
+        HashSet<decimal> seen = [];
         for (int i = 0; i < SampleCount; i++) {
             decimal value = Any.Decimal().Between(0m, 1m).WithScale(1).Generate();
             Check.That(value).IsEqualTo(Math.Round(value, 1, MidpointRounding.ToEven));

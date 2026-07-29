@@ -76,7 +76,7 @@ public sealed class XmlDocCrefConventionTests {
         Check.WithCustomMessage($"Only {files.Count} source file(s) found under the JustDummies projects; the scan lost its target.")
              .That(files.Count).IsStrictlyGreaterThan(100);
 
-        List<string> offenders = new();
+        List<string> offenders = [];
         int          scanned   = 0;
 
         foreach (string file in files) {
@@ -111,7 +111,7 @@ public sealed class XmlDocCrefConventionTests {
         Check.WithCustomMessage($"Only {hosts.Count} file(s) declare Any or AnyContext; the scan lost its target.")
              .That(hosts.Count).IsStrictlyGreaterThan(4);
 
-        List<string> offenders = new();
+        List<string> offenders = [];
 
         foreach (string host in hosts) {
             foreach (Match cref in CrefAttribute.Matches(File.ReadAllText(host))) {
@@ -183,6 +183,11 @@ public sealed class XmlDocCrefConventionTests {
         return positions.ToString();
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1870:Use a cached 'SearchValues' instance",
+                                                     Justification =
+                                                         "SearchValues<T> arrived in .NET 8 and this suite also runs on the .NET Framework 4.7.2 support floor " +
+                                                         "(ADR-0022), where the type does not exist. IndexOfAny over two characters, run once per cref in a " +
+                                                         "convention test, is not the cost this rule exists to remove.")]
     private static string MemberPath(string cref) {
         int end = cref.IndexOfAny(new[] { '{', '(' });
 

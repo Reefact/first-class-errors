@@ -57,7 +57,7 @@ public sealed class UriProperties {
     ///     The schemes the library is allowed to emit. <c>file</c> is deliberately absent: a file path does not
     ///     round-trip identically across target frameworks, so the unconstrained draw must never reach it.
     /// </summary>
-    private static readonly HashSet<string> EmittableSchemes = new() { "http", "https", "ws", "wss", "ftp", "mailto" };
+    private static readonly HashSet<string> EmittableSchemes = ["http", "https", "ws", "wss", "ftp", "mailto"];
 
     /// <summary>
     ///     Arbitrary hosts the library accepts, drawn from the very alphabet <c>UriSpec</c> draws its own hosts from: a
@@ -158,7 +158,7 @@ public sealed class UriProperties {
                     seed => {
                         // One family in five per draw, so 120 draws leave a miss far below any rate that could make
                         // this flaky, while a hand-written test can only ever assert it for the one seed it picked.
-                        HashSet<string> seen = new();
+                        HashSet<string> seen = [];
                         foreach (Uri value in Expect.Draws(Any.WithSeed(seed).Uri(), 120)) {
                             seen.Add(value.IsAbsoluteUri ? value.Scheme : "relative");
                         }
@@ -276,9 +276,9 @@ public sealed class UriProperties {
                                                                    ? value.Scheme == (testCase.Secure.Value ? "wss" : "ws")
                                                                    : value.Scheme is "ws" or "wss")
                                                            && rendered.StartsWith(value.Scheme + "://" + testCase.Host, StringComparison.Ordinal)
-                                                           && (rendered.IndexOf('?') >= 0) == testCase.Query
-                                                           && rendered.IndexOf('#') < 0
-                                                           && rendered.IndexOf('@') < 0;
+                                                           && rendered.Contains('?') == testCase.Query
+                                                           && !rendered.Contains('#')
+                                                           && !rendered.Contains('@');
                                                 });
                     })
             .QuickCheckThrowOnFailure();
@@ -357,6 +357,17 @@ public sealed class UriProperties {
     }
 
     [Fact(DisplayName = "A relative draw is a relative reference carrying exactly the declared path, query and fragment.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1870:Use a cached 'SearchValues' instance",
+                                                     Justification =
+                                                         "SearchValues<T> arrived in .NET 8 and this suite also runs on the .NET Framework 4.7.2 support floor " +
+                                                         "(ADR-0022, build/Net472TestFloor.props), where the type does not exist. The rule is right on net10.0 only; " +
+                                                         "IndexOfAny over a two-character array carries the same meaning on both legs. Same downlevel wall as " +
+                                                         "SYSLIB1045 and CA1510 (ADR-0058).")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1865:Use char overload",
+                                                     Justification =
+                                                         "string.StartsWith(char) is not on the .NET Framework 4.7.2 support floor this suite also runs on " +
+                                                         "(ADR-0022): measured, the net472 leg rejects it with CS1503, cannot convert from 'char' to 'string'. " +
+                                                         "The explicit StringComparison.Ordinal overload compiles on both legs and states the comparison it uses.")]
     public void RelativeDrawsAreRelativeReferences() {
         Gen<(int? Segments, bool Rooted, bool Query, bool Fragment)> cases =
             from segments in Optional(Generators.Count(6))
@@ -389,8 +400,8 @@ public sealed class UriProperties {
                                                            && reference.Length > 0
                                                            && (!testCase.Rooted || reference.StartsWith("/", StringComparison.Ordinal))
                                                            && (testCase.Segments.HasValue ? segments == testCase.Segments.Value : segments <= 2)
-                                                           && (reference.IndexOf('?') >= 0) == testCase.Query
-                                                           && (reference.IndexOf('#') >= 0) == testCase.Fragment;
+                                                           && reference.Contains('?') == testCase.Query
+                                                           && reference.Contains('#') == testCase.Fragment;
                                                 });
                     })
             .QuickCheckThrowOnFailure();

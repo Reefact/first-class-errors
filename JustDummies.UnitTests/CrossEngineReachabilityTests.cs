@@ -198,7 +198,7 @@ public sealed class CrossEngineReachabilityTests {
 
     /// <summary>The builder names, one theory row each — a serializable key so every builder is an isolated test.</summary>
     public static TheoryData<string> CaseNames() {
-        TheoryData<string> data = new();
+        TheoryData<string> data = [];
         foreach (ReachabilityCase one in AllCases) { data.Add(one.Name); }
 
         return data;
@@ -420,7 +420,7 @@ internal sealed class IntervalCase<T> : ReachabilityCase {
     private (double Min, double Max, HashSet<T> Seen) Sample(IAny<T> generator, int count) {
         double     min  = double.PositiveInfinity;
         double     max  = double.NegativeInfinity;
-        HashSet<T> seen = new();
+        HashSet<T> seen = [];
 
         for (int i = 0; i < count; i++) {
             T      value  = generator.Generate();

@@ -25,6 +25,11 @@ namespace FirstClassErrors.RequestBinder.Benchmarks;
 [SimpleJob(RunStrategy.Throughput, launchCount: 1, warmupCount: 3, iterationCount: 7)]
 public class BinderBenchmarks {
 
+    // The two fixture values every payload is built from. Named so a benchmark comparing two shapes is
+    // demonstrably feeding them the same input: a drifting literal would silently compare different work.
+    private const string SampleEmail = "guest@example.org";
+    private const string SampleDate  = "2026-08-01";
+
     private BookingRequest    _fullRequest    = null!;
     private FiveScalarsDto    _fiveScalars    = null!;
     private FiveScalarsDto    _fiveScalarsOneMissing = null!;
@@ -45,37 +50,37 @@ public class BinderBenchmarks {
     [GlobalSetup]
     public void Setup() {
         _fullRequest = new BookingRequest {
-            GuestEmail  = "guest@example.org",
+            GuestEmail  = SampleEmail,
             Reference   = "BK-2026-000123",
             Currency    = "EUR",
             Nights      = 3,
             MaxNights   = 10,
-            Stay        = new StayDto { CheckIn = "2026-08-01", CheckOut = "2026-08-04" },
-            Tags        = new List<string?> { "beach", "family", "late-checkout" },
-            RoomNumbers = new List<int?> { 101, 102, 210 },
-            Guests      = new List<GuestDto?> {
+            Stay        = new StayDto { CheckIn = SampleDate, CheckOut = "2026-08-04" },
+            Tags        = ["beach", "family", "late-checkout"],
+            RoomNumbers = [101, 102, 210],
+            Guests      = [
                 new GuestDto { FirstName = "Ada", Email = "ada@example.org" },
                 new GuestDto { FirstName = "Blaise", Email = null },
-            },
+            ],
         };
         _fiveScalars = new FiveScalarsDto {
-            First  = "guest@example.org",
+            First  = SampleEmail,
             Second = "BK-2026-000123",
             Third  = "EUR",
             Fourth = "beach",
-            Fifth  = "2026-08-01",
+            Fifth  = SampleDate,
         };
         _fiveScalarsOneMissing = new FiveScalarsDto {
-            First  = "guest@example.org",
+            First  = SampleEmail,
             Second = null, // the missing required argument
             Third  = "EUR",
             Fourth = "beach",
-            Fifth  = "2026-08-01",
+            Fifth  = SampleDate,
         };
-        _oneScalar      = new OneScalarDto { First      = "guest@example.org" };
+        _oneScalar      = new OneScalarDto { First      = SampleEmail };
         _oneNullableInt = new OneNullableIntDto { Count = 3 };
-        _listOfTen      = new ListOnlyDto { Items       = new List<string?> { "a1", "b2", "c3", "d4", "e5", "f6", "g7", "h8", "i9", "j10" } };
-        _stay           = new StayDto { CheckIn         = "2026-08-01", CheckOut = "2026-08-04" };
+        _listOfTen      = new ListOnlyDto { Items       = ["a1", "b2", "c3", "d4", "e5", "f6", "g7", "h8", "i9", "j10"] };
+        _stay           = new StayDto { CheckIn         = SampleDate, CheckOut = "2026-08-04" };
         _routeBookingId = "bk_0123456789";
     }
 

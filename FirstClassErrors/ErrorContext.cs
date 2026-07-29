@@ -18,7 +18,7 @@ public sealed class ErrorContext {
 
     #region Static members
 
-    private static readonly Dictionary<ErrorContextKey, object?> EmptyValues = new(0);
+    private static readonly Dictionary<ErrorContextKey, object?> EmptyValues = [];
 
     /// <summary>Represents an empty diagnostic context.</summary>
     public static ErrorContext Empty { get; } = new(EmptyValues);

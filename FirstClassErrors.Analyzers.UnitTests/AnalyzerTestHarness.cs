@@ -71,7 +71,7 @@ internal static class AnalyzerTestHarness {
     }
 
     private static ImmutableArray<MetadataReference> BuildBaseReferences() {
-        List<MetadataReference> references = new();
+        List<MetadataReference> references = [];
 
         // Reference the running runtime's assemblies so snippets resolve System types without pinning a ref pack.
         string trustedAssemblies = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string ?? string.Empty;
@@ -90,7 +90,7 @@ internal static class AnalyzerTestHarness {
     }
 
     private static ImmutableArray<MetadataReference> BuildNet472References() {
-        List<MetadataReference> references = new();
+        List<MetadataReference> references = [];
 
         // The .NET Framework 4.7.2 reference assemblies (including the netstandard facade, so the netstandard2.0 core
         // resolves). The directory is baked in at build time via the Net472ReferenceAssemblies assembly metadata.

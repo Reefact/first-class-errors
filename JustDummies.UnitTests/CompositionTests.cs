@@ -278,7 +278,7 @@ public sealed class CompositionTests {
     public void DerivedGeneratorsDrawFreshValues() {
         IAny<Percentage> generator = Any.Int32().Between(0, 100).As(Percentage.Create);
 
-        HashSet<int> seen = new();
+        HashSet<int> seen = [];
         for (int i = 0; i < 100; i++) {
             seen.Add(generator.Generate().Value);
         }

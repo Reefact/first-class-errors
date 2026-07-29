@@ -18,6 +18,14 @@
          methods, so supplying it would mean shadowing System.ArgumentNullException itself. Suppressed for as
          long as this project targets below .NET 6; see ADR-0058. -->
     <NoWarn>$(NoWarn);CA1510</NoWarn>
+
+    <!-- SYSLIB1045 asks every `new Regex("...")` to become a partial method carrying [GeneratedRegex], so a
+         source generator emits the automaton at compile time. The attribute arrived in .NET 7 and the floor
+         leg is net472, where it does not exist — and the three suites it fires on (AnyPatternTests,
+         XmlDocCrefConventionTests, ConcurrentDrawTests) are all compiled on that leg, none of them being in
+         the net472 <Compile Remove> list below. Same wall as CA1510, same remedy and same expiry: suppressed
+         for as long as this project builds against the floor; see ADR-0058 and ADR-0022. -->
+    <NoWarn>$(NoWarn);SYSLIB1045</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

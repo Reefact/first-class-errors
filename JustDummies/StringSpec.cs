@@ -221,7 +221,7 @@ internal sealed class StringSpec {
     internal StringSpec WithFragment(string fragment, string applying) {
         if (fragment is null) { throw new ArgumentNullException(nameof(fragment)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
-        List<string> fragments = new(_fragments) { fragment };
+        List<string> fragments = [.. _fragments, fragment];
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, fragments,
@@ -301,7 +301,7 @@ internal sealed class StringSpec {
 
         // The applied constraint tags its own values, so a conflict message can name the exclusion that actually
         // emptied an allow-list rather than a shape constraint that merely borders it.
-        List<(string Constraint, string[] Values)> exclusions = new(_exclusions) { (applying, values.ToArray()) };
+        List<(string Constraint, string[] Values)> exclusions = [.. _exclusions, (applying, values.ToArray())];
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
@@ -545,7 +545,7 @@ internal sealed class StringSpec {
     ///     could loosen without changing the verdict.
     /// </summary>
     private IReadOnlyList<string> ConstraintsRejectingAll(IReadOnlyList<string> values) {
-        List<string> culprits = new();
+        List<string> culprits = [];
         foreach ((string constraint, Func<string, bool> admits) in DeclaredConstraints()) {
             if (!values.Any(admits)) { culprits.Add(constraint); }
         }
@@ -588,6 +588,11 @@ internal sealed class StringSpec {
                });
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2249:Consider using String.Contains instead of String.IndexOf",
+                                                     Justification =
+                                                         "string.Contains(string, StringComparison) does not exist on netstandard2.0, which this library targets " +
+                                                         "(ADR-0022). IndexOf with StringComparison.Ordinal is the same comparison and the only spelling that " +
+                                                         "compiles on the shipped asset. Same downlevel wall as CA1510 (ADR-0058).")]
     private IEnumerable<(string Constraint, Func<string, bool> Admits)> Declarations() {
         if (_exactLength is int exact) { yield return (_exactConstraint!, value => value.Length == exact); }
         if (_minLength > 0) { yield return (_minConstraint!, value => value.Length >= _minLength); }
@@ -621,7 +626,7 @@ internal sealed class StringSpec {
     }
 
     private (string Description, bool Several) DescribeFragments() {
-        List<string> parts = new();
+        List<string> parts = [];
         if (_prefix is not null) { parts.Add($"the prefix \"{_prefix}\""); }
         foreach (string fragment in _fragments) { parts.Add($"the contained value \"{fragment}\""); }
         if (_suffix is not null) { parts.Add($"the suffix \"{_suffix}\""); }
