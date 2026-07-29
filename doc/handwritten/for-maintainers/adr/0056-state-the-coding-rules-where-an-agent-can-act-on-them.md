@@ -2,8 +2,9 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0056-state-the-coding-rules-where-an-agent-can-act-on-them.fr.md)
 
-**Status:** Proposed
-**Date:** 2026-07-28
+**Status:** Accepted
+**Proposed:** 2026-07-28
+**Accepted:** 2026-07-29
 **Decision Makers:** Reefact
 
 ## Context
