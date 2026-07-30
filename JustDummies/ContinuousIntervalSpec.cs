@@ -114,13 +114,13 @@ internal sealed class ContinuousIntervalSpec {
     /// <summary>Tightens the lower bound; a looser bound than the current one is a no-op.</summary>
     internal ContinuousIntervalSpec WithMinimum(double minimum, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
-        if (double.IsInfinity(minimum)) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying.ToString(), _typeName); }
+        if (double.IsInfinity(minimum)) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
         if (minimum <= _min) { return this; }
 
         if (minimum > _max) {
-            if (_maxConstraint is null) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying.ToString(), _typeName); }
+            if (_maxConstraint is null) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
 
-            throw ConflictingAnyConstraintException.AlreadyBoundedAbove(applying.ToString(), _maxConstraint.ToString(), _render(_max));
+            throw ConflictingAnyConstraintException.AlreadyBoundedAbove(applying, _maxConstraint, _render(_max));
         }
 
         return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _nextUp, minimum, applying, _max, _maxConstraint, _allowed, _allowedConstraint, _exclusions), applying);
@@ -129,13 +129,13 @@ internal sealed class ContinuousIntervalSpec {
     /// <summary>Tightens the upper bound; a looser bound than the current one is a no-op.</summary>
     internal ContinuousIntervalSpec WithMaximum(double maximum, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
-        if (double.IsInfinity(maximum)) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying.ToString(), _typeName); }
+        if (double.IsInfinity(maximum)) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
         if (maximum >= _max) { return this; }
 
         if (maximum < _min) {
-            if (_minConstraint is null) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying.ToString(), _typeName); }
+            if (_minConstraint is null) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
 
-            throw ConflictingAnyConstraintException.AlreadyBoundedBelow(applying.ToString(), _minConstraint.ToString(), _render(_min));
+            throw ConflictingAnyConstraintException.AlreadyBoundedBelow(applying, _minConstraint, _render(_min));
         }
 
         return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _nextUp, _min, _minConstraint, maximum, applying, _allowed, _allowedConstraint, _exclusions), applying);
@@ -162,7 +162,7 @@ internal sealed class ContinuousIntervalSpec {
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (_allowedConstraint == applying) { return this; }
-        if (_allowedConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying.ToString(), _allowedConstraint.ToString()); }
+        if (_allowedConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _allowedConstraint); }
 
         double[] distinct = values.Distinct().ToArray();
 
@@ -326,7 +326,7 @@ internal sealed class ContinuousIntervalSpec {
     private ContinuousIntervalSpec Validated(ContinuousIntervalSpec candidate, ConstraintCall applying) {
         if (candidate.IsSatisfiable()) { return candidate; }
 
-        throw ConflictingAnyConstraintException.NoValueRemains(applying.ToString(), candidate.DescribeExhaustion(applying));
+        throw ConflictingAnyConstraintException.NoValueRemains(applying, candidate.DescribeExhaustion(applying));
     }
 
     private bool IsSatisfiable() {

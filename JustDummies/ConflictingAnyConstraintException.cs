@@ -16,7 +16,7 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     ///     Builds the exception for a constraint that no value of <paramref name="typeName" /> can satisfy — the
     ///     constraint is unsatisfiable on its own, before any other is considered.
     /// </summary>
-    internal static ConflictingAnyConstraintException NoValueSatisfies(string applying, string typeName) {
+    internal static ConflictingAnyConstraintException NoValueSatisfies(ConstraintCall applying, string typeName) {
         return Sentence(applying, $"no {typeName} value satisfies it");
     }
 
@@ -26,28 +26,28 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     ///     <see cref="NoValueSatisfies" />: nothing survives the combination, rather than the constraint admitting
     ///     nothing by itself.
     /// </summary>
-    internal static ConflictingAnyConstraintException NoValueRemains(string applying, string exhaustion) {
+    internal static ConflictingAnyConstraintException NoValueRemains(ConstraintCall applying, string exhaustion) {
         return Sentence(applying, exhaustion);
     }
 
     /// <summary>
     ///     Builds the exception for a constraint that <paramref name="existingConstraint" /> has already settled.
     /// </summary>
-    internal static ConflictingAnyConstraintException AlreadyDefined(string applying, string existingConstraint) {
+    internal static ConflictingAnyConstraintException AlreadyDefined(ConstraintCall applying, ConstraintCall existingConstraint) {
         return Sentence(applying, $"{existingConstraint} is already defined");
     }
 
     /// <summary>
     ///     Builds the exception for a constraint that contradicts an upper bound already declared.
     /// </summary>
-    internal static ConflictingAnyConstraintException AlreadyBoundedAbove(string applying, string existingConstraint, string bound) {
+    internal static ConflictingAnyConstraintException AlreadyBoundedAbove(ConstraintCall applying, ConstraintCall existingConstraint, string bound) {
         return Sentence(applying, $"{existingConstraint} already requires values less than or equal to {bound}");
     }
 
     /// <summary>
     ///     Builds the exception for a constraint that contradicts a lower bound already declared.
     /// </summary>
-    internal static ConflictingAnyConstraintException AlreadyBoundedBelow(string applying, string existingConstraint, string bound) {
+    internal static ConflictingAnyConstraintException AlreadyBoundedBelow(ConstraintCall applying, ConstraintCall existingConstraint, string bound) {
         return Sentence(applying, $"{existingConstraint} already requires values greater than or equal to {bound}");
     }
 
@@ -67,10 +67,15 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     ///         parameters are non-nullable, so a caller that cannot prove a value is CS8604 at build time, which is
     ///         how the one nullable constraint name in the interval specs was found.
     ///     </para>
+    ///     <para>
+    ///         Interpolating a <see cref="ConstraintCall" /> here calls its <c>ToString</c>, which reads back text
+    ///         rendered when the constraint was declared rather than composing any. The rule above therefore holds
+    ///         for the constraints too, by construction rather than by inspection.
+    ///     </para>
     /// </remarks>
     /// <param name="applying">The constraint being declared, as the caller spelled it.</param>
     /// <param name="reason">Why it cannot be applied, written without a final period.</param>
-    private static ConflictingAnyConstraintException Sentence(string applying, string reason) {
+    private static ConflictingAnyConstraintException Sentence(ConstraintCall applying, string reason) {
         return new ConflictingAnyConstraintException($"Cannot apply {applying} because {reason}.");
     }
 

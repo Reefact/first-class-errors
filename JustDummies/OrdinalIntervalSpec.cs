@@ -163,9 +163,9 @@ internal sealed class OrdinalIntervalSpec {
         if (minimum <= _min) { return this; }
 
         if (minimum > _max) {
-            if (_maxConstraint is null) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying.ToString(), _typeName); }
+            if (_maxConstraint is null) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
 
-            throw ConflictingAnyConstraintException.AlreadyBoundedAbove(applying.ToString(), _maxConstraint.ToString(), _render(_max));
+            throw ConflictingAnyConstraintException.AlreadyBoundedAbove(applying, _maxConstraint, _render(_max));
         }
 
         return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, minimum, applying, _max, _maxConstraint, _allowed, _allowedConstraint, _exclusions, _step, _anchor, _stepConstraint), applying);
@@ -174,7 +174,7 @@ internal sealed class OrdinalIntervalSpec {
     /// <summary>Tightens the lower bound to strictly above <paramref name="bound" /> — the exclusive form of <see cref="WithMinimum" />.</summary>
     internal OrdinalIntervalSpec WithMinimumAbove(ulong bound, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
-        if (bound == _domainMax) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying.ToString(), _typeName); }
+        if (bound == _domainMax) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
 
         return WithMinimum(bound + 1, applying);
     }
@@ -185,9 +185,9 @@ internal sealed class OrdinalIntervalSpec {
         if (maximum >= _max) { return this; }
 
         if (maximum < _min) {
-            if (_minConstraint is null) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying.ToString(), _typeName); }
+            if (_minConstraint is null) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
 
-            throw ConflictingAnyConstraintException.AlreadyBoundedBelow(applying.ToString(), _minConstraint.ToString(), _render(_min));
+            throw ConflictingAnyConstraintException.AlreadyBoundedBelow(applying, _minConstraint, _render(_min));
         }
 
         return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, maximum, applying, _allowed, _allowedConstraint, _exclusions, _step, _anchor, _stepConstraint), applying);
@@ -196,7 +196,7 @@ internal sealed class OrdinalIntervalSpec {
     /// <summary>Tightens the upper bound to strictly below <paramref name="bound" /> — the exclusive form of <see cref="WithMaximum" />.</summary>
     internal OrdinalIntervalSpec WithMaximumBelow(ulong bound, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
-        if (bound == _domainMin) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying.ToString(), _typeName); }
+        if (bound == _domainMin) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
 
         return WithMaximum(bound - 1, applying);
     }
@@ -208,7 +208,7 @@ internal sealed class OrdinalIntervalSpec {
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (_allowedConstraint == applying) { return this; }
-        if (_allowedConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying.ToString(), _allowedConstraint.ToString()); }
+        if (_allowedConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _allowedConstraint); }
 
         ulong[] distinct = ordinals.Distinct().ToArray();
 
@@ -255,7 +255,7 @@ internal sealed class OrdinalIntervalSpec {
 
             // _step and _stepConstraint are written as a pair by the constructor and rethreaded as a pair by every
             // rebuild, so a declared step always carries the name of the constraint that declared it.
-            throw ConflictingAnyConstraintException.AlreadyDefined(applying.ToString(), _stepConstraint!.ToString());
+            throw ConflictingAnyConstraintException.AlreadyDefined(applying, _stepConstraint!);
         }
 
         return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, _exclusions, step, anchor, applying), applying);
@@ -372,7 +372,7 @@ internal sealed class OrdinalIntervalSpec {
     private OrdinalIntervalSpec Validated(OrdinalIntervalSpec candidate, ConstraintCall applying) {
         if (candidate.IsSatisfiable()) { return candidate; }
 
-        throw ConflictingAnyConstraintException.NoValueRemains(applying.ToString(), candidate.DescribeExhaustion(applying));
+        throw ConflictingAnyConstraintException.NoValueRemains(applying, candidate.DescribeExhaustion(applying));
     }
 
     private bool IsSatisfiable() {
