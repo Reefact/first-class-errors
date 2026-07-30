@@ -380,7 +380,7 @@ Trois remarques sur la table.
 **`Any.String().NonEmpty()`, pas `Any.String()`.** Sans contrainte, `Any.String()` produit *0 à 16*
 lettres et chiffres ASCII (§14.5) — il peut retourner la chaîne vide. Un paramètre de constructeur
 de type `string` dans un type métier est massivement requis non vide, et un défaut qui échoue
-environ une fois sur seize (mesuré : §17) est exactement l'instabilité que la bibliothèque existe
+environ une fois sur dix-sept (mesuré : §17) est exactement l'instabilité que la bibliothèque existe
 pour supprimer. Même raisonnement pour `Any.Guid().NonEmpty()`.
 
 **Les collections reposent sur la covariance — les types valeur, non.** `IAny<out T>` est
@@ -507,7 +507,8 @@ La lecture des gardes est aussi ce qui rend la composition par fabrique correcte
 nominale : `OrderReference.Create` garde sur `IsNullOrWhiteSpace`, donc le tool émet
 `Any.String().NonEmpty().As(OrderReference.Create)` — une chaîne qui fonctionne — au lieu de
 `Any.String().As(OrderReference.Create)`, mesurée levant `AnyGenerationException` **594 fois sur
-10 000 tirages**, environ une fois sur seize (§17).
+10 000 tirages**, et 557 lors d'une reprise indépendante — environ une fois sur dix-sept, ce que
+prédit un tirage non contraint sur les dix-sept longueurs de 0 à 16 (§17).
 
 Cette seule mesure est la raison d'être de cette section ; D5 + D6 en expose l'argument et les
 alternatives pesées contre lui.
@@ -1556,7 +1557,9 @@ négatifs compris (§14.5).
 Les constructeurs métier rejettent couramment une partie de ce domaine.
 
 Cela a été mesuré sur une vraie fabrique validante de ce dépôt : un generator de chaînes non
-contraint composé dessus a levé 594 fois sur 10 000 tirages, environ une fois sur seize (§17).
+contraint composé dessus a levé 594 fois sur 10 000 tirages, et 557 lors d'une reprise
+indépendante — environ une fois sur dix-sept, le taux que prédit un tirage non contraint sur les
+longueurs de 0 à 16 (§17).
 
 Les clauses de garde en tête de constructeur sont l'idiome de validation dominant dans le code que
 ce tool vise.
@@ -1578,7 +1581,7 @@ et émet un identifiant inexistant pour tout paramètre dont il ne peut pas inf�
 
 Sans lecture des gardes, la sortie par défaut du tool n'est pas seulement imprécise, elle est
 nuisible : elle fabrique, dans la suite de tests du développeur, l'échec intermittent que la
-bibliothèque existe pour éliminer. Un échec sur seize est pire que pas d'outil du tout, parce qu'il
+bibliothèque existe pour éliminer. Un échec sur dix-sept est pire que pas d'outil du tout, parce qu'il
 discrédite la bibliothèque à l'instant du premier usage.
 
 Un ensemble clos et syntaxique borne le risque. Lire des gardes n'est pas inférer une intention ;
@@ -2197,7 +2200,7 @@ branchés. Les résultats ci-dessous sont ce que le harnais a affiché.
 | `.WithX(IAny<T>)` maintient la composition contrainte ouverte | §4.2 | `.WithReference(Any.String().StartingWith("ORD-").As(...))` donne `ORD-x9vDEd2` |
 | Une recette construite **hors** d'un scope rejoue dedans | §8.2, §14.5 | deux exécutions `Any.Reproducibly(20260730, …)` ont produit des valeurs identiques |
 | La chaîne dérivée des gardes ne lève jamais | §5.3 | 500 tirages à travers `OrderReference.Create`, aucune `AnyGenerationException` |
-| La chaîne **sans** lecture des gardes lève par intermittence | §5.3 | **594 / 10 000** tirages ont levé — environ 1 sur 16 |
+| La chaîne **sans** lecture des gardes lève par intermittence | §5.3 | **594 / 10 000** tirages ont levé, et **557 / 10 000** à la reprise contre une bibliothèque plus récente — environ 1 sur 17, conforme aux 588 que prédisent dix-sept longueurs équiprobables |
 | La covariance des collections ne demande aucun adaptateur | §5.2, §14.5 | `Any.ListOf(...)` affecté à `IAny<IReadOnlyList<string>>` |
 | Un nullable de type valeur **exige** bien le saut `.As` | §5.2 | `IAny<int>` n'est pas un `IAny<int?>` ; `.As(value => (int?)value)` compile |
 | Les bornes complémentaires se composent | §5.3 | `.GreaterThanOrEqualTo(0).LessThanOrEqualTo(100)` et `.NonEmpty().WithMaxLength(10)` tirent tous deux |
@@ -2209,6 +2212,7 @@ branchés. Les résultats ci-dessous sont ce que le harnais a affiché.
 | **Chaque ligne du §5.2 compile** | §5.2 | 40 déclarations, chacune affectant l'expression émise à l'`IAny<T>` du paramètre — 0 erreur, 0 warning, nullable activé, warnings-as-errors |
 | **Chaque ligne du §5.2 tient sa promesse** | §5.2 | 3 000 tirages par ligne scalaire : `NonEmpty` jamais vide, `Guid` jamais `Empty`, `Enum` uniquement des membres déclarés, `Uri().Web()` absolue http(s) |
 | **Chaque mapping de garde du §5.3 est solide** | §5.3 | 17 mappings × 4 000 tirages : toute valeur tirée est une valeur que la garde d'origine accepterait |
+| **Chaque fait du §14 redérivé contre une bibliothèque plus récente** | §14 | 29 commits amont plus tard — exceptions retravaillées, parser regex refactoré — les décomptes, l'inventaire des analyzers et le sous-ensemble regex tiennent toujours |
 | Les formes record, fabrique statique et noms atypiques fonctionnent | §4.2, §5.1 | record positionnel, type à constructeur privé plus `Create`, et paramètres `_id` / `@class` compilent et génèrent |
 | Un constructeur sans paramètre casse la forme standard | §4.2 | émettre les deux constructeurs leur donne une seule signature — `CS0111` |
 | Un nom de bibliothèque générique ne peut pas être masqué | §7 | un `AnySet` scaffoldé et `JustDummies.AnySet<T>` coexistent ; l'arité fait partie de l'identité |

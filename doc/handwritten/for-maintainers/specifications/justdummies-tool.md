@@ -371,7 +371,7 @@ Three notes on the table.
 **`Any.String().NonEmpty()`, not `Any.String()`.** Unconstrained, `Any.String()` yields *0 to 16*
 ASCII letters and digits (§14.5) — it can return the empty string. A constructor parameter of type
 `string` in a domain type is overwhelmingly required non-empty, and a default that fails roughly
-one call in sixteen (measured: §17) is exactly the flakiness the library exists to remove. Same
+one call in seventeen (measured: §17) is exactly the flakiness the library exists to remove. Same
 reasoning for `Any.Guid().NonEmpty()`.
 
 **Collections rely on covariance — and value types do not.** `IAny<out T>` is covariant, so
@@ -492,7 +492,8 @@ Guard reading is also what makes factory composition correct rather than nominal
 `OrderReference.Create` guards on `IsNullOrWhiteSpace`, so the tool emits
 `Any.String().NonEmpty().As(OrderReference.Create)` — a chain that works — instead of
 `Any.String().As(OrderReference.Create)`, which was measured throwing `AnyGenerationException`
-**594 times in 10 000 draws**, about one in sixteen (§17).
+**594 times in 10 000 draws**, and 557 on an independent re-run — about one in seventeen,
+which is what an unconstrained draw over the seventeen lengths 0 to 16 predicts (§17).
 
 That single measurement is why this section exists at all; D5 + D6 sets out the argument and the
 alternatives weighed against it.
@@ -817,7 +818,7 @@ sweep. In v1.0 `NamingOptions` carries a single fixed pattern, `Any{Type}`.
   (§13.7): a rule and the snippet that tests it, both written by the same author, share the same
   misconception and pass together; code written for other reasons does not. `ErrorCode.Create` in
   the current repository is the canonical case — it guards on `IsNullOrWhiteSpace`, so without
-  §5.3 the scaffolded code fails about one call in sixteen, which no golden file would reveal.
+  §5.3 the scaffolded code fails about one call in seventeen, which no golden file would reveal.
   In a repository without such types, use any validating value object with a static factory.
 * **Asset-selection test.** Scaffold against a `netstandard2.0`-asset consumer and a `net8.0`-asset
   consumer for a type with a `DateOnly` parameter, and assert the first produces a TODO **marked
@@ -1504,7 +1505,8 @@ including negatives (§14.5).
 Domain constructors commonly reject part of that domain.
 
 This was measured on a real validating factory from this repository: an unconstrained string
-generator composed onto it threw 594 times in 10 000 draws, roughly one in sixteen (§17).
+generator composed onto it threw 594 times in 10 000 draws, and 557 on an independent re-run —
+roughly one in seventeen, the rate an unconstrained draw over the lengths 0 to 16 predicts (§17).
 
 Guard clauses at the head of a constructor are the dominant validation idiom in the code this tool
 targets.
@@ -1526,7 +1528,7 @@ an identifier that does not exist for any parameter whose generator it cannot in
 
 Without guard reading the tool's default output is not merely imprecise, it is harmful: it
 manufactures, inside the developer's test suite, the intermittent failure the library exists to
-eliminate. One failure in sixteen is worse than no tool at all, because it discredits the library
+eliminate. One failure in seventeen is worse than no tool at all, because it discredits the library
 at the moment of first use.
 
 A closed, syntactic set bounds the risk. Reading guards is not inference about intent; each
@@ -2116,7 +2118,7 @@ in. The results below are what the harness printed.
 | `.WithX(IAny<T>)` keeps constrained composition open | §4.2 | `.WithReference(Any.String().StartingWith("ORD-").As(...))` yields `ORD-x9vDEd2` |
 | A recipe built **outside** a scope still replays inside it | §8.2, §14.5 | two `Any.Reproducibly(20260730, …)` runs produced identical values |
 | The guard-derived chain never throws | §5.3 | 500 draws through `OrderReference.Create`, no `AnyGenerationException` |
-| The chain **without** guard reading throws intermittently | §5.3 | **594 / 10 000** draws threw — about 1 in 16 |
+| The chain **without** guard reading throws intermittently | §5.3 | **594 / 10 000** draws threw, and **557 / 10 000** on a re-run against a later library — about 1 in 17, matching the 588 predicted by seventeen equiprobable lengths |
 | Collection covariance needs no adapter | §5.2, §14.5 | `Any.ListOf(...)` assigned to `IAny<IReadOnlyList<string>>` |
 | A value-type nullable **does** need the `.As` hop | §5.2 | `IAny<int>` is not an `IAny<int?>`; `.As(value => (int?)value)` compiles |
 | Complementary bounds compose | §5.3 | `.GreaterThanOrEqualTo(0).LessThanOrEqualTo(100)` and `.NonEmpty().WithMaxLength(10)` both draw |
@@ -2128,6 +2130,7 @@ in. The results below are what the harness printed.
 | **Every row of §5.2 compiles** | §5.2 | 40 declarations, each assigning the emitted expression to the parameter's own `IAny<T>` — 0 errors, 0 warnings, nullable on, warnings-as-errors |
 | **Every row of §5.2 keeps its promise** | §5.2 | 3 000 draws per scalar row: `NonEmpty` never empty, `Guid` never `Empty`, `Enum` only declared members, `Uri().Web()` absolute http(s) |
 | **Every guard mapping of §5.3 is sound** | §5.3 | 17 mappings × 4 000 draws: every value drawn is one the original guard would accept |
+| **Every §14 fact re-derived against a later library** | §14 | 29 upstream commits later — reworked exceptions, refactored regex parser — the counts, the analyzer inventory and the regex subset all still hold |
 | The record, static-factory and odd-name shapes work | §4.2, §5.1 | positional record, a type with only a private constructor plus `Create`, and `_id` / `@class` parameters all compile and generate |
 | A zero-parameter constructor breaks the standard shape | §4.2 | emitting both constructors gives them one signature — `CS0111` |
 | A generic library name cannot be shadowed | §7 | a scaffolded `AnySet` and `JustDummies.AnySet<T>` coexist; arity is part of the identity |
