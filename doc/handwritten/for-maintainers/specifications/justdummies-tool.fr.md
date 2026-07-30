@@ -1101,7 +1101,10 @@ grep -n "#if NET8_0_OR_GREATER" JustDummies/Any.Primitive.cs
 # 14.2  points d'entrée, et le miroir AnyContext
 grep -hn "public static" JustDummies/Any.*.cs
 grep -n "public " JustDummies/AnyContext.cs
-grep -rhoP "^public (sealed )?class \KAny\w+" JustDummies/*.cs | sort
+# Les noms de types AVEC leur arité. `abstract` compte — AnyCollection n'est pas sealed, et un
+# motif n'acceptant que `sealed` sous-compte d'une unité. L'arité est ce dont le contrôle de
+# masquage du §7 a besoin : 8 noms génériques ne peuvent pas entrer en collision, les 32 autres si.
+grep -rhoP "^public (?:sealed |abstract )?class \KAny\w+(?:<[^>]*>)?" JustDummies/*.cs | sort -u
 
 # 14.3  surfaces de contraintes
 grep -oP "public AnyInt32 \K\w+(?=\()" JustDummies/AnyInt32.cs | sort -u
@@ -2014,6 +2017,10 @@ branchés. Les résultats ci-dessous sont ce que le harnais a affiché.
 | Les regex de validation réalistes sortent du sous-ensemble supporté | §5.3 | 4 sur 5 rejetées : lookahead, limite de mot, backreference, catégorie Unicode |
 | Un motif non supporté lève à la **construction**, pas au `Generate()` | §5.3 | donc le constructeur sans paramètre émis lèverait avant qu'un `With…` puisse surcharger |
 | Les generators de collection ne portent aucune contrainte de longueur | §5.3 | `AnyList<T>` expose `WithCount`, `WithCountBetween`, `WithMinCount`, `WithMaxCount` — pas de `WithLength` |
+| **Chaque ligne du §5.2 compile** | §5.2 | 40 déclarations, chacune affectant l'expression émise à l'`IAny<T>` du paramètre — 0 erreur, 0 warning, nullable activé, warnings-as-errors |
+| **Chaque ligne du §5.2 tient sa promesse** | §5.2 | 3 000 tirages par ligne scalaire : `NonEmpty` jamais vide, `Guid` jamais `Empty`, `Enum` uniquement des membres déclarés, `Uri().Web()` absolue http(s) |
+| **Chaque mapping de garde du §5.3 est solide** | §5.3 | 17 mappings × 4 000 tirages : toute valeur tirée est une valeur que la garde d'origine accepterait |
+| Les formes record, fabrique statique et noms atypiques fonctionnent | §4.2, §5.1 | record positionnel, type à constructeur privé plus `Create`, et paramètres `_id` / `@class` compilent et génèrent |
 | Un constructeur sans paramètre casse la forme standard | §4.2 | émettre les deux constructeurs leur donne une seule signature — `CS0111` |
 | Un nom de bibliothèque générique ne peut pas être masqué | §7 | un `AnySet` scaffoldé et `JustDummies.AnySet<T>` coexistent ; l'arité fait partie de l'identité |
 | Un nom non générique, si | §7 | `AnyPattern` dans le namespace de la cible résout vers le type scaffoldé, pas celui de la bibliothèque |

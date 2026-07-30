@@ -1069,7 +1069,10 @@ grep -n "#if NET8_0_OR_GREATER" JustDummies/Any.Primitive.cs
 # 14.2  entry points, and the AnyContext mirror
 grep -hn "public static" JustDummies/Any.*.cs
 grep -n "public " JustDummies/AnyContext.cs
-grep -rhoP "^public (sealed )?class \KAny\w+" JustDummies/*.cs | sort
+# Type names WITH their arity. `abstract` matters — AnyCollection is not sealed, and a pattern
+# that only allows `sealed` under-counts by one. The arity is what §7's shadowing check needs:
+# 8 generic names cannot collide with a scaffolded Any{Type}, the other 32 can.
+grep -rhoP "^public (?:sealed |abstract )?class \KAny\w+(?:<[^>]*>)?" JustDummies/*.cs | sort -u
 
 # 14.3  constraint surfaces
 grep -oP "public AnyInt32 \K\w+(?=\()" JustDummies/AnyInt32.cs | sort -u
@@ -1943,6 +1946,10 @@ in. The results below are what the harness printed.
 | Realistic validation regexes fall outside the supported subset | §5.3 | 4 of 5 rejected: lookahead, word boundary, backreference, Unicode category |
 | An unsupported pattern throws at **construction**, not at `Generate()` | §5.3 | so the emitted parameterless constructor would throw before any `With…` could override it |
 | Collection generators carry no length constraint | §5.3 | `AnyList<T>` exposes `WithCount`, `WithCountBetween`, `WithMinCount`, `WithMaxCount` — no `WithLength` |
+| **Every row of §5.2 compiles** | §5.2 | 40 declarations, each assigning the emitted expression to the parameter's own `IAny<T>` — 0 errors, 0 warnings, nullable on, warnings-as-errors |
+| **Every row of §5.2 keeps its promise** | §5.2 | 3 000 draws per scalar row: `NonEmpty` never empty, `Guid` never `Empty`, `Enum` only declared members, `Uri().Web()` absolute http(s) |
+| **Every guard mapping of §5.3 is sound** | §5.3 | 17 mappings × 4 000 draws: every value drawn is one the original guard would accept |
+| The record, static-factory and odd-name shapes work | §4.2, §5.1 | positional record, a type with only a private constructor plus `Create`, and `_id` / `@class` parameters all compile and generate |
 | A zero-parameter constructor breaks the standard shape | §4.2 | emitting both constructors gives them one signature — `CS0111` |
 | A generic library name cannot be shadowed | §7 | a scaffolded `AnySet` and `JustDummies.AnySet<T>` coexist; arity is part of the identity |
 | A non-generic one is | §7 | `AnyPattern` in the target's namespace resolves to the scaffolded type, not the library's |
