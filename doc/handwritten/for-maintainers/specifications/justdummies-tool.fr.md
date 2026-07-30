@@ -25,6 +25,7 @@ de `Reefact/first-class-errors`.
 * **§15, c'est le raisonnement.** Huit enregistrements de décision au format ADR de ce dépôt, tenus
   dans la spécification parce que le dépôt qui devrait les accueillir n'existe pas encore. À lire
   quand on veut savoir *pourquoi*, ou quand on est tenté de revenir sur une décision du §2.
+* **§16, c'est la frontière de la v1.0.** Ce qui est reporté, et ce qui a été abandonné net.
 * **§17, ce sont les preuves.** Le squelette émis du §4.1 a été compilé et exécuté contre la vraie
   bibliothèque, et les deux affirmations contestées ont été mesurées. Le §17.2 dit comment tout
   rejouer.
@@ -82,8 +83,8 @@ valeurs valides ; le **tool** rend le test concis.
 
 ## 2. Décisions
 
-Ce sont les décisions porteuses. Neuf d'entre elles portent un enregistrement de décision complet
-au §15 — contexte, argument, alternatives écartées, conséquences. Cette table en est l'index ; elle
+Ce sont les décisions porteuses. Neuf d'entre elles sont couvertes par les huit enregistrements de
+décision du §15 — contexte, argument, alternatives écartées, conséquences ; D5 et D6 en partagent un. Cette table en est l'index ; elle
 ne porte aucun argument propre.
 
 | # | Décision | Pourquoi, en une ligne |
@@ -193,7 +194,12 @@ using JustDummies;
 
 namespace Shop.Domain;
 
-/// <summary>A generator of arbitrary <see cref="Order" /> values.</summary>
+/// <summary>
+///     A generator of arbitrary <see cref="Order" /> values. It draws from the ambient random
+///     context, so a reproducibility scope pins it; to draw from an isolated
+///     <c>Any.WithSeed(...)</c> context, pass that context's generators through the
+///     <c>With…</c> overloads.
+/// </summary>
 public sealed partial class AnyOrder : IAny<Order> {
 
     private readonly IAny<OrderReference>        _reference;
@@ -399,7 +405,7 @@ L'ensemble reconnu est clos :
 | `string.IsNullOrEmpty(p)`, `string.IsNullOrWhiteSpace(p)`, `p.Length == 0`, `p.Length < 1` | `.NonEmpty()` |
 | `p.Length > N` | `.WithMaxLength(N)` |
 | `p.Length < N` | `.WithMinLength(N)` |
-| `p <= 0`, `p < 1` | `.Positive()` |
+| `p <= 0` ; ou `p < 1` sur un type **intégral** | `.Positive()` |
 | `p < 0` | `.GreaterThanOrEqualTo(0)` |
 | `p >= 0` | `.Negative()` |
 | `p == 0` | `.NonZero()` |
@@ -413,11 +419,32 @@ L'ensemble reconnu est clos :
 `Any.String()` non contraint ne tire que des lettres et chiffres ASCII : un tirage non vide ne peut
 jamais être blanc (§14.5).
 
-Les contraintes sont regroupées par **axe** — longueur, intervalle, jeu de caractères, motif. Si
-deux gardes reconnues atterrissent sur le même axe, **les deux sont abandonnées** et le paramètre
-est signalé `guards not combined` ; le développeur voit le generator neutre et la console lui dit
-d'aller voir. C'est le seul endroit où le moteur pourrait émettre une chaîne que la bibliothèque
-rejette à l'exécution par `ConflictingAnyConstraintException`, et cette règle l'élimine.
+Les contraintes reconnues **se composent quand elles bornent des choses différentes, et sont
+abandonnées quand elles se heurtent**. Deux gardes posant une borne inférieure et une borne
+supérieure sont complémentaires — `.NonEmpty()` avec `.WithMaxLength(10)`, ou
+`.GreaterThanOrEqualTo(0)` avec `.LessThanOrEqualTo(100)` — et les deux sont conservées. C'est
+l'idiome d'intervalle borné ordinaire, écrit en deux gardes consécutives ; l'écarter rendrait la
+lecture des gardes inutile pour le cas qu'elle rencontre le plus souvent. Les deux compositions ont
+été vérifiées contre la bibliothèque (§17).
+
+Deux gardes posant *la même* borne, ou un jeu de caractères contre un autre, sont inconciliables :
+les deux sont abandonnées et le paramètre est signalé `guards not combined`. Une borne inférieure
+au-dessus d'une borne supérieure aussi — la bibliothèque rejette cette chaîne par
+`ConflictingAnyConstraintException`, et `JD023` la signale à la compilation (§17), mais le moteur ne
+doit pas l'émettre pour autant.
+
+Une **garde de motif reconnue est exclusive**. `Any.StringMatching(...)` retourne un generator
+n'exposant que `DifferentFrom` et `Except` (§14.3), donc aucune contrainte de longueur ou de jeu de
+caractères ne peut y être chaînée — une telle émission ne compile tout simplement pas. Quand une
+garde de motif est reconnue, elle remplace le generator de base et toute autre contrainte de chaîne
+sur ce paramètre est abandonnée.
+
+Quand deux lignes apparient une même condition, **la plus spécifique gagne**. `p < 1` sur un type
+intégral relève de la ligne `.Positive()` ; sur `decimal`, `double` ou `float`, de la ligne
+`.GreaterThanOrEqualTo(N)`, parce que `.Positive()` admettrait les valeurs entre zéro et un que la
+garde rejette. C'est un tirage rare pour un `decimal` par ailleurs non contraint — mesuré à un sur
+cinq mille — et fréquent dès que le paramètre porte une autre borne (§17). Exactement le profil d'un
+défaut qui survit à un test superficiel.
 
 Chaque contrainte ci-dessus reste soumise à D4. `.Positive()` sur un paramètre `uint` ne se résout
 pas (§14.3) et est ignorée.
@@ -481,6 +508,10 @@ coûte dix secondes, un échec à l'exécution une semaine plus tard lui coûte 
 Le récapitulatif console n'est pas décoratif : c'est le mécanisme qui maintient le tool honnête sur
 ce qu'il a inféré et ce qu'il a deviné.
 
+L'exécution ci-dessous porte sur le même `Order` qu'au §4.1, mais *avant* que `AnyCustomer` ne soit
+scaffoldé — d'où l'unique paramètre resté ouvert. Scaffolder `Customer` puis relancer avec `--force`
+le referme, et ce deux-temps est la façon prévue de traverser un graphe d'agrégats.
+
 ```console
 $ dum generate Order
 
@@ -501,8 +532,9 @@ Analyzing Shop.Domain.Order
 La colonne de droite porte la provenance de chaque expression : vide pour la table de base, `guard`
 quand le §5.3 l'a resserrée, `factory` quand le §5.4 l'a composée, `AnyX` quand un generator
 scaffoldé a été réutilisé, `guards not combined` pour le cas de conflit du §5.3, `no source` quand le
-corps du constructeur était indisponible et qu'aucune garde n'a pu être lue, et `unavailable` quand
-le generator existe dans la bibliothèque mais pas dans l'asset que ce projet résout.
+corps du constructeur était indisponible et qu'aucune garde n'a pu être lue, `unread guards` quand
+le corps lève d'une façon que l'ensemble reconnu n'a pas appariée, et `unavailable` quand le
+generator existe dans la bibliothèque mais pas dans l'asset que ce projet résout.
 
 Cette dernière valeur compte plus qu'il n'y paraît. Sans elle, la dégradation de D4 est
 indiscernable d'une simple ignorance du tool : un paramètre `DateOnly` sur un projet downlevel se
@@ -601,9 +633,12 @@ Nommés explicitement pour ne pas être pris pour des oublis.
 * **Remplissage automatique de graphe d'objets.** La composition est d'un saut, via `Any{T}` ou une
   fabrique à un paramètre, limitée à une profondeur de 3. Au-delà, le développeur l'écrit.
 * **Les invariants que le tool ne peut pas voir.** Le §5.3 lit un ensemble clos d'idiomes de garde.
-  Un constructeur qui valide via une méthode auxiliaire, une bibliothèque `Guard.Against` ou une
-  règle inter-paramètres obtient le generator neutre et une ligne de console. Il n'obtient pas une
-  supposition fausse.
+  Là où le constructeur lève d'une façon que l'ensemble n'apparie pas — règle inter-paramètres,
+  condition arithmétique — le paramètre obtient le generator neutre et le récapitulatif le marque
+  `unread guards`, pour que le développeur sache où regarder. Là où la validation est entièrement
+  déléguée à un helper (`Guard.Against.Null(p)`), il n'y a aucun `throw` à voir dans le corps, et le
+  tool ne peut pas distinguer ce paramètre d'un paramètre non contraint. Dans aucun des deux cas il
+  ne devine.
 * **L'aller-retour.** Le tool ne relit jamais un fichier qu'il a écrit.
 * **Membres `init` / `required`, construction par propriétés.** Constructeur et fabrique statique
   uniquement.
@@ -653,7 +688,11 @@ Un point d'entrée, taillé pour que le futur consommateur IDE puisse l'appeler 
   * le nom de fichier et le texte source complet ;
   * une ligne par paramètre : nom, type affiché, expression émise (ou aucune), et provenance (§6) ;
   * les avertissements, comme le cas de masquage `Any*` du §7 ;
-  * un indicateur « contient au moins un TODO ».
+  * un indicateur « contient au moins un TODO » ;
+  * **l'échec comme donnée, pas comme exception** — un type cible qui ne résout vers rien ou vers
+    plusieurs candidats revient comme un résultat portant cette liste de candidats, de sorte que la
+    CLI le projette sur les codes de sortie du §7 sans rien attraper. Le §11.1 place la résolution
+    du type dans le moteur, donc le modèle doit porter cela ou la frontière fuit des exceptions.
 
 La CLI rend ce modèle ; un code refactoring appliquerait le texte source et ignorerait le reste.
 Rien dans le modèle n'est une chaîne destinée à une console.
@@ -687,7 +726,7 @@ dépendance `JustDummies` (§13.6).
 2. `MSBuildWorkspace.Create()`, ouvrir le projet, prendre sa `Compilation`. Les diagnostics du
    workspace sont remontés, pas avalés. (CLI uniquement.)
 3. Passer la `Compilation` au moteur. Tout ce qui suit est `JustDummies.GenAny`.
-4. Résoudre `JustDummies.Any`, `JustDummies.IAny\`1` et `JustDummies.AnyExtensions` par nom de
+4. Résoudre `JustDummies.Any`, ``JustDummies.IAny`1`` et `JustDummies.AnyExtensions` par nom de
    métadonnée. Absents → le moteur le signale et la CLI sort en `1` (§7).
 5. Résoudre le type cible (§3.2), choisir le constructeur (§5.1).
 6. Par paramètre : table de base (§5.2) → gardes (§5.3) → composition (§5.4) → non résolu (§5.5).
@@ -719,8 +758,10 @@ modification de cette fonction plus une liaison d'options, pas un balayage. En v
 * **Tests unitaires du résolveur.** Construire une `CSharpCompilation` en mémoire avec une référence
   sur le `JustDummies.dll` construit, et asserter la chaîne d'expression émise par paramètre.
   Rapide, sans MSBuild. Couvrir chaque ligne du §5.2, chaque ligne du §5.3, les deux chemins du
-  §5.4 et le repli du §5.5. Inclure le cas non signé (`p <= 0` sur un `uint`) et le cas nullable de
-  type valeur.
+  §5.4 et le repli du §5.5. Inclure le cas non signé (`p <= 0` sur un `uint`), le cas nullable de
+  type valeur, les deux issues de composition du §5.3 (bornes complémentaires conservées, même borne
+  abandonnée), l'exclusivité du motif, et `p < 1` sur un paramètre intégral puis sur un `decimal` —
+  les deux lignes qui ne diffèrent que par le type du paramètre.
 * **Fichiers de référence de l'émetteur.** Un fichier approuvé par forme représentative : aucun
   paramètre, un paramètre, six paramètres, un TODO, une collision de nom, un record positionnel,
   une cible à fabrique statique.
@@ -740,7 +781,8 @@ modification de cette fonction plus une liaison d'options, pas un balayage. En v
   prendre n'importe quel value object validant doté d'une fabrique statique.
 * **Test de sélection d'asset.** Scaffolder contre un consommateur de l'asset `netstandard2.0` et un
   consommateur de l'asset `net8.0` pour un type ayant un paramètre `DateOnly`, et asserter que le
-  premier produit un TODO et le second `Any.DateOnly()`. C'est la preuve exécutable de D4 (§13.8).
+  premier produit un TODO **marqué `unavailable`** — pas seulement un TODO — et le second
+  `Any.DateOnly()`. C'est la preuve exécutable de D4 (§13.8).
 
 **Coquille — `JustDummies.Cli.UnitTests`** : découverte de projet, gestion des options, codes de
 sortie du §7, et rendu du récapitulatif depuis un modèle de résultat figé.
@@ -754,58 +796,78 @@ JustDummies a vocation à rejoindre son propre dépôt avant que ce tool soit co
 exemple. Si la bibliothèque a déménagé, rétablir tout cela là-bas ; ne pas construire le tool contre
 l'infrastructure d'un autre dépôt.
 
-**13.1 Versions de packages épinglées** pour les dépendances du tool. Nouvelles pour le tool :
+### 13.1 Versions de packages épinglées
+
+Pour les dépendances du tool. Nouvelles pour le tool :
 `Microsoft.CodeAnalysis.Workspaces.MSBuild` et `Microsoft.Build.Locator` (CLI uniquement). Déjà
 présentes pour la bibliothèque et ses analyzers : `Microsoft.CodeAnalysis.CSharp` et
 `Spectre.Console.Cli`. *Réalisation actuelle : gestion centralisée des packages dans
 `Directory.Packages.props`.*
 
-**13.2 Une propriété de plancher Roslyn.** `JustDummies.GenAny` doit compiler contre la **même
+### 13.2 Une propriété de plancher Roslyn
+
+`JustDummies.GenAny` doit compiler contre la **même
 version minimale de Roslyn que le package d'analyzers**, et ne pas flotter au-dessus — un assembly
 chargé par le compilateur d'un consommateur échoue silencieusement (`CS8032`) sur un hôte plus
 ancien s'il a été construit contre un Roslyn plus récent. *Réalisation actuelle :
 `RoslynFloorVersion` = `4.8.0`, posée une fois dans `Directory.Build.props` et appliquée avec
 `VersionOverride`.* La CLI n'est **pas** liée par cela : elle héberge son propre compilateur.
 
-**13.3 Imbrication dans la solution.** Si l'hôte utilise un `.sln`, ajouter les deux projets et les
+### 13.3 Imbrication dans la solution
+
+Si l'hôte utilise un `.sln`, ajouter les deux projets et les
 deux projets de test à son `GlobalSection(NestedProjects)`, sous les dossiers de solution source et
 tests. Un projet absent de cette section apparaît en vrac à la racine de la solution au lieu d'être
 groupé avec ses frères. Cela a été manqué puis corrigé après coup à plusieurs reprises ; le vérifier
 à chaque ajout de `.csproj`.
 
-**13.4 Exclusion de la baseline d'API publique.** Ni `JustDummies.GenAny` ni `JustDummies.Cli`
+### 13.4 Exclusion de la baseline d'API publique
+
+Ni `JustDummies.GenAny` ni `JustDummies.Cli`
 n'adhèrent à la baseline d'API publique : les outils ne portent aucune promesse de compatibilité, et
 l'analyzer signalerait toute leur surface comme non déclarée. *Réalisation actuelle : seules les
 bibliothèques publiées importent `build/PublicApiBaseline.props`.*
 
-**13.5 Tests de mutation.** Si l'hôte mesure la mutation sur les projets dont le code est publié ou
+### 13.5 Tests de mutation
+
+Si l'hôte mesure la mutation sur les projets dont le code est publié ou
 s'exécute, les deux projets qualifient. Donner à chacun sa propre configuration — le moteur est la
 cible à forte valeur, la coquille non — et les enregistrer avec les autres. *Réalisation actuelle :
 un JSON par projet sous `build/stryker/`, piloté par un flux dédié, consultatif par pull request et
 imposé par un balayage hebdomadaire.*
 
-**13.6 Un train de publication pour le tool,** distinct de celui de la bibliothèque. Le tool ne
+### 13.6 Un train de publication pour le tool
+
+Distinct de celui de la bibliothèque. Le tool ne
 versionne pas en lockstep avec la bibliothèque (D9), donc il ne doit pas monter sur son train.
 L'étape de packaging du train doit asserter que le `.nupkg` produit ne déclare **aucune dépendance
 `JustDummies`** — la forme exécutable de D9. *Réalisation actuelle : `tools/packaging/pack.sh` avec
 un train par famille de packages et une assertion « standalone » déjà écrite pour le train de la
 bibliothèque.*
 
-**13.7 Les analyzers doivent pouvoir tourner sur le code de l'hôte,** pour que le test sur le code
+### 13.7 Les analyzers doivent pouvoir tourner sur le code de l'hôte
+
+Pour que le test sur le code
 du dépôt (§12) puisse exister. *Réalisation actuelle : le projet d'analyzers est branché sur les
 suites du dépôt lui-même, décision prise après avoir constaté que la suite unitaire des analyzers
 n'attrapait pas cinq règles fausses que le passage sur du vrai code a attrapées immédiatement.*
 
-**13.8 Un moyen de consommer la bibliothèque packagée depuis deux TFM consommateurs,** pour que le
+### 13.8 Deux TFM consommateurs pour la bibliothèque packagée
+
+Pour que le
 test de sélection d'asset (§12) puisse exister : un consommateur en `net8.0` (résout l'asset
 `net8.0`) et un en dessous (résout `netstandard2.0`). *Réalisation actuelle : un projet isolé hors
 solution, multi-ciblé, consommant le `.nupkg` packagé depuis un flux local.*
 
-**13.9 Framework de tests.** *Réalisation actuelle : `xunit.v3`, `NFluent`, `Verify.XunitV3` pour
+### 13.9 Framework de tests
+
+*Réalisation actuelle : `xunit.v3`, `NFluent`, `Verify.XunitV3` pour
 les fichiers de référence, `NSubstitute`.* Tout équivalent convient ; les tests à fichier de
 référence ont besoin d'une bibliothèque de snapshots.
 
-**13.10 Conventions de commit, de branche et de pull request,** et un processus ADR pour le §15.
+### 13.10 Conventions de commit, de branche et de pull request
+
+Et un processus ADR pour le §15.
 *Réalisation actuelle : Conventional Commits avec une liste close de types et de scopes, imposée par
 un hook et par la CI ; ADR sous `doc/handwritten/for-maintainers/adr/` où un agent rédige en
 `Proposed` et le mainteneur accepte.*
@@ -1389,9 +1451,9 @@ le test de sélection d'asset (§12), qui asserte le cas présent et le cas abse
 
 #### Actions de suivi
 
-* La colonne de provenance de la console doit distinguer « non inféré » de « indisponible dans cette
-  compilation » (§6), pour que la dégradation discrète ci-dessus soit visible plutôt que
-  seulement silencieuse.
+* Le §6 porte la valeur de provenance `unavailable` pour cette raison. Conserver un test qui
+  l'asserte : sans lui, la dégradation que cette décision accepte redevient invisible et l'exigence
+  se dégrade en commentaire.
 
 #### Références
 
@@ -1851,16 +1913,20 @@ branchés. Les résultats ci-dessous sont ce que le harnais a affiché.
 |---|---|---|
 | Le squelette spécifié compile tel quel | §4.1 | compile, 0 avertissement |
 | Le chaînage `.WithX` fonctionne et ne perturbe pas une base partagée | D2, §4.2 | deux `.WithStatus` sur une même base restent indépendants |
-| `AnyOrder` est accepté par les seams de composition de la bibliothèque | D2, §2.2 | `Any.ListOf`, `Any.PairOf` et `.As` l'acceptent tous |
+| `AnyOrder` est accepté par les seams de composition de la bibliothèque | D2, §15 | `Any.ListOf`, `Any.PairOf` et `.As` l'acceptent tous |
 | `.WithX(IAny<T>)` maintient la composition contrainte ouverte | §4.2 | `.WithReference(Any.String().StartingWith("ORD-").As(...))` donne `ORD-x9vDEd2` |
 | Une recette construite **hors** d'un scope rejoue dedans | §8.2, §14.5 | deux exécutions `Any.Reproducibly(20260730, …)` ont produit des valeurs identiques |
 | La chaîne dérivée des gardes ne lève jamais | §5.3 | 500 tirages à travers `OrderReference.Create`, aucune `AnyGenerationException` |
 | La chaîne **sans** lecture des gardes lève par intermittence | §5.3 | **594 / 10 000** tirages ont levé — environ 1 sur 16 |
 | La covariance des collections ne demande aucun adaptateur | §5.2, §14.5 | `Any.ListOf(...)` affecté à `IAny<IReadOnlyList<string>>` |
 | Un nullable de type valeur **exige** bien le saut `.As` | §5.2 | `IAny<int>` n'est pas un `IAny<int?>` ; `.As(value => (int?)value)` compile |
+| Les bornes complémentaires se composent | §5.3 | `.GreaterThanOrEqualTo(0).LessThanOrEqualTo(100)` et `.NonEmpty().WithMaxLength(10)` tirent tous deux |
+| Les bornes contradictoires sont rejetées deux fois | §5.3 | `ConflictingAnyConstraintException` à l'exécution, et `JD023` à la **compilation** |
+| Un generator de motif n'admet aucune autre contrainte de chaîne | §5.3 | `Any.StringMatching(...).NonEmpty()` ne compile pas — `CS1061`, `AnyPattern` n'a que `DifferentFrom`/`Except` |
+| `.Positive()` est incorrect pour une garde `p < 1` sur un decimal | §5.3 | 1 tirage sur 5 000 est passé sous 1 sans contrainte ; ~1 sur 5 dès qu'une autre borne resserre |
 | La sortie scaffoldée ne lève aucun diagnostic JD | D3, §12 | 0 diagnostic sur les fichiers émis |
 | Les analyzers étaient réellement chargés | D3 | un fichier de contrôle a levé `JD006` et `JD005` dans le même build |
-| `<auto-generated/>` les éteint | D3, §2.1 | le même fichier de contrôle, ainsi marqué, en a levé **0** — l'erreur `JD005` comprise |
+| `<auto-generated/>` les éteint | D3, §15 | le même fichier de contrôle, ainsi marqué, en a levé **0** — l'erreur `JD005` comprise |
 
 ### 17.2 Comment le rejouer
 
