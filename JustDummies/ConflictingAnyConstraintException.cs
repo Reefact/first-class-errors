@@ -108,6 +108,28 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     }
 
     /// <summary>
+    ///     Builds the exception for a second, different equality on a collection already required to be distinct. One
+    ///     collection is distinct under one equality, so the two cannot both be honoured.
+    /// </summary>
+    internal static ConflictingAnyConstraintException ComparerAlreadyDefined(string applying) {
+        return Sentence(applying, $"a different comparer is already defined by an earlier {applying}");
+    }
+
+    /// <summary>
+    ///     Builds the exception for a value required to be contained twice in a collection required to be distinct.
+    /// </summary>
+    internal static ConflictingAnyConstraintException DuplicateInDistinctCollection(string applying, string value) {
+        return Sentence(applying, $"a distinct collection cannot contain {value} more than once");
+    }
+
+    /// <summary>
+    ///     Builds the exception for more distinct elements than the element generator has distinct values to give.
+    /// </summary>
+    internal static ConflictingAnyConstraintException DistinctElementsExceedCardinality(string applying, string required, string cardinality) {
+        return Sentence(applying, $"{required} required to be distinct exceed the {cardinality} distinct value(s) the element generator can produce");
+    }
+
+    /// <summary>
     ///     Builds the exception for a constraint that contradicts an upper bound already declared.
     /// </summary>
     internal static ConflictingAnyConstraintException AlreadyBoundedAbove(string applying, string existingConstraint, string bound) {
