@@ -33,34 +33,12 @@ once is still prose in the middle of logic.
 
 ## Decision
 
-**Every throw of one of this library's own exceptions goes through a static factory on that
-exception, named after the failure it reports.**
-
-* The factory names a **case**, not a shape of sentence: `NoValueSatisfies`, `NoValueRemains`,
-  `AlreadyDefined`, `GridNudgeExhausted`. A method that names the *grammar* of a message
-  (`Because(applying, reason)`, taking a free-form reason) is not a factory and does not qualify —
-  it is the constructor with a prefix, and its call sites say nothing.
-* This holds **whether or not the message repeats**. A failure reported from one place, once, and
-  for ever still gets a name.
-* Factories are `internal` unless a consumer needs to construct the exception. The exception type
-  keeps its public constructors; nothing about the public surface changes.
-* Where several factories share a sentence, a **private** helper may own it, so the shape exists in
-  one place. Private because it names grammar: every caller must be a named case.
-* **Nothing on the construction path guards its arguments.** ADR-0045 already exempts exception
-  types and the reflection convention skips them, for the reason given there: building an exception
-  must never throw, or the failure being reported is replaced by a failure about reporting it.
-  Non-nullable parameters make the contract the compiler's instead.
-* When naming the case would need more loose arguments than a reader can keep in order, the
-  arguments that belong together become a **value object** — a class, immutable, and on this path
-  unvalidated for the reason above. `ConstraintClaim` (a constraint and what it claims) is the first.
-
-**This applies only to the exceptions this library declares** — the `DummyException` hierarchy:
-`ConflictingAnyConstraintException`, `AnyGenerationException`, `UnsupportedRegexException`. It does
-**not** apply to `System` exceptions or to any type the library does not own. `ArgumentNullException`,
-`ArgumentException` and `ArgumentOutOfRangeException` keep their guard-clause form
-(`if (x is null) { throw new ArgumentNullException(nameof(x)); }`), which ADR-0045 requires and which
-no factory could improve — and which in any case cannot be added to a type the library does not
-declare.
+Every throw of an exception this library declares goes through a static factory on that exception,
+named after the failure it reports — whether or not the message repeats, `internal` unless a
+consumer must construct the exception, guarding nothing because building an exception must never
+throw, and grouping arguments into a value object when naming the case would otherwise take more
+loose parameters than a reader can keep in order — while the `System` exceptions the library does
+not own keep the guard-clause form ADR-0045 requires of them.
 
 ## Rationale
 
@@ -115,20 +93,32 @@ cost no reader of theirs would ever collect.
 
 ## Consequences
 
-* A new failure requires a factory before it can be thrown. That is the intended friction: naming
-  the case is the design step, and it happens before the message is written.
-* The exception types grow. `ConflictingAnyConstraintException` holds the sentence shape for every
-  conflict in the library, which makes it the file to read when a message must change — and the
-  only one.
-* The messages are observable behaviour and the unit suites assert their content, so the conversion
-  is verifiable: a green suite is the byte-for-byte guard that no wording moved.
-* Converting the existing sites touches most of the library. It is done in **functional slices** —
-  the interval specs, the size specs, the `Any*` generators, the collection and URI specs, the
-  pattern engine — chosen so each pull request is a unit a reviewer can name in one sentence.
-* Mutation testing selects per file — the cost of a slice follows the files it touches, not the
-  lines it changed — so a wide slice may exceed the advisory per-PR budget and report no score.
-  That is a consequence of the slicing, never a constraint on it: functional coherence decides the
-  boundaries, and the weekly full sweep is the enforced bar (ADR-0046).
+### Positive
+
+* The call site states which failure occurred and nothing else, so a method about constraints reads
+  as a method about constraints. The message it produces addresses a different reader at a different
+  moment, and separating them lets both be good.
+* The wording of a failure has one home. `ConflictingAnyConstraintException` holds the sentence shape
+  for every conflict in the library, which makes it the only file to read when a message must change.
+* The rule is checkable by inspection: "does this file throw one of our exceptions with `new`?" has a
+  yes/no answer, which is what makes a convention hold.
+
+### Negative
+
+* A new failure requires a factory before it can be thrown. That friction is intended — naming the
+  case is the design step — but it is friction.
+* The exception types grow, and a reader looking for a message must go to the exception rather than
+  to the code that raises it.
+* Converting the existing sites touches most of the library, one functional slice at a time.
+
+### Risks
+
+* A factory named after a *shape of sentence* rather than a failure would satisfy the letter of this
+  rule and defeat it; the first attempt did exactly that and had to be undone. The test is whether
+  the call site reads as a statement of fact without its arguments.
+* Messages are observable behaviour. The unit suites assert their content, so a conversion that
+  altered one would fail — the mitigation is that the suites must stay green through every slice, not
+  merely at the end.
 
 ## References
 

@@ -34,37 +34,12 @@ assemblé une seule fois reste de la prose au milieu de la logique.
 
 ## Décision
 
-**Toute levée d'une exception appartenant à cette bibliothèque passe par une factory statique sur
-cette exception, nommée d'après l'échec qu'elle rapporte.**
-
-* La factory nomme un **cas**, pas une forme de phrase : `NoValueSatisfies`, `NoValueRemains`,
-  `AlreadyDefined`, `GridNudgeExhausted`. Une méthode qui nomme la *grammaire* du message
-  (`Because(applying, reason)`, prenant une raison libre) n'est pas une factory et ne convient pas :
-  c'est le constructeur avec un préfixe, et ses sites d'appel ne disent rien.
-* La règle vaut **que le message se répète ou non**. Un échec rapporté d'un seul endroit, une seule
-  fois, et pour toujours, reçoit quand même un nom.
-* Les factories sont `internal` sauf si un consommateur doit construire l'exception. Le type garde
-  ses constructeurs publics ; rien de la surface publique ne change.
-* Quand plusieurs factories partagent une phrase, un helper **privé** peut la posséder, pour que sa
-  forme existe à un seul endroit. Privé parce qu'il nomme une grammaire : tout appelant doit être un
-  cas nommé.
-* **Rien sur le chemin de construction ne garde ses arguments.** ADR-0045 exempte déjà les types
-  d'exception et la convention par réflexion les ignore, pour la raison qui y est donnée : construire
-  une exception ne doit jamais lever, sinon l'échec rapporté est remplacé par un échec sur le fait de
-  le rapporter. Des paramètres non-nullables confient le contrat au compilateur.
-* Quand nommer le cas demanderait plus d'arguments épars qu'un lecteur ne peut en tenir dans l'ordre,
-  ceux qui vont ensemble deviennent un **value object** — une classe, immuable, et sur ce chemin
-  non validante pour la raison ci-dessus. `ConstraintClaim` (une contrainte et ce qu'elle affirme)
-  est le premier.
-
-**Cela ne concerne que les exceptions déclarées par cette bibliothèque** — la hiérarchie
-`DummyException` : `ConflictingAnyConstraintException`, `AnyGenerationException`,
-`UnsupportedRegexException`. Cela ne s'applique **pas** aux exceptions `System`, ni à aucun type que
-la bibliothèque ne possède pas. `ArgumentNullException`, `ArgumentException` et
-`ArgumentOutOfRangeException` gardent leur forme de clause de garde
-(`if (x is null) { throw new ArgumentNullException(nameof(x)); }`), qu'ADR-0045 impose et qu'aucune
-factory n'améliorerait — et qu'on ne pourrait de toute façon pas greffer sur un type qu'on ne
-déclare pas.
+Toute levée d'une exception que cette bibliothèque déclare passe par une factory statique sur cette
+exception, nommée d'après l'échec qu'elle rapporte — que le message se répète ou non, `internal` sauf
+si un consommateur doit construire l'exception, ne gardant rien parce que construire une exception ne
+doit jamais lever, et regroupant ses arguments en value object quand nommer le cas demanderait plus
+de paramètres épars qu'un lecteur ne peut en tenir dans l'ordre — tandis que les exceptions `System`,
+que la bibliothèque ne possède pas, gardent la forme de clause de garde qu'ADR-0045 leur impose.
 
 ## Justification
 
@@ -122,23 +97,33 @@ percevrait.
 
 ## Conséquences
 
-* Un nouvel échec exige une factory avant de pouvoir être levé. C'est la friction voulue : nommer le
-  cas est l'étape de conception, et elle précède l'écriture du message.
-* Les types d'exception grossissent. `ConflictingAnyConstraintException` porte la forme de phrase de
-  tous les conflits de la bibliothèque, ce qui en fait le fichier à lire quand un message doit
-  changer — et le seul.
-* Les messages sont du comportement observable et les suites unitaires en assertent le contenu : la
-  conversion est donc vérifiable, une suite verte étant la garantie au octet près qu'aucune
-  formulation n'a bougé.
-* Convertir les sites existants touche la majeure partie de la bibliothèque. Cela se fait par
-  **tranches fonctionnelles** — les specs d'intervalle, les specs de taille, les générateurs `Any*`,
-  les specs de collection et d'URI, le moteur de motifs — choisies pour que chaque pull request soit
-  une unité qu'un relecteur peut nommer en une phrase.
-* Les tests de mutation sélectionnent par fichier — le coût d'une tranche suit les fichiers qu'elle
-  touche, pas les lignes qu'elle change — donc une tranche large peut dépasser le budget consultatif
-  par PR et ne remonter aucun score. C'est une conséquence du découpage, jamais une contrainte sur
-  lui : la cohérence fonctionnelle décide des frontières, et le balayage hebdomadaire reste la mesure
-  imposée (ADR-0046).
+### Positives
+
+* Le site d'appel énonce quel échec s'est produit, et rien d'autre : une méthode qui parle de
+  contraintes se lit comme telle. Le message qu'elle produit s'adresse à un autre lecteur, à un autre
+  moment ; les séparer permet aux deux d'être bons.
+* La formulation d'un échec a un seul domicile. `ConflictingAnyConstraintException` porte la forme de
+  phrase de tous les conflits, ce qui en fait le seul fichier à lire quand un message doit changer.
+* La règle se vérifie à l'œil : « ce fichier lève-t-il une de nos exceptions avec `new` ? » a une
+  réponse binaire, et c'est ce qui fait tenir une convention.
+
+### Négatives
+
+* Un nouvel échec exige une factory avant de pouvoir être levé. Cette friction est voulue — nommer le
+  cas est l'étape de conception — mais c'est une friction.
+* Les types d'exception grossissent, et qui cherche un message doit aller à l'exception plutôt qu'au
+  code qui la lève.
+* Convertir les sites existants touche la majeure partie de la bibliothèque, une tranche
+  fonctionnelle à la fois.
+
+### Risques
+
+* Une factory nommée d'après une *forme de phrase* plutôt que d'après un échec satisferait la lettre
+  de cette règle en la vidant ; la première tentative a fait exactement cela et a dû être défaite. Le
+  test est de savoir si le site d'appel se lit comme un constat, sans ses arguments.
+* Les messages sont du comportement observable. Les suites unitaires en assertent le contenu, donc
+  une conversion qui en altérerait un échouerait — la parade étant que les suites restent vertes à
+  chaque tranche, pas seulement à la fin.
 
 ## Références
 
