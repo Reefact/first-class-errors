@@ -264,3 +264,4 @@ Optional supporting material:
 | [ADR-0060](0060-let-stated-intent-outrank-generic-analyzer-advice.md) | Let stated intent outrank generic analyzer advice, and record the refusal beside the rule | Proposed |
 | [ADR-0061](0061-run-the-justdummies-analyzers-on-the-repository-s-own-code.md) | Run the JustDummies analyzers on the repository's own code, so the rules are verified against code not written to please them | Accepted |
 | [ADR-0062](0062-derive-the-build-rule-set-from-the-quality-profile.md) | Derive the build's Sonar rule set from the quality profile: generated membership, hand-written exceptions, weekly drift check | Accepted |
+| [ADR-0063](0063-throw-the-library-s-own-exceptions-through-named-factories.md) | Throw the library's own exceptions through named factories, and only those — the `System` types keep their guard clauses | Accepted |
