@@ -33,19 +33,13 @@ internal static class EqualityFacts {
     }
 
     private static bool ImplementsIEquatable(INamedTypeSymbol type) {
-        foreach (INamedTypeSymbol implemented in type.AllInterfaces) {
-            if (implemented is { IsGenericType: true, Name: "IEquatable" } && implemented.ContainingNamespace is { Name: "System", ContainingNamespace.IsGlobalNamespace: true }) { return true; }
-        }
-
-        return false;
+        return type.AllInterfaces.Any(implemented => implemented is { IsGenericType: true, Name: "IEquatable" }
+                                                 && implemented.ContainingNamespace is { Name: "System", ContainingNamespace.IsGlobalNamespace: true });
     }
 
     private static bool OverridesEquals(INamedTypeSymbol type) {
-        foreach (ISymbol member in type.GetMembers("Equals")) {
-            if (member is IMethodSymbol { IsOverride: true, Parameters.Length: 1, ReturnType.SpecialType: SpecialType.System_Boolean }) { return true; }
-        }
-
-        return false;
+        return type.GetMembers("Equals")
+                   .Any(member => member is IMethodSymbol { IsOverride: true, Parameters.Length: 1, ReturnType.SpecialType: SpecialType.System_Boolean });
     }
 
 }

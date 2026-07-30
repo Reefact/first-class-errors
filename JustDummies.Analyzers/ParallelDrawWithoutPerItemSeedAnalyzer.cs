@@ -73,11 +73,7 @@ public sealed class ParallelDrawWithoutPerItemSeedAnalyzer : DiagnosticAnalyzer 
          && call.TargetMethod.Name == "UseSeed"
          && SymbolEqualityComparer.Default.Equals(call.TargetMethod.ContainingType, any)) { return true; }
 
-        foreach (IOperation child in node.ChildOperations) {
-            if (OpensASeedScope(child, any)) { return true; }
-        }
-
-        return false;
+        return node.ChildOperations.Any(child => OpensASeedScope(child, any));
     }
 
 }
