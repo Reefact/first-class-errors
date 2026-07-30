@@ -595,8 +595,8 @@ public sealed class AnyCollectionTests {
 
         private int Value { get; }
 
-        public override bool Equals(object? other) {
-            return other is Tag tag && tag.Value == Value;
+        public override bool Equals(object? obj) {
+            return obj is Tag tag && tag.Value == Value;
         }
 
         public override int GetHashCode() {

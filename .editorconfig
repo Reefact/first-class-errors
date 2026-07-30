@@ -69,50 +69,24 @@ dotnet_diagnostic.CA1859.severity = none
 # --- Sonar rules not yet enforced: the backlog -------------------------------------------------
 #
 # build/sonar-profile.globalconfig is generated from the SonarCloud quality profile and puts every
-# rule it activates at `warning`, so the default is ENFORCE. The 27 rules below are the
-# exceptions: each still has violations in this tree, and promoting it now would turn unrelated
-# pull requests red. They are demoted to `suggestion` — active, non-blocking — with the number of
-# sites measured when this landed.
+# rule it activates at `warning`, so the default is ENFORCE. This block held the exceptions: rules
+# with violations still in the tree, demoted to `suggestion` — active, non-blocking — so promoting
+# one did not turn unrelated pull requests red.
 #
-# This block IS the backlog, and it shrinks by DELETION: clear a rule's sites, delete its line,
-# and the generated file enforces it from the next build with nothing further to write. A rule
-# this codebase means to refuse outright does not belong here — it belongs with the declines
-# above, at `none`, with its reason (ADR-0060). `suggestion` means "not yet", never "no".
+# THE BACKLOG IS EMPTY. All 377 rules the profile activates are enforced as of this commit, measured
+# by elevating every entry to `warning` and building the solution: zero sites. The block is kept, with
+# nothing in it, because the mechanism outlives the list — the next generated profile may activate a
+# rule this tree violates, and this is where it goes.
 #
-# The other 350 rules the profile activates have zero violations here and are
-# enforced as of this commit. Total outstanding: 83 sites. Decision: ADR-0062.
+# The block shrinks by DELETION: clear a rule's sites, delete its line, and the generated file
+# enforces it from the next build with nothing further to write. A rule this codebase means to refuse
+# outright does not belong here — it belongs with the declines above, at `none`, with its reason
+# (ADR-0060), or in the test-scoped section below when its whole domain is test-shaped.
+# `suggestion` means "not yet", never "no". Decision: ADR-0062.
 #
-# A rule leaves this block by one of two doors, and both are visible in the tree: its sites are
-# cleared, or the few that remain are deliberate and carry a [SuppressMessage] with the reason at
-# the site. The second door keeps the rule enforced everywhere else, which parking it never did.
-
-dotnet_diagnostic.S1244.severity = suggestion  #  15 — Floating point numbers should not be tested for equality
-dotnet_diagnostic.S3878.severity = suggestion  #  14 — Arrays should not be created for params parameters
-dotnet_diagnostic.S3218.severity = suggestion  #   8 — Inner class members should not shadow outer class "static" or type members
-dotnet_diagnostic.S107.severity = suggestion  #   6 — Methods should not have too many parameters
-dotnet_diagnostic.S1481.severity = suggestion  #   5 — Unused local variables should be removed
-dotnet_diagnostic.S1854.severity = suggestion  #   4 — Unused assignments should be removed
-dotnet_diagnostic.S4144.severity = suggestion  #   3 — Methods should not have identical implementations
-dotnet_diagnostic.S108.severity = suggestion  #   2 — Nested blocks of code should not be left empty
-dotnet_diagnostic.S125.severity = suggestion  #   2 — Sections of code should not be commented out
-dotnet_diagnostic.S1905.severity = suggestion  #   2 — Redundant casts should not be used
-dotnet_diagnostic.S2326.severity = suggestion  #   2 — Unused type parameters should be removed
-dotnet_diagnostic.S3220.severity = suggestion  #   2 — Method calls should not resolve ambiguously to overloads with "params"
-dotnet_diagnostic.S3358.severity = suggestion  #   2 — Ternary operators should not be nested
-dotnet_diagnostic.S6966.severity = suggestion  #   2 — Awaitable method should be used
-dotnet_diagnostic.S927.severity = suggestion  #   2 — Parameter names should match base declaration and other partial definitions
-dotnet_diagnostic.S1144.severity = suggestion  #   1 — Unused private types or members should be removed
-dotnet_diagnostic.S2219.severity = suggestion  #   1 — Runtime type checking should be simplified
-dotnet_diagnostic.S2342.severity = suggestion  #   1 — Enumeration types should comply with a naming convention
-dotnet_diagnostic.S2692.severity = suggestion  #   1 — "IndexOf" checks should not be for positive numbers
-dotnet_diagnostic.S3376.severity = suggestion  #   1 — Attribute, EventArgs, and Exception type names should end with the type being extended
-dotnet_diagnostic.S3459.severity = suggestion  #   1 — Unassigned members should be removed
-dotnet_diagnostic.S3871.severity = suggestion  #   1 — Exception types should be "public"
-dotnet_diagnostic.S3877.severity = suggestion  #   1 — Exceptions should not be thrown from unexpected methods
-dotnet_diagnostic.S3881.severity = suggestion  #   1 — "IDisposable" should be implemented correctly
-dotnet_diagnostic.S4136.severity = suggestion  #   1 — Method overloads should be grouped together
-dotnet_diagnostic.S6580.severity = suggestion  #   1 — Use a format provider when parsing date and time
-dotnet_diagnostic.S6608.severity = suggestion  #   1 — Prefer indexing instead of "Enumerable" methods on types implementing "IList"
+# A rule leaves by one of two doors, and both are visible in the tree: its sites are cleared, or the
+# few that remain are deliberate and carry a [SuppressMessage] with the reason at the site. The second
+# door keeps the rule enforced everywhere else, which parking it never did.
 
 # Test projects only. `*Tests` matches the thirteen test projects and no shipping one —
 # FirstClassErrors.Testing ends in `Testing`, so the rule below does not reach it.
@@ -125,6 +99,33 @@ dotnet_diagnostic.S6608.severity = suggestion  #   1 — Prefer indexing instead
 # few hundred times in a suite. The rule stays ON for shipping code, where a hot path can
 # genuinely want it — which is why this is scoped here rather than switched off repository-wide.
 dotnet_diagnostic.CA1861.severity = none
+
+# Declined in tests: exact floating-point equality. S1244 assumes an `==` between doubles is an
+# accident of arithmetic. In these suites it is the assertion: `Between(value, value)` declares a
+# degenerate interval and the property is that the draw IS that value; `bounds.Min == bounds.Max`
+# detects that degenerate case to branch on it; `Zero()` pins a value and `== Half.Zero` is the
+# contract it promises. A tolerance would not make these checks safer, it would stop them testing
+# what they exist to test. Shipping code keeps the rule, where an `==` between computed floats
+# really is the bug the rule describes.
+dotnet_diagnostic.S1244.severity = none
+
+# Declined in tests: parameter-count ceilings. S107 caps a lambda at seven parameters. The lambdas
+# it fires on are the eight-operand `Any.Combine` overload's composer — the arity IS the subject of
+# the test, and it is fixed by the API being exercised, not chosen by the test. The rule stays ON
+# for shipping code, where a long parameter list is a design smell rather than a fixture.
+dotnet_diagnostic.S107.severity = none
+
+# Declined in tests: unused generic type parameters. S2326 is right that a `<T>` nothing reads is
+# dead weight — except in a fixture built to be READ BY REFLECTION, where the unused parameter is
+# precisely the shape under test (an overload that differs only by arity, a generic-only member the
+# documentation reader must find). Removing it would delete the test case.
+dotnet_diagnostic.S2326.severity = none
+
+# Declined in tests: empty blocks. S108 asks that `{ }` be filled or removed. In these suites the
+# empty body IS the exercise: `using (Any.UseSeed(1, …)) { }` enters and leaves a scope to assert
+# what disposal does, and filling the block would add a statement with nothing to say. The rule
+# stays ON for shipping code, where an empty block is usually a forgotten branch.
+dotnet_diagnostic.S108.severity = none
 
 [*.{csproj,props,targets,nuspec,config,xml}]
 indent_size = 2

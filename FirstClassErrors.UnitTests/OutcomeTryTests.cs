@@ -240,6 +240,12 @@ public sealed class OutcomeTryTests {
     }
 
     [Fact(DisplayName = "Awaiting the async Try lets a cancellation propagate rather than mapping it to a failure.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S6966:Awaitable method should be used",
+                                                     Justification =
+                                                         "CancellationTokenSource.CancelAsync arrived in .NET 8 and this suite also runs on the .NET Framework 4.7.2 " +
+                                                         "support floor (ADR-0022, build/Net472TestFloor.props), where the method does not exist. Same downlevel wall " +
+                                                         "as CA1870 and CA1865 (ADR-0058). Cancel() is synchronous on both legs and the token is already cancelled " +
+                                                         "before the call under test runs, which is all the test needs.")]
     public async Task AwaitingTheAsyncTryLetsACancellationPropagateRatherThanMappingItToAFailure() {
         // Setup
         DomainError error = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());
@@ -377,6 +383,12 @@ public sealed class OutcomeTryTests {
     }
 
     [Fact(DisplayName = "Awaiting the async Try (void) lets a cancellation propagate.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S6966:Awaitable method should be used",
+                                                     Justification =
+                                                         "CancellationTokenSource.CancelAsync arrived in .NET 8 and this suite also runs on the .NET Framework 4.7.2 " +
+                                                         "support floor (ADR-0022, build/Net472TestFloor.props), where the method does not exist. Same downlevel wall " +
+                                                         "as CA1870 and CA1865 (ADR-0058). Cancel() is synchronous on both legs and the token is already cancelled " +
+                                                         "before the call under test runs, which is all the test needs.")]
     public async Task AwaitingTheAsyncTryVoidLetsACancellationPropagate() {
         // Setup
         DomainError error = ErrorFactory.Domain(ErrorCodeFactory.Any(), DiagnosticMessageFactory.Any());

@@ -1,3 +1,9 @@
+#region Usings declarations
+
+using System.Globalization;
+
+#endregion
+
 namespace FirstClassErrors.RequestBinder.UnitTests;
 
 #region Request DTOs
@@ -57,7 +63,7 @@ internal sealed class BookingDate {
     public DateOnly Value { get; }
 
     public static Outcome<BookingDate> Parse(string raw) {
-        return DateOnly.TryParse(raw, out DateOnly parsed)
+        return DateOnly.TryParse(raw, CultureInfo.InvariantCulture, out DateOnly parsed)
                    ? Outcome<BookingDate>.Success(new BookingDate(parsed))
                    : Outcome<BookingDate>.Failure(BookingDomainError.DateInvalid(raw));
     }
@@ -138,6 +144,12 @@ internal static class BookingDomainError {
                           .WithPublicMessage("The number must be strictly positive.");
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3218:Inner class members should not shadow outer class \"static\" or type members",
+                                                     Justification =
+                                                         "The mirror IS the point: each code is named after the factory that raises it, so the call site reads " +
+                                                         "Code.DateInvalid inside DateInvalid(). Renaming to DateInvalidCode to satisfy the rule would break the " +
+                                                         "one-to-one correspondence that makes this file scannable, and buy nothing — the nested class is private " +
+                                                         "and its members are only ever reached through it.")]
     private static class Code {
 
         public static readonly ErrorCode EmailInvalid       = ErrorCode.Create("TEST_EMAIL_INVALID");
@@ -168,6 +180,12 @@ internal static class BookingEnvelopeError {
                                .WithPublicMessage("A guest's information is invalid.");
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3218:Inner class members should not shadow outer class \"static\" or type members",
+                                                     Justification =
+                                                         "The mirror IS the point: each code is named after the factory that raises it, so the call site reads " +
+                                                         "Code.DateInvalid inside DateInvalid(). Renaming to DateInvalidCode to satisfy the rule would break the " +
+                                                         "one-to-one correspondence that makes this file scannable, and buy nothing — the nested class is private " +
+                                                         "and its members are only ever reached through it.")]
     private static class Code {
 
         public static readonly ErrorCode CommandInvalid = ErrorCode.Create("TEST_BOOKING_COMMAND_INVALID");

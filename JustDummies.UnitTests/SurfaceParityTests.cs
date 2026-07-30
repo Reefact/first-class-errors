@@ -130,11 +130,14 @@ public sealed class SurfaceParityTests {
     ];
 
     // Instant-like builders rename the bound family to domain vocabulary, with identical inclusive/exclusive
-    // semantics, and carry no Positive/Negative/Zero (an instant has no sign).
+    // semantics, and carry no Positive/Negative/Zero (an instant has no sign). Conditioned like its only
+    // consumer — AnyDateOnly exists on .NET 8 and later — so the net472 leg does not carry a field it cannot use.
+#if NET8_0_OR_GREATER
     private static readonly string[] InstantAlgebra = [
         "After", "AfterOrEqualTo", "Before", "BeforeOrEqualTo",
         "Between", "OneOf", "Except", "DifferentFrom"
     ];
+#endif
 
     // Instants with sub-day tick precision also carry the temporal granularity lattice WithGranularity (DateOnly,
     // already day-resolution, keeps the plain InstantAlgebra).

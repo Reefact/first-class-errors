@@ -72,7 +72,7 @@ public sealed class CatalogDiffCommandEndToEndTests {
         string baseline = dir.File("errors-baseline.json");
         BaselineStore.Save(baseline, Snapshot("A"));
 
-        (int exit, string _, RecordingLogger __) = RunDiff(new RecordingSnapshotSource(Snapshot("A", "B")), new CatalogDiffSettings {
+        (int exit, string _, RecordingLogger _) = RunDiff(new RecordingSnapshotSource(Snapshot("A", "B")), new CatalogDiffSettings {
             ConfigPath   = CliTestHelpers.NonExistentConfigPath(),
             BaselinePath = baseline,
             FailOn       = "any"
@@ -102,7 +102,7 @@ public sealed class CatalogDiffCommandEndToEndTests {
         string baseline = dir.File("errors-baseline.json");
         BaselineStore.Save(baseline, Snapshot("A", "B"));
 
-        (int exit, string _, RecordingLogger __) = RunDiff(new RecordingSnapshotSource(Snapshot("A")), new CatalogDiffSettings {
+        (int exit, string _, RecordingLogger _) = RunDiff(new RecordingSnapshotSource(Snapshot("A")), new CatalogDiffSettings {
             ConfigPath   = CliTestHelpers.NonExistentConfigPath(),
             BaselinePath = baseline,
             FailOn       = "none"
@@ -188,7 +188,7 @@ public sealed class CatalogDiffCommandEndToEndTests {
         string baseline = dir.File("errors-baseline.json");
         BaselineStore.Save(baseline, Snapshot("A"));
 
-        (int exit, string _, RecordingLogger __) = RunDiff(new CancellingSnapshotSource(), new CatalogDiffSettings {
+        (int exit, string _, RecordingLogger _) = RunDiff(new CancellingSnapshotSource(), new CatalogDiffSettings {
             ConfigPath   = CliTestHelpers.NonExistentConfigPath(),
             BaselinePath = baseline
         });
@@ -305,7 +305,7 @@ public sealed class CatalogUpdateCommandEndToEndTests {
         string configPath = dir.File("fce.json");
         File.WriteAllText(configPath, """{ "baseline": "errors-baseline.json" }""");
 
-        (int exit, string _, RecordingLogger __) = RunUpdate(new RecordingSnapshotSource(Snapshot("A")), new CatalogUpdateSettings {
+        (int exit, string _, RecordingLogger _) = RunUpdate(new RecordingSnapshotSource(Snapshot("A")), new CatalogUpdateSettings {
             ConfigPath = configPath
         });
 
@@ -336,7 +336,7 @@ public sealed class CatalogUpdateCommandEndToEndTests {
     public void CancellationExitsOneThirty() {
         using TempDir dir = new();
 
-        (int exit, string _, RecordingLogger __) = RunUpdate(new CancellingSnapshotSource(), new CatalogUpdateSettings {
+        (int exit, string _, RecordingLogger _) = RunUpdate(new CancellingSnapshotSource(), new CatalogUpdateSettings {
             ConfigPath   = CliTestHelpers.NonExistentConfigPath(),
             BaselinePath = dir.File("errors-baseline.json")
         });

@@ -203,6 +203,11 @@ public sealed class CatalogSnapshotSerializerTests {
     }
 
     [Fact(DisplayName = "A snapshot declaring a newer schema is rejected as a distinct CatalogSchemaTooNewException.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S2219:Runtime type checking should be simplified",
+                                                     Justification =
+                                                         "Not a disguised null check: caught is already the narrower snapshot exception, and this line asserts the " +
+                                                         "compatibility guarantee the comment above states — that the distinct, catchable type still derives from " +
+                                                         "InvalidOperationException, so existing handlers keep working.")]
     public void ASnapshotDeclaringANewerSchemaIsRejected() {
         // Exercise
         CatalogSchemaTooNewException? caught = null;

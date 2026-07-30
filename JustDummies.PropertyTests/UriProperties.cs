@@ -117,6 +117,16 @@ public sealed class UriProperties {
         return secure ? generator.UsingWss() : generator.UsingWs();
     }
 
+    /// <summary>The scheme a pinned web generator must draw — the read side of <see cref="PinScheme(AnyWebUri, bool)" />.</summary>
+    private static string WebScheme(bool secure) {
+        return secure ? "https" : "http";
+    }
+
+    /// <summary>The scheme a pinned WebSocket generator must draw — the read side of <see cref="PinScheme(AnyWebSocketUri, bool)" />.</summary>
+    private static string WebSocketScheme(bool secure) {
+        return secure ? "wss" : "ws";
+    }
+
     /// <summary>Declares a path constraint: a segment count, or the root path when <paramref name="segments" /> is <c>null</c>.</summary>
     private static AnyWebUri PinPath(AnyWebUri generator, int? segments) {
         return segments.HasValue ? generator.WithPathSegments(segments.Value) : generator.WithoutPath();
@@ -156,7 +166,7 @@ public sealed class UriProperties {
 
         return value.IsAbsoluteUri
                && (testCase.Secure.HasValue
-                       ? value.Scheme == (testCase.Secure.Value ? "https" : "http")
+                       ? value.Scheme == WebScheme(testCase.Secure.Value)
                        : value.Scheme is "http" or "https")
                && value.Host == testCase.Host
                && (!testCase.Port.HasValue || value.Port == testCase.Port.Value)
@@ -187,7 +197,7 @@ public sealed class UriProperties {
 
         return value.IsAbsoluteUri
                && (testCase.Secure.HasValue
-                       ? value.Scheme == (testCase.Secure.Value ? "wss" : "ws")
+                       ? value.Scheme == WebSocketScheme(testCase.Secure.Value)
                        : value.Scheme is "ws" or "wss")
                && rendered.StartsWith(value.Scheme + "://" + testCase.Host, StringComparison.Ordinal)
                && rendered.Contains('?') == testCase.Query
@@ -215,7 +225,7 @@ public sealed class UriProperties {
         if ((headerStart >= 0) != testCase.Headers) { return false; }
         if (headerStart >= 0) { address = address.Substring(0, headerStart); }
 
-        string[] parts = address.Split(new[] { '@' });
+        string[] parts = address.Split('@');
 
         return parts.Length == 2
                && parts[0].Length > 0
@@ -318,6 +328,10 @@ public sealed class UriProperties {
     }
 
     [Fact(DisplayName = "Declared user-info reaches the URI, whichever of the three overloads declared it.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S2692:\"IndexOf\" checks should not be for positive numbers",
+                                                     Justification =
+                                                         "0 is deliberately excluded. The check asserts that a user-info draw renders user:password with a NON-EMPTY " +
+                                                         "user, so a colon at index 0 — an empty local part — must fail the property, which is exactly what > 0 says.")]
     public void UserInfoShapesReachTheUri() {
         Gen<(UserInfoChoice Choice, string User, string Password)> cases =
             from choice in Gen.Elements(UserInfoChoice.Arbitrary, UserInfoChoice.UserOnly, UserInfoChoice.UserAndPassword)

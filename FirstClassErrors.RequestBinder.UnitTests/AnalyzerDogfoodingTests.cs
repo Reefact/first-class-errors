@@ -51,7 +51,8 @@ public sealed class AnalyzerDogfoodingTests {
 
     private static bool ReferencesTheAnalyzers(XElement projectReference) {
         string include  = (string?)projectReference.Attribute("Include") ?? string.Empty;
-        string fileName = include.Replace('\\', '/').Split('/').Last();
+        string[] segments = include.Replace('\\', '/').Split('/');
+        string   fileName = segments[segments.Length - 1];
 
         return string.Equals(fileName, "FirstClassErrors.Analyzers.csproj", StringComparison.OrdinalIgnoreCase);
     }
