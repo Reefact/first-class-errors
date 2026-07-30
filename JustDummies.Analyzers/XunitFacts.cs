@@ -53,7 +53,7 @@ internal static class XunitFacts {
     public static bool IsTheoryDataProvider(ISymbol symbol, KnownSymbols symbols) {
         // A draw inside a property's body reports the accessor (get_Cases), not the property, so normalize first —
         // otherwise a [MemberData(nameof(Cases))] never matches the member it names.
-        ISymbol member = symbol is IMethodSymbol { AssociatedSymbol: not null } accessor ? accessor.AssociatedSymbol! : symbol;
+        ISymbol member = symbol is IMethodSymbol { AssociatedSymbol: not null } accessor ? accessor.AssociatedSymbol : symbol;
 
         if (IsNamedByMemberData(member, symbols)) { return true; }
 
