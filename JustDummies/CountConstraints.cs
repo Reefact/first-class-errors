@@ -17,7 +17,7 @@ namespace JustDummies;
 /// </summary>
 /// <remarks>
 ///     Each method takes a state and returns the tightened state; the caller wraps that state back into its own
-///     immutable generator. The label strings (<c>"NonEmpty()"</c>, <c>"WithCount(3)"</c>, ...) are part of the
+///     immutable generator. The labels (<c>NonEmpty()</c>, <c>WithCount(3)</c>, ...) are part of the
 ///     user-facing conflict messages, so they are produced here rather than in the label-agnostic
 ///     <see cref="CollectionState{T}" />, which only records whichever label its caller hands it.
 /// </remarks>
@@ -43,14 +43,14 @@ internal static class CountConstraints {
     internal static CollectionState<T> NonEmpty<T>(CollectionState<T> state) {
         if (state is null) { throw new ArgumentNullException(nameof(state)); }
 
-        return state.WithMinCount(1, "NonEmpty()");
+        return state.WithMinCount(1, ConstraintCall.Of(nameof(NonEmpty)));
     }
 
     /// <summary>Fixes the collection to no elements.</summary>
     internal static CollectionState<T> Empty<T>(CollectionState<T> state) {
         if (state is null) { throw new ArgumentNullException(nameof(state)); }
 
-        return state.WithExactCount(0, "Empty()");
+        return state.WithExactCount(0, ConstraintCall.Of(nameof(Empty)));
     }
 
     /// <summary>Fixes the exact number of elements.</summary>
@@ -58,7 +58,7 @@ internal static class CountConstraints {
         if (state is null) { throw new ArgumentNullException(nameof(state)); }
         RequireProducible(count, nameof(count));
 
-        return state.WithExactCount(count, $"WithCount({V(count)})");
+        return state.WithExactCount(count, ConstraintCall.Of(nameof(WithCount), V(count)));
     }
 
     /// <summary>
@@ -69,7 +69,7 @@ internal static class CountConstraints {
         if (state is null) { throw new ArgumentNullException(nameof(state)); }
         RequireProducible(count, nameof(count));
 
-        return state.WithMinCount(count, $"WithMinCount({V(count)})");
+        return state.WithMinCount(count, ConstraintCall.Of(nameof(WithMinCount), V(count)));
     }
 
     /// <summary>
@@ -80,7 +80,7 @@ internal static class CountConstraints {
         if (state is null) { throw new ArgumentNullException(nameof(state)); }
         RequireNonNegative(count, nameof(count));
 
-        return state.WithMaxCount(count, $"WithMaxCount({V(count)})");
+        return state.WithMaxCount(count, ConstraintCall.Of(nameof(WithMaxCount), V(count)));
     }
 
     /// <summary>
@@ -94,7 +94,7 @@ internal static class CountConstraints {
         RequireNonNegative(maximum, nameof(maximum));
         if (minimum > maximum) { throw new ArgumentException($"The minimum ({V(minimum)}) must be less than or equal to the maximum ({V(maximum)}).", nameof(minimum)); }
 
-        string constraint = $"WithCountBetween({V(minimum)}, {V(maximum)})";
+        ConstraintCall constraint = ConstraintCall.Of(nameof(WithCountBetween), V(minimum), V(maximum));
 
         return state.WithMinCount(minimum, constraint).WithMaxCount(maximum, constraint);
     }

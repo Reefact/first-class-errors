@@ -106,7 +106,7 @@ public sealed class AnyDictionary<TKey, TValue> : IAny<Dictionary<TKey, TValue>>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDictionary<TKey, TValue> ContainingKey(TKey key) {
-        return With(_keys.WithContaining(key, $"ContainingKey({AnyDerivation.Display(key)})"));
+        return With(_keys.WithContaining(key, ConstraintCall.Of(nameof(ContainingKey), AnyDerivation.Display(key))));
     }
 
     /// <summary>
@@ -123,7 +123,7 @@ public sealed class AnyDictionary<TKey, TValue> : IAny<Dictionary<TKey, TValue>>
     public AnyDictionary<TKey, TValue> ContainingAnyKey(IAny<TKey> generator) {
         if (generator is null) { throw new ArgumentNullException(nameof(generator)); }
 
-        return With(_keys.WithContaining(generator, "ContainingAnyKey(<generator>)"));
+        return With(_keys.WithContaining(generator, ConstraintCall.Of(nameof(ContainingAnyKey), "<generator>")));
     }
 
     /// <summary>
@@ -138,7 +138,7 @@ public sealed class AnyDictionary<TKey, TValue> : IAny<Dictionary<TKey, TValue>>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDictionary<TKey, TValue> ContainingEntry(TKey key, TValue value) {
-        CollectionState<TKey> keys = _keys.WithContaining(key, $"ContainingEntry({AnyDerivation.Display(key)}, {AnyDerivation.Display(value)})");
+        CollectionState<TKey> keys = _keys.WithContaining(key, ConstraintCall.Of(nameof(ContainingEntry), AnyDerivation.Display(key), AnyDerivation.Display(value)));
 
         Dictionary<TKey, TValue> pinned = new(_pinnedValues.Count + 1, _keys.Comparer);
         foreach (KeyValuePair<TKey, TValue> entry in _pinnedValues) { pinned[entry.Key] = entry.Value; }

@@ -20,7 +20,7 @@ public sealed class AnySequence<T> : AnyCollection<T, IEnumerable<T>, AnySequenc
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint cannot be satisfied by the element generator's domain.</exception>
     public AnySequence<T> Distinct() {
-        return With(State.AsDistinct(null, "Distinct()"));
+        return With(State.AsDistinct(null, ConstraintCall.Of(nameof(Distinct))));
     }
 
     /// <summary>Requires the elements to be pairwise distinct under <paramref name="comparer" />.</summary>
@@ -31,7 +31,7 @@ public sealed class AnySequence<T> : AnyCollection<T, IEnumerable<T>, AnySequenc
     public AnySequence<T> Distinct(IEqualityComparer<T> comparer) {
         if (comparer is null) { throw new ArgumentNullException(nameof(comparer)); }
 
-        return With(State.AsDistinct(comparer, "Distinct(comparer)"));
+        return With(State.AsDistinct(comparer, ConstraintCall.Of(nameof(Distinct), "comparer")));
     }
 
     private protected override AnySequence<T> With(CollectionState<T> state) {
