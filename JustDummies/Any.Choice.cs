@@ -26,7 +26,7 @@ public static partial class Any {
     public static AnyOneOf<T> OneOf<T>(params T[] values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
 
-        return AnyOneOf<T>.FromPool(AmbientRandomSource.Instance, values, "OneOf(...)");
+        return AnyOneOf<T>.FromPool(AmbientRandomSource.Instance, values, ConstraintCall.OfElided(nameof(OneOf)));
     }
 
     /// <summary>
@@ -45,7 +45,7 @@ public static partial class Any {
     public static AnyOneOf<T> ElementOf<T>(IReadOnlyList<T> values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
 
-        return AnyOneOf<T>.FromPool(AmbientRandomSource.Instance, values, "ElementOf(...)");
+        return AnyOneOf<T>.FromPool(AmbientRandomSource.Instance, values, ConstraintCall.OfElided(nameof(ElementOf)));
     }
 
     /// <summary>
@@ -61,7 +61,7 @@ public static partial class Any {
     public static AnyOneOf<T> ElementOf<T>(IEnumerable<T> values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
 
-        return AnyOneOf<T>.FromPool(AmbientRandomSource.Instance, values as IReadOnlyList<T> ?? values.ToArray(), "ElementOf(...)");
+        return AnyOneOf<T>.FromPool(AmbientRandomSource.Instance, values as IReadOnlyList<T> ?? values.ToArray(), ConstraintCall.OfElided(nameof(ElementOf)));
     }
 
 }

@@ -44,7 +44,7 @@ public sealed class AnyOneOf<T> : IAny<T>, IHasRandomSource, ICardinalityHint<T>
     // own arguments per the null-argument convention (ADR-0045); the public factories additionally reject a null
     // array first, under the caller-facing parameter name, before delegating here. The factory names itself so a
     // later exclusion conflict can say which declaration it emptied.
-    internal static AnyOneOf<T> FromPool(RandomSource source, IReadOnlyList<T> values, string declaring) {
+    internal static AnyOneOf<T> FromPool(RandomSource source, IReadOnlyList<T> values, ConstraintCall declaring) {
         if (source is null) { throw new ArgumentNullException(nameof(source)); }
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (declaring is null) { throw new ArgumentNullException(nameof(declaring)); }
@@ -64,13 +64,13 @@ public sealed class AnyOneOf<T> : IAny<T>, IHasRandomSource, ICardinalityHint<T>
     // whether the applied exclusion forbids the whole declared pool or merely the part earlier exclusions had left,
     // so the message can make the stronger claim exactly when it is true.
     private readonly IReadOnlyList<T> _declared;
-    private readonly string           _declaringConstraint;
+    private readonly ConstraintCall   _declaringConstraint;
     private readonly RandomSource     _source;
     private readonly IReadOnlyList<T> _values;
 
     #endregion
 
-    private AnyOneOf(RandomSource source, IReadOnlyList<T> values, IReadOnlyList<T> declared, string declaringConstraint) {
+    private AnyOneOf(RandomSource source, IReadOnlyList<T> values, IReadOnlyList<T> declared, ConstraintCall declaringConstraint) {
         _source              = source;
         _values              = values;
         _declared            = declared;
@@ -106,7 +106,7 @@ public sealed class AnyOneOf<T> : IAny<T>, IHasRandomSource, ICardinalityHint<T>
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
         if (values.Any(value => value is null)) { throw new ArgumentException("The values must not contain a null element.", nameof(values)); }
 
-        return Excluding(values, "Except(...)");
+        return Excluding(values, ConstraintCall.OfElided(nameof(Except)));
     }
 
     /// <summary>
@@ -122,7 +122,7 @@ public sealed class AnyOneOf<T> : IAny<T>, IHasRandomSource, ICardinalityHint<T>
     public AnyOneOf<T> DifferentFrom(T value) {
         if (value is null) { throw new ArgumentNullException(nameof(value)); }
 
-        return Excluding([value], "DifferentFrom(...)");
+        return Excluding([value], ConstraintCall.OfElided(nameof(DifferentFrom)));
     }
 
     /// <inheritdoc />
@@ -130,7 +130,7 @@ public sealed class AnyOneOf<T> : IAny<T>, IHasRandomSource, ICardinalityHint<T>
         return _values[_source.Current.Next(_values.Count)];
     }
 
-    private AnyOneOf<T> Excluding(IReadOnlyList<T> excluded, string applying) {
+    private AnyOneOf<T> Excluding(IReadOnlyList<T> excluded, ConstraintCall applying) {
         T[] survivors = _values.Where(value => !excluded.Contains(value)).ToArray();
         if (survivors.Length == 0) {
             // The values themselves are never rendered: T is opaque, so its ToString is the caller's, not the

@@ -331,7 +331,7 @@ public sealed class AnyContext {
     public AnyOneOf<T> OneOf<T>(params T[] values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
 
-        return AnyOneOf<T>.FromPool(_source, values, "OneOf(...)");
+        return AnyOneOf<T>.FromPool(_source, values, ConstraintCall.OfElided(nameof(OneOf)));
     }
 
     /// <summary>
@@ -346,7 +346,7 @@ public sealed class AnyContext {
     public AnyOneOf<T> ElementOf<T>(IReadOnlyList<T> values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
 
-        return AnyOneOf<T>.FromPool(_source, values, "ElementOf(...)");
+        return AnyOneOf<T>.FromPool(_source, values, ConstraintCall.OfElided(nameof(ElementOf)));
     }
 
     /// <summary>
@@ -362,7 +362,7 @@ public sealed class AnyContext {
     public AnyOneOf<T> ElementOf<T>(IEnumerable<T> values) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
 
-        return AnyOneOf<T>.FromPool(_source, values as IReadOnlyList<T> ?? values.ToArray(), "ElementOf(...)");
+        return AnyOneOf<T>.FromPool(_source, values as IReadOnlyList<T> ?? values.ToArray(), ConstraintCall.OfElided(nameof(ElementOf)));
     }
 
 }
