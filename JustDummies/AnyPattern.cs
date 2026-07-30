@@ -221,8 +221,7 @@ public sealed class AnyPattern : IAny<string>, IHasRandomSource {
             }
         }
 
-        throw new AnyGenerationException(
-            $"Generation failed: after {V(MatchAttemptLimit)} attempts, every value the pattern generator built was rejected by the .NET engine for the same pattern. This happens only for a degenerate pattern whose empty-match behaviour the generator cannot mirror; rewrite it with the supported subset, or generate the value another way.");
+        throw AnyGenerationException.PatternVerificationFailed(V(MatchAttemptLimit));
     }
 
     private AnyGenerationException Exhausted() {
