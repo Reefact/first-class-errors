@@ -17,9 +17,6 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     ///     constraint is unsatisfiable on its own, before any other is considered.
     /// </summary>
     internal static ConflictingAnyConstraintException NoValueSatisfies(string applying, string typeName) {
-        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
-        if (typeName is null) { throw new ArgumentNullException(nameof(typeName)); }
-
         return Sentence(applying, $"no {typeName} value satisfies it");
     }
 
@@ -30,9 +27,6 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     ///     nothing by itself.
     /// </summary>
     internal static ConflictingAnyConstraintException NoValueRemains(string applying, string exhaustion) {
-        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
-        if (exhaustion is null) { throw new ArgumentNullException(nameof(exhaustion)); }
-
         return Sentence(applying, exhaustion);
     }
 
@@ -40,9 +34,6 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     ///     Builds the exception for a constraint that <paramref name="existingConstraint" /> has already settled.
     /// </summary>
     internal static ConflictingAnyConstraintException AlreadyDefined(string applying, string existingConstraint) {
-        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
-        if (existingConstraint is null) { throw new ArgumentNullException(nameof(existingConstraint)); }
-
         return Sentence(applying, $"{existingConstraint} is already defined");
     }
 
@@ -50,10 +41,6 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     ///     Builds the exception for a constraint that contradicts an upper bound already declared.
     /// </summary>
     internal static ConflictingAnyConstraintException AlreadyBoundedAbove(string applying, string existingConstraint, string bound) {
-        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
-        if (existingConstraint is null) { throw new ArgumentNullException(nameof(existingConstraint)); }
-        if (bound is null) { throw new ArgumentNullException(nameof(bound)); }
-
         return Sentence(applying, $"{existingConstraint} already requires values less than or equal to {bound}");
     }
 
@@ -61,10 +48,6 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     ///     Builds the exception for a constraint that contradicts a lower bound already declared.
     /// </summary>
     internal static ConflictingAnyConstraintException AlreadyBoundedBelow(string applying, string existingConstraint, string bound) {
-        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
-        if (existingConstraint is null) { throw new ArgumentNullException(nameof(existingConstraint)); }
-        if (bound is null) { throw new ArgumentNullException(nameof(bound)); }
-
         return Sentence(applying, $"{existingConstraint} already requires values greater than or equal to {bound}");
     }
 
@@ -75,8 +58,15 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     /// <remarks>
     ///     Private on purpose. It names the grammar of the message, not a failure, so it is no one's factory: every
     ///     caller is a named case above, and a new case gets a name of its own rather than a free-form reason passed
-    ///     through here. Its arguments are guarded by those callers, each of which the reflection convention in
-    ///     JustDummies.UnitTests exercises (ADR-0045).
+    ///     through here.
+    ///     <para>
+    ///         Nothing here guards its arguments, and that is the rule rather than an omission: building an exception
+    ///         must never throw. A guard would replace the failure being reported with a failure about reporting it,
+    ///         losing the original. ADR-0045 exempts exception types for exactly that reason, and the reflection
+    ///         convention that enforces it skips them outright. The contract is the compiler's instead — these
+    ///         parameters are non-nullable, so a caller that cannot prove a value is CS8604 at build time, which is
+    ///         how the one nullable constraint name in the interval specs was found.
+    ///     </para>
     /// </remarks>
     /// <param name="applying">The constraint being declared, as the caller spelled it.</param>
     /// <param name="reason">Why it cannot be applied, written without a final period.</param>
