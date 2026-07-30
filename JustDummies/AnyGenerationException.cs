@@ -49,6 +49,33 @@ public sealed class AnyGenerationException : DummyException {
     }
 
     /// <summary>
+    ///     Builds the exception for an enum with no member to draw from — nothing was constrained, the type simply
+    ///     offers nothing.
+    /// </summary>
+    internal static AnyGenerationException EnumDeclaresNoMembers(string enumName) {
+        return new AnyGenerationException($"Cannot generate an arbitrary {enumName} value because the enum declares no members.");
+    }
+
+    /// <summary>
+    ///     Builds the exception for a caller-supplied factory or composer that threw, naming what was being generated
+    ///     and how to replay the run.
+    /// </summary>
+    /// <remarks>
+    ///     <paramref name="failure" /> stays a thunk all the way in here, and is called once, on this path only:
+    ///     rendering the generated values would run the caller's <c>ToString()</c> and allocate the sentence on every
+    ///     successful draw otherwise — which is every draw a test actually makes.
+    /// </remarks>
+    internal static AnyGenerationException FactoryFailed(Func<string> failure, Exception cause, RandomSource? source, bool reproducible) {
+        int?   seed    = source?.Current.Seed;
+        string message = $"Generation failed: {failure()} ({cause.GetType().Name}: {cause.Message}).";
+        if (source is not null) {
+            message += $" {(reproducible ? source.ReplayGuidance(seed!.Value) : source.PartialReplayGuidance(seed!.Value))}";
+        }
+
+        return new AnyGenerationException(message, seed, cause);
+    }
+
+    /// <summary>
     ///     Writes the sentence every near-the-candidate failure shares, and wraps <paramref name="diagnostic" /> as the
     ///     inner failure so the developer-facing detail travels with the exception rather than in its message.
     /// </summary>
