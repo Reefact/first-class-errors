@@ -181,6 +181,16 @@ public sealed class AnyStringTests {
         Check.That(conflict.Message).Contains("Numeric()");
     }
 
+    // A contained value is the one constraint the specification records per occurrence rather than in a named slot,
+    // so it is also the one whose name a message can lose without any other assertion noticing.
+    [Fact(DisplayName = "An allow-list that offers no value carrying the fragment names Containing as the culprit.")]
+    public void AllowListRejectedByAFragmentNamesContaining() {
+        ConflictingAnyConstraintException conflict = Assert.Throws<ConflictingAnyConstraintException>(
+            () => Any.String().Containing("ABC").OneOf("x", "y"));
+
+        Check.That(conflict.Message).Contains("Containing(\"ABC\")");
+    }
+
     [Fact(DisplayName = "Declaring the charset after an incompatible prefix conflicts too: order does not matter.")]
     public void CharsetAfterIncompatiblePrefixConflicts() {
         ConflictingAnyConstraintException conflict = Assert.Throws<ConflictingAnyConstraintException>(
