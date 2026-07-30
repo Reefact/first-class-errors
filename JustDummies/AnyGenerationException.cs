@@ -57,6 +57,16 @@ public sealed class AnyGenerationException : DummyException {
     }
 
     /// <summary>
+    ///     Builds the exception for a relative URI whose every component was declared away — no path segment, no query,
+    ///     no fragment, no root — leaving the empty string, which is not a valid URI reference.
+    /// </summary>
+    internal static AnyGenerationException EmptyRelativeReference(string replayGuidance, int seed) {
+        return new AnyGenerationException("A relative URI with exactly 0 path segments and no query, fragment or root is empty, which is not a valid URI reference. " +
+                                          $"Add a query, a fragment, Rooted(), or a positive segment count. {replayGuidance}",
+                                          seed);
+    }
+
+    /// <summary>
     ///     Builds the exception for a caller-supplied factory or composer that threw, naming what was being generated
     ///     and how to replay the run.
     /// </summary>
