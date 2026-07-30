@@ -403,9 +403,8 @@ internal sealed class StringSpec {
     }
 
     private AnyGenerationException Exhausted(RandomSource source) {
-        int seed = source.Current.Seed;
         // A string generator draws only from its own source, so the seed replays the run fully — never the partial hint.
-        string replay = source.ReplayGuidance(seed);
+        Replay replay = Replay.Of(source);
         // The claim is the budget, not impossibility. The redraw is bounded, so an exhausted budget is overwhelming
         // evidence that almost nothing survives the exclusions — and the usual cause really is a shape with no value
         // left — but it is not a proof: a shape with one free value in a few hundred thousand exhausts the budget
@@ -417,9 +416,9 @@ internal sealed class StringSpec {
             "budget rather than a proof that no value remains — though the usual cause is a shape the exclusions " +
             "leave nothing of (excluding every value a fixed short length allows). Loosen the exclusions or widen " +
             "the shape. " +
-            replay;
+            replay.Guidance;
 
-        return new AnyGenerationException(message, seed);
+        return new AnyGenerationException(message, replay.Seed);
     }
 
     private string DescribeExcluded() {
