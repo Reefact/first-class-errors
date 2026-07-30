@@ -24,6 +24,7 @@ repository before the tool is built, so nothing here may depend on being read in
 * **§15 is the reasoning.** Eight decision records in this repository's ADR format, held inside
   the specification because the repository that should hold them does not exist yet. Read them
   when you want to know *why*, or when you are tempted to reverse something in §2.
+* **§16 is the boundary of v1.0.** What is deferred, and what was dropped outright.
 * **§17 is the evidence.** The emitted skeleton of §4.1 was compiled and run against the real
   library, and the two contested claims were measured. §17.2 says how to re-run all of it.
 
@@ -80,8 +81,8 @@ The value proposition stays distinct from the library's: the **library** makes v
 
 ## 2. Decisions
 
-These are the load-bearing decisions. Nine of them carry a full decision record in §15 — context,
-argument, alternatives rejected, consequences. This table is the index; it holds no argument of its
+These are the load-bearing decisions. Nine of them are covered by the eight decision records in
+§15 — context, argument, alternatives rejected, consequences; D5 and D6 share one. This table is the index; it holds no argument of its
 own.
 
 | # | Decision | Why, in one line |
@@ -189,7 +190,12 @@ using JustDummies;
 
 namespace Shop.Domain;
 
-/// <summary>A generator of arbitrary <see cref="Order" /> values.</summary>
+/// <summary>
+///     A generator of arbitrary <see cref="Order" /> values. It draws from the ambient random
+///     context, so a reproducibility scope pins it; to draw from an isolated
+///     <c>Any.WithSeed(...)</c> context, pass that context's generators through the
+///     <c>With…</c> overloads.
+/// </summary>
 public sealed partial class AnyOrder : IAny<Order> {
 
     private readonly IAny<OrderReference>        _reference;
@@ -390,7 +396,7 @@ The recognised set is closed:
 | `string.IsNullOrEmpty(p)`, `string.IsNullOrWhiteSpace(p)`, `p.Length == 0`, `p.Length < 1` | `.NonEmpty()` |
 | `p.Length > N` | `.WithMaxLength(N)` |
 | `p.Length < N` | `.WithMinLength(N)` |
-| `p <= 0`, `p < 1` | `.Positive()` |
+| `p <= 0`; or `p < 1` on an **integral** type | `.Positive()` |
 | `p < 0` | `.GreaterThanOrEqualTo(0)` |
 | `p >= 0` | `.Negative()` |
 | `p == 0` | `.NonZero()` |
@@ -404,11 +410,29 @@ The recognised set is closed:
 `Any.String()` draws only ASCII letters and digits, so a non-empty draw can never be whitespace
 (§14.5).
 
-Constraints are grouped by **axis** — length, range, charset, pattern. If two recognised guards
-land on the same axis, **both are dropped** and the parameter is reported as
-`guards not combined`; the developer sees the neutral generator and the console tells them to
-look. This is the only place the engine could emit a chain the library rejects at runtime with
-`ConflictingAnyConstraintException`, and this rule removes it.
+Recognised constraints **compose when they bound different things, and are dropped when they
+collide**. Two guards setting a lower and an upper bound are complementary — `.NonEmpty()` with
+`.WithMaxLength(10)`, or `.GreaterThanOrEqualTo(0)` with `.LessThanOrEqualTo(100)` — and both are
+kept. That is the ordinary bounded-range idiom, written as two consecutive guards; discarding it
+would make guard reading useless for the case it most often meets. Both compositions were verified
+against the library (§17).
+
+Two guards setting *the same* bound, or one charset against another, are irreconcilable: both are
+dropped and the parameter is reported as `guards not combined`. So is a lower bound above an upper
+one — the library rejects that chain with `ConflictingAnyConstraintException`, and `JD023` reports
+it at compile time (§17), but the engine must not emit it in the first place.
+
+A recognised **pattern guard is exclusive**. `Any.StringMatching(...)` returns a generator exposing
+only `DifferentFrom` and `Except` (§14.3), so no length or charset constraint can be chained onto
+it — such an emission does not compile at all. When a pattern guard is recognised it replaces the
+base generator, and every other string constraint on that parameter is discarded.
+
+Where two rows both match a condition, the **more specific wins**. `p < 1` on an integral type is
+the `.Positive()` row; on `decimal`, `double` or `float` it is the `.GreaterThanOrEqualTo(N)` row,
+because `.Positive()` would admit the values between zero and one that the guard rejects. That is a
+rare draw for an otherwise unconstrained decimal — measured at one in five thousand — and a common
+one as soon as the parameter carries another bound (§17). Exactly the profile of a defect that
+survives casual testing.
 
 Every constraint above is still subject to D4. `.Positive()` on a `uint` parameter does not
 resolve (§14.3) and is skipped.
@@ -470,6 +494,10 @@ line costs them ten seconds, and a runtime failure a week later costs far more.
 The console recap is not decoration: it is the mechanism that keeps the tool honest about what it
 inferred and what it guessed.
 
+The run below is the same `Order` as §4.1, but *before* `AnyCustomer` was scaffolded — which is why
+`customer` is the one parameter left open. Scaffolding `Customer` and re-running with `--force`
+closes it, and that two-step is the intended way through a graph of aggregates.
+
 ```console
 $ dum generate Order
 
@@ -490,8 +518,9 @@ Analyzing Shop.Domain.Order
 The right-hand column carries the provenance of each expression: empty for the base table,
 `guard` when §5.3 tightened it, `factory` when §5.4 composed it, `AnyX` when a scaffolded
 generator was reused, `guards not combined` for the §5.3 conflict case, `no source` when the
-constructor body was unavailable so no guard could be read, and `unavailable` when the generator
-exists in the library but not in the asset this project resolves.
+constructor body was unavailable so no guard could be read, `unread guards` when the body throws in
+a way the recognised set did not match, and `unavailable` when the generator exists in the library
+but not in the asset this project resolves.
 
 That last value matters more than it looks. Without it, D4's degradation is indistinguishable from
 the tool simply not knowing: a `DateOnly` parameter on a downlevel project would read as "not
@@ -587,9 +616,12 @@ Named explicitly so they are not mistaken for oversights.
   No names, no emails, no addresses.
 * **Object-graph auto-filling.** Composition is one hop through `Any{T}` or a one-parameter
   factory, depth-limited to 3. Beyond that the developer writes it.
-* **Invariants the tool cannot see.** §5.3 reads a closed set of guard idioms. A constructor that
-  validates through a helper method, a `Guard.Against` library, or a cross-parameter rule gets the
-  neutral generator and a console line. It does not get a wrong guess.
+* **Invariants the tool cannot see.** §5.3 reads a closed set of guard idioms. Where the
+  constructor throws in a way the set does not match — a cross-parameter rule, an arithmetic
+  condition — the parameter gets the neutral generator and the recap marks it `unread guards`, so
+  the developer knows where to look. Where validation is delegated entirely to a helper
+  (`Guard.Against.Null(p)`), there is no throw in the body to see, and the tool cannot tell that
+  parameter from an unconstrained one. In neither case does it guess.
 * **Round-tripping.** The tool never reads a file it previously wrote.
 * **`init` / `required` members, property-only construction.** Constructor and static factory only.
 * **Anything under `--all`.** Explicit type arguments only.
@@ -637,7 +669,11 @@ One entry point, shaped so the future IDE consumer can call it unchanged:
   * per-parameter rows: name, type display string, emitted expression (or none), and provenance
     (§6);
   * warnings, such as the `Any*` shadowing case of §7;
-  * a flag for "contains at least one TODO".
+  * a flag for "contains at least one TODO";
+  * **failure as data, not as an exception** — a target type resolving to nothing or to several
+    candidates comes back as an outcome carrying that candidate list, so the CLI maps it to the
+    exit codes of §7 without catching anything. §11.1 puts type resolution inside the engine, so
+    the model has to carry this or the boundary leaks exceptions.
 
 The CLI renders that model; a code refactoring would apply the source text and ignore the rest.
 Nothing in the model is a console string.
@@ -670,7 +706,7 @@ impossible, and the tool package must declare no `JustDummies` dependency (§13.
 2. `MSBuildWorkspace.Create()`, open the project, take its `Compilation`. Workspace diagnostics
    are surfaced, not swallowed. (CLI only.)
 3. Hand the `Compilation` to the engine. Everything from here is `JustDummies.GenAny`.
-4. Resolve `JustDummies.Any`, `JustDummies.IAny\`1` and `JustDummies.AnyExtensions` by metadata
+4. Resolve `JustDummies.Any`, ``JustDummies.IAny`1`` and `JustDummies.AnyExtensions` by metadata
    name. Absent → the engine reports it and the CLI exits `1` (§7).
 5. Resolve the target type (§3.2), pick the constructor (§5.1).
 6. Per parameter: base table (§5.2) → guards (§5.3) → composition (§5.4) → unresolved (§5.5).
@@ -700,7 +736,9 @@ sweep. In v1.0 `NamingOptions` carries a single fixed pattern, `Any{Type}`.
 * **Resolver unit tests.** Build a `CSharpCompilation` in memory with a reference to the built
   `JustDummies.dll`, and assert the emitted expression string per parameter. Fast, no MSBuild.
   Cover every row of §5.2, every row of §5.3, both §5.4 paths, and the §5.5 fallback. Include the
-  unsigned case (`p <= 0` on a `uint`) and the value-type nullable case.
+  unsigned case (`p <= 0` on a `uint`), the value-type nullable case, both composition outcomes of
+  §5.3 (complementary bounds kept, same bound dropped), pattern exclusivity, and `p < 1` on an
+  integral and on a `decimal` parameter — the two rows that differ only by the parameter's type.
 * **Emitter golden files.** One approved file per representative shape: no parameters, one
   parameter, six parameters, a TODO, a name collision, a positional record, a static-factory
   target.
@@ -718,8 +756,9 @@ sweep. In v1.0 `NamingOptions` carries a single fixed pattern, `Any{Type}`.
   §5.3 the scaffolded code fails about one call in sixteen, which no golden file would reveal.
   In a repository without such types, use any validating value object with a static factory.
 * **Asset-selection test.** Scaffold against a `netstandard2.0`-asset consumer and a `net8.0`-asset
-  consumer for a type with a `DateOnly` parameter, and assert the first produces a TODO and the
-  second `Any.DateOnly()`. This is the executable proof of D4 (§13.8).
+  consumer for a type with a `DateOnly` parameter, and assert the first produces a TODO **marked
+  `unavailable`** — not merely a TODO — and the second `Any.DateOnly()`. This is the executable
+  proof of D4 (§13.8).
 
 **Shell — `JustDummies.Cli.UnitTests`:** project discovery, option handling, exit codes of §7,
 and recap rendering from a fixed result model.
@@ -733,54 +772,74 @@ states each dependency on the host as a **requirement**, with the current reposi
 realization as an example. If the library has moved, re-establish these there; do not build the
 tool against another repository's infrastructure.
 
-**13.1 Pinned package versions** for the tool's dependencies. New to the tool:
+### 13.1 Pinned package versions
+
+For the tool's dependencies. New to the tool:
 `Microsoft.CodeAnalysis.Workspaces.MSBuild` and `Microsoft.Build.Locator` (CLI only). Already
 present for the library and its analyzers: `Microsoft.CodeAnalysis.CSharp` and
 `Spectre.Console.Cli`. *Current realization: central package management in
 `Directory.Packages.props`.*
 
-**13.2 A Roslyn floor property.** `JustDummies.GenAny` must compile against the **same minimum
+### 13.2 A Roslyn floor property
+
+`JustDummies.GenAny` must compile against the **same minimum
 Roslyn version as the analyzer package**, and must not float above it — an assembly loaded by a
 consumer's compiler fails silently (`CS8032`) on an older host if it was built against a newer
 Roslyn. *Current realization: `RoslynFloorVersion` = `4.8.0`, set once in `Directory.Build.props`
 and applied with `VersionOverride`.* The CLI is **not** bound by this: it hosts its own compiler.
 
-**13.3 Solution nesting.** If the host uses a `.sln`, add both projects and both test projects to
+### 13.3 Solution nesting
+
+If the host uses a `.sln`, add both projects and both test projects to
 its `GlobalSection(NestedProjects)` under the source and test solution folders. A project missing
 from that section appears loose at the solution root instead of grouped with its siblings. This
 has been missed and fixed after the fact several times; check it every time a `.csproj` is added.
 
-**13.4 Public-API baseline exclusion.** Neither `JustDummies.GenAny` nor `JustDummies.Cli` opts
+### 13.4 Public-API baseline exclusion
+
+Neither `JustDummies.GenAny` nor `JustDummies.Cli` opts
 into the public-API baseline: tools carry no compatibility promise, and the analyzer would flag
 their entire surface as undeclared. *Current realization: only the shipping libraries import
 `build/PublicApiBaseline.props`.*
 
-**13.5 Mutation testing.** If the host measures mutation on projects whose code ships or runs,
+### 13.5 Mutation testing
+
+If the host measures mutation on projects whose code ships or runs,
 both projects qualify. Give each its own configuration — the engine is the high-value target, the
 shell is not — and register them with the rest. *Current realization: one JSON per project under
 `build/stryker/`, driven by a dedicated workflow, advisory per pull request and enforced by a
 weekly sweep.*
 
-**13.6 A release train for the tool,** separate from the library's. The tool does not version in
+### 13.6 A release train for the tool
+
+Separate from the library's. The tool does not version in
 lockstep with the library (D9), so it must not ride the library's train. The train's packing step
 must assert that the produced `.nupkg` declares **no `JustDummies` dependency** — the executable
 form of D9. *Current realization: `tools/packaging/pack.sh` with one train per package family and
 a standalone assertion already written for the library's train.*
 
-**13.7 The analyzers must be runnable over the host's own code,** so the own-code test of §12 can
+### 13.7 The analyzers must be runnable over the host's own code
+
+So the own-code test of §12 can
 exist. *Current realization: the analyzer project is wired into the repository's own suites, a
 decision taken after the analyzers' unit suite was found unable to catch five wrong rules that
 running over real code caught immediately.*
 
-**13.8 A way to consume the packed library from two consumer TFMs,** so the asset-selection test
+### 13.8 Two consumer TFMs for the packed library
+
+So the asset-selection test
 of §12 can exist: one consumer at `net8.0` (resolves the `net8.0` asset) and one below it
 (resolves `netstandard2.0`). *Current realization: an isolated project outside the solution,
 multi-targeted, consuming the packed `.nupkg` from a local feed.*
 
-**13.9 Test framework.** *Current realization: `xunit.v3`, `NFluent`, `Verify.XunitV3` for golden
+### 13.9 Test framework
+
+*Current realization: `xunit.v3`, `NFluent`, `Verify.XunitV3` for golden
 files, `NSubstitute`.* Any equivalent works; the golden-file tests need a snapshot library.
 
-**13.10 Commit, branch and pull-request conventions,** and an ADR process for §15. *Current
+### 13.10 Commit, branch and pull-request conventions
+
+And an ADR process for §15. *Current
 realization: Conventional Commits with a closed type and scope list, enforced by a hook and by
 CI; ADRs under `doc/handwritten/for-maintainers/adr/` where an agent drafts as `Proposed` and the
 maintainer accepts.*
@@ -1345,8 +1404,9 @@ asset-selection test (§12), which asserts both the present and the absent case.
 
 #### Follow-up Actions
 
-* The console provenance column must distinguish "not inferred" from "unavailable in this
-  compilation" (§6), so the quiet degradation above is visible rather than merely silent.
+* §6 carries the `unavailable` provenance value for this reason. Keep a test asserting it: without
+  one, the degradation this decision accepts becomes invisible again and the requirement decays
+  into a comment.
 
 #### References
 
@@ -1785,16 +1845,20 @@ in. The results below are what the harness printed.
 |---|---|---|
 | The specified skeleton compiles as written | §4.1 | compiles, 0 warnings |
 | `.WithX` chaining works and does not disturb a shared base | D2, §4.2 | two `.WithStatus` calls off one base stay independent |
-| `AnyOrder` is accepted by the library's composition seams | D2, §2.2 | `Any.ListOf`, `Any.PairOf` and `.As` all accept it |
+| `AnyOrder` is accepted by the library's composition seams | D2, §15 | `Any.ListOf`, `Any.PairOf` and `.As` all accept it |
 | `.WithX(IAny<T>)` keeps constrained composition open | §4.2 | `.WithReference(Any.String().StartingWith("ORD-").As(...))` yields `ORD-x9vDEd2` |
 | A recipe built **outside** a scope still replays inside it | §8.2, §14.5 | two `Any.Reproducibly(20260730, …)` runs produced identical values |
 | The guard-derived chain never throws | §5.3 | 500 draws through `OrderReference.Create`, no `AnyGenerationException` |
 | The chain **without** guard reading throws intermittently | §5.3 | **594 / 10 000** draws threw — about 1 in 16 |
 | Collection covariance needs no adapter | §5.2, §14.5 | `Any.ListOf(...)` assigned to `IAny<IReadOnlyList<string>>` |
 | A value-type nullable **does** need the `.As` hop | §5.2 | `IAny<int>` is not an `IAny<int?>`; `.As(value => (int?)value)` compiles |
+| Complementary bounds compose | §5.3 | `.GreaterThanOrEqualTo(0).LessThanOrEqualTo(100)` and `.NonEmpty().WithMaxLength(10)` both draw |
+| Contradictory bounds are rejected twice over | §5.3 | `ConflictingAnyConstraintException` at run time, and `JD023` at **compile** time |
+| A pattern generator admits no other string constraint | §5.3 | `Any.StringMatching(...).NonEmpty()` fails to compile — `CS1061`, `AnyPattern` has only `DifferentFrom`/`Except` |
+| `.Positive()` is unsound for a `p < 1` guard on a decimal | §5.3 | 1 draw in 5 000 fell below 1 unconstrained; ~1 in 5 once another bound narrows the range |
 | The scaffolded output raises no JD diagnostic | D3, §12 | 0 diagnostics on the emitted files |
 | The analyzers were genuinely loaded | D3 | a control file raised `JD006` and `JD005` in the same build |
-| `<auto-generated/>` silences them | D3, §2.1 | the same control file, so marked, raised **0** — including the `JD005` error |
+| `<auto-generated/>` silences them | D3, §15 | the same control file, so marked, raised **0** — including the `JD005` error |
 
 ### 17.2 How to re-run it
 
