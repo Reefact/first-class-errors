@@ -40,6 +40,7 @@ namespace JustDummies;
 ///         restate it, and could not be reached from C# without defeating the annotation it duplicates.
 ///     </para>
 /// </remarks>
+[ValueObject]
 internal sealed class ConstraintCall : IEquatable<ConstraintCall> {
 
     #region Statics members declarations
