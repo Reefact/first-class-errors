@@ -318,7 +318,7 @@ internal sealed class WideIntervalSpec {
     private WideIntervalSpec Validated(WideIntervalSpec candidate, string applying) {
         if (candidate.IsSatisfiable()) { return candidate; }
 
-        throw ConflictingAnyConstraintException.Because(applying, candidate.DescribeExhaustion(applying));
+        throw ConflictingAnyConstraintException.NoValueRemains(applying, candidate.DescribeExhaustion(applying));
     }
 
     private bool IsSatisfiable() {

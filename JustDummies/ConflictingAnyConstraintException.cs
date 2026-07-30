@@ -13,58 +13,75 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     #region Statics members declarations
 
     /// <summary>
-    ///     Builds the exception for a conflict described by <paramref name="reason" />, which completes the sentence
-    ///     "Cannot apply X because …" and is written without its final period.
+    ///     Builds the exception for a constraint that no value of <paramref name="typeName" /> can satisfy — the
+    ///     constraint is unsatisfiable on its own, before any other is considered.
     /// </summary>
-    /// <remarks>
-    ///     Every factory here funnels through this one, so the sentence shape exists in exactly one place in the
-    ///     library. It was written out at each throw site before, and the wording had that many chances to drift.
-    /// </remarks>
-    /// <param name="applying">The constraint being declared, as the caller spelled it.</param>
-    /// <param name="reason">Why it cannot be applied, without a final period.</param>
-    internal static ConflictingAnyConstraintException Because(string applying, string reason) {
+    internal static ConflictingAnyConstraintException NoValueSatisfies(string applying, string typeName) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
-        if (reason is null) { throw new ArgumentNullException(nameof(reason)); }
+        if (typeName is null) { throw new ArgumentNullException(nameof(typeName)); }
 
-        return new ConflictingAnyConstraintException($"Cannot apply {applying} because {reason}.");
+        return Sentence(applying, $"no {typeName} value satisfies it");
     }
 
     /// <summary>
-    ///     Builds the exception for a constraint that no value of <paramref name="typeName" /> can satisfy.
+    ///     Builds the exception for a constraint that leaves no value available once the constraints already declared
+    ///     are taken together, <paramref name="exhaustion" /> naming what exhausted the domain. The counterpart of
+    ///     <see cref="NoValueSatisfies" />: nothing survives the combination, rather than the constraint admitting
+    ///     nothing by itself.
     /// </summary>
-    internal static ConflictingAnyConstraintException NoValueSatisfies(string applying, string typeName) {
-        if (typeName is null) { throw new ArgumentNullException(nameof(typeName)); }
+    internal static ConflictingAnyConstraintException NoValueRemains(string applying, string exhaustion) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
+        if (exhaustion is null) { throw new ArgumentNullException(nameof(exhaustion)); }
 
-        return Because(applying, $"no {typeName} value satisfies it");
+        return Sentence(applying, exhaustion);
     }
 
     /// <summary>
     ///     Builds the exception for a constraint that <paramref name="existingConstraint" /> has already settled.
     /// </summary>
     internal static ConflictingAnyConstraintException AlreadyDefined(string applying, string existingConstraint) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (existingConstraint is null) { throw new ArgumentNullException(nameof(existingConstraint)); }
 
-        return Because(applying, $"{existingConstraint} is already defined");
+        return Sentence(applying, $"{existingConstraint} is already defined");
     }
 
     /// <summary>
     ///     Builds the exception for a constraint that contradicts an upper bound already declared.
     /// </summary>
     internal static ConflictingAnyConstraintException AlreadyBoundedAbove(string applying, string existingConstraint, string bound) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (existingConstraint is null) { throw new ArgumentNullException(nameof(existingConstraint)); }
         if (bound is null) { throw new ArgumentNullException(nameof(bound)); }
 
-        return Because(applying, $"{existingConstraint} already requires values less than or equal to {bound}");
+        return Sentence(applying, $"{existingConstraint} already requires values less than or equal to {bound}");
     }
 
     /// <summary>
     ///     Builds the exception for a constraint that contradicts a lower bound already declared.
     /// </summary>
     internal static ConflictingAnyConstraintException AlreadyBoundedBelow(string applying, string existingConstraint, string bound) {
+        if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (existingConstraint is null) { throw new ArgumentNullException(nameof(existingConstraint)); }
         if (bound is null) { throw new ArgumentNullException(nameof(bound)); }
 
-        return Because(applying, $"{existingConstraint} already requires values greater than or equal to {bound}");
+        return Sentence(applying, $"{existingConstraint} already requires values greater than or equal to {bound}");
+    }
+
+    /// <summary>
+    ///     Writes the conflict sentence, which every factory above funnels through so its shape exists in exactly one
+    ///     place — it was written out at each throw site before, and had that many chances to drift.
+    /// </summary>
+    /// <remarks>
+    ///     Private on purpose. It names the grammar of the message, not a failure, so it is no one's factory: every
+    ///     caller is a named case above, and a new case gets a name of its own rather than a free-form reason passed
+    ///     through here. Its arguments are guarded by those callers, each of which the reflection convention in
+    ///     JustDummies.UnitTests exercises (ADR-0045).
+    /// </remarks>
+    /// <param name="applying">The constraint being declared, as the caller spelled it.</param>
+    /// <param name="reason">Why it cannot be applied, written without a final period.</param>
+    private static ConflictingAnyConstraintException Sentence(string applying, string reason) {
+        return new ConflictingAnyConstraintException($"Cannot apply {applying} because {reason}.");
     }
 
     #endregion
