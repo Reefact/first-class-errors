@@ -77,7 +77,8 @@ documentées une seule fois ici plutôt que répétées sur chaque page.
 | [`analyzers`](analyzers.fr.md) | Dogfood des analyzers Roslyn embarqués, y compris sur le plus vieux compilateur supporté (le floor Roslyn). |
 | [`commit-lint`](commit-lint.fr.md) | Impose la convention Conventional Commits sur chaque commit de PR, via le même script que le hook local. |
 | [`lint`](lint.fr.md) | shellcheck et actionlint sur les fichiers que le compilateur C# ne voit jamais — les scripts POSIX et les définitions de workflow. Zéro constat, `info` compris. |
-| [`sonar-profile`](sonar-profile.fr.md) | Chaque nuit : échoue quand la liste de règles C# Sonar committée s'est écartée du profil qualité SonarCloud. Signale, ne répare jamais. |
+| [`sonar-profile`](sonar-profile.fr.md) | Chaque semaine : échoue quand la liste de règles C# Sonar committée s'est écartée du profil qualité SonarCloud. Signale, ne répare jamais. |
+| [`sonar-gate`](sonar-gate.fr.md) | Chaque nuit : lit le verdict du Quality Gate SonarCloud et échoue s'il est rouge. Ne bloque jamais un merge — l'alarme que le téléversement `sonar` n'a jamais été. |
 | [`adr-check`](adr-check.fr.md) | Consultatif, dispatch manuel : confronte une branche à la base d'ADR (nouvelle décision / remplacement / conflit). Le repli pour les contributeurs sans Claude Code ; ne bloque jamais. |
 
 ### Sécurité & chaîne d'approvisionnement
