@@ -88,23 +88,23 @@ public sealed class NullArgumentGuardConventionTests {
     }
 
     private static IEnumerable<MemberDescriptor> MembersOf(Type type) {
-        bool instantiable = type is { IsAbstract: false, IsInterface: false };
+        return ConstructorsOf(type).Concat(MethodsOf(type));
+    }
 
-        if (instantiable) {
-            foreach (ConstructorInfo ctor in type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
-                if (IsAccessible(ctor)) { yield return new MemberDescriptor(ctor, ctor, type); }
-            }
+    private static IEnumerable<MemberDescriptor> ConstructorsOf(Type type) {
+        if (type is { IsAbstract: true } or { IsInterface: true }) { yield break; }
+
+        foreach (ConstructorInfo ctor in type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
+            if (IsAccessible(ctor)) { yield return new MemberDescriptor(ctor, ctor, type); }
         }
+    }
 
+    private static IEnumerable<MemberDescriptor> MethodsOf(Type type) {
         BindingFlags methodFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
         if (type.IsAbstract) { methodFlags |= BindingFlags.DeclaredOnly; } // instance methods of an abstract base are reached through its concrete subclasses
 
         foreach (MethodInfo method in type.GetMethods(methodFlags)) {
-            if (method.DeclaringType == typeof(object)) { continue; }
-            if (method.IsSpecialName) { continue; }          // property/event accessors, operators
-            if (method.Name.Contains('<')) { continue; }     // compiler-generated
-            if (!IsAccessible(method)) { continue; }
-            if (method is { IsAbstract: true }) { continue; } // no body to reach directly
+            if (!IsReachableMethod(method)) { continue; }
 
             if (method.IsGenericMethodDefinition) {
                 if (!TryClose(method, out MethodInfo? closed)) { continue; }
@@ -113,6 +113,17 @@ public sealed class NullArgumentGuardConventionTests {
                 yield return new MemberDescriptor(method, method, type);
             }
         }
+    }
+
+    // The methods the harness can actually call: not object's own, not an accessor or operator, not compiler-generated,
+    // accessible, and not abstract.
+    private static bool IsReachableMethod(MethodInfo method) {
+        if (method.DeclaringType == typeof(object)) { return false; }
+        if (method.IsSpecialName) { return false; }      // property/event accessors, operators
+        if (method.Name.Contains('<')) { return false; } // compiler-generated
+        if (!IsAccessible(method)) { return false; }
+
+        return method is not { IsAbstract: true }; // no body to reach directly
     }
 
     private static bool IsInScope(Type type) {
@@ -153,35 +164,58 @@ public sealed class NullArgumentGuardConventionTests {
             ParameterInfo classify = classifyParams[index];
             if (!IsGuardTarget(classify)) { continue; }
 
-            string description = Describe(member, classify);
+            VerifyParameterGuard(member, invokeParams, index, classify, forwardsName, violations, uncovered);
+        }
+    }
 
-            object?[] arguments;
-            object?   instance;
-            try {
-                instance  = member.Invoke.IsStatic || member.Invoke is ConstructorInfo ? null : Sample(member.Receiver);
-                arguments = new object?[invokeParams.Length];
-                for (int j = 0; j < invokeParams.Length; j++) {
-                    arguments[j] = j == index ? null : ArgumentFor(invokeParams[j]);
-                }
-            } catch (Exception build) {
-                uncovered.Add($"{description}: could not build arguments — {Root(build).Message}");
-                continue;
+    // One parameter, exercised on its own: every other argument is supplied, so whatever the member throws is a
+    // verdict about THIS parameter's guard and nothing else.
+    private static void VerifyParameterGuard(MemberDescriptor member, ParameterInfo[] invokeParams, int index, ParameterInfo classify,
+                                             bool forwardsName, List<string> violations, List<string> uncovered) {
+        string description = Describe(member, classify);
+
+        if (!TryBuildInvocation(member, invokeParams, index, out object? instance, out object?[] arguments, out string? failure)) {
+            uncovered.Add($"{description}: could not build arguments — {failure}");
+
+            return;
+        }
+
+        try {
+            if (member.Invoke is ConstructorInfo ctor) { ctor.Invoke(arguments); } else { member.Invoke.Invoke(instance, arguments); }
+            violations.Add($"{description}: expected ArgumentNullException, nothing was thrown");
+        } catch (TargetInvocationException invocation) {
+            Exception? thrown = invocation.InnerException;
+            if (thrown is ArgumentNullException guard && (guard.ParamName == classify.Name || forwardsName)) { return; }
+
+            string got = thrown is ArgumentNullException other
+                             ? $"ArgumentNullException(ParamName=\"{other.ParamName}\")"
+                             : thrown?.GetType().Name ?? "null";
+            violations.Add($"{description}: expected ArgumentNullException(\"{classify.Name}\") but got {got}");
+        } catch (Exception unexpected) {
+            uncovered.Add($"{description}: invocation failed — {Root(unexpected).GetType().Name}: {Root(unexpected).Message}");
+        }
+    }
+
+    // The receiver and the argument array to invoke with, `index` left null. Answers false when the harness has no
+    // sample for some other parameter — which is a coverage hole to report, not a missing guard.
+    private static bool TryBuildInvocation(MemberDescriptor member, ParameterInfo[] invokeParams, int index,
+                                           out object? instance, out object?[] arguments, out string? failure) {
+        try {
+            instance  = member.Invoke.IsStatic || member.Invoke is ConstructorInfo ? null : Sample(member.Receiver);
+            arguments = new object?[invokeParams.Length];
+            for (int j = 0; j < invokeParams.Length; j++) {
+                arguments[j] = j == index ? null : ArgumentFor(invokeParams[j]);
             }
 
-            try {
-                if (member.Invoke is ConstructorInfo ctor) { ctor.Invoke(arguments); } else { member.Invoke.Invoke(instance, arguments); }
-                violations.Add($"{description}: expected ArgumentNullException, nothing was thrown");
-            } catch (TargetInvocationException invocation) {
-                Exception? thrown = invocation.InnerException;
-                if (thrown is ArgumentNullException guard && (guard.ParamName == classify.Name || forwardsName)) { continue; }
+            failure = null;
 
-                string got = thrown is ArgumentNullException other
-                                 ? $"ArgumentNullException(ParamName=\"{other.ParamName}\")"
-                                 : thrown?.GetType().Name ?? "null";
-                violations.Add($"{description}: expected ArgumentNullException(\"{classify.Name}\") but got {got}");
-            } catch (Exception unexpected) {
-                uncovered.Add($"{description}: invocation failed — {Root(unexpected).GetType().Name}: {Root(unexpected).Message}");
-            }
+            return true;
+        } catch (Exception build) {
+            instance  = null;
+            arguments = [];
+            failure   = Root(build).Message;
+
+            return false;
         }
     }
 
@@ -331,9 +365,8 @@ public sealed class NullArgumentGuardConventionTests {
     // itself builds is what lets the harness supply a valid `spec` when testing a `source` guard, without wiring up
     // each engine type by hand.
     private static List<object> HarvestSamples() {
-        List<object>          pool    = [];
-        HashSet<object>       visited  = new(ReferenceEqualityComparer.Instance);
-        Queue<object>         frontier = new();
+        HashSet<object> visited  = new(ReferenceEqualityComparer.Instance);
+        Queue<object>   frontier = new();
 
         void Seed(object? root) {
             if (root is null or string) { return; }
@@ -341,21 +374,33 @@ public sealed class NullArgumentGuardConventionTests {
             if (visited.Add(root)) { frontier.Enqueue(root); }
         }
 
+        SeedContextRoots(Seed);
+        SeedRepresentativeGenerators(Seed);
+
+        return WalkReachableObjects(frontier, Seed);
+    }
+
+    // The context itself, the two random sources, and every parameterless generator AnyContext exposes.
+    private static void SeedContextRoots(Action<object?> seed) {
         AnyContext context = new(0);
-        Seed(context);
-        Seed(new FixedRandomSource(0));
-        Seed(new SeededRandom(0));
+        seed(context);
+        seed(new FixedRandomSource(0));
+        seed(new SeededRandom(0));
 
         foreach (MethodInfo factory in typeof(AnyContext).GetMethods(BindingFlags.Public | BindingFlags.Instance)) {
             if (factory.DeclaringType == typeof(object)) { continue; }
             if (factory.IsSpecialName || factory.GetParameters().Length != 0) { continue; }
             if (factory.ReturnType == typeof(void) || factory.ReturnType == typeof(AnyContext) || factory.IsGenericMethodDefinition) { continue; }
-            try { Seed(factory.Invoke(context, null)); } catch { /* best effort */ }
+            try { seed(factory.Invoke(context, null)); } catch { /* best effort */ }
         }
+    }
 
+    // The shapes AnyContext's parameterless factories cannot reach: everything that needs an element generator, a
+    // type argument or a pattern to exist at all.
+    private static void SeedRepresentativeGenerators(Action<object?> seed) {
         IAny<string> strings = Any.String();
         void Try(Func<object?> build) {
-            try { Seed(build()); } catch { /* best effort */ }
+            try { seed(build()); } catch { /* best effort */ }
         }
 
         // Collections closed on the representative element type the harness uses (string), plus a dictionary and an enum.
@@ -374,29 +419,43 @@ public sealed class NullArgumentGuardConventionTests {
         Try(() => Any.StringMatching("a|b|c"));  // alternation
         Try(() => Any.StringMatching("a{2,3}")); // repeat
         Try(() => Any.StringMatching("[a-z]"));  // characters
+    }
 
-        int budget = 0;
+    // Breadth-first over what the seeded roots can reach, bounded by a budget so a cyclic or unexpectedly wide graph
+    // cannot hang the suite.
+    private static List<object> WalkReachableObjects(Queue<object> frontier, Action<object?> seed) {
+        List<object> pool   = [];
+        int          budget = 0;
+
         while (frontier.Count > 0 && budget++ < 5_000) {
             object current = frontier.Dequeue();
             pool.Add(current);
 
-            for (Type? level = current.GetType(); level is not null && level != typeof(object); level = level.BaseType) {
-                foreach (FieldInfo field in level.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
-                    Seed(field.GetValue(current));
-                }
-            }
-
-            // Follow parameterless generator-producing steps too, so a sibling generator reachable only through a
-            // fluent call (e.g. the concrete URI generators returned by AnyUri) still enters the pool.
-            if (current.GetType().Assembly != LibraryAssembly) { continue; }
-            foreach (MethodInfo step in current.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance)) {
-                if (step.DeclaringType == typeof(object) || step.IsSpecialName || step.IsGenericMethodDefinition) { continue; }
-                if (step.GetParameters().Length != 0 || step.ReturnType.Assembly != LibraryAssembly) { continue; }
-                try { Seed(step.Invoke(current, null)); } catch { /* best effort */ }
-            }
+            SeedFields(current, seed);
+            SeedParameterlessSteps(current, seed);
         }
 
         return pool;
+    }
+
+    private static void SeedFields(object current, Action<object?> seed) {
+        for (Type? level = current.GetType(); level is not null && level != typeof(object); level = level.BaseType) {
+            foreach (FieldInfo field in level.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
+                seed(field.GetValue(current));
+            }
+        }
+    }
+
+    // Follow parameterless generator-producing steps too, so a sibling generator reachable only through a
+    // fluent call (e.g. the concrete URI generators returned by AnyUri) still enters the pool.
+    private static void SeedParameterlessSteps(object current, Action<object?> seed) {
+        if (current.GetType().Assembly != LibraryAssembly) { return; }
+
+        foreach (MethodInfo step in current.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance)) {
+            if (step.DeclaringType == typeof(object) || step.IsSpecialName || step.IsGenericMethodDefinition) { continue; }
+            if (step.GetParameters().Length != 0 || step.ReturnType.Assembly != LibraryAssembly) { continue; }
+            try { seed(step.Invoke(current, null)); } catch { /* best effort */ }
+        }
     }
 
     #endregion

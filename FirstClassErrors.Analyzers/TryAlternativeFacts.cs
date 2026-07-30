@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Linq;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Operations;
@@ -140,28 +141,32 @@ internal static class TryAlternativeFacts {
         ITypeSymbol      resultType) {
 
         for (INamedTypeSymbol? type = containingType; type is not null; type = type.BaseType) {
-            foreach (ISymbol member in type.GetMembers(counterpartName)) {
-                if (member is not IMethodSymbol candidate) { continue; }
-                if (!candidate.IsStatic || candidate.DeclaredAccessibility != Accessibility.Public) { continue; }
-                if (candidate.ReturnType.SpecialType != SpecialType.System_Boolean) { continue; }
-
-                IMethodSymbol constructed;
-                if (throwingMember.TypeArguments.Length > 0) {
-                    if (candidate.TypeParameters.Length != throwingMember.TypeArguments.Length) { continue; }
-                    constructed = candidate.Construct(throwingMember.TypeArguments.ToArray());
-                } else if (candidate.TypeParameters.Length != 0) {
-                    continue;
-                } else {
-                    constructed = candidate;
-                }
-
-                if (SignatureIsDropInReplacement(throwingMember.Parameters, constructed.Parameters, resultType)) {
-                    return true;
-                }
-            }
+            if (type.GetMembers(counterpartName).Any(member => IsCompatibleCounterpart(member, throwingMember, resultType))) { return true; }
         }
 
         return false;
+    }
+
+    // Whether one candidate member is the counterpart: public and static, answering bool, generic in exactly the same
+    // way as the throwing member, and taking its parameters plus a trailing `out result`. Each test rejects the
+    // candidate rather than the search, which is why they read as `return false` here and read as `continue` at the
+    // call site.
+    private static bool IsCompatibleCounterpart(ISymbol member, IMethodSymbol throwingMember, ITypeSymbol resultType) {
+        if (member is not IMethodSymbol candidate) { return false; }
+        if (!candidate.IsStatic || candidate.DeclaredAccessibility != Accessibility.Public) { return false; }
+        if (candidate.ReturnType.SpecialType != SpecialType.System_Boolean) { return false; }
+
+        IMethodSymbol constructed;
+        if (throwingMember.TypeArguments.Length > 0) {
+            if (candidate.TypeParameters.Length != throwingMember.TypeArguments.Length) { return false; }
+            constructed = candidate.Construct(throwingMember.TypeArguments.ToArray());
+        } else if (candidate.TypeParameters.Length != 0) {
+            return false;
+        } else {
+            constructed = candidate;
+        }
+
+        return SignatureIsDropInReplacement(throwingMember.Parameters, constructed.Parameters, resultType);
     }
 
     // The counterpart must take the throwing member's parameters unchanged — same types AND same ref kinds — then a

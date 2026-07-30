@@ -112,42 +112,58 @@ public sealed class ConflictMessageTruthfulnessProperties {
         // A conflict was thrown, so the in-effect domain must genuinely be empty.
         if (Feasible(hasBetween, lo, hi, step, allow, excl).Count != 0) { return false; }
 
-        // Allow-list claims. The bare form asserts every allowed value is forbidden; the qualified form asserts only
-        // the values the bounds and lattice still permit are forbidden.
-        if (message.Contains("every value") && message.Contains("allows") && allow.Length > 0) {
-            int   rangeLo   = hasBetween ? lo : -50;
-            int   rangeHi   = hasBetween ? hi : 50;
-            int[] reachable = allow.Where(a => a >= rangeLo && a <= rangeHi && (step <= 1 || a % step == 0)).ToArray();
+        if (!AllowListClaimHolds(message, hasBetween, lo, hi, step, allow, excl)) { return false; }
+        if (!RangeClaimHolds(message, hasBetween, lo, hi, excl)) { return false; }
+        if (!LatticeClaimHolds(message, hasBetween, lo, hi, step, excl)) { return false; }
 
-            bool qualified = message.Contains("that the other constraints leave");
-            bool claimTrue = qualified ? reachable.All(a => excl.Contains(a)) : allow.All(a => excl.Contains(a));
-            if (!claimTrue) { return false; }
+        return MessageReadsWell(message);
+    }
 
-            // The bare form must not be used when a bound or the lattice already dropped an allowed value.
-            if (!qualified && reachable.Length != allow.Length) { return false; }
-        }
+    /// <summary>
+    ///     Allow-list claims. The bare form asserts every allowed value is forbidden; the qualified form asserts only
+    ///     the values the bounds and lattice still permit are forbidden. True when the message makes no such claim.
+    /// </summary>
+    private static bool AllowListClaimHolds(string message, bool hasBetween, int lo, int hi, int step, int[] allow, int[] excl) {
+        if (!message.Contains("every value") || !message.Contains("allows") || allow.Length == 0) { return true; }
 
-        // A range claim must hold for every value in the window.
-        if (hasBetween && message.Contains($"every value between {lo} and {hi}")) {
-            if (!Enumerable.Range(lo, hi - lo + 1).All(value => excl.Contains(value))) { return false; }
-        }
+        int   rangeLo   = hasBetween ? lo : -50;
+        int   rangeHi   = hasBetween ? hi : 50;
+        int[] reachable = allow.Where(a => a >= rangeLo && a <= rangeHi && (step <= 1 || a % step == 0)).ToArray();
 
-        // A lattice claim must hold for every on-lattice value in the window.
-        if (hasBetween && step > 1 && message.Contains($"every MultipleOf({step}) value between {lo} and {hi}")) {
-            if (!Enumerable.Range(lo, hi - lo + 1).Where(value => value % step == 0).All(value => excl.Contains(value))) { return false; }
-        }
+        bool qualified = message.Contains("that the other constraints leave");
+        bool claimTrue = qualified ? reachable.All(a => excl.Contains(a)) : allow.All(a => excl.Contains(a));
+        if (!claimTrue) { return false; }
 
-        // Comprehensibility: no malformed fragment, and no "Cannot apply X because X forbids …" echo.
+        // The bare form must not be used when a bound or the lattice already dropped an allowed value.
+        return qualified || reachable.Length == allow.Length;
+    }
+
+    /// <summary>A range claim must hold for every value in the window. True when the message makes no such claim.</summary>
+    private static bool RangeClaimHolds(string message, bool hasBetween, int lo, int hi, int[] excl) {
+        if (!hasBetween || !message.Contains($"every value between {lo} and {hi}")) { return true; }
+
+        return Enumerable.Range(lo, hi - lo + 1).All(value => excl.Contains(value));
+    }
+
+    /// <summary>A lattice claim must hold for every on-lattice value in the window. True when the message makes no such claim.</summary>
+    private static bool LatticeClaimHolds(string message, bool hasBetween, int lo, int hi, int step, int[] excl) {
+        if (!hasBetween || step <= 1 || !message.Contains($"every MultipleOf({step}) value between {lo} and {hi}")) { return true; }
+
+        return Enumerable.Range(lo, hi - lo + 1).Where(value => value % step == 0).All(value => excl.Contains(value));
+    }
+
+    /// <summary>Comprehensibility: no malformed fragment, and no "Cannot apply X because X forbids …" echo.</summary>
+    private static bool MessageReadsWell(string message) {
         if (message.Contains("  ") || message.Contains(" ,") || message.Contains("forbids ,") || message.Contains("forbid ,")) { return false; }
-        int because = message.IndexOf(" because ", StringComparison.Ordinal);
-        if (because >= 0 && message.StartsWith("Cannot apply ", StringComparison.Ordinal)) {
-            int    prefix  = "Cannot apply ".Length;
-            string applied = message.Substring(prefix, because - prefix);
-            string clause  = message.Substring(because + " because ".Length);
-            if (clause.StartsWith(applied + " forbids", StringComparison.Ordinal) || clause.StartsWith(applied + " forbid", StringComparison.Ordinal)) { return false; }
-        }
 
-        return true;
+        int because = message.IndexOf(" because ", StringComparison.Ordinal);
+        if (because < 0 || !message.StartsWith("Cannot apply ", StringComparison.Ordinal)) { return true; }
+
+        int    prefix  = "Cannot apply ".Length;
+        string applied = message.Substring(prefix, because - prefix);
+        string clause  = message.Substring(because + " because ".Length);
+
+        return !clause.StartsWith(applied + " forbids", StringComparison.Ordinal) && !clause.StartsWith(applied + " forbid", StringComparison.Ordinal);
     }
 
     #endregion
