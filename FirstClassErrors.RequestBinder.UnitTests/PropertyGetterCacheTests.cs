@@ -150,6 +150,15 @@ public sealed class PropertyGetterCacheTests {
 
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S3459:Unassigned members should be removed",
+                                                     Justification =
+                                                         "Deliberately misdeclared, as the name says. This DTO exists so the binder can refuse a non-nullable value-type " +
+                                                         "property; the refusal happens when the property is SELECTED, so nothing ever assigns or reads it. Assigning it " +
+                                                         "would remove the very defect under test.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S1144:Unused private types or members should be removed",
+                                                     Justification =
+                                                         "Same reason as the S3459 suppression above: the property is a fixture for a refusal that fires before any value " +
+                                                         "is set, so its init accessor is unreachable by design.")]
     private sealed record MisdeclaredDto {
 
         public int Count { get; init; }

@@ -12,6 +12,11 @@ namespace FirstClassErrors.UnitTests;
 
 [Collection("SmartEnumSideEffects")]
 [TestSubject(typeof(ErrorContextKey))]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S3881:\"IDisposable\" should be implemented correctly",
+                                                 Justification =
+                                                     "xUnit's teardown hook, not a resource owner. The class holds nothing unmanaged and is instantiated once per " +
+                                                     "test by the framework, which calls Dispose itself; the full pattern (virtual Dispose(bool), a finalizer, " +
+                                                     "GC.SuppressFinalize) would add ceremony around a single ResetForTests() call.")]
 public class ErrorContextKeyTests : IDisposable {
 
     #region Constructors & Destructor
