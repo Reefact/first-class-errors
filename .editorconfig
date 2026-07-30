@@ -86,7 +86,7 @@ dotnet_diagnostic.CA1859.severity = none
 # cleared, or the few that remain are deliberate and carry a [SuppressMessage] with the reason at
 # the site. The second door keeps the rule enforced everywhere else, which parking it never did.
 
-dotnet_diagnostic.S3776.severity = suggestion  #  19 — Cognitive Complexity of methods should not be too high
+dotnet_diagnostic.S3776.severity = suggestion  #  15 — Cognitive Complexity of methods should not be too high
 dotnet_diagnostic.S1244.severity = suggestion  #  15 — Floating point numbers should not be tested for equality
 dotnet_diagnostic.S3878.severity = suggestion  #  14 — Arrays should not be created for params parameters
 dotnet_diagnostic.S3218.severity = suggestion  #   8 — Inner class members should not shadow outer class "static" or type members

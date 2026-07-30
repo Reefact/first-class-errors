@@ -445,24 +445,30 @@ internal sealed class StringSpec {
     }
 
     private void ValidateLengthBounds(string applying) {
-        if (_exactLength is int exact) {
-            if (exact < _minLength) {
-                throw new ConflictingAnyConstraintException(applying == _exactConstraint
-                                                                ? $"Cannot apply {applying} because {_minConstraint} already requires at least {Characters(_minLength)}."
-                                                                : $"Cannot apply {applying} because {_exactConstraint} already fixes the length at {V(exact)}.");
-            }
-
-            if (_maxLength is int cappedAt && exact > cappedAt) {
-                throw new ConflictingAnyConstraintException(applying == _exactConstraint
-                                                                ? $"Cannot apply {applying} because {_maxConstraint} already caps the length at {V(cappedAt)}."
-                                                                : $"Cannot apply {applying} because {_exactConstraint} already fixes the length at {V(exact)}.");
-            }
-        }
+        if (_exactLength is int exact) { ValidateExactAgainstBounds(applying, exact); }
 
         if (_maxLength is int max && _minLength > max) {
             throw new ConflictingAnyConstraintException(applying == _maxConstraint
                                                             ? $"Cannot apply {applying} because {_minConstraint} already requires at least {Characters(_minLength)}."
                                                             : $"Cannot apply {applying} because {_maxConstraint} already caps the length at {V(max)}.");
+        }
+    }
+
+    /// <summary>
+    ///     Validates a fixed length against a bound already applied; throws naming the bound it contradicts. Symmetric
+    ///     wording, so the message reads whether the last constraint applied was the fixed length or the bound.
+    /// </summary>
+    private void ValidateExactAgainstBounds(string applying, int exact) {
+        if (exact < _minLength) {
+            throw new ConflictingAnyConstraintException(applying == _exactConstraint
+                                                            ? $"Cannot apply {applying} because {_minConstraint} already requires at least {Characters(_minLength)}."
+                                                            : $"Cannot apply {applying} because {_exactConstraint} already fixes the length at {V(exact)}.");
+        }
+
+        if (_maxLength is int cappedAt && exact > cappedAt) {
+            throw new ConflictingAnyConstraintException(applying == _exactConstraint
+                                                            ? $"Cannot apply {applying} because {_maxConstraint} already caps the length at {V(cappedAt)}."
+                                                            : $"Cannot apply {applying} because {_exactConstraint} already fixes the length at {V(exact)}.");
         }
     }
 
