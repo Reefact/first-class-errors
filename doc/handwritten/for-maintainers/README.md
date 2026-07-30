@@ -48,9 +48,12 @@ an engine loadable by a Roslyn host, plus a thin CLI over it. It is implementabl
 as written: the emitted skeleton, the parameter-resolution rules and the decisions
 behind them were each checked against the library's source, and the central claims
 were measured. It is also **self-contained**: it inlines every library fact it
-relies on and states its host-repository requirements as requirements rather than
-paths, so it survives JustDummies moving to its own repository. Not yet built.
-Also in [French](specifications/justdummies-tool.fr.md).
+relies on, states its host-repository requirements as requirements rather than
+paths, and carries its seven architectural decisions as full ADR-format records
+in its own §15 — held there, rather than entered into the base above, because the
+repository that should hold them does not exist yet. All of which survives
+JustDummies moving to its own repository. Not yet built. Also in
+[French](specifications/justdummies-tool.fr.md).
 
 ### [Architecture Decision Records](adr/README.md)
 
