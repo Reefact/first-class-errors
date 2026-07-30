@@ -41,18 +41,18 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Gui
     #region Fields declarations
 
     private readonly IReadOnlyList<Guid>? _allowed;
-    private readonly string?              _allowedConstraint;
+    private readonly ConstraintCall?      _allowedConstraint;
     private readonly List<Guid>?          _effectiveAllowed;
     private readonly IReadOnlyList<Guid>  _excluded;
     private readonly HashSet<Guid>        _excludedSet;
     private readonly Guid?                _pinned;
-    private readonly string?              _pinnedConstraint;
+    private readonly ConstraintCall?      _pinnedConstraint;
     private readonly RandomSource         _source;
 
     #endregion
 
-    private AnyGuid(RandomSource source, Guid? pinned, string? pinnedConstraint,
-                    IReadOnlyList<Guid>? allowed, string? allowedConstraint, IReadOnlyList<Guid> excluded) {
+    private AnyGuid(RandomSource source, Guid? pinned, ConstraintCall? pinnedConstraint,
+                    IReadOnlyList<Guid>? allowed, ConstraintCall? allowedConstraint, IReadOnlyList<Guid> excluded) {
         _source            = source;
         _pinned            = pinned;
         _pinnedConstraint  = pinnedConstraint;
@@ -82,14 +82,14 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Gui
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyGuid NonEmpty() {
-        return WithExcluded([Guid.Empty], "NonEmpty()");
+        return WithExcluded([Guid.Empty], ConstraintCall.Of(nameof(NonEmpty)));
     }
 
     /// <summary>Pins the identifier to <see cref="Guid.Empty" />.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyGuid Empty() {
-        return Validated(new AnyGuid(_source, Guid.Empty, "Empty()", _allowed, _allowedConstraint, _excluded), "Empty()");
+        return Validated(new AnyGuid(_source, Guid.Empty, ConstraintCall.Of(nameof(Empty)), _allowed, _allowedConstraint, _excluded), ConstraintCall.Of(nameof(Empty)));
     }
 
     /// <summary>Requires the identifier to be one of the supplied values. Declared once per generator.</summary>
@@ -102,10 +102,10 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Gui
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        string constraint = $"OneOf({Join(values)})";
+        ConstraintCall constraint = ConstraintCall.Of(nameof(OneOf), Join(values));
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-        if (string.Equals(_allowedConstraint, constraint, StringComparison.Ordinal)) { return this; }
+        if (_allowedConstraint == constraint) { return this; }
         if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {constraint} because {_allowedConstraint} is already defined."); }
 
         return Validated(new AnyGuid(_source, _pinned, _pinnedConstraint, values.Distinct().ToArray(), constraint, _excluded), constraint);
@@ -121,7 +121,7 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Gui
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        return WithExcluded(values, $"Except({Join(values)})");
+        return WithExcluded(values, ConstraintCall.Of(nameof(Except), Join(values)));
     }
 
     /// <summary>
@@ -132,7 +132,7 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Gui
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyGuid DifferentFrom(Guid value) {
-        return WithExcluded([value], $"DifferentFrom({V(value)})");
+        return WithExcluded([value], ConstraintCall.Of(nameof(DifferentFrom), V(value)));
     }
 
     /// <inheritdoc />
@@ -160,7 +160,7 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Gui
         return candidate;
     }
 
-    private AnyGuid WithExcluded(Guid[] values, string applying) {
+    private AnyGuid WithExcluded(Guid[] values, ConstraintCall applying) {
         List<Guid> excluded = [.. _excluded, .. values];
 
         return Validated(new AnyGuid(_source, _pinned, _pinnedConstraint, _allowed, _allowedConstraint, excluded), applying);
@@ -180,7 +180,7 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Gui
                                                          "the rule notices — but that is a builder validating its own successor, not an oversight. Making it static across seven types " +
                                                          "would break a family resemblance the reader relies on, for no measurable gain on a path that runs once per declared " +
                                                          "constraint.")]
-    private AnyGuid Validated(AnyGuid candidate, string applying) {
+    private AnyGuid Validated(AnyGuid candidate, ConstraintCall applying) {
         if (candidate._pinned is Guid pinned) {
             if (candidate._excluded.Contains(pinned)) {
                 throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {candidate._pinnedConstraint} already pins the value to {V(pinned)}, which the exclusions forbid.");
