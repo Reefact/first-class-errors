@@ -53,7 +53,7 @@ paramètres et les décisions qui les portent ont chacun été vérifiés contre
 de la bibliothèque, et les affirmations centrales ont été mesurées. Elle est aussi
 **autonome** : elle inline chaque fait sur la bibliothèque dont elle dépend, énonce
 ses exigences envers le dépôt hôte en exigences plutôt qu'en chemins, et porte ses
-huit enregistrements de décision au format ADR complet dans son
+dix enregistrements de décision au format ADR complet dans son
 propre §15 — tenus là, plutôt qu'entrés dans la base ci-dessus, parce que le dépôt
 qui devrait les accueillir n'existe pas encore. Le tout survit au déménagement de
 JustDummies dans son propre dépôt. Pas encore construit. Aussi en
