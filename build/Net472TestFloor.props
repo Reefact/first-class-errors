@@ -35,6 +35,19 @@
     <OutputType Condition="'$(TargetFramework)' == 'net472'">Exe</OutputType>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
+    <!-- S8969 (redundant null-forgiving operator) cannot hold on this leg, because the net472 reference
+         assemblies carry NO nullable annotations. Roslyn treats an unannotated - "oblivious" - expression as
+         not-null in flow analysis, so `X? x = list.FirstOrDefault(...)` leaves x already not-null here while
+         the annotated modern BCL leaves it maybe-null. The same `x!` is therefore REQUIRED on net10.0 and
+         redundant on net472: six sites in FirstClassErrors.UnitTests, and no way to satisfy both legs with one
+         spelling short of #if. The rule stays enforced on every shipping target and stands down only here,
+         which is the same concession as the IsExternalInit polyfill below - a property of the floor, not of
+         the code. Scoped to the TFM rather than written in .editorconfig because .editorconfig cannot see a
+         target framework. -->
+    <NoWarn>$(NoWarn);S8969</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
     <!-- Reference assemblies so net472 COMPILES on any box without the 4.7.2 targeting pack installed (the
          Linux legs, a bare Windows runner). Build-time only (PrivateAssets=all): never a runtime or package
