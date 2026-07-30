@@ -269,10 +269,7 @@ internal sealed class DecimalIntervalSpec {
 
             decimal? free = NudgeOnGrid(snapped, true) ?? NudgeOnGrid(snapped, false);
             if (free is null) {
-                throw new AnyGenerationException(
-                    $"Generation failed: no {_typeName} value near the drawn candidate satisfies the exclusions. {source.ReplayGuidance(random.Seed)}",
-                    random.Seed,
-                    new InvalidOperationException("The grid nudge could not leave the excluded point within the allowed range."));
+                throw AnyGenerationException.GridNudgeExhausted(_typeName, source.ReplayGuidance(random.Seed), random.Seed);
             }
 
             return free.Value;
@@ -285,10 +282,7 @@ internal sealed class DecimalIntervalSpec {
         while (IsExcluded(candidate)) {
             decimal next = Clamped(candidate + SmallestStep);
             if (next == candidate || budget-- == 0) {
-                throw new AnyGenerationException(
-                    $"Generation failed: no {_typeName} value near the drawn candidate satisfies the exclusions. {source.ReplayGuidance(random.Seed)}",
-                    random.Seed,
-                    new InvalidOperationException("The exclusion nudge could not leave the excluded point within the allowed range."));
+                throw AnyGenerationException.ExclusionNudgeExhausted(_typeName, source.ReplayGuidance(random.Seed), random.Seed);
             }
 
             candidate = next;

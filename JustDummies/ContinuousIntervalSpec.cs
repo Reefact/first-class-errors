@@ -262,10 +262,7 @@ internal sealed class ContinuousIntervalSpec {
             // examined. Reporting the stronger claim would send a caller looking for a contradiction that may not
             // exist, and the shape that reaches this line (a wide range whose free values sit further than the
             // budget from the draw) is precisely the one where it would not.
-            throw new AnyGenerationException(
-                $"Generation failed: no {_typeName} value near the drawn candidate satisfies the exclusions. {source.ReplayGuidance(random.Seed)}",
-                random.Seed,
-                new InvalidOperationException($"Every representable value within {NudgeBudget.ToString(CultureInfo.InvariantCulture)} steps of the drawn candidate, in both directions, is excluded or out of bounds. Values further away were not examined, so this is an exhausted local search rather than an empty range."));
+            throw AnyGenerationException.LocalSearchExhausted(_typeName, source.ReplayGuidance(random.Seed), random.Seed, NudgeBudget);
         }
 
         return free.Value;
