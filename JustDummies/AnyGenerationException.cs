@@ -27,8 +27,8 @@ public sealed class AnyGenerationException : DummyException {
     ///     The bounded walk around the drawn candidate found nothing the exclusions allow: every representable value
     ///     within <paramref name="budget" /> steps of it, in both directions, is excluded or out of bounds.
     /// </summary>
-    internal static AnyGenerationException LocalSearchExhausted(string typeName, string replayGuidance, int? seed, int budget) {
-        return NearTheCandidate(typeName, replayGuidance, seed,
+    internal static AnyGenerationException LocalSearchExhausted(string typeName, Replay replay, int budget) {
+        return NearTheCandidate(typeName, replay,
                                 $"Every representable value within {budget.ToString(CultureInfo.InvariantCulture)} steps of the drawn candidate, in both directions, is excluded or out of bounds. Values further away were not examined, so this is an exhausted local search rather than an empty range.");
     }
 
@@ -36,16 +36,16 @@ public sealed class AnyGenerationException : DummyException {
     ///     Snapping the drawn candidate onto the scale lattice could not leave an excluded point without leaving the
     ///     allowed range.
     /// </summary>
-    internal static AnyGenerationException GridNudgeExhausted(string typeName, string replayGuidance, int? seed) {
-        return NearTheCandidate(typeName, replayGuidance, seed, "The grid nudge could not leave the excluded point within the allowed range.");
+    internal static AnyGenerationException GridNudgeExhausted(string typeName, Replay replay) {
+        return NearTheCandidate(typeName, replay, "The grid nudge could not leave the excluded point within the allowed range.");
     }
 
     /// <summary>
     ///     Nudging the drawn candidate away from an excluded point could not find a free value without leaving the
     ///     allowed range.
     /// </summary>
-    internal static AnyGenerationException ExclusionNudgeExhausted(string typeName, string replayGuidance, int? seed) {
-        return NearTheCandidate(typeName, replayGuidance, seed, "The exclusion nudge could not leave the excluded point within the allowed range.");
+    internal static AnyGenerationException ExclusionNudgeExhausted(string typeName, Replay replay) {
+        return NearTheCandidate(typeName, replay, "The exclusion nudge could not leave the excluded point within the allowed range.");
     }
 
     /// <summary>
@@ -60,10 +60,10 @@ public sealed class AnyGenerationException : DummyException {
     ///     Builds the exception for a relative URI whose every component was declared away — no path segment, no query,
     ///     no fragment, no root — leaving the empty string, which is not a valid URI reference.
     /// </summary>
-    internal static AnyGenerationException EmptyRelativeReference(string replayGuidance, int seed) {
+    internal static AnyGenerationException EmptyRelativeReference(Replay replay) {
         return new AnyGenerationException("A relative URI with exactly 0 path segments and no query, fragment or root is empty, which is not a valid URI reference. " +
-                                          $"Add a query, a fragment, Rooted(), or a positive segment count. {replayGuidance}",
-                                          seed);
+                                          $"Add a query, a fragment, Rooted(), or a positive segment count. {replay.Guidance}",
+                                          replay.Seed);
     }
 
     /// <summary>
@@ -94,13 +94,18 @@ public sealed class AnyGenerationException : DummyException {
     ///     successful draw otherwise — which is every draw a test actually makes.
     /// </remarks>
     internal static AnyGenerationException FactoryFailed(Func<string> failure, Exception cause, RandomSource? source, bool reproducible) {
-        int?   seed    = source?.Current.Seed;
-        string message = $"Generation failed: {failure()} ({cause.GetType().Name}: {cause.Message}).";
+        // A derivation over a foreign generator carries no source to name, and then there is nothing to replay.
+        Replay? replay = null;
         if (source is not null) {
-            message += $" {(reproducible ? source.ReplayGuidance(seed!.Value) : source.PartialReplayGuidance(seed!.Value))}";
+            replay = reproducible ? Replay.Of(source) : Replay.PartialOf(source);
         }
 
-        return new AnyGenerationException(message, seed, cause);
+        string message = $"Generation failed: {failure()} ({cause.GetType().Name}: {cause.Message}).";
+        if (replay is not null) {
+            message += $" {replay.Guidance}";
+        }
+
+        return new AnyGenerationException(message, replay?.Seed, cause);
     }
 
     /// <summary>
@@ -113,9 +118,9 @@ public sealed class AnyGenerationException : DummyException {
     ///     exception must never throw, or the failure being reported is replaced by a failure about reporting it
     ///     (ADR-0045, which exempts exception types for exactly that reason).
     /// </remarks>
-    private static AnyGenerationException NearTheCandidate(string typeName, string replayGuidance, int? seed, string diagnostic) {
-        return new AnyGenerationException($"Generation failed: no {typeName} value near the drawn candidate satisfies the exclusions. {replayGuidance}",
-                                          seed,
+    private static AnyGenerationException NearTheCandidate(string typeName, Replay replay, string diagnostic) {
+        return new AnyGenerationException($"Generation failed: no {typeName} value near the drawn candidate satisfies the exclusions. {replay.Guidance}",
+                                          replay.Seed,
                                           new InvalidOperationException(diagnostic));
     }
 

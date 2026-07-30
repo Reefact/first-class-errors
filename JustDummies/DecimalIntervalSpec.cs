@@ -269,7 +269,7 @@ internal sealed class DecimalIntervalSpec {
 
             decimal? free = NudgeOnGrid(snapped, true) ?? NudgeOnGrid(snapped, false);
             if (free is null) {
-                throw AnyGenerationException.GridNudgeExhausted(_typeName, source.ReplayGuidance(random.Seed), random.Seed);
+                throw AnyGenerationException.GridNudgeExhausted(_typeName, Replay.Of(source, random.Seed));
             }
 
             return free.Value;
@@ -282,7 +282,7 @@ internal sealed class DecimalIntervalSpec {
         while (IsExcluded(candidate)) {
             decimal next = Clamped(candidate + SmallestStep);
             if (next == candidate || budget-- == 0) {
-                throw AnyGenerationException.ExclusionNudgeExhausted(_typeName, source.ReplayGuidance(random.Seed), random.Seed);
+                throw AnyGenerationException.ExclusionNudgeExhausted(_typeName, Replay.Of(source, random.Seed));
             }
 
             candidate = next;
