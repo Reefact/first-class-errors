@@ -65,11 +65,13 @@ public sealed class ListBindingTests {
         body.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
 
         Outcome<string> outcome = bind.New(_ => "never");
-        Check.That(outcome.Error!.InnerErrors).HasSize(2);
-        Check.That(outcome.Error!.InnerErrors.Select(BindingAssertions.ArgumentPathOf))
+
+        Error envelope = outcome.Error!;
+        Check.That(envelope.InnerErrors).HasSize(2);
+        Check.That(envelope.InnerErrors.Select(BindingAssertions.ArgumentPathOf))
              .ContainsExactly("Tags[1]", "Tags[2]");
-        Check.That(outcome.Error!.InnerErrors[0].Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
-        Check.That(outcome.Error!.InnerErrors[1].Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_REQUIRED");
+        Check.That(envelope.InnerErrors[0].Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_INVALID");
+        Check.That(envelope.InnerErrors[1].Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_REQUIRED");
     }
 
     [Fact(DisplayName = "An optional list that is absent binds an empty list — never null — and records nothing.")]
@@ -118,14 +120,16 @@ public sealed class ListBindingTests {
         body.ListOfComplexProperties(r => r.Guests).FailWith(BookingEnvelopeError.GuestInvalid).AsRequired<Guest>(BindGuest);
 
         Outcome<string> outcome = bind.New(_ => "never");
-        Check.That(outcome.Error!.InnerErrors).HasSize(2);
 
-        Error second = outcome.Error!.InnerErrors[0];
+        Error envelope = outcome.Error!;
+        Check.That(envelope.InnerErrors).HasSize(2);
+
+        Error second = envelope.InnerErrors[0];
         Check.That(second.Code.ToString()).IsEqualTo("TEST_GUEST_INVALID");
         Check.That(second.InnerErrors.Select(BindingAssertions.ArgumentPathOf))
              .ContainsExactly("Guests[1].FirstName", "Guests[1].Email");
 
-        Error third = outcome.Error!.InnerErrors[1];
+        Error third = envelope.InnerErrors[1];
         Check.That(third.InnerErrors.Select(BindingAssertions.ArgumentPathOf)).ContainsExactly("Guests[2].FirstName");
     }
 
@@ -152,13 +156,14 @@ public sealed class ListBindingTests {
         Outcome<string> outcome = bind.New(_ => "never");
 
         // Both the null element AND the invalid element after it must be collected — the null must not short-circuit.
-        Check.That(outcome.Error!.InnerErrors).HasSize(2);
+        Error envelope = outcome.Error!;
+        Check.That(envelope.InnerErrors).HasSize(2);
 
-        Error nullElement = outcome.Error!.InnerErrors[0];
+        Error nullElement = envelope.InnerErrors[0];
         Check.That(nullElement.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_REQUIRED");
         Check.That(BindingAssertions.ArgumentPathOf(nullElement)).IsEqualTo("Guests[0]");
 
-        Error secondEnvelope = outcome.Error!.InnerErrors[1];
+        Error secondEnvelope = envelope.InnerErrors[1];
         Check.That(secondEnvelope.Code.ToString()).IsEqualTo("TEST_GUEST_INVALID");
         Check.That(secondEnvelope.InnerErrors.Select(BindingAssertions.ArgumentPathOf))
              .ContainsExactly("Guests[1].FirstName", "Guests[1].Email");

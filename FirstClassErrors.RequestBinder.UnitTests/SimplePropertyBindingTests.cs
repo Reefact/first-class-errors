@@ -35,9 +35,11 @@ public sealed class SimplePropertyBindingTests {
 
         Outcome<string> outcome = bind.New(_ => "never");
         Check.That(outcome.IsFailure).IsTrue();
-        Check.That(outcome.Error!.Code.ToString()).IsEqualTo("TEST_BOOKING_COMMAND_INVALID");
 
-        Error required = outcome.Error!.InnerErrors.Single();
+        Error envelope = outcome.Error!;
+        Check.That(envelope.Code.ToString()).IsEqualTo("TEST_BOOKING_COMMAND_INVALID");
+
+        Error required = envelope.InnerErrors.Single();
         Check.That(required.Code.ToString()).IsEqualTo("REQUEST_ARGUMENT_REQUIRED");
         Check.That(BindingAssertions.ArgumentPathOf(required)).IsEqualTo("GuestEmail");
     }
