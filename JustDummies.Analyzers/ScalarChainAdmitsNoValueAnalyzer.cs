@@ -46,6 +46,18 @@ public sealed class ScalarChainAdmitsNoValueAnalyzer : DiagnosticAnalyzer {
         if (factory is null || !IsIntegerFactory(factory.TargetMethod.Name)) { return; }
         if (NegativeTestGuard.IsSoleBodyOfLambdaArgument(invocation.Syntax)) { return; }
 
+        AnalyzeConstraints(context, constraints);
+    }
+
+    /// <summary>
+    ///     Walks the constraints in the order they were written, carrying the interval they describe, and reports the
+    ///     first one that empties it, that narrows nothing, or that excludes nothing.
+    /// </summary>
+    /// <remarks>
+    ///     Split from <see cref="Analyze" />, which answers a different question: whether this chain is one the rule
+    ///     reasons about at all. Everything below assumes that answer is yes.
+    /// </remarks>
+    private static void AnalyzeConstraints(OperationAnalysisContext context, IReadOnlyList<IInvocationOperation> constraints) {
         ScalarConstraintState state = ScalarConstraintState.Unconstrained();
 
         foreach (IInvocationOperation constraint in constraints) {
