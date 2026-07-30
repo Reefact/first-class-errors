@@ -47,17 +47,17 @@ internal sealed class CountSpec {
     #region Fields declarations
 
     private readonly int?    _exact;
-    private readonly string? _exactConstraint;
+    private readonly ConstraintCall? _exactConstraint;
     private readonly int?    _max;
-    private readonly string? _maxConstraint;
+    private readonly ConstraintCall? _maxConstraint;
     private readonly int     _min;
-    private readonly string? _minConstraint;
+    private readonly ConstraintCall? _minConstraint;
 
     #endregion
 
-    private CountSpec(int? exact, string? exactConstraint,
-                      int   min,   string? minConstraint,
-                      int?  max,   string? maxConstraint) {
+    private CountSpec(int? exact, ConstraintCall? exactConstraint,
+                      int   min,   ConstraintCall? minConstraint,
+                      int?  max,   ConstraintCall? maxConstraint) {
         _exact           = exact;
         _exactConstraint = exactConstraint;
         _min             = min;
@@ -73,18 +73,18 @@ internal sealed class CountSpec {
     internal int? Ceiling => _exact ?? _max;
 
     /// <summary>Fixes the exact count; declared once per generator.</summary>
-    internal CountSpec WithExactCount(int count, string applying) {
+    internal CountSpec WithExactCount(int count, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-        if (string.Equals(_exactConstraint, applying, StringComparison.Ordinal)) { return this; }
+        if (_exactConstraint == applying) { return this; }
         if (_exactConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_exactConstraint} is already defined."); }
 
         return new CountSpec(count, applying, _min, _minConstraint, _max, _maxConstraint).Validated(applying);
     }
 
     /// <summary>Tightens the minimum count; a looser bound than the current one is a no-op.</summary>
-    internal CountSpec WithMinCount(int count, string applying) {
+    internal CountSpec WithMinCount(int count, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (count <= _min) { return this; }
 
@@ -92,7 +92,7 @@ internal sealed class CountSpec {
     }
 
     /// <summary>Tightens the maximum count; a looser bound than the current one is a no-op.</summary>
-    internal CountSpec WithMaxCount(int count, string applying) {
+    internal CountSpec WithMaxCount(int count, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_max is not null && count >= _max) { return this; }
 
@@ -126,7 +126,7 @@ internal sealed class CountSpec {
     ///     upper bound that leaves no room. Symmetric wording, so the message reads whether the last constraint applied
     ///     was the count cap or the containment requirement.
     /// </summary>
-    internal void EnsureFits(int required, string applying) {
+    internal void EnsureFits(int required, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         int? cap = _exact ?? _max;
         if (cap is int ceiling && required > ceiling) {
@@ -134,7 +134,7 @@ internal sealed class CountSpec {
         }
     }
 
-    private CountSpec Validated(string applying) {
+    private CountSpec Validated(ConstraintCall applying) {
         if (_exact is int exact) { EnsureExactAgreesWithBounds(applying, exact); }
 
         if (_max is int max && _min > max) {
@@ -150,7 +150,7 @@ internal sealed class CountSpec {
     ///     Ensures a fixed count does not contradict a bound already applied; throws naming the bound it contradicts.
     ///     Symmetric wording, so the message reads whether the last constraint applied was the fixed count or the bound.
     /// </summary>
-    private void EnsureExactAgreesWithBounds(string applying, int exact) {
+    private void EnsureExactAgreesWithBounds(ConstraintCall applying, int exact) {
         if (exact < _min) {
             throw new ConflictingAnyConstraintException(applying == _exactConstraint
                                                             ? $"Cannot apply {applying} because {_minConstraint} already requires at least {Elements(_min)}."
