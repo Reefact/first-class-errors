@@ -39,21 +39,21 @@ internal sealed class DecimalIntervalSpec {
     #region Fields declarations
 
     private readonly IReadOnlyList<decimal>? _allowed;
-    private readonly string?                 _allowedConstraint;
+    private readonly ConstraintCall?         _allowedConstraint;
     private readonly decimal                 _ceiledMin;
     private readonly List<decimal>?          _effectiveAllowed;
     private readonly IReadOnlyList<decimal>  _excluded;
-    private readonly IReadOnlyList<(string Constraint, decimal[] Ordinals)> _exclusions;
+    private readonly IReadOnlyList<(ConstraintCall Constraint, decimal[] Ordinals)> _exclusions;
     private readonly int                     _excludedOnLattice;
     private readonly decimal                 _flooredMax;
     private readonly bool                    _latticeHasPoint;
     private readonly decimal                 _max;
-    private readonly string?                 _maxConstraint;
+    private readonly ConstraintCall?         _maxConstraint;
     private readonly decimal                 _min;
-    private readonly string?                 _minConstraint;
+    private readonly ConstraintCall?         _minConstraint;
     private readonly Func<decimal, string>   _render;
     private readonly int                     _scale;
-    private readonly string?                 _scaleConstraint;
+    private readonly ConstraintCall?         _scaleConstraint;
     private readonly decimal                 _step;
     private readonly string                  _typeName;
 
@@ -65,11 +65,11 @@ internal sealed class DecimalIntervalSpec {
                                                          "every With* call, so every field has to be threaded through it. A parameter object would only rename the same list, and the " +
                                                          "constructor is private — no caller ever writes this argument list.")]
     private DecimalIntervalSpec(string  typeName, Func<decimal, string> render,
-                                decimal min,      string? minConstraint,
-                                decimal max,      string? maxConstraint,
-                                IReadOnlyList<decimal>? allowed, string? allowedConstraint,
-                                IReadOnlyList<(string Constraint, decimal[] Ordinals)> exclusions,
-                                int     scale,    string? scaleConstraint) {
+                                decimal min,      ConstraintCall? minConstraint,
+                                decimal max,      ConstraintCall? maxConstraint,
+                                IReadOnlyList<decimal>? allowed, ConstraintCall? allowedConstraint,
+                                IReadOnlyList<(ConstraintCall Constraint, decimal[] Ordinals)> exclusions,
+                                int     scale,    ConstraintCall? scaleConstraint) {
         _typeName          = typeName;
         _render            = render;
         _min               = min;
@@ -103,55 +103,55 @@ internal sealed class DecimalIntervalSpec {
     }
 
     /// <summary>Tightens the lower bound; a looser bound than the current one is a no-op.</summary>
-    internal DecimalIntervalSpec WithMinimum(decimal minimum, string applying) {
+    internal DecimalIntervalSpec WithMinimum(decimal minimum, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (minimum <= _min) { return this; }
 
         if (minimum > _max) {
-            if (_maxConstraint is null) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
+            if (_maxConstraint is null) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying.ToString(), _typeName); }
 
-            throw ConflictingAnyConstraintException.AlreadyBoundedAbove(applying, _maxConstraint, _render(_max));
+            throw ConflictingAnyConstraintException.AlreadyBoundedAbove(applying.ToString(), _maxConstraint.ToString(), _render(_max));
         }
 
         return Validated(new DecimalIntervalSpec(_typeName, _render, minimum, applying, _max, _maxConstraint, _allowed, _allowedConstraint, _exclusions, _scale, _scaleConstraint), applying);
     }
 
     /// <summary>Tightens the upper bound; a looser bound than the current one is a no-op.</summary>
-    internal DecimalIntervalSpec WithMaximum(decimal maximum, string applying) {
+    internal DecimalIntervalSpec WithMaximum(decimal maximum, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (maximum >= _max) { return this; }
 
         if (maximum < _min) {
-            if (_minConstraint is null) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
+            if (_minConstraint is null) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying.ToString(), _typeName); }
 
-            throw ConflictingAnyConstraintException.AlreadyBoundedBelow(applying, _minConstraint, _render(_min));
+            throw ConflictingAnyConstraintException.AlreadyBoundedBelow(applying.ToString(), _minConstraint.ToString(), _render(_min));
         }
 
         return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, maximum, applying, _allowed, _allowedConstraint, _exclusions, _scale, _scaleConstraint), applying);
     }
 
     /// <summary>Tightens the lower bound to strictly above <paramref name="bound" /> — the inclusive bound plus a point exclusion.</summary>
-    internal DecimalIntervalSpec WithMinimumAbove(decimal bound, string applying) {
+    internal DecimalIntervalSpec WithMinimumAbove(decimal bound, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
 
         return WithMinimum(bound, applying).WithExcluded([bound], applying);
     }
 
     /// <summary>Tightens the upper bound to strictly below <paramref name="bound" /> — the inclusive bound plus a point exclusion.</summary>
-    internal DecimalIntervalSpec WithMaximumBelow(decimal bound, string applying) {
+    internal DecimalIntervalSpec WithMaximumBelow(decimal bound, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
 
         return WithMaximum(bound, applying).WithExcluded([bound], applying);
     }
 
     /// <summary>Restricts the domain to an explicit allow-list; declared once per generator.</summary>
-    internal DecimalIntervalSpec WithAllowed(decimal[] values, string applying) {
+    internal DecimalIntervalSpec WithAllowed(decimal[] values, ConstraintCall applying) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-        if (string.Equals(_allowedConstraint, applying, StringComparison.Ordinal)) { return this; }
-        if (_allowedConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _allowedConstraint); }
+        if (_allowedConstraint == applying) { return this; }
+        if (_allowedConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying.ToString(), _allowedConstraint.ToString()); }
 
         decimal[] distinct = values.Distinct().ToArray();
 
@@ -159,13 +159,13 @@ internal sealed class DecimalIntervalSpec {
     }
 
     /// <summary>Adds values the generator must never produce.</summary>
-    internal DecimalIntervalSpec WithExcluded(decimal[] values, string applying) {
+    internal DecimalIntervalSpec WithExcluded(decimal[] values, ConstraintCall applying) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
 
         // The applied constraint tags its own values, so a later exhaustion message can name the exclusion
         // that actually emptied the domain rather than a bound that merely happens to border it.
-        List<(string Constraint, decimal[] Ordinals)> exclusions = [.. _exclusions, (applying, values)];
+        List<(ConstraintCall Constraint, decimal[] Ordinals)> exclusions = [.. _exclusions, (applying, values)];
 
         return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, exclusions, _scale, _scaleConstraint), applying);
     }
@@ -175,14 +175,14 @@ internal sealed class DecimalIntervalSpec {
     ///     decimal places. A value lattice, not a representation contract: the drawn value lies on the grid, but its
     ///     rendered form is not padded with trailing zeros. Declared once per generator.
     /// </summary>
-    internal DecimalIntervalSpec WithScale(int scale, string applying) {
+    internal DecimalIntervalSpec WithScale(int scale, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_scale >= 0) {
             if (_scale == scale) { return this; }
 
             // _scale and _scaleConstraint are written as a pair by the constructor and rethreaded as a pair by every
             // rebuild, so a declared scale always carries the name of the constraint that declared it.
-            throw ConflictingAnyConstraintException.AlreadyDefined(applying, _scaleConstraint!);
+            throw ConflictingAnyConstraintException.AlreadyDefined(applying.ToString(), _scaleConstraint!.ToString());
         }
 
         return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, _exclusions, scale, applying), applying);
@@ -368,10 +368,10 @@ internal sealed class DecimalIntervalSpec {
                                                          "the rule notices — but that is a builder validating its own successor, not an oversight. Making it static across seven types " +
                                                          "would break a family resemblance the reader relies on, for no measurable gain on a path that runs once per declared " +
                                                          "constraint.")]
-    private DecimalIntervalSpec Validated(DecimalIntervalSpec candidate, string applying) {
+    private DecimalIntervalSpec Validated(DecimalIntervalSpec candidate, ConstraintCall applying) {
         if (candidate.IsSatisfiable()) { return candidate; }
 
-        throw ConflictingAnyConstraintException.NoValueRemains(applying, candidate.DescribeExhaustion(applying));
+        throw ConflictingAnyConstraintException.NoValueRemains(applying.ToString(), candidate.DescribeExhaustion(applying));
     }
 
     private bool IsSatisfiable() {
@@ -393,8 +393,8 @@ internal sealed class DecimalIntervalSpec {
                                                          "The flagged lines are prose, not disabled code: the heuristic reads an equation, a bracketed range or a semicolon inside an " +
                                                          "explanatory sentence as a statement. These comments carry the reasoning this codebase asks every comment to carry, so the " +
                                                          "finding is recorded rather than the comment deleted.")]
-    private string DescribeExhaustion(string applying) {
-        IReadOnlyList<string> culprits = ExcludingConstraintsInEffect();
+    private string DescribeExhaustion(ConstraintCall applying) {
+        IReadOnlyList<ConstraintCall> culprits = ExcludingConstraintsInEffect();
 
         if (_allowed is not null) {
             if (culprits.Count == 0) { return $"none of the values {_allowedConstraint} allows satisfies the constraints already defined"; }
@@ -416,7 +416,7 @@ internal sealed class DecimalIntervalSpec {
         }
 
         if (culprits.Count == 0) {
-            string pinning = _minConstraint ?? _maxConstraint ?? "the declared bounds";
+            string pinning = _minConstraint?.ToString() ?? _maxConstraint?.ToString() ?? "the declared bounds";
 
             return $"{pinning} already pins the value to {_render(_min)}, which the exclusions forbid";
         }
@@ -429,9 +429,9 @@ internal sealed class DecimalIntervalSpec {
     ///     value the interval, scale lattice and allow-list would otherwise permit. An exclusion whose values fall
     ///     outside the surviving domain never bit, so naming it would mislead; first-declared order is preserved.
     /// </summary>
-    private IReadOnlyList<string> ExcludingConstraintsInEffect() {
-        List<string> names = [];
-        foreach ((string constraint, decimal[] values) in _exclusions) {
+    private IReadOnlyList<ConstraintCall> ExcludingConstraintsInEffect() {
+        List<ConstraintCall> names = [];
+        foreach ((ConstraintCall constraint, decimal[] values) in _exclusions) {
             if (names.Contains(constraint)) { continue; }
             if (values.Any(WouldAllowIgnoringExclusions)) { names.Add(constraint); }
         }
@@ -452,7 +452,7 @@ internal sealed class DecimalIntervalSpec {
     ///     so the message reads "Cannot apply DifferentFrom(1) because it forbids …" rather than repeating the
     ///     constraint on both sides of "because".
     /// </summary>
-    private static string Forbids(IReadOnlyList<string> names, string applying) {
+    private static string Forbids(IReadOnlyList<ConstraintCall> names, ConstraintCall applying) {
         if (names.Count == 1) { return names[0] == applying ? "it forbids" : $"{names[0]} forbids"; }
 
         return $"{string.Join(", ", names)} forbid";
@@ -460,7 +460,7 @@ internal sealed class DecimalIntervalSpec {
 
     /// <summary>Names the bounds that pinned the domain to its single value, for the "forbids X, the only value ... leaves" form.</summary>
     private string PinningClause() {
-        List<string> bounds = [];
+        List<ConstraintCall> bounds = [];
         if (_minConstraint is not null) { bounds.Add(_minConstraint); }
         if (_maxConstraint is not null && _maxConstraint != _minConstraint) { bounds.Add(_maxConstraint); }
 
