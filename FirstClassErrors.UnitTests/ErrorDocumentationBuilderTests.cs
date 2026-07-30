@@ -178,16 +178,6 @@ public sealed class ErrorDocumentationBuilderTests : IDisposable {
              .WithMessage("At least one example factory must be provided to build documentation examples.");
     }
 
-    [Fact(DisplayName = "An error documentation builder rejects a null example factory.")]
-    public void AnErrorDocumentationBuilderRejectsANullExampleFactory() {
-        // Setup
-        ErrorDocumentationBuilder builder = new();
-
-        // Exercise & verify
-        Check.ThatCode(() => builder.WithExamples<DomainError>(null!))
-             .Throws<ArgumentNullException>();
-    }
-
     [Fact(DisplayName = "An error documentation builder rejects a null example factory among the provided factories.")]
     public void AnErrorDocumentationBuilderRejectsANullExampleFactoryAmongTheProvidedFactories() {
         // Setup

@@ -35,10 +35,6 @@ public sealed class AnyUriTests {
         }
     }
 
-    private static IEnumerable<Uri> Sample(IAny<Uri> generator) {
-        for (int i = 0; i < SampleCount; i++) { yield return generator.Generate(); }
-    }
-
     private static IAny<Uri> Seeded(Func<AnyContext, IAny<Uri>> build) {
         return build(Any.WithSeed(20260723));
     }
