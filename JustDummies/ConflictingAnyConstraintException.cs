@@ -55,6 +55,16 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     }
 
     /// <summary>
+    ///     Builds the exception for an allow-list none of whose values survives every constraint already declared,
+    ///     <paramref name="exhaustion" /> naming what rejected them. The allow-list counterpart of
+    ///     <see cref="NoValueRemains" />: the caller supplied the values, so the failure names what turned them all
+    ///     away rather than what the domain could not produce.
+    /// </summary>
+    internal static ConflictingAnyConstraintException NoPooledValueSurvives(string applying, string exhaustion) {
+        return Sentence(applying, exhaustion);
+    }
+
+    /// <summary>
     ///     Builds the exception for elements required to be contained that cannot fit the capacity already declared.
     /// </summary>
     internal static ConflictingAnyConstraintException ContainedElementsDoNotFit(string applying, string required, string capacity) {
