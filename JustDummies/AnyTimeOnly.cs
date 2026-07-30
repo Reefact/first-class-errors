@@ -67,7 +67,7 @@ public sealed class AnyTimeOnly : IAny<TimeOnly>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyTimeOnly After(TimeOnly time) {
-        return new AnyTimeOnly(_source, _spec.WithMinimumAbove(Ord(time), $"After({V(time)})"));
+        return new AnyTimeOnly(_source, _spec.WithMinimumAbove(Ord(time), ConstraintCall.Of(nameof(After), V(time))));
     }
 
     /// <summary>Requires a time of day at or after <paramref name="time" />.</summary>
@@ -75,7 +75,7 @@ public sealed class AnyTimeOnly : IAny<TimeOnly>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyTimeOnly AfterOrEqualTo(TimeOnly time) {
-        return new AnyTimeOnly(_source, _spec.WithMinimum(Ord(time), $"AfterOrEqualTo({V(time)})"));
+        return new AnyTimeOnly(_source, _spec.WithMinimum(Ord(time), ConstraintCall.Of(nameof(AfterOrEqualTo), V(time))));
     }
 
     /// <summary>Requires a time of day strictly before <paramref name="time" />.</summary>
@@ -83,7 +83,7 @@ public sealed class AnyTimeOnly : IAny<TimeOnly>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyTimeOnly Before(TimeOnly time) {
-        return new AnyTimeOnly(_source, _spec.WithMaximumBelow(Ord(time), $"Before({V(time)})"));
+        return new AnyTimeOnly(_source, _spec.WithMaximumBelow(Ord(time), ConstraintCall.Of(nameof(Before), V(time))));
     }
 
     /// <summary>Requires a time of day at or before <paramref name="time" />.</summary>
@@ -91,7 +91,7 @@ public sealed class AnyTimeOnly : IAny<TimeOnly>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyTimeOnly BeforeOrEqualTo(TimeOnly time) {
-        return new AnyTimeOnly(_source, _spec.WithMaximum(Ord(time), $"BeforeOrEqualTo({V(time)})"));
+        return new AnyTimeOnly(_source, _spec.WithMaximum(Ord(time), ConstraintCall.Of(nameof(BeforeOrEqualTo), V(time))));
     }
 
     /// <summary>Requires a time of day within the inclusive range [<paramref name="start" />, <paramref name="end" />].</summary>
@@ -103,7 +103,7 @@ public sealed class AnyTimeOnly : IAny<TimeOnly>, IHasRandomSource, ICardinality
     public AnyTimeOnly Between(TimeOnly start, TimeOnly end) {
         if (start > end) { throw new ArgumentException($"The start ({V(start)}) must be at or before the end ({V(end)}).", nameof(start)); }
 
-        string constraint = $"Between({V(start)}, {V(end)})";
+        ConstraintCall constraint = ConstraintCall.Of(nameof(Between), V(start), V(end));
 
         return new AnyTimeOnly(_source, _spec.WithMinimum(Ord(start), constraint).WithMaximum(Ord(end), constraint));
     }
@@ -123,7 +123,7 @@ public sealed class AnyTimeOnly : IAny<TimeOnly>, IHasRandomSource, ICardinality
 
         string rendered = granularity.ToString("c", CultureInfo.InvariantCulture);
 
-        return new AnyTimeOnly(_source, _spec.WithStep((ulong)granularity.Ticks, Ord(TimeOnly.MinValue), $"WithGranularity({rendered})"));
+        return new AnyTimeOnly(_source, _spec.WithStep((ulong)granularity.Ticks, Ord(TimeOnly.MinValue), ConstraintCall.Of(nameof(WithGranularity), rendered)));
     }
 
     /// <summary>Requires the time of day to be one of the supplied values. Declared once per generator.</summary>
@@ -136,7 +136,7 @@ public sealed class AnyTimeOnly : IAny<TimeOnly>, IHasRandomSource, ICardinality
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        return new AnyTimeOnly(_source, _spec.WithAllowed(values.Select(Ord).ToArray(), $"OneOf({Join(values)})"));
+        return new AnyTimeOnly(_source, _spec.WithAllowed(values.Select(Ord).ToArray(), ConstraintCall.Of(nameof(OneOf), Join(values))));
     }
 
     /// <summary>Requires the time of day to be none of the supplied values.</summary>
@@ -149,7 +149,7 @@ public sealed class AnyTimeOnly : IAny<TimeOnly>, IHasRandomSource, ICardinality
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        return new AnyTimeOnly(_source, _spec.WithExcluded(values.Select(Ord).ToArray(), $"Except({Join(values)})"));
+        return new AnyTimeOnly(_source, _spec.WithExcluded(values.Select(Ord).ToArray(), ConstraintCall.Of(nameof(Except), Join(values))));
     }
 
     /// <summary>
@@ -160,7 +160,7 @@ public sealed class AnyTimeOnly : IAny<TimeOnly>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyTimeOnly DifferentFrom(TimeOnly value) {
-        return new AnyTimeOnly(_source, _spec.WithExcluded([Ord(value)], $"DifferentFrom({V(value)})"));
+        return new AnyTimeOnly(_source, _spec.WithExcluded([Ord(value)], ConstraintCall.Of(nameof(DifferentFrom), V(value))));
     }
 
     /// <inheritdoc />
