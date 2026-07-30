@@ -38,14 +38,23 @@ en `normal` — il atteint un IDE et le journal SARIF, personne d'autre. Une lis
 apparaît en console et le ratchet CI de `Directory.Build.props` en fait une erreur ; les deux ont
 été vérifiés de bout en bout en introduisant une violation d'une règle appliquée.
 
-Au commit qui a posé ceci, **342 des 375 règles sont appliquées** — elles avaient zéro violation
-dans l'arbre, les promouvoir ne coûtait donc rien — et **33 sont garées** dans `.editorconfig` en
-`suggestion`, représentant ensemble 135 sites en suspens.
+**348 des 377 règles sont appliquées** — elles avaient zéro violation dans l'arbre, les promouvoir
+ne coûtait donc rien — et **29 sont garées** dans `.editorconfig` en `suggestion`, représentant
+ensemble 104 sites en suspens.
 
-Cette liste garée **est** l'arriéré, et elle se réduit par *suppression* : videz les sites d'une
-règle, supprimez sa ligne, et le fichier généré l'applique dès la compilation suivante. Une règle
-que le code entend refuser tout court n'y a pas sa place : elle va avec les refus, en `none`, avec
-sa raison (ADR-0060). `suggestion` veut dire « pas encore », jamais « non ».
+Cette liste garée **est** l'arriéré, et une règle en sort par l'une de deux portes :
+
+* **Ses sites sont vidés.** Supprimez sa ligne, et le fichier généré l'applique dès la
+  compilation suivante. Rien d'autre à écrire.
+* **Les rares sites qui restent sont délibérés.** Chacun porte un `[SuppressMessage]` avec sa
+  raison au site, et la ligne part quand même. C'est la porte à préférer dès qu'une poignée de
+  violations se défend et que le reste de l'arbre est propre, car les deux états diffèrent sur ce
+  que la règle fait *demain* : garée, elle est muette partout, y compris sur du code pas encore
+  écrit ; supprimée en cinq endroits, elle est appliquée partout ailleurs.
+
+Une règle que le code entend refuser *tout court* est une troisième chose et n'a pas sa place dans
+l'arriéré : elle va avec les refus, en `none`, avec sa raison (ADR-0060). `suggestion` veut dire
+« pas encore », jamais « non ».
 
 `.editorconfig` prime sur un AnalyzerConfig global, vérifié dans les deux sens. **L'appartenance
 est générée ; chaque exception est écrite.** Qui demande « pourquoi cette règle ne bloque-t-elle
@@ -121,16 +130,20 @@ ce qui maintiendra ce workflow le jour où le projet cessera d'être public, au 
 
 ## L'arriéré actuel
 
-Les 33 règles garées dans `.editorconfig` représentent **135 sites**. Toute autre règle que le
+Les 29 règles garées dans `.editorconfig` représentent **104 sites**. Toute autre règle que le
 profil active est déjà appliquée : cette liste est donc l'intégralité de ce que Sonar demande et
 que ce code ne fait pas encore. À promouvoir famille par famille, en supprimant chaque ligne à
 mesure que ses sites sont vidés.
 
 La concentration, par ordre décroissant : `S3776` (19, complexité cognitive), `S1244` (15,
 égalité de flottants — toutes dans des projets de test, où l'égalité exacte est déjà justifiée),
-`S3267` (14, boucles vers LINQ), `S8969` (14, opérateurs null-forgiving redondants), `S3878` (14,
-tableaux pour `params`), `S3218` (8, membres internes masquant l'externe), `S107` (6, trop de
-paramètres — une décision que le dépôt a déjà consignée comme délibérée).
+`S3878` (14, tableaux pour `params`), `S3218` (8, membres internes masquant l'externe), `S107` (6,
+trop de paramètres — une décision que le dépôt a déjà consignée comme délibérée).
+
+Notez ce que ces chiffres ne sont **pas** : SonarCloud remonte beaucoup moins d'issues que
+l'arriéré n'a de sites, parce qu'il classe les treize projets de tests comme du code de test et
+n'y lève pas la plupart des règles, là où le jeu de règles du build s'applique partout. Un
+SonarCloud vert est donc un jalon, pas la ligne d'arrivée — cette liste, oui.
 
 ## Voir aussi
 
