@@ -267,3 +267,4 @@ Optional supporting material:
 | [ADR-0063](0063-throw-the-library-s-own-exceptions-through-named-factories.md) | Throw the library's own exceptions through named factories, and only those — the `System` types keep their guard clauses | Accepted |
 | [ADR-0064](0064-exempt-the-whole-failure-reporting-path-from-the-null-guard-convention.md) | Exempt the whole failure-reporting path from the null-guard convention, declared with `[BuiltOnTheFailurePath]`; supersedes ADR-0045 | Accepted |
 | [ADR-0065](0065-carry-a-declared-constraint-as-a-value-object.md) | Carry a declared constraint as a value object, not as its rendered text | Proposed |
+| [ADR-0066](0066-declare-a-value-object-and-enforce-its-identity.md) | Declare a value object with an attribute, and enforce its identity by convention | Proposed |
