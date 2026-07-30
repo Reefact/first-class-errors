@@ -32,6 +32,7 @@ namespace JustDummies;
 ///     </para>
 /// </remarks>
 [BuiltOnTheFailurePath]
+[ValueObject]
 internal sealed class ConstraintClaim : IEquatable<ConstraintClaim> {
 
     #region Statics members declarations

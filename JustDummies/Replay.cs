@@ -28,6 +28,7 @@ namespace JustDummies;
 ///     </para>
 /// </remarks>
 [BuiltOnTheFailurePath]
+[ValueObject]
 internal sealed class Replay : IEquatable<Replay> {
 
     #region Statics members declarations
