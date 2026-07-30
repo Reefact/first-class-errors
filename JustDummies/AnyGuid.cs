@@ -105,13 +105,8 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Gui
         ConstraintCall constraint = ConstraintCall.Of(nameof(OneOf), Join(values));
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-<<<<<<< 88de5b4e682e5d352e96694673226610ded6ffc9
-        if (string.Equals(_allowedConstraint, constraint, StringComparison.Ordinal)) { return this; }
-        if (_allowedConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(constraint, _allowedConstraint); }
-=======
         if (_allowedConstraint == constraint) { return this; }
-        if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {constraint} because {_allowedConstraint} is already defined."); }
->>>>>>> fee1aa3135aebaa7f74ee03ff0a7326525863167
+        if (_allowedConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(constraint, _allowedConstraint); }
 
         return Validated(new AnyGuid(_source, _pinned, _pinnedConstraint, values.Distinct().ToArray(), constraint, _excluded), constraint);
     }

@@ -168,13 +168,8 @@ internal sealed class UriSpec {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-<<<<<<< 1ec032ca2a241945a341f783d1266a39cf8d8e0b
-        if (string.Equals(_schemeConstraint, applying, StringComparison.Ordinal)) { return this; }
-        if (_schemeConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _schemeConstraint); }
-=======
         if (_schemeConstraint == applying) { return this; }
-        if (_schemeConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_schemeConstraint} is already defined."); }
->>>>>>> 48a9a29f79e77b617aee382e6145ef10be23eb8e
+        if (_schemeConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _schemeConstraint); }
 
         return new UriSpec(_family, scheme, applying, _host, _hasUserInfo, _user, _password,
                            _hasPort, _port, _pathMode, _pathSegments, _hasQuery, _hasFragment, _rooted, _pathConstraint, _hostConstraint, _userInfoConstraint, _portConstraint);
@@ -191,13 +186,8 @@ internal sealed class UriSpec {
     internal UriSpec WithHost(string host, ConstraintCall applying) {
         if (host is null) { throw new ArgumentNullException(nameof(host)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
-<<<<<<< 1ec032ca2a241945a341f783d1266a39cf8d8e0b
-        if (string.Equals(_hostConstraint, applying, StringComparison.Ordinal)) { return this; }
-        if (_hostConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _hostConstraint); }
-=======
         if (_hostConstraint == applying) { return this; }
-        if (_hostConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_hostConstraint} is already defined."); }
->>>>>>> 48a9a29f79e77b617aee382e6145ef10be23eb8e
+        if (_hostConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _hostConstraint); }
 
         return new UriSpec(_family, _scheme, _schemeConstraint, host, _hasUserInfo, _user, _password,
                            _hasPort, _port, _pathMode, _pathSegments, _hasQuery, _hasFragment, _rooted, _pathConstraint, applying, _userInfoConstraint, _portConstraint);
@@ -205,13 +195,8 @@ internal sealed class UriSpec {
 
     internal UriSpec WithUserInfo(string? user, string? password, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
-<<<<<<< 1ec032ca2a241945a341f783d1266a39cf8d8e0b
-        if (string.Equals(_userInfoConstraint, applying, StringComparison.Ordinal)) { return this; }
-        if (_userInfoConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _userInfoConstraint); }
-=======
         if (_userInfoConstraint == applying) { return this; }
-        if (_userInfoConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_userInfoConstraint} is already defined."); }
->>>>>>> 48a9a29f79e77b617aee382e6145ef10be23eb8e
+        if (_userInfoConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _userInfoConstraint); }
 
         return new UriSpec(_family, _scheme, _schemeConstraint, _host, true, user, password,
                            _hasPort, _port, _pathMode, _pathSegments, _hasQuery, _hasFragment, _rooted, _pathConstraint, _hostConstraint, applying, _portConstraint);
@@ -219,13 +204,8 @@ internal sealed class UriSpec {
 
     internal UriSpec WithPort(int? port, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
-<<<<<<< 1ec032ca2a241945a341f783d1266a39cf8d8e0b
-        if (string.Equals(_portConstraint, applying, StringComparison.Ordinal)) { return this; }
-        if (_portConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _portConstraint); }
-=======
         if (_portConstraint == applying) { return this; }
-        if (_portConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_portConstraint} is already defined."); }
->>>>>>> 48a9a29f79e77b617aee382e6145ef10be23eb8e
+        if (_portConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _portConstraint); }
 
         return new UriSpec(_family, _scheme, _schemeConstraint, _host, _hasUserInfo, _user, _password,
                            true, port, _pathMode, _pathSegments, _hasQuery, _hasFragment, _rooted, _pathConstraint, _hostConstraint, _userInfoConstraint, applying);
@@ -235,13 +215,8 @@ internal sealed class UriSpec {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-<<<<<<< 1ec032ca2a241945a341f783d1266a39cf8d8e0b
-        if (string.Equals(_pathConstraint, applying, StringComparison.Ordinal)) { return this; }
-        if (_pathConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _pathConstraint); }
-=======
         if (_pathConstraint == applying) { return this; }
-        if (_pathConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_pathConstraint} is already defined."); }
->>>>>>> 48a9a29f79e77b617aee382e6145ef10be23eb8e
+        if (_pathConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _pathConstraint); }
 
         return new UriSpec(_family, _scheme, _schemeConstraint, _host, _hasUserInfo, _user, _password,
                            _hasPort, _port, mode, segments, _hasQuery, _hasFragment, _rooted, applying, _hostConstraint, _userInfoConstraint, _portConstraint);

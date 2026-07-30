@@ -77,13 +77,8 @@ internal sealed class CountSpec {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-<<<<<<< 45f5b416800601a31b8986793bd1f02752de3c2e
-        if (string.Equals(_exactConstraint, applying, StringComparison.Ordinal)) { return this; }
-        if (_exactConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _exactConstraint); }
-=======
         if (_exactConstraint == applying) { return this; }
-        if (_exactConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_exactConstraint} is already defined."); }
->>>>>>> 3a9f0177cfa27a85edc8f533da1c0ac94c9c61a1
+        if (_exactConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _exactConstraint); }
 
         return new CountSpec(count, applying, _min, _minConstraint, _max, _maxConstraint).Validated(applying);
     }
