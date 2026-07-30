@@ -52,6 +52,18 @@ public sealed class StringConstraintsAdmitNoValueAnalyzer : DiagnosticAnalyzer {
         if (factory is null || factory.TargetMethod.Name != "String") { return; }
         if (NegativeTestGuard.IsSoleBodyOfLambdaArgument(invocation.Syntax)) { return; }
 
+        AnalyzeConstraints(context, constraints);
+    }
+
+    /// <summary>
+    ///     Reads what the chain declares about the string — its pool, its casing, its fragments and its length budget —
+    ///     then reports the first declaration no value can satisfy.
+    /// </summary>
+    /// <remarks>
+    ///     Split from <see cref="Analyze" />, which answers a different question: whether this chain is one the rule
+    ///     reasons about at all. Everything below assumes that answer is yes.
+    /// </remarks>
+    private static void AnalyzeConstraints(OperationAnalysisContext context, IReadOnlyList<IInvocationOperation> constraints) {
         string?                            pool        = null;
         string?                            poolName    = null;
         bool                               requireUpper = false;

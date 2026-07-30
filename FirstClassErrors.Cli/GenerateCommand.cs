@@ -63,17 +63,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
             // Effective options: command line first, then configuration, then the built-in default.
             ResolvedGenerateOptions resolved = GenerateOptionsResolver.Resolve(settings, configuration);
 
-            if (resolved.HasSolution && resolved.HasAssemblies) {
-                logger.Error("Specify either a solution or assemblies, not both.");
-
-                return 1;
-            }
-
-            if (!resolved.HasSolution && !resolved.HasAssemblies) {
-                logger.Error("No source: pass --solution/--assemblies, or set 'solution'/'assemblies' in the configuration.");
-
-                return 1;
-            }
+            if (ReportUnusableSource(resolved, logger)) { return 1; }
 
             // The language drives both the extraction (localized error descriptions) and the rendering (localized
             // template boilerplate). It defaults to English.
@@ -85,20 +75,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
             IReadOnlyList<IErrorDocumentationRenderer> customRenderers = RendererLoader.Load(configuration.Renderers, configDir, logger);
             IErrorDocumentationRenderer                renderer        = RendererCatalog.Create(resolved.Format, customRenderers);
 
-            if (!renderer.SupportedLayouts.Contains(resolved.Layout, StringComparer.OrdinalIgnoreCase)) {
-                logger.Error($"The '{resolved.Format}' format does not support the '{resolved.Layout}' layout. Supported layouts: {string.Join(", ", renderer.SupportedLayouts)}.");
-
-                return 1;
-            }
-
-            // The markdown/html formats embed RFC 9457 examples whose problem type is urn:problem:{service}:{code}. The
-            // service segment cannot be invented, so require it (from --service-name or the configuration) rather than
-            // emit a type-less example. The json format carries no such example and is exempt.
-            if ((resolved.Format is "markdown" or "html") && string.IsNullOrWhiteSpace(resolved.ServiceName)) {
-                logger.Error($"No service name: the '{resolved.Format}' format embeds RFC 9457 examples whose problem type is urn:problem:{{service}}:{{code}}. Pass --service-name <name> (for example --service-name temperature-simulator), or set 'serviceName' in the configuration.");
-
-                return 1;
-            }
+            if (ReportUnusableOutput(resolved, renderer, logger)) { return 1; }
 
             SolutionGenerationOptions options = new() {
                 BuildSolution      = !resolved.NoBuild,
@@ -162,6 +139,46 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
     }
 
     #region Helpers
+
+    // The two ways the resolved source cannot name a catalog. Judged on the RESOLVED options rather than on the
+    // settings, because the command line and the configuration are merged first: "both" and "neither" are properties
+    // of the merge, not of either side.
+    private static bool ReportUnusableSource(ResolvedGenerateOptions resolved, IGenerationLogger logger) {
+        if (resolved.HasSolution && resolved.HasAssemblies) {
+            logger.Error("Specify either a solution or assemblies, not both.");
+
+            return true;
+        }
+
+        if (!resolved.HasSolution && !resolved.HasAssemblies) {
+            logger.Error("No source: pass --solution/--assemblies, or set 'solution'/'assemblies' in the configuration.");
+
+            return true;
+        }
+
+        return false;
+    }
+
+    // The two ways the requested output cannot be produced. Both are checked before the (expensive) extraction runs,
+    // so a bad --format/--layout or a missing service name fails fast.
+    private static bool ReportUnusableOutput(ResolvedGenerateOptions resolved, IErrorDocumentationRenderer renderer, IGenerationLogger logger) {
+        if (!renderer.SupportedLayouts.Contains(resolved.Layout, StringComparer.OrdinalIgnoreCase)) {
+            logger.Error($"The '{resolved.Format}' format does not support the '{resolved.Layout}' layout. Supported layouts: {string.Join(", ", renderer.SupportedLayouts)}.");
+
+            return true;
+        }
+
+        // The markdown/html formats embed RFC 9457 examples whose problem type is urn:problem:{service}:{code}. The
+        // service segment cannot be invented, so require it (from --service-name or the configuration) rather than
+        // emit a type-less example. The json format carries no such example and is exempt.
+        if ((resolved.Format is "markdown" or "html") && string.IsNullOrWhiteSpace(resolved.ServiceName)) {
+            logger.Error($"No service name: the '{resolved.Format}' format embeds RFC 9457 examples whose problem type is urn:problem:{{service}}:{{code}}. Pass --service-name <name> (for example --service-name temperature-simulator), or set 'serviceName' in the configuration.");
+
+            return true;
+        }
+
+        return false;
+    }
 
     internal static CultureInfo ResolveCulture(string language) {
         try {

@@ -52,19 +52,7 @@ public sealed class InertDistinctnessAnalyzer : DiagnosticAnalyzer {
         string factoryName = factory.TargetMethod.Name;
         if (factoryName is not ("ListOf" or "ArrayOf" or "SequenceOf" or "SetOf" or "DictionaryOf")) { return; }
 
-        // A comparer supplied to the factory answers the equality question itself, whatever the element type does.
-        bool impliedByFactory = factoryName is "SetOf" or "DictionaryOf";
-        if (impliedByFactory && CarriesComparer(factory)) { return; }
-
-        IInvocationOperation? declaration = impliedByFactory ? factory : null;
-
-        foreach (IInvocationOperation constraint in constraints) {
-            if (constraint.TargetMethod.Name != "Distinct") { continue; }
-            if (CarriesComparer(constraint)) { return; }
-
-            declaration ??= constraint;
-        }
-
+        IInvocationOperation? declaration = DistinctnessDeclaration(factory, factoryName, constraints);
         if (declaration is null) { return; }
         if (factory.TargetMethod.TypeArguments.Length == 0 || factory.Arguments.Length == 0) { return; }
 
@@ -76,6 +64,33 @@ public sealed class InertDistinctnessAnalyzer : DiagnosticAnalyzer {
 
         context.ReportDiagnostic(Diagnostic.Create(
             Descriptors.InertDistinctness, declaration.Syntax.GetLocation(), element.Name));
+    }
+
+    /// <summary>
+    ///     Where distinctness was declared: the factory itself for the set-like generators, otherwise the first
+    ///     <c>Distinct()</c> in the chain. <c>null</c> when none was declared, and also when one was but a comparer
+    ///     came with it.
+    /// </summary>
+    /// <remarks>
+    ///     The two <c>null</c> answers are deliberately the same answer, because the rule does the same thing with
+    ///     them: stand down. A comparer supplied to the factory or to <c>Distinct()</c> answers the equality question
+    ///     itself, whatever the element type does — so there is nothing inert to report, exactly as when distinctness
+    ///     was never asked for.
+    /// </remarks>
+    private static IInvocationOperation? DistinctnessDeclaration(IInvocationOperation factory, string factoryName, IReadOnlyList<IInvocationOperation> constraints) {
+        bool                  impliedByFactory = factoryName is "SetOf" or "DictionaryOf";
+        IInvocationOperation? declaration      = impliedByFactory ? factory : null;
+
+        if (impliedByFactory && CarriesComparer(factory)) { return null; }
+
+        foreach (IInvocationOperation constraint in constraints) {
+            if (constraint.TargetMethod.Name != "Distinct") { continue; }
+            if (CarriesComparer(constraint)) { return null; }
+
+            declaration ??= constraint;
+        }
+
+        return declaration;
     }
 
     /// <summary>
