@@ -14,7 +14,7 @@
 # codebase refuses is set to "none" with its reason. That list is the backlog, and it shrinks
 # by deletion. Nothing about a fate is decided in this file.
 #
-# Rules: 375. Regenerate after any change to the profile; the weekly sonar-profile workflow
+# Rules: 377. Regenerate after any change to the profile; the weekly sonar-profile workflow
 # fails when the two have drifted apart. Regenerating can turn CI red - that is the point:
 # a rule the profile adds now has to be cleaned or parked, deliberately, before it merges.
 
@@ -389,6 +389,8 @@ dotnet_diagnostic.S8483.severity = warning
 dotnet_diagnostic.S8484.severity = warning
 dotnet_diagnostic.S8487.severity = warning
 dotnet_diagnostic.S8717.severity = warning
+dotnet_diagnostic.S8718.severity = warning
+dotnet_diagnostic.S8733.severity = warning
 dotnet_diagnostic.S8747.severity = warning
 dotnet_diagnostic.S8949.severity = warning
 dotnet_diagnostic.S8969.severity = warning
