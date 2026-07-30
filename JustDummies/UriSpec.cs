@@ -295,8 +295,7 @@ internal sealed class UriSpec {
         // root asked for the empty reference, which cannot generate: surface it with the seed to replay, like the
         // library's other unsatisfiable specs.
         if (_pathMode == UriPathMode.Exact) {
-            int seed = source.Current.Seed;
-            throw AnyGenerationException.EmptyRelativeReference(source.ReplayGuidance(seed), seed);
+            throw AnyGenerationException.EmptyRelativeReference(Replay.Of(source));
         }
 
         return Draw(random, LowerAlphaNum, 1, 8);

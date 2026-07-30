@@ -225,9 +225,8 @@ public sealed class AnyPattern : IAny<string>, IHasRandomSource {
     }
 
     private AnyGenerationException Exhausted() {
-        int seed = _source.Current.Seed;
         // A pattern generator draws only from its own source, so the seed replays the run fully — never the partial hint.
-        string replay = _source.ReplayGuidance(seed);
+        Replay replay = Replay.Of(_source);
         // The claim is the budget, not impossibility. The library builds values from the pattern; it never enumerates
         // the language, so it cannot prove one holds no other value. Excluding both words of "^[ab]$" really does
         // empty it — but a pattern with one free value in a few hundred thousand exhausts the same budget and is
@@ -238,9 +237,9 @@ public sealed class AnyPattern : IAny<string>, IHasRandomSource {
             "than a proof that the pattern matches no other value — though the usual cause is a pattern the " +
             "exclusions leave nothing of (excluding every word of a language with only a few). Loosen the exclusions " +
             "or widen the pattern. " +
-            replay;
+            replay.Guidance;
 
-        return new AnyGenerationException(message, seed);
+        return new AnyGenerationException(message, replay.Seed);
     }
 
 }
