@@ -43,11 +43,14 @@ this page applies it. Also in [French](WritingJustDummiesTests.fr.md).
 ### [JustDummies tool (`dum`) — specification](specifications/justdummies-tool.md)
 
 The complete specification of `dum`, the JustDummies command-line scaffolder that
-writes a named, composable generator for a type from the developer's own code. It
-is implementable as written: the emitted skeleton, the parameter-resolution rules
-and the decisions behind them were each checked against the library's source, and
-the central claims were measured. Not yet built. Also in
-[French](specifications/justdummies-tool.fr.md).
+writes a named, composable generator for a type from the developer's own code —
+an engine loadable by a Roslyn host, plus a thin CLI over it. It is implementable
+as written: the emitted skeleton, the parameter-resolution rules and the decisions
+behind them were each checked against the library's source, and the central claims
+were measured. It is also **self-contained**: it inlines every library fact it
+relies on and states its host-repository requirements as requirements rather than
+paths, so it survives JustDummies moving to its own repository. Not yet built.
+Also in [French](specifications/justdummies-tool.fr.md).
 
 ### [Architecture Decision Records](adr/README.md)
 

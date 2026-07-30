@@ -47,10 +47,14 @@ cette page l'applique. Aussi en [anglais](WritingJustDummiesTests.en.md).
 
 La spécification complète de `dum`, le scaffolder en ligne de commande de
 JustDummies, qui écrit un generator nommé et composable pour un type du code du
-développeur. Elle est implémentable telle quelle : le squelette émis, les règles de
-résolution des paramètres et les décisions qui les portent ont chacun été vérifiés
-contre la source de la bibliothèque, et les affirmations centrales ont été mesurées.
-Pas encore construit. Aussi en [anglais](specifications/justdummies-tool.md).
+développeur — un moteur chargeable par un hôte Roslyn, plus une CLI mince par-dessus.
+Elle est implémentable telle quelle : le squelette émis, les règles de résolution des
+paramètres et les décisions qui les portent ont chacun été vérifiés contre la source
+de la bibliothèque, et les affirmations centrales ont été mesurées. Elle est aussi
+**autonome** : elle inline chaque fait sur la bibliothèque dont elle dépend et énonce
+ses exigences envers le dépôt hôte en exigences plutôt qu'en chemins, de sorte qu'elle
+survit au déménagement de JustDummies dans son propre dépôt. Pas encore construit.
+Aussi en [anglais](specifications/justdummies-tool.md).
 
 ### [Registres de décision d'architecture (ADR)](adr/README.md)
 
