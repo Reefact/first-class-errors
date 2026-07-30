@@ -262,7 +262,7 @@ internal sealed class ContinuousIntervalSpec {
             // examined. Reporting the stronger claim would send a caller looking for a contradiction that may not
             // exist, and the shape that reaches this line (a wide range whose free values sit further than the
             // budget from the draw) is precisely the one where it would not.
-            throw AnyGenerationException.LocalSearchExhausted(_typeName, source.ReplayGuidance(random.Seed), random.Seed, NudgeBudget);
+            throw AnyGenerationException.LocalSearchExhausted(_typeName, Replay.Of(source, random.Seed), NudgeBudget);
         }
 
         return free.Value;
