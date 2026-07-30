@@ -129,35 +129,46 @@ internal sealed class RegexParser {
     private RegexNode ParseSequence() {
         List<RegexNode> parts = [];
         while (!AtEnd && Peek() != '|' && Peek() != ')') {
-            // Anchors are no-ops for a whole-string generator, but only where they are guaranteed to match:
-            // '^' at the start and '$' at the end of the pattern or of a top-level alternation branch. A run of
-            // them ('^^', '$$') and a quantified one ('^*', '$?', '^{2}') are equally no-ops there — the real
-            // engine accepts and matches all of these — so they are consumed and ignored. Anywhere else ('a^',
-            // '$a', inside a group) the pattern can never be matched by a whole generated string, so it is
-            // refused instead of silently mis-generated.
-            if (Peek() == '^') {
-                if (_depth > 0 || parts.Count > 0) { throw Unsupported("an anchor '^' away from the start of the pattern or of a top-level alternation branch", _index); }
-                _index++;
-                SkipAnchorQuantifier();
-
-                continue;
-            }
-
-            if (Peek() == '$') {
-                int position = _index;
-                _index++;
-                SkipAnchorQuantifier();
-                // A '$' is a no-op only at the very end: what follows must be end-of-pattern, a branch bar, or
-                // another end-anchor '$'. Inside a group, or before anything else, it can never match a whole string.
-                if (_depth > 0 || (!AtEnd && Peek() != '|' && Peek() != '$')) { throw Unsupported("an anchor '$' away from the end of the pattern or of a top-level alternation branch", position); }
-
-                continue;
-            }
+            if (TryConsumeAnchor(atSequenceStart: parts.Count == 0)) { continue; }
 
             parts.Add(ParseQuantified());
         }
 
         return parts.Count == 1 ? parts[0] : new RegexSequence(parts.ToArray());
+    }
+
+    /// <summary>
+    ///     Consumes a boundary anchor at the current position when one is there, answering whether it did.
+    /// </summary>
+    /// <remarks>
+    ///     Anchors are no-ops for a whole-string generator, but only where they are guaranteed to match: <c>^</c> at
+    ///     the start and <c>$</c> at the end of the pattern or of a top-level alternation branch. A run of them
+    ///     (<c>^^</c>, <c>$$</c>) and a quantified one (<c>^*</c>, <c>$?</c>, <c>^{2}</c>) are equally no-ops there —
+    ///     the real engine accepts and matches all of these — so they are consumed and ignored. Anywhere else
+    ///     (<c>a^</c>, <c>$a</c>, inside a group) the pattern can never be matched by a whole generated string, so it
+    ///     is refused instead of silently mis-generated.
+    /// </remarks>
+    private bool TryConsumeAnchor(bool atSequenceStart) {
+        if (Peek() == '^') {
+            if (_depth > 0 || !atSequenceStart) { throw Unsupported("an anchor '^' away from the start of the pattern or of a top-level alternation branch", _index); }
+            _index++;
+            SkipAnchorQuantifier();
+
+            return true;
+        }
+
+        if (Peek() == '$') {
+            int position = _index;
+            _index++;
+            SkipAnchorQuantifier();
+            // A '$' is a no-op only at the very end: what follows must be end-of-pattern, a branch bar, or
+            // another end-anchor '$'. Inside a group, or before anything else, it can never match a whole string.
+            if (_depth > 0 || (!AtEnd && Peek() != '|' && Peek() != '$')) { throw Unsupported("an anchor '$' away from the end of the pattern or of a top-level alternation branch", position); }
+
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -445,8 +456,27 @@ internal sealed class RegexParser {
         int position = _index;
         _index++; // consume '['
         bool          negated = Eat('^');
-        HashSet<char> set     = [];
-        bool          first   = true;
+        HashSet<char> set     = ReadClassMembers();
+
+        if (_ignoreCase) { set = ExpandCase(set); }
+        char[] choices = negated ? RegexAlphabet.Negate(set) : set.ToArray();
+        // Only a negated class can end up empty — a plain class always holds the member it just read. Such a class
+        // is well-formed and regular (the real engine accepts it), but it excludes every character JustDummies draws
+        // from, so it is refused as unsupported (a universe limit), not as malformed. Routing it through Malformed
+        // would claim the caller wrote a broken pattern for one the real engine compiles.
+        if (choices.Length == 0) {
+            throw new UnsupportedRegexException($"The regular expression pattern \"{_pattern}\" uses a negated character class that excludes every character JustDummies can generate (printable ASCII U+0020 to U+007E) at position {position}, which JustDummies cannot generate from. It draws values from printable ASCII; express the requirement with characters inside that range, or generate the value another way.");
+        }
+
+        return new RegexCharacters(choices);
+    }
+
+    /// <summary>
+    ///     Reads the class members up to the closing <c>]</c>, which it consumes.
+    /// </summary>
+    private HashSet<char> ReadClassMembers() {
+        HashSet<char> set   = [];
+        bool          first = true;
 
         while (true) {
             if (AtEnd) { throw Malformed("unterminated character class '['"); }
@@ -469,33 +499,30 @@ internal sealed class RegexParser {
                 continue;
             }
 
-            char low = ReadClassChar();
-            // A '-[' immediately after a member is subtraction as well ('[a-[x]]'): the real engine never reads it
-            // as a range whose upper bound is '[', so intercepting it here can never turn away a valid range.
-            if (!AtEnd && Peek() == '-' && PeekAt(1) == '[') { throw Unsupported("a character-class subtraction '[…-[…]]'", _index); }
-            if (!AtEnd && Peek() == '-' && PeekAt(1) != ']' && PeekAt(1) != '\0') {
-                _index++; // consume '-'
-                char high = ReadClassChar();
-                if (high < low) { throw Malformed($"character class range '{low}-{high}' is out of order"); }
-                // Iterate an int, not a char: a class range may legitimately end at U+FFFF (reachable via a
-                // literal or the \uFFFF escape), and incrementing a 16-bit char past it wraps to 0x0000 and never ends.
-                for (int code = low; code <= high; code++) { set.Add((char)code); }
-            } else {
-                set.Add(low);
-            }
+            AddClassMemberOrRange(set);
         }
 
-        if (_ignoreCase) { set = ExpandCase(set); }
-        char[] choices = negated ? RegexAlphabet.Negate(set) : set.ToArray();
-        // Only a negated class can end up empty — a plain class always holds the member it just read. Such a class
-        // is well-formed and regular (the real engine accepts it), but it excludes every character JustDummies draws
-        // from, so it is refused as unsupported (a universe limit), not as malformed. Routing it through Malformed
-        // would claim the caller wrote a broken pattern for one the real engine compiles.
-        if (choices.Length == 0) {
-            throw new UnsupportedRegexException($"The regular expression pattern \"{_pattern}\" uses a negated character class that excludes every character JustDummies can generate (printable ASCII U+0020 to U+007E) at position {position}, which JustDummies cannot generate from. It draws values from printable ASCII; express the requirement with characters inside that range, or generate the value another way.");
-        }
+        return set;
+    }
 
-        return new RegexCharacters(choices);
+    /// <summary>
+    ///     Reads one class member and adds it, or the whole range it opens, to <paramref name="set" />.
+    /// </summary>
+    private void AddClassMemberOrRange(HashSet<char> set) {
+        char low = ReadClassChar();
+        // A '-[' immediately after a member is subtraction as well ('[a-[x]]'): the real engine never reads it
+        // as a range whose upper bound is '[', so intercepting it here can never turn away a valid range.
+        if (!AtEnd && Peek() == '-' && PeekAt(1) == '[') { throw Unsupported("a character-class subtraction '[…-[…]]'", _index); }
+        if (!AtEnd && Peek() == '-' && PeekAt(1) != ']' && PeekAt(1) != '\0') {
+            _index++; // consume '-'
+            char high = ReadClassChar();
+            if (high < low) { throw Malformed($"character class range '{low}-{high}' is out of order"); }
+            // Iterate an int, not a char: a class range may legitimately end at U+FFFF (reachable via a
+            // literal or the \uFFFF escape), and incrementing a 16-bit char past it wraps to 0x0000 and never ends.
+            for (int code = low; code <= high; code++) { set.Add((char)code); }
+        } else {
+            set.Add(low);
+        }
     }
 
     private char ReadClassChar() {
