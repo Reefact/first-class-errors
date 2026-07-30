@@ -29,6 +29,43 @@ public sealed class ValueIdentityTests {
 
     #endregion
 
+    // The halves are asserted directly rather than only through ToString and equality: a getter carries no logic, so
+    // a mutation score says nothing about it, and Constraint is what the blame choice reads.
+    [Fact(DisplayName = "A claim on a constraint exposes the constraint, its rendering and its clause.")]
+    public void ClaimOnAConstraintExposesItsHalves() {
+        ConstraintCall  length = Length("3");
+        ConstraintClaim claim  = ConstraintClaim.Of(length, "already fixes the length at 3");
+
+        Check.That(claim.Constraint).IsEqualTo(length);
+        Check.That(claim.Subject).IsEqualTo("WithLength(3)");
+        Check.That(claim.Claims).IsEqualTo("already fixes the length at 3");
+        Check.That(claim.ToString()).IsEqualTo("WithLength(3) already fixes the length at 3");
+    }
+
+    [Fact(DisplayName = "A claim on a phrase exposes the phrase and carries no constraint.")]
+    public void ClaimOnAPhraseCarriesNoConstraint() {
+        ConstraintClaim claim = ConstraintClaim.OfPhrase("the contained value \"ABC\"", "contains 'x', which it does not allow");
+
+        Check.That(claim.Constraint).IsNull();
+        Check.That(claim.Subject).IsEqualTo("the contained value \"ABC\"");
+        Check.That(claim.Claims).IsEqualTo("contains 'x', which it does not allow");
+        Check.That(claim.ToString()).IsEqualTo("the contained value \"ABC\" contains 'x', which it does not allow");
+    }
+
+    [Fact(DisplayName = "A replay exposes the seed it was given and the guidance naming it.")]
+    public void ReplayExposesItsSeedAndGuidance() {
+        FixedRandomSource source = new(7);
+
+        Replay full    = Replay.Of(source, 42);
+        Replay partial = Replay.PartialOf(source);
+
+        Check.That(full.Seed).IsEqualTo(42);
+        Check.That(full.Guidance).Contains("42");
+        // The seed is supplied, not read back from the source, so the two need not agree.
+        Check.That(partial.Seed).IsEqualTo(7);
+        Check.That(partial.Guidance).Contains("not reproducible from this seed alone");
+    }
+
     [Fact(DisplayName = "Two claims blaming the same constraint for the same thing are equal.")]
     public void ClaimsWithTheSameConstraintAndClaimAreEqual() {
         ConstraintClaim first  = ConstraintClaim.Of(Length("3"), "already fixes the length at 3");
