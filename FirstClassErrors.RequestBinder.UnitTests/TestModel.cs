@@ -1,3 +1,9 @@
+#region Usings declarations
+
+using System.Globalization;
+
+#endregion
+
 namespace FirstClassErrors.RequestBinder.UnitTests;
 
 #region Request DTOs
@@ -57,7 +63,7 @@ internal sealed class BookingDate {
     public DateOnly Value { get; }
 
     public static Outcome<BookingDate> Parse(string raw) {
-        return DateOnly.TryParse(raw, out DateOnly parsed)
+        return DateOnly.TryParse(raw, CultureInfo.InvariantCulture, out DateOnly parsed)
                    ? Outcome<BookingDate>.Success(new BookingDate(parsed))
                    : Outcome<BookingDate>.Failure(BookingDomainError.DateInvalid(raw));
     }

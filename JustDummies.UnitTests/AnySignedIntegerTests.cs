@@ -13,8 +13,8 @@ public sealed class AnySignedIntegerTests {
     [Fact(DisplayName = "SByte: Positive and Negative are strict, and contradict each other.")]
     public void SByteSignConstraints() {
         for (int i = 0; i < SampleCount; i++) {
-            Check.That((sbyte)Any.SByte().Positive().Generate()).IsStrictlyGreaterThan((sbyte)0);
-            Check.That((sbyte)Any.SByte().Negative().Generate()).IsStrictlyLessThan((sbyte)0);
+            Check.That(Any.SByte().Positive().Generate()).IsStrictlyGreaterThan((sbyte)0);
+            Check.That(Any.SByte().Negative().Generate()).IsStrictlyLessThan((sbyte)0);
         }
 
         ConflictingAnyConstraintException conflict = Assert.Throws<ConflictingAnyConstraintException>(

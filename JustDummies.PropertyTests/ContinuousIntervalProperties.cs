@@ -91,12 +91,12 @@ public sealed class ContinuousIntervalProperties {
 
     /// <summary>The three values a floating-point generator must refuse as a bound instead of quietly carrying.</summary>
     private static Gen<double> NonFiniteDoubles() {
-        return Gen.Elements(new[] { double.NaN, double.PositiveInfinity, double.NegativeInfinity });
+        return Gen.Elements(double.NaN, double.PositiveInfinity, double.NegativeInfinity);
     }
 
     /// <summary>The <see cref="float" /> counterpart of <see cref="NonFiniteDoubles" />.</summary>
     private static Gen<float> NonFiniteSingles() {
-        return Gen.Elements(new[] { float.NaN, float.PositiveInfinity, float.NegativeInfinity });
+        return Gen.Elements(float.NaN, float.PositiveInfinity, float.NegativeInfinity);
     }
 
     /// <summary>
@@ -108,7 +108,7 @@ public sealed class ContinuousIntervalProperties {
         return from seed in Generators.Seed()
                from low in Gen.Choose(-1_000_000, 1_000_000)
                from width in Gen.Choose(1, 1_000_000)
-               from unit in Gen.Elements(new[] { 0.0001d, 1d, 1000d })
+               from unit in Gen.Elements(0.0001d, 1d, 1000d)
                select (Seed: seed, Min: low * unit, Max: (low + width) * unit);
     }
 
@@ -117,7 +117,7 @@ public sealed class ContinuousIntervalProperties {
         return from seed in Generators.Seed()
                from low in Gen.Choose(-1_000_000, 1_000_000)
                from width in Gen.Choose(1, 1_000_000)
-               from unit in Gen.Elements(new[] { 0.0001m, 1m, 1000m })
+               from unit in Gen.Elements(0.0001m, 1m, 1000m)
                select (Seed: seed, Min: low * unit, Max: (low + width) * unit);
     }
 
