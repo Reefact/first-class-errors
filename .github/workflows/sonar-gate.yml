@@ -1,0 +1,79 @@
+name: sonar-gate
+
+# Reads the SonarCloud Quality Gate verdict every night and fails when it is not green.
+#
+# The gap this closes. `dotnet-sonarscanner end` uploads the analysis and returns; it neither waits
+# for the gate nor reads it, and no GitHub check carries the verdict — of the 28 checks on a recent
+# pull request, the only Sonar one was the repository's own analysis job. The gate was therefore
+# computed by SonarCloud and enforced by nothing. Two findings typed VULNERABILITY reached `main`
+# behind a permanently green `sonar` workflow.
+#
+# Why not simply make the scanner wait (`sonar.qualitygate.wait`). Because `sonar` is a REQUIRED
+# check that calls the service, so a SonarCloud outage already blocks every merge while a red gate
+# does not; adding the wait would deepen that coupling rather than remove it. Reading the verdict
+# from a SCHEDULED job separates the two questions: the verdict gets enforced, and an outage costs
+# a red nightly instead of a frozen repository. That combination — not blocking a merge, and
+# reading the gate — is the one ADR-0062 left open, and this is it.
+#
+# Why this is not redundant with the build. build/sonar-profile.globalconfig enforces the C# rules
+# the SonarAnalyzer NuGet package implements, which is a strict SUBSET of what the gate measures:
+#   - symbolic-execution rules the package does not run. Measured: an S2583 violation sat in this
+#     repository with the rule enforced at `warning`, and the local build reported nothing;
+#   - every non-C# family — githubactions, shell, secrets, xml, json, yaml;
+#   - coverage, duplication and hotspot review, which no analyzer can answer.
+# Both of the findings that last turned this gate red were in those classes. The build hardening
+# and this check are complements.
+#
+# Nightly, unlike the weekly `sonar-profile` check: a quality profile moves on a vendor's release
+# cadence, but the gate moves with every merge.
+
+on:
+  schedule:
+    # 04:11 UTC daily — in the gap left by the weekly jobs, which run Monday between 03:00 and 06:30.
+    - cron: '11 4 * * *'
+  workflow_dispatch:
+
+# Cancel superseded runs (a dispatch on top of a scheduled one).
+concurrency:
+  group: sonar-gate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: Quality gate verdict
+    runs-on: ubuntu-latest
+    # One API call; the cap only guards a hung request.
+    timeout-minutes: 10
+    # Declared per job so a job added later inherits nothing it did not ask for (Sonar
+    # githubactions:S8264). This job reads the checkout and calls a public API — nothing else.
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Read the quality gate
+        # The project is public, so this needs no secret. SONAR_TOKEN is passed from the same secret
+        # sonar.yml uses so the check keeps working the day the project stops being public; a missing
+        # secret is an empty string, which the script treats as unauthenticated.
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: tools/sonar-profile/check-gate.sh
+
+      - name: Say what to do about it
+        # The failing conditions are already in the log above; this is the pointer, not a repeat.
+        if: failure()
+        run: |
+          # shellcheck disable=SC2016  # the backticks are Markdown for the step summary, not command substitution
+          {
+            echo '### SonarCloud quality gate is red'
+            echo
+            echo 'The failing conditions are in the previous step.'
+            echo
+            echo 'A rating worse than A means the new-code period carries at least one issue of that'
+            echo 'kind — reliability is a Bug, security is a Vulnerability, maintainability a Code Smell.'
+            echo 'Coverage and duplication conditions read directly.'
+            echo
+            echo 'This check does NOT block any merge, by design. It is the standing alarm that the'
+            echo 'gate is not green, and it will stay red until someone acts on it.'
+          } >> "$GITHUB_STEP_SUMMARY"
