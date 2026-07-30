@@ -2,8 +2,9 @@
 
 🌍 🇫🇷 Français (ce fichier) · 🇬🇧 [English](0062-derive-the-build-rule-set-from-the-quality-profile.md)
 
-**Statut :** Proposé
+**Statut :** Accepté
 **Proposé :** 2026-07-29
+**Accepté :** 2026-07-30
 **Décideurs :** Reefact
 
 ## Contexte

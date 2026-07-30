@@ -71,11 +71,16 @@ fi
 # fetch <url> — GET one endpoint. The project is public, so the API answers unauthenticated;
 # SONAR_TOKEN is honoured when set, which is what keeps this working the day it stops being
 # public. Retries cover a transient blip; a real outage aborts before anything is written.
+# --proto '=https' --proto-redir '=https' matter more here than anywhere: the authenticated branch
+# sends SONAR_TOKEN, and -L without them would follow a redirect to plaintext http and put the
+# credential on the wire in clear. Refusing every non-HTTPS hop is the only version of this call
+# that is safe to give a token to.
 fetch() {
   if [ -n "${SONAR_TOKEN:-}" ]; then
-    curl -sSfL --retry 3 --retry-delay 2 --max-time 60 --user "${SONAR_TOKEN}:" "$1"
+    curl --proto '=https' --proto-redir '=https' -sSfL --retry 3 --retry-delay 2 --max-time 60 \
+      --user "${SONAR_TOKEN}:" "$1"
   else
-    curl -sSfL --retry 3 --retry-delay 2 --max-time 60 "$1"
+    curl --proto '=https' --proto-redir '=https' -sSfL --retry 3 --retry-delay 2 --max-time 60 "$1"
   fi
 }
 
