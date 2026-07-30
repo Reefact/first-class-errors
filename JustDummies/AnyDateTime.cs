@@ -72,7 +72,7 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateTime After(DateTime instant) {
-        return new AnyDateTime(_source, _spec.WithMinimumAbove(Ord(instant), $"After({V(instant)})"), _allowedOriginals);
+        return new AnyDateTime(_source, _spec.WithMinimumAbove(Ord(instant), ConstraintCall.Of(nameof(After), V(instant))), _allowedOriginals);
     }
 
     /// <summary>Requires an instant at or after <paramref name="instant" />.</summary>
@@ -80,7 +80,7 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateTime AfterOrEqualTo(DateTime instant) {
-        return new AnyDateTime(_source, _spec.WithMinimum(Ord(instant), $"AfterOrEqualTo({V(instant)})"), _allowedOriginals);
+        return new AnyDateTime(_source, _spec.WithMinimum(Ord(instant), ConstraintCall.Of(nameof(AfterOrEqualTo), V(instant))), _allowedOriginals);
     }
 
     /// <summary>Requires an instant strictly before <paramref name="instant" />.</summary>
@@ -88,7 +88,7 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateTime Before(DateTime instant) {
-        return new AnyDateTime(_source, _spec.WithMaximumBelow(Ord(instant), $"Before({V(instant)})"), _allowedOriginals);
+        return new AnyDateTime(_source, _spec.WithMaximumBelow(Ord(instant), ConstraintCall.Of(nameof(Before), V(instant))), _allowedOriginals);
     }
 
     /// <summary>Requires an instant at or before <paramref name="instant" />.</summary>
@@ -96,7 +96,7 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateTime BeforeOrEqualTo(DateTime instant) {
-        return new AnyDateTime(_source, _spec.WithMaximum(Ord(instant), $"BeforeOrEqualTo({V(instant)})"), _allowedOriginals);
+        return new AnyDateTime(_source, _spec.WithMaximum(Ord(instant), ConstraintCall.Of(nameof(BeforeOrEqualTo), V(instant))), _allowedOriginals);
     }
 
     /// <summary>Requires an instant within the inclusive range [<paramref name="start" />, <paramref name="end" />].</summary>
@@ -108,7 +108,7 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource, ICardinality
     public AnyDateTime Between(DateTime start, DateTime end) {
         if (start > end) { throw new ArgumentException($"The start ({V(start)}) must be at or before the end ({V(end)}).", nameof(start)); }
 
-        string constraint = $"Between({V(start)}, {V(end)})";
+        ConstraintCall constraint = ConstraintCall.Of(nameof(Between), V(start), V(end));
 
         return new AnyDateTime(_source, _spec.WithMinimum(Ord(start), constraint).WithMaximum(Ord(end), constraint), _allowedOriginals);
     }
@@ -128,7 +128,7 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource, ICardinality
 
         string rendered = granularity.ToString("c", CultureInfo.InvariantCulture);
 
-        return new AnyDateTime(_source, _spec.WithStep((ulong)granularity.Ticks, Ord(DateTime.MinValue), $"WithGranularity({rendered})"), _allowedOriginals);
+        return new AnyDateTime(_source, _spec.WithStep((ulong)granularity.Ticks, Ord(DateTime.MinValue), ConstraintCall.Of(nameof(WithGranularity), rendered)), _allowedOriginals);
     }
 
     /// <summary>Requires the instant to be one of the supplied values. Declared once per generator.</summary>
@@ -152,7 +152,7 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource, ICardinality
             if (!originals.ContainsKey(Ord(value))) { originals.Add(Ord(value), value); }
         }
 
-        return new AnyDateTime(_source, _spec.WithAllowed(values.Select(Ord).ToArray(), $"OneOf({Join(values)})"), originals);
+        return new AnyDateTime(_source, _spec.WithAllowed(values.Select(Ord).ToArray(), ConstraintCall.Of(nameof(OneOf), Join(values))), originals);
     }
 
     /// <summary>Requires the instant to be none of the supplied values.</summary>
@@ -165,7 +165,7 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource, ICardinality
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        return new AnyDateTime(_source, _spec.WithExcluded(values.Select(Ord).ToArray(), $"Except({Join(values)})"), _allowedOriginals);
+        return new AnyDateTime(_source, _spec.WithExcluded(values.Select(Ord).ToArray(), ConstraintCall.Of(nameof(Except), Join(values))), _allowedOriginals);
     }
 
     /// <summary>
@@ -176,7 +176,7 @@ public sealed class AnyDateTime : IAny<DateTime>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateTime DifferentFrom(DateTime value) {
-        return new AnyDateTime(_source, _spec.WithExcluded([Ord(value)], $"DifferentFrom({V(value)})"), _allowedOriginals);
+        return new AnyDateTime(_source, _spec.WithExcluded([Ord(value)], ConstraintCall.Of(nameof(DifferentFrom), V(value))), _allowedOriginals);
     }
 
     /// <inheritdoc />
