@@ -108,9 +108,9 @@ internal sealed class DecimalIntervalSpec {
         if (minimum <= _min) { return this; }
 
         if (minimum > _max) {
-            if (_maxConstraint is null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because no {_typeName} value satisfies it."); }
+            if (_maxConstraint is null) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
 
-            throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_maxConstraint} already requires values less than or equal to {_render(_max)}.");
+            throw ConflictingAnyConstraintException.AlreadyBoundedAbove(applying, _maxConstraint, _render(_max));
         }
 
         return Validated(new DecimalIntervalSpec(_typeName, _render, minimum, applying, _max, _maxConstraint, _allowed, _allowedConstraint, _exclusions, _scale, _scaleConstraint), applying);
@@ -122,9 +122,9 @@ internal sealed class DecimalIntervalSpec {
         if (maximum >= _max) { return this; }
 
         if (maximum < _min) {
-            if (_minConstraint is null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because no {_typeName} value satisfies it."); }
+            if (_minConstraint is null) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
 
-            throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_minConstraint} already requires values greater than or equal to {_render(_min)}.");
+            throw ConflictingAnyConstraintException.AlreadyBoundedBelow(applying, _minConstraint, _render(_min));
         }
 
         return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, maximum, applying, _allowed, _allowedConstraint, _exclusions, _scale, _scaleConstraint), applying);
@@ -151,7 +151,7 @@ internal sealed class DecimalIntervalSpec {
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (string.Equals(_allowedConstraint, applying, StringComparison.Ordinal)) { return this; }
-        if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_allowedConstraint} is already defined."); }
+        if (_allowedConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _allowedConstraint); }
 
         decimal[] distinct = values.Distinct().ToArray();
 
@@ -180,7 +180,9 @@ internal sealed class DecimalIntervalSpec {
         if (_scale >= 0) {
             if (_scale == scale) { return this; }
 
-            throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_scaleConstraint} is already defined.");
+            // _scale and _scaleConstraint are written as a pair by the constructor and rethreaded as a pair by every
+            // rebuild, so a declared scale always carries the name of the constraint that declared it.
+            throw ConflictingAnyConstraintException.AlreadyDefined(applying, _scaleConstraint!);
         }
 
         return Validated(new DecimalIntervalSpec(_typeName, _render, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, _exclusions, scale, applying), applying);
@@ -375,7 +377,7 @@ internal sealed class DecimalIntervalSpec {
     private DecimalIntervalSpec Validated(DecimalIntervalSpec candidate, string applying) {
         if (candidate.IsSatisfiable()) { return candidate; }
 
-        throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {candidate.DescribeExhaustion(applying)}.");
+        throw ConflictingAnyConstraintException.Because(applying, candidate.DescribeExhaustion(applying));
     }
 
     private bool IsSatisfiable() {
