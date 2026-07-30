@@ -142,6 +142,13 @@ pointant `--project`.
 1. par nom de métadonnée complet, si l'argument contient un `.` (`Shop.Domain.Order`) ;
 2. par nom simple parmi les types source de la compilation et les assemblies référencées.
 
+Un type **imbriqué** s'écrit comme un développeur le taperait — `dum generate Order.Line` — et le
+moteur le traduit pour la recherche, où le séparateur est `+` et non `.`
+(`Shop.Domain.Order+Line`). Passer la forme pointée telle quelle à une recherche par nom de
+métadonnée ne renvoie rien, ce qui signalerait comme absent un type bien réel. Le generator émis est
+un type de premier niveau dans le namespace englobant, nommé d'après le seul type imbriqué :
+`AnyLine`.
+
 Zéro correspondance → erreur, avec les noms les plus proches par distance d'édition. Plus d'une →
 erreur, avec les noms complets, en demandant lequel. Les deux sortent en `1`.
 
@@ -294,6 +301,14 @@ public sealed partial class AnyOrder : IAny<Order> {
 * Casse de `With{Param}` : le nom du paramètre, première lettre en majuscule, culture invariante.
   Un paramètre nommé `_id` ou `@class` est normalisé en retirant le `_`/`@` de tête.
 
+**Le cas dégénéré a sa propre forme.** Un constructeur sans paramètre (§5.1) fait s'effondrer tout
+ce qui précède : un seul constructeur public sans paramètre, aucun champ, aucun constructeur privé,
+aucune méthode `With`, aucun helper `FixedValue`, et `Generate()` retournant `new {Type}()`. Émettre
+les deux constructeurs sans condition leur donnerait la même signature et échouerait en `CS0111` —
+vérifié. Le résultat vaut quand même d'être généré : `Any{Type}` est un `IAny<T>`, donc il se
+compose dans `Any.ListOf(...)`, `Any.Combine(...)` et le reste, ce qu'un simple `new {Type}()` ne
+fait pas.
+
 ### 4.3 Règles d'en-tête
 
 Exactement trois lignes de commentaire, comme ci-dessus. **Aucun horodatage et aucune version du
@@ -328,6 +343,10 @@ le paramètre non résolu.
 4. Les records positionnels fonctionnent sans traitement particulier — leur constructeur primaire
    est un constructeur public ordinaire. Les membres `init` et `required` sont **hors périmètre**
    (§16).
+5. Un constructeur ayant un paramètre `ref` ou `out` n'est **pas éligible** : `Generate()` passe des
+   arguments par valeur, et un tel site d'appel échoue en `CS1620` — vérifié. L'ignorer et
+   considérer le candidat suivant ; s'il n'en reste aucun, le type est non résolu (§7). `in`
+   convient, un argument par valeur s'y lie.
 
 ### 5.2 La table de base
 
@@ -597,13 +616,24 @@ change de cible, ou écris-le toi-même ». Un mot transforme une impasse en ins
 | Le projet ne référence pas JustDummies | `1` | Rien ne peut être résolu (D4) ; le dit et suggère le package. |
 | `Any{Type}` masque un type `JustDummies.Any*` | `0` | **Avertissement**, puis génération. |
 
-Cette dernière ligne mérite sa note. La bibliothèque possède 39 noms de types publics `Any*`
-(§14.2) — `AnyList`, `AnySet`, `AnyArray`, `AnySequence`, `AnyPattern`, `AnyUri`, `AnyChar`,
-`AnyString`, … Un type métier nommé `Set`, `List`, `Sequence` ou `Pattern` scaffolde vers un nom
+Cette dernière ligne mérite sa note, et le contrôle derrière est plus étroit qu'il n'y paraît. La
+bibliothèque déclare 40 noms de types publics `Any*`, mais **8 sont génériques** — `AnyList<T>`,
+`AnySet<T>`, `AnyArray<T>`, `AnySequence<T>`, `AnyDictionary<K,V>`, `AnyOneOf<T>`, `AnyEnum<T>`,
+`AnyCollection<…>`. L'arité fait partie de l'identité d'un type en C#, donc un `AnySet` scaffoldé
+(arité 0) et le `AnySet<T>` de la bibliothèque **coexistent sans rien masquer** — vérifié. Un type
+métier nommé `Set`, `List` ou `Sequence` est une fausse alerte.
+
+Le vrai ensemble de collision, ce sont les **32 noms non génériques** (§14.2) : `AnyString`,
+`AnyGuid`, `AnyUri`, `AnyPattern`, `AnyChar`, `AnyBoolean`, `AnyDateTime`, `AnyContext`,
+`AnyDecimal`, `AnyInt32`, … Un type métier nommé `Pattern`, `Context` ou `Uri` scaffolde vers un nom
 qui, dans son propre namespace, **masque silencieusement le type de la bibliothèque** pour tous les
 fichiers de ce namespace : C# résout le namespace englobant avant tout `using`. Cela compile ; c'est
-simplement faux plus tard. Le tool avertit, nomme les deux types, et génère quand même — sous la
-règle de conception 4, le renommage est l'affaire du développeur, et la v1.1 lui en donne le levier.
+simplement faux plus tard — vérifié. Le tool avertit, nomme les deux types, et génère quand même ;
+sous la règle de conception 4 le renommage est l'affaire du développeur, et la v1.1 lui en donne le
+levier.
+
+Le contrôle doit donc comparer l'arité, pas seulement le nom. Avertir sur les 40 crierait au loup
+sur les huit qui ne peuvent pas entrer en collision.
 
 Plusieurs arguments de type (`dum generate Order Customer Invoice`) sont traités indépendamment ; le
 code de sortie est le pire d'entre eux, et un échec n'empêche pas l'écriture des autres.
@@ -802,7 +832,10 @@ modification de cette fonction plus une liaison d'options, pas un balayage. En v
   de motif, pour que l'exclusion du §5.3 ne puisse pas être défaite par inadvertance.
 * **Fichiers de référence de l'émetteur.** Un fichier approuvé par forme représentative : aucun
   paramètre, un paramètre, six paramètres, un TODO, une collision de nom, un record positionnel,
-  une cible à fabrique statique.
+  une cible à fabrique statique. Le fichier sans paramètre épingle la forme dégénérée du §4.2 —
+  émettre les deux constructeurs sans condition y donne un `CS0111`. Le fichier de collision doit
+  utiliser un nom de bibliothèque **non générique** (`Pattern`, `Context`, `Uri`), puisqu'un nom
+  générique ne peut pas entrer en collision (§7).
 * **Tests de compilation de la sortie.** Chaque fichier de référence est compilé contre
   `JustDummies.dll` **avec les analyzers JustDummies branchés**, et la compilation ne doit produire
   aucune erreur `CS*` ni aucun diagnostic `JD*`. C'est le contrôle que D3 rend possible : le fichier
@@ -959,8 +992,12 @@ projette sur **`Any.Double()`**, pas `Any.Decimal()`.
 d'entrée de choix comme méthodes **d'instance** tirant de sa propre source fixe. Il ne reflète
 **pas** les points d'entrée de collection ni de composition. D7 le met hors périmètre.
 
-La bibliothèque déclare **39 noms de types publics `Any*`** (37 generators plus `AnyContext` et
-`AnyGenerationException`). C'est cet ensemble que l'avertissement de masquage du §7 interroge.
+La bibliothèque déclare **40 noms de types publics `Any*`** — 38 generators plus `AnyContext` et
+`AnyGenerationException`. **8 sont génériques et 32 ne le sont pas**, et seuls les non génériques
+peuvent être masqués par un `Any{Type}` scaffoldé ; c'est cet ensemble de 32 noms que
+l'avertissement du §7 interroge. (`AnyCollection<…>`, la base abstraite des generators de
+collection, est facile à manquer au comptage : elle est déclarée `public abstract class`, pas
+`public sealed class`.)
 
 ### 14.3 Surfaces de contraintes utilisées par l'émetteur
 
@@ -1977,6 +2014,11 @@ branchés. Les résultats ci-dessous sont ce que le harnais a affiché.
 | Les regex de validation réalistes sortent du sous-ensemble supporté | §5.3 | 4 sur 5 rejetées : lookahead, limite de mot, backreference, catégorie Unicode |
 | Un motif non supporté lève à la **construction**, pas au `Generate()` | §5.3 | donc le constructeur sans paramètre émis lèverait avant qu'un `With…` puisse surcharger |
 | Les generators de collection ne portent aucune contrainte de longueur | §5.3 | `AnyList<T>` expose `WithCount`, `WithCountBetween`, `WithMinCount`, `WithMaxCount` — pas de `WithLength` |
+| Un constructeur sans paramètre casse la forme standard | §4.2 | émettre les deux constructeurs leur donne une seule signature — `CS0111` |
+| Un nom de bibliothèque générique ne peut pas être masqué | §7 | un `AnySet` scaffoldé et `JustDummies.AnySet<T>` coexistent ; l'arité fait partie de l'identité |
+| Un nom non générique, si | §7 | `AnyPattern` dans le namespace de la cible résout vers le type scaffoldé, pas celui de la bibliothèque |
+| Les paramètres `ref` / `out` cassent le site d'appel | §5.1 | `CS1620` ; `in` accepte un argument par valeur sans broncher |
+| `FixedValue` accepte ce que `Any.OneOf` refuse | §4.2 | `FixedValue<string?>(null)` rend null ; `Any.OneOf<string>(null)` lève `ArgumentException` |
 | `.Positive()` est incorrect pour une garde `p < 1` sur un decimal | §5.3 | 1 tirage sur 5 000 est passé sous 1 sans contrainte ; ~1 sur 5 dès qu'une autre borne resserre |
 | La sortie scaffoldée ne lève aucun diagnostic JD | D3, §12 | 0 diagnostic sur les fichiers émis |
 | Les analyzers étaient réellement chargés | D3 | un fichier de contrôle a levé `JD006` et `JD005` dans le même build |

@@ -139,6 +139,12 @@ or several, fail with a message naming the candidates and pointing at `--project
 1. by full metadata name, if the argument contains a `.` (`Shop.Domain.Order`);
 2. by simple name across the compilation's source types and referenced assemblies.
 
+A **nested** type is written the way a developer would type it — `dum generate Order.Line` — and
+the engine translates it for the lookup, where the separator is `+` rather than `.`
+(`Shop.Domain.Order+Line`). Passing the dotted form straight to a metadata-name lookup returns
+nothing, which would report a real type as missing. The generator it emits is a top-level type in
+the containing namespace, named after the nested type alone: `AnyLine`.
+
 Zero matches → error, listing the closest names by edit distance. More than one match → error,
 listing the full names, asking for one of them. Both exit `1`.
 
@@ -289,6 +295,13 @@ public sealed partial class AnyOrder : IAny<Order> {
 * `With{Param}` casing: the parameter name, first letter upper-cased, invariant culture. A
   parameter named `_id` or `@class` is normalised by stripping the leading `_`/`@`.
 
+**The degenerate case has its own shape.** A constructor with no parameters (§5.1) collapses all of
+the above: one public parameterless constructor, no fields, no private constructor, no `With`
+methods, no `FixedValue` helper, and `Generate()` returning `new {Type}()`. Emitting the two
+constructors unconditionally would give them the same signature and fail with `CS0111` — verified.
+The result is still worth generating: `Any{Type}` is an `IAny<T>`, so it composes into
+`Any.ListOf(...)`, `Any.Combine(...)` and the rest, which a bare `new {Type}()` does not.
+
 ### 4.3 Header rules
 
 Exactly three comment lines, as above. **No timestamp and no tool version**: both would make the
@@ -321,6 +334,10 @@ marks the parameter unresolved.
 3. A parameterless constructor yields a valid, trivial `AnyOrder` with no `With` methods.
 4. Positional records work with no special handling — their primary constructor is an ordinary
    public constructor. `init` and `required` members are **out of scope** (§16).
+5. A constructor with a `ref` or `out` parameter is **not eligible**: `Generate()` passes plain
+   value arguments, and such a call site fails with `CS1620` — verified. Skip it and consider the
+   next candidate; if none remains, the type is unresolved (§7). `in` is fine, a value argument
+   binds to it.
 
 ### 5.2 The base table
 
@@ -582,13 +599,23 @@ renders it. That is what makes the recap testable without a console.
 | The project does not reference JustDummies | `1` | Nothing can be resolved (D4); says so and suggests the package. |
 | `Any{Type}` shadows a `JustDummies.Any*` type | `0` | **Warning**, then generate. |
 
-That last row deserves its own note. The library owns 39 public `Any*` type names (§14.2) —
-`AnyList`, `AnySet`, `AnyArray`, `AnySequence`, `AnyPattern`, `AnyUri`, `AnyChar`, `AnyString`, …
-A domain type named `Set`, `List`, `Sequence` or `Pattern` scaffolds to a name that, inside its own
+That last row deserves its own note, and the check behind it is narrower than it first looks. The
+library declares 40 public `Any*` type names, but **8 of them are generic** — `AnyList<T>`,
+`AnySet<T>`, `AnyArray<T>`, `AnySequence<T>`, `AnyDictionary<K,V>`, `AnyOneOf<T>`, `AnyEnum<T>`,
+`AnyCollection<…>`. Arity is part of a type's identity in C#, so a scaffolded `AnySet` (arity 0)
+and the library's `AnySet<T>` **coexist without shadowing anything** — verified. A domain type
+named `Set`, `List` or `Sequence` is a false alarm.
+
+The real collision set is the **32 non-generic** names (§14.2): `AnyString`, `AnyGuid`, `AnyUri`,
+`AnyPattern`, `AnyChar`, `AnyBoolean`, `AnyDateTime`, `AnyContext`, `AnyDecimal`, `AnyInt32`, …
+A domain type named `Pattern`, `Context` or `Uri` scaffolds to a name that, inside its own
 namespace, **silently shadows the library's type** for every file in that namespace: C# resolves
-the enclosing namespace before any `using`. It compiles; it is just wrong later. The tool warns,
-names both types, and generates anyway — under design rule 4, the rename is the developer's call,
-and v1.1 gives them the switch.
+the enclosing namespace before any `using`. It compiles; it is just wrong later — verified. The
+tool warns, names both types, and generates anyway; under design rule 4 the rename is the
+developer's call, and v1.1 gives them the switch.
+
+The check must therefore compare arity, not just the name. Warning on all 40 would cry wolf on the
+eight that cannot collide.
 
 Multiple type arguments (`dum generate Order Customer Invoice`) are processed independently; the
 exit code is the worst of them, and one failure does not prevent the others being written.
@@ -778,7 +805,9 @@ sweep. In v1.0 `NamingOptions` carries a single fixed pattern, `Any{Type}`.
   exclusion of §5.3 cannot be undone by accident.
 * **Emitter golden files.** One approved file per representative shape: no parameters, one
   parameter, six parameters, a TODO, a name collision, a positional record, a static-factory
-  target.
+  target. The no-parameter file pins the degenerate shape of §4.2 — emitting the two constructors
+  unconditionally there is a `CS0111`. The collision file must use a **non-generic** library name
+  (`Pattern`, `Context`, `Uri`), since a generic one cannot collide (§7).
 * **Compile-the-output tests.** Each golden file is compiled against `JustDummies.dll` **with the
   JustDummies analyzers wired**, and the compilation must produce no `CS*` error and no `JD*`
   diagnostic. This is the check D3 buys: since the file is not marked as generated code, the
@@ -824,6 +853,11 @@ Roslyn version as the analyzer package**, and must not float above it — an ass
 consumer's compiler fails silently (`CS8032`) on an older host if it was built against a newer
 Roslyn. *Current realization: `RoslynFloorVersion` = `4.8.0`, set once in `Directory.Build.props`
 and applied with `VersionOverride`.* The CLI is **not** bound by this: it hosts its own compiler.
+
+The two therefore differ on purpose — the CLI carries a current Roslyn and hands a `Compilation` to
+an engine compiled against an older one. That direction is the supported one: a newer runtime
+satisfies an older reference. The reverse never holds, which is the whole reason the floor is
+pinned rather than floated.
 
 ### 13.3 Solution nesting
 
@@ -930,8 +964,11 @@ Note the naming traps: it is **`Any.Boolean()`**, not `Any.Bool()`; and `double`
 the choice entry points as **instance** methods drawing from its own fixed source. It does **not**
 mirror the collection or composition entry points. D7 puts it out of scope.
 
-The library declares **39 public `Any*` type names** (37 generators plus `AnyContext` and
-`AnyGenerationException`). That set is what the shadowing warning of §7 checks against.
+The library declares **40 public `Any*` type names** — 38 generators plus `AnyContext` and
+`AnyGenerationException`. **8 are generic and 32 are not**, and only the non-generic ones can be
+shadowed by a scaffolded `Any{Type}`; that 32-name set is what the warning of §7 checks against.
+(`AnyCollection<…>`, the abstract base of the collection generators, is easy to miss when counting:
+it is declared `public abstract class`, not `public sealed class`.)
 
 ### 14.3 Constraint surfaces the emitter uses
 
@@ -1906,6 +1943,11 @@ in. The results below are what the harness printed.
 | Realistic validation regexes fall outside the supported subset | §5.3 | 4 of 5 rejected: lookahead, word boundary, backreference, Unicode category |
 | An unsupported pattern throws at **construction**, not at `Generate()` | §5.3 | so the emitted parameterless constructor would throw before any `With…` could override it |
 | Collection generators carry no length constraint | §5.3 | `AnyList<T>` exposes `WithCount`, `WithCountBetween`, `WithMinCount`, `WithMaxCount` — no `WithLength` |
+| A zero-parameter constructor breaks the standard shape | §4.2 | emitting both constructors gives them one signature — `CS0111` |
+| A generic library name cannot be shadowed | §7 | a scaffolded `AnySet` and `JustDummies.AnySet<T>` coexist; arity is part of the identity |
+| A non-generic one is | §7 | `AnyPattern` in the target's namespace resolves to the scaffolded type, not the library's |
+| `ref` / `out` constructor parameters break the call site | §5.1 | `CS1620`; `in` binds a value argument without complaint |
+| `FixedValue` accepts what `Any.OneOf` refuses | §4.2 | `FixedValue<string?>(null)` yields null; `Any.OneOf<string>(null)` throws `ArgumentException` |
 | `.Positive()` is unsound for a `p < 1` guard on a decimal | §5.3 | 1 draw in 5 000 fell below 1 unconstrained; ~1 in 5 once another bound narrows the range |
 | The scaffolded output raises no JD diagnostic | D3, §12 | 0 diagnostics on the emitted files |
 | The analyzers were genuinely loaded | D3 | a control file raised `JD006` and `JD005` in the same build |
