@@ -22,7 +22,7 @@ de `Reefact/first-class-errors`.
 * **§14, c'est la référence.** Chaque fait sur la bibliothèque JustDummies dont dépend cette
   spécification, inliné, avec la commande pour le redériver. Rien dans les §1–§12 n'exige de lire
   la source de la bibliothèque pour être vérifié.
-* **§15, c'est le raisonnement.** Sept enregistrements de décision au format ADR de ce dépôt, tenus
+* **§15, c'est le raisonnement.** Huit enregistrements de décision au format ADR de ce dépôt, tenus
   dans la spécification parce que le dépôt qui devrait les accueillir n'existe pas encore. À lire
   quand on veut savoir *pourquoi*, ou quand on est tenté de revenir sur une décision du §2.
 * **§17, ce sont les preuves.** Le squelette émis du §4.1 a été compilé et exécuté contre la vraie
@@ -82,7 +82,7 @@ valeurs valides ; le **tool** rend le test concis.
 
 ## 2. Décisions
 
-Ce sont les décisions porteuses. Sept d'entre elles portent un enregistrement de décision complet
+Ce sont les décisions porteuses. Neuf d'entre elles portent un enregistrement de décision complet
 au §15 — contexte, argument, alternatives écartées, conséquences. Cette table en est l'index ; elle
 ne porte aucun argument propre.
 
@@ -981,8 +981,8 @@ Les chemins sont ceux du dépôt actuel ; les ajuster si la bibliothèque a dém
 
 ## 15. Enregistrements de décision
 
-Sept des décisions du §2 sont architecturales : un mainteneur futur remettrait chacune en question,
-et chacune tiendrait inchangée même si l'implémentation était entièrement réécrite. Dans le cours
+Neuf des onze décisions du §2 sont architecturales : un mainteneur futur remettrait chacune en
+question, et chacune tiendrait inchangée même si l'implémentation était entièrement réécrite. Dans le cours
 normal des choses, elles entreraient dans la base ADR d'un dépôt en `Proposed`, y recevraient un
 numéro, et seraient acceptées par le mainteneur.
 
@@ -996,7 +996,7 @@ contient plus.
 
 Les garder ici ne coûte rien et rapporte deux choses. Le raisonnement reste attaché à la
 spécification qu'il justifie, donc l'historique de décision voyage comme un seul artefact plutôt
-que comme un document plus six fichiers que quelqu'un doit penser à emporter. Et chaque
+que comme un document plus huit fichiers que quelqu'un doit penser à emporter. Et chaque
 enregistrement suit le format ADR de ce dépôt, section par section, de sorte que l'admission est
 mécanique : soulever l'enregistrement dans la base ADR du dépôt de destination, lui y attribuer son
 numéro, conserver sa date `Proposed:`, et remplacer l'enregistrement ici par un lien.
@@ -1004,13 +1004,24 @@ numéro, conserver sa date `Proposed:`, et remplacer l'enregistrement ici par un
 D'ici là ce sont des brouillons. Aucun statut n'est basculé dans ce document ; le mainteneur les
 accepte dans la base qui les portera.
 
-Quatre décisions du §2 ne portent délibérément aucun enregistrement. **D7** (contexte ambiant
-uniquement) et **D8** (le namespace du type cible) sont des choix de périmètre et de défaut,
-révisables sans conséquence durable — D7 figure déjà comme reportée au §16. **D10** (jamais
-`.OrNull()`) est une ligne de comportement d'émetteur. Toutes échouent au test qui tranche la
-question : *si l'implémentation changeait mais que la décision tenait, l'enregistrement
-aurait-il besoin d'être édité ?* Pour celles-ci, l'enregistrement ne serait que l'implémentation
-redite.
+Deux décisions du §2 ne portent délibérément aucun enregistrement. **D7** (contexte ambiant
+uniquement) est une frontière de périmètre déjà listée comme reportée au §16 — une décision
+programmée pour être revisitée n'est pas une décision durable, et implémenter le support
+d'`AnyContext` plus tard serait un ajout, pas une supersession. **D8** (le namespace du type cible)
+est un défaut dont `--namespace` est l'échappatoire, et un défaut surchargeable à chaque invocation
+ne décide rien de durable. Les deux échouent au test qui tranche la question : *si l'implémentation
+changeait mais que la décision tenait, l'enregistrement aurait-il besoin d'être édité ?* Pour
+celles-là, l'enregistrement ne serait que l'implémentation redite.
+
+**D10 a été déplacée dans cette section plutôt que laissée dehors.** C'est en apparence la plus
+petite décision ici — une règle sur une méthode de la bibliothèque — et la taille est justement la
+mauvaise mesure. Elle passe le test sur les trois plans : elle survivrait à une réécriture de
+l'émetteur dans n'importe quel langage ; c'est le genre de règle qu'un mainteneur remettrait en
+question, parce qu'émettre `OrNull` pour un paramètre déclaré `string?` est la lecture d'apparence
+fidèle et serait signalée comme une correction de bug ; et elle a une conséquence visible au §5.2 —
+la conversion explicite pour les nullables de type valeur — qui se lit comme de la complexité
+accidentelle pour qui ignore pourquoi elle est là. Un enregistrement qui empêche un « nettoyage »
+plausible de réintroduire des échecs intermittents mérite sa place.
 
 ---
 
@@ -1585,6 +1596,106 @@ dû porter une valeur.
 #### Références
 
 * §10.4, §13.6, §14.2 de cette spécification.
+
+---
+
+### D10 — Ne jamais tirer null pour un paramètre nullable
+
+**Statut :** Proposed
+**Proposé :** 2026-07-30
+**Décideurs :** Reefact
+
+#### Contexte
+
+La bibliothèque expose `OrNull` sous deux formes — une pour les types valeur, une pour les types
+référence annotés — chacune retournant un generator qui produit `null` une partie du temps (§14.4).
+
+Un paramètre de constructeur déclaré `string?` ou `int?` énonce que null est *permis*. Il n'énonce
+pas qu'un test particulier a l'intention d'exercer le chemin null.
+
+Le principe affiché de la bibliothèque est que les contraintes expriment les invariants qu'une
+valeur doit satisfaire, jamais ce que le test asserte.
+
+Le type émis porte une surcharge `With{Param}(IAny<TParam>)` pour chaque paramètre (D2), donc un
+développeur peut fournir n'importe quel generator, y compris nullable, sur un paramètre choisi dans
+un test choisi.
+
+La variance en C# ne franchit pas les types valeur, donc un paramètre nullable de type valeur exige
+une conversion explicite quand le generator sous-jacent est utilisé. `OrNull` n'en exigerait
+aucune, puisqu'il retourne déjà le type de generator nullable (§5.2).
+
+Un test qui n'échoue que sur certaines exécutions est le mode d'échec que la bibliothèque existe
+pour supprimer.
+
+#### Décision
+
+L'émetteur n'applique jamais `OrNull`, de sorte qu'un paramètre nullable tire une valeur de son
+type sous-jacent et que le développeur consent à null explicitement.
+
+#### Justification
+
+La nullabilité dans une signature est une permission, pas une intention. La lire comme une
+intention fait décider au tool, à la place du développeur et au hasard, quelles exécutions
+exercent le chemin null — si bien qu'un test écrit pour le chemin ordinaire échoue sur les
+exécutions qui tirent null, pour une raison étrangère à tout ce qu'il asserte. C'est l'échec
+intermittent que D5 existe pour empêcher, atteint par l'autre bout.
+
+Le consentement est déjà bon marché et précis. La surcharge par generator de D2 permet au
+développeur de demander null au paramètre exact et dans le test exact où cela compte, c'est-à-dire
+là où cette décision appartient : le test qui veut le chemin null le dit, et aucun autre test n'en
+souffre.
+
+Refuser ici applique aussi à un défaut la règle propre à la bibliothèque sur les contraintes.
+Émettre `OrNull` encoderait ce qu'un test pourrait asserter plutôt que ce que la valeur doit
+satisfaire, ce qui est la distinction sur laquelle la bibliothèque est bâtie.
+
+#### Alternatives considérées
+
+##### Émettre `OrNull` pour tout paramètre nullable
+
+Considérée parce que c'est la lecture fidèle du type déclaré, qu'elle ne demande aucun cas
+particulier, et que — pour les nullables de type valeur — elle est plus courte que la conversion que
+cette décision impose.
+
+Écartée parce que la fidélité à la signature coûte le déterminisme : environ la moitié des valeurs
+générées seraient null sans que le test l'ait choisi. L'émission plus courte achète la brièveté au
+prix de la propriété que la bibliothèque vend.
+
+##### Émettre `OrNull` seulement là où le constructeur tolère visiblement null
+
+Considérée parce qu'elle réutiliserait la lecture des gardes que D5 effectue déjà, n'appliquant la
+nullabilité que là où le code l'accepte démontrablement.
+
+Écartée parce que l'absence de garde null n'est pas une preuve d'intention — elle est tout aussi
+compatible avec un oubli — et parce qu'elle ferait dépendre la stabilité d'un test de l'écriture ou
+non d'une garde sans rapport. C'est pire qu'une règle uniforme, dans un sens comme dans l'autre.
+
+#### Conséquences
+
+**Positives.** Un generator scaffoldé produit la même forme de valeur à chaque exécution. Rien dans
+le défaut émis ne peut rendre un test intermittent par la nullabilité.
+
+**Négatives.** La branche null d'un constructeur, ou du code sous test, n'est jamais exercée par un
+generator scaffoldé à moins que le développeur ne le demande. Un paramètre typé `string?` pour une
+raison reçoit un generator qui n'explore jamais cette raison.
+
+Visiblement négatif aussi : pour un nullable de type valeur l'émetteur doit convertir explicitement,
+donc le §5.2 porte un saut qui se lit comme gratuit tant que cette décision n'est pas connue.
+
+**Risques.** Ce saut est la partie de l'émetteur la plus susceptible d'être « simplifiée » en
+défaut — `OrNull` est plus court, retourne exactement le type voulu, et ressemble au nettoyage
+évident. Le réintroduire restaurerait l'instabilité en silence. Atténué par cet enregistrement et
+par le cas de résolveur nommé ci-dessous.
+
+#### Actions de suivi
+
+* Conserver un cas de résolveur pour un paramètre nullable de type valeur assertant la conversion
+  explicite, et nommer cet enregistrement là où l'émetteur l'effectue, pour que le saut ne soit pas
+  simplifié.
+
+#### Références
+
+* §5.2, §14.4 de cette spécification ; D2 et D5 de cette section.
 
 ---
 

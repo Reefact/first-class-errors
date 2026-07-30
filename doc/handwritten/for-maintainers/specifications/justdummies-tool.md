@@ -21,7 +21,7 @@ repository before the tool is built, so nothing here may depend on being read in
 * **§14 is the reference.** Every fact about the JustDummies library that this specification
   relies on, inlined, with the command to re-derive each one. Nothing in §1–§12 requires reading
   the library's source to be checked.
-* **§15 is the reasoning.** Seven decision records in this repository's ADR format, held inside
+* **§15 is the reasoning.** Eight decision records in this repository's ADR format, held inside
   the specification because the repository that should hold them does not exist yet. Read them
   when you want to know *why*, or when you are tempted to reverse something in §2.
 * **§17 is the evidence.** The emitted skeleton of §4.1 was compiled and run against the real
@@ -80,7 +80,7 @@ The value proposition stays distinct from the library's: the **library** makes v
 
 ## 2. Decisions
 
-These are the load-bearing decisions. Seven of them carry a full decision record in §15 — context,
+These are the load-bearing decisions. Nine of them carry a full decision record in §15 — context,
 argument, alternatives rejected, consequences. This table is the index; it holds no argument of its
 own.
 
@@ -955,8 +955,8 @@ Paths are those of the current repository; adjust them if the library has moved.
 
 ## 15. Decision records
 
-Seven of the decisions in §2 are architectural: a future maintainer would question each of them,
-and each would stand unchanged if the implementation were rewritten. In the ordinary course they
+Nine of the eleven decisions in §2 are architectural: a future maintainer would question each of
+them, and each would stand unchanged if the implementation were rewritten. In the ordinary course they
 would be entered into a repository's ADR base as `Proposed`, numbered there, and accepted by the
 maintainer.
 
@@ -969,7 +969,7 @@ repository's log carrying decisions about code it no longer holds.
 
 Keeping them here costs nothing and buys two things. The reasoning stays attached to the
 specification it justifies, so the decision history travels as a single artefact rather than as a
-document plus six files someone must remember to bring. And each record follows this repository's
+document plus eight files someone must remember to bring. And each record follows this repository's
 ADR format section for section, so admission is mechanical: lift the record into the destination
 repository's ADR base, assign its number there, keep its `Proposed:` date, and replace the record
 here with a link.
@@ -977,12 +977,22 @@ here with a link.
 Until then they are drafts. No status is flipped in this document; the maintainer accepts them in
 the base that will hold them.
 
-Four decisions of §2 deliberately carry no record. **D7** (ambient context only) and **D8** (the
-target type's namespace) are scope and default choices, revisable without lasting consequence —
-D7 is already listed as deferred in §16. **D10** (never `.OrNull()`) is one line of emitter
-behaviour. All three fail the test that decides the matter: *if the implementation changed but the
-decision stood, would the record need editing?* For these, the record would simply be the
-implementation restated.
+Two decisions of §2 deliberately carry no record. **D7** (ambient context only) is a scope
+boundary already listed as deferred in §16 — a decision scheduled to be revisited is not a lasting
+one, and implementing `AnyContext` support later would be an addition rather than a supersession.
+**D8** (the target type's namespace) is a default with `--namespace` as its escape hatch, and a
+default that can be overridden per invocation decides nothing durable. Both fail the test that
+settles the matter: *if the implementation changed but the decision stood, would the record need
+editing?* For these two, the record would be the implementation restated.
+
+**D10 was moved into this section rather than left out of it.** It looks like the smallest decision
+here — one rule about one library method — and size is exactly the wrong measure. It passes the
+test on all three counts: it would survive a rewrite of the emitter in any language; it is the kind
+of rule a maintainer would question, because emitting `OrNull` for a parameter declared `string?`
+is the faithful-looking reading and would be filed as a bug fix; and it has a visible consequence
+in §5.2 — the explicit conversion for nullable value types — that reads as accidental complexity
+to anyone who does not know why it is there. A record that stops one plausible "cleanup" from
+reintroducing intermittent failures earns its place.
 
 ---
 
@@ -1535,6 +1545,101 @@ value.
 #### References
 
 * §10.4, §13.6, §14.2 of this specification.
+
+---
+
+### D10 — Never draw null for a nullable parameter
+
+**Status:** Proposed
+**Proposed:** 2026-07-30
+**Decision Makers:** Reefact
+
+#### Context
+
+The library exposes `OrNull` in two forms — one for value types, one for annotated reference types
+— each returning a generator that yields `null` some of the time (§14.4).
+
+A constructor parameter declared `string?` or `int?` states that null is *permitted*. It does not
+state that any particular test intends to exercise the null path.
+
+The library's stated principle is that constraints express the invariants a value must satisfy,
+never what the test asserts.
+
+The emitted type carries a `With{Param}(IAny<TParam>)` overload for every parameter (D2), so a
+developer can supply any generator, including a nullable one, at a chosen parameter in a chosen
+test.
+
+Variance in C# does not cross value types, so a nullable value-type parameter needs an explicit
+conversion when the underlying generator is used. `OrNull` would need none, since it already
+returns the nullable generator type (§5.2).
+
+A test that fails only on some runs is the failure mode the library exists to remove.
+
+#### Decision
+
+The emitter never applies `OrNull`, so a nullable parameter draws a value of its underlying type
+and the developer opts into null explicitly.
+
+#### Rationale
+
+Nullability in a signature is permission, not intent. Reading it as intent makes the tool decide,
+on the developer's behalf and at random, which runs exercise the null path — so a test written for
+the ordinary path fails on the runs that happen to draw null, for a reason unrelated to anything it
+asserts. That is the intermittent failure D5 exists to prevent, reached from the other direction.
+
+Opting in is already cheap and precise. The generator overload of D2 lets a developer ask for null
+at the exact parameter and in the exact test where it matters, which is where that decision
+belongs: the test that wants the null path says so, and no other test is affected.
+
+Refusing here also applies the library's own rule about constraints to a default. Emitting `OrNull`
+would encode what a test might assert rather than what the value must satisfy, which is the
+distinction the library is built on.
+
+#### Alternatives Considered
+
+##### Emitting `OrNull` for every nullable parameter
+
+Considered because it is the faithful reading of the declared type, needs no special case, and —
+for nullable value types — is shorter than the conversion this decision forces.
+
+Rejected because faithfulness to the signature costs determinism: roughly half the generated values
+would be null for no reason the test chose. The shorter emission buys brevity at the price of the
+property the library sells.
+
+##### Emitting `OrNull` only where the constructor visibly tolerates null
+
+Considered because it would reuse the guard reading D5 already performs, applying nullability only
+where the code demonstrably accepts it.
+
+Rejected because the absence of a null guard is not evidence of intent — it is equally consistent
+with an oversight — and because it would make a test's stability depend on whether an unrelated
+guard happened to be written. That is worse than a uniform rule in either direction.
+
+#### Consequences
+
+**Positive.** A scaffolded generator produces the same shape of value on every run. Nothing in the
+emitted default can make a test intermittent through nullability.
+
+**Negative.** The null branch of a constructor, or of the code under test, is never exercised by a
+scaffolded generator unless the developer asks for it. A parameter typed `string?` for a reason
+receives a generator that never explores that reason.
+
+Visibly negative, too: for a nullable value type the emitter must convert explicitly, so §5.2
+carries a hop that reads as gratuitous unless this decision is known.
+
+**Risks.** That hop is the most likely part of the emitter to be "simplified" back into a defect —
+`OrNull` is shorter, returns exactly the wanted type, and looks like the obvious cleanup.
+Reintroducing it would restore the flakiness silently. Mitigated by this record and by the resolver
+case named below.
+
+#### Follow-up Actions
+
+* Keep a resolver case for a nullable value-type parameter asserting the explicit conversion, and
+  name this record where the emitter performs it, so the hop is not simplified away.
+
+#### References
+
+* §5.2, §14.4 of this specification; D2 and D5 of this section.
 
 ---
 
