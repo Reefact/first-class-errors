@@ -49,7 +49,7 @@ as written: the emitted skeleton, the parameter-resolution rules and the decisio
 behind them were each checked against the library's source, and the central claims
 were measured. It is also **self-contained**: it inlines every library fact it
 relies on, states its host-repository requirements as requirements rather than
-paths, and carries its seven architectural decisions as full ADR-format records
+paths, and carries its eight architectural decision records in full ADR format
 in its own §15 — held there, rather than entered into the base above, because the
 repository that should hold them does not exist yet. All of which survives
 JustDummies moving to its own repository. Not yet built. Also in
