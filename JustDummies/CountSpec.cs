@@ -78,7 +78,7 @@ internal sealed class CountSpec {
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (string.Equals(_exactConstraint, applying, StringComparison.Ordinal)) { return this; }
-        if (_exactConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_exactConstraint} is already defined."); }
+        if (_exactConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _exactConstraint); }
 
         return new CountSpec(count, applying, _min, _minConstraint, _max, _maxConstraint).Validated(applying);
     }
@@ -130,32 +130,44 @@ internal sealed class CountSpec {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         int? cap = _exact ?? _max;
         if (cap is int ceiling && required > ceiling) {
-            throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {Elements(required)} required to be contained cannot fit in a collection of at most {Elements(ceiling)}.");
+            throw ConflictingAnyConstraintException.ContainedElementsDoNotFit(applying, Elements(required), Elements(ceiling));
         }
     }
 
     private CountSpec Validated(string applying) {
-        if (_exact is int exact) {
-            if (exact < _min) {
-                throw new ConflictingAnyConstraintException(applying == _exactConstraint
-                                                                ? $"Cannot apply {applying} because {_minConstraint} already requires at least {Elements(_min)}."
-                                                                : $"Cannot apply {applying} because {_exactConstraint} already fixes the count at {V(exact)}.");
-            }
-
-            if (_max is int cappedAt && exact > cappedAt) {
-                throw new ConflictingAnyConstraintException(applying == _exactConstraint
-                                                                ? $"Cannot apply {applying} because {_maxConstraint} already caps the count at {V(cappedAt)}."
-                                                                : $"Cannot apply {applying} because {_exactConstraint} already fixes the count at {V(exact)}.");
-            }
-        }
+        if (_exact is int exact) { EnsureExactAgreesWithBounds(applying, exact); }
 
         if (_max is int max && _min > max) {
-            throw new ConflictingAnyConstraintException(applying == _maxConstraint
-                                                            ? $"Cannot apply {applying} because {_minConstraint} already requires at least {Elements(_min)}."
-                                                            : $"Cannot apply {applying} because {_maxConstraint} already caps the count at {V(max)}.");
+            // Both bounds carry their constraint name: each is written as a pair by the constructor. And this branch
+            // needs _min > max, with max >= 0 because the entry points reject a negative count — so _min > 0, which
+            // only WithMinCount can produce, and it names the constraint as it sets the value.
+            throw ConflictingAnyConstraintException.Contradicts(applying,
+                                                                ConstraintClaim.Of(_maxConstraint!, $"already caps the count at {V(max)}"),
+                                                                ConstraintClaim.Of(_minConstraint!, $"already requires at least {Elements(_min)}"));
         }
 
         return this;
+    }
+
+    /// <summary>
+    ///     Ensures a fixed count does not contradict a bound already applied; throws naming the bound it contradicts.
+    ///     Symmetric wording, so the message reads whether the last constraint applied was the fixed count or the bound.
+    /// </summary>
+    private void EnsureExactAgreesWithBounds(string applying, int exact) {
+        if (exact < _min) {
+            // Same reasoning as above: exact >= 0 is guaranteed by the entry points, so exact < _min needs _min > 0
+            // — a declared minimum, hence a named one — and a declared exact count carries its name too.
+            throw ConflictingAnyConstraintException.Contradicts(applying,
+                                                                ConstraintClaim.Of(_exactConstraint!, $"already fixes the count at {V(exact)}"),
+                                                                ConstraintClaim.Of(_minConstraint!, $"already requires at least {Elements(_min)}"));
+        }
+
+        if (_max is int cappedAt && exact > cappedAt) {
+            // Both values are declared here, and each was written as a pair with the constraint that declared it.
+            throw ConflictingAnyConstraintException.Contradicts(applying,
+                                                                ConstraintClaim.Of(_exactConstraint!, $"already fixes the count at {V(exact)}"),
+                                                                ConstraintClaim.Of(_maxConstraint!, $"already caps the count at {V(cappedAt)}"));
+        }
     }
 
 }

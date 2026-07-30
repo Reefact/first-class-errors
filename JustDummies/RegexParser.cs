@@ -129,35 +129,46 @@ internal sealed class RegexParser {
     private RegexNode ParseSequence() {
         List<RegexNode> parts = [];
         while (!AtEnd && Peek() != '|' && Peek() != ')') {
-            // Anchors are no-ops for a whole-string generator, but only where they are guaranteed to match:
-            // '^' at the start and '$' at the end of the pattern or of a top-level alternation branch. A run of
-            // them ('^^', '$$') and a quantified one ('^*', '$?', '^{2}') are equally no-ops there — the real
-            // engine accepts and matches all of these — so they are consumed and ignored. Anywhere else ('a^',
-            // '$a', inside a group) the pattern can never be matched by a whole generated string, so it is
-            // refused instead of silently mis-generated.
-            if (Peek() == '^') {
-                if (_depth > 0 || parts.Count > 0) { throw Unsupported("an anchor '^' away from the start of the pattern or of a top-level alternation branch", _index); }
-                _index++;
-                SkipAnchorQuantifier();
-
-                continue;
-            }
-
-            if (Peek() == '$') {
-                int position = _index;
-                _index++;
-                SkipAnchorQuantifier();
-                // A '$' is a no-op only at the very end: what follows must be end-of-pattern, a branch bar, or
-                // another end-anchor '$'. Inside a group, or before anything else, it can never match a whole string.
-                if (_depth > 0 || (!AtEnd && Peek() != '|' && Peek() != '$')) { throw Unsupported("an anchor '$' away from the end of the pattern or of a top-level alternation branch", position); }
-
-                continue;
-            }
+            if (TryConsumeAnchor(atSequenceStart: parts.Count == 0)) { continue; }
 
             parts.Add(ParseQuantified());
         }
 
         return parts.Count == 1 ? parts[0] : new RegexSequence(parts.ToArray());
+    }
+
+    /// <summary>
+    ///     Consumes a boundary anchor at the current position when one is there, answering whether it did.
+    /// </summary>
+    /// <remarks>
+    ///     Anchors are no-ops for a whole-string generator, but only where they are guaranteed to match: <c>^</c> at
+    ///     the start and <c>$</c> at the end of the pattern or of a top-level alternation branch. A run of them
+    ///     (<c>^^</c>, <c>$$</c>) and a quantified one (<c>^*</c>, <c>$?</c>, <c>^{2}</c>) are equally no-ops there —
+    ///     the real engine accepts and matches all of these — so they are consumed and ignored. Anywhere else
+    ///     (<c>a^</c>, <c>$a</c>, inside a group) the pattern can never be matched by a whole generated string, so it
+    ///     is refused instead of silently mis-generated.
+    /// </remarks>
+    private bool TryConsumeAnchor(bool atSequenceStart) {
+        if (Peek() == '^') {
+            if (_depth > 0 || !atSequenceStart) { throw UnsupportedRegexException.OutsideRegularSubset(_pattern, "an anchor '^' away from the start of the pattern or of a top-level alternation branch", _index); }
+            _index++;
+            SkipAnchorQuantifier();
+
+            return true;
+        }
+
+        if (Peek() == '$') {
+            int position = _index;
+            _index++;
+            SkipAnchorQuantifier();
+            // A '$' is a no-op only at the very end: what follows must be end-of-pattern, a branch bar, or
+            // another end-anchor '$'. Inside a group, or before anything else, it can never match a whole string.
+            if (_depth > 0 || (!AtEnd && Peek() != '|' && Peek() != '$')) { throw UnsupportedRegexException.OutsideRegularSubset(_pattern, "an anchor '$' away from the end of the pattern or of a top-level alternation branch", position); }
+
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -286,13 +297,13 @@ internal sealed class RegexParser {
                 // An atomic group commits to the first branch that matches, so its language is NOT that of the
                 // plain alternation ('(?>ab|a)b' matches only "abb"); generating from it as if it were would
                 // yield non-matching values, so it is refused.
-                case '>': throw Unsupported("an atomic group '(?>…)'", position);
-                case '=': throw Unsupported("a lookahead '(?=…)'", position);
-                case '!': throw Unsupported("a negative lookahead '(?!…)'", position);
-                case '(': throw Unsupported("a conditional group '(?(…)…)'", position);
-                case '#': throw Unsupported("an inline comment '(?#…)'", position);
+                case '>': throw UnsupportedRegexException.OutsideRegularSubset(_pattern, "an atomic group '(?>…)'", position);
+                case '=': throw UnsupportedRegexException.OutsideRegularSubset(_pattern, "a lookahead '(?=…)'", position);
+                case '!': throw UnsupportedRegexException.OutsideRegularSubset(_pattern, "a negative lookahead '(?!…)'", position);
+                case '(': throw UnsupportedRegexException.OutsideRegularSubset(_pattern, "a conditional group '(?(…)…)'", position);
+                case '#': throw UnsupportedRegexException.OutsideRegularSubset(_pattern, "an inline comment '(?#…)'", position);
                 case '<':
-                    if (PeekAt(1) is '=' or '!') { throw Unsupported("a lookbehind '(?<=…)' or '(?<!…)'", position); }
+                    if (PeekAt(1) is '=' or '!') { throw UnsupportedRegexException.OutsideRegularSubset(_pattern, "a lookbehind '(?<=…)' or '(?<!…)'", position); }
                     _index++;                     // consume '<'
                     SkipGroupName('>', position);  // named group: the name never shapes generation, but it is validated
                     break;
@@ -300,7 +311,7 @@ internal sealed class RegexParser {
                     _index++; // consume '\''
                     SkipGroupName('\'', position);
                     break;
-                default: throw Unsupported($"a group option '(?{Peek()}…)'", position);
+                default: throw UnsupportedRegexException.OutsideRegularSubset(_pattern, $"a group option '(?{Peek()}…)'", position);
             }
         }
 
@@ -352,7 +363,7 @@ internal sealed class RegexParser {
         // A '-' marks a balancing group; it manipulates the capture stack (the backreference family), so it is
         // non-regular and refused here even when its target is undefined (see SkipGroupName for why the divergence
         // from the real engine's malformed-pattern verdict on that case is accepted).
-        if (name.Contains('-')) { throw Unsupported("a balancing group '(?<name1-name2>…)'", position); }
+        if (name.Contains('-')) { throw UnsupportedRegexException.OutsideRegularSubset(_pattern, "a balancing group '(?<name1-name2>…)'", position); }
 
         // A name opening with a digit is an explicit capture number: the real engine accepts it only as a positive
         // integer with no leading zero, so '0', '01' and '1a' are refused while '1' and '10' pass.
@@ -399,17 +410,17 @@ internal sealed class RegexParser {
             case 'u': return Literal(ReadHexEscape(4));
             case 'c': return Literal(ReadControlEscape());
             case '0': return Literal(ReadOctalTail(0));
-            case 'b': throw Unsupported("a word-boundary '\\b'", position);
-            case 'B': throw Unsupported("a non-word-boundary '\\B'", position);
-            case 'A': throw Unsupported("a start-of-string anchor '\\A'", position);
-            case 'G': throw Unsupported("a contiguous-match anchor '\\G'", position);
+            case 'b': throw UnsupportedRegexException.OutsideRegularSubset(_pattern, "a word-boundary '\\b'", position);
+            case 'B': throw UnsupportedRegexException.OutsideRegularSubset(_pattern, "a non-word-boundary '\\B'", position);
+            case 'A': throw UnsupportedRegexException.OutsideRegularSubset(_pattern, "a start-of-string anchor '\\A'", position);
+            case 'G': throw UnsupportedRegexException.OutsideRegularSubset(_pattern, "a contiguous-match anchor '\\G'", position);
             case 'Z':
-            case 'z': throw Unsupported("an end-of-string anchor '\\" + escaped + "'", position);
+            case 'z': throw UnsupportedRegexException.OutsideRegularSubset(_pattern, "an end-of-string anchor '\\" + escaped + "'", position);
             case 'p':
-            case 'P': throw Unsupported("a Unicode category '\\" + escaped + "{…}'", position);
-            case 'k': throw Unsupported("a named backreference '\\k<…>'", position);
+            case 'P': throw UnsupportedRegexException.OutsideRegularSubset(_pattern, "a Unicode category '\\" + escaped + "{…}'", position);
+            case 'k': throw UnsupportedRegexException.OutsideRegularSubset(_pattern, "a named backreference '\\k<…>'", position);
             default:
-                if (escaped is >= '1' and <= '9') { throw Unsupported($"a backreference '\\{escaped}'", position); }
+                if (escaped is >= '1' and <= '9') { throw UnsupportedRegexException.OutsideRegularSubset(_pattern, $"a backreference '\\{escaped}'", position); }
                 // The real engine rejects unknown word-character escapes rather than reading them as literals;
                 // mirroring it keeps "accepted by JustDummies" aligned with "accepted by .NET".
                 if (char.IsLetterOrDigit(escaped)) { throw Malformed($"unrecognized escape sequence '\\{escaped}'"); }
@@ -445,8 +456,27 @@ internal sealed class RegexParser {
         int position = _index;
         _index++; // consume '['
         bool          negated = Eat('^');
-        HashSet<char> set     = [];
-        bool          first   = true;
+        HashSet<char> set     = ReadClassMembers();
+
+        if (_ignoreCase) { set = ExpandCase(set); }
+        char[] choices = negated ? RegexAlphabet.Negate(set) : set.ToArray();
+        // Only a negated class can end up empty — a plain class always holds the member it just read. Such a class
+        // is well-formed and regular (the real engine accepts it), but it excludes every character JustDummies draws
+        // from, so it is refused as unsupported (a universe limit), not as malformed. Routing it through Malformed
+        // would claim the caller wrote a broken pattern for one the real engine compiles.
+        if (choices.Length == 0) {
+            throw UnsupportedRegexException.EmptyNegatedClass(_pattern, position);
+        }
+
+        return new RegexCharacters(choices);
+    }
+
+    /// <summary>
+    ///     Reads the class members up to the closing <c>]</c>, which it consumes.
+    /// </summary>
+    private HashSet<char> ReadClassMembers() {
+        HashSet<char> set   = [];
+        bool          first = true;
 
         while (true) {
             if (AtEnd) { throw Malformed("unterminated character class '['"); }
@@ -461,7 +491,7 @@ internal sealed class RegexParser {
             // close the class early and generate values outside it, so the construct is refused. But '-[' is
             // subtraction only when a base member precedes it: the real engine reads a leading '-' (as in '[-[x]]')
             // as an ordinary hyphen, so it is refused here only once the set already holds a member.
-            if (Peek() == '-' && PeekAt(1) == '[' && set.Count > 0) { throw Unsupported("a character-class subtraction '[…-[…]]'", _index); }
+            if (Peek() == '-' && PeekAt(1) == '[' && set.Count > 0) { throw UnsupportedRegexException.OutsideRegularSubset(_pattern, "a character-class subtraction '[…-[…]]'", _index); }
             if (Peek() == '\\' && IsClassShorthand(PeekAt(1))) {
                 _index++; // consume '\'
                 AddClassShorthand(set, Next());
@@ -469,33 +499,30 @@ internal sealed class RegexParser {
                 continue;
             }
 
-            char low = ReadClassChar();
-            // A '-[' immediately after a member is subtraction as well ('[a-[x]]'): the real engine never reads it
-            // as a range whose upper bound is '[', so intercepting it here can never turn away a valid range.
-            if (!AtEnd && Peek() == '-' && PeekAt(1) == '[') { throw Unsupported("a character-class subtraction '[…-[…]]'", _index); }
-            if (!AtEnd && Peek() == '-' && PeekAt(1) != ']' && PeekAt(1) != '\0') {
-                _index++; // consume '-'
-                char high = ReadClassChar();
-                if (high < low) { throw Malformed($"character class range '{low}-{high}' is out of order"); }
-                // Iterate an int, not a char: a class range may legitimately end at U+FFFF (reachable via a
-                // literal or the \uFFFF escape), and incrementing a 16-bit char past it wraps to 0x0000 and never ends.
-                for (int code = low; code <= high; code++) { set.Add((char)code); }
-            } else {
-                set.Add(low);
-            }
+            AddClassMemberOrRange(set);
         }
 
-        if (_ignoreCase) { set = ExpandCase(set); }
-        char[] choices = negated ? RegexAlphabet.Negate(set) : set.ToArray();
-        // Only a negated class can end up empty — a plain class always holds the member it just read. Such a class
-        // is well-formed and regular (the real engine accepts it), but it excludes every character JustDummies draws
-        // from, so it is refused as unsupported (a universe limit), not as malformed. Routing it through Malformed
-        // would claim the caller wrote a broken pattern for one the real engine compiles.
-        if (choices.Length == 0) {
-            throw new UnsupportedRegexException($"The regular expression pattern \"{_pattern}\" uses a negated character class that excludes every character JustDummies can generate (printable ASCII U+0020 to U+007E) at position {position}, which JustDummies cannot generate from. It draws values from printable ASCII; express the requirement with characters inside that range, or generate the value another way.");
-        }
+        return set;
+    }
 
-        return new RegexCharacters(choices);
+    /// <summary>
+    ///     Reads one class member and adds it, or the whole range it opens, to <paramref name="set" />.
+    /// </summary>
+    private void AddClassMemberOrRange(HashSet<char> set) {
+        char low = ReadClassChar();
+        // A '-[' immediately after a member is subtraction as well ('[a-[x]]'): the real engine never reads it
+        // as a range whose upper bound is '[', so intercepting it here can never turn away a valid range.
+        if (!AtEnd && Peek() == '-' && PeekAt(1) == '[') { throw UnsupportedRegexException.OutsideRegularSubset(_pattern, "a character-class subtraction '[…-[…]]'", _index); }
+        if (!AtEnd && Peek() == '-' && PeekAt(1) != ']' && PeekAt(1) != '\0') {
+            _index++; // consume '-'
+            char high = ReadClassChar();
+            if (high < low) { throw Malformed($"character class range '{low}-{high}' is out of order"); }
+            // Iterate an int, not a char: a class range may legitimately end at U+FFFF (reachable via a
+            // literal or the \uFFFF escape), and incrementing a 16-bit char past it wraps to 0x0000 and never ends.
+            for (int code = low; code <= high; code++) { set.Add((char)code); }
+        } else {
+            set.Add(low);
+        }
     }
 
     private char ReadClassChar() {
@@ -523,7 +550,7 @@ internal sealed class RegexParser {
                 if (IsClassShorthand(escaped)) { throw Malformed($"a shorthand '\\{escaped}' cannot be an endpoint of a character range"); }
                 // Inside a class a backslash-digit is an octal escape — backreferences cannot occur here.
                 if (escaped is >= '1' and <= '7') { return ReadOctalTail(escaped - '0'); }
-                if (escaped is 'p' or 'P') { throw Unsupported($"a Unicode category '\\{escaped}{{…}}'", _index - 2); }
+                if (escaped is 'p' or 'P') { throw UnsupportedRegexException.OutsideRegularSubset(_pattern, $"a Unicode category '\\{escaped}{{…}}'", _index - 2); }
                 if (char.IsLetterOrDigit(escaped)) { throw Malformed($"unrecognized escape sequence '\\{escaped}' in a character class"); }
 
                 return escaped; // an escaped metacharacter or escaped punctuation
@@ -547,10 +574,6 @@ internal sealed class RegexParser {
                                                          "which is the argument they must fix. This private factory only assembles the exception on the parser's behalf.")]
     private ArgumentException Malformed(string reason) {
         return new ArgumentException($"The regular expression pattern \"{_pattern}\" is invalid: {reason} (at position {_index}).", "pattern");
-    }
-
-    private UnsupportedRegexException Unsupported(string construct, int position) {
-        return new UnsupportedRegexException($"The regular expression pattern \"{_pattern}\" uses {construct} at position {position}, which JustDummies cannot generate from. It builds values from the regular subset of the pattern language; lookarounds, backreferences, word boundaries and Unicode categories are outside it. Express the requirement with the supported subset, or generate the value another way.");
     }
 
 }

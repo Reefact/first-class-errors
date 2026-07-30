@@ -39,14 +39,23 @@ been invisible to the reader it exists for. At `warning` the diagnostic appears 
 the CI ratchet in `Directory.Build.props` turns it into an error; both were verified end to end by
 introducing a violation of an enforced rule.
 
-As of the commit that landed this, **342 of the 375 rules are enforced** — they had zero
-violations in the tree, so promoting them cost nothing — and **33 are parked** in
-`.editorconfig` at `suggestion`, together accounting for 135 outstanding sites.
+**348 of the 377 rules are enforced** — they had zero violations in the tree, so promoting them
+cost nothing — and **29 are parked** in `.editorconfig` at `suggestion`, together accounting for
+104 outstanding sites.
 
-That parked list **is** the backlog, and it shrinks by *deletion*: clear a rule's sites, delete
-its line, and the generated file enforces it from the next build. A rule the codebase means to
-refuse outright does not belong there; it belongs with the declines at `none`, with its reason
-(ADR-0060). `suggestion` means "not yet", never "no".
+That parked list **is** the backlog, and a rule leaves it by one of two doors:
+
+* **Its sites are cleared.** Delete its line, and the generated file enforces it from the next
+  build. Nothing else to write.
+* **The few sites that remain are deliberate.** Each carries a `[SuppressMessage]` with its
+  reason at the site, and the line goes anyway. This is the door to prefer whenever a handful of
+  violations are defensible and the rest of the tree is clean, because the two states differ in
+  what the rule does *tomorrow*: parked, it is silent everywhere, including on code not yet
+  written; suppressed at five sites, it is enforced everywhere else.
+
+A rule the codebase means to refuse *outright* is a third thing and does not belong in the
+backlog at all: it goes with the declines at `none`, with its reason (ADR-0060). `suggestion`
+means "not yet", never "no".
 
 `.editorconfig` takes precedence over a global AnalyzerConfig, verified in both directions.
 **Membership is generated; every exception is written down.** A reader asking "why does this rule
@@ -118,15 +127,19 @@ keeps this working the day the project stops being public, instead of failing on
 
 ## The current backlog
 
-The 33 rules parked in `.editorconfig` account for **135 sites**. Every other rule the profile
+The 29 rules parked in `.editorconfig` account for **104 sites**. Every other rule the profile
 activates is already enforced, so this list is the whole of what Sonar asks for and this codebase
 does not yet do. Promote family by family, deleting each line as its sites are cleared.
 
 The concentration, largest first: `S3776` (19, cognitive complexity), `S1244` (15, floating
-point equality — all in test projects, where exact equality is already justified), `S3267` (14,
-loops to LINQ), `S8969` (14, redundant null-forgiving operators), `S3878` (14, arrays for
-`params`), `S3218` (8, inner members shadowing outer), `S107` (6, too many parameters — a
-decision the repository has already recorded as deliberate).
+point equality — all in test projects, where exact equality is already justified), `S3878` (14,
+arrays for `params`), `S3218` (8, inner members shadowing outer), `S107` (6, too many parameters —
+a decision the repository has already recorded as deliberate).
+
+Note what these counts are **not**: SonarCloud reports far fewer issues than the backlog has
+sites, because it classifies the thirteen test projects as test code and does not raise most
+rules there, while the build's rule set applies everywhere. A green SonarCloud is therefore a
+milestone and not the finish line — this list is.
 
 ## Related
 

@@ -21,11 +21,7 @@ internal static class GeneratorFacts {
 
         if (type is INamedTypeSymbol named && SymbolEqualityComparer.Default.Equals(named.OriginalDefinition, iAnyType)) { return true; }
 
-        foreach (INamedTypeSymbol implemented in type.AllInterfaces) {
-            if (SymbolEqualityComparer.Default.Equals(implemented.OriginalDefinition, iAnyType)) { return true; }
-        }
-
-        return false;
+        return type.AllInterfaces.Any(implemented => SymbolEqualityComparer.Default.Equals(implemented.OriginalDefinition, iAnyType));
     }
 
     /// <summary>

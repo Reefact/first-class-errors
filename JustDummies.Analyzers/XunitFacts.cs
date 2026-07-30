@@ -34,11 +34,7 @@ internal static class XunitFacts {
     ///     <c>IFactAttribute</c>, which covers <c>[Fact]</c>, <c>[Theory]</c> and third-party derivatives alike.
     /// </summary>
     public static bool IsTestMethod(IMethodSymbol method, INamedTypeSymbol factAttribute) {
-        foreach (AttributeData attribute in method.GetAttributes()) {
-            if (attribute.AttributeClass is not null && Implements(attribute.AttributeClass, factAttribute)) { return true; }
-        }
-
-        return false;
+        return method.GetAttributes().Any(attribute => attribute.AttributeClass is not null && Implements(attribute.AttributeClass, factAttribute));
     }
 
     /// <summary>
@@ -53,7 +49,7 @@ internal static class XunitFacts {
     public static bool IsTheoryDataProvider(ISymbol symbol, KnownSymbols symbols) {
         // A draw inside a property's body reports the accessor (get_Cases), not the property, so normalize first —
         // otherwise a [MemberData(nameof(Cases))] never matches the member it names.
-        ISymbol member = symbol is IMethodSymbol { AssociatedSymbol: not null } accessor ? accessor.AssociatedSymbol! : symbol;
+        ISymbol member = symbol is IMethodSymbol { AssociatedSymbol: not null } accessor ? accessor.AssociatedSymbol : symbol;
 
         if (IsNamedByMemberData(member, symbols)) { return true; }
 
@@ -113,21 +109,13 @@ internal static class XunitFacts {
     private static bool HasAttribute(ISymbol? symbol, INamedTypeSymbol attributeType) {
         if (symbol is null) { return false; }
 
-        foreach (AttributeData attribute in symbol.GetAttributes()) {
-            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeType)) { return true; }
-        }
-
-        return false;
+        return symbol.GetAttributes().Any(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeType));
     }
 
     private static bool Implements(INamedTypeSymbol type, INamedTypeSymbol @interface) {
         if (SymbolEqualityComparer.Default.Equals(type, @interface)) { return true; }
 
-        foreach (INamedTypeSymbol implemented in type.AllInterfaces) {
-            if (SymbolEqualityComparer.Default.Equals(implemented, @interface)) { return true; }
-        }
-
-        return false;
+        return type.AllInterfaces.Any(implemented => SymbolEqualityComparer.Default.Equals(implemented, @interface));
     }
 
 }

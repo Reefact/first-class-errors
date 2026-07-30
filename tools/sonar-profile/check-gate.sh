@@ -39,16 +39,19 @@ command -v jq   >/dev/null || fail "jq is required"
 
 # --proto '=https' --proto-redir '=https' refuse every non-HTTPS hop, including on a redirect,
 # which matters because the token below would otherwise be sent in clear (Sonar
-# githubactions:S6506 flagged exactly this shape elsewhere in the repository).
-if [ -n "${SONAR_TOKEN:-}" ]; then
-  body="$(curl --proto '=https' --proto-redir '=https' -sSfL --retry 3 --retry-delay 2 --max-time 60 \
-    --user "${SONAR_TOKEN}:" "${API}/qualitygates/project_status?projectKey=${PROJECT}")" \
-    || fail "could not reach ${API}"
-else
-  body="$(curl --proto '=https' --proto-redir '=https' -sSfL --retry 3 --retry-delay 2 --max-time 60 \
-    "${API}/qualitygates/project_status?projectKey=${PROJECT}")" \
-    || fail "could not reach ${API}"
-fi
+# githubactions:S6506 flagged exactly this shape elsewhere in the repository). The token is
+# prepended to this function's own positional parameters rather than duplicating the curl call, so
+# those restrictions are written ONCE and cannot drift between the authenticated and anonymous
+# paths — the authenticated one being exactly where a drift would leak the credential. Same shape
+# as sync-profile.sh, deliberately.
+fetch() {
+  if [ -n "${SONAR_TOKEN:-}" ]; then set -- --user "${SONAR_TOKEN}:" "$@"; fi
+
+  curl --proto '=https' --proto-redir '=https' -sSfL --retry 3 --retry-delay 2 --max-time 60 "$@"
+}
+
+body="$(fetch "${API}/qualitygates/project_status?projectKey=${PROJECT}")" \
+  || fail "could not reach ${API}"
 
 status="$(printf '%s' "$body" | jq -r '.projectStatus.status // empty')"
 [ -n "$status" ] || fail "no gate status in the response; the project key may be wrong: ${PROJECT}"

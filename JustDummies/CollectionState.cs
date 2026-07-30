@@ -112,7 +112,7 @@ internal sealed class CollectionState<T> {
         // the same comparer again, or re-declaring distinctness without one, asks for the equality already in
         // force and stays a no-op.
         if (comparer is not null && _comparer is not null && !ReferenceEquals(comparer, _comparer)) {
-            throw new ConflictingAnyConstraintException($"Cannot apply {applying} because a different comparer is already defined by an earlier {applying}.");
+            throw ConflictingAnyConstraintException.ComparerAlreadyDefined(applying);
         }
 
         return Rebuild(_count, true, comparer ?? _comparer, _fixedContaining, _generatedContaining, applying);
@@ -190,7 +190,7 @@ internal sealed class CollectionState<T> {
         for (int left = 0; left < _fixedContaining.Count; left++) {
             for (int right = left + 1; right < _fixedContaining.Count; right++) {
                 if (comparer.Equals(_fixedContaining[left], _fixedContaining[right])) {
-                    throw new ConflictingAnyConstraintException($"Cannot apply {applying} because a distinct collection cannot contain {AnyDerivation.Display(_fixedContaining[left])} more than once.");
+                    throw ConflictingAnyConstraintException.DuplicateInDistinctCollection(applying, AnyDerivation.Display(_fixedContaining[left]));
                 }
             }
         }
@@ -204,7 +204,7 @@ internal sealed class CollectionState<T> {
             int need          = Math.Max(_count.Floor, required);
             int fromGenerator = need - FixedOutsideCount() - _generatedContaining.Count;
             if (fromGenerator > cardinality) {
-                throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {Elements(fromGenerator)} required to be distinct exceed the {cardinality.ToString(CultureInfo.InvariantCulture)} distinct value(s) the element generator can produce.");
+                throw ConflictingAnyConstraintException.DistinctElementsExceedCardinality(applying, Elements(fromGenerator), cardinality.ToString(CultureInfo.InvariantCulture));
             }
         }
     }

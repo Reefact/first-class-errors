@@ -147,7 +147,7 @@ internal sealed class StringSpec {
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (string.Equals(_exactConstraint, applying, StringComparison.Ordinal)) { return this; }
-        if (_exactConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_exactConstraint} is already defined."); }
+        if (_exactConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _exactConstraint); }
 
         StringSpec candidate = new(length, applying, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
@@ -190,7 +190,7 @@ internal sealed class StringSpec {
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (string.Equals(_prefixConstraint, applying, StringComparison.Ordinal)) { return this; }
-        if (_prefixConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_prefixConstraint} is already defined."); }
+        if (_prefixConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _prefixConstraint); }
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    prefix, applying, _suffix, _suffixConstraint, _fragments,
@@ -207,7 +207,7 @@ internal sealed class StringSpec {
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (string.Equals(_suffixConstraint, applying, StringComparison.Ordinal)) { return this; }
-        if (_suffixConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_suffixConstraint} is already defined."); }
+        if (_suffixConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _suffixConstraint); }
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, suffix, applying, _fragments,
@@ -237,7 +237,7 @@ internal sealed class StringSpec {
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (string.Equals(_charsetConstraint, applying, StringComparison.Ordinal)) { return this; }
-        if (_charsetConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_charsetConstraint} is already defined."); }
+        if (_charsetConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _charsetConstraint); }
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
@@ -259,11 +259,11 @@ internal sealed class StringSpec {
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (string.Equals(_charsetConstraint, applying, StringComparison.Ordinal)) { return this; }
-        if (_charsetConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_charsetConstraint} is already defined."); }
+        if (_charsetConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _charsetConstraint); }
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (string.Equals(_casingConstraint, applying, StringComparison.Ordinal)) { return this; }
-        if (_casingConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_casingConstraint} is already defined."); }
+        if (_casingConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _casingConstraint); }
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
@@ -279,8 +279,10 @@ internal sealed class StringSpec {
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (string.Equals(_casingConstraint, applying, StringComparison.Ordinal)) { return this; }
-        if (_casingConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_casingConstraint} is already defined."); }
-        if (_customPool is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_charsetConstraint} is already defined."); }
+        if (_casingConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _casingConstraint); }
+        // A custom pool and the constraint naming it are written together (WithCustomPool passes `applying, pool`),
+        // so a declared pool always carries its name.
+        if (_customPool is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _charsetConstraint!); }
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
@@ -322,7 +324,7 @@ internal sealed class StringSpec {
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (string.Equals(_allowedConstraint, applying, StringComparison.Ordinal)) { return this; }
-        if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_allowedConstraint} is already defined."); }
+        if (_allowedConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _allowedConstraint); }
 
         string[] distinct = values.Distinct(StringComparer.Ordinal).ToArray();
 
@@ -445,24 +447,35 @@ internal sealed class StringSpec {
     }
 
     private void ValidateLengthBounds(string applying) {
-        if (_exactLength is int exact) {
-            if (exact < _minLength) {
-                throw new ConflictingAnyConstraintException(applying == _exactConstraint
-                                                                ? $"Cannot apply {applying} because {_minConstraint} already requires at least {Characters(_minLength)}."
-                                                                : $"Cannot apply {applying} because {_exactConstraint} already fixes the length at {V(exact)}.");
-            }
+        if (_exactLength is int exact) { ValidateExactAgainstBounds(applying, exact); }
 
-            if (_maxLength is int cappedAt && exact > cappedAt) {
-                throw new ConflictingAnyConstraintException(applying == _exactConstraint
-                                                                ? $"Cannot apply {applying} because {_maxConstraint} already caps the length at {V(cappedAt)}."
-                                                                : $"Cannot apply {applying} because {_exactConstraint} already fixes the length at {V(exact)}.");
-            }
+        // Each bound is written as a pair with the constraint that set it. And this branch needs _minLength > max,
+        // with max >= 0 because AnyString.WithMaxLength rejects a negative length — so _minLength > 0, which only
+        // WithMinLength can produce, and it names the constraint as it sets the value.
+        if (_maxLength is int max && _minLength > max) {
+            throw ConflictingAnyConstraintException.Contradicts(applying,
+                                                                                ConstraintClaim.Of(_maxConstraint!, $"already caps the length at {V(max)}"),
+                                                                                ConstraintClaim.Of(_minConstraint!, $"already requires at least {Characters(_minLength)}"));
+        }
+    }
+
+    /// <summary>
+    ///     Validates a fixed length against a bound already applied; throws naming the bound it contradicts. Symmetric
+    ///     wording, so the message reads whether the last constraint applied was the fixed length or the bound.
+    /// </summary>
+    private void ValidateExactAgainstBounds(string applying, int exact) {
+        // Same reasoning: exact >= 0 is guaranteed by the entry points, so exact < _minLength needs _minLength > 0 —
+        // a declared minimum, hence a named one — and a declared exact length carries its name too.
+        if (exact < _minLength) {
+            throw ConflictingAnyConstraintException.Contradicts(applying,
+                                                                                ConstraintClaim.Of(_exactConstraint!, $"already fixes the length at {V(exact)}"),
+                                                                                ConstraintClaim.Of(_minConstraint!, $"already requires at least {Characters(_minLength)}"));
         }
 
-        if (_maxLength is int max && _minLength > max) {
-            throw new ConflictingAnyConstraintException(applying == _maxConstraint
-                                                            ? $"Cannot apply {applying} because {_minConstraint} already requires at least {Characters(_minLength)}."
-                                                            : $"Cannot apply {applying} because {_maxConstraint} already caps the length at {V(max)}.");
+        if (_maxLength is int cappedAt && exact > cappedAt) {
+            throw ConflictingAnyConstraintException.Contradicts(applying,
+                                                                                ConstraintClaim.Of(_exactConstraint!, $"already fixes the length at {V(exact)}"),
+                                                                                ConstraintClaim.Of(_maxConstraint!, $"already caps the length at {V(cappedAt)}"));
         }
     }
 
@@ -474,34 +487,36 @@ internal sealed class StringSpec {
         string requires = several ? "require" : "requires";
 
         if (_exactLength is int exact && required > exact) {
-            throw new ConflictingAnyConstraintException(applying == _exactConstraint
-                                                            ? $"Cannot apply {applying} because {description} already {requires} {Characters(required)}."
-                                                            : $"Cannot apply {applying} because {_exactConstraint} allows only {Characters(exact)} while {description} {requires} {V(required)}.");
+            throw ConflictingAnyConstraintException.Contradicts(applying,
+                                                                                ConstraintClaim.Of(_exactConstraint!, $"allows only {Characters(exact)} while {description} {requires} {V(required)}"),
+                                                                                ConstraintClaim.Of(description, $"already {requires} {Characters(required)}"));
         }
 
         if (_maxLength is int max && required > max) {
-            throw new ConflictingAnyConstraintException(applying == _maxConstraint
-                                                            ? $"Cannot apply {applying} because {description} already {requires} {Characters(required)}."
-                                                            : $"Cannot apply {applying} because {_maxConstraint} allows at most {Characters(max)} while {description} {requires} {V(required)}.");
+            throw ConflictingAnyConstraintException.Contradicts(applying,
+                                                                                ConstraintClaim.Of(_maxConstraint!, $"allows at most {Characters(max)} while {description} {requires} {V(required)}"),
+                                                                                ConstraintClaim.Of(description, $"already {requires} {Characters(required)}"));
         }
     }
 
     private void ValidateFragmentCharacters(string applying) {
         foreach ((string kind, string fragment) in Fragments()) {
+            // A character can only be disallowed by a declared pool or a declared character set, and either is
+            // written together with the constraint that named it: an offending character proves _charsetConstraint.
             char? offendingCharacter = FirstDisallowedCharacter(fragment);
             if (offendingCharacter is char outside) {
-                throw new ConflictingAnyConstraintException(applying == _charsetConstraint
-                                                                ? $"Cannot apply {applying} because the {kind} \"{fragment}\" contains '{outside}', which it does not allow."
-                                                                : $"Cannot apply {applying} because {_charsetConstraint} does not allow its character '{outside}'.");
+                throw ConflictingAnyConstraintException.Contradicts(applying,
+                                                                                    ConstraintClaim.Of(_charsetConstraint!, $"does not allow its character '{outside}'"),
+                                                                                    ConstraintClaim.Of($"the {kind} \"{fragment}\"", $"contains '{outside}', which it does not allow"));
             }
 
             if (_casing is LetterCasing casing) {
                 char? offending = FirstAgainstCasing(fragment, casing);
                 if (offending is char against) {
                     string caseName = casing == LetterCasing.Lower ? "uppercase" : "lowercase";
-                    throw new ConflictingAnyConstraintException(applying == _casingConstraint
-                                                                    ? $"Cannot apply {applying} because the {kind} \"{fragment}\" contains the {caseName} letter '{against}'."
-                                                                    : $"Cannot apply {applying} because {_casingConstraint} forbids its {caseName} letter '{against}'.");
+                    throw ConflictingAnyConstraintException.Contradicts(applying,
+                                                                                        ConstraintClaim.Of(_casingConstraint!, $"forbids its {caseName} letter '{against}'"),
+                                                                                        ConstraintClaim.Of($"the {kind} \"{fragment}\"", $"contains the {caseName} letter '{against}'"));
                 }
             }
         }
@@ -514,7 +529,7 @@ internal sealed class StringSpec {
     private void ValidateAllowedSurvives(string applying, StringSpec previous) {
         if (_effectiveAllowed!.Count > 0) { return; }
 
-        throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {DescribeEmptyPool(applying, previous)}.");
+        throw ConflictingAnyConstraintException.NoPooledValueSurvives(applying, DescribeEmptyPool(applying, previous));
     }
 
     private string DescribeEmptyPool(string applying, StringSpec previous) {

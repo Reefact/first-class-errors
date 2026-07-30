@@ -114,13 +114,13 @@ internal sealed class ContinuousIntervalSpec {
     /// <summary>Tightens the lower bound; a looser bound than the current one is a no-op.</summary>
     internal ContinuousIntervalSpec WithMinimum(double minimum, string applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
-        if (double.IsInfinity(minimum)) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because no {_typeName} value satisfies it."); }
+        if (double.IsInfinity(minimum)) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
         if (minimum <= _min) { return this; }
 
         if (minimum > _max) {
-            if (_maxConstraint is null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because no {_typeName} value satisfies it."); }
+            if (_maxConstraint is null) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
 
-            throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_maxConstraint} already requires values less than or equal to {_render(_max)}.");
+            throw ConflictingAnyConstraintException.AlreadyBoundedAbove(applying, _maxConstraint, _render(_max));
         }
 
         return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _nextUp, minimum, applying, _max, _maxConstraint, _allowed, _allowedConstraint, _exclusions), applying);
@@ -129,13 +129,13 @@ internal sealed class ContinuousIntervalSpec {
     /// <summary>Tightens the upper bound; a looser bound than the current one is a no-op.</summary>
     internal ContinuousIntervalSpec WithMaximum(double maximum, string applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
-        if (double.IsInfinity(maximum)) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because no {_typeName} value satisfies it."); }
+        if (double.IsInfinity(maximum)) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
         if (maximum >= _max) { return this; }
 
         if (maximum < _min) {
-            if (_minConstraint is null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because no {_typeName} value satisfies it."); }
+            if (_minConstraint is null) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
 
-            throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_minConstraint} already requires values greater than or equal to {_render(_min)}.");
+            throw ConflictingAnyConstraintException.AlreadyBoundedBelow(applying, _minConstraint, _render(_min));
         }
 
         return Validated(new ContinuousIntervalSpec(_typeName, _render, _quantize, _nextUp, _min, _minConstraint, maximum, applying, _allowed, _allowedConstraint, _exclusions), applying);
@@ -162,7 +162,7 @@ internal sealed class ContinuousIntervalSpec {
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (string.Equals(_allowedConstraint, applying, StringComparison.Ordinal)) { return this; }
-        if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_allowedConstraint} is already defined."); }
+        if (_allowedConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _allowedConstraint); }
 
         double[] distinct = values.Distinct().ToArray();
 
@@ -262,10 +262,7 @@ internal sealed class ContinuousIntervalSpec {
             // examined. Reporting the stronger claim would send a caller looking for a contradiction that may not
             // exist, and the shape that reaches this line (a wide range whose free values sit further than the
             // budget from the draw) is precisely the one where it would not.
-            throw new AnyGenerationException(
-                $"Generation failed: no {_typeName} value near the drawn candidate satisfies the exclusions. {source.ReplayGuidance(random.Seed)}",
-                random.Seed,
-                new InvalidOperationException($"Every representable value within {NudgeBudget.ToString(CultureInfo.InvariantCulture)} steps of the drawn candidate, in both directions, is excluded or out of bounds. Values further away were not examined, so this is an exhausted local search rather than an empty range."));
+            throw AnyGenerationException.LocalSearchExhausted(_typeName, source.ReplayGuidance(random.Seed), random.Seed, NudgeBudget);
         }
 
         return free.Value;
@@ -329,7 +326,7 @@ internal sealed class ContinuousIntervalSpec {
     private ContinuousIntervalSpec Validated(ContinuousIntervalSpec candidate, string applying) {
         if (candidate.IsSatisfiable()) { return candidate; }
 
-        throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {candidate.DescribeExhaustion(applying)}.");
+        throw ConflictingAnyConstraintException.NoValueRemains(applying, candidate.DescribeExhaustion(applying));
     }
 
     private bool IsSatisfiable() {

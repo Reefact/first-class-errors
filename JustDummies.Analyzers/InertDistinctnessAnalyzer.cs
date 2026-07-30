@@ -104,11 +104,7 @@ public sealed class InertDistinctnessAnalyzer : DiagnosticAnalyzer {
     }
 
     private static bool CarriesComparer(IInvocationOperation invocation) {
-        foreach (IParameterSymbol parameter in invocation.TargetMethod.Parameters) {
-            if (parameter.Type is INamedTypeSymbol { Name: "IEqualityComparer" }) { return true; }
-        }
-
-        return false;
+        return invocation.TargetMethod.Parameters.Any(parameter => parameter.Type is INamedTypeSymbol { Name: "IEqualityComparer" });
     }
 
 }

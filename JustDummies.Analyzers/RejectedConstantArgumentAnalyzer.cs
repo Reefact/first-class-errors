@@ -19,6 +19,13 @@ namespace JustDummies.Analyzers;
 ///     mirrors <c>SizeGuard</c> and the per-generator guards exactly; where it cannot be certain it stays silent.
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3267:Loops should be simplified with \"LINQ\" expressions",
+                                                 Justification =
+                                                     "Every TryCheck* member walks the argument list and reports the first offender through its out parameters. The rule asks for " +
+                                                     "Select(argument => argument.Value), a projection that buys nothing and renames the loop variable away from what it is: `argument` " +
+                                                     "is an IArgumentOperation, and `argument.Value` reads as the operation behind it. TryCheckSize cannot honour it at all — its filter " +
+                                                     "produces the `out int value` its body then reports on, so a projection would force a second TryGetInt32 call. The family reads the " +
+                                                     "same way on purpose, so it is declared once here rather than four times below.")]
 public sealed class RejectedConstantArgumentAnalyzer : DiagnosticAnalyzer {
 
     // SizeGuard.MaxProducibleSize — a size the generator must actually produce is capped here.

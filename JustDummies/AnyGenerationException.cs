@@ -1,3 +1,9 @@
+#region Usings declarations
+
+using System.Globalization;
+
+#endregion
+
 namespace JustDummies;
 
 /// <summary>
@@ -14,6 +20,106 @@ namespace JustDummies;
 ///     the fix is to tighten the constraints so they express that invariant.
 /// </remarks>
 public sealed class AnyGenerationException : DummyException {
+
+    #region Statics members declarations
+
+    /// <summary>
+    ///     The bounded walk around the drawn candidate found nothing the exclusions allow: every representable value
+    ///     within <paramref name="budget" /> steps of it, in both directions, is excluded or out of bounds.
+    /// </summary>
+    internal static AnyGenerationException LocalSearchExhausted(string typeName, string replayGuidance, int? seed, int budget) {
+        return NearTheCandidate(typeName, replayGuidance, seed,
+                                $"Every representable value within {budget.ToString(CultureInfo.InvariantCulture)} steps of the drawn candidate, in both directions, is excluded or out of bounds. Values further away were not examined, so this is an exhausted local search rather than an empty range.");
+    }
+
+    /// <summary>
+    ///     Snapping the drawn candidate onto the scale lattice could not leave an excluded point without leaving the
+    ///     allowed range.
+    /// </summary>
+    internal static AnyGenerationException GridNudgeExhausted(string typeName, string replayGuidance, int? seed) {
+        return NearTheCandidate(typeName, replayGuidance, seed, "The grid nudge could not leave the excluded point within the allowed range.");
+    }
+
+    /// <summary>
+    ///     Nudging the drawn candidate away from an excluded point could not find a free value without leaving the
+    ///     allowed range.
+    /// </summary>
+    internal static AnyGenerationException ExclusionNudgeExhausted(string typeName, string replayGuidance, int? seed) {
+        return NearTheCandidate(typeName, replayGuidance, seed, "The exclusion nudge could not leave the excluded point within the allowed range.");
+    }
+
+    /// <summary>
+    ///     Builds the exception for an enum with no member to draw from — nothing was constrained, the type simply
+    ///     offers nothing.
+    /// </summary>
+    internal static AnyGenerationException EnumDeclaresNoMembers(string enumName) {
+        return new AnyGenerationException($"Cannot generate an arbitrary {enumName} value because the enum declares no members.");
+    }
+
+    /// <summary>
+    ///     Builds the exception for a relative URI whose every component was declared away — no path segment, no query,
+    ///     no fragment, no root — leaving the empty string, which is not a valid URI reference.
+    /// </summary>
+    internal static AnyGenerationException EmptyRelativeReference(string replayGuidance, int seed) {
+        return new AnyGenerationException("A relative URI with exactly 0 path segments and no query, fragment or root is empty, which is not a valid URI reference. " +
+                                          $"Add a query, a fragment, Rooted(), or a positive segment count. {replayGuidance}",
+                                          seed);
+    }
+
+    /// <summary>
+    ///     Builds the exception for a pattern whose expansion outgrew the generation ceiling, which exists so no
+    ///     pattern can grow the buffer without bound.
+    /// </summary>
+    internal static AnyGenerationException PatternExceedsGenerationLimit(int limit) {
+        return new AnyGenerationException($"The pattern produced a string longer than the {limit}-character generation limit. This ceiling guards against runaway expansion; a pattern can reach it " +
+                                          "either through a nested unbounded quantifier (such as \"(a+)+\") or through bounded quantifiers whose product is very large (such as \"(a{1000}){1000}\").");
+    }
+
+    /// <summary>
+    ///     Builds the exception for a pattern every draw of which the .NET engine refused to match — the generator and
+    ///     the engine disagree about the same pattern, which only a degenerate empty-match shape provokes.
+    /// </summary>
+    internal static AnyGenerationException PatternVerificationFailed(string attempts) {
+        return new AnyGenerationException($"Generation failed: after {attempts} attempts, every value the pattern generator built was rejected by the .NET engine for the same pattern. " +
+                                          "This happens only for a degenerate pattern whose empty-match behaviour the generator cannot mirror; rewrite it with the supported subset, or generate the value another way.");
+    }
+
+    /// <summary>
+    ///     Builds the exception for a caller-supplied factory or composer that threw, naming what was being generated
+    ///     and how to replay the run.
+    /// </summary>
+    /// <remarks>
+    ///     <paramref name="failure" /> stays a thunk all the way in here, and is called once, on this path only:
+    ///     rendering the generated values would run the caller's <c>ToString()</c> and allocate the sentence on every
+    ///     successful draw otherwise — which is every draw a test actually makes.
+    /// </remarks>
+    internal static AnyGenerationException FactoryFailed(Func<string> failure, Exception cause, RandomSource? source, bool reproducible) {
+        int?   seed    = source?.Current.Seed;
+        string message = $"Generation failed: {failure()} ({cause.GetType().Name}: {cause.Message}).";
+        if (source is not null) {
+            message += $" {(reproducible ? source.ReplayGuidance(seed!.Value) : source.PartialReplayGuidance(seed!.Value))}";
+        }
+
+        return new AnyGenerationException(message, seed, cause);
+    }
+
+    /// <summary>
+    ///     Writes the sentence every near-the-candidate failure shares, and wraps <paramref name="diagnostic" /> as the
+    ///     inner failure so the developer-facing detail travels with the exception rather than in its message.
+    /// </summary>
+    /// <remarks>
+    ///     Private on purpose, like the factories above are internal on purpose: it names the grammar of the message,
+    ///     not a failure, so every caller is a named case. And nothing here guards its arguments — building an
+    ///     exception must never throw, or the failure being reported is replaced by a failure about reporting it
+    ///     (ADR-0045, which exempts exception types for exactly that reason).
+    /// </remarks>
+    private static AnyGenerationException NearTheCandidate(string typeName, string replayGuidance, int? seed, string diagnostic) {
+        return new AnyGenerationException($"Generation failed: no {typeName} value near the drawn candidate satisfies the exclusions. {replayGuidance}",
+                                          seed,
+                                          new InvalidOperationException(diagnostic));
+    }
+
+    #endregion
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="AnyGenerationException" /> class.
