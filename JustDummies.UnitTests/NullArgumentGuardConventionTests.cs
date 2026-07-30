@@ -23,7 +23,8 @@ namespace JustDummies.UnitTests;
 ///         factory, or fluent method is held to the convention automatically, with nothing to add here. Value-type
 ///         and nullable (<c>?</c>) parameters are excluded by design — the former cannot be <c>null</c>, the latter
 ///         are deliberately optional. Exception types are excluded too: constructing an exception must never itself
-///         throw while an error is being handled or logged.
+///         throw while an error is being handled or logged — as are the types that exist only to build one, which
+///         declare themselves with <c>[BuiltOnTheFailurePath]</c> (ADR-0064).
 ///     </para>
 ///     <para>
 ///         Testing the internal boundary (the <c>Create</c> factories and internal constructors the public API can
@@ -118,6 +119,9 @@ public sealed class NullArgumentGuardConventionTests {
         if (type.IsInterface || type.IsEnum) { return false; }
         if (typeof(Delegate).IsAssignableFrom(type)) { return false; }
         if (typeof(Exception).IsAssignableFrom(type)) { return false; }
+        // Types that exist only to build one of the library's exceptions are exempt for the same reason exception
+        // types are, and say so with the marker rather than being inferred (ADR-0064, widening ADR-0045).
+        if (type.GetCustomAttribute<BuiltOnTheFailurePathAttribute>() is not null) { return false; }
         if (type.Name.StartsWith('<')) { return false; }
         if (type.GetCustomAttribute<System.Runtime.CompilerServices.CompilerGeneratedAttribute>() is not null) { return false; }
 
