@@ -83,9 +83,8 @@ public sealed class AwaitableBodyPassedToReproduciblyAnalyzer : DiagnosticAnalyz
         if (type is null || type.SpecialType == SpecialType.System_Void) { return false; }
 
         for (ITypeSymbol? current = type; current is not null; current = current.BaseType) {
-            foreach (ISymbol member in current.GetMembers(GetAwaiterMethodName)) {
-                if (member is IMethodSymbol { Parameters.IsEmpty: true, DeclaredAccessibility: Accessibility.Public }) { return true; }
-            }
+            if (current.GetMembers(GetAwaiterMethodName)
+                       .Any(member => member is IMethodSymbol { Parameters.IsEmpty: true, DeclaredAccessibility: Accessibility.Public })) { return true; }
         }
 
         return false;
