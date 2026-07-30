@@ -76,12 +76,12 @@ fi
 # credential on the wire in clear. Refusing every non-HTTPS hop is the only version of this call
 # that is safe to give a token to.
 fetch() {
-  if [ -n "${SONAR_TOKEN:-}" ]; then
-    curl --proto '=https' --proto-redir '=https' -sSfL --retry 3 --retry-delay 2 --max-time 60 \
-      --user "${SONAR_TOKEN}:" "$1"
-  else
-    curl --proto '=https' --proto-redir '=https' -sSfL --retry 3 --retry-delay 2 --max-time 60 "$1"
-  fi
+  # The token is prepended to this function's own positional parameters rather than duplicating the
+  # curl call, so the protocol restrictions below are written ONCE and cannot drift between the
+  # authenticated and anonymous paths — which is the branch that would leak the credential.
+  if [ -n "${SONAR_TOKEN:-}" ]; then set -- --user "${SONAR_TOKEN}:" "$@"; fi
+
+  curl --proto '=https' --proto-redir '=https' -sSfL --retry 3 --retry-delay 2 --max-time 60 "$@"
 }
 
 # --- the profile bound to this project, for C# ---------------------------------
@@ -94,6 +94,7 @@ qp_claimed="$(printf '%s' "$profiles" | jq -r '[.profiles[]? | select(.language 
 case "$qp_key" in
   '' )        fail "no C# quality profile is bound to ${PROJECT}" ;;
   *' '* )     fail "more than one C# quality profile reported for ${PROJECT}: ${qp_key}" ;;
+  * )         ;; # exactly one key, which is the only shape this script can work with
 esac
 
 # --- every rule the profile activates -----------------------------------------
