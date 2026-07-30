@@ -45,7 +45,7 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinality
     internal static AnyEnum<TEnum> Create(RandomSource source) {
         if (source is null) { throw new ArgumentNullException(nameof(source)); }
         if (Declared.Length == 0) {
-            throw new AnyGenerationException($"Cannot generate an arbitrary {typeof(TEnum).Name} value because the enum declares no members.");
+            throw AnyGenerationException.EnumDeclaresNoMembers(typeof(TEnum).Name);
         }
 
         return new AnyEnum<TEnum>(source, Declared, false, null, null, []);
@@ -174,15 +174,12 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinality
         if (_combinable) { return this; }
 
         if (!IsFlags) {
-            throw new ConflictingAnyConstraintException(
-                $"Cannot apply {constraint} because {typeof(TEnum).Name} is not declared [Flags]: OR-ing its members would produce values the type does not define.");
+            throw ConflictingAnyConstraintException.EnumIsNotFlags(constraint, typeof(TEnum).Name);
         }
 
         int generators = Declared.Count(value => ToUInt64(value) != 0UL);
         if (generators > MaxCombinableMembers) {
-            throw new ConflictingAnyConstraintException(
-                $"Cannot apply {constraint} because {typeof(TEnum).Name} declares {V(generators)} non-zero members, more than the {V(MaxCombinableMembers)} whose combinations can be enumerated. " +
-                $"Draw from an explicit set with OneOf(...) instead.");
+            throw ConflictingAnyConstraintException.TooManyCombinableMembers(constraint, typeof(TEnum).Name, V(generators), V(MaxCombinableMembers));
         }
 
         return Validated(new AnyEnum<TEnum>(_source, Combinations, true, _allowed, _allowedConstraint, _excluded), constraint);
@@ -213,7 +210,7 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinality
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (_allowedConstraint == constraint) { return this; }
-        if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {constraint} because {_allowedConstraint} is already defined."); }
+        if (_allowedConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(constraint, _allowedConstraint); }
 
         return Validated(new AnyEnum<TEnum>(_source, _universe, _combinable, values.Distinct().ToArray(), constraint, _excluded), constraint);
     }
@@ -292,7 +289,7 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinality
         else if (candidate._combinable) { pool = $"no {typeof(TEnum).Name} combination remains available"; }
         else { pool = $"no declared {typeof(TEnum).Name} member remains available"; }
 
-        throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {pool}.");
+        throw ConflictingAnyConstraintException.NoValueRemains(applying, pool);
     }
 
 }

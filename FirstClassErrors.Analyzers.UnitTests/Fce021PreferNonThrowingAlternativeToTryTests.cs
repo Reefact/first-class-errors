@@ -41,6 +41,11 @@ public class Fce021PreferNonThrowingAlternativeToTryTests {
     [InlineData("System.Version", "new System.Version(raw)")]                               // ctor -> TryParse
     [InlineData("System.Uri", "new System.Uri(raw, System.UriKind.Absolute)")]              // ctor -> TryCreate
     [InlineData("System.Net.Mail.MailAddress", "new System.Net.Mail.MailAddress(raw)")]     // ctor -> TryCreate
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S4144:Methods should not have identical implementations",
+                                                     Justification =
+                                                         "The bodies are identical because the DATA is what differs: this theory drives the constructor cases " +
+                                                         "(ctor -> TryParse, ctor -> TryCreate) and its sibling the method cases. Merging them would lose the two " +
+                                                         "claims their names make; extracting the shared body would leave two one-line theories pointing at it.")]
     public async Task Reports_a_constructor_that_has_a_matching_counterpart(string resultType, string call) {
         string source = $$"""
             using FirstClassErrors;

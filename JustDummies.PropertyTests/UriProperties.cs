@@ -117,6 +117,16 @@ public sealed class UriProperties {
         return secure ? generator.UsingWss() : generator.UsingWs();
     }
 
+    /// <summary>The scheme a pinned web generator must draw — the read side of <see cref="PinScheme(AnyWebUri, bool)" />.</summary>
+    private static string WebScheme(bool secure) {
+        return secure ? "https" : "http";
+    }
+
+    /// <summary>The scheme a pinned WebSocket generator must draw — the read side of <see cref="PinScheme(AnyWebSocketUri, bool)" />.</summary>
+    private static string WebSocketScheme(bool secure) {
+        return secure ? "wss" : "ws";
+    }
+
     /// <summary>Declares a path constraint: a segment count, or the root path when <paramref name="segments" /> is <c>null</c>.</summary>
     private static AnyWebUri PinPath(AnyWebUri generator, int? segments) {
         return segments.HasValue ? generator.WithPathSegments(segments.Value) : generator.WithoutPath();
@@ -130,6 +140,134 @@ public sealed class UriProperties {
     /// </summary>
     private static int RelativeSegments(int? declared) {
         return declared is null ? 1 : declared.Value + 2;
+    }
+
+    /// <summary>Declares on a web generator exactly the components the case asks for, and nothing else.</summary>
+    private static AnyWebUri WebGeneratorFor((string Host, int? Port, PathChoice Path, int Segments, bool? Secure, bool Query, bool Fragment) testCase) {
+        AnyWebUri generator = Any.Uri().Web().WithHost(testCase.Host);
+        if (testCase.Secure.HasValue) { generator = PinScheme(generator, testCase.Secure.Value); }
+        if (testCase.Port.HasValue) { generator = generator.WithPort(testCase.Port.Value); }
+        if (testCase.Path == PathChoice.Root) { generator = generator.WithoutPath(); }
+        if (testCase.Path == PathChoice.Exact) { generator = generator.WithPathSegments(testCase.Segments); }
+        if (testCase.Query) { generator = generator.WithQuery(); }
+        if (testCase.Fragment) { generator = generator.WithFragment(); }
+
+        return generator;
+    }
+
+    /// <summary>Whether one web draw carries the declared components — and, for the undeclared ones, nothing.</summary>
+    private static bool WebDrawCarries(Uri value, (string Host, int? Port, PathChoice Path, int Segments, bool? Secure, bool Query, bool Fragment) testCase) {
+        bool pathHolds = testCase.Path switch {
+            PathChoice.Root  => value.AbsolutePath == "/",
+            PathChoice.Exact => SegmentCount(value.AbsolutePath) == testCase.Segments,
+            // An undeclared path draws 0 to 2 segments.
+            _ => SegmentCount(value.AbsolutePath) <= 2
+        };
+
+        return value.IsAbsoluteUri
+               && (testCase.Secure.HasValue
+                       ? value.Scheme == WebScheme(testCase.Secure.Value)
+                       : value.Scheme is "http" or "https")
+               && value.Host == testCase.Host
+               && (!testCase.Port.HasValue || value.Port == testCase.Port.Value)
+               && pathHolds
+               && value.UserInfo.Length == 0
+               && (value.Query.Length > 0) == testCase.Query
+               && (value.Fragment.Length > 0) == testCase.Fragment;
+    }
+
+    /// <summary>Declares on a WebSocket generator exactly the components the case asks for.</summary>
+    private static AnyWebSocketUri WebSocketGeneratorFor((string Host, PathChoice Path, int Segments, bool? Secure, bool Query) testCase) {
+        AnyWebSocketUri generator = Any.Uri().WebSocket().WithHost(testCase.Host);
+        if (testCase.Secure.HasValue) { generator = PinScheme(generator, testCase.Secure.Value); }
+        if (testCase.Path == PathChoice.Root) { generator = generator.WithoutPath(); }
+        if (testCase.Path == PathChoice.Exact) { generator = generator.WithPathSegments(testCase.Segments); }
+        if (testCase.Query) { generator = generator.WithQuery(); }
+
+        return generator;
+    }
+
+    /// <summary>
+    ///     Whether one WebSocket draw carries the declared components. Asserted on the rendered string rather than on
+    ///     the parsed components: ws and wss are not authority-parsed identically on every framework, and the rendering
+    ///     is what the library actually promises.
+    /// </summary>
+    private static bool WebSocketDrawCarries(Uri value, (string Host, PathChoice Path, int Segments, bool? Secure, bool Query) testCase) {
+        string rendered = value.OriginalString;
+
+        return value.IsAbsoluteUri
+               && (testCase.Secure.HasValue
+                       ? value.Scheme == WebSocketScheme(testCase.Secure.Value)
+                       : value.Scheme is "ws" or "wss")
+               && rendered.StartsWith(value.Scheme + "://" + testCase.Host, StringComparison.Ordinal)
+               && rendered.Contains('?') == testCase.Query
+               && !rendered.Contains('#')
+               && !rendered.Contains('@');
+    }
+
+    /// <summary>Declares on a mailto generator whichever address parts the case pins.</summary>
+    private static AnyMailtoUri MailtoGeneratorFor((string Local, string Domain, bool PinLocal, bool PinDomain, bool Headers) testCase) {
+        AnyMailtoUri generator = Any.Uri().Mailto();
+        if (testCase.PinLocal) { generator = generator.WithLocalPart(testCase.Local); }
+        if (testCase.PinDomain) { generator = generator.WithDomain(testCase.Domain); }
+        if (testCase.Headers) { generator = generator.WithHeaders(); }
+
+        return generator;
+    }
+
+    /// <summary>Whether one mailto draw renders local@domain, honouring whichever part the case pinned.</summary>
+    private static bool MailtoDrawRenders(Uri value, (string Local, string Domain, bool PinLocal, bool PinDomain, bool Headers) testCase) {
+        if (!value.IsAbsoluteUri || value.Scheme != "mailto") { return false; }
+        if (!value.OriginalString.StartsWith("mailto:", StringComparison.Ordinal)) { return false; }
+
+        string address     = value.OriginalString.Substring("mailto:".Length);
+        int    headerStart = address.IndexOf('?');
+        if ((headerStart >= 0) != testCase.Headers) { return false; }
+        if (headerStart >= 0) { address = address.Substring(0, headerStart); }
+
+        string[] parts = address.Split('@');
+
+        return parts.Length == 2
+               && parts[0].Length > 0
+               && parts[1].Length > 0
+               && (!testCase.PinLocal || parts[0] == testCase.Local)
+               && (!testCase.PinDomain || parts[1] == testCase.Domain);
+    }
+
+    /// <summary>Declares on a relative generator exactly the path, query and fragment the case asks for.</summary>
+    private static AnyRelativeUri RelativeGeneratorFor((int? Segments, bool Rooted, bool Query, bool Fragment) testCase) {
+        AnyRelativeUri generator = Any.Uri().Relative();
+        if (testCase.Rooted) { generator = generator.Rooted(); }
+        if (testCase.Segments.HasValue) { generator = generator.WithPathSegments(testCase.Segments.Value); }
+        if (testCase.Query) { generator = generator.WithQuery(); }
+        if (testCase.Fragment) { generator = generator.WithFragment(); }
+
+        return generator;
+    }
+
+    /// <summary>Whether one relative draw is a relative reference carrying exactly the declared path, query and fragment.</summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1870:Use a cached 'SearchValues' instance",
+                                                     Justification =
+                                                         "SearchValues<T> arrived in .NET 8 and this suite also runs on the .NET Framework 4.7.2 support floor " +
+                                                         "(ADR-0022, build/Net472TestFloor.props), where the type does not exist. The rule is right on net10.0 only; " +
+                                                         "IndexOfAny over a two-character array carries the same meaning on both legs. Same downlevel wall as " +
+                                                         "SYSLIB1045 and CA1510 (ADR-0058).")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1865:Use char overload",
+                                                     Justification =
+                                                         "string.StartsWith(char) is not on the .NET Framework 4.7.2 support floor this suite also runs on " +
+                                                         "(ADR-0022): measured, the net472 leg rejects it with CS1503, cannot convert from 'char' to 'string'. " +
+                                                         "The explicit StringComparison.Ordinal overload compiles on both legs and states the comparison it uses.")]
+    private static bool RelativeDrawCarries(Uri value, (int? Segments, bool Rooted, bool Query, bool Fragment) testCase) {
+        string reference = value.OriginalString;
+        int    cut       = reference.IndexOfAny(new[] { '?', '#' });
+        int    segments  = SegmentCount(cut < 0 ? reference : reference.Substring(0, cut));
+
+        return !value.IsAbsoluteUri
+               && reference.Length > 0
+               && (!testCase.Rooted || reference.StartsWith("/", StringComparison.Ordinal))
+               && (testCase.Segments.HasValue ? segments == testCase.Segments.Value : segments <= 2)
+               && reference.Contains('?') == testCase.Query
+               && reference.Contains('#') == testCase.Fragment;
     }
 
     #endregion
@@ -185,40 +323,15 @@ public sealed class UriProperties {
             select (host, port, path, segments, secure, query, fragment);
 
         Prop.ForAll(cases.ToArbitrary(),
-                    testCase => {
-                        AnyWebUri generator = Any.Uri().Web().WithHost(testCase.Host);
-                        if (testCase.Secure.HasValue) { generator = PinScheme(generator, testCase.Secure.Value); }
-                        if (testCase.Port.HasValue) { generator = generator.WithPort(testCase.Port.Value); }
-                        if (testCase.Path == PathChoice.Root) { generator = generator.WithoutPath(); }
-                        if (testCase.Path == PathChoice.Exact) { generator = generator.WithPathSegments(testCase.Segments); }
-                        if (testCase.Query) { generator = generator.WithQuery(); }
-                        if (testCase.Fragment) { generator = generator.WithFragment(); }
-
-                        return Expect.EveryDraw(generator,
-                                                value => {
-                                                    bool pathHolds = testCase.Path switch {
-                                                        PathChoice.Root  => value.AbsolutePath == "/",
-                                                        PathChoice.Exact => SegmentCount(value.AbsolutePath) == testCase.Segments,
-                                                        // An undeclared path draws 0 to 2 segments.
-                                                        _ => SegmentCount(value.AbsolutePath) <= 2
-                                                    };
-
-                                                    return value.IsAbsoluteUri
-                                                           && (testCase.Secure.HasValue
-                                                                   ? value.Scheme == (testCase.Secure.Value ? "https" : "http")
-                                                                   : value.Scheme is "http" or "https")
-                                                           && value.Host == testCase.Host
-                                                           && (!testCase.Port.HasValue || value.Port == testCase.Port.Value)
-                                                           && pathHolds
-                                                           && value.UserInfo.Length == 0
-                                                           && (value.Query.Length > 0) == testCase.Query
-                                                           && (value.Fragment.Length > 0) == testCase.Fragment;
-                                                });
-                    })
+                    testCase => Expect.EveryDraw(WebGeneratorFor(testCase), value => WebDrawCarries(value, testCase)))
             .QuickCheckThrowOnFailure();
     }
 
     [Fact(DisplayName = "Declared user-info reaches the URI, whichever of the three overloads declared it.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S2692:\"IndexOf\" checks should not be for positive numbers",
+                                                     Justification =
+                                                         "0 is deliberately excluded. The check asserts that a user-info draw renders user:password with a NON-EMPTY " +
+                                                         "user, so a colon at index 0 — an empty local part — must fail the property, which is exactly what > 0 says.")]
     public void UserInfoShapesReachTheUri() {
         Gen<(UserInfoChoice Choice, string User, string Password)> cases =
             from choice in Gen.Elements(UserInfoChoice.Arbitrary, UserInfoChoice.UserOnly, UserInfoChoice.UserAndPassword)
@@ -257,30 +370,7 @@ public sealed class UriProperties {
             select (host, path, segments, secure, query);
 
         Prop.ForAll(cases.ToArbitrary(),
-                    testCase => {
-                        AnyWebSocketUri generator = Any.Uri().WebSocket().WithHost(testCase.Host);
-                        if (testCase.Secure.HasValue) { generator = PinScheme(generator, testCase.Secure.Value); }
-                        if (testCase.Path == PathChoice.Root) { generator = generator.WithoutPath(); }
-                        if (testCase.Path == PathChoice.Exact) { generator = generator.WithPathSegments(testCase.Segments); }
-                        if (testCase.Query) { generator = generator.WithQuery(); }
-
-                        return Expect.EveryDraw(generator,
-                                                value => {
-                                                    // Asserted on the rendered string rather than on the parsed components:
-                                                    // ws and wss are not authority-parsed identically on every framework, and
-                                                    // the rendering is what the library actually promises.
-                                                    string rendered = value.OriginalString;
-
-                                                    return value.IsAbsoluteUri
-                                                           && (testCase.Secure.HasValue
-                                                                   ? value.Scheme == (testCase.Secure.Value ? "wss" : "ws")
-                                                                   : value.Scheme is "ws" or "wss")
-                                                           && rendered.StartsWith(value.Scheme + "://" + testCase.Host, StringComparison.Ordinal)
-                                                           && rendered.Contains('?') == testCase.Query
-                                                           && !rendered.Contains('#')
-                                                           && !rendered.Contains('@');
-                                                });
-                    })
+                    testCase => Expect.EveryDraw(WebSocketGeneratorFor(testCase), value => WebSocketDrawCarries(value, testCase)))
             .QuickCheckThrowOnFailure();
     }
 
@@ -328,46 +418,11 @@ public sealed class UriProperties {
             select (local, domain, pinLocal, pinDomain, headers);
 
         Prop.ForAll(cases.ToArbitrary(),
-                    testCase => {
-                        AnyMailtoUri generator = Any.Uri().Mailto();
-                        if (testCase.PinLocal) { generator = generator.WithLocalPart(testCase.Local); }
-                        if (testCase.PinDomain) { generator = generator.WithDomain(testCase.Domain); }
-                        if (testCase.Headers) { generator = generator.WithHeaders(); }
-
-                        return Expect.EveryDraw(generator,
-                                                value => {
-                                                    if (!value.IsAbsoluteUri || value.Scheme != "mailto") { return false; }
-                                                    if (!value.OriginalString.StartsWith("mailto:", StringComparison.Ordinal)) { return false; }
-
-                                                    string address     = value.OriginalString.Substring("mailto:".Length);
-                                                    int    headerStart = address.IndexOf('?');
-                                                    if ((headerStart >= 0) != testCase.Headers) { return false; }
-                                                    if (headerStart >= 0) { address = address.Substring(0, headerStart); }
-
-                                                    string[] parts = address.Split(new[] { '@' });
-
-                                                    return parts.Length == 2
-                                                           && parts[0].Length > 0
-                                                           && parts[1].Length > 0
-                                                           && (!testCase.PinLocal || parts[0] == testCase.Local)
-                                                           && (!testCase.PinDomain || parts[1] == testCase.Domain);
-                                                });
-                    })
+                    testCase => Expect.EveryDraw(MailtoGeneratorFor(testCase), value => MailtoDrawRenders(value, testCase)))
             .QuickCheckThrowOnFailure();
     }
 
     [Fact(DisplayName = "A relative draw is a relative reference carrying exactly the declared path, query and fragment.")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1870:Use a cached 'SearchValues' instance",
-                                                     Justification =
-                                                         "SearchValues<T> arrived in .NET 8 and this suite also runs on the .NET Framework 4.7.2 support floor " +
-                                                         "(ADR-0022, build/Net472TestFloor.props), where the type does not exist. The rule is right on net10.0 only; " +
-                                                         "IndexOfAny over a two-character array carries the same meaning on both legs. Same downlevel wall as " +
-                                                         "SYSLIB1045 and CA1510 (ADR-0058).")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1865:Use char overload",
-                                                     Justification =
-                                                         "string.StartsWith(char) is not on the .NET Framework 4.7.2 support floor this suite also runs on " +
-                                                         "(ADR-0022): measured, the net472 leg rejects it with CS1503, cannot convert from 'char' to 'string'. " +
-                                                         "The explicit StringComparison.Ordinal overload compiles on both legs and states the comparison it uses.")]
     public void RelativeDrawsAreRelativeReferences() {
         Gen<(int? Segments, bool Rooted, bool Query, bool Fragment)> cases =
             from segments in Optional(Generators.Count(6))
@@ -378,11 +433,7 @@ public sealed class UriProperties {
 
         Prop.ForAll(cases.ToArbitrary(),
                     testCase => {
-                        AnyRelativeUri generator = Any.Uri().Relative();
-                        if (testCase.Rooted) { generator = generator.Rooted(); }
-                        if (testCase.Segments.HasValue) { generator = generator.WithPathSegments(testCase.Segments.Value); }
-                        if (testCase.Query) { generator = generator.WithQuery(); }
-                        if (testCase.Fragment) { generator = generator.WithFragment(); }
+                        AnyRelativeUri generator = RelativeGeneratorFor(testCase);
 
                         // An explicit zero-segment path with nothing else to carry it renders the empty string, which is
                         // not a valid reference: the one shape of this family that cannot generate.
@@ -390,19 +441,7 @@ public sealed class UriProperties {
                             return Expect.Throws<AnyGenerationException>(() => generator.Generate());
                         }
 
-                        return Expect.EveryDraw(generator,
-                                                value => {
-                                                    string reference = value.OriginalString;
-                                                    int    cut       = reference.IndexOfAny(new[] { '?', '#' });
-                                                    int    segments  = SegmentCount(cut < 0 ? reference : reference.Substring(0, cut));
-
-                                                    return !value.IsAbsoluteUri
-                                                           && reference.Length > 0
-                                                           && (!testCase.Rooted || reference.StartsWith("/", StringComparison.Ordinal))
-                                                           && (testCase.Segments.HasValue ? segments == testCase.Segments.Value : segments <= 2)
-                                                           && reference.Contains('?') == testCase.Query
-                                                           && reference.Contains('#') == testCase.Fragment;
-                                                });
+                        return Expect.EveryDraw(generator, value => RelativeDrawCarries(value, testCase));
                     })
             .QuickCheckThrowOnFailure();
     }

@@ -124,7 +124,7 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint<cha
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (_allowedConstraint == constraint) { return this; }
-        if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {constraint} because {_allowedConstraint} is already defined."); }
+        if (_allowedConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(constraint, _allowedConstraint); }
 
         return Validated(new AnyChar(_source, _charset, _charsetConstraint, _casing, _casingConstraint, values.Distinct().ToArray(), constraint, _excluded), constraint);
     }
@@ -162,7 +162,7 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint<cha
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (_charsetConstraint == applying) { return this; }
-        if (_charsetConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_charsetConstraint} is already defined."); }
+        if (_charsetConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _charsetConstraint); }
 
         return Validated(new AnyChar(_source, charset, applying, _casing, _casingConstraint, _allowed, _allowedConstraint, _excluded), applying);
     }
@@ -171,7 +171,7 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint<cha
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (_casingConstraint == applying) { return this; }
-        if (_casingConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_casingConstraint} is already defined."); }
+        if (_casingConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _casingConstraint); }
 
         return Validated(new AnyChar(_source, _charset, _charsetConstraint, casing, applying, _allowed, _allowedConstraint, _excluded), applying);
     }
@@ -203,7 +203,7 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint<cha
                           ? "no character remains in the pool the declared constraints allow"
                           : $"no character {candidate._allowedConstraint} allows satisfies the constraints already defined";
 
-        throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {pool}.");
+        throw ConflictingAnyConstraintException.NoValueRemains(applying, pool);
     }
 
     private bool MatchesCharset(char character) {

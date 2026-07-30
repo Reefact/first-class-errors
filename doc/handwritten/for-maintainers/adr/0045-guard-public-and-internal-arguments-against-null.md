@@ -2,7 +2,7 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0045-guard-public-and-internal-arguments-against-null.fr.md)
 
-**Status:** Accepted
+**Status:** Superseded by [ADR-0064](0064-exempt-the-whole-failure-reporting-path-from-the-null-guard-convention.md)
 **Proposed:** 2026-07-27
 **Accepted:** 2026-07-27
 **Decision Makers:** Reefact

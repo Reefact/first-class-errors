@@ -32,7 +32,7 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
     internal static AnyDateTimeOffset Create(RandomSource source) {
         if (source is null) { throw new ArgumentNullException(nameof(source)); }
 
-        return new AnyDateTimeOffset(source, OrdinalIntervalSpec.Unconstrained("DateTimeOffset", ordinal => V(Val(ordinal)), Ord(DateTimeOffset.MinValue), Ord(DateTimeOffset.MaxValue)), null, false, 0, 0);
+        return new AnyDateTimeOffset(source, OrdinalIntervalSpec.Unconstrained("DateTimeOffset", ordinal => V(Val(ordinal)), Ord(DateTimeOffset.MinValue), Ord(DateTimeOffset.MaxValue)), null, null, 0, 0);
     }
 
     private static ulong Ord(DateTimeOffset value) {
@@ -70,7 +70,7 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
     #region Fields declarations
 
     private readonly IReadOnlyDictionary<ulong, DateTimeOffset>? _allowedOriginals;
-    private readonly bool                                        _offsetDeclared;
+    private readonly ConstraintCall?                             _offsetConstraint;
     private readonly int                                         _offsetMaxMinutes;
     private readonly int                                         _offsetMinMinutes;
     private readonly RandomSource                                _source;
@@ -79,11 +79,11 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
     #endregion
 
     private AnyDateTimeOffset(RandomSource source, OrdinalIntervalSpec spec, IReadOnlyDictionary<ulong, DateTimeOffset>? allowedOriginals,
-                             bool offsetDeclared, int offsetMinMinutes, int offsetMaxMinutes) {
+                             ConstraintCall? offsetConstraint, int offsetMinMinutes, int offsetMaxMinutes) {
         _source           = source;
         _spec             = spec;
         _allowedOriginals = allowedOriginals;
-        _offsetDeclared   = offsetDeclared;
+        _offsetConstraint = offsetConstraint;
         _offsetMinMinutes = offsetMinMinutes;
         _offsetMaxMinutes = offsetMaxMinutes;
     }
@@ -214,7 +214,7 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
         // A pooled value is returned as given, offset included — rebuilding it from the ordinal would normalize the
         // offset to UTC. So when an offset constraint is already in force, the pool is FILTERED by it rather than
         // the constraint being ignored: a value carrying a different offset is one this generator must not produce.
-        DateTimeOffset[] admitted = _offsetDeclared ? values.Where(SatisfiesDeclaredOffset).ToArray() : values;
+        DateTimeOffset[] admitted = _offsetConstraint is not null ? values.Where(SatisfiesDeclaredOffset).ToArray() : values;
         if (admitted.Length == 0) { throw OffsetExcludesEveryPooledValue(applying, _offsetMinMinutes, _offsetMaxMinutes); }
 
         // Remember the supplied values by instant, so generation returns them as given: the ordinal space
@@ -224,7 +224,7 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
             if (!originals.ContainsKey(Ord(value))) { originals.Add(Ord(value), value); }
         }
 
-        return new AnyDateTimeOffset(_source, _spec.WithAllowed(admitted.Select(Ord).ToArray(), applying), originals, _offsetDeclared, _offsetMinMinutes, _offsetMaxMinutes);
+        return new AnyDateTimeOffset(_source, _spec.WithAllowed(admitted.Select(Ord).ToArray(), applying), originals, _offsetConstraint, _offsetMinMinutes, _offsetMaxMinutes);
     }
 
     /// <summary>Requires the instant to be none of the supplied values (compared by instant).</summary>
@@ -257,7 +257,7 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
         SeededRandom random  = _source.Current;
         ulong        ordinal = _spec.GenerateOrdinal(random);
         if (_allowedOriginals is not null && _allowedOriginals.TryGetValue(ordinal, out DateTimeOffset original)) { return original; }
-        if (!_offsetDeclared) { return Val(ordinal); }
+        if (_offsetConstraint is null) { return Val(ordinal); }
 
         int minutes = _offsetMinMinutes == _offsetMaxMinutes
                           ? _offsetMinMinutes
@@ -270,7 +270,7 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
 
     /// <summary>Carries the offset state forward onto a new spec — every instant constraint routes through here.</summary>
     private AnyDateTimeOffset With(OrdinalIntervalSpec spec) {
-        return new AnyDateTimeOffset(_source, spec, _allowedOriginals, _offsetDeclared, _offsetMinMinutes, _offsetMaxMinutes);
+        return new AnyDateTimeOffset(_source, spec, _allowedOriginals, _offsetConstraint, _offsetMinMinutes, _offsetMaxMinutes);
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out",
@@ -279,10 +279,10 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
                                                          "explanatory sentence as a statement. These comments carry the reasoning this codebase asks every comment to carry, so the " +
                                                          "finding is recorded rather than the comment deleted.")]
     private AnyDateTimeOffset WithOffsetRange(int minMinutes, int maxMinutes, ConstraintCall applying) {
-        if (_offsetDeclared) {
+        if (_offsetConstraint is not null) {
             if (_offsetMinMinutes == minMinutes && _offsetMaxMinutes == maxMinutes) { return this; }
 
-            throw new ConflictingAnyConstraintException($"Cannot apply {applying} because an offset constraint is already defined.");
+            throw ConflictingAnyConstraintException.AlreadyDefined(applying, _offsetConstraint);
         }
 
         // Tighten the instant so local ticks = UtcTicks + offset stay in [0, MaxTicks] for every offset in the range;
@@ -302,10 +302,10 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
                                                          .ToDictionary(entry => entry.Key, entry => entry.Value);
             if (admitted.Count == 0) { throw OffsetExcludesEveryPooledValue(applying, minMinutes, maxMinutes); }
 
-            return new AnyDateTimeOffset(_source, spec.NarrowingAllowed(admitted.Keys.ToArray(), applying), admitted, true, minMinutes, maxMinutes);
+            return new AnyDateTimeOffset(_source, spec.NarrowingAllowed(admitted.Keys.ToArray(), applying), admitted, applying, minMinutes, maxMinutes);
         }
 
-        return new AnyDateTimeOffset(_source, spec, _allowedOriginals, true, minMinutes, maxMinutes);
+        return new AnyDateTimeOffset(_source, spec, _allowedOriginals, applying, minMinutes, maxMinutes);
     }
 
     /// <summary>Whether <paramref name="value" /> carries an offset the declared offset dimension admits.</summary>

@@ -169,7 +169,7 @@ internal sealed class UriSpec {
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (_schemeConstraint == applying) { return this; }
-        if (_schemeConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_schemeConstraint} is already defined."); }
+        if (_schemeConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _schemeConstraint); }
 
         return new UriSpec(_family, scheme, applying, _host, _hasUserInfo, _user, _password,
                            _hasPort, _port, _pathMode, _pathSegments, _hasQuery, _hasFragment, _rooted, _pathConstraint, _hostConstraint, _userInfoConstraint, _portConstraint);
@@ -187,7 +187,7 @@ internal sealed class UriSpec {
         if (host is null) { throw new ArgumentNullException(nameof(host)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_hostConstraint == applying) { return this; }
-        if (_hostConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_hostConstraint} is already defined."); }
+        if (_hostConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _hostConstraint); }
 
         return new UriSpec(_family, _scheme, _schemeConstraint, host, _hasUserInfo, _user, _password,
                            _hasPort, _port, _pathMode, _pathSegments, _hasQuery, _hasFragment, _rooted, _pathConstraint, applying, _userInfoConstraint, _portConstraint);
@@ -196,7 +196,7 @@ internal sealed class UriSpec {
     internal UriSpec WithUserInfo(string? user, string? password, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_userInfoConstraint == applying) { return this; }
-        if (_userInfoConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_userInfoConstraint} is already defined."); }
+        if (_userInfoConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _userInfoConstraint); }
 
         return new UriSpec(_family, _scheme, _schemeConstraint, _host, true, user, password,
                            _hasPort, _port, _pathMode, _pathSegments, _hasQuery, _hasFragment, _rooted, _pathConstraint, _hostConstraint, applying, _portConstraint);
@@ -205,7 +205,7 @@ internal sealed class UriSpec {
     internal UriSpec WithPort(int? port, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_portConstraint == applying) { return this; }
-        if (_portConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_portConstraint} is already defined."); }
+        if (_portConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _portConstraint); }
 
         return new UriSpec(_family, _scheme, _schemeConstraint, _host, _hasUserInfo, _user, _password,
                            true, port, _pathMode, _pathSegments, _hasQuery, _hasFragment, _rooted, _pathConstraint, _hostConstraint, _userInfoConstraint, applying);
@@ -216,7 +216,7 @@ internal sealed class UriSpec {
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (_pathConstraint == applying) { return this; }
-        if (_pathConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_pathConstraint} is already defined."); }
+        if (_pathConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _pathConstraint); }
 
         return new UriSpec(_family, _scheme, _schemeConstraint, _host, _hasUserInfo, _user, _password,
                            _hasPort, _port, mode, segments, _hasQuery, _hasFragment, _rooted, applying, _hostConstraint, _userInfoConstraint, _portConstraint);
@@ -298,9 +298,7 @@ internal sealed class UriSpec {
         // library's other unsatisfiable specs.
         if (_pathMode == UriPathMode.Exact) {
             int seed = source.Current.Seed;
-            throw new AnyGenerationException(
-                "A relative URI with exactly 0 path segments and no query, fragment or root is empty, which is not a valid URI reference. Add a query, a fragment, Rooted(), or a positive segment count. " + source.ReplayGuidance(seed),
-                seed);
+            throw AnyGenerationException.EmptyRelativeReference(source.ReplayGuidance(seed), seed);
         }
 
         return Draw(random, LowerAlphaNum, 1, 8);

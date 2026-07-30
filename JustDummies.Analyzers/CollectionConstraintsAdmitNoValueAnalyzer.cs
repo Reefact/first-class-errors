@@ -43,6 +43,18 @@ public sealed class CollectionConstraintsAdmitNoValueAnalyzer : DiagnosticAnalyz
         if (factory is null || !IsCollectionFactory(factory.TargetMethod.Name)) { return; }
         if (NegativeTestGuard.IsSoleBodyOfLambdaArgument(invocation.Syntax)) { return; }
 
+        AnalyzeConstraints(context, factory, constraints);
+    }
+
+    /// <summary>
+    ///     Reads the counts, the distinctness and the contained elements the chain declares, then reports the first
+    ///     combination of them no collection can satisfy.
+    /// </summary>
+    /// <remarks>
+    ///     Split from <see cref="Analyze" />, which answers a different question: whether this chain is one the rule
+    ///     reasons about at all. Everything below assumes that answer is yes.
+    /// </remarks>
+    private static void AnalyzeConstraints(OperationAnalysisContext context, IInvocationOperation factory, IReadOnlyList<IInvocationOperation> constraints) {
         int?  exact    = null;
         int?  minimum  = null;
         int?  maximum  = null;

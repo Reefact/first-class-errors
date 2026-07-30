@@ -310,7 +310,7 @@ public sealed class PatternRoundTripProperties {
     /// <summary>A <c>\xHH</c> or <c>\uHHHH</c> escape naming a letter or a digit, so the escaped character stays printable.</summary>
     private static Gen<string> HexEscape() {
         return from character in Gen.Elements(AlphaNumericAlphabet.ToCharArray())
-               from wide in Gen.Elements(new[] { false, true })
+               from wide in Gen.Elements(false, true)
                select wide
                           ? @"\u" + ((int)character).ToString("X4", CultureInfo.InvariantCulture)
                           : @"\x" + ((int)character).ToString("X2", CultureInfo.InvariantCulture);
@@ -321,7 +321,7 @@ public sealed class PatternRoundTripProperties {
     ///     set (see <see cref="PositiveShorthands" />), so the negation always leaves characters to draw from.
     /// </summary>
     private static Gen<string> CharacterClass() {
-        return from negated in Gen.Elements(new[] { false, true })
+        return from negated in Gen.Elements(false, true)
                from count in Gen.Choose(1, 3)
                from members in Gen.ArrayOf(ClassMember(negated), count)
                select "[" + (negated ? "^" : string.Empty) + string.Concat(members) + "]";
@@ -353,12 +353,12 @@ public sealed class PatternRoundTripProperties {
     private static Gen<string> LeafQuantifier() {
         Gen<string> bounded = from minimum in Gen.Choose(0, 2)
                               from extra in Gen.Choose(0, 2)
-                              from exact in Gen.Elements(new[] { false, true })
+                              from exact in Gen.Elements(false, true)
                               select exact
                                          ? "{" + Digits(minimum) + "}"
                                          : "{" + Digits(minimum) + "," + Digits(minimum + extra) + "}";
 
-        Gen<string> unbounded = Gen.OneOf(Gen.Elements(new[] { "*", "+" }),
+        Gen<string> unbounded = Gen.OneOf(Gen.Elements("*", "+"),
                                           Gen.Choose(0, 2).Select(minimum => "{" + Digits(minimum) + ",}"));
 
         return WithOptionalLazyMarker(Gen.Frequency<string>((5, Gen.Constant(string.Empty)),

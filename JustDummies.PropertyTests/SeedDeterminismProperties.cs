@@ -116,7 +116,7 @@ public sealed class SeedDeterminismProperties {
     /// </summary>
     private static Gen<string> BlankSnippet() {
         return from length in Gen.Choose(0, 6)
-               from whitespace in Gen.Elements(new[] { ' ', '\t', '\n', '\r', '\v', '\f' })
+               from whitespace in Gen.Elements(' ', '\t', '\n', '\r', '\v', '\f')
                select new string(whitespace, length);
     }
 

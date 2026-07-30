@@ -142,7 +142,7 @@ public sealed class AnyOneOf<T> : IAny<T>, IHasRandomSource, ICardinalityHint<T>
                                  ? $"it forbids every value {_declaringConstraint} allows that the exclusions already declared leave"
                                  : $"it forbids every value {_declaringConstraint} allows";
 
-            throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {emptied}.");
+            throw ConflictingAnyConstraintException.NoValueRemains(applying, emptied);
         }
 
         return new AnyOneOf<T>(_source, survivors, _declared, _declaringConstraint);

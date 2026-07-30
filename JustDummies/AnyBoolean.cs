@@ -75,7 +75,7 @@ public sealed class AnyBoolean : IAny<bool>, IHasRandomSource, ICardinalityHint<
 
     private AnyBoolean Pin(bool value, ConstraintCall applying) {
         if (_pinnedConstraint is not null && _pinned != value) {
-            throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {_pinnedConstraint} already pins the value to {V(_pinned!.Value)}.");
+            throw ConflictingAnyConstraintException.AlreadyPinned(applying, _pinnedConstraint, V(_pinned!.Value));
         }
 
         return new AnyBoolean(_source, value, applying);

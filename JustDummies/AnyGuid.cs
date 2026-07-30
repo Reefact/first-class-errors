@@ -106,7 +106,7 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Gui
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
         if (_allowedConstraint == constraint) { return this; }
-        if (_allowedConstraint is not null) { throw new ConflictingAnyConstraintException($"Cannot apply {constraint} because {_allowedConstraint} is already defined."); }
+        if (_allowedConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(constraint, _allowedConstraint); }
 
         return Validated(new AnyGuid(_source, _pinned, _pinnedConstraint, values.Distinct().ToArray(), constraint, _excluded), constraint);
     }
@@ -183,17 +183,17 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Gui
     private AnyGuid Validated(AnyGuid candidate, ConstraintCall applying) {
         if (candidate._pinned is Guid pinned) {
             if (candidate._excluded.Contains(pinned)) {
-                throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {candidate._pinnedConstraint} already pins the value to {V(pinned)}, which the exclusions forbid.");
+                throw ConflictingAnyConstraintException.PinnedValueExcluded(applying, candidate._pinnedConstraint!, V(pinned));
             }
             if (candidate._allowed is not null && !candidate._allowed.Contains(pinned)) {
-                throw new ConflictingAnyConstraintException($"Cannot apply {applying} because {candidate._pinnedConstraint} already pins the value to {V(pinned)}, which {candidate._allowedConstraint} does not allow.");
+                throw ConflictingAnyConstraintException.PinnedValueNotAllowed(applying, candidate._pinnedConstraint!, V(pinned), candidate._allowedConstraint!);
             }
 
             return candidate;
         }
 
         if (candidate._effectiveAllowed is not null && candidate._effectiveAllowed.Count == 0) {
-            throw new ConflictingAnyConstraintException($"Cannot apply {applying} because no value {candidate._allowedConstraint} allows remains available.");
+            throw ConflictingAnyConstraintException.NoValueRemains(applying, $"no value {candidate._allowedConstraint} allows remains available");
         }
 
         return candidate;

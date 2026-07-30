@@ -49,6 +49,61 @@ public sealed class AnyGenerationException : DummyException {
     }
 
     /// <summary>
+    ///     Builds the exception for an enum with no member to draw from — nothing was constrained, the type simply
+    ///     offers nothing.
+    /// </summary>
+    internal static AnyGenerationException EnumDeclaresNoMembers(string enumName) {
+        return new AnyGenerationException($"Cannot generate an arbitrary {enumName} value because the enum declares no members.");
+    }
+
+    /// <summary>
+    ///     Builds the exception for a relative URI whose every component was declared away — no path segment, no query,
+    ///     no fragment, no root — leaving the empty string, which is not a valid URI reference.
+    /// </summary>
+    internal static AnyGenerationException EmptyRelativeReference(string replayGuidance, int seed) {
+        return new AnyGenerationException("A relative URI with exactly 0 path segments and no query, fragment or root is empty, which is not a valid URI reference. " +
+                                          $"Add a query, a fragment, Rooted(), or a positive segment count. {replayGuidance}",
+                                          seed);
+    }
+
+    /// <summary>
+    ///     Builds the exception for a pattern whose expansion outgrew the generation ceiling, which exists so no
+    ///     pattern can grow the buffer without bound.
+    /// </summary>
+    internal static AnyGenerationException PatternExceedsGenerationLimit(int limit) {
+        return new AnyGenerationException($"The pattern produced a string longer than the {limit}-character generation limit. This ceiling guards against runaway expansion; a pattern can reach it " +
+                                          "either through a nested unbounded quantifier (such as \"(a+)+\") or through bounded quantifiers whose product is very large (such as \"(a{1000}){1000}\").");
+    }
+
+    /// <summary>
+    ///     Builds the exception for a pattern every draw of which the .NET engine refused to match — the generator and
+    ///     the engine disagree about the same pattern, which only a degenerate empty-match shape provokes.
+    /// </summary>
+    internal static AnyGenerationException PatternVerificationFailed(string attempts) {
+        return new AnyGenerationException($"Generation failed: after {attempts} attempts, every value the pattern generator built was rejected by the .NET engine for the same pattern. " +
+                                          "This happens only for a degenerate pattern whose empty-match behaviour the generator cannot mirror; rewrite it with the supported subset, or generate the value another way.");
+    }
+
+    /// <summary>
+    ///     Builds the exception for a caller-supplied factory or composer that threw, naming what was being generated
+    ///     and how to replay the run.
+    /// </summary>
+    /// <remarks>
+    ///     <paramref name="failure" /> stays a thunk all the way in here, and is called once, on this path only:
+    ///     rendering the generated values would run the caller's <c>ToString()</c> and allocate the sentence on every
+    ///     successful draw otherwise — which is every draw a test actually makes.
+    /// </remarks>
+    internal static AnyGenerationException FactoryFailed(Func<string> failure, Exception cause, RandomSource? source, bool reproducible) {
+        int?   seed    = source?.Current.Seed;
+        string message = $"Generation failed: {failure()} ({cause.GetType().Name}: {cause.Message}).";
+        if (source is not null) {
+            message += $" {(reproducible ? source.ReplayGuidance(seed!.Value) : source.PartialReplayGuidance(seed!.Value))}";
+        }
+
+        return new AnyGenerationException(message, seed, cause);
+    }
+
+    /// <summary>
     ///     Writes the sentence every near-the-candidate failure shares, and wraps <paramref name="diagnostic" /> as the
     ///     inner failure so the developer-facing detail travels with the exception rather than in its message.
     /// </summary>

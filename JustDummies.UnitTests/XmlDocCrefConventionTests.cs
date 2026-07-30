@@ -202,6 +202,15 @@ public sealed class XmlDocCrefConventionTests {
 
     // obj/ carries generated sources (AssemblyInfo, global usings) and bin/ a copy of whatever was compiled;
     // scanning either would double-count and, worse, report a file nobody can fix.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out",
+                                                     Justification =
+                                                         "Prose, not code. The line explains what obj/ and bin/ contain and why scanning them would double-count; " +
+                                                         "the rule reads the slashes and the parenthetical as a commented-out statement.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S3220:Method calls should not resolve ambiguously to overloads with \"params\"",
+                                                     Justification =
+                                                         "Two separators passed to Split's params overload, which is the only spelling that works on both target " +
+                                                         "frameworks. Wrapping them in an explicit array to disambiguate would immediately trip S3878, which asks " +
+                                                         "for that array to be removed again.")]
     private static bool IsBuildOutput(string file) {
         return file.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
                    .Any(segment => segment is "bin" or "obj");

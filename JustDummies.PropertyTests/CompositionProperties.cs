@@ -430,6 +430,14 @@ public sealed class CompositionProperties {
     }
 
     /// <summary>The failure a factory raises, distinguishable from anything the library itself could throw.</summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S3871:Exception types should be \"public\"",
+                                                     Justification =
+                                                         "A fixture, not part of any contract. It exists so a test factory can raise a failure distinguishable from " +
+                                                         "anything the library itself throws; making it public would export a type from a test assembly for no reader.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3376:Attribute, EventArgs, and Exception type names should end with the type being extended",
+                                                     Justification =
+                                                         "Named for what it reads as at the throw site inside the property. The Exception suffix would say nothing the " +
+                                                         "base type does not, and this type is private to one test class.")]
     private sealed class FactoryRejection : Exception {
 
         internal FactoryRejection() : base("The factory rejected the generated value.") { }
