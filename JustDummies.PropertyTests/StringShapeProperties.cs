@@ -244,7 +244,7 @@ public sealed class StringShapeProperties {
     [Fact(DisplayName = "A casing constrains every cased character, at every length.")]
     public void ACasingConstrainsEveryCasedCharacter() {
         Gen<(bool Upper, int Length)> cases =
-            from upper in Gen.Elements(new[] { false, true })
+            from upper in Gen.Elements(false, true)
             from length in Generators.Count(20)
             select (Upper: upper, Length: length);
 
@@ -342,8 +342,8 @@ public sealed class StringShapeProperties {
     [Fact(DisplayName = "A second casing conflicts unless it repeats the first, whichever two are combined.")]
     public void ASecondCasingConflictsUnlessItRepeatsTheFirst() {
         Gen<(bool First, bool Second)> cases =
-            from first in Gen.Elements(new[] { false, true })
-            from second in Gen.Elements(new[] { false, true })
+            from first in Gen.Elements(false, true)
+            from second in Gen.Elements(false, true)
             select (First: first, Second: second);
 
         Prop.ForAll(cases.ToArbitrary(),
@@ -379,7 +379,7 @@ public sealed class StringShapeProperties {
     [Fact(DisplayName = "A second prefix or a second suffix conflicts unless it repeats the first, whatever the two values.")]
     public void ASecondPrefixOrSuffixConflictsUnlessItRepeatsTheFirst() {
         Gen<(bool AsSuffix, string First, string Second)> cases =
-            from asSuffix in Gen.Elements(new[] { false, true })
+            from asSuffix in Gen.Elements(false, true)
             from first in Affix(DefaultAlphabet, 6)
             from second in Affix(DefaultAlphabet, 6)
             select (AsSuffix: asSuffix, First: first, Second: second);

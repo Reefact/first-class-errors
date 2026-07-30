@@ -174,7 +174,7 @@ public sealed class AnyEnumCombinationTests {
     [Fact(DisplayName = "AllowingCombinations: an enum with too many members to enumerate is refused, naming the ceiling.")]
     public void TooManyMembersIsRefused() {
         ConflictingAnyConstraintException conflict = Assert.Throws<ConflictingAnyConstraintException>(
-            () => Any.Enum<Wide>().AllowingCombinations());
+            () => Any.Enum<WideBits>().AllowingCombinations());
 
         Check.That(conflict.Message).Contains("AllowingCombinations()");
         Check.That(conflict.Message).Contains("21");
@@ -196,7 +196,7 @@ public sealed class AnyEnumCombinationTests {
 
     // Twenty-one single-bit members: one past the ceiling AllowingCombinations() will enumerate.
     [Flags]
-    private enum Wide {
+    private enum WideBits {
 
         B00 = 1 << 0, B01 = 1 << 1, B02 = 1 << 2, B03 = 1 << 3, B04 = 1 << 4, B05 = 1 << 5, B06 = 1 << 6,
         B07 = 1 << 7, B08 = 1 << 8, B09 = 1 << 9, B10 = 1 << 10, B11 = 1 << 11, B12 = 1 << 12, B13 = 1 << 13,
