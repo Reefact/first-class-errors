@@ -26,13 +26,21 @@ namespace JustDummies;
 ///         carries its diagnostics along, and a misspelling stops being a string literal that compiles.
 ///     </para>
 ///     <para>
+///         Two constraints are equal when they read the same, ordinally. That is not a convenience: a spec compares
+///         the constraint being applied against the one it already recorded to tell a harmless redeclaration
+///         (<c>Between(0, 100)</c> twice, which returns the spec untouched) from a real conflict
+///         (<c>Between(0, 100)</c> then <c>Between(5, 50)</c>). <c>==</c> is defined for the same reason rather
+///         than for symmetry — those comparisons are written with it, and a reference type without it would compare
+///         identities in silence, turning every redeclaration into a conflict.
+///     </para>
+///     <para>
 ///         Nothing checks the rendered arguments for <c>null</c>, and that is the compiler's job rather than an
 ///         omission: the parameter is a non-nullable <c>string[]</c>, so a caller that cannot prove an argument
 ///         non-null is CS8604 at build time, which this repository promotes to an error. A runtime guard would only
 ///         restate it, and could not be reached from C# without defeating the annotation it duplicates.
 ///     </para>
 /// </remarks>
-internal sealed class ConstraintCall {
+internal sealed class ConstraintCall : IEquatable<ConstraintCall> {
 
     #region Statics members declarations
 
@@ -66,6 +74,26 @@ internal sealed class ConstraintCall {
 
     #endregion
 
+    /// <summary>
+    ///     Determines whether two constraints read the same.
+    /// </summary>
+    /// <param name="left">The first constraint to compare.</param>
+    /// <param name="right">The second constraint to compare.</param>
+    /// <returns><c>true</c> when both render the same text, or both are <c>null</c>; otherwise <c>false</c>.</returns>
+    public static bool operator ==(ConstraintCall? left, ConstraintCall? right) {
+        return Equals(left, right);
+    }
+
+    /// <summary>
+    ///     Determines whether two constraints read differently.
+    /// </summary>
+    /// <param name="left">The first constraint to compare.</param>
+    /// <param name="right">The second constraint to compare.</param>
+    /// <returns><c>true</c> when they render different text, or exactly one is <c>null</c>; otherwise <c>false</c>.</returns>
+    public static bool operator !=(ConstraintCall? left, ConstraintCall? right) {
+        return !Equals(left, right);
+    }
+
     #region Fields declarations
 
     private readonly string _rendered;
@@ -83,6 +111,21 @@ internal sealed class ConstraintCall {
     /// <returns>The rendered constraint, such as <c>Between(0, 100)</c>.</returns>
     public override string ToString() {
         return _rendered;
+    }
+
+    /// <inheritdoc />
+    public bool Equals(ConstraintCall? other) {
+        return other is not null && string.Equals(_rendered, other._rendered, StringComparison.Ordinal);
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj) {
+        return obj is ConstraintCall other && Equals(other);
+    }
+
+    /// <inheritdoc />
+    public override int GetHashCode() {
+        return StringComparer.Ordinal.GetHashCode(_rendered);
     }
 
 }
