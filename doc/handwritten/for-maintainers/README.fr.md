@@ -43,6 +43,22 @@ elle-même est enregistrée dans
 [l'ADR-0040](adr/0040-split-the-justdummies-test-bed-between-example-and-property-suites.fr.md) ;
 cette page l'applique. Aussi en [anglais](WritingJustDummiesTests.en.md).
 
+### [Tool JustDummies (`dum`) — spécification](specifications/justdummies-tool.fr.md)
+
+La spécification complète de `dum`, le scaffolder en ligne de commande de
+JustDummies, qui écrit un generator nommé et composable pour un type du code du
+développeur — un moteur chargeable par un hôte Roslyn, plus une CLI mince par-dessus.
+Elle est implémentable telle quelle : le squelette émis, les règles de résolution des
+paramètres et les décisions qui les portent ont chacun été vérifiés contre la source
+de la bibliothèque, et les affirmations centrales ont été mesurées. Elle est aussi
+**autonome** : elle inline chaque fait sur la bibliothèque dont elle dépend, énonce
+ses exigences envers le dépôt hôte en exigences plutôt qu'en chemins, et porte ses
+dix enregistrements de décision au format ADR complet dans son
+propre §15 — tenus là, plutôt qu'entrés dans la base ci-dessus, parce que le dépôt
+qui devrait les accueillir n'existe pas encore. Le tout survit au déménagement de
+JustDummies dans son propre dépôt. Pas encore construit. Aussi en
+[anglais](specifications/justdummies-tool.md).
+
 ### [Registres de décision d'architecture (ADR)](adr/README.md)
 
 Des enregistrements datés des décisions importantes — leur contexte, l'option
