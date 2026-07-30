@@ -1,3 +1,9 @@
+#region Usings declarations
+
+using System.Globalization;
+
+#endregion
+
 namespace JustDummies;
 
 /// <summary>
@@ -14,6 +20,51 @@ namespace JustDummies;
 ///     the fix is to tighten the constraints so they express that invariant.
 /// </remarks>
 public sealed class AnyGenerationException : DummyException {
+
+    #region Statics members declarations
+
+    /// <summary>
+    ///     The bounded walk around the drawn candidate found nothing the exclusions allow: every representable value
+    ///     within <paramref name="budget" /> steps of it, in both directions, is excluded or out of bounds.
+    /// </summary>
+    internal static AnyGenerationException LocalSearchExhausted(string typeName, string replayGuidance, int? seed, int budget) {
+        return NearTheCandidate(typeName, replayGuidance, seed,
+                                $"Every representable value within {budget.ToString(CultureInfo.InvariantCulture)} steps of the drawn candidate, in both directions, is excluded or out of bounds. Values further away were not examined, so this is an exhausted local search rather than an empty range.");
+    }
+
+    /// <summary>
+    ///     Snapping the drawn candidate onto the scale lattice could not leave an excluded point without leaving the
+    ///     allowed range.
+    /// </summary>
+    internal static AnyGenerationException GridNudgeExhausted(string typeName, string replayGuidance, int? seed) {
+        return NearTheCandidate(typeName, replayGuidance, seed, "The grid nudge could not leave the excluded point within the allowed range.");
+    }
+
+    /// <summary>
+    ///     Nudging the drawn candidate away from an excluded point could not find a free value without leaving the
+    ///     allowed range.
+    /// </summary>
+    internal static AnyGenerationException ExclusionNudgeExhausted(string typeName, string replayGuidance, int? seed) {
+        return NearTheCandidate(typeName, replayGuidance, seed, "The exclusion nudge could not leave the excluded point within the allowed range.");
+    }
+
+    /// <summary>
+    ///     Writes the sentence every near-the-candidate failure shares, and wraps <paramref name="diagnostic" /> as the
+    ///     inner failure so the developer-facing detail travels with the exception rather than in its message.
+    /// </summary>
+    /// <remarks>
+    ///     Private on purpose, like the factories above are internal on purpose: it names the grammar of the message,
+    ///     not a failure, so every caller is a named case. And nothing here guards its arguments — building an
+    ///     exception must never throw, or the failure being reported is replaced by a failure about reporting it
+    ///     (ADR-0045, which exempts exception types for exactly that reason).
+    /// </remarks>
+    private static AnyGenerationException NearTheCandidate(string typeName, string replayGuidance, int? seed, string diagnostic) {
+        return new AnyGenerationException($"Generation failed: no {typeName} value near the drawn candidate satisfies the exclusions. {replayGuidance}",
+                                          seed,
+                                          new InvalidOperationException(diagnostic));
+    }
+
+    #endregion
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="AnyGenerationException" /> class.
