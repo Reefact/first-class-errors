@@ -396,6 +396,7 @@ The recognised set is closed:
 | `string.IsNullOrEmpty(p)`, `string.IsNullOrWhiteSpace(p)`, `p.Length == 0`, `p.Length < 1` | `.NonEmpty()` |
 | `p.Length > N` | `.WithMaxLength(N)` |
 | `p.Length < N` | `.WithMinLength(N)` |
+| `p.Length != N` | `.WithLength(N)` |
 | `p <= 0`; or `p < 1` on an **integral** type | `.Positive()` |
 | `p < 0` | `.GreaterThanOrEqualTo(0)` |
 | `p >= 0` | `.Negative()` |
@@ -403,12 +404,18 @@ The recognised set is closed:
 | `p > N` | `.LessThanOrEqualTo(N)` |
 | `p < N` | `.GreaterThanOrEqualTo(N)` |
 | `p == Guid.Empty` | `.NonEmpty()` |
-| `!Regex.IsMatch(p, "literal")` | the base generator is replaced by `Any.StringMatching("literal")` |
 | `!Enum.IsDefined(typeof(E), p)` | none — `Any.Enum<E>()` already draws only declared members |
 
 `.NonEmpty()` covers `IsNullOrWhiteSpace` as well as `IsNullOrEmpty`, because an unconstrained
 `Any.String()` draws only ASCII letters and digits, so a non-empty draw can never be whitespace
 (§14.5).
+
+**A size guard on a collection parameter maps to the count family, not the length family.** A
+collection generator exposes `NonEmpty`, `WithCount`, `WithMinCount` and `WithMaxCount`, and no
+`WithLength` at all (§14.3). So `p.Length > N` on a `T[]`, or `p.Count > N` on a `List<T>`, becomes
+`.WithMaxCount(N)`; `p.Count != N` becomes `.WithCount(N)`. Reading such a guard against the string
+family instead would emit a member that does not resolve, and D4 would drop it **silently** — a
+real constraint lost without a trace. `.NonEmpty()` is the one member spelled the same for both.
 
 Recognised constraints **compose when they bound different things, and are dropped when they
 collide**. Two guards setting a lower and an upper bound are complementary — `.NonEmpty()` with
@@ -417,15 +424,36 @@ kept. That is the ordinary bounded-range idiom, written as two consecutive guard
 would make guard reading useless for the case it most often meets. Both compositions were verified
 against the library (§17).
 
-Two guards setting *the same* bound, or one charset against another, are irreconcilable: both are
-dropped and the parameter is reported as `guards not combined`. So is a lower bound above an upper
-one — the library rejects that chain with `ConflictingAnyConstraintException`, and `JD023` reports
-it at compile time (§17), but the engine must not emit it in the first place.
+Two guards setting *the same* bound are irreconcilable: both are dropped and the parameter is
+reported as `guards not combined`. So is a lower bound above an upper one — the library rejects
+that chain with `ConflictingAnyConstraintException`, and `JD023` reports it at compile time (§17),
+but the engine must not emit it in the first place. No recognised guard produces a charset or a
+pattern constraint, so those axes never arise.
 
-A recognised **pattern guard is exclusive**. `Any.StringMatching(...)` returns a generator exposing
-only `DifferentFrom` and `Except` (§14.3), so no length or charset constraint can be chained onto
-it — such an emission does not compile at all. When a pattern guard is recognised it replaces the
-base generator, and every other string constraint on that parameter is discarded.
+**Regex guards are deliberately not read.** `!Regex.IsMatch(p, "…")` looks like the ideal guard to
+translate: the library has `Any.StringMatching(...)`, and the pattern sits right there as a
+literal. It is out of the set for v1.0, for a reason that generalises.
+
+The library builds values from the *regular* subset of the pattern language — lookarounds,
+backreferences, word boundaries and Unicode categories are outside it, and a pattern using any of
+them raises `UnsupportedRegexException`. Four of five realistic validation patterns tried against
+it were rejected (§17); lookaheads and word boundaries are the ordinary vocabulary of a
+hand-written validator.
+
+Worse, the rejection happens at **construction**, not at `Generate()`. The emitted parameterless
+constructor runs the whole recipe in its initialiser, so `new AnyOrder()` would throw before any
+`.WithReference(...)` could override it. The generated type would be unusable rather than merely
+imprecise, and no call the developer could write would rescue it — verified (§17).
+
+And the engine cannot tell in advance. D9 keeps it from referencing the library, so it cannot ask
+the library's own parser whether a pattern is supported, and re-implementing that check would
+duplicate a parser it cannot see and drift from it.
+
+That yields a rule worth stating on its own, because the pattern row is the only thing that ever
+broke it: **the engine never emits an expression whose validity depends on a value it cannot
+check.** Every other row emits a member D4 resolves, with an argument that is a compile-time
+constant of the right type. Reading regex guards is a v1.1 candidate (§16) and needs the subset
+question answered first.
 
 Where two rows both match a condition, the **more specific wins**. `p < 1` on an integral type is
 the `.Positive()` row; on `decimal`, `double` or `float` it is the `.GreaterThanOrEqualTo(N)` row,
@@ -433,6 +461,12 @@ because `.Positive()` would admit the values between zero and one that the guard
 rare draw for an otherwise unconstrained decimal — measured at one in five thousand — and a common
 one as soon as the parameter carries another bound (§17). Exactly the profile of a defect that
 survives casual testing.
+
+**Where the constraints attach.** A guard-derived constraint belongs to the generator for the
+parameter's own type, *before* any conversion or composition. An `int?` parameter guarded by
+`p <= 0` emits `Any.Int32().Positive().As(value => (int?)value)`, not the reverse; a factory
+parameter guarded inside the factory's body emits `Any.String().NonEmpty().As(OrderReference.Create)`.
+The `.As` hop always comes last, because it is the step that changes the type.
 
 Every constraint above is still subject to D4. `.Positive()` on a `uint` parameter does not
 resolve (§14.3) and is skipped.
@@ -618,8 +652,8 @@ Named explicitly so they are not mistaken for oversights.
   factory, depth-limited to 3. Beyond that the developer writes it.
 * **Invariants the tool cannot see.** §5.3 reads a closed set of guard idioms. Where the
   constructor throws in a way the set does not match — a cross-parameter rule, an arithmetic
-  condition — the parameter gets the neutral generator and the recap marks it `unread guards`, so
-  the developer knows where to look. Where validation is delegated entirely to a helper
+  condition, a regex guard (§5.3) — the parameter gets the neutral generator and the recap marks it
+  `unread guards`, so the developer knows where to look. Where validation is delegated entirely to a helper
   (`Guard.Against.Null(p)`), there is no throw in the body to see, and the tool cannot tell that
   parameter from an unconstrained one. In neither case does it guess.
 * **Round-tripping.** The tool never reads a file it previously wrote.
@@ -737,8 +771,11 @@ sweep. In v1.0 `NamingOptions` carries a single fixed pattern, `Any{Type}`.
   `JustDummies.dll`, and assert the emitted expression string per parameter. Fast, no MSBuild.
   Cover every row of §5.2, every row of §5.3, both §5.4 paths, and the §5.5 fallback. Include the
   unsigned case (`p <= 0` on a `uint`), the value-type nullable case, both composition outcomes of
-  §5.3 (complementary bounds kept, same bound dropped), pattern exclusivity, and `p < 1` on an
-  integral and on a `decimal` parameter — the two rows that differ only by the parameter's type.
+  §5.3 (complementary bounds kept, same bound dropped), a size guard on a **collection** parameter
+  (which must reach `WithMaxCount`, never `WithMaxLength`), and `p < 1` on an integral and on a
+  `decimal` parameter — the two rows that differ only by the parameter's type. Add a negative case:
+  a constructor guarded by `!Regex.IsMatch(...)` must produce **no** pattern constraint, so the
+  exclusion of §5.3 cannot be undone by accident.
 * **Emitter golden files.** One approved file per representative shape: no parameters, one
   parameter, six parameters, a TODO, a name collision, a positional record, a static-factory
   target.
@@ -898,7 +935,7 @@ The library declares **39 public `Any*` type names** (37 generators plus `AnyCon
 
 ### 14.3 Constraint surfaces the emitter uses
 
-| Generator family | Constraints relied on by §5.2 and §5.3 |
+| Generator family | Constraint surface available to the emitter |
 |---|---|
 | `AnyString` | `NonEmpty`, `WithMinLength`, `WithMaxLength`, `WithLength`, `WithLengthBetween`, `StartingWith`, `EndingWith`, `Containing`, `Alpha`, `Numeric`, `AlphaNumeric`, `UpperCase`, `LowerCase`, `WithChars`, `OneOf`, `Except`, `DifferentFrom` |
 | Signed integers (`SByte`, `Int16`, `Int32`, `Int64`) | `Positive`, `Negative`, `NonZero`, `Zero`, `Between`, `GreaterThan(OrEqualTo)`, `LessThan(OrEqualTo)`, `MultipleOf`, `OneOf`, `Except`, `DifferentFrom` |
@@ -912,8 +949,13 @@ The library declares **39 public `Any*` type names** (37 generators plus `AnyCon
 | `AnyTimeSpan` | temporal-style plus `Positive`, `Negative`, `NonZero`, `Zero` |
 | Collections | `Empty`, `NonEmpty`, `WithCount`, `WithCountBetween`, `WithMinCount`, `WithMaxCount`, `Containing`, `ContainingAny` |
 
-The unsigned row is the one that bites: it is why D4 must gate `.Positive()` rather than the
-emitter assuming a uniform numeric algebra.
+Two rows bite. The **unsigned** one is why D4 must gate `.Positive()` rather than let the emitter
+assume a uniform numeric algebra. The **collection** one is why a size guard must reach the count
+family: there is no `WithLength` on a collection generator, so reading such a guard against the
+string family emits a member that never resolves (§5.3).
+
+v1.0 draws on the size, sign and bound constraints only. The charset and pattern families are
+listed because §16 may reach for them, not because the emitter uses them today.
 
 ### 14.4 Composition seams
 
@@ -1822,6 +1864,12 @@ plus an optional `dum.json` at the project root for a project-wide default:
 `{Type}` is the only placeholder. The default pattern stays `Any{Type}`, so an existing project
 sees no change. This is also the answer to the shadowing warning of §7.
 
+**Reading regex guards.** Left out of §5.3 for v1.0 because the library generates from the regular
+subset of the pattern language only, and an unsupported pattern throws at construction — which
+would make the whole emitted type unusable. Reaching for it needs the subset question answered
+first: either the engine validates a pattern without referencing the library (which D9 forbids
+today), or the library offers a way to ask.
+
 **Other deferred items.** `--all`; `init` / `required` members and property-only construction;
 `AnyContext` support (D7); an `--ctor` selector when several constructors compete; extending §5.3
 to a `Guard.Against`-style helper library; publishing `JustDummies.GenAny` as its own package once
@@ -1855,6 +1903,9 @@ in. The results below are what the harness printed.
 | Complementary bounds compose | §5.3 | `.GreaterThanOrEqualTo(0).LessThanOrEqualTo(100)` and `.NonEmpty().WithMaxLength(10)` both draw |
 | Contradictory bounds are rejected twice over | §5.3 | `ConflictingAnyConstraintException` at run time, and `JD023` at **compile** time |
 | A pattern generator admits no other string constraint | §5.3 | `Any.StringMatching(...).NonEmpty()` fails to compile — `CS1061`, `AnyPattern` has only `DifferentFrom`/`Except` |
+| Realistic validation regexes fall outside the supported subset | §5.3 | 4 of 5 rejected: lookahead, word boundary, backreference, Unicode category |
+| An unsupported pattern throws at **construction**, not at `Generate()` | §5.3 | so the emitted parameterless constructor would throw before any `With…` could override it |
+| Collection generators carry no length constraint | §5.3 | `AnyList<T>` exposes `WithCount`, `WithCountBetween`, `WithMinCount`, `WithMaxCount` — no `WithLength` |
 | `.Positive()` is unsound for a `p < 1` guard on a decimal | §5.3 | 1 draw in 5 000 fell below 1 unconstrained; ~1 in 5 once another bound narrows the range |
 | The scaffolded output raises no JD diagnostic | D3, §12 | 0 diagnostics on the emitted files |
 | The analyzers were genuinely loaded | D3 | a control file raised `JD006` and `JD005` in the same build |
