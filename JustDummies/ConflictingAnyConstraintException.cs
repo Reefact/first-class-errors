@@ -38,6 +38,30 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     }
 
     /// <summary>
+    ///     Builds the exception for two constraints that cannot hold together, blaming
+    ///     <paramref name="culprit" /> — unless it is the one being applied, in which case
+    ///     <paramref name="otherwise" /> is blamed instead.
+    /// </summary>
+    /// <remarks>
+    ///     The choice is the whole point of this factory. A conflict always has two sides, and the message must name
+    ///     the side the caller did NOT just write: telling someone that the constraint they are applying conflicts
+    ///     with itself explains nothing. Every conflict between a fixed count or length and a bound is this shape, so
+    ///     the rule is stated once here rather than re-derived at each throw site.
+    /// </remarks>
+    internal static ConflictingAnyConstraintException Contradicts(string applying, ConstraintClaim culprit, ConstraintClaim otherwise) {
+        ConstraintClaim blamed = applying == culprit.Constraint ? otherwise : culprit;
+
+        return Sentence(applying, blamed.ToString());
+    }
+
+    /// <summary>
+    ///     Builds the exception for elements required to be contained that cannot fit the capacity already declared.
+    /// </summary>
+    internal static ConflictingAnyConstraintException ContainedElementsDoNotFit(string applying, string required, string capacity) {
+        return Sentence(applying, $"{required} required to be contained cannot fit in a collection of at most {capacity}");
+    }
+
+    /// <summary>
     ///     Builds the exception for a constraint that contradicts an upper bound already declared.
     /// </summary>
     internal static ConflictingAnyConstraintException AlreadyBoundedAbove(string applying, string existingConstraint, string bound) {
