@@ -82,8 +82,8 @@ The value proposition stays distinct from the library's: the **library** makes v
 ## 2. Decisions
 
 These are the load-bearing decisions. All eleven are covered by the ten decision records in §15 —
-context, argument, alternatives rejected, consequences; D5 and D6 share one. This table is the index; it holds no argument of its
-own.
+context, argument, alternatives rejected, consequences; D5 and D6 share one. This table is the
+index; it holds no argument of its own.
 
 | # | Decision | Why, in one line |
 |---|---|---|
@@ -494,9 +494,8 @@ Guard reading is also what makes factory composition correct rather than nominal
 `Any.String().As(OrderReference.Create)`, which was measured throwing `AnyGenerationException`
 **594 times in 10 000 draws**, about one in sixteen (§17).
 
-That single measurement is the argument for this whole section. A tool that emits the second
-chain does not merely fall short: it manufactures, in the developer's test suite, the exact
-intermittent failure the library was built to eliminate.
+That single measurement is why this section exists at all; D5 + D6 sets out the argument and the
+alternatives weighed against it.
 
 ### 5.4 Composition
 
@@ -649,12 +648,11 @@ Any.Reproducibly(() => {
 is reproducible, and so is the ordinary case where both happen inside the scope. This was
 verified (§17).
 
-**`Any.WithSeed(seed)` is out of scope by decision (D7).** An `AnyContext` carries its own fixed
-random source and is unaffected by the ambient scope, so a generator built from `Any.*` cannot
-draw from it. Supporting it would mean an `AnyOrder(AnyContext)` constructor and a second recipe
-path. It is not worth the surface: the `.With{Param}(IAny<TParam>)` overload already lets a
-developer on `WithSeed` supply `context.String()` per parameter. The emitted XML doc says so in
-one sentence.
+**`Any.WithSeed(seed)` is out of scope (D7).** An `AnyContext` carries its own fixed random source
+and is unaffected by the ambient scope, so a generator built from `Any.*` cannot draw from it. A
+developer on `WithSeed` supplies that context's generators parameter by parameter through the
+`.With{Param}(IAny<TParam>)` overload, and the emitted XML doc says so in one sentence (§4.1). The
+reasoning, and the alternatives weighed against it, are in D7.
 
 The emitter never produces static state, so `JD009` and `JD020` have nothing to fire on.
 

@@ -84,8 +84,8 @@ valeurs valides ; le **tool** rend le test concis.
 ## 2. Décisions
 
 Ce sont les décisions porteuses. Les onze sont couvertes par les dix enregistrements de décision du
-§15 — contexte, argument, alternatives écartées, conséquences ; D5 et D6 en partagent un. Cette table en est l'index ; elle
-ne porte aucun argument propre.
+§15 — contexte, argument, alternatives écartées, conséquences ; D5 et D6 en partagent un. Cette
+table en est l'index ; elle ne porte aucun argument propre.
 
 | # | Décision | Pourquoi, en une ligne |
 |---|---|---|
@@ -509,9 +509,8 @@ nominale : `OrderReference.Create` garde sur `IsNullOrWhiteSpace`, donc le tool 
 `Any.String().As(OrderReference.Create)`, mesurée levant `AnyGenerationException` **594 fois sur
 10 000 tirages**, environ une fois sur seize (§17).
 
-Cette seule mesure est l'argument de toute cette section. Un tool qui émet la seconde chaîne ne fait
-pas que passer à côté : il fabrique, dans la suite de tests du développeur, exactement l'échec
-intermittent que la bibliothèque a été construite pour éliminer.
+Cette seule mesure est la raison d'être de cette section ; D5 + D6 en expose l'argument et les
+alternatives pesées contre lui.
 
 ### 5.4 Composition
 
@@ -668,12 +667,11 @@ Any.Reproducibly(() => {
 est reproductible, tout comme le cas ordinaire où les deux se produisent dans le scope. Cela a été
 vérifié (§17).
 
-**`Any.WithSeed(seed)` est hors périmètre par décision (D7).** Un `AnyContext` porte sa propre
-source aléatoire fixe et n'est pas affecté par le scope ambiant, donc un generator construit à
-partir de `Any.*` ne peut pas y tirer. Le supporter impliquerait un constructeur
-`AnyOrder(AnyContext)` et un second chemin de recette. Cela ne vaut pas la surface : la surcharge
-`.With{Param}(IAny<TParam>)` permet déjà à un développeur sur `WithSeed` de fournir
-`context.String()` par paramètre. La doc XML émise le dit en une phrase.
+**`Any.WithSeed(seed)` est hors périmètre (D7).** Un `AnyContext` porte sa propre source aléatoire
+fixe et n'est pas affecté par le scope ambiant, donc un generator construit à partir de `Any.*` ne
+peut pas y tirer. Un développeur sur `WithSeed` fournit les generators de ce contexte paramètre par
+paramètre via la surcharge `.With{Param}(IAny<TParam>)`, et la doc XML émise le dit en une phrase
+(§4.1). Le raisonnement, et les alternatives pesées contre lui, sont dans D7.
 
 L'émetteur ne produit jamais d'état statique, donc `JD009` et `JD020` n'ont rien sur quoi se
 déclencher.
@@ -700,8 +698,9 @@ Nommés explicitement pour ne pas être pris pour des oublis.
 * **Les invariants que le tool ne peut pas voir.** Le §5.3 lit un ensemble clos d'idiomes de garde.
   Là où le constructeur lève d'une façon que l'ensemble n'apparie pas — règle inter-paramètres,
   condition arithmétique, garde regex (§5.3) — le paramètre obtient le generator neutre et le
-  récapitulatif le marque `unread guards`, pour que le développeur sache où regarder. Là où la validation est entièrement
-  déléguée à un helper (`Guard.Against.Null(p)`), il n'y a aucun `throw` à voir dans le corps, et le
+  récapitulatif le marque `unread guards`, pour que le développeur sache où regarder. Là où la
+  validation est entièrement déléguée à un helper (`Guard.Against.Null(p)`), il n'y a aucun `throw`
+  à voir dans le corps, et le
   tool ne peut pas distinguer ce paramètre d'un paramètre non contraint. Dans aucun des deux cas il
   ne devine.
 * **L'aller-retour.** Le tool ne relit jamais un fichier qu'il a écrit.
@@ -1170,7 +1169,7 @@ et aucune de ces trois conséquences ne s'explique d'elle-même là où elle att
 
 ### D1 — Scaffolder le generator une fois et confier le fichier au développeur
 
-**Statut :** Proposed
+**Statut :** Proposé
 **Proposé :** 2026-07-30
 **Décideurs :** Reefact
 
@@ -1275,7 +1274,7 @@ les fichiers voisins survivent, et par `--force` exigé pour écraser tout court
 
 ### D2 — Faire du generator émis un `IAny<T>` de plein droit
 
-**Statut :** Proposed
+**Statut :** Proposé
 **Proposé :** 2026-07-30
 **Décideurs :** Reefact
 
@@ -1354,7 +1353,7 @@ plus stricte que nécessaire — inoffensif, et aucune action ne serait requise.
 
 ### D3 — Laisser le fichier scaffoldé ouvert aux analyzers JustDummies
 
-**Statut :** Proposed
+**Statut :** Proposé
 **Proposé :** 2026-07-30
 **Décideurs :** Reefact
 
@@ -1450,7 +1449,7 @@ fichiers scaffoldés d'un coup. Atténué par les tests de compilation de la sor
 
 ### D4 — N'émettre que des membres résolus dans la compilation cible
 
-**Statut :** Proposed
+**Statut :** Proposé
 **Proposé :** 2026-07-30
 **Décideurs :** Reefact
 
@@ -1544,7 +1543,7 @@ le test de sélection d'asset (§12), qui asserte le cas présent et le cas abse
 
 ### D5 + D6 — Amorcer les generators sur les gardes du constructeur, et laisser le reste en erreur de compilation
 
-**Statut :** Proposed
+**Statut :** Proposé
 **Proposé :** 2026-07-30
 **Décideurs :** Reefact
 
@@ -1664,7 +1663,7 @@ l'émetteur sur du code écrit pour d'autres raisons.
 
 ### D7 — Tirer du contexte ambiant et ne détenir aucun état
 
-**Statut :** Proposed
+**Statut :** Proposé
 **Proposé :** 2026-07-30
 **Décideurs :** Reefact
 
@@ -1760,7 +1759,7 @@ attrape la première, et c'est celui qu'on oublie.
 
 ### D8 — Émettre le generator dans le namespace du type cible
 
-**Statut :** Proposed
+**Statut :** Proposé
 **Proposé :** 2026-07-30
 **Décideurs :** Reefact
 
@@ -1858,7 +1857,7 @@ de changer de namespace.
 
 ### D9 — Ne donner au scaffolder aucune dépendance sur le package JustDummies
 
-**Statut :** Proposed
+**Statut :** Proposé
 **Proposé :** 2026-07-30
 **Décideurs :** Reefact
 
@@ -1938,7 +1937,7 @@ dû porter une valeur.
 
 ### D10 — Ne jamais tirer null pour un paramètre nullable
 
-**Statut :** Proposed
+**Statut :** Proposé
 **Proposé :** 2026-07-30
 **Décideurs :** Reefact
 
@@ -2038,7 +2037,7 @@ par le cas de résolveur nommé ci-dessous.
 
 ### D11 — Garder le moteur de scaffolding chargeable par un hôte Roslyn
 
-**Statut :** Proposed
+**Statut :** Proposé
 **Proposé :** 2026-07-30
 **Décideurs :** Reefact
 
