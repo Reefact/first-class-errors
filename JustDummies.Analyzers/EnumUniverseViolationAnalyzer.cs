@@ -60,27 +60,19 @@ public sealed class EnumUniverseViolationAnalyzer : DiagnosticAnalyzer {
 
         HashSet<object?> excluded = [];
 
-        foreach (IInvocationOperation constraint in constraints) {
-            string name = constraint.TargetMethod.Name;
-            if (name is not ("OneOf" or "Except" or "DifferentFrom")) { continue; }
+        foreach ((string name, IOperation value, object? constant) in ConstrainedValues(constraints)) {
+            if (name is "Except" or "DifferentFrom") { excluded.Add(constant); }
 
-            foreach (IOperation value in ConstantArguments(constraint)) {
-                Optional<object?> constant = value.ConstantValue;
-                if (!constant.HasValue) { continue; }
+            // AllowingCombinations widens the universe to the OR-closure of the declared members, which no longer
+            // matches a declared value one for one — so the rule stands down rather than approximate it.
+            if (combinationsAllowed || declared.Contains(constant)) { continue; }
 
-                if (name is "Except" or "DifferentFrom") { excluded.Add(constant.Value); }
+            context.ReportDiagnostic(Diagnostic.Create(
+                Descriptors.EnumUniverseViolation, value.Syntax.GetLocation(),
+                $"{constant} is not a declared member of {enumType.Name}"
+              + (enumType.GetAttributes().Any(IsFlagsAttribute) ? "; declare AllowingCombinations() to draw flag combinations" : string.Empty)));
 
-                // AllowingCombinations widens the universe to the OR-closure of the declared members, which no longer
-                // matches a declared value one for one — so the rule stands down rather than approximate it.
-                if (combinationsAllowed || declared.Contains(constant.Value)) { continue; }
-
-                context.ReportDiagnostic(Diagnostic.Create(
-                    Descriptors.EnumUniverseViolation, value.Syntax.GetLocation(),
-                    $"{constant.Value} is not a declared member of {enumType.Name}"
-                  + (enumType.GetAttributes().Any(IsFlagsAttribute) ? "; declare AllowingCombinations() to draw flag combinations" : string.Empty)));
-
-                return;
-            }
+            return;
         }
 
         if (excluded.Count == 0 || !declared.All(excluded.Contains)) { return; }
@@ -88,6 +80,28 @@ public sealed class EnumUniverseViolationAnalyzer : DiagnosticAnalyzer {
         context.ReportDiagnostic(Diagnostic.Create(
             Descriptors.EnumUniverseViolation, invocation.Syntax.GetLocation(),
             $"no declared {enumType.Name} member remains once every exclusion is applied"));
+    }
+
+    /// <summary>
+    ///     The constant values the universe rules reason about, each paired with the constraint that declared it —
+    ///     <c>OneOf</c>, <c>Except</c> and <c>DifferentFrom</c>, in the order they were written, and only where the
+    ///     argument is a constant the rule can compare against a declared member.
+    /// </summary>
+    /// <remarks>
+    ///     Flattened here rather than inline so the rule states what it does <i>with</i> a value without also spelling
+    ///     out how to reach one: which constraints carry values, how a <c>params</c> array unfolds, and that a
+    ///     non-constant argument is skipped are all one concern, and it is not the universe check.
+    /// </remarks>
+    private static IEnumerable<(string Name, IOperation Value, object? Constant)> ConstrainedValues(IReadOnlyList<IInvocationOperation> constraints) {
+        foreach (IInvocationOperation constraint in constraints) {
+            string name = constraint.TargetMethod.Name;
+            if (name is not ("OneOf" or "Except" or "DifferentFrom")) { continue; }
+
+            foreach (IOperation value in ConstantArguments(constraint)) {
+                Optional<object?> constant = value.ConstantValue;
+                if (constant.HasValue) { yield return (name, value, constant.Value); }
+            }
+        }
     }
 
     private static IEnumerable<IOperation> ConstantArguments(IInvocationOperation constraint) {
