@@ -115,7 +115,7 @@ internal static class AnalyzerTestHarness {
     private static string Net472ReferenceDirectory() {
         foreach (AssemblyMetadataAttribute attribute in typeof(AnalyzerTestHarness).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()) {
             if (attribute.Key == Net472ReferenceAssembliesMetadataKey && !string.IsNullOrWhiteSpace(attribute.Value)) {
-                return attribute.Value!;
+                return attribute.Value;
             }
         }
 

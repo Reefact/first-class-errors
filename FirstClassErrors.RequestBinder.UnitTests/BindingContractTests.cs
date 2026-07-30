@@ -171,9 +171,11 @@ public sealed class BindingContractTests {
         body.ListOfSimpleProperties(r => r.Tags).AsRequired(Tag.Parse);
 
         Outcome<string> outcome = bind.New(_ => "never");
-        Check.That(outcome.Error!.InnerErrors.Select(e => e.Code.ToString()))
+
+        Error envelope = outcome.Error!;
+        Check.That(envelope.InnerErrors.Select(e => e.Code.ToString()))
              .ContainsExactly("REQUEST_ARGUMENT_REQUIRED", "REQUEST_ARGUMENT_INVALID");
-        Check.That(outcome.Error!.InnerErrors.Select(BindingAssertions.ArgumentPathOf))
+        Check.That(envelope.InnerErrors.Select(BindingAssertions.ArgumentPathOf))
              .ContainsExactly("Tags[1]", "Tags[2]");
     }
 
