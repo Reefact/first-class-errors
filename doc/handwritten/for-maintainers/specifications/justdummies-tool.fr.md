@@ -22,7 +22,7 @@ de `Reefact/first-class-errors`.
 * **§14, c'est la référence.** Chaque fait sur la bibliothèque JustDummies dont dépend cette
   spécification, inliné, avec la commande pour le redériver. Rien dans les §1–§12 n'exige de lire
   la source de la bibliothèque pour être vérifié.
-* **§15, c'est le raisonnement.** Huit enregistrements de décision au format ADR de ce dépôt, tenus
+* **§15, c'est le raisonnement.** Dix enregistrements de décision au format ADR de ce dépôt, tenus
   dans la spécification parce que le dépôt qui devrait les accueillir n'existe pas encore. À lire
   quand on veut savoir *pourquoi*, ou quand on est tenté de revenir sur une décision du §2.
 * **§16, c'est la frontière de la v1.0.** Ce qui est reporté, et ce qui a été abandonné net.
@@ -83,8 +83,8 @@ valeurs valides ; le **tool** rend le test concis.
 
 ## 2. Décisions
 
-Ce sont les décisions porteuses. Neuf d'entre elles sont couvertes par les huit enregistrements de
-décision du §15 — contexte, argument, alternatives écartées, conséquences ; D5 et D6 en partagent un. Cette table en est l'index ; elle
+Ce sont les décisions porteuses. Les onze sont couvertes par les dix enregistrements de décision du
+§15 — contexte, argument, alternatives écartées, conséquences ; D5 et D6 en partagent un. Cette table en est l'index ; elle
 ne porte aucun argument propre.
 
 | # | Décision | Pourquoi, en une ligne |
@@ -95,8 +95,8 @@ ne porte aucun argument propre.
 | **D4** | Ne jamais émettre un membre non résolu dans la compilation cible. | Une règle couvre le clivage de TFM, la baseline d'API publique, l'écart de version et l'arithmétique non signée. |
 | **D5** | Lire les clauses de garde du constructeur pour amorcer chaque generator. | Sans cela le code émis produit des valeurs que le constructeur rejette. |
 | **D6** | Un paramètre non résolu est émis comme **erreur de compilation**. | Le développeur est déjà dans le fichier ; un soulignement rouge est le signal le moins cher. |
-| **D7** | Le generator émis tire du contexte **ambiant** uniquement. | Supporter `AnyContext` coûte de la surface pour un cas que `.WithX(IAny<T>)` couvre déjà. |
-| **D8** | Le type émis vit dans le **namespace du type cible**. | Le test a déjà ce `using` ; `new AnyOrder()` fonctionne tel quel. |
+| **D7** | Le generator émis tire du contexte **ambiant** et ne détient aucun état. | La résolution au tirage rend la garantie du §8.2 gratuite ; un état capturé exigerait une règle de cycle de vie. |
+| **D8** | Le type émis vit dans le **namespace du type cible**. | Zéro friction au site d'appel — et la cause unique du risque de masquage du §7. |
 | **D9** | Le tool ne prend **aucune dépendance sur le package JustDummies**. | Résolution par nom de métadonnée, comme les analyzers — l'écart de version devient structurellement impossible. |
 | **D10** | Ne jamais émettre `.OrNull()`. | Un dummy aléatoirement `null` est précisément l'instabilité que la bibliothèque existe pour supprimer. |
 | **D11** | Le **moteur de scaffolding est une bibliothèque séparée** au plancher Roslyn ; la CLI est une coquille. | Le second consommateur plausible du moteur est un refactoring IDE, qui n'est pas une CLI et ne peut pas charger un assembly `net8.0`. |
@@ -1128,10 +1128,11 @@ Les chemins sont ceux du dépôt actuel ; les ajuster si la bibliothèque a dém
 
 ## 15. Enregistrements de décision
 
-Neuf des onze décisions du §2 sont architecturales : un mainteneur futur remettrait chacune en
-question, et chacune tiendrait inchangée même si l'implémentation était entièrement réécrite. Dans le cours
-normal des choses, elles entreraient dans la base ADR d'un dépôt en `Proposed`, y recevraient un
-numéro, et seraient acceptées par le mainteneur.
+Les onze décisions du §2 sont architecturales : un mainteneur futur remettrait chacune en question,
+et chacune tiendrait inchangée même si l'implémentation était entièrement réécrite. **Dix
+enregistrements** les couvrent — D5 et D6 en partagent un. Dans le cours normal des choses, elles
+entreraient dans la base ADR d'un dépôt en `Proposed`, y recevraient un numéro, et seraient
+acceptées par le mainteneur.
 
 **Elles sont tenues à l'intérieur de cette spécification, parce que le dépôt qui devrait les
 accueillir n'existe pas encore.** JustDummies a vocation à quitter `Reefact/first-class-errors`
@@ -1151,24 +1152,19 @@ numéro, conserver sa date `Proposed:`, et remplacer l'enregistrement ici par un
 D'ici là ce sont des brouillons. Aucun statut n'est basculé dans ce document ; le mainteneur les
 accepte dans la base qui les portera.
 
-Deux décisions du §2 ne portent délibérément aucun enregistrement. **D7** (contexte ambiant
-uniquement) est une frontière de périmètre déjà listée comme reportée au §16 — une décision
-programmée pour être revisitée n'est pas une décision durable, et implémenter le support
-d'`AnyContext` plus tard serait un ajout, pas une supersession. **D8** (le namespace du type cible)
-est un défaut dont `--namespace` est l'échappatoire, et un défaut surchargeable à chaque invocation
-ne décide rien de durable. Les deux échouent au test qui tranche la question : *si l'implémentation
-changeait mais que la décision tenait, l'enregistrement aurait-il besoin d'être édité ?* Pour
-celles-là, l'enregistrement ne serait que l'implémentation redite.
+Trois de ces enregistrements ont été écrits après la table des décisions, et le pourquoi mérite
+d'être gardé. D7, D8 et D10 ont chacune été jugées trop petites d'abord — une limite de périmètre
+déjà programmée pour être revisitée, un défaut de namespace avec surcharge, une règle sur une
+méthode de la bibliothèque. La taille était à chaque fois la mauvaise mesure ; le test est de savoir
+si la décision survit à l'implémentation, et les trois y survivent.
 
-**D10 a été déplacée dans cette section plutôt que laissée dehors.** C'est en apparence la plus
-petite décision ici — une règle sur une méthode de la bibliothèque — et la taille est justement la
-mauvaise mesure. Elle passe le test sur les trois plans : elle survivrait à une réécriture de
-l'émetteur dans n'importe quel langage ; c'est le genre de règle qu'un mainteneur remettrait en
-question, parce qu'émettre `OrNull` pour un paramètre déclaré `string?` est la lecture d'apparence
-fidèle et serait signalée comme une correction de bug ; et elle a une conséquence visible au §5.2 —
-la conversion explicite pour les nullables de type valeur — qui se lit comme de la complexité
-accidentelle pour qui ignore pourquoi elle est là. Un enregistrement qui empêche un « nettoyage »
-plausible de réintroduire des échecs intermittents mérite sa place.
+Surtout, chacune s'est révélée porter ailleurs dans ce document une conséquence qui se lit comme
+accidentelle tant que le raisonnement n'est pas écrit. D10 est la raison pour laquelle le §5.2 porte
+une conversion explicite pour les nullables de type valeur. D8 est la **cause unique** du risque de
+masquage du §7. D7 est la raison pour laquelle le type émis n'a besoin d'aucune règle de cycle de
+vie, et pour laquelle deux analyzers de seeding n'ont rien à y signaler. Un enregistrement qui
+empêche un nettoyage plausible de réintroduire un défaut mérite sa place quelle que soit sa taille,
+et aucune de ces trois conséquences ne s'explique d'elle-même là où elle atterrit.
 
 ---
 
@@ -1663,6 +1659,200 @@ l'émetteur sur du code écrit pour d'autres raisons.
 #### Références
 
 * §5.3, §5.5, §9, §14.5, §17 de cette spécification.
+
+---
+
+### D7 — Tirer du contexte ambiant et ne détenir aucun état
+
+**Statut :** Proposed
+**Proposé :** 2026-07-30
+**Décideurs :** Reefact
+
+#### Contexte
+
+La bibliothèque offre deux mécanismes de reproductibilité. Le contexte **ambiant** est épinglé par
+un scope (`Any.UseSeed`, `Any.Reproducibly`) et suit le contexte d'exécution ; le contexte **isolé**
+est créé par `Any.WithSeed` et porte sa propre source aléatoire fixe, insensible à tout scope.
+
+Chaque fabrique statique `Any.*` capture l'objet source ambiant, et cette source résout la frame
+`AsyncLocal` courante **au moment du `Generate()`**, pas à la construction du generator (§14.5).
+
+`AnyContext` reflète les points d'entrée primitifs, motif, URI et choix comme méthodes d'instance.
+Il ne reflète **pas** les points d'entrée de collection ni de composition (§14.2).
+
+Le type émis porte une surcharge `With{Param}(IAny<TParam>)` pour chaque paramètre (D2). Il est
+construit une fois et peut être générateur de plusieurs valeurs, possiblement dans des scopes
+différents.
+
+Deux analyzers, `JD009` et `JD020`, signalent les tirages depuis un initialiseur statique et les
+contextes statiques partagés. Le fichier émis est analysé comme du code écrit à la main (D3).
+
+#### Décision
+
+Le generator émis construit sa recette à partir de la seule façade statique `Any`, sans détenir de
+source aléatoire, de seed ni d'état statique propre.
+
+#### Justification
+
+La résolution au moment du tirage est ce qui rend cela gratuit. Une recette construite hors d'un
+scope de reproductibilité et générée dedans reste épinglée par ce scope : le type émis n'a donc
+besoin d'aucune règle de cycle de vie — on le construit là où ça se lit le mieux, on le génère là où
+le seed compte. Toute conception capturant une source à la construction devrait spécifier ce cycle
+de vie, et dire ce qui arrive quand le generator survit au scope qui l'a vu naître.
+
+Ne détenir aucun état statique est ce qui laisse `JD009` et `JD020` sans rien à signaler. Le fichier
+émis étant analysé, un émetteur qui mettrait quoi que ce soit en cache statique serait signalé dans
+le build du développeur et non dans le nôtre — le diagnostic serait juste, et le tool serait le
+fautif.
+
+Supporter le contexte isolé signifierait un second constructeur et un second chemin de recette à
+travers `AnyContext`. Ce chemin ne pourrait pas exprimer toutes les lignes du §5.2, puisque
+`AnyContext` ne reflète aucun point d'entrée de collection ni de composition : la surface serait
+plus grande *et* moins capable. Le cas est déjà couvert sans rien ajouter : un développeur sur
+`WithSeed` passe les generators de ce contexte paramètre par paramètre, via la surcharge que D2
+fournit déjà.
+
+#### Alternatives considérées
+
+##### Capturer un seed à la construction
+
+Considérée parce qu'un generator qui possède son seed est autonome et manifestement reproductible,
+sans rien d'ambiant à raisonner.
+
+Écartée parce qu'elle duplique un mécanisme que la bibliothèque possède déjà, et parce que deux
+generators de ce type dans un même test tireraient de séquences indépendantes — aucun seed unique
+rapporté par un test en échec ne pourrait alors rejouer l'exécution dans son ensemble, ce qui est
+précisément la propriété que la reproductibilité de la bibliothèque existe pour offrir.
+
+##### Un second constructeur prenant un `AnyContext`
+
+Considérée parce qu'elle referme le manque pour un développeur travaillant avec `Any.WithSeed`, qui
+est une façon supportée d'utiliser la bibliothèque.
+
+Écartée pour la v1.0 parce que `AnyContext` ne reflète qu'une partie de la façade — le second chemin
+ne saurait pas résoudre les paramètres collection ni composés — et parce que la surcharge par
+paramètre couvre déjà le cas sans coût de surface. Laissée ouverte au §16.
+
+#### Conséquences
+
+**Positives.** Aucune règle de cycle de vie, aucun état statique. La garantie de reproductibilité du
+§8.2 vient gratuitement, et les deux analyzers de seeding n'ont rien sur quoi se déclencher.
+
+**Négatives.** Un développeur utilisant `Any.WithSeed` ne peut pas confier le contexte entier au
+generator et doit fournir les generators paramètre par paramètre, ce qui est verbeux pour un
+constructeur large.
+
+**Risques.** Un futur émetteur qui mémoïserait quoi que ce soit — generator en cache, instance
+partagée — casserait d'un coup la garantie de reproductibilité et la propreté vis-à-vis des
+analyzers. Le test de compilation de la sortie attrape la seconde ; seul un test de reproductibilité
+attrape la première, et c'est celui qu'on oublie.
+
+#### Actions de suivi
+
+* Conserver un test assertant qu'une recette construite **hors** d'un scope y rejoue dedans. C'est
+  la forme exécutable de cette décision ; le §17 consigne l'exécution manuelle qu'il doit remplacer.
+
+#### Références
+
+* §8.2, §14.2, §14.5, §16 de cette spécification ; D2 et D3 de cette section.
+
+---
+
+### D8 — Émettre le generator dans le namespace du type cible
+
+**Statut :** Proposed
+**Proposé :** 2026-07-30
+**Décideurs :** Reefact
+
+#### Contexte
+
+Le fichier scaffoldé est écrit dans le projet de test du développeur, mais le type qu'il génère vit
+dans le projet de production.
+
+Un test qui utilise `Order` importe déjà le namespace d'`Order`.
+
+C# résout un nom de type simple dans le **namespace englobant avant toute directive `using`**, donc
+un type déclaré dans un namespace l'emporte sur un type importé de même nom et de même arité.
+
+La bibliothèque déclare 32 noms de types publics `Any*` non génériques (§14.2) ; un generator
+scaffoldé dont le nom correspond à l'un d'eux, dans un namespace où la bibliothèque est importée, le
+masque.
+
+Le tool offre `--namespace` comme surcharge par invocation (§3), et le motif de nommage de la v1.1
+(§16) change le nom du type émis mais pas son namespace.
+
+Le moteur détient une `Compilation` et aucune connaissance MSBuild : il ignore le namespace racine du
+projet et sa convention dossier-vers-namespace (D11).
+
+#### Décision
+
+Le generator émis est déclaré dans le namespace du type qu'il génère, sauf indication contraire de
+`--namespace`.
+
+#### Justification
+
+C'est le seul choix qui ne coûte rien au site d'appel. Un test important déjà le namespace métier
+écrit `new AnyOrder()` et s'arrête là ; tout autre namespace ajoute un import à chaque fichier de
+test qui touche au generator. C'est une friction payée à chaque usage, et la règle de conception 2 la
+tarife cher — un outil trop pénible à chaque appel ne vaut pas d'être adopté.
+
+C'est aussi le seul choix que le moteur peut faire avec ce qu'il détient. Le namespace qu'un IDE
+inférerait — celui qu'implique le dossier de sortie — exige le namespace racine du projet et sa
+convention de dossiers, c'est-à-dire exactement la connaissance MSBuild que D11 tient hors du moteur.
+
+Le coût est réel et assumé les yeux ouverts : **cette décision, et elle seule, crée le risque de
+masquage du §7.** Un generator dans un namespace dédié ne pourrait jamais masquer un type de la
+bibliothèque, parce que le `using` du développeur concourrait alors à armes égales au lieu de perdre
+d'office contre une déclaration englobante. Le risque est borné — 32 noms, un contrôle conscient de
+l'arité, un avertissement nommant les deux types — et rare. Échanger une collision rare et signalée
+contre une friction à chaque usage est le bon sens de l'échange.
+
+#### Alternatives considérées
+
+##### Un namespace dédié aux helpers générés
+
+Considérée parce qu'elle supprime entièrement le risque de masquage et garde les helpers de test
+visiblement à part du code métier, ce que certains codebases exigent au titre du découpage en
+couches.
+
+Écartée parce qu'elle facture un import à chaque fichier de test, définitivement, pour éviter un
+risque qui touche une poignée de noms de types et s'annonce quand il survient. `--namespace` donne
+cette disposition à qui la veut, par invocation, sans l'imposer à tout le monde.
+
+##### Le namespace impliqué par le dossier de sortie
+
+Considérée parce que c'est ce que fait un IDE quand on ajoute un fichier, donc ce à quoi un
+développeur s'attend.
+
+Écartée parce que le dériver exige le namespace racine du projet et la convention
+dossier-vers-namespace. Le moteur ne les porte pas (D11), donc la CLI devrait les découvrir et les
+transmettre, élargissant le contrat du §10.3 pour aboutir à un résultat moins bon que le namespace
+propre du type cible.
+
+#### Conséquences
+
+**Positives.** Aucune friction au site d'appel. Le moteur n'a besoin d'aucune connaissance du projet.
+La déclaration de namespace émise est copiée sur le fichier du type cible, donc le fichier scaffoldé
+ressemble à ses voisins dans la forme comme dans le nom (§4.4).
+
+**Négatives.** Un helper de test est déclaré dans un namespace de production, ce que certains
+codebases jugeront discutable au nom du découpage ; `--namespace` est la réponse, et il faut le
+donner à chaque invocation. Et cette décision est la cause unique du risque du §7.
+
+**Risques.** Un développeur scaffoldant un type portant l'un des 32 noms non génériques de la
+bibliothèque obtient un masquage silencieux s'il ignore l'avertissement. Atténué par l'avertissement
+qui nomme les deux types, et par le motif de nommage de la v1.1 qui offre un renommage sans exiger
+de changer de namespace.
+
+#### Actions de suivi
+
+* Le contrôle de masquage doit être conscient de l'arité (§7). Avertir sur les huit noms génériques,
+  qui ne peuvent pas entrer en collision, entraînerait les développeurs à ignorer le seul
+  avertissement qui compte.
+
+#### Références
+
+* §3, §4.4, §7, §14.2, §16 de cette spécification ; D11 de cette section.
 
 ---
 

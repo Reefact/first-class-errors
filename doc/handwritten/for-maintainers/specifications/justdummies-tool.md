@@ -21,7 +21,7 @@ repository before the tool is built, so nothing here may depend on being read in
 * **§14 is the reference.** Every fact about the JustDummies library that this specification
   relies on, inlined, with the command to re-derive each one. Nothing in §1–§12 requires reading
   the library's source to be checked.
-* **§15 is the reasoning.** Eight decision records in this repository's ADR format, held inside
+* **§15 is the reasoning.** Ten decision records in this repository's ADR format, held inside
   the specification because the repository that should hold them does not exist yet. Read them
   when you want to know *why*, or when you are tempted to reverse something in §2.
 * **§16 is the boundary of v1.0.** What is deferred, and what was dropped outright.
@@ -81,8 +81,8 @@ The value proposition stays distinct from the library's: the **library** makes v
 
 ## 2. Decisions
 
-These are the load-bearing decisions. Nine of them are covered by the eight decision records in
-§15 — context, argument, alternatives rejected, consequences; D5 and D6 share one. This table is the index; it holds no argument of its
+These are the load-bearing decisions. All eleven are covered by the ten decision records in §15 —
+context, argument, alternatives rejected, consequences; D5 and D6 share one. This table is the index; it holds no argument of its
 own.
 
 | # | Decision | Why, in one line |
@@ -93,8 +93,8 @@ own.
 | **D4** | Never emit a member not resolved in the target compilation. | One rule covers the TFM split, the public-API baseline, version skew and unsigned arithmetic. |
 | **D5** | Read constructor guard clauses to seed each generator. | Without it the emitted code produces values the constructor rejects. |
 | **D6** | An unresolved parameter is emitted as a **compile error**. | The developer is already in the file; a red squiggle is the cheapest possible signal. |
-| **D7** | The emitted generator draws from the **ambient** context only. | `AnyContext` support costs API surface for a case `.WithX(IAny<T>)` already covers. |
-| **D8** | The emitted type lives in the **target type's namespace**. | The test already has that `using`; `new AnyOrder()` just works. |
+| **D7** | The emitted generator draws from the **ambient** context and holds no state. | Draw-time resolution makes the §8.2 guarantee free; captured state would need a lifecycle rule. |
+| **D8** | The emitted type lives in the **target type's namespace**. | Zero friction at the call site — and the sole cause of the §7 shadowing hazard. |
 | **D9** | The tool takes **no dependency on the JustDummies package**. | Resolution by metadata name, exactly like the analyzers — version skew becomes structurally impossible. |
 | **D10** | Never emit `.OrNull()`. | A dummy that is randomly `null` is the flakiness the library exists to remove. |
 | **D11** | The scaffolding **engine is a separate library** at the Roslyn floor; the CLI is a shell. | The engine's plausible second consumer is an IDE refactoring, which is not a CLI and cannot load a `net8.0` assembly. |
@@ -1096,10 +1096,10 @@ Paths are those of the current repository; adjust them if the library has moved.
 
 ## 15. Decision records
 
-Nine of the eleven decisions in §2 are architectural: a future maintainer would question each of
-them, and each would stand unchanged if the implementation were rewritten. In the ordinary course they
-would be entered into a repository's ADR base as `Proposed`, numbered there, and accepted by the
-maintainer.
+All eleven decisions in §2 are architectural: a future maintainer would question each of them, and
+each would stand unchanged if the implementation were rewritten. **Ten records** cover them — D5
+and D6 share one. In the ordinary course they would be entered into a repository's ADR base as
+`Proposed`, numbered there, and accepted by the maintainer.
 
 **They are held inside this specification instead, because the repository that should hold them
 does not exist yet.** JustDummies is expected to move out of `Reefact/first-class-errors` before
@@ -1118,22 +1118,17 @@ here with a link.
 Until then they are drafts. No status is flipped in this document; the maintainer accepts them in
 the base that will hold them.
 
-Two decisions of §2 deliberately carry no record. **D7** (ambient context only) is a scope
-boundary already listed as deferred in §16 — a decision scheduled to be revisited is not a lasting
-one, and implementing `AnyContext` support later would be an addition rather than a supersession.
-**D8** (the target type's namespace) is a default with `--namespace` as its escape hatch, and a
-default that can be overridden per invocation decides nothing durable. Both fail the test that
-settles the matter: *if the implementation changed but the decision stood, would the record need
-editing?* For these two, the record would be the implementation restated.
+Three of these records were written after the decision table was, and why is worth keeping. D7, D8
+and D10 were each judged too small at first — a scope limit already scheduled for revisiting, a
+namespace default with an override, one rule about one library method. Size was the wrong measure
+every time; the test is whether the decision outlives the implementation, and all three do.
 
-**D10 was moved into this section rather than left out of it.** It looks like the smallest decision
-here — one rule about one library method — and size is exactly the wrong measure. It passes the
-test on all three counts: it would survive a rewrite of the emitter in any language; it is the kind
-of rule a maintainer would question, because emitting `OrNull` for a parameter declared `string?`
-is the faithful-looking reading and would be filed as a bug fix; and it has a visible consequence
-in §5.2 — the explicit conversion for nullable value types — that reads as accidental complexity
-to anyone who does not know why it is there. A record that stops one plausible "cleanup" from
-reintroducing intermittent failures earns its place.
+More to the point, each turned out to carry a consequence elsewhere in this document that reads as
+accidental unless the reasoning is written down. D10 is why §5.2 carries an explicit conversion for
+nullable value types. D8 is the **sole cause** of the shadowing hazard in §7. D7 is why the emitted
+type needs no lifecycle rule at all, and why two seeding analyzers have nothing to report on it. A
+record that keeps a plausible cleanup from reintroducing a defect earns its place whatever its size,
+and none of those three consequences is self-explanatory in the section where it lands.
 
 ---
 
@@ -1609,6 +1604,192 @@ check most likely to catch it, because it runs the emitter over code written for
 #### References
 
 * §5.3, §5.5, §9, §14.5, §17 of this specification.
+
+---
+
+### D7 — Draw from the ambient context and hold no state
+
+**Status:** Proposed
+**Proposed:** 2026-07-30
+**Decision Makers:** Reefact
+
+#### Context
+
+The library offers two reproducibility mechanisms. The **ambient** context is pinned by a scope
+(`Any.UseSeed`, `Any.Reproducibly`) and flows with the execution context; the **isolated** context
+is created by `Any.WithSeed` and carries its own fixed random source, unaffected by any scope.
+
+Every static `Any.*` factory captures the ambient source object, and that source resolves the
+current `AsyncLocal` frame **when `Generate()` runs**, not when the generator is built (§14.5).
+
+`AnyContext` mirrors the primitive, pattern, URI and choice entry points as instance methods. It
+does **not** mirror the collection or composition entry points (§14.2).
+
+The emitted type carries a `With{Param}(IAny<TParam>)` overload for every parameter (D2). It is
+built once and may be generated from many times, possibly inside different scopes.
+
+Two analyzers, `JD009` and `JD020`, report draws from static initialisers and shared static
+contexts. The emitted file is analyzed like hand-written code (D3).
+
+#### Decision
+
+The emitted generator builds its recipe from the static `Any` façade alone, holding no random
+source, no seed and no static state of its own.
+
+#### Rationale
+
+Draw-time resolution is what makes this free. A recipe built outside a reproducibility scope and
+generated inside one is still pinned by that scope, so the emitted type needs no lifecycle rule at
+all: build it where it reads best, generate it where the seed matters. Any design that captured a
+source at construction would have to specify that lifecycle, and would have to say what happens
+when the generator outlives the scope it was born in.
+
+Holding no static state is what leaves `JD009` and `JD020` with nothing to report. Since the
+emitted file is analyzed, an emitter that cached anything statically would be flagged in the
+developer's own build rather than in ours — the diagnostic would be correct, and the tool would be
+the one at fault.
+
+Supporting the isolated context would mean a second constructor and a second recipe path through
+`AnyContext`. That path could not express every row of §5.2, because `AnyContext` mirrors no
+collection or composition entry point: the surface would be larger *and* less capable. The case is
+already covered without adding any: a developer on `WithSeed` passes that context's generators
+per parameter through the overload D2 already provides.
+
+#### Alternatives Considered
+
+##### Capturing a seed at construction
+
+Considered because a generator that owns its seed is self-contained and obviously reproducible,
+with nothing ambient to reason about.
+
+Rejected because it duplicates a mechanism the library already owns, and because two such
+generators in one test would draw from independent sequences — so no single seed reported by a
+failing test could replay the run as a whole, which is the property the library's reproducibility
+exists to provide.
+
+##### A second constructor taking an `AnyContext`
+
+Considered because it closes the gap for a developer working with `Any.WithSeed`, which is a
+supported way to use the library.
+
+Rejected for v1.0 because `AnyContext` mirrors only part of the façade, so the second path could
+not resolve collection or composed parameters at all, and because the per-parameter override
+already covers the case at no cost in surface. Left open in §16.
+
+#### Consequences
+
+**Positive.** No lifecycle rule and no static state. The reproducibility guarantee of §8.2 comes
+free, and the two seeding analyzers have nothing to fire on.
+
+**Negative.** A developer using `Any.WithSeed` cannot hand the whole context to the generator and
+must supply generators parameter by parameter, which is verbose for a wide constructor.
+
+**Risks.** A future emitter that memoised anything — a cached generator, a shared instance — would
+break the reproducibility guarantee and the analyzer cleanliness at once. The compile-the-output
+test catches the second; only a reproducibility test catches the first, and it is the one easy to
+forget.
+
+#### Follow-up Actions
+
+* Keep a test asserting that a recipe built **outside** a scope replays inside it. It is the
+  executable form of this decision; §17 records the manual run it must replace.
+
+#### References
+
+* §8.2, §14.2, §14.5, §16 of this specification; D2 and D3 of this section.
+
+---
+
+### D8 — Emit the generator into the target type's namespace
+
+**Status:** Proposed
+**Proposed:** 2026-07-30
+**Decision Makers:** Reefact
+
+#### Context
+
+The scaffolded file is written into the developer's test project, but the type it generates lives
+in the production project.
+
+A test that uses `Order` already imports `Order`'s namespace.
+
+C# resolves a simple type name in the **enclosing namespace before any `using` directive**, so a
+type declared in a namespace wins over an imported one of the same name and arity.
+
+The library declares 32 non-generic public `Any*` type names (§14.2); a scaffolded generator whose
+name matches one of them, in a namespace where the library is imported, shadows it.
+
+The tool offers `--namespace` as a per-invocation override (§3), and the v1.1 naming pattern (§16)
+changes the emitted type's name but not its namespace.
+
+The engine holds a `Compilation` and no MSBuild knowledge: it does not know the project's root
+namespace or its folder-to-namespace convention (D11).
+
+#### Decision
+
+The emitted generator is declared in the namespace of the type it generates, unless `--namespace`
+says otherwise.
+
+#### Rationale
+
+It is the only choice that costs nothing at the call site. A test already importing the domain
+namespace writes `new AnyOrder()` and stops; any other namespace adds an import to every test file
+that touches the generator. That is friction paid on every single use, and design rule 2 prices
+that heavily — a tool too tedious to use at each call is not worth adopting.
+
+It is also the only choice the engine can make from what it holds. The namespace an IDE would
+infer — the one implied by the output folder — requires the project's root namespace and its
+folder convention, which is exactly the MSBuild knowledge D11 keeps out of the engine.
+
+The cost is real and accepted with open eyes: **this decision, and only this decision, creates the
+shadowing hazard of §7.** A generator in a dedicated namespace could never shadow a library type,
+because the developer's `using` would then compete on equal terms instead of losing outright to an
+enclosing declaration. The hazard is bounded — 32 names, an arity-aware check, a warning naming
+both types — and rare. Trading a rare warned collision against friction on every use is the right
+way round.
+
+#### Alternatives Considered
+
+##### A dedicated namespace for generated helpers
+
+Considered because it removes the shadowing hazard entirely and keeps test helpers visibly apart
+from domain code, which some codebases require as a matter of layering.
+
+Rejected because it charges an import to every test file, permanently, to avoid a hazard that
+touches a handful of type names and announces itself when it occurs. `--namespace` gives that
+layout to whoever wants it, per invocation, without imposing it on everyone.
+
+##### The namespace implied by the output folder
+
+Considered because it is what an IDE does when a file is added, so it would match a developer's
+expectation.
+
+Rejected because deriving it needs the project's root namespace and folder-to-namespace
+convention. The engine does not carry that (D11), so the CLI would have to discover and pass it,
+widening the contract of §10.3 to reach a worse outcome than the target type's own namespace.
+
+#### Consequences
+
+**Positive.** Zero friction at the call site. The engine needs no project knowledge. The emitted
+namespace declaration is copied from the target type's own file, so the scaffolded file matches its
+neighbours in form as well as in name (§4.4).
+
+**Negative.** A test helper is declared in a production namespace, which some codebases will find
+objectionable on layering grounds; `--namespace` is the answer, and it must be given on every
+invocation. And this decision is the sole cause of the §7 hazard.
+
+**Risks.** A developer scaffolding a type named after one of the 32 non-generic library names gets
+a silent shadow if they dismiss the warning. Mitigated by the warning naming both types, and by the
+v1.1 naming pattern offering a rename that does not require moving namespaces.
+
+#### Follow-up Actions
+
+* The shadowing check must be arity-aware (§7). Warning on the eight generic names, which cannot
+  collide, would train developers to ignore the one warning that matters.
+
+#### References
+
+* §3, §4.4, §7, §14.2, §16 of this specification; D11 of this section.
 
 ---
 
