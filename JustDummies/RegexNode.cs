@@ -32,7 +32,7 @@ internal sealed class RegexGenerationContext {
 
     internal void Append(char character) {
         if (_builder.Length >= _limit) {
-            throw new AnyGenerationException($"The pattern produced a string longer than the {_limit}-character generation limit. This ceiling guards against runaway expansion; a pattern can reach it either through a nested unbounded quantifier (such as \"(a+)+\") or through bounded quantifiers whose product is very large (such as \"(a{{1000}}){{1000}}\").");
+            throw AnyGenerationException.PatternExceedsGenerationLimit(_limit);
         }
 
         _builder.Append(character);

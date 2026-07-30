@@ -67,6 +67,24 @@ public sealed class AnyGenerationException : DummyException {
     }
 
     /// <summary>
+    ///     Builds the exception for a pattern whose expansion outgrew the generation ceiling, which exists so no
+    ///     pattern can grow the buffer without bound.
+    /// </summary>
+    internal static AnyGenerationException PatternExceedsGenerationLimit(int limit) {
+        return new AnyGenerationException($"The pattern produced a string longer than the {limit}-character generation limit. This ceiling guards against runaway expansion; a pattern can reach it " +
+                                          "either through a nested unbounded quantifier (such as \"(a+)+\") or through bounded quantifiers whose product is very large (such as \"(a{1000}){1000}\").");
+    }
+
+    /// <summary>
+    ///     Builds the exception for a pattern every draw of which the .NET engine refused to match — the generator and
+    ///     the engine disagree about the same pattern, which only a degenerate empty-match shape provokes.
+    /// </summary>
+    internal static AnyGenerationException PatternVerificationFailed(string attempts) {
+        return new AnyGenerationException($"Generation failed: after {attempts} attempts, every value the pattern generator built was rejected by the .NET engine for the same pattern. " +
+                                          "This happens only for a degenerate pattern whose empty-match behaviour the generator cannot mirror; rewrite it with the supported subset, or generate the value another way.");
+    }
+
+    /// <summary>
     ///     Builds the exception for a caller-supplied factory or composer that threw, naming what was being generated
     ///     and how to replay the run.
     /// </summary>
