@@ -405,6 +405,7 @@ L'ensemble reconnu est clos :
 | `string.IsNullOrEmpty(p)`, `string.IsNullOrWhiteSpace(p)`, `p.Length == 0`, `p.Length < 1` | `.NonEmpty()` |
 | `p.Length > N` | `.WithMaxLength(N)` |
 | `p.Length < N` | `.WithMinLength(N)` |
+| `p.Length != N` | `.WithLength(N)` |
 | `p <= 0` ; ou `p < 1` sur un type **intégral** | `.Positive()` |
 | `p < 0` | `.GreaterThanOrEqualTo(0)` |
 | `p >= 0` | `.Negative()` |
@@ -412,12 +413,19 @@ L'ensemble reconnu est clos :
 | `p > N` | `.LessThanOrEqualTo(N)` |
 | `p < N` | `.GreaterThanOrEqualTo(N)` |
 | `p == Guid.Empty` | `.NonEmpty()` |
-| `!Regex.IsMatch(p, "littéral")` | le generator de base est remplacé par `Any.StringMatching("littéral")` |
 | `!Enum.IsDefined(typeof(E), p)` | aucune — `Any.Enum<E>()` ne tire déjà que des membres déclarés |
 
 `.NonEmpty()` couvre `IsNullOrWhiteSpace` aussi bien que `IsNullOrEmpty`, parce qu'un
 `Any.String()` non contraint ne tire que des lettres et chiffres ASCII : un tirage non vide ne peut
 jamais être blanc (§14.5).
+
+**Une garde de taille sur un paramètre collection relève de la famille `Count`, pas de la famille
+`Length`.** Un generator de collection expose `NonEmpty`, `WithCount`, `WithMinCount` et
+`WithMaxCount`, et aucun `WithLength` (§14.3). Donc `p.Length > N` sur un `T[]`, ou `p.Count > N`
+sur une `List<T>`, devient `.WithMaxCount(N)` ; `p.Count != N` devient `.WithCount(N)`. Lire une
+telle garde contre la famille des chaînes émettrait un membre qui ne se résout pas, et D4
+l'abandonnerait **silencieusement** — une vraie contrainte perdue sans laisser de trace.
+`.NonEmpty()` est le seul membre qui s'écrit pareil des deux côtés.
 
 Les contraintes reconnues **se composent quand elles bornent des choses différentes, et sont
 abandonnées quand elles se heurtent**. Deux gardes posant une borne inférieure et une borne
@@ -427,17 +435,37 @@ l'idiome d'intervalle borné ordinaire, écrit en deux gardes consécutives ; l'
 lecture des gardes inutile pour le cas qu'elle rencontre le plus souvent. Les deux compositions ont
 été vérifiées contre la bibliothèque (§17).
 
-Deux gardes posant *la même* borne, ou un jeu de caractères contre un autre, sont inconciliables :
-les deux sont abandonnées et le paramètre est signalé `guards not combined`. Une borne inférieure
-au-dessus d'une borne supérieure aussi — la bibliothèque rejette cette chaîne par
-`ConflictingAnyConstraintException`, et `JD023` la signale à la compilation (§17), mais le moteur ne
-doit pas l'émettre pour autant.
+Deux gardes posant *la même* borne sont inconciliables : les deux sont abandonnées et le paramètre
+est signalé `guards not combined`. Une borne inférieure au-dessus d'une borne supérieure aussi — la
+bibliothèque rejette cette chaîne par `ConflictingAnyConstraintException`, et `JD023` la signale à
+la compilation (§17), mais le moteur ne doit pas l'émettre pour autant. Aucune garde reconnue ne
+produit de contrainte de jeu de caractères ni de motif, donc ces axes ne se présentent jamais.
 
-Une **garde de motif reconnue est exclusive**. `Any.StringMatching(...)` retourne un generator
-n'exposant que `DifferentFrom` et `Except` (§14.3), donc aucune contrainte de longueur ou de jeu de
-caractères ne peut y être chaînée — une telle émission ne compile tout simplement pas. Quand une
-garde de motif est reconnue, elle remplace le generator de base et toute autre contrainte de chaîne
-sur ce paramètre est abandonnée.
+**Les gardes regex ne sont délibérément pas lues.** `!Regex.IsMatch(p, "…")` a tout de la garde
+idéale à traduire : la bibliothèque a `Any.StringMatching(...)`, et le motif est là, littéral. Elle
+est hors de l'ensemble pour la v1.0, pour une raison qui se généralise.
+
+La bibliothèque construit ses valeurs à partir du sous-ensemble *régulier* du langage des motifs —
+lookarounds, backreferences, limites de mot et catégories Unicode sont en dehors, et un motif qui en
+utilise lève `UnsupportedRegexException`. Quatre motifs de validation réalistes sur cinq ont été
+rejetés à l'essai (§17) ; lookaheads et limites de mot sont le vocabulaire ordinaire d'un validateur
+écrit à la main.
+
+Pire, le rejet a lieu à la **construction**, pas au `Generate()`. Le constructeur sans paramètre
+émis exécute toute la recette dans son initialiseur, donc `new AnyOrder()` lèverait avant que le
+moindre `.WithReference(...)` ne puisse surcharger. Le type généré serait inutilisable, pas
+seulement imprécis, et aucun appel que le développeur pourrait écrire ne le rattraperait — vérifié
+(§17).
+
+Et le moteur ne peut pas le savoir à l'avance. D9 lui interdit de référencer la bibliothèque, donc
+il ne peut pas demander à son parser si un motif est supporté, et réimplémenter ce contrôle
+dupliquerait un parser qu'il ne voit pas et en dériverait.
+
+D'où une règle qui mérite d'être énoncée pour elle-même, puisque la ligne motif est la seule à
+l'avoir jamais enfreinte : **le moteur n'émet jamais une expression dont la validité dépend d'une
+valeur qu'il ne peut pas contrôler.** Toutes les autres lignes émettent un membre que D4 résout,
+avec un argument qui est une constante de compilation du bon type. Lire les gardes regex est un
+candidat v1.1 (§16) et suppose la question du sous-ensemble tranchée d'abord.
 
 Quand deux lignes apparient une même condition, **la plus spécifique gagne**. `p < 1` sur un type
 intégral relève de la ligne `.Positive()` ; sur `decimal`, `double` ou `float`, de la ligne
@@ -445,6 +473,13 @@ intégral relève de la ligne `.Positive()` ; sur `decimal`, `double` ou `float`
 garde rejette. C'est un tirage rare pour un `decimal` par ailleurs non contraint — mesuré à un sur
 cinq mille — et fréquent dès que le paramètre porte une autre borne (§17). Exactement le profil d'un
 défaut qui survit à un test superficiel.
+
+**Où les contraintes s'attachent.** Une contrainte dérivée d'une garde appartient au generator du
+type propre du paramètre, *avant* toute conversion ou composition. Un paramètre `int?` gardé par
+`p <= 0` émet `Any.Int32().Positive().As(value => (int?)value)`, pas l'inverse ; un paramètre de
+fabrique gardé dans le corps de celle-ci émet
+`Any.String().NonEmpty().As(OrderReference.Create)`. Le saut `.As` vient toujours en dernier, parce
+que c'est l'étape qui change le type.
 
 Chaque contrainte ci-dessus reste soumise à D4. `.Positive()` sur un paramètre `uint` ne se résout
 pas (§14.3) et est ignorée.
@@ -634,8 +669,8 @@ Nommés explicitement pour ne pas être pris pour des oublis.
   fabrique à un paramètre, limitée à une profondeur de 3. Au-delà, le développeur l'écrit.
 * **Les invariants que le tool ne peut pas voir.** Le §5.3 lit un ensemble clos d'idiomes de garde.
   Là où le constructeur lève d'une façon que l'ensemble n'apparie pas — règle inter-paramètres,
-  condition arithmétique — le paramètre obtient le generator neutre et le récapitulatif le marque
-  `unread guards`, pour que le développeur sache où regarder. Là où la validation est entièrement
+  condition arithmétique, garde regex (§5.3) — le paramètre obtient le generator neutre et le
+  récapitulatif le marque `unread guards`, pour que le développeur sache où regarder. Là où la validation est entièrement
   déléguée à un helper (`Guard.Against.Null(p)`), il n'y a aucun `throw` à voir dans le corps, et le
   tool ne peut pas distinguer ce paramètre d'un paramètre non contraint. Dans aucun des deux cas il
   ne devine.
@@ -760,8 +795,11 @@ modification de cette fonction plus une liaison d'options, pas un balayage. En v
   Rapide, sans MSBuild. Couvrir chaque ligne du §5.2, chaque ligne du §5.3, les deux chemins du
   §5.4 et le repli du §5.5. Inclure le cas non signé (`p <= 0` sur un `uint`), le cas nullable de
   type valeur, les deux issues de composition du §5.3 (bornes complémentaires conservées, même borne
-  abandonnée), l'exclusivité du motif, et `p < 1` sur un paramètre intégral puis sur un `decimal` —
-  les deux lignes qui ne diffèrent que par le type du paramètre.
+  abandonnée), une garde de taille sur un paramètre **collection** (qui doit atteindre
+  `WithMaxCount`, jamais `WithMaxLength`), et `p < 1` sur un paramètre intégral puis sur un
+  `decimal` — les deux lignes qui ne diffèrent que par le type du paramètre. Ajouter un cas
+  négatif : un constructeur gardé par `!Regex.IsMatch(...)` ne doit produire **aucune** contrainte
+  de motif, pour que l'exclusion du §5.3 ne puisse pas être défaite par inadvertance.
 * **Fichiers de référence de l'émetteur.** Un fichier approuvé par forme représentative : aucun
   paramètre, un paramètre, six paramètres, un TODO, une collision de nom, un record positionnel,
   une cible à fabrique statique.
@@ -926,7 +964,7 @@ La bibliothèque déclare **39 noms de types publics `Any*`** (37 generators plu
 
 ### 14.3 Surfaces de contraintes utilisées par l'émetteur
 
-| Famille de generator | Contraintes utilisées par les §5.2 et §5.3 |
+| Famille de generator | Surface de contraintes disponible pour l'émetteur |
 |---|---|
 | `AnyString` | `NonEmpty`, `WithMinLength`, `WithMaxLength`, `WithLength`, `WithLengthBetween`, `StartingWith`, `EndingWith`, `Containing`, `Alpha`, `Numeric`, `AlphaNumeric`, `UpperCase`, `LowerCase`, `WithChars`, `OneOf`, `Except`, `DifferentFrom` |
 | Entiers signés (`SByte`, `Int16`, `Int32`, `Int64`) | `Positive`, `Negative`, `NonZero`, `Zero`, `Between`, `GreaterThan(OrEqualTo)`, `LessThan(OrEqualTo)`, `MultipleOf`, `OneOf`, `Except`, `DifferentFrom` |
@@ -940,8 +978,15 @@ La bibliothèque déclare **39 noms de types publics `Any*`** (37 generators plu
 | `AnyTimeSpan` | style temporel plus `Positive`, `Negative`, `NonZero`, `Zero` |
 | Collections | `Empty`, `NonEmpty`, `WithCount`, `WithCountBetween`, `WithMinCount`, `WithMaxCount`, `Containing`, `ContainingAny` |
 
-La ligne non signée est celle qui mord : c'est pour elle que D4 doit filtrer `.Positive()` plutôt que
-laisser l'émetteur supposer une algèbre numérique uniforme.
+Deux lignes mordent. La ligne **non signée** est pourquoi D4 doit filtrer `.Positive()` plutôt que
+laisser l'émetteur supposer une algèbre numérique uniforme. La ligne **collections** est pourquoi
+une garde de taille doit atteindre la famille `Count` : il n'y a pas de `WithLength` sur un
+generator de collection, donc lire une telle garde contre la famille des chaînes émet un membre qui
+ne se résout jamais (§5.3).
+
+La v1.0 n'utilise que les contraintes de taille, de signe et de borne. Les familles jeu de
+caractères et motif sont listées parce que le §16 pourrait y revenir, pas parce que l'émetteur s'en
+sert aujourd'hui.
 
 ### 14.4 Seams de composition
 
@@ -1889,6 +1934,12 @@ plus un `dum.json` optionnel à la racine du projet pour un défaut à l'échell
 `{Type}` est le seul emplacement. Le motif par défaut reste `Any{Type}`, donc un projet existant ne
 voit aucun changement. C'est aussi la réponse à l'avertissement de masquage du §7.
 
+**Lire les gardes regex.** Laissé hors du §5.3 pour la v1.0 parce que la bibliothèque ne génère
+qu'à partir du sous-ensemble régulier du langage des motifs, et qu'un motif non supporté lève à la
+construction — ce qui rendrait le type émis entièrement inutilisable. Y revenir suppose la question
+du sous-ensemble tranchée d'abord : soit le moteur valide un motif sans référencer la bibliothèque
+(ce que D9 interdit aujourd'hui), soit la bibliothèque offre un moyen de le lui demander.
+
 **Autres éléments reportés.** `--all` ; les membres `init` / `required` et la construction par
 propriétés ; le support d'`AnyContext` (D7) ; un sélecteur `--ctor` quand plusieurs constructeurs se
 disputent ; l'extension du §5.3 à une bibliothèque auxiliaire de type `Guard.Against` ; la
@@ -1923,6 +1974,9 @@ branchés. Les résultats ci-dessous sont ce que le harnais a affiché.
 | Les bornes complémentaires se composent | §5.3 | `.GreaterThanOrEqualTo(0).LessThanOrEqualTo(100)` et `.NonEmpty().WithMaxLength(10)` tirent tous deux |
 | Les bornes contradictoires sont rejetées deux fois | §5.3 | `ConflictingAnyConstraintException` à l'exécution, et `JD023` à la **compilation** |
 | Un generator de motif n'admet aucune autre contrainte de chaîne | §5.3 | `Any.StringMatching(...).NonEmpty()` ne compile pas — `CS1061`, `AnyPattern` n'a que `DifferentFrom`/`Except` |
+| Les regex de validation réalistes sortent du sous-ensemble supporté | §5.3 | 4 sur 5 rejetées : lookahead, limite de mot, backreference, catégorie Unicode |
+| Un motif non supporté lève à la **construction**, pas au `Generate()` | §5.3 | donc le constructeur sans paramètre émis lèverait avant qu'un `With…` puisse surcharger |
+| Les generators de collection ne portent aucune contrainte de longueur | §5.3 | `AnyList<T>` expose `WithCount`, `WithCountBetween`, `WithMinCount`, `WithMaxCount` — pas de `WithLength` |
 | `.Positive()` est incorrect pour une garde `p < 1` sur un decimal | §5.3 | 1 tirage sur 5 000 est passé sous 1 sans contrainte ; ~1 sur 5 dès qu'une autre borne resserre |
 | La sortie scaffoldée ne lève aucun diagnostic JD | D3, §12 | 0 diagnostic sur les fichiers émis |
 | Les analyzers étaient réellement chargés | D3 | un fichier de contrôle a levé `JD006` et `JD005` dans le même build |
