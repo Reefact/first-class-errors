@@ -51,7 +51,11 @@ public sealed class AnyString : IAny<string>, IHasRandomSource, ICardinalityHint
     }
 
     private static string Join(string[] values) {
-        return string.Join(", ", values.Select(value => $"\"{value}\""));
+        return string.Join(", ", values.Select(Q));
+    }
+
+    private static string Q(string value) {
+        return $"\"{value}\"";
     }
 
     private static void RequireText(string value, string parameterName) {
@@ -104,7 +108,7 @@ public sealed class AnyString : IAny<string>, IHasRandomSource, ICardinalityHint
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyString NonEmpty() {
-        return new AnyString(_source, _spec.WithMinLength(1, "NonEmpty()"));
+        return new AnyString(_source, _spec.WithMinLength(1, ConstraintCall.Of(nameof(NonEmpty))));
     }
 
     /// <summary>Fixes the exact length. Declared once per generator.</summary>
@@ -115,7 +119,7 @@ public sealed class AnyString : IAny<string>, IHasRandomSource, ICardinalityHint
     public AnyString WithLength(int length) {
         RequireProducible(length, nameof(length));
 
-        return new AnyString(_source, _spec.WithExactLength(length, $"WithLength({V(length)})"));
+        return new AnyString(_source, _spec.WithExactLength(length, ConstraintCall.Of(nameof(WithLength), V(length))));
     }
 
     /// <summary>
@@ -130,7 +134,7 @@ public sealed class AnyString : IAny<string>, IHasRandomSource, ICardinalityHint
     public AnyString WithMinLength(int length) {
         RequireProducible(length, nameof(length));
 
-        return new AnyString(_source, _spec.WithMinLength(length, $"WithMinLength({V(length)})"));
+        return new AnyString(_source, _spec.WithMinLength(length, ConstraintCall.Of(nameof(WithMinLength), V(length))));
     }
 
     /// <summary>
@@ -145,7 +149,7 @@ public sealed class AnyString : IAny<string>, IHasRandomSource, ICardinalityHint
     public AnyString WithMaxLength(int length) {
         RequireNonNegative(length, nameof(length));
 
-        return new AnyString(_source, _spec.WithMaxLength(length, $"WithMaxLength({V(length)})"));
+        return new AnyString(_source, _spec.WithMaxLength(length, ConstraintCall.Of(nameof(WithMaxLength), V(length))));
     }
 
     /// <summary>
@@ -165,7 +169,7 @@ public sealed class AnyString : IAny<string>, IHasRandomSource, ICardinalityHint
         RequireNonNegative(maximum, nameof(maximum));
         if (minimum > maximum) { throw new ArgumentException($"The minimum ({V(minimum)}) must be less than or equal to the maximum ({V(maximum)}).", nameof(minimum)); }
 
-        string constraint = $"WithLengthBetween({V(minimum)}, {V(maximum)})";
+        ConstraintCall constraint = ConstraintCall.Of(nameof(WithLengthBetween), V(minimum), V(maximum));
 
         return new AnyString(_source, _spec.WithMinLength(minimum, constraint).WithMaxLength(maximum, constraint));
     }
@@ -179,7 +183,7 @@ public sealed class AnyString : IAny<string>, IHasRandomSource, ICardinalityHint
     public AnyString StartingWith(string prefix) {
         RequireText(prefix, nameof(prefix));
 
-        return new AnyString(_source, _spec.WithPrefix(prefix, $"StartingWith(\"{prefix}\")"));
+        return new AnyString(_source, _spec.WithPrefix(prefix, ConstraintCall.Of(nameof(StartingWith), Q(prefix))));
     }
 
     /// <summary>Requires the string to end with <paramref name="suffix" />. Declared once per generator.</summary>
@@ -191,7 +195,7 @@ public sealed class AnyString : IAny<string>, IHasRandomSource, ICardinalityHint
     public AnyString EndingWith(string suffix) {
         RequireText(suffix, nameof(suffix));
 
-        return new AnyString(_source, _spec.WithSuffix(suffix, $"EndingWith(\"{suffix}\")"));
+        return new AnyString(_source, _spec.WithSuffix(suffix, ConstraintCall.Of(nameof(EndingWith), Q(suffix))));
     }
 
     /// <summary>
@@ -206,28 +210,28 @@ public sealed class AnyString : IAny<string>, IHasRandomSource, ICardinalityHint
     public AnyString Containing(string value) {
         RequireText(value, nameof(value));
 
-        return new AnyString(_source, _spec.WithFragment(value, $"Containing(\"{value}\")"));
+        return new AnyString(_source, _spec.WithFragment(value, ConstraintCall.Of(nameof(Containing), Q(value))));
     }
 
     /// <summary>Restricts the string to ASCII letters only. Declared once per generator.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyString Alpha() {
-        return new AnyString(_source, _spec.WithCharset(CharacterSet.Alpha, "Alpha()"));
+        return new AnyString(_source, _spec.WithCharset(CharacterSet.Alpha, ConstraintCall.Of(nameof(Alpha))));
     }
 
     /// <summary>Restricts the string to ASCII digits only. Declared once per generator.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyString Numeric() {
-        return new AnyString(_source, _spec.WithCharset(CharacterSet.Numeric, "Numeric()"));
+        return new AnyString(_source, _spec.WithCharset(CharacterSet.Numeric, ConstraintCall.Of(nameof(Numeric))));
     }
 
     /// <summary>Restricts the string to ASCII letters and digits only. Declared once per generator.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyString AlphaNumeric() {
-        return new AnyString(_source, _spec.WithCharset(CharacterSet.AlphaNumeric, "AlphaNumeric()"));
+        return new AnyString(_source, _spec.WithCharset(CharacterSet.AlphaNumeric, ConstraintCall.Of(nameof(AlphaNumeric))));
     }
 
     /// <summary>
@@ -256,21 +260,21 @@ public sealed class AnyString : IAny<string>, IHasRandomSource, ICardinalityHint
 
         string distinct = new(pool.Distinct().ToArray());
 
-        return new AnyString(_source, _spec.WithCharPool(distinct, $"WithChars(\"{pool}\")"));
+        return new AnyString(_source, _spec.WithCharPool(distinct, ConstraintCall.Of(nameof(WithChars), Q(pool))));
     }
 
     /// <summary>Requires every alphabetic character to be lowercase. Declared once per generator.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyString LowerCase() {
-        return new AnyString(_source, _spec.WithCasing(LetterCasing.Lower, "LowerCase()"));
+        return new AnyString(_source, _spec.WithCasing(LetterCasing.Lower, ConstraintCall.Of(nameof(LowerCase))));
     }
 
     /// <summary>Requires every alphabetic character to be uppercase. Declared once per generator.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyString UpperCase() {
-        return new AnyString(_source, _spec.WithCasing(LetterCasing.Upper, "UpperCase()"));
+        return new AnyString(_source, _spec.WithCasing(LetterCasing.Upper, ConstraintCall.Of(nameof(UpperCase))));
     }
 
     /// <summary>
@@ -293,7 +297,7 @@ public sealed class AnyString : IAny<string>, IHasRandomSource, ICardinalityHint
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
         if (values.Any(value => value is null)) { throw new ArgumentException("The values must not contain a null element.", nameof(values)); }
 
-        return new AnyString(_source, _spec.WithExcluded(values, $"Except({Join(values)})"));
+        return new AnyString(_source, _spec.WithExcluded(values, ConstraintCall.Of(nameof(Except), Join(values))));
     }
 
     /// <summary>
@@ -309,7 +313,7 @@ public sealed class AnyString : IAny<string>, IHasRandomSource, ICardinalityHint
     public AnyString DifferentFrom(string value) {
         if (value is null) { throw new ArgumentNullException(nameof(value)); }
 
-        return new AnyString(_source, _spec.WithExcluded([value], $"DifferentFrom(\"{value}\")"));
+        return new AnyString(_source, _spec.WithExcluded([value], ConstraintCall.Of(nameof(DifferentFrom), Q(value))));
     }
 
     /// <summary>
@@ -341,7 +345,7 @@ public sealed class AnyString : IAny<string>, IHasRandomSource, ICardinalityHint
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
         if (values.Any(value => value is null)) { throw new ArgumentException("The values must not contain a null element; use OrNull() to make the whole generator nullable.", nameof(values)); }
 
-        return new AnyString(_source, _spec.WithAllowed(values, $"OneOf({Join(values)})"));
+        return new AnyString(_source, _spec.WithAllowed(values, ConstraintCall.Of(nameof(OneOf), Join(values))));
     }
 
     /// <summary>

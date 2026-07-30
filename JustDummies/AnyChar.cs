@@ -31,12 +31,12 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint<cha
     #region Fields declarations
 
     private readonly IReadOnlyList<char>? _allowed;
-    private readonly string?              _allowedConstraint;
+    private readonly ConstraintCall?      _allowedConstraint;
     private readonly List<char>           _pool;
     private readonly LetterCasing?        _casing;
-    private readonly string?              _casingConstraint;
+    private readonly ConstraintCall?      _casingConstraint;
     private readonly CharacterSet?        _charset;
-    private readonly string?              _charsetConstraint;
+    private readonly ConstraintCall?      _charsetConstraint;
     private readonly IReadOnlyList<char>  _excluded;
     private readonly RandomSource         _source;
 
@@ -48,9 +48,9 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint<cha
                                                          "every With* call, so every field has to be threaded through it. A parameter object would only rename the same list, and the " +
                                                          "constructor is private — no caller ever writes this argument list.")]
     private AnyChar(RandomSource source,
-                    CharacterSet? charset, string? charsetConstraint,
-                    LetterCasing? casing,  string? casingConstraint,
-                    IReadOnlyList<char>? allowed, string? allowedConstraint,
+                    CharacterSet? charset, ConstraintCall? charsetConstraint,
+                    LetterCasing? casing,  ConstraintCall? casingConstraint,
+                    IReadOnlyList<char>? allowed, ConstraintCall? allowedConstraint,
                     IReadOnlyList<char>  excluded) {
         _source            = source;
         _charset           = charset;
@@ -79,35 +79,35 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint<cha
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyChar Alpha() {
-        return WithCharset(CharacterSet.Alpha, "Alpha()");
+        return WithCharset(CharacterSet.Alpha, ConstraintCall.Of(nameof(Alpha)));
     }
 
     /// <summary>Restricts the character to ASCII digits only. Declared once per generator.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyChar Numeric() {
-        return WithCharset(CharacterSet.Numeric, "Numeric()");
+        return WithCharset(CharacterSet.Numeric, ConstraintCall.Of(nameof(Numeric)));
     }
 
     /// <summary>Restricts the character to ASCII letters and digits only. Declared once per generator.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyChar AlphaNumeric() {
-        return WithCharset(CharacterSet.AlphaNumeric, "AlphaNumeric()");
+        return WithCharset(CharacterSet.AlphaNumeric, ConstraintCall.Of(nameof(AlphaNumeric)));
     }
 
     /// <summary>Requires an alphabetic character to be lowercase. Declared once per generator.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyChar LowerCase() {
-        return WithCasing(LetterCasing.Lower, "LowerCase()");
+        return WithCasing(LetterCasing.Lower, ConstraintCall.Of(nameof(LowerCase)));
     }
 
     /// <summary>Requires an alphabetic character to be uppercase. Declared once per generator.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyChar UpperCase() {
-        return WithCasing(LetterCasing.Upper, "UpperCase()");
+        return WithCasing(LetterCasing.Upper, ConstraintCall.Of(nameof(UpperCase)));
     }
 
     /// <summary>Requires the character to be one of the supplied values. Declared once per generator.</summary>
@@ -120,10 +120,10 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint<cha
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        string constraint = $"OneOf({Join(values)})";
+        ConstraintCall constraint = ConstraintCall.Of(nameof(OneOf), Join(values));
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-        if (string.Equals(_allowedConstraint, constraint, StringComparison.Ordinal)) { return this; }
+        if (_allowedConstraint == constraint) { return this; }
         if (_allowedConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(constraint, _allowedConstraint); }
 
         return Validated(new AnyChar(_source, _charset, _charsetConstraint, _casing, _casingConstraint, values.Distinct().ToArray(), constraint, _excluded), constraint);
@@ -139,7 +139,7 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint<cha
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        return WithExcluded(values, $"Except({Join(values)})");
+        return WithExcluded(values, ConstraintCall.Of(nameof(Except), Join(values)));
     }
 
     /// <summary>
@@ -150,7 +150,7 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint<cha
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyChar DifferentFrom(char value) {
-        return WithExcluded([value], $"DifferentFrom({V(value)})");
+        return WithExcluded([value], ConstraintCall.Of(nameof(DifferentFrom), V(value)));
     }
 
     /// <inheritdoc />
@@ -158,25 +158,25 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint<cha
         return _pool[_source.Current.Next(_pool.Count)];
     }
 
-    private AnyChar WithCharset(CharacterSet charset, string applying) {
+    private AnyChar WithCharset(CharacterSet charset, ConstraintCall applying) {
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-        if (string.Equals(_charsetConstraint, applying, StringComparison.Ordinal)) { return this; }
+        if (_charsetConstraint == applying) { return this; }
         if (_charsetConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _charsetConstraint); }
 
         return Validated(new AnyChar(_source, charset, applying, _casing, _casingConstraint, _allowed, _allowedConstraint, _excluded), applying);
     }
 
-    private AnyChar WithCasing(LetterCasing casing, string applying) {
+    private AnyChar WithCasing(LetterCasing casing, ConstraintCall applying) {
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-        if (string.Equals(_casingConstraint, applying, StringComparison.Ordinal)) { return this; }
+        if (_casingConstraint == applying) { return this; }
         if (_casingConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _casingConstraint); }
 
         return Validated(new AnyChar(_source, _charset, _charsetConstraint, casing, applying, _allowed, _allowedConstraint, _excluded), applying);
     }
 
-    private AnyChar WithExcluded(char[] values, string applying) {
+    private AnyChar WithExcluded(char[] values, ConstraintCall applying) {
         List<char> excluded = [.. _excluded, .. values];
 
         return Validated(new AnyChar(_source, _charset, _charsetConstraint, _casing, _casingConstraint, _allowed, _allowedConstraint, excluded), applying);
@@ -196,7 +196,7 @@ public sealed class AnyChar : IAny<char>, IHasRandomSource, ICardinalityHint<cha
                                                          "the rule notices — but that is a builder validating its own successor, not an oversight. Making it static across seven types " +
                                                          "would break a family resemblance the reader relies on, for no measurable gain on a path that runs once per declared " +
                                                          "constraint.")]
-    private AnyChar Validated(AnyChar candidate, string applying) {
+    private AnyChar Validated(AnyChar candidate, ConstraintCall applying) {
         if (candidate._pool.Count > 0) { return candidate; }
 
         string pool = candidate._allowedConstraint is null

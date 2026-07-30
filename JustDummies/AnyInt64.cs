@@ -62,28 +62,28 @@ public sealed class AnyInt64 : IAny<long>, IHasRandomSource, ICardinalityHint<lo
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyInt64 Positive() {
-        return new AnyInt64(_source, _spec.WithMinimum(Ord(1), "Positive()"));
+        return new AnyInt64(_source, _spec.WithMinimum(Ord(1), ConstraintCall.Of(nameof(Positive))));
     }
 
     /// <summary>Requires a value strictly less than zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyInt64 Negative() {
-        return new AnyInt64(_source, _spec.WithMaximum(Ord(-1), "Negative()"));
+        return new AnyInt64(_source, _spec.WithMaximum(Ord(-1), ConstraintCall.Of(nameof(Negative))));
     }
 
     /// <summary>Pins the value to exactly zero. Useful for symmetry with the other constraints when a test sweeps cases.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyInt64 Zero() {
-        return new AnyInt64(_source, _spec.WithMinimum(Ord(0), "Zero()").WithMaximum(Ord(0), "Zero()"));
+        return new AnyInt64(_source, _spec.WithMinimum(Ord(0), ConstraintCall.Of(nameof(Zero))).WithMaximum(Ord(0), ConstraintCall.Of(nameof(Zero))));
     }
 
     /// <summary>Requires a value different from zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyInt64 NonZero() {
-        return new AnyInt64(_source, _spec.WithExcluded([Ord(0)], "NonZero()"));
+        return new AnyInt64(_source, _spec.WithExcluded([Ord(0)], ConstraintCall.Of(nameof(NonZero))));
     }
 
     /// <summary>Requires a value strictly greater than <paramref name="value" />.</summary>
@@ -91,7 +91,7 @@ public sealed class AnyInt64 : IAny<long>, IHasRandomSource, ICardinalityHint<lo
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyInt64 GreaterThan(long value) {
-        return new AnyInt64(_source, _spec.WithMinimumAbove(Ord(value), $"GreaterThan({V(value)})"));
+        return new AnyInt64(_source, _spec.WithMinimumAbove(Ord(value), ConstraintCall.Of(nameof(GreaterThan), V(value))));
     }
 
     /// <summary>Requires a value greater than or equal to <paramref name="value" />.</summary>
@@ -99,7 +99,7 @@ public sealed class AnyInt64 : IAny<long>, IHasRandomSource, ICardinalityHint<lo
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyInt64 GreaterThanOrEqualTo(long value) {
-        return new AnyInt64(_source, _spec.WithMinimum(Ord(value), $"GreaterThanOrEqualTo({V(value)})"));
+        return new AnyInt64(_source, _spec.WithMinimum(Ord(value), ConstraintCall.Of(nameof(GreaterThanOrEqualTo), V(value))));
     }
 
     /// <summary>Requires a value strictly less than <paramref name="value" />.</summary>
@@ -107,7 +107,7 @@ public sealed class AnyInt64 : IAny<long>, IHasRandomSource, ICardinalityHint<lo
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyInt64 LessThan(long value) {
-        return new AnyInt64(_source, _spec.WithMaximumBelow(Ord(value), $"LessThan({V(value)})"));
+        return new AnyInt64(_source, _spec.WithMaximumBelow(Ord(value), ConstraintCall.Of(nameof(LessThan), V(value))));
     }
 
     /// <summary>Requires a value less than or equal to <paramref name="value" />.</summary>
@@ -115,7 +115,7 @@ public sealed class AnyInt64 : IAny<long>, IHasRandomSource, ICardinalityHint<lo
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyInt64 LessThanOrEqualTo(long value) {
-        return new AnyInt64(_source, _spec.WithMaximum(Ord(value), $"LessThanOrEqualTo({V(value)})"));
+        return new AnyInt64(_source, _spec.WithMaximum(Ord(value), ConstraintCall.Of(nameof(LessThanOrEqualTo), V(value))));
     }
 
     /// <summary>Requires a value within the inclusive range [<paramref name="minimum" />, <paramref name="maximum" />].</summary>
@@ -127,7 +127,7 @@ public sealed class AnyInt64 : IAny<long>, IHasRandomSource, ICardinalityHint<lo
     public AnyInt64 Between(long minimum, long maximum) {
         if (minimum > maximum) { throw new ArgumentException($"The minimum ({V(minimum)}) must be less than or equal to the maximum ({V(maximum)}).", nameof(minimum)); }
 
-        string constraint = $"Between({V(minimum)}, {V(maximum)})";
+        ConstraintCall constraint = ConstraintCall.Of(nameof(Between), V(minimum), V(maximum));
 
         return new AnyInt64(_source, _spec.WithMinimum(Ord(minimum), constraint).WithMaximum(Ord(maximum), constraint));
     }
@@ -144,7 +144,7 @@ public sealed class AnyInt64 : IAny<long>, IHasRandomSource, ICardinalityHint<lo
     public AnyInt64 MultipleOf(long value) {
         if (value <= 0) { throw new ArgumentOutOfRangeException(nameof(value), value, "The multiple must be strictly positive."); }
 
-        return new AnyInt64(_source, _spec.WithStep((ulong)value, Ord(0), $"MultipleOf({V(value)})"));
+        return new AnyInt64(_source, _spec.WithStep((ulong)value, Ord(0), ConstraintCall.Of(nameof(MultipleOf), V(value))));
     }
 
     /// <summary>Requires the value to be one of the supplied values. Declared once per generator.</summary>
@@ -157,7 +157,7 @@ public sealed class AnyInt64 : IAny<long>, IHasRandomSource, ICardinalityHint<lo
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        return new AnyInt64(_source, _spec.WithAllowed(values.Select(Ord).ToArray(), $"OneOf({Join(values)})"));
+        return new AnyInt64(_source, _spec.WithAllowed(values.Select(Ord).ToArray(), ConstraintCall.Of(nameof(OneOf), Join(values))));
     }
 
     /// <summary>Requires the value to be none of the supplied values.</summary>
@@ -170,7 +170,7 @@ public sealed class AnyInt64 : IAny<long>, IHasRandomSource, ICardinalityHint<lo
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        return new AnyInt64(_source, _spec.WithExcluded(values.Select(Ord).ToArray(), $"Except({Join(values)})"));
+        return new AnyInt64(_source, _spec.WithExcluded(values.Select(Ord).ToArray(), ConstraintCall.Of(nameof(Except), Join(values))));
     }
 
     /// <summary>
@@ -181,7 +181,7 @@ public sealed class AnyInt64 : IAny<long>, IHasRandomSource, ICardinalityHint<lo
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyInt64 DifferentFrom(long value) {
-        return new AnyInt64(_source, _spec.WithExcluded([Ord(value)], $"DifferentFrom({V(value)})"));
+        return new AnyInt64(_source, _spec.WithExcluded([Ord(value)], ConstraintCall.Of(nameof(DifferentFrom), V(value))));
     }
 
     /// <inheritdoc />

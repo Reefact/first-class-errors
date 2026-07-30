@@ -16,7 +16,7 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     ///     Builds the exception for a constraint that no value of <paramref name="typeName" /> can satisfy — the
     ///     constraint is unsatisfiable on its own, before any other is considered.
     /// </summary>
-    internal static ConflictingAnyConstraintException NoValueSatisfies(string applying, string typeName) {
+    internal static ConflictingAnyConstraintException NoValueSatisfies(ConstraintCall applying, string typeName) {
         return Sentence(applying, $"no {typeName} value satisfies it");
     }
 
@@ -26,14 +26,14 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     ///     <see cref="NoValueSatisfies" />: nothing survives the combination, rather than the constraint admitting
     ///     nothing by itself.
     /// </summary>
-    internal static ConflictingAnyConstraintException NoValueRemains(string applying, string exhaustion) {
+    internal static ConflictingAnyConstraintException NoValueRemains(ConstraintCall applying, string exhaustion) {
         return Sentence(applying, exhaustion);
     }
 
     /// <summary>
     ///     Builds the exception for a constraint that <paramref name="existingConstraint" /> has already settled.
     /// </summary>
-    internal static ConflictingAnyConstraintException AlreadyDefined(string applying, string existingConstraint) {
+    internal static ConflictingAnyConstraintException AlreadyDefined(ConstraintCall applying, ConstraintCall existingConstraint) {
         return Sentence(applying, $"{existingConstraint} is already defined");
     }
 
@@ -48,7 +48,7 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     ///     with itself explains nothing. Every conflict between a fixed count or length and a bound is this shape, so
     ///     the rule is stated once here rather than re-derived at each throw site.
     /// </remarks>
-    internal static ConflictingAnyConstraintException Contradicts(string applying, ConstraintClaim culprit, ConstraintClaim otherwise) {
+    internal static ConflictingAnyConstraintException Contradicts(ConstraintCall applying, ConstraintClaim culprit, ConstraintClaim otherwise) {
         ConstraintClaim blamed = applying == culprit.Constraint ? otherwise : culprit;
 
         return Sentence(applying, blamed.ToString());
@@ -60,42 +60,42 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     ///     <see cref="NoValueRemains" />: the caller supplied the values, so the failure names what turned them all
     ///     away rather than what the domain could not produce.
     /// </summary>
-    internal static ConflictingAnyConstraintException NoPooledValueSurvives(string applying, string exhaustion) {
+    internal static ConflictingAnyConstraintException NoPooledValueSurvives(ConstraintCall applying, string exhaustion) {
         return Sentence(applying, exhaustion);
     }
 
     /// <summary>
     ///     Builds the exception for a constraint that contradicts a value already pinned.
     /// </summary>
-    internal static ConflictingAnyConstraintException AlreadyPinned(string applying, string pinningConstraint, string value) {
+    internal static ConflictingAnyConstraintException AlreadyPinned(ConstraintCall applying, ConstraintCall pinningConstraint, string value) {
         return Sentence(applying, $"{pinningConstraint} already pins the value to {value}");
     }
 
     /// <summary>
     ///     Builds the exception for a pinned value the exclusions declared alongside it forbid.
     /// </summary>
-    internal static ConflictingAnyConstraintException PinnedValueExcluded(string applying, string pinningConstraint, string value) {
+    internal static ConflictingAnyConstraintException PinnedValueExcluded(ConstraintCall applying, ConstraintCall pinningConstraint, string value) {
         return Sentence(applying, $"{pinningConstraint} already pins the value to {value}, which the exclusions forbid");
     }
 
     /// <summary>
     ///     Builds the exception for a pinned value the allow-list declared alongside it does not admit.
     /// </summary>
-    internal static ConflictingAnyConstraintException PinnedValueNotAllowed(string applying, string pinningConstraint, string value, string allowingConstraint) {
+    internal static ConflictingAnyConstraintException PinnedValueNotAllowed(ConstraintCall applying, ConstraintCall pinningConstraint, string value, ConstraintCall allowingConstraint) {
         return Sentence(applying, $"{pinningConstraint} already pins the value to {value}, which {allowingConstraint} does not allow");
     }
 
     /// <summary>
     ///     Builds the exception for combinations asked of an enum the runtime would not recognise them on.
     /// </summary>
-    internal static ConflictingAnyConstraintException EnumIsNotFlags(string applying, string enumName) {
+    internal static ConflictingAnyConstraintException EnumIsNotFlags(ConstraintCall applying, string enumName) {
         return Sentence(applying, $"{enumName} is not declared [Flags]: OR-ing its members would produce values the type does not define");
     }
 
     /// <summary>
     ///     Builds the exception for an enum with more combinable members than the library will enumerate.
     /// </summary>
-    internal static ConflictingAnyConstraintException TooManyCombinableMembers(string applying, string enumName, string declared, string maximum) {
+    internal static ConflictingAnyConstraintException TooManyCombinableMembers(ConstraintCall applying, string enumName, string declared, string maximum) {
         return Sentence(applying, $"{enumName} declares {declared} non-zero members, more than the {maximum} whose combinations can be enumerated. " +
                                   "Draw from an explicit set with OneOf(...) instead");
     }
@@ -103,7 +103,7 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     /// <summary>
     ///     Builds the exception for elements required to be contained that cannot fit the capacity already declared.
     /// </summary>
-    internal static ConflictingAnyConstraintException ContainedElementsDoNotFit(string applying, string required, string capacity) {
+    internal static ConflictingAnyConstraintException ContainedElementsDoNotFit(ConstraintCall applying, string required, string capacity) {
         return Sentence(applying, $"{required} required to be contained cannot fit in a collection of at most {capacity}");
     }
 
@@ -111,35 +111,35 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     ///     Builds the exception for a second, different equality on a collection already required to be distinct. One
     ///     collection is distinct under one equality, so the two cannot both be honoured.
     /// </summary>
-    internal static ConflictingAnyConstraintException ComparerAlreadyDefined(string applying) {
+    internal static ConflictingAnyConstraintException ComparerAlreadyDefined(ConstraintCall applying) {
         return Sentence(applying, $"a different comparer is already defined by an earlier {applying}");
     }
 
     /// <summary>
     ///     Builds the exception for a value required to be contained twice in a collection required to be distinct.
     /// </summary>
-    internal static ConflictingAnyConstraintException DuplicateInDistinctCollection(string applying, string value) {
+    internal static ConflictingAnyConstraintException DuplicateInDistinctCollection(ConstraintCall applying, string value) {
         return Sentence(applying, $"a distinct collection cannot contain {value} more than once");
     }
 
     /// <summary>
     ///     Builds the exception for more distinct elements than the element generator has distinct values to give.
     /// </summary>
-    internal static ConflictingAnyConstraintException DistinctElementsExceedCardinality(string applying, string required, string cardinality) {
+    internal static ConflictingAnyConstraintException DistinctElementsExceedCardinality(ConstraintCall applying, string required, string cardinality) {
         return Sentence(applying, $"{required} required to be distinct exceed the {cardinality} distinct value(s) the element generator can produce");
     }
 
     /// <summary>
     ///     Builds the exception for a constraint that contradicts an upper bound already declared.
     /// </summary>
-    internal static ConflictingAnyConstraintException AlreadyBoundedAbove(string applying, string existingConstraint, string bound) {
+    internal static ConflictingAnyConstraintException AlreadyBoundedAbove(ConstraintCall applying, ConstraintCall existingConstraint, string bound) {
         return Sentence(applying, $"{existingConstraint} already requires values less than or equal to {bound}");
     }
 
     /// <summary>
     ///     Builds the exception for a constraint that contradicts a lower bound already declared.
     /// </summary>
-    internal static ConflictingAnyConstraintException AlreadyBoundedBelow(string applying, string existingConstraint, string bound) {
+    internal static ConflictingAnyConstraintException AlreadyBoundedBelow(ConstraintCall applying, ConstraintCall existingConstraint, string bound) {
         return Sentence(applying, $"{existingConstraint} already requires values greater than or equal to {bound}");
     }
 
@@ -159,10 +159,15 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     ///         parameters are non-nullable, so a caller that cannot prove a value is CS8604 at build time, which is
     ///         how the one nullable constraint name in the interval specs was found.
     ///     </para>
+    ///     <para>
+    ///         Interpolating a <see cref="ConstraintCall" /> here calls its <c>ToString</c>, which reads back text
+    ///         rendered when the constraint was declared rather than composing any. The rule above therefore holds
+    ///         for the constraints too, by construction rather than by inspection.
+    ///     </para>
     /// </remarks>
     /// <param name="applying">The constraint being declared, as the caller spelled it.</param>
     /// <param name="reason">Why it cannot be applied, written without a final period.</param>
-    private static ConflictingAnyConstraintException Sentence(string applying, string reason) {
+    private static ConflictingAnyConstraintException Sentence(ConstraintCall applying, string reason) {
         return new ConflictingAnyConstraintException($"Cannot apply {applying} because {reason}.");
     }
 

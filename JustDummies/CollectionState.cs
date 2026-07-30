@@ -84,28 +84,28 @@ internal sealed class CollectionState<T> {
     internal IEqualityComparer<T>? Comparer => _comparer;
 
     /// <summary>Fixes the exact element count.</summary>
-    internal CollectionState<T> WithExactCount(int count, string applying) {
+    internal CollectionState<T> WithExactCount(int count, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
 
         return Rebuild(_count.WithExactCount(count, applying), _distinct, _comparer, _fixedContaining, _generatedContaining, applying);
     }
 
     /// <summary>Tightens the minimum element count.</summary>
-    internal CollectionState<T> WithMinCount(int count, string applying) {
+    internal CollectionState<T> WithMinCount(int count, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
 
         return Rebuild(_count.WithMinCount(count, applying), _distinct, _comparer, _fixedContaining, _generatedContaining, applying);
     }
 
     /// <summary>Tightens the maximum element count.</summary>
-    internal CollectionState<T> WithMaxCount(int count, string applying) {
+    internal CollectionState<T> WithMaxCount(int count, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
 
         return Rebuild(_count.WithMaxCount(count, applying), _distinct, _comparer, _fixedContaining, _generatedContaining, applying);
     }
 
     /// <summary>Requires the elements to be pairwise distinct, optionally under <paramref name="comparer" />.</summary>
-    internal CollectionState<T> AsDistinct(IEqualityComparer<T>? comparer, string applying) {
+    internal CollectionState<T> AsDistinct(IEqualityComparer<T>? comparer, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         // One collection is distinct under ONE equality, so a second, different comparer cannot be honoured
         // alongside the first: keeping the last one silently would drop a constraint the caller wrote. Declaring
@@ -119,14 +119,14 @@ internal sealed class CollectionState<T> {
     }
 
     /// <summary>Requires the collection to contain <paramref name="value" />.</summary>
-    internal CollectionState<T> WithContaining(T value, string applying) {
+    internal CollectionState<T> WithContaining(T value, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
 
         return Rebuild(_count, _distinct, _comparer, Append(_fixedContaining, value), _generatedContaining, applying);
     }
 
     /// <summary>Requires the collection to contain a value drawn from <paramref name="generator" />.</summary>
-    internal CollectionState<T> WithContaining(IAny<T> generator, string applying) {
+    internal CollectionState<T> WithContaining(IAny<T> generator, ConstraintCall applying) {
         if (generator is null) { throw new ArgumentNullException(nameof(generator)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
 
@@ -173,14 +173,14 @@ internal sealed class CollectionState<T> {
     }
 
     private CollectionState<T> Rebuild(CountSpec count, bool distinct, IEqualityComparer<T>? comparer,
-                                       IReadOnlyList<T> fixedContaining, IReadOnlyList<IAny<T>> generatedContaining, string applying) {
+                                       IReadOnlyList<T> fixedContaining, IReadOnlyList<IAny<T>> generatedContaining, ConstraintCall applying) {
         CollectionState<T> candidate = new(_item, _itemCardinality, count, distinct, comparer, fixedContaining, generatedContaining);
         candidate.Validate(applying);
 
         return candidate;
     }
 
-    private void Validate(string applying) {
+    private void Validate(ConstraintCall applying) {
         int required = _fixedContaining.Count + _generatedContaining.Count;
         _count.EnsureFits(required, applying);
 

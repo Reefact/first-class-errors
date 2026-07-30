@@ -114,7 +114,7 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinality
     #region Fields declarations
 
     private readonly IReadOnlyList<TEnum>? _allowed;
-    private readonly string?               _allowedConstraint;
+    private readonly ConstraintCall?       _allowedConstraint;
     private readonly bool                  _combinable;
     private readonly IReadOnlyList<TEnum>  _excluded;
     private readonly List<TEnum>           _pool;
@@ -124,7 +124,7 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinality
     #endregion
 
     private AnyEnum(RandomSource source, IReadOnlyList<TEnum> universe, bool combinable,
-                    IReadOnlyList<TEnum>? allowed, string? allowedConstraint, IReadOnlyList<TEnum> excluded) {
+                    IReadOnlyList<TEnum>? allowed, ConstraintCall? allowedConstraint, IReadOnlyList<TEnum> excluded) {
         _source            = source;
         _universe          = universe;
         _combinable        = combinable;
@@ -170,7 +170,7 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinality
     ///     members than the enumerable ceiling, or when the constraint contradicts a constraint already declared.
     /// </exception>
     public AnyEnum<TEnum> AllowingCombinations() {
-        const string constraint = "AllowingCombinations()";
+        ConstraintCall constraint = ConstraintCall.Of(nameof(AllowingCombinations));
         if (_combinable) { return this; }
 
         if (!IsFlags) {
@@ -206,10 +206,10 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinality
             if (!_universe.Contains(value)) { throw new ArgumentException($"The value {value} {DescribeOutsideUniverse()}", nameof(values)); }
         }
 
-        string constraint = $"OneOf({Join(values)})";
+        ConstraintCall constraint = ConstraintCall.Of(nameof(OneOf), Join(values));
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-        if (string.Equals(_allowedConstraint, constraint, StringComparison.Ordinal)) { return this; }
+        if (_allowedConstraint == constraint) { return this; }
         if (_allowedConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(constraint, _allowedConstraint); }
 
         return Validated(new AnyEnum<TEnum>(_source, _universe, _combinable, values.Distinct().ToArray(), constraint, _excluded), constraint);
@@ -229,7 +229,7 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinality
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        return WithExcluded(values, $"Except({Join(values)})");
+        return WithExcluded(values, ConstraintCall.Of(nameof(Except), Join(values)));
     }
 
     /// <summary>
@@ -240,7 +240,7 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyEnum<TEnum> DifferentFrom(TEnum value) {
-        return WithExcluded([value], $"DifferentFrom({V(value)})");
+        return WithExcluded([value], ConstraintCall.Of(nameof(DifferentFrom), V(value)));
     }
 
     /// <inheritdoc />
@@ -259,7 +259,7 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinality
         return $"{subject} Apply AllowingCombinations() first to draw combinations of them.";
     }
 
-    private AnyEnum<TEnum> WithExcluded(TEnum[] values, string applying) {
+    private AnyEnum<TEnum> WithExcluded(TEnum[] values, ConstraintCall applying) {
         List<TEnum> excluded = [.. _excluded, .. values];
 
         return Validated(new AnyEnum<TEnum>(_source, _universe, _combinable, _allowed, _allowedConstraint, excluded), applying);
@@ -279,7 +279,7 @@ public sealed class AnyEnum<TEnum> : IAny<TEnum>, IHasRandomSource, ICardinality
                                                          "the rule notices — but that is a builder validating its own successor, not an oversight. Making it static across seven types " +
                                                          "would break a family resemblance the reader relies on, for no measurable gain on a path that runs once per declared " +
                                                          "constraint.")]
-    private AnyEnum<TEnum> Validated(AnyEnum<TEnum> candidate, string applying) {
+    private AnyEnum<TEnum> Validated(AnyEnum<TEnum> candidate, ConstraintCall applying) {
         if (candidate._pool.Count > 0) { return candidate; }
 
         // Three exhausted pools, three different things to tell the reader: an allow-list that nothing survives, a

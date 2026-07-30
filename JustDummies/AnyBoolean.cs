@@ -24,12 +24,12 @@ public sealed class AnyBoolean : IAny<bool>, IHasRandomSource, ICardinalityHint<
     #region Fields declarations
 
     private readonly bool?        _pinned;
-    private readonly string?      _pinnedConstraint;
+    private readonly ConstraintCall? _pinnedConstraint;
     private readonly RandomSource _source;
 
     #endregion
 
-    private AnyBoolean(RandomSource source, bool? pinned, string? pinnedConstraint) {
+    private AnyBoolean(RandomSource source, bool? pinned, ConstraintCall? pinnedConstraint) {
         _source           = source;
         _pinned           = pinned;
         _pinnedConstraint = pinnedConstraint;
@@ -47,14 +47,14 @@ public sealed class AnyBoolean : IAny<bool>, IHasRandomSource, ICardinalityHint<
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyBoolean True() {
-        return Pin(true, "True()");
+        return Pin(true, ConstraintCall.Of(nameof(True)));
     }
 
     /// <summary>Pins the value to <c>false</c>.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyBoolean False() {
-        return Pin(false, "False()");
+        return Pin(false, ConstraintCall.Of(nameof(False)));
     }
 
     /// <summary>
@@ -65,7 +65,7 @@ public sealed class AnyBoolean : IAny<bool>, IHasRandomSource, ICardinalityHint<
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyBoolean DifferentFrom(bool value) {
-        return Pin(!value, $"DifferentFrom({V(value)})");
+        return Pin(!value, ConstraintCall.Of(nameof(DifferentFrom), V(value)));
     }
 
     /// <inheritdoc />
@@ -73,7 +73,7 @@ public sealed class AnyBoolean : IAny<bool>, IHasRandomSource, ICardinalityHint<
         return _pinned ?? _source.Current.Next(2) == 0;
     }
 
-    private AnyBoolean Pin(bool value, string applying) {
+    private AnyBoolean Pin(bool value, ConstraintCall applying) {
         if (_pinnedConstraint is not null && _pinned != value) {
             throw ConflictingAnyConstraintException.AlreadyPinned(applying, _pinnedConstraint, V(_pinned!.Value));
         }

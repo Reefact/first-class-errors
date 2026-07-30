@@ -54,23 +54,23 @@ internal sealed class WideIntervalSpec {
     #region Fields declarations
 
     private readonly IReadOnlyList<UInt128>? _allowed;
-    private readonly string?                 _allowedConstraint;
+    private readonly ConstraintCall?         _allowedConstraint;
     private readonly UInt128                 _anchor;
     private readonly UInt128                 _domainMax;
     private readonly List<UInt128>?          _effectiveAllowed;
     private readonly List<UInt128>           _excludedInRange;
     private readonly List<UInt128>           _excludedOnLattice;
     private readonly UInt128                 _domainMin;
-    private readonly IReadOnlyList<(string Constraint, UInt128[] Ordinals)> _exclusions;
+    private readonly IReadOnlyList<(ConstraintCall Constraint, UInt128[] Ordinals)> _exclusions;
     private readonly UInt128                 _latticeFirst;
     private readonly bool                    _latticeHasPoint;
     private readonly UInt128                 _max;
-    private readonly string?                 _maxConstraint;
+    private readonly ConstraintCall?         _maxConstraint;
     private readonly UInt128                 _min;
-    private readonly string?                 _minConstraint;
+    private readonly ConstraintCall?         _minConstraint;
     private readonly Func<UInt128, string>   _render;
     private readonly UInt128                 _step;
-    private readonly string?                 _stepConstraint;
+    private readonly ConstraintCall?         _stepConstraint;
     private readonly string                  _typeName;
 
     #endregion
@@ -81,11 +81,11 @@ internal sealed class WideIntervalSpec {
                                                          "every With* call, so every field has to be threaded through it. A parameter object would only rename the same list, and the " +
                                                          "constructor is private — no caller ever writes this argument list.")]
     private WideIntervalSpec(string typeName, Func<UInt128, string> render, UInt128 domainMin, UInt128 domainMax,
-                             UInt128 min, string? minConstraint,
-                             UInt128 max, string? maxConstraint,
-                             IReadOnlyList<UInt128>? allowed, string? allowedConstraint,
-                             IReadOnlyList<(string Constraint, UInt128[] Ordinals)> exclusions,
-                             UInt128 step, UInt128 anchor, string? stepConstraint) {
+                             UInt128 min, ConstraintCall? minConstraint,
+                             UInt128 max, ConstraintCall? maxConstraint,
+                             IReadOnlyList<UInt128>? allowed, ConstraintCall? allowedConstraint,
+                             IReadOnlyList<(ConstraintCall Constraint, UInt128[] Ordinals)> exclusions,
+                             UInt128 step, UInt128 anchor, ConstraintCall? stepConstraint) {
         _typeName          = typeName;
         _render            = render;
         _domainMin         = domainMin;
@@ -122,7 +122,7 @@ internal sealed class WideIntervalSpec {
     }
 
     /// <summary>Tightens the lower bound; a looser bound than the current one is a no-op.</summary>
-    internal WideIntervalSpec WithMinimum(UInt128 minimum, string applying) {
+    internal WideIntervalSpec WithMinimum(UInt128 minimum, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (minimum <= _min) { return this; }
 
@@ -136,7 +136,7 @@ internal sealed class WideIntervalSpec {
     }
 
     /// <summary>Tightens the lower bound to strictly above <paramref name="bound" /> — the exclusive form of <see cref="WithMinimum" />.</summary>
-    internal WideIntervalSpec WithMinimumAbove(UInt128 bound, string applying) {
+    internal WideIntervalSpec WithMinimumAbove(UInt128 bound, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (bound == _domainMax) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
 
@@ -144,7 +144,7 @@ internal sealed class WideIntervalSpec {
     }
 
     /// <summary>Tightens the upper bound; a looser bound than the current one is a no-op.</summary>
-    internal WideIntervalSpec WithMaximum(UInt128 maximum, string applying) {
+    internal WideIntervalSpec WithMaximum(UInt128 maximum, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (maximum >= _max) { return this; }
 
@@ -158,7 +158,7 @@ internal sealed class WideIntervalSpec {
     }
 
     /// <summary>Tightens the upper bound to strictly below <paramref name="bound" /> — the exclusive form of <see cref="WithMaximum" />.</summary>
-    internal WideIntervalSpec WithMaximumBelow(UInt128 bound, string applying) {
+    internal WideIntervalSpec WithMaximumBelow(UInt128 bound, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (bound == _domainMin) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
 
@@ -166,12 +166,12 @@ internal sealed class WideIntervalSpec {
     }
 
     /// <summary>Restricts the domain to an explicit allow-list; declared once per generator.</summary>
-    internal WideIntervalSpec WithAllowed(UInt128[] ordinals, string applying) {
+    internal WideIntervalSpec WithAllowed(UInt128[] ordinals, ConstraintCall applying) {
         if (ordinals is null) { throw new ArgumentNullException(nameof(ordinals)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-        if (string.Equals(_allowedConstraint, applying, StringComparison.Ordinal)) { return this; }
+        if (_allowedConstraint == applying) { return this; }
         if (_allowedConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _allowedConstraint); }
 
         UInt128[] distinct = ordinals.Distinct().ToArray();
@@ -180,13 +180,13 @@ internal sealed class WideIntervalSpec {
     }
 
     /// <summary>Adds values the generator must never produce.</summary>
-    internal WideIntervalSpec WithExcluded(UInt128[] ordinals, string applying) {
+    internal WideIntervalSpec WithExcluded(UInt128[] ordinals, ConstraintCall applying) {
         if (ordinals is null) { throw new ArgumentNullException(nameof(ordinals)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
 
         // The applied constraint tags its own ordinals, so a later exhaustion message can name the exclusion
         // that actually emptied the domain rather than a bound that merely happens to border it.
-        List<(string Constraint, UInt128[] Ordinals)> exclusions = [.. _exclusions, (applying, ordinals)];
+        List<(ConstraintCall Constraint, UInt128[] Ordinals)> exclusions = [.. _exclusions, (applying, ordinals)];
 
         return Validated(new WideIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, exclusions, _step, _anchor, _stepConstraint), applying);
     }
@@ -196,7 +196,7 @@ internal sealed class WideIntervalSpec {
     ///     <paramref name="anchor" /> — a known lattice ordinal, the ordinal of the value <c>0</c>. Declared once per
     ///     generator.
     /// </summary>
-    internal WideIntervalSpec WithStep(UInt128 step, UInt128 anchor, string applying) {
+    internal WideIntervalSpec WithStep(UInt128 step, UInt128 anchor, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (step <= UInt128.One) { return this; } // every value is a multiple of one: a no-op, not a constraint
 
@@ -315,7 +315,7 @@ internal sealed class WideIntervalSpec {
                                                          "the rule notices — but that is a builder validating its own successor, not an oversight. Making it static across seven types " +
                                                          "would break a family resemblance the reader relies on, for no measurable gain on a path that runs once per declared " +
                                                          "constraint.")]
-    private WideIntervalSpec Validated(WideIntervalSpec candidate, string applying) {
+    private WideIntervalSpec Validated(WideIntervalSpec candidate, ConstraintCall applying) {
         if (candidate.IsSatisfiable()) { return candidate; }
 
         throw ConflictingAnyConstraintException.NoValueRemains(applying, candidate.DescribeExhaustion(applying));
@@ -333,8 +333,8 @@ internal sealed class WideIntervalSpec {
         return _max - _min + 1 - (UInt128)_excludedInRange.Count > 0;
     }
 
-    private string DescribeExhaustion(string applying) {
-        IReadOnlyList<string> culprits = ExcludingConstraintsInEffect();
+    private string DescribeExhaustion(ConstraintCall applying) {
+        IReadOnlyList<ConstraintCall> culprits = ExcludingConstraintsInEffect();
 
         if (_allowed is not null) {
             if (culprits.Count == 0) { return $"none of the values {_allowedConstraint} allows satisfies the constraints already defined"; }
@@ -357,7 +357,7 @@ internal sealed class WideIntervalSpec {
 
         if (_min == _max) {
             if (culprits.Count == 0) {
-                string pinning = _minConstraint ?? _maxConstraint ?? "the declared bounds";
+                string pinning = _minConstraint?.ToString() ?? _maxConstraint?.ToString() ?? "the declared bounds";
 
                 return $"{pinning} already pins the value to {_render(_min)}";
             }
@@ -375,9 +375,9 @@ internal sealed class WideIntervalSpec {
     ///     value the interval, lattice and allow-list would otherwise permit. An exclusion whose values fall outside
     ///     the surviving domain never bit, so naming it would mislead; first-declared order is preserved.
     /// </summary>
-    private IReadOnlyList<string> ExcludingConstraintsInEffect() {
-        List<string> names = [];
-        foreach ((string constraint, UInt128[] ordinals) in _exclusions) {
+    private IReadOnlyList<ConstraintCall> ExcludingConstraintsInEffect() {
+        List<ConstraintCall> names = [];
+        foreach ((ConstraintCall constraint, UInt128[] ordinals) in _exclusions) {
             if (names.Contains(constraint)) { continue; }
             if (ordinals.Any(WouldAllowIgnoringExclusions)) { names.Add(constraint); }
         }
@@ -398,7 +398,7 @@ internal sealed class WideIntervalSpec {
     ///     so the message reads "Cannot apply Except(1) because it forbids …" rather than repeating the constraint on
     ///     both sides of "because".
     /// </summary>
-    private static string Forbids(IReadOnlyList<string> names, string applying) {
+    private static string Forbids(IReadOnlyList<ConstraintCall> names, ConstraintCall applying) {
         if (names.Count == 1) { return names[0] == applying ? "it forbids" : $"{names[0]} forbids"; }
 
         return $"{string.Join(", ", names)} forbid";
@@ -406,7 +406,7 @@ internal sealed class WideIntervalSpec {
 
     /// <summary>Names the bounds that pinned the domain to its single value, for the "forbids X, the only value ... leaves" form.</summary>
     private string PinningClause() {
-        List<string> bounds = [];
+        List<ConstraintCall> bounds = [];
         if (_minConstraint is not null) { bounds.Add(_minConstraint); }
         if (_maxConstraint is not null && _maxConstraint != _minConstraint) { bounds.Add(_maxConstraint); }
 

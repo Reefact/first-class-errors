@@ -26,62 +26,62 @@ public sealed class AnyWebUri : IAny<Uri>, IHasRandomSource {
 
     /// <summary>Pins the scheme to <c>http</c>. Declared once per generator.</summary>
     public AnyWebUri UsingHttp() {
-        return new AnyWebUri(_source, _spec.WithScheme("http", "UsingHttp()"));
+        return new AnyWebUri(_source, _spec.WithScheme("http", ConstraintCall.Of(nameof(UsingHttp))));
     }
 
     /// <summary>Pins the scheme to <c>https</c>. Declared once per generator.</summary>
     public AnyWebUri UsingHttps() {
-        return new AnyWebUri(_source, _spec.WithScheme("https", "UsingHttps()"));
+        return new AnyWebUri(_source, _spec.WithScheme("https", ConstraintCall.Of(nameof(UsingHttps))));
     }
 
     /// <summary>Pins the host. Must be an ASCII host name (pass the punycode form for internationalized hosts).</summary>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="host" /> is <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="host" /> is empty, non-ASCII or not a valid host name.</exception>
     public AnyWebUri WithHost(string host) {
-        return new AnyWebUri(_source, _spec.WithHost(UriSpec.RequireHost(host, nameof(host)), UriSpec.Label("WithHost", host)));
+        return new AnyWebUri(_source, _spec.WithHost(UriSpec.RequireHost(host, nameof(host)), UriSpec.Label(nameof(WithHost), host)));
     }
 
     /// <summary>Includes arbitrary <c>user:password</c> user-info.</summary>
     public AnyWebUri WithUserInfo() {
-        return new AnyWebUri(_source, _spec.WithUserInfo(null, null, UriSpec.Label("WithUserInfo")));
+        return new AnyWebUri(_source, _spec.WithUserInfo(null, null, UriSpec.Label(nameof(WithUserInfo))));
     }
 
     /// <summary>Includes user-info with the given <paramref name="user" /> and an arbitrary password.</summary>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="user" /> is <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="user" /> contains a non-unreserved character.</exception>
     public AnyWebUri WithUserInfo(string user) {
-        return new AnyWebUri(_source, _spec.WithUserInfo(UriSpec.RequireUserInfoPart(user, nameof(user)), null, UriSpec.Label("WithUserInfo", user)));
+        return new AnyWebUri(_source, _spec.WithUserInfo(UriSpec.RequireUserInfoPart(user, nameof(user)), null, UriSpec.Label(nameof(WithUserInfo), user)));
     }
 
     /// <summary>Includes the given <paramref name="user" /> and <paramref name="password" /> user-info.</summary>
     /// <exception cref="ArgumentNullException">Thrown when an argument is <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Thrown when an argument contains a non-unreserved character.</exception>
     public AnyWebUri WithUserInfo(string user, string password) {
-        return new AnyWebUri(_source, _spec.WithUserInfo(UriSpec.RequireUserInfoPart(user, nameof(user)), UriSpec.RequireUserInfoPart(password, nameof(password)), UriSpec.Label("WithUserInfo", user, password)));
+        return new AnyWebUri(_source, _spec.WithUserInfo(UriSpec.RequireUserInfoPart(user, nameof(user)), UriSpec.RequireUserInfoPart(password, nameof(password)), UriSpec.Label(nameof(WithUserInfo), user, password)));
     }
 
     /// <summary>Includes an arbitrary non-default port.</summary>
     public AnyWebUri WithPort() {
-        return new AnyWebUri(_source, _spec.WithPort(null, UriSpec.Label("WithPort")));
+        return new AnyWebUri(_source, _spec.WithPort(null, UriSpec.Label(nameof(WithPort))));
     }
 
     /// <summary>Includes the given <paramref name="port" />.</summary>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="port" /> is outside 1..65535.</exception>
     public AnyWebUri WithPort(int port) {
-        return new AnyWebUri(_source, _spec.WithPort(UriSpec.RequirePort(port, nameof(port)), UriSpec.Label("WithPort", port)));
+        return new AnyWebUri(_source, _spec.WithPort(UriSpec.RequirePort(port, nameof(port)), UriSpec.Label(nameof(WithPort), port)));
     }
 
     /// <summary>Fixes the path to exactly <paramref name="count" /> segments. Declared once per generator.</summary>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count" /> is negative.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when a path constraint is already declared.</exception>
     public AnyWebUri WithPathSegments(int count) {
-        return new AnyWebUri(_source, _spec.WithPath(UriPathMode.Exact, UriSpec.RequireSegmentCount(count, nameof(count)), UriSpec.SegmentsLabel(count)));
+        return new AnyWebUri(_source, _spec.WithPath(UriPathMode.Exact, UriSpec.RequireSegmentCount(count, nameof(count)), UriSpec.Label(nameof(WithPathSegments), count)));
     }
 
     /// <summary>Renders the root path (<c>/</c>) with no segments. Declared once per generator.</summary>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when a path constraint is already declared.</exception>
     public AnyWebUri WithoutPath() {
-        return new AnyWebUri(_source, _spec.WithPath(UriPathMode.Root, 0, "WithoutPath()"));
+        return new AnyWebUri(_source, _spec.WithPath(UriPathMode.Root, 0, ConstraintCall.Of(nameof(WithoutPath))));
     }
 
     /// <summary>Includes an arbitrary query string.</summary>

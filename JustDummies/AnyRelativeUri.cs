@@ -33,7 +33,7 @@ public sealed class AnyRelativeUri : IAny<Uri>, IHasRandomSource {
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count" /> is negative.</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when a path constraint is already declared.</exception>
     public AnyRelativeUri WithPathSegments(int count) {
-        return new AnyRelativeUri(_source, _spec.WithPath(UriPathMode.Exact, UriSpec.RequireSegmentCount(count, nameof(count)), UriSpec.SegmentsLabel(count)));
+        return new AnyRelativeUri(_source, _spec.WithPath(UriPathMode.Exact, UriSpec.RequireSegmentCount(count, nameof(count)), UriSpec.Label(nameof(WithPathSegments), count)));
     }
 
     /// <summary>Includes an arbitrary query string.</summary>

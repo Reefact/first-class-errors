@@ -100,7 +100,7 @@ public abstract class AnyCollection<TItem, TResult, TSelf> : IAny<TResult>, IHas
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public TSelf Containing(TItem value) {
-        return With(State.WithContaining(value, $"Containing({AnyDerivation.Display(value)})"));
+        return With(State.WithContaining(value, ConstraintCall.Of(nameof(Containing), AnyDerivation.Display(value))));
     }
 
     /// <summary>
@@ -116,7 +116,7 @@ public abstract class AnyCollection<TItem, TResult, TSelf> : IAny<TResult>, IHas
     public TSelf ContainingAny(IAny<TItem> generator) {
         if (generator is null) { throw new ArgumentNullException(nameof(generator)); }
 
-        return With(State.WithContaining(generator, "ContainingAny(<generator>)"));
+        return With(State.WithContaining(generator, ConstraintCall.Of(nameof(ContainingAny), "<generator>")));
     }
 
     /// <inheritdoc />

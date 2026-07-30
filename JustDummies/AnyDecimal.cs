@@ -55,28 +55,28 @@ public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource, ICardinalityHi
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDecimal Positive() {
-        return new AnyDecimal(_source, _spec.WithMinimumAbove(0m, "Positive()"));
+        return new AnyDecimal(_source, _spec.WithMinimumAbove(0m, ConstraintCall.Of(nameof(Positive))));
     }
 
     /// <summary>Requires a value strictly less than zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDecimal Negative() {
-        return new AnyDecimal(_source, _spec.WithMaximumBelow(0m, "Negative()"));
+        return new AnyDecimal(_source, _spec.WithMaximumBelow(0m, ConstraintCall.Of(nameof(Negative))));
     }
 
     /// <summary>Pins the value to exactly zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDecimal Zero() {
-        return new AnyDecimal(_source, _spec.WithMinimum(0m, "Zero()").WithMaximum(0m, "Zero()"));
+        return new AnyDecimal(_source, _spec.WithMinimum(0m, ConstraintCall.Of(nameof(Zero))).WithMaximum(0m, ConstraintCall.Of(nameof(Zero))));
     }
 
     /// <summary>Requires a value different from zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDecimal NonZero() {
-        return new AnyDecimal(_source, _spec.WithExcluded([0m], "NonZero()"));
+        return new AnyDecimal(_source, _spec.WithExcluded([0m], ConstraintCall.Of(nameof(NonZero))));
     }
 
     /// <summary>Requires a value strictly greater than <paramref name="value" /> — the inclusive bound plus a point exclusion.</summary>
@@ -84,7 +84,7 @@ public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource, ICardinalityHi
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDecimal GreaterThan(decimal value) {
-        return new AnyDecimal(_source, _spec.WithMinimumAbove(value, $"GreaterThan({V(value)})"));
+        return new AnyDecimal(_source, _spec.WithMinimumAbove(value, ConstraintCall.Of(nameof(GreaterThan), V(value))));
     }
 
     /// <summary>Requires a value greater than or equal to <paramref name="value" />.</summary>
@@ -92,7 +92,7 @@ public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource, ICardinalityHi
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDecimal GreaterThanOrEqualTo(decimal value) {
-        return new AnyDecimal(_source, _spec.WithMinimum(value, $"GreaterThanOrEqualTo({V(value)})"));
+        return new AnyDecimal(_source, _spec.WithMinimum(value, ConstraintCall.Of(nameof(GreaterThanOrEqualTo), V(value))));
     }
 
     /// <summary>Requires a value strictly less than <paramref name="value" /> — the inclusive bound plus a point exclusion.</summary>
@@ -100,7 +100,7 @@ public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource, ICardinalityHi
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDecimal LessThan(decimal value) {
-        return new AnyDecimal(_source, _spec.WithMaximumBelow(value, $"LessThan({V(value)})"));
+        return new AnyDecimal(_source, _spec.WithMaximumBelow(value, ConstraintCall.Of(nameof(LessThan), V(value))));
     }
 
     /// <summary>Requires a value less than or equal to <paramref name="value" />.</summary>
@@ -108,7 +108,7 @@ public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource, ICardinalityHi
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDecimal LessThanOrEqualTo(decimal value) {
-        return new AnyDecimal(_source, _spec.WithMaximum(value, $"LessThanOrEqualTo({V(value)})"));
+        return new AnyDecimal(_source, _spec.WithMaximum(value, ConstraintCall.Of(nameof(LessThanOrEqualTo), V(value))));
     }
 
     /// <summary>Requires a value within the inclusive range [<paramref name="minimum" />, <paramref name="maximum" />].</summary>
@@ -120,7 +120,7 @@ public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource, ICardinalityHi
     public AnyDecimal Between(decimal minimum, decimal maximum) {
         if (minimum > maximum) { throw new ArgumentException($"The minimum ({V(minimum)}) must be less than or equal to the maximum ({V(maximum)}).", nameof(minimum)); }
 
-        string constraint = $"Between({V(minimum)}, {V(maximum)})";
+        ConstraintCall constraint = ConstraintCall.Of(nameof(Between), V(minimum), V(maximum));
 
         return new AnyDecimal(_source, _spec.WithMinimum(minimum, constraint).WithMaximum(maximum, constraint));
     }
@@ -138,7 +138,7 @@ public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource, ICardinalityHi
     public AnyDecimal WithScale(int scale) {
         if (scale < 0 || scale > 28) { throw new ArgumentOutOfRangeException(nameof(scale), scale, "The scale must be in the inclusive range [0, 28]."); }
 
-        return new AnyDecimal(_source, _spec.WithScale(scale, $"WithScale({scale.ToString(CultureInfo.InvariantCulture)})"));
+        return new AnyDecimal(_source, _spec.WithScale(scale, ConstraintCall.Of(nameof(WithScale), scale.ToString(CultureInfo.InvariantCulture))));
     }
 
     /// <summary>Requires the value to be one of the supplied values. Declared once per generator.</summary>
@@ -151,7 +151,7 @@ public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource, ICardinalityHi
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        return new AnyDecimal(_source, _spec.WithAllowed(values, $"OneOf({Join(values)})"));
+        return new AnyDecimal(_source, _spec.WithAllowed(values, ConstraintCall.Of(nameof(OneOf), Join(values))));
     }
 
     /// <summary>Requires the value to be none of the supplied values.</summary>
@@ -164,7 +164,7 @@ public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource, ICardinalityHi
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        return new AnyDecimal(_source, _spec.WithExcluded(values, $"Except({Join(values)})"));
+        return new AnyDecimal(_source, _spec.WithExcluded(values, ConstraintCall.Of(nameof(Except), Join(values))));
     }
 
     /// <summary>
@@ -175,7 +175,7 @@ public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource, ICardinalityHi
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDecimal DifferentFrom(decimal value) {
-        return new AnyDecimal(_source, _spec.WithExcluded([value], $"DifferentFrom({V(value)})"));
+        return new AnyDecimal(_source, _spec.WithExcluded([value], ConstraintCall.Of(nameof(DifferentFrom), V(value))));
     }
 
     /// <inheritdoc />

@@ -54,28 +54,28 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource, ICardinalityHint
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDouble Positive() {
-        return new AnyDouble(_source, _spec.WithMinimumAbove(0d, "Positive()"));
+        return new AnyDouble(_source, _spec.WithMinimumAbove(0d, ConstraintCall.Of(nameof(Positive))));
     }
 
     /// <summary>Requires a value strictly less than zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDouble Negative() {
-        return new AnyDouble(_source, _spec.WithMaximumBelow(0d, "Negative()"));
+        return new AnyDouble(_source, _spec.WithMaximumBelow(0d, ConstraintCall.Of(nameof(Negative))));
     }
 
     /// <summary>Pins the value to exactly zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDouble Zero() {
-        return new AnyDouble(_source, _spec.WithMinimum(0d, "Zero()").WithMaximum(0d, "Zero()"));
+        return new AnyDouble(_source, _spec.WithMinimum(0d, ConstraintCall.Of(nameof(Zero))).WithMaximum(0d, ConstraintCall.Of(nameof(Zero))));
     }
 
     /// <summary>Requires a value different from zero.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDouble NonZero() {
-        return new AnyDouble(_source, _spec.WithExcluded([0d], "NonZero()"));
+        return new AnyDouble(_source, _spec.WithExcluded([0d], ConstraintCall.Of(nameof(NonZero))));
     }
 
     /// <summary>Requires a value strictly greater than <paramref name="value" />.</summary>
@@ -85,7 +85,7 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource, ICardinalityHint
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDouble GreaterThan(double value) {
         ContinuousIntervalSpec.EnsureFinite(value, nameof(value));
-        return new AnyDouble(_source, _spec.WithMinimumAbove(value, $"GreaterThan({V(value)})"));
+        return new AnyDouble(_source, _spec.WithMinimumAbove(value, ConstraintCall.Of(nameof(GreaterThan), V(value))));
     }
 
     /// <summary>Requires a value greater than or equal to <paramref name="value" />.</summary>
@@ -95,7 +95,7 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource, ICardinalityHint
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDouble GreaterThanOrEqualTo(double value) {
         ContinuousIntervalSpec.EnsureFinite(value, nameof(value));
-        return new AnyDouble(_source, _spec.WithMinimum(value, $"GreaterThanOrEqualTo({V(value)})"));
+        return new AnyDouble(_source, _spec.WithMinimum(value, ConstraintCall.Of(nameof(GreaterThanOrEqualTo), V(value))));
     }
 
     /// <summary>Requires a value strictly less than <paramref name="value" />.</summary>
@@ -105,7 +105,7 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource, ICardinalityHint
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDouble LessThan(double value) {
         ContinuousIntervalSpec.EnsureFinite(value, nameof(value));
-        return new AnyDouble(_source, _spec.WithMaximumBelow(value, $"LessThan({V(value)})"));
+        return new AnyDouble(_source, _spec.WithMaximumBelow(value, ConstraintCall.Of(nameof(LessThan), V(value))));
     }
 
     /// <summary>Requires a value less than or equal to <paramref name="value" />.</summary>
@@ -115,7 +115,7 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource, ICardinalityHint
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDouble LessThanOrEqualTo(double value) {
         ContinuousIntervalSpec.EnsureFinite(value, nameof(value));
-        return new AnyDouble(_source, _spec.WithMaximum(value, $"LessThanOrEqualTo({V(value)})"));
+        return new AnyDouble(_source, _spec.WithMaximum(value, ConstraintCall.Of(nameof(LessThanOrEqualTo), V(value))));
     }
 
     /// <summary>Requires a value within the inclusive range [<paramref name="minimum" />, <paramref name="maximum" />].</summary>
@@ -129,7 +129,7 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource, ICardinalityHint
         ContinuousIntervalSpec.EnsureFinite(maximum, nameof(maximum));
         if (minimum > maximum) { throw new ArgumentException($"The minimum ({V(minimum)}) must be less than or equal to the maximum ({V(maximum)}).", nameof(minimum)); }
 
-        string constraint = $"Between({V(minimum)}, {V(maximum)})";
+        ConstraintCall constraint = ConstraintCall.Of(nameof(Between), V(minimum), V(maximum));
 
         return new AnyDouble(_source, _spec.WithMinimum(minimum, constraint).WithMaximum(maximum, constraint));
     }
@@ -145,7 +145,7 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource, ICardinalityHint
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
         foreach (double value in values) { ContinuousIntervalSpec.EnsureFinite(value, nameof(values)); }
 
-        return new AnyDouble(_source, _spec.WithAllowed(values, $"OneOf({Join(values)})"));
+        return new AnyDouble(_source, _spec.WithAllowed(values, ConstraintCall.Of(nameof(OneOf), Join(values))));
     }
 
     /// <summary>Requires the value to be none of the supplied values.</summary>
@@ -159,7 +159,7 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource, ICardinalityHint
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
         foreach (double value in values) { ContinuousIntervalSpec.EnsureFinite(value, nameof(values)); }
 
-        return new AnyDouble(_source, _spec.WithExcluded(values, $"Except({Join(values)})"));
+        return new AnyDouble(_source, _spec.WithExcluded(values, ConstraintCall.Of(nameof(Except), Join(values))));
     }
 
     /// <summary>
@@ -172,7 +172,7 @@ public sealed class AnyDouble : IAny<double>, IHasRandomSource, ICardinalityHint
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDouble DifferentFrom(double value) {
         ContinuousIntervalSpec.EnsureFinite(value, nameof(value));
-        return new AnyDouble(_source, _spec.WithExcluded([value], $"DifferentFrom({V(value)})"));
+        return new AnyDouble(_source, _spec.WithExcluded([value], ConstraintCall.Of(nameof(DifferentFrom), V(value))));
     }
 
     /// <inheritdoc />

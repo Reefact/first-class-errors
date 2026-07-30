@@ -63,28 +63,28 @@ public sealed class AnyTimeSpan : IAny<TimeSpan>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyTimeSpan Positive() {
-        return new AnyTimeSpan(_source, _spec.WithMinimumAbove(Ord(TimeSpan.Zero), "Positive()"));
+        return new AnyTimeSpan(_source, _spec.WithMinimumAbove(Ord(TimeSpan.Zero), ConstraintCall.Of(nameof(Positive))));
     }
 
     /// <summary>Requires a duration strictly less than <see cref="TimeSpan.Zero" />.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyTimeSpan Negative() {
-        return new AnyTimeSpan(_source, _spec.WithMaximumBelow(Ord(TimeSpan.Zero), "Negative()"));
+        return new AnyTimeSpan(_source, _spec.WithMaximumBelow(Ord(TimeSpan.Zero), ConstraintCall.Of(nameof(Negative))));
     }
 
     /// <summary>Pins the duration to exactly <see cref="TimeSpan.Zero" />.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyTimeSpan Zero() {
-        return new AnyTimeSpan(_source, _spec.WithMinimum(Ord(TimeSpan.Zero), "Zero()").WithMaximum(Ord(TimeSpan.Zero), "Zero()"));
+        return new AnyTimeSpan(_source, _spec.WithMinimum(Ord(TimeSpan.Zero), ConstraintCall.Of(nameof(Zero))).WithMaximum(Ord(TimeSpan.Zero), ConstraintCall.Of(nameof(Zero))));
     }
 
     /// <summary>Requires a duration different from <see cref="TimeSpan.Zero" />.</summary>
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyTimeSpan NonZero() {
-        return new AnyTimeSpan(_source, _spec.WithExcluded([Ord(TimeSpan.Zero)], "NonZero()"));
+        return new AnyTimeSpan(_source, _spec.WithExcluded([Ord(TimeSpan.Zero)], ConstraintCall.Of(nameof(NonZero))));
     }
 
     /// <summary>Requires a duration strictly greater than <paramref name="value" />.</summary>
@@ -92,7 +92,7 @@ public sealed class AnyTimeSpan : IAny<TimeSpan>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyTimeSpan GreaterThan(TimeSpan value) {
-        return new AnyTimeSpan(_source, _spec.WithMinimumAbove(Ord(value), $"GreaterThan({V(value)})"));
+        return new AnyTimeSpan(_source, _spec.WithMinimumAbove(Ord(value), ConstraintCall.Of(nameof(GreaterThan), V(value))));
     }
 
     /// <summary>Requires a duration greater than or equal to <paramref name="value" />.</summary>
@@ -100,7 +100,7 @@ public sealed class AnyTimeSpan : IAny<TimeSpan>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyTimeSpan GreaterThanOrEqualTo(TimeSpan value) {
-        return new AnyTimeSpan(_source, _spec.WithMinimum(Ord(value), $"GreaterThanOrEqualTo({V(value)})"));
+        return new AnyTimeSpan(_source, _spec.WithMinimum(Ord(value), ConstraintCall.Of(nameof(GreaterThanOrEqualTo), V(value))));
     }
 
     /// <summary>Requires a duration strictly less than <paramref name="value" />.</summary>
@@ -108,7 +108,7 @@ public sealed class AnyTimeSpan : IAny<TimeSpan>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyTimeSpan LessThan(TimeSpan value) {
-        return new AnyTimeSpan(_source, _spec.WithMaximumBelow(Ord(value), $"LessThan({V(value)})"));
+        return new AnyTimeSpan(_source, _spec.WithMaximumBelow(Ord(value), ConstraintCall.Of(nameof(LessThan), V(value))));
     }
 
     /// <summary>Requires a duration less than or equal to <paramref name="value" />.</summary>
@@ -116,7 +116,7 @@ public sealed class AnyTimeSpan : IAny<TimeSpan>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyTimeSpan LessThanOrEqualTo(TimeSpan value) {
-        return new AnyTimeSpan(_source, _spec.WithMaximum(Ord(value), $"LessThanOrEqualTo({V(value)})"));
+        return new AnyTimeSpan(_source, _spec.WithMaximum(Ord(value), ConstraintCall.Of(nameof(LessThanOrEqualTo), V(value))));
     }
 
     /// <summary>Requires a duration within the inclusive range [<paramref name="minimum" />, <paramref name="maximum" />].</summary>
@@ -128,7 +128,7 @@ public sealed class AnyTimeSpan : IAny<TimeSpan>, IHasRandomSource, ICardinality
     public AnyTimeSpan Between(TimeSpan minimum, TimeSpan maximum) {
         if (minimum > maximum) { throw new ArgumentException($"The minimum ({V(minimum)}) must be less than or equal to the maximum ({V(maximum)}).", nameof(minimum)); }
 
-        string constraint = $"Between({V(minimum)}, {V(maximum)})";
+        ConstraintCall constraint = ConstraintCall.Of(nameof(Between), V(minimum), V(maximum));
 
         return new AnyTimeSpan(_source, _spec.WithMinimum(Ord(minimum), constraint).WithMaximum(Ord(maximum), constraint));
     }
@@ -147,7 +147,7 @@ public sealed class AnyTimeSpan : IAny<TimeSpan>, IHasRandomSource, ICardinality
 
         string rendered = granularity.ToString("c", CultureInfo.InvariantCulture);
 
-        return new AnyTimeSpan(_source, _spec.WithStep((ulong)granularity.Ticks, Ord(TimeSpan.Zero), $"WithGranularity({rendered})"));
+        return new AnyTimeSpan(_source, _spec.WithStep((ulong)granularity.Ticks, Ord(TimeSpan.Zero), ConstraintCall.Of(nameof(WithGranularity), rendered)));
     }
 
     /// <summary>Requires the duration to be one of the supplied values. Declared once per generator.</summary>
@@ -160,7 +160,7 @@ public sealed class AnyTimeSpan : IAny<TimeSpan>, IHasRandomSource, ICardinality
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        return new AnyTimeSpan(_source, _spec.WithAllowed(values.Select(Ord).ToArray(), $"OneOf({Join(values)})"));
+        return new AnyTimeSpan(_source, _spec.WithAllowed(values.Select(Ord).ToArray(), ConstraintCall.Of(nameof(OneOf), Join(values))));
     }
 
     /// <summary>Requires the duration to be none of the supplied values.</summary>
@@ -173,7 +173,7 @@ public sealed class AnyTimeSpan : IAny<TimeSpan>, IHasRandomSource, ICardinality
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        return new AnyTimeSpan(_source, _spec.WithExcluded(values.Select(Ord).ToArray(), $"Except({Join(values)})"));
+        return new AnyTimeSpan(_source, _spec.WithExcluded(values.Select(Ord).ToArray(), ConstraintCall.Of(nameof(Except), Join(values))));
     }
 
     /// <summary>
@@ -184,7 +184,7 @@ public sealed class AnyTimeSpan : IAny<TimeSpan>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyTimeSpan DifferentFrom(TimeSpan value) {
-        return new AnyTimeSpan(_source, _spec.WithExcluded([Ord(value)], $"DifferentFrom({V(value)})"));
+        return new AnyTimeSpan(_source, _spec.WithExcluded([Ord(value)], ConstraintCall.Of(nameof(DifferentFrom), V(value))));
     }
 
     /// <inheritdoc />

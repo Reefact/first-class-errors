@@ -89,23 +89,23 @@ internal sealed class OrdinalIntervalSpec {
     #region Fields declarations
 
     private readonly IReadOnlyList<ulong>? _allowed;
-    private readonly string?               _allowedConstraint;
+    private readonly ConstraintCall?       _allowedConstraint;
     private readonly ulong                 _anchor;
     private readonly ulong                 _domainMax;
     private readonly ulong                 _domainMin;
     private readonly List<ulong>?          _effectiveAllowed;
-    private readonly IReadOnlyList<(string Constraint, ulong[] Ordinals)> _exclusions;
+    private readonly IReadOnlyList<(ConstraintCall Constraint, ulong[] Ordinals)> _exclusions;
     private readonly List<ulong>           _excludedInRange;
     private readonly List<ulong>           _excludedOnLattice;
     private readonly ulong                 _latticeFirst;
     private readonly bool                  _latticeHasPoint;
     private readonly ulong                 _max;
-    private readonly string?               _maxConstraint;
+    private readonly ConstraintCall?       _maxConstraint;
     private readonly ulong                 _min;
-    private readonly string?               _minConstraint;
+    private readonly ConstraintCall?       _minConstraint;
     private readonly Func<ulong, string>   _render;
     private readonly ulong                 _step;
-    private readonly string?               _stepConstraint;
+    private readonly ConstraintCall?       _stepConstraint;
     private readonly string                _typeName;
 
     #endregion
@@ -116,11 +116,11 @@ internal sealed class OrdinalIntervalSpec {
                                                          "every With* call, so every field has to be threaded through it. A parameter object would only rename the same list, and the " +
                                                          "constructor is private — no caller ever writes this argument list.")]
     private OrdinalIntervalSpec(string typeName, Func<ulong, string> render, ulong domainMin, ulong domainMax,
-                                ulong  min,     string? minConstraint,
-                                ulong  max,     string? maxConstraint,
-                                IReadOnlyList<ulong>? allowed, string? allowedConstraint,
-                                IReadOnlyList<(string Constraint, ulong[] Ordinals)> exclusions,
-                                ulong  step,    ulong anchor, string? stepConstraint) {
+                                ulong  min,     ConstraintCall? minConstraint,
+                                ulong  max,     ConstraintCall? maxConstraint,
+                                IReadOnlyList<ulong>? allowed, ConstraintCall? allowedConstraint,
+                                IReadOnlyList<(ConstraintCall Constraint, ulong[] Ordinals)> exclusions,
+                                ulong  step,    ulong anchor, ConstraintCall? stepConstraint) {
         _typeName          = typeName;
         _render            = render;
         _domainMin         = domainMin;
@@ -158,7 +158,7 @@ internal sealed class OrdinalIntervalSpec {
     }
 
     /// <summary>Tightens the lower bound; a looser bound than the current one is a no-op.</summary>
-    internal OrdinalIntervalSpec WithMinimum(ulong minimum, string applying) {
+    internal OrdinalIntervalSpec WithMinimum(ulong minimum, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (minimum <= _min) { return this; }
 
@@ -172,7 +172,7 @@ internal sealed class OrdinalIntervalSpec {
     }
 
     /// <summary>Tightens the lower bound to strictly above <paramref name="bound" /> — the exclusive form of <see cref="WithMinimum" />.</summary>
-    internal OrdinalIntervalSpec WithMinimumAbove(ulong bound, string applying) {
+    internal OrdinalIntervalSpec WithMinimumAbove(ulong bound, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (bound == _domainMax) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
 
@@ -180,7 +180,7 @@ internal sealed class OrdinalIntervalSpec {
     }
 
     /// <summary>Tightens the upper bound; a looser bound than the current one is a no-op.</summary>
-    internal OrdinalIntervalSpec WithMaximum(ulong maximum, string applying) {
+    internal OrdinalIntervalSpec WithMaximum(ulong maximum, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (maximum >= _max) { return this; }
 
@@ -194,7 +194,7 @@ internal sealed class OrdinalIntervalSpec {
     }
 
     /// <summary>Tightens the upper bound to strictly below <paramref name="bound" /> — the exclusive form of <see cref="WithMaximum" />.</summary>
-    internal OrdinalIntervalSpec WithMaximumBelow(ulong bound, string applying) {
+    internal OrdinalIntervalSpec WithMaximumBelow(ulong bound, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (bound == _domainMin) { throw ConflictingAnyConstraintException.NoValueSatisfies(applying, _typeName); }
 
@@ -202,12 +202,12 @@ internal sealed class OrdinalIntervalSpec {
     }
 
     /// <summary>Restricts the domain to an explicit allow-list; declared once per generator.</summary>
-    internal OrdinalIntervalSpec WithAllowed(ulong[] ordinals, string applying) {
+    internal OrdinalIntervalSpec WithAllowed(ulong[] ordinals, ConstraintCall applying) {
         if (ordinals is null) { throw new ArgumentNullException(nameof(ordinals)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-        if (string.Equals(_allowedConstraint, applying, StringComparison.Ordinal)) { return this; }
+        if (_allowedConstraint == applying) { return this; }
         if (_allowedConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _allowedConstraint); }
 
         ulong[] distinct = ordinals.Distinct().ToArray();
@@ -220,7 +220,7 @@ internal sealed class OrdinalIntervalSpec {
     ///     This is not a second declaration — the caller is removing values another constraint forbids — so it does
     ///     not trip the declared-once guard, and the original provenance stays the one a later conflict names.
     /// </summary>
-    internal OrdinalIntervalSpec NarrowingAllowed(ulong[] kept, string applying) {
+    internal OrdinalIntervalSpec NarrowingAllowed(ulong[] kept, ConstraintCall applying) {
         if (kept is null) { throw new ArgumentNullException(nameof(kept)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
 
@@ -230,13 +230,13 @@ internal sealed class OrdinalIntervalSpec {
     }
 
     /// <summary>Adds values the generator must never produce.</summary>
-    internal OrdinalIntervalSpec WithExcluded(ulong[] ordinals, string applying) {
+    internal OrdinalIntervalSpec WithExcluded(ulong[] ordinals, ConstraintCall applying) {
         if (ordinals is null) { throw new ArgumentNullException(nameof(ordinals)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
 
         // The applied constraint tags its own ordinals, so a later exhaustion message can name the exclusion
         // that actually emptied the domain rather than a bound that merely happens to border it.
-        List<(string Constraint, ulong[] Ordinals)> exclusions = [.. _exclusions, (applying, ordinals)];
+        List<(ConstraintCall Constraint, ulong[] Ordinals)> exclusions = [.. _exclusions, (applying, ordinals)];
 
         return Validated(new OrdinalIntervalSpec(_typeName, _render, _domainMin, _domainMax, _min, _minConstraint, _max, _maxConstraint, _allowed, _allowedConstraint, exclusions, _step, _anchor, _stepConstraint), applying);
     }
@@ -246,7 +246,7 @@ internal sealed class OrdinalIntervalSpec {
     ///     <paramref name="anchor" /> — a known lattice ordinal, the ordinal of the value <c>0</c>. Declared once per
     ///     generator (a second, different lattice conflicts rather than silently intersecting).
     /// </summary>
-    internal OrdinalIntervalSpec WithStep(ulong step, ulong anchor, string applying) {
+    internal OrdinalIntervalSpec WithStep(ulong step, ulong anchor, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (step <= 1UL) { return this; } // every value is a multiple of one: a no-op, not a constraint
 
@@ -369,7 +369,7 @@ internal sealed class OrdinalIntervalSpec {
                                                          "the rule notices — but that is a builder validating its own successor, not an oversight. Making it static across seven types " +
                                                          "would break a family resemblance the reader relies on, for no measurable gain on a path that runs once per declared " +
                                                          "constraint.")]
-    private OrdinalIntervalSpec Validated(OrdinalIntervalSpec candidate, string applying) {
+    private OrdinalIntervalSpec Validated(OrdinalIntervalSpec candidate, ConstraintCall applying) {
         if (candidate.IsSatisfiable()) { return candidate; }
 
         throw ConflictingAnyConstraintException.NoValueRemains(applying, candidate.DescribeExhaustion(applying));
@@ -387,8 +387,8 @@ internal sealed class OrdinalIntervalSpec {
         return _max - _min + 1 - (ulong)_excludedInRange.Count > 0;
     }
 
-    private string DescribeExhaustion(string applying) {
-        IReadOnlyList<string> culprits = ExcludingConstraintsInEffect();
+    private string DescribeExhaustion(ConstraintCall applying) {
+        IReadOnlyList<ConstraintCall> culprits = ExcludingConstraintsInEffect();
 
         if (_allowed is not null) {
             if (culprits.Count == 0) { return $"none of the values {_allowedConstraint} allows satisfies the constraints already defined"; }
@@ -411,7 +411,7 @@ internal sealed class OrdinalIntervalSpec {
 
         if (_min == _max) {
             if (culprits.Count == 0) {
-                string pinning = _minConstraint ?? _maxConstraint ?? "the declared bounds";
+                string pinning = _minConstraint?.ToString() ?? _maxConstraint?.ToString() ?? "the declared bounds";
 
                 return $"{pinning} already pins the value to {_render(_min)}";
             }
@@ -429,9 +429,9 @@ internal sealed class OrdinalIntervalSpec {
     ///     value the interval, lattice and allow-list would otherwise permit. An exclusion whose values fall outside
     ///     the surviving domain never bit, so naming it would mislead; first-declared order is preserved.
     /// </summary>
-    private IReadOnlyList<string> ExcludingConstraintsInEffect() {
-        List<string> names = [];
-        foreach ((string constraint, ulong[] ordinals) in _exclusions) {
+    private IReadOnlyList<ConstraintCall> ExcludingConstraintsInEffect() {
+        List<ConstraintCall> names = [];
+        foreach ((ConstraintCall constraint, ulong[] ordinals) in _exclusions) {
             if (names.Contains(constraint)) { continue; }
             if (ordinals.Any(WouldAllowIgnoringExclusions)) { names.Add(constraint); }
         }
@@ -452,7 +452,7 @@ internal sealed class OrdinalIntervalSpec {
     ///     so the message reads "Cannot apply Except(1) because it forbids …" rather than repeating the constraint on
     ///     both sides of "because".
     /// </summary>
-    private static string Forbids(IReadOnlyList<string> names, string applying) {
+    private static string Forbids(IReadOnlyList<ConstraintCall> names, ConstraintCall applying) {
         if (names.Count == 1) { return names[0] == applying ? "it forbids" : $"{names[0]} forbids"; }
 
         return $"{string.Join(", ", names)} forbid";
@@ -460,7 +460,7 @@ internal sealed class OrdinalIntervalSpec {
 
     /// <summary>Names the bounds that pinned the domain to its single value, for the "forbids X, the only value ... leaves" form.</summary>
     private string PinningClause() {
-        List<string> bounds = [];
+        List<ConstraintCall> bounds = [];
         if (_minConstraint is not null) { bounds.Add(_minConstraint); }
         if (_maxConstraint is not null && _maxConstraint != _minConstraint) { bounds.Add(_maxConstraint); }
 

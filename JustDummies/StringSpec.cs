@@ -75,26 +75,26 @@ internal sealed class StringSpec {
     #region Fields declarations
 
     private readonly IReadOnlyList<string>? _allowed;
-    private readonly string?                _allowedConstraint;
+    private readonly ConstraintCall?        _allowedConstraint;
     private readonly LetterCasing?          _casing;
-    private readonly string?                _casingConstraint;
+    private readonly ConstraintCall?        _casingConstraint;
     private readonly CharacterSet?          _charset;
-    private readonly string?                _charsetConstraint;
+    private readonly ConstraintCall?        _charsetConstraint;
     private readonly string?                _customPool;
     private readonly List<string>?          _effectiveAllowed;
     private readonly int?                   _exactLength;
-    private readonly string?                _exactConstraint;
+    private readonly ConstraintCall?        _exactConstraint;
     private readonly IReadOnlyList<string>  _excluded;
-    private readonly IReadOnlyList<(string Constraint, string[] Values)> _exclusions;
-    private readonly IReadOnlyList<string>  _fragments;
+    private readonly IReadOnlyList<(ConstraintCall Constraint, string[] Values)> _exclusions;
+    private readonly IReadOnlyList<(string Fragment, ConstraintCall Constraint)> _fragments;
     private readonly int?                   _maxLength;
-    private readonly string?                _maxConstraint;
+    private readonly ConstraintCall?        _maxConstraint;
     private readonly int                    _minLength;
-    private readonly string?                _minConstraint;
+    private readonly ConstraintCall?        _minConstraint;
     private readonly string?                _prefix;
-    private readonly string?                _prefixConstraint;
+    private readonly ConstraintCall?        _prefixConstraint;
     private readonly string?                _suffix;
-    private readonly string?                _suffixConstraint;
+    private readonly ConstraintCall?        _suffixConstraint;
 
     #endregion
 
@@ -103,16 +103,16 @@ internal sealed class StringSpec {
                                                          "This private constructor carries the engine's whole immutable state: the 'constrain once, draw many' design rebuilds the spec on " +
                                                          "every With* call, so every field has to be threaded through it. A parameter object would only rename the same list, and the " +
                                                          "constructor is private — no caller ever writes this argument list.")]
-    private StringSpec(int?    exactLength, string? exactConstraint,
-                       int     minLength,   string? minConstraint,
-                       int?    maxLength,   string? maxConstraint,
-                       string? prefix,      string? prefixConstraint,
-                       string? suffix,      string? suffixConstraint,
-                       IReadOnlyList<string> fragments,
-                       CharacterSet? charset, string? charsetConstraint, string? customPool,
-                       LetterCasing? casing,  string? casingConstraint,
-                       IReadOnlyList<(string Constraint, string[] Values)> exclusions,
-                       IReadOnlyList<string>? allowed, string? allowedConstraint) {
+    private StringSpec(int?    exactLength, ConstraintCall? exactConstraint,
+                       int     minLength,   ConstraintCall? minConstraint,
+                       int?    maxLength,   ConstraintCall? maxConstraint,
+                       string? prefix,      ConstraintCall? prefixConstraint,
+                       string? suffix,      ConstraintCall? suffixConstraint,
+                       IReadOnlyList<(string Fragment, ConstraintCall Constraint)> fragments,
+                       CharacterSet? charset, ConstraintCall? charsetConstraint, string? customPool,
+                       LetterCasing? casing,  ConstraintCall? casingConstraint,
+                       IReadOnlyList<(ConstraintCall Constraint, string[] Values)> exclusions,
+                       IReadOnlyList<string>? allowed, ConstraintCall? allowedConstraint) {
         _exactLength       = exactLength;
         _exactConstraint   = exactConstraint;
         _minLength         = minLength;
@@ -142,11 +142,11 @@ internal sealed class StringSpec {
     }
 
     /// <summary>Fixes the exact length; declared once per generator.</summary>
-    internal StringSpec WithExactLength(int length, string applying) {
+    internal StringSpec WithExactLength(int length, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-        if (string.Equals(_exactConstraint, applying, StringComparison.Ordinal)) { return this; }
+        if (_exactConstraint == applying) { return this; }
         if (_exactConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _exactConstraint); }
 
         StringSpec candidate = new(length, applying, _minLength, _minConstraint, _maxLength, _maxConstraint,
@@ -158,7 +158,7 @@ internal sealed class StringSpec {
     }
 
     /// <summary>Tightens the minimum length; a looser bound than the current one is a no-op.</summary>
-    internal StringSpec WithMinLength(int length, string applying) {
+    internal StringSpec WithMinLength(int length, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (length <= _minLength) { return this; }
 
@@ -171,7 +171,7 @@ internal sealed class StringSpec {
     }
 
     /// <summary>Tightens the maximum length; a looser bound than the current one is a no-op.</summary>
-    internal StringSpec WithMaxLength(int length, string applying) {
+    internal StringSpec WithMaxLength(int length, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         if (_maxLength is not null && length >= _maxLength) { return this; }
 
@@ -184,12 +184,12 @@ internal sealed class StringSpec {
     }
 
     /// <summary>Anchors a prefix; declared once per generator.</summary>
-    internal StringSpec WithPrefix(string prefix, string applying) {
+    internal StringSpec WithPrefix(string prefix, ConstraintCall applying) {
         if (prefix is null) { throw new ArgumentNullException(nameof(prefix)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-        if (string.Equals(_prefixConstraint, applying, StringComparison.Ordinal)) { return this; }
+        if (_prefixConstraint == applying) { return this; }
         if (_prefixConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _prefixConstraint); }
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
@@ -201,12 +201,12 @@ internal sealed class StringSpec {
     }
 
     /// <summary>Anchors a suffix; declared once per generator.</summary>
-    internal StringSpec WithSuffix(string suffix, string applying) {
+    internal StringSpec WithSuffix(string suffix, ConstraintCall applying) {
         if (suffix is null) { throw new ArgumentNullException(nameof(suffix)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-        if (string.Equals(_suffixConstraint, applying, StringComparison.Ordinal)) { return this; }
+        if (_suffixConstraint == applying) { return this; }
         if (_suffixConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _suffixConstraint); }
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
@@ -218,10 +218,10 @@ internal sealed class StringSpec {
     }
 
     /// <summary>Adds a value the generated string must contain.</summary>
-    internal StringSpec WithFragment(string fragment, string applying) {
+    internal StringSpec WithFragment(string fragment, ConstraintCall applying) {
         if (fragment is null) { throw new ArgumentNullException(nameof(fragment)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
-        List<string> fragments = [.. _fragments, fragment];
+        List<(string Fragment, ConstraintCall Constraint)> fragments = [.. _fragments, (fragment, applying)];
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, fragments,
@@ -232,11 +232,11 @@ internal sealed class StringSpec {
     }
 
     /// <summary>Restricts the character family; declared once per generator.</summary>
-    internal StringSpec WithCharset(CharacterSet charset, string applying) {
+    internal StringSpec WithCharset(CharacterSet charset, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-        if (string.Equals(_charsetConstraint, applying, StringComparison.Ordinal)) { return this; }
+        if (_charsetConstraint == applying) { return this; }
         if (_charsetConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _charsetConstraint); }
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
@@ -253,16 +253,16 @@ internal sealed class StringSpec {
     ///     pool is the whole character definition, cannot combine with a casing. The pool is expected to be
     ///     distinct already.
     /// </summary>
-    internal StringSpec WithCharPool(string pool, string applying) {
+    internal StringSpec WithCharPool(string pool, ConstraintCall applying) {
         if (pool is null) { throw new ArgumentNullException(nameof(pool)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-        if (string.Equals(_charsetConstraint, applying, StringComparison.Ordinal)) { return this; }
+        if (_charsetConstraint == applying) { return this; }
         if (_charsetConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _charsetConstraint); }
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-        if (string.Equals(_casingConstraint, applying, StringComparison.Ordinal)) { return this; }
+        if (_casingConstraint == applying) { return this; }
         if (_casingConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _casingConstraint); }
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
@@ -274,11 +274,11 @@ internal sealed class StringSpec {
     }
 
     /// <summary>Imposes a letter casing; declared once per generator.</summary>
-    internal StringSpec WithCasing(LetterCasing casing, string applying) {
+    internal StringSpec WithCasing(LetterCasing casing, ConstraintCall applying) {
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-        if (string.Equals(_casingConstraint, applying, StringComparison.Ordinal)) { return this; }
+        if (_casingConstraint == applying) { return this; }
         if (_casingConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _casingConstraint); }
         // A custom pool and the constraint naming it are written together (WithCustomPool passes `applying, pool`),
         // so a declared pool always carries its name.
@@ -297,13 +297,13 @@ internal sealed class StringSpec {
                                                      Justification =
                                                          "The condition reads the collection the body mutates. Where is lazily evaluated, so lifting the filter out would run each " +
                                                          "predicate against a snapshot taken before the additions it is meant to see, and let duplicates through.")]
-    internal StringSpec WithExcluded(IReadOnlyList<string> values, string applying) {
+    internal StringSpec WithExcluded(IReadOnlyList<string> values, ConstraintCall applying) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
 
         // The applied constraint tags its own values, so a conflict message can name the exclusion that actually
         // emptied an allow-list rather than a shape constraint that merely borders it.
-        List<(string Constraint, string[] Values)> exclusions = [.. _exclusions, (applying, values.ToArray())];
+        List<(ConstraintCall Constraint, string[] Values)> exclusions = [.. _exclusions, (applying, values.ToArray())];
 
         StringSpec candidate = new(_exactLength, _exactConstraint, _minLength, _minConstraint, _maxLength, _maxConstraint,
                                    _prefix, _prefixConstraint, _suffix, _suffixConstraint, _fragments,
@@ -318,12 +318,12 @@ internal sealed class StringSpec {
     ///     is a filter over the supplied values rather than a layout to build, so every other constraint — those
     ///     already declared and those declared later — narrows the pool instead of shaping a string.
     /// </summary>
-    internal StringSpec WithAllowed(IReadOnlyList<string> values, string applying) {
+    internal StringSpec WithAllowed(IReadOnlyList<string> values, ConstraintCall applying) {
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (applying is null) { throw new ArgumentNullException(nameof(applying)); }
         // Re-declaring the SAME constraint is not a contradiction, so it is a no-op rather than a
         // conflict: the second declaration asks for exactly what the first already guarantees.
-        if (string.Equals(_allowedConstraint, applying, StringComparison.Ordinal)) { return this; }
+        if (_allowedConstraint == applying) { return this; }
         if (_allowedConstraint is not null) { throw ConflictingAnyConstraintException.AlreadyDefined(applying, _allowedConstraint); }
 
         string[] distinct = values.Distinct(StringComparer.Ordinal).ToArray();
@@ -395,7 +395,7 @@ internal sealed class StringSpec {
         StringBuilder builder = new(length);
         if (_prefix is not null) { builder.Append(_prefix); }
         AppendFiller(builder, random, pool, before);
-        foreach (string fragment in _fragments) { builder.Append(fragment); }
+        foreach ((string fragment, ConstraintCall _) in _fragments) { builder.Append(fragment); }
         AppendFiller(builder, random, pool, after);
         if (_suffix is not null) { builder.Append(_suffix); }
 
@@ -431,7 +431,7 @@ internal sealed class StringSpec {
     ///     value survives every declared constraint. <paramref name="previous" /> is the specification this one was
     ///     derived from — it tells a conflict message which side was already narrowed and which is the new one.
     /// </summary>
-    private StringSpec Validated(string applying, StringSpec previous) {
+    private StringSpec Validated(ConstraintCall applying, StringSpec previous) {
         ValidateLengthBounds(applying);
         if (_allowed is null) {
             ValidateFragmentBudget(applying);
@@ -445,7 +445,7 @@ internal sealed class StringSpec {
         return this;
     }
 
-    private void ValidateLengthBounds(string applying) {
+    private void ValidateLengthBounds(ConstraintCall applying) {
         if (_exactLength is int exact) { ValidateExactAgainstBounds(applying, exact); }
 
         // Each bound is written as a pair with the constraint that set it. And this branch needs _minLength > max,
@@ -462,7 +462,7 @@ internal sealed class StringSpec {
     ///     Validates a fixed length against a bound already applied; throws naming the bound it contradicts. Symmetric
     ///     wording, so the message reads whether the last constraint applied was the fixed length or the bound.
     /// </summary>
-    private void ValidateExactAgainstBounds(string applying, int exact) {
+    private void ValidateExactAgainstBounds(ConstraintCall applying, int exact) {
         // Same reasoning: exact >= 0 is guaranteed by the entry points, so exact < _minLength needs _minLength > 0 —
         // a declared minimum, hence a named one — and a declared exact length carries its name too.
         if (exact < _minLength) {
@@ -478,7 +478,7 @@ internal sealed class StringSpec {
         }
     }
 
-    private void ValidateFragmentBudget(string applying) {
+    private void ValidateFragmentBudget(ConstraintCall applying) {
         int required = RequiredLength();
         if (required == 0) { return; }
 
@@ -488,17 +488,17 @@ internal sealed class StringSpec {
         if (_exactLength is int exact && required > exact) {
             throw ConflictingAnyConstraintException.Contradicts(applying,
                                                                                 ConstraintClaim.Of(_exactConstraint!, $"allows only {Characters(exact)} while {description} {requires} {V(required)}"),
-                                                                                ConstraintClaim.Of(description, $"already {requires} {Characters(required)}"));
+                                                                                ConstraintClaim.OfPhrase(description, $"already {requires} {Characters(required)}"));
         }
 
         if (_maxLength is int max && required > max) {
             throw ConflictingAnyConstraintException.Contradicts(applying,
                                                                                 ConstraintClaim.Of(_maxConstraint!, $"allows at most {Characters(max)} while {description} {requires} {V(required)}"),
-                                                                                ConstraintClaim.Of(description, $"already {requires} {Characters(required)}"));
+                                                                                ConstraintClaim.OfPhrase(description, $"already {requires} {Characters(required)}"));
         }
     }
 
-    private void ValidateFragmentCharacters(string applying) {
+    private void ValidateFragmentCharacters(ConstraintCall applying) {
         foreach ((string kind, string fragment) in Fragments()) {
             // A character can only be disallowed by a declared pool or a declared character set, and either is
             // written together with the constraint that named it: an offending character proves _charsetConstraint.
@@ -506,7 +506,7 @@ internal sealed class StringSpec {
             if (offendingCharacter is char outside) {
                 throw ConflictingAnyConstraintException.Contradicts(applying,
                                                                                     ConstraintClaim.Of(_charsetConstraint!, $"does not allow its character '{outside}'"),
-                                                                                    ConstraintClaim.Of($"the {kind} \"{fragment}\"", $"contains '{outside}', which it does not allow"));
+                                                                                    ConstraintClaim.OfPhrase($"the {kind} \"{fragment}\"", $"contains '{outside}', which it does not allow"));
             }
 
             if (_casing is LetterCasing casing) {
@@ -515,7 +515,7 @@ internal sealed class StringSpec {
                     string caseName = casing == LetterCasing.Lower ? "uppercase" : "lowercase";
                     throw ConflictingAnyConstraintException.Contradicts(applying,
                                                                                         ConstraintClaim.Of(_casingConstraint!, $"forbids its {caseName} letter '{against}'"),
-                                                                                        ConstraintClaim.Of($"the {kind} \"{fragment}\"", $"contains the {caseName} letter '{against}'"));
+                                                                                        ConstraintClaim.OfPhrase($"the {kind} \"{fragment}\"", $"contains the {caseName} letter '{against}'"));
                 }
             }
         }
@@ -525,18 +525,18 @@ internal sealed class StringSpec {
     ///     Fails when no pooled value survives every declared constraint, with a message naming exactly the two sides
     ///     in play and claiming only what the surviving pools establish.
     /// </summary>
-    private void ValidateAllowedSurvives(string applying, StringSpec previous) {
+    private void ValidateAllowedSurvives(ConstraintCall applying, StringSpec previous) {
         if (_effectiveAllowed!.Count > 0) { return; }
 
         throw ConflictingAnyConstraintException.NoPooledValueSurvives(applying, DescribeEmptyPool(applying, previous));
     }
 
-    private string DescribeEmptyPool(string applying, StringSpec previous) {
+    private string DescribeEmptyPool(ConstraintCall applying, StringSpec previous) {
         // The allow-list is the constraint being applied: the values are new, and the constraints already declared
         // are the other side. Name those that reject every single value — the ones the caller must loosen — and stay
         // generic when it took a combination of them, since no individual constraint is then the culprit.
         if (previous._allowed is null) {
-            IReadOnlyList<string> culprits = previous.ConstraintsRejectingAll(_allowed!);
+            IReadOnlyList<ConstraintCall> culprits = previous.ConstraintsRejectingAll(_allowed!);
             if (culprits.Count == 0) { return "no value it offers satisfies the constraints already declared"; }
             if (culprits.Count == 1) { return $"{culprits[0]} allows none of its values"; }
 
@@ -558,9 +558,9 @@ internal sealed class StringSpec {
     ///     order. A constraint some value satisfies is not a culprit — naming it would blame a constraint the caller
     ///     could loosen without changing the verdict.
     /// </summary>
-    private IReadOnlyList<string> ConstraintsRejectingAll(IReadOnlyList<string> values) {
-        List<string> culprits = [];
-        foreach ((string constraint, Func<string, bool> admits) in DeclaredConstraints()) {
+    private IReadOnlyList<ConstraintCall> ConstraintsRejectingAll(IReadOnlyList<string> values) {
+        List<ConstraintCall> culprits = [];
+        foreach ((ConstraintCall constraint, Func<string, bool> admits) in DeclaredConstraints()) {
             if (!values.Any(admits)) { culprits.Add(constraint); }
         }
 
@@ -572,9 +572,9 @@ internal sealed class StringSpec {
     ///     specification does not carry admits everything, which keeps a message that cannot identify its own
     ///     applied constraint on the weaker, still-true claim rather than the stronger one.
     /// </summary>
-    private Func<string, bool> AdmittedBy(string constraint) {
+    private Func<string, bool> AdmittedBy(ConstraintCall constraint) {
         Func<string, bool>[] tests = DeclaredConstraints()
-                                     .Where(entry => string.Equals(entry.Constraint, constraint, StringComparison.Ordinal))
+                                     .Where(entry => entry.Constraint == constraint)
                                      .Select(entry => entry.Admits)
                                      .ToArray();
 
@@ -592,9 +592,9 @@ internal sealed class StringSpec {
     ///     caller can only loosen the call: judging its halves separately would let a constraint that alone rejects
     ///     every value escape the blame, because each half on its own admits one.
     /// </remarks>
-    private IEnumerable<(string Constraint, Func<string, bool> Admits)> DeclaredConstraints() {
+    private IEnumerable<(ConstraintCall Constraint, Func<string, bool> Admits)> DeclaredConstraints() {
         return Declarations()
-               .GroupBy(entry => entry.Constraint, StringComparer.Ordinal)
+               .GroupBy(entry => entry.Constraint)
                .Select(group => {
                    Func<string, bool>[] tests = group.Select(entry => entry.Admits).ToArray();
 
@@ -607,26 +607,25 @@ internal sealed class StringSpec {
                                                          "string.Contains(string, StringComparison) does not exist on netstandard2.0, which this library targets " +
                                                          "(ADR-0022). IndexOf with StringComparison.Ordinal is the same comparison and the only spelling that " +
                                                          "compiles on the shipped asset. Same downlevel wall as CA1510 (ADR-0058).")]
-    private IEnumerable<(string Constraint, Func<string, bool> Admits)> Declarations() {
+    private IEnumerable<(ConstraintCall Constraint, Func<string, bool> Admits)> Declarations() {
         if (_exactLength is int exact) { yield return (_exactConstraint!, value => value.Length == exact); }
         if (_minLength > 0) { yield return (_minConstraint!, value => value.Length >= _minLength); }
         if (_maxLength is int max) { yield return (_maxConstraint!, value => value.Length <= max); }
         if (_prefix is not null) { yield return (_prefixConstraint!, value => value.StartsWith(_prefix, StringComparison.Ordinal)); }
         if (_suffix is not null) { yield return (_suffixConstraint!, value => value.EndsWith(_suffix, StringComparison.Ordinal)); }
-        foreach (string fragment in _fragments) {
-            // AnyString renders the constraint from the fragment itself, so it is reconstructed identically here.
-            yield return ($"Containing(\"{fragment}\")", value => value.IndexOf(fragment, StringComparison.Ordinal) >= 0);
+        foreach ((string fragment, ConstraintCall constraint) in _fragments) {
+            yield return (constraint, value => value.IndexOf(fragment, StringComparison.Ordinal) >= 0);
         }
         if (_charsetConstraint is not null) { yield return (_charsetConstraint, value => FirstDisallowedCharacter(value) is null); }
         if (_casing is LetterCasing casing) { yield return (_casingConstraint!, value => FirstAgainstCasing(value, casing) is null); }
-        foreach ((string constraint, string[] excluded) in _exclusions) {
+        foreach ((ConstraintCall constraint, string[] excluded) in _exclusions) {
             yield return (constraint, value => !excluded.Contains(value, StringComparer.Ordinal));
         }
     }
 
     /// <summary>Whether <paramref name="value" /> satisfies every declared constraint — the allow-list filter.</summary>
     private bool Admits(string value) {
-        foreach ((string _, Func<string, bool> admits) in DeclaredConstraints()) {
+        foreach ((ConstraintCall _, Func<string, bool> admits) in DeclaredConstraints()) {
             if (!admits(value)) { return false; }
         }
 
@@ -635,14 +634,14 @@ internal sealed class StringSpec {
 
     private IEnumerable<(string Kind, string Fragment)> Fragments() {
         if (_prefix is not null) { yield return ("prefix", _prefix); }
-        foreach (string fragment in _fragments) { yield return ("contained value", fragment); }
+        foreach ((string fragment, ConstraintCall _) in _fragments) { yield return ("contained value", fragment); }
         if (_suffix is not null) { yield return ("suffix", _suffix); }
     }
 
     private (string Description, bool Several) DescribeFragments() {
         List<string> parts = [];
         if (_prefix is not null) { parts.Add($"the prefix \"{_prefix}\""); }
-        foreach (string fragment in _fragments) { parts.Add($"the contained value \"{fragment}\""); }
+        foreach ((string fragment, ConstraintCall _) in _fragments) { parts.Add($"the contained value \"{fragment}\""); }
         if (_suffix is not null) { parts.Add($"the suffix \"{_suffix}\""); }
 
         return (string.Join(" and ", parts), parts.Count > 1);
@@ -650,7 +649,7 @@ internal sealed class StringSpec {
 
     private int RequiredLength() {
         int required = (_prefix?.Length ?? 0) + (_suffix?.Length ?? 0);
-        foreach (string fragment in _fragments) { required += fragment.Length; }
+        foreach ((string fragment, ConstraintCall _) in _fragments) { required += fragment.Length; }
 
         return required;
     }

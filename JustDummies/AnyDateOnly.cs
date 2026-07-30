@@ -67,7 +67,7 @@ public sealed class AnyDateOnly : IAny<DateOnly>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateOnly After(DateOnly date) {
-        return new AnyDateOnly(_source, _spec.WithMinimumAbove(Ord(date), $"After({V(date)})"));
+        return new AnyDateOnly(_source, _spec.WithMinimumAbove(Ord(date), ConstraintCall.Of(nameof(After), V(date))));
     }
 
     /// <summary>Requires a date at or after <paramref name="date" />.</summary>
@@ -75,7 +75,7 @@ public sealed class AnyDateOnly : IAny<DateOnly>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateOnly AfterOrEqualTo(DateOnly date) {
-        return new AnyDateOnly(_source, _spec.WithMinimum(Ord(date), $"AfterOrEqualTo({V(date)})"));
+        return new AnyDateOnly(_source, _spec.WithMinimum(Ord(date), ConstraintCall.Of(nameof(AfterOrEqualTo), V(date))));
     }
 
     /// <summary>Requires a date strictly before <paramref name="date" />.</summary>
@@ -83,7 +83,7 @@ public sealed class AnyDateOnly : IAny<DateOnly>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateOnly Before(DateOnly date) {
-        return new AnyDateOnly(_source, _spec.WithMaximumBelow(Ord(date), $"Before({V(date)})"));
+        return new AnyDateOnly(_source, _spec.WithMaximumBelow(Ord(date), ConstraintCall.Of(nameof(Before), V(date))));
     }
 
     /// <summary>Requires a date at or before <paramref name="date" />.</summary>
@@ -91,7 +91,7 @@ public sealed class AnyDateOnly : IAny<DateOnly>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateOnly BeforeOrEqualTo(DateOnly date) {
-        return new AnyDateOnly(_source, _spec.WithMaximum(Ord(date), $"BeforeOrEqualTo({V(date)})"));
+        return new AnyDateOnly(_source, _spec.WithMaximum(Ord(date), ConstraintCall.Of(nameof(BeforeOrEqualTo), V(date))));
     }
 
     /// <summary>Requires a date within the inclusive range [<paramref name="start" />, <paramref name="end" />].</summary>
@@ -103,7 +103,7 @@ public sealed class AnyDateOnly : IAny<DateOnly>, IHasRandomSource, ICardinality
     public AnyDateOnly Between(DateOnly start, DateOnly end) {
         if (start > end) { throw new ArgumentException($"The start ({V(start)}) must be at or before the end ({V(end)}).", nameof(start)); }
 
-        string constraint = $"Between({V(start)}, {V(end)})";
+        ConstraintCall constraint = ConstraintCall.Of(nameof(Between), V(start), V(end));
 
         return new AnyDateOnly(_source, _spec.WithMinimum(Ord(start), constraint).WithMaximum(Ord(end), constraint));
     }
@@ -118,7 +118,7 @@ public sealed class AnyDateOnly : IAny<DateOnly>, IHasRandomSource, ICardinality
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        return new AnyDateOnly(_source, _spec.WithAllowed(values.Select(Ord).ToArray(), $"OneOf({Join(values)})"));
+        return new AnyDateOnly(_source, _spec.WithAllowed(values.Select(Ord).ToArray(), ConstraintCall.Of(nameof(OneOf), Join(values))));
     }
 
     /// <summary>Requires the date to be none of the supplied values.</summary>
@@ -131,7 +131,7 @@ public sealed class AnyDateOnly : IAny<DateOnly>, IHasRandomSource, ICardinality
         if (values is null) { throw new ArgumentNullException(nameof(values)); }
         if (values.Length == 0) { throw new ArgumentException("At least one value is required.", nameof(values)); }
 
-        return new AnyDateOnly(_source, _spec.WithExcluded(values.Select(Ord).ToArray(), $"Except({Join(values)})"));
+        return new AnyDateOnly(_source, _spec.WithExcluded(values.Select(Ord).ToArray(), ConstraintCall.Of(nameof(Except), Join(values))));
     }
 
     /// <summary>
@@ -142,7 +142,7 @@ public sealed class AnyDateOnly : IAny<DateOnly>, IHasRandomSource, ICardinality
     /// <returns>A new generator carrying the added constraint.</returns>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDateOnly DifferentFrom(DateOnly value) {
-        return new AnyDateOnly(_source, _spec.WithExcluded([Ord(value)], $"DifferentFrom({V(value)})"));
+        return new AnyDateOnly(_source, _spec.WithExcluded([Ord(value)], ConstraintCall.Of(nameof(DifferentFrom), V(value))));
     }
 
     /// <inheritdoc />
