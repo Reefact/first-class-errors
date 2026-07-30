@@ -113,13 +113,7 @@ internal static class AnyDerivation {
         } catch (DummyException) {
             throw;
         } catch (Exception exception) {
-            int?   seed    = source?.Current.Seed;
-            string message = $"Generation failed: {failure()} ({exception.GetType().Name}: {exception.Message}).";
-            if (source is not null) {
-                message += $" {(reproducible ? source.ReplayGuidance(seed!.Value) : source.PartialReplayGuidance(seed!.Value))}";
-            }
-
-            throw new AnyGenerationException(message, seed, exception);
+            throw AnyGenerationException.FactoryFailed(failure, exception, source, reproducible);
         }
     }
 

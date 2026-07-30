@@ -65,10 +65,68 @@ public sealed class ConflictingAnyConstraintException : DummyException {
     }
 
     /// <summary>
+    ///     Builds the exception for a constraint that contradicts a value already pinned.
+    /// </summary>
+    internal static ConflictingAnyConstraintException AlreadyPinned(string applying, string pinningConstraint, string value) {
+        return Sentence(applying, $"{pinningConstraint} already pins the value to {value}");
+    }
+
+    /// <summary>
+    ///     Builds the exception for a pinned value the exclusions declared alongside it forbid.
+    /// </summary>
+    internal static ConflictingAnyConstraintException PinnedValueExcluded(string applying, string pinningConstraint, string value) {
+        return Sentence(applying, $"{pinningConstraint} already pins the value to {value}, which the exclusions forbid");
+    }
+
+    /// <summary>
+    ///     Builds the exception for a pinned value the allow-list declared alongside it does not admit.
+    /// </summary>
+    internal static ConflictingAnyConstraintException PinnedValueNotAllowed(string applying, string pinningConstraint, string value, string allowingConstraint) {
+        return Sentence(applying, $"{pinningConstraint} already pins the value to {value}, which {allowingConstraint} does not allow");
+    }
+
+    /// <summary>
+    ///     Builds the exception for combinations asked of an enum the runtime would not recognise them on.
+    /// </summary>
+    internal static ConflictingAnyConstraintException EnumIsNotFlags(string applying, string enumName) {
+        return Sentence(applying, $"{enumName} is not declared [Flags]: OR-ing its members would produce values the type does not define");
+    }
+
+    /// <summary>
+    ///     Builds the exception for an enum with more combinable members than the library will enumerate.
+    /// </summary>
+    internal static ConflictingAnyConstraintException TooManyCombinableMembers(string applying, string enumName, string declared, string maximum) {
+        return Sentence(applying, $"{enumName} declares {declared} non-zero members, more than the {maximum} whose combinations can be enumerated. " +
+                                  "Draw from an explicit set with OneOf(...) instead");
+    }
+
+    /// <summary>
     ///     Builds the exception for elements required to be contained that cannot fit the capacity already declared.
     /// </summary>
     internal static ConflictingAnyConstraintException ContainedElementsDoNotFit(string applying, string required, string capacity) {
         return Sentence(applying, $"{required} required to be contained cannot fit in a collection of at most {capacity}");
+    }
+
+    /// <summary>
+    ///     Builds the exception for a second, different equality on a collection already required to be distinct. One
+    ///     collection is distinct under one equality, so the two cannot both be honoured.
+    /// </summary>
+    internal static ConflictingAnyConstraintException ComparerAlreadyDefined(string applying) {
+        return Sentence(applying, $"a different comparer is already defined by an earlier {applying}");
+    }
+
+    /// <summary>
+    ///     Builds the exception for a value required to be contained twice in a collection required to be distinct.
+    /// </summary>
+    internal static ConflictingAnyConstraintException DuplicateInDistinctCollection(string applying, string value) {
+        return Sentence(applying, $"a distinct collection cannot contain {value} more than once");
+    }
+
+    /// <summary>
+    ///     Builds the exception for more distinct elements than the element generator has distinct values to give.
+    /// </summary>
+    internal static ConflictingAnyConstraintException DistinctElementsExceedCardinality(string applying, string required, string cardinality) {
+        return Sentence(applying, $"{required} required to be distinct exceed the {cardinality} distinct value(s) the element generator can produce");
     }
 
     /// <summary>

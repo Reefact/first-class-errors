@@ -282,7 +282,7 @@ public sealed class AnyDateTimeOffset : IAny<DateTimeOffset>, IHasRandomSource, 
         if (_offsetDeclared) {
             if (_offsetMinMinutes == minMinutes && _offsetMaxMinutes == maxMinutes) { return this; }
 
-            throw new ConflictingAnyConstraintException($"Cannot apply {applying} because an offset constraint is already defined.");
+            throw ConflictingAnyConstraintException.AlreadyDefined(applying, "an offset constraint");
         }
 
         // Tighten the instant so local ticks = UtcTicks + offset stay in [0, MaxTicks] for every offset in the range;
