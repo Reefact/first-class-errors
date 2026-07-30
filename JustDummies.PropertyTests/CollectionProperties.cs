@@ -347,8 +347,8 @@ public sealed class CollectionProperties {
             _value = value;
         }
 
-        public override bool Equals(object? other) {
-            return other is Tag tag && tag._value == _value;
+        public override bool Equals(object? obj) {
+            return obj is Tag tag && tag._value == _value;
         }
 
         public override int GetHashCode() {

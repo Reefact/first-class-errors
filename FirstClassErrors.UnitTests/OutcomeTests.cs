@@ -33,15 +33,6 @@ public sealed class OutcomeTests {
         Check.That(outcome.GetResultOrThrow()).IsEqualTo("ok");
     }
 
-    [Fact(DisplayName = "A successful outcome can be escalated to a value.")]
-    public void ASuccessfulOutcomeCanBeEscalatedToAValue() {
-        // Exercise
-        Outcome<string> outcome = Outcome<string>.Success("ok");
-
-        // Verify
-        Check.That(outcome.GetResultOrThrow()).IsEqualTo("ok");
-    }
-
     [Fact(DisplayName = "A successful outcome cannot be created from a null value.")]
     public void SuccessfulOutcomeCannotBeCreatedFromANullValue() {
         // Exercise & verify
