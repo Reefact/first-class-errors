@@ -135,19 +135,7 @@ internal sealed class CountSpec {
     }
 
     private CountSpec Validated(string applying) {
-        if (_exact is int exact) {
-            if (exact < _min) {
-                throw new ConflictingAnyConstraintException(applying == _exactConstraint
-                                                                ? $"Cannot apply {applying} because {_minConstraint} already requires at least {Elements(_min)}."
-                                                                : $"Cannot apply {applying} because {_exactConstraint} already fixes the count at {V(exact)}.");
-            }
-
-            if (_max is int cappedAt && exact > cappedAt) {
-                throw new ConflictingAnyConstraintException(applying == _exactConstraint
-                                                                ? $"Cannot apply {applying} because {_maxConstraint} already caps the count at {V(cappedAt)}."
-                                                                : $"Cannot apply {applying} because {_exactConstraint} already fixes the count at {V(exact)}.");
-            }
-        }
+        if (_exact is int exact) { EnsureExactAgreesWithBounds(applying, exact); }
 
         if (_max is int max && _min > max) {
             throw new ConflictingAnyConstraintException(applying == _maxConstraint
@@ -156,6 +144,24 @@ internal sealed class CountSpec {
         }
 
         return this;
+    }
+
+    /// <summary>
+    ///     Ensures a fixed count does not contradict a bound already applied; throws naming the bound it contradicts.
+    ///     Symmetric wording, so the message reads whether the last constraint applied was the fixed count or the bound.
+    /// </summary>
+    private void EnsureExactAgreesWithBounds(string applying, int exact) {
+        if (exact < _min) {
+            throw new ConflictingAnyConstraintException(applying == _exactConstraint
+                                                            ? $"Cannot apply {applying} because {_minConstraint} already requires at least {Elements(_min)}."
+                                                            : $"Cannot apply {applying} because {_exactConstraint} already fixes the count at {V(exact)}.");
+        }
+
+        if (_max is int cappedAt && exact > cappedAt) {
+            throw new ConflictingAnyConstraintException(applying == _exactConstraint
+                                                            ? $"Cannot apply {applying} because {_maxConstraint} already caps the count at {V(cappedAt)}."
+                                                            : $"Cannot apply {applying} because {_exactConstraint} already fixes the count at {V(exact)}.");
+        }
     }
 
 }
