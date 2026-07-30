@@ -51,10 +51,13 @@ développeur — un moteur chargeable par un hôte Roslyn, plus une CLI mince pa
 Elle est implémentable telle quelle : le squelette émis, les règles de résolution des
 paramètres et les décisions qui les portent ont chacun été vérifiés contre la source
 de la bibliothèque, et les affirmations centrales ont été mesurées. Elle est aussi
-**autonome** : elle inline chaque fait sur la bibliothèque dont elle dépend et énonce
-ses exigences envers le dépôt hôte en exigences plutôt qu'en chemins, de sorte qu'elle
-survit au déménagement de JustDummies dans son propre dépôt. Pas encore construit.
-Aussi en [anglais](specifications/justdummies-tool.md).
+**autonome** : elle inline chaque fait sur la bibliothèque dont elle dépend, énonce
+ses exigences envers le dépôt hôte en exigences plutôt qu'en chemins, et porte ses
+sept décisions architecturales comme enregistrements au format ADR complet dans son
+propre §15 — tenus là, plutôt qu'entrés dans la base ci-dessus, parce que le dépôt
+qui devrait les accueillir n'existe pas encore. Le tout survit au déménagement de
+JustDummies dans son propre dépôt. Pas encore construit. Aussi en
+[anglais](specifications/justdummies-tool.md).
 
 ### [Registres de décision d'architecture (ADR)](adr/README.md)
 
