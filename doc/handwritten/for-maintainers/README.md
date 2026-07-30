@@ -40,6 +40,15 @@ does the assertion have an input space? The boundary itself is recorded in
 [ADR-0040](adr/0040-split-the-justdummies-test-bed-between-example-and-property-suites.md);
 this page applies it. Also in [French](WritingJustDummiesTests.fr.md).
 
+### [JustDummies tool (`dum`) — specification](specifications/justdummies-tool.md)
+
+The complete specification of `dum`, the JustDummies command-line scaffolder that
+writes a named, composable generator for a type from the developer's own code. It
+is implementable as written: the emitted skeleton, the parameter-resolution rules
+and the decisions behind them were each checked against the library's source, and
+the central claims were measured. Not yet built. Also in
+[French](specifications/justdummies-tool.fr.md).
+
 ### [Architecture Decision Records](adr/README.md)
 
 Dated records of significant decisions — their context, the option chosen, and
