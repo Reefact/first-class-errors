@@ -333,6 +333,11 @@ public sealed class AnyStringValueSetTests {
     }
 
     [Fact(DisplayName = "OneOf rejects null, empty, or null-containing value lists as arguments.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S3220:Method calls should not resolve ambiguously to overloads with \"params\"",
+                                                     Justification =
+                                                         "Passing a bare null to a params parameter is exactly what this test asserts about: OneOf(null!) must be " +
+                                                         "refused with ArgumentNullException rather than read as an empty list. The ambiguity the rule warns about " +
+                                                         "IS the input under test.")]
     public void RejectsInvalidValueLists() {
         Check.ThatCode(() => Any.String().OneOf()).Throws<ArgumentException>();
         Check.ThatCode(() => Any.String().OneOf(null!)).Throws<ArgumentNullException>();

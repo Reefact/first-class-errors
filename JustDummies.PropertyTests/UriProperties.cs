@@ -328,6 +328,10 @@ public sealed class UriProperties {
     }
 
     [Fact(DisplayName = "Declared user-info reaches the URI, whichever of the three overloads declared it.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S2692:\"IndexOf\" checks should not be for positive numbers",
+                                                     Justification =
+                                                         "0 is deliberately excluded. The check asserts that a user-info draw renders user:password with a NON-EMPTY " +
+                                                         "user, so a colon at index 0 — an empty local part — must fail the property, which is exactly what > 0 says.")]
     public void UserInfoShapesReachTheUri() {
         Gen<(UserInfoChoice Choice, string User, string Password)> cases =
             from choice in Gen.Elements(UserInfoChoice.Arbitrary, UserInfoChoice.UserOnly, UserInfoChoice.UserAndPassword)

@@ -140,6 +140,10 @@ public sealed class SimplePropertyBindingTests {
     }
 
     [Fact(DisplayName = "An optional value property yields a real null when absent — never default(T): an absent count is null, not 0.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S125:Sections of code should not be commented out",
+                                                     Justification =
+                                                         "Prose, not code. The line explains why the outcome is projected to a bool — Nullable<T> is not `notnull`, " +
+                                                         "so New's TCommand cannot be int? — and the rule reads the type names and the semicolon as a statement.")]
     public void OptionalValueYieldsNullWhenAbsent() {
         RequestBinder absent     = Bind.Request(BookingEnvelopeError.CommandInvalid);
         PropertySource<BookingRequest> absentBody = absent.PropertiesOf(Request(nights: null));

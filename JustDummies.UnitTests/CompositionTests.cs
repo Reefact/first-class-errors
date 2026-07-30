@@ -314,6 +314,11 @@ public sealed class CompositionTests {
 
     #region Nested types
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S3877:Exceptions should not be thrown from unexpected methods",
+                                                     Justification =
+                                                         "Throwing from ToString() IS the fixture. The test proves diagnostics survive a domain object whose rendering " +
+                                                         "explodes, and that a successful draw never renders one — neither of which can be shown without a type that " +
+                                                         "throws exactly here.")]
     private sealed class Unrenderable {
 
         // A domain object whose ToString() throws: the ordinary shape of it is a renderer reaching for state the
