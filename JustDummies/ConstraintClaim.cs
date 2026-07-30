@@ -10,11 +10,11 @@ namespace JustDummies;
 ///     Immutable, and a class rather than a struct, like every value in this repository: a struct would expose a
 ///     parameterless constructor yielding a pair with no name and no claim.
 ///     <para>
-///         It carries <b>no validation</b>, which is deliberate and is the one place this type departs from the
-///         repository's usual habit. Instances are built on the way to constructing an exception — at the throw site,
-///         as an argument — so a guard here would throw while a failure is being reported and lose the failure it was
-///         reporting, exactly what ADR-0045 exempts exception construction for. The contract is the compiler's
-///         instead: both members are non-nullable, so a caller that cannot prove a value is CS8604 at build time.
+///         It guards its arguments, unlike the exception factories it feeds. The difference is that this is not an
+///         exception: ADR-0045 exempts exception types — building one must never throw — and the reflection
+///         convention that enforces the rule skips them, but it does inspect this type and requires the guard. The
+///         null it defends against is unreachable in practice, since every call site passes values the compiler has
+///         proven non-null; the guard is what the convention checks, not what the code relies on.
 ///     </para>
 /// </remarks>
 internal sealed class ConstraintClaim {
@@ -26,6 +26,9 @@ internal sealed class ConstraintClaim {
     ///     follows the constraint's name — "already caps the count at 3", not "caps".
     /// </summary>
     internal static ConstraintClaim Of(string constraint, string claims) {
+        if (constraint is null) { throw new ArgumentNullException(nameof(constraint)); }
+        if (claims is null) { throw new ArgumentNullException(nameof(claims)); }
+
         return new ConstraintClaim(constraint, claims);
     }
 
