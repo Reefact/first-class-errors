@@ -37,6 +37,11 @@ public sealed class AwaitableBodyPassedToReproduciblyAnalyzer : DiagnosticAnalyz
         context.RegisterOperationAction(operationContext => Analyze(operationContext, symbols.Any), OperationKind.Invocation);
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Minor Code Smell", "S3267:Loops should be simplified with \"LINQ\" expressions",
+                                                     Justification =
+                                                         "The rule asks for Select(argument => argument.Value). The loop unwraps a delegate creation before testing what it found and " +
+                                                         "reports on the lambda body, so the projection would rename the loop variable away from what it is without removing a single " +
+                                                         "step: `argument` is an IArgumentOperation, and the unwrapping still has to happen inside.")]
     private static void Analyze(OperationAnalysisContext context, INamedTypeSymbol anyType) {
         IInvocationOperation invocation = (IInvocationOperation)context.Operation;
         IMethodSymbol        method     = invocation.TargetMethod;
@@ -83,9 +88,8 @@ public sealed class AwaitableBodyPassedToReproduciblyAnalyzer : DiagnosticAnalyz
         if (type is null || type.SpecialType == SpecialType.System_Void) { return false; }
 
         for (ITypeSymbol? current = type; current is not null; current = current.BaseType) {
-            foreach (ISymbol member in current.GetMembers(GetAwaiterMethodName)) {
-                if (member is IMethodSymbol { Parameters.IsEmpty: true, DeclaredAccessibility: Accessibility.Public }) { return true; }
-            }
+            if (current.GetMembers(GetAwaiterMethodName)
+                       .Any(member => member is IMethodSymbol { Parameters.IsEmpty: true, DeclaredAccessibility: Accessibility.Public })) { return true; }
         }
 
         return false;

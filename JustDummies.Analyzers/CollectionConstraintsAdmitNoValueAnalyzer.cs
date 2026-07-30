@@ -93,7 +93,7 @@ public sealed class CollectionConstraintsAdmitNoValueAnalyzer : DiagnosticAnalyz
         // The cardinality gate (ADR-0013): a distinct collection cannot hold more elements than its element
         // generator has distinct values to give.
         if (!distinct) { return; }
-        if (!TryGetProvableCardinality(factory, symbols, out int cardinality)) { return; }
+        if (!TryGetProvableCardinality(factory, out int cardinality)) { return; }
         if (effectiveMin <= cardinality) { return; }
 
         Report(context, at, $"{effectiveMin} distinct element(s) are required, but the element generator can produce only {cardinality}");
@@ -117,7 +117,7 @@ public sealed class CollectionConstraintsAdmitNoValueAnalyzer : DiagnosticAnalyz
     ///     An upper bound on the element generator's distinct domain, for the shapes the compiler can settle. Anything
     ///     else answers <c>false</c>: an unprovable domain must never be treated as a small one.
     /// </summary>
-    private static bool TryGetProvableCardinality(IInvocationOperation factory, KnownSymbols symbols, out int cardinality) {
+    private static bool TryGetProvableCardinality(IInvocationOperation factory, out int cardinality) {
         cardinality = 0;
 
         if (factory.Arguments.Length == 0) { return false; }

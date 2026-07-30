@@ -109,8 +109,10 @@ public sealed class RequestBinderTests {
 
         Check.That(outcome.IsFailure).IsTrue();
         Check.That(factoryCalled).IsFalse();
-        Check.That(outcome.Error!.Code.ToString()).IsEqualTo("TEST_STAY_INVALID");
-        Check.That(outcome.Error!.InnerErrors.Select(e => e.Code.ToString())).ContainsExactly("REQUEST_ARGUMENT_REQUIRED");
+
+        Error envelope = outcome.Error!;
+        Check.That(envelope.Code.ToString()).IsEqualTo("TEST_STAY_INVALID");
+        Check.That(envelope.InnerErrors.Select(e => e.Code.ToString())).ContainsExactly("REQUEST_ARGUMENT_REQUIRED");
     }
 
     [Fact(DisplayName = "Every failing property is collected into the envelope, in declaration order — collect-all, not first-failure.")]
@@ -123,10 +125,12 @@ public sealed class RequestBinderTests {
         body.SimpleProperty(r => r.Currency).AsOptional(Currency.Parse, "EUR");
 
         Outcome<string> outcome = bind.New(_ => "never");
-        Check.That(outcome.Error!.Code.ToString()).IsEqualTo("TEST_BOOKING_COMMAND_INVALID");
-        Check.That(outcome.Error!.InnerErrors.Select(e => e.Code.ToString()))
+
+        Error envelope = outcome.Error!;
+        Check.That(envelope.Code.ToString()).IsEqualTo("TEST_BOOKING_COMMAND_INVALID");
+        Check.That(envelope.InnerErrors.Select(e => e.Code.ToString()))
              .ContainsExactly("REQUEST_ARGUMENT_INVALID", "REQUEST_ARGUMENT_REQUIRED", "REQUEST_ARGUMENT_INVALID");
-        Check.That(outcome.Error!.InnerErrors.Select(BindingAssertions.ArgumentPathOf))
+        Check.That(envelope.InnerErrors.Select(BindingAssertions.ArgumentPathOf))
              .ContainsExactly("GuestEmail", "Reference", "Currency");
     }
 
