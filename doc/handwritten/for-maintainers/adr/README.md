@@ -268,3 +268,4 @@ Optional supporting material:
 | [ADR-0064](0064-exempt-the-whole-failure-reporting-path-from-the-null-guard-convention.md) | Exempt the whole failure-reporting path from the null-guard convention, declared with `[BuiltOnTheFailurePath]`; supersedes ADR-0045 | Accepted |
 | [ADR-0065](0065-carry-a-declared-constraint-as-a-value-object.md) | Carry a declared constraint as a value object, not as its rendered text | Proposed |
 | [ADR-0066](0066-declare-a-value-object-and-enforce-its-identity.md) | Declare a value object with an attribute, and enforce its identity by convention | Proposed |
+| [ADR-0067](0067-treat-the-cli-s-exit-codes-as-a-closed-published-contract.md) | Treat the CLI's exit codes as a closed, published contract | Accepted |
