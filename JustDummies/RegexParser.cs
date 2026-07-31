@@ -32,6 +32,27 @@ internal sealed class RegexParser {
 
     private const int MaxGroupDepth = 256;
 
+    /// <summary>How many hexadecimal digits a <c>\xHH</c> escape spells.</summary>
+    private const int HexEscapeDigits = 2;
+
+    /// <summary>How many hexadecimal digits a <c>\uHHHH</c> escape spells.</summary>
+    private const int UnicodeEscapeDigits = 4;
+
+    /// <summary>How many octal digits may follow the first one in a <c>\0nn</c> escape.</summary>
+    private const int MaxOctalTailDigits = 2;
+
+    /// <summary>The base a <c>\x</c> or <c>\u</c> escape's digits accumulate in.</summary>
+    private const int HexBase = 16;
+
+    /// <summary>The base a <c>\0</c> escape's digits accumulate in.</summary>
+    private const int OctalBase = 8;
+
+    /// <summary>How many digits precede <c>'A'</c> in the hexadecimal alphabet, so <c>'A'</c> reads back as ten.</summary>
+    private const int HexLetterOffset = 10;
+
+    /// <summary>The control code <c>\cA</c> names — the alphabet's first letter maps to the first control character, not to the null one.</summary>
+    private const int FirstControlCode = 1;
+
     internal static RegexNode Parse(string pattern, bool ignoreCase) {
         if (pattern is null) { throw new ArgumentNullException(nameof(pattern)); }
         RegexParser parser = new(pattern, ignoreCase);
@@ -74,7 +95,7 @@ internal sealed class RegexParser {
     }
 
     private static int HexValue(char character) {
-        return character <= '9' ? character - '0' : char.ToUpperInvariant(character) - 'A' + 10;
+        return character <= '9' ? character - '0' : char.ToUpperInvariant(character) - 'A' + HexLetterOffset;
     }
 
     #endregion
@@ -406,8 +427,8 @@ internal sealed class RegexParser {
             case 'v': return Literal('\v');
             case 'a': return Literal('\a');
             case 'e': return Literal('\u001B');
-            case 'x': return Literal(ReadHexEscape(2));
-            case 'u': return Literal(ReadHexEscape(4));
+            case 'x': return Literal(ReadHexEscape(HexEscapeDigits));
+            case 'u': return Literal(ReadHexEscape(UnicodeEscapeDigits));
             case 'c': return Literal(ReadControlEscape());
             case '0': return Literal(ReadOctalTail(0));
             case 'b': throw UnsupportedRegexException.OutsideRegularSubset(_pattern, "a word-boundary '\\b'", position);
@@ -432,8 +453,8 @@ internal sealed class RegexParser {
     private char ReadHexEscape(int digits) {
         int value = 0;
         for (int i = 0; i < digits; i++) {
-            if (AtEnd || !IsHexDigit(Peek())) { throw Malformed($"a '\\{(digits == 2 ? 'x' : 'u')}' escape expects exactly {digits} hexadecimal digits"); }
-            value = value * 16 + HexValue(Next());
+            if (AtEnd || !IsHexDigit(Peek())) { throw Malformed($"a '\\{(digits == HexEscapeDigits ? 'x' : 'u')}' escape expects exactly {digits} hexadecimal digits"); }
+            value = value * HexBase + HexValue(Next());
         }
 
         return (char)value;
@@ -442,12 +463,12 @@ internal sealed class RegexParser {
     private char ReadControlEscape() {
         if (AtEnd || Peek() is not ((>= 'A' and <= 'Z') or (>= 'a' and <= 'z'))) { throw Malformed("a '\\c' escape expects a letter (\\cA through \\cZ)"); }
 
-        return (char)(char.ToUpperInvariant(Next()) - 'A' + 1);
+        return (char)(char.ToUpperInvariant(Next()) - 'A' + FirstControlCode);
     }
 
     private char ReadOctalTail(int firstDigit) {
         int value = firstDigit;
-        for (int i = 0; i < 2 && !AtEnd && Peek() is >= '0' and <= '7'; i++) { value = value * 8 + (Next() - '0'); }
+        for (int i = 0; i < MaxOctalTailDigits && !AtEnd && Peek() is >= '0' and <= '7'; i++) { value = value * OctalBase + (Next() - '0'); }
 
         return (char)value;
     }
@@ -542,8 +563,8 @@ internal sealed class RegexParser {
             case 'a': return '\a';
             case 'e': return '\u001B';
             case 'b': return '\b'; // inside a class, \b is the backspace character, never a word boundary
-            case 'x': return ReadHexEscape(2);
-            case 'u': return ReadHexEscape(4);
+            case 'x': return ReadHexEscape(HexEscapeDigits);
+            case 'u': return ReadHexEscape(UnicodeEscapeDigits);
             case 'c': return ReadControlEscape();
             case '0': return ReadOctalTail(0);
             default:

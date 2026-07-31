@@ -15,6 +15,9 @@ namespace JustDummies;
 /// </summary>
 public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource, ICardinalityHint<decimal> {
 
+    /// <summary>The fewest decimal places <see cref="WithScale" /> accepts — a whole number, with no fractional part.</summary>
+    private const int MinScale = 0;
+
     #region Statics members declarations
 
     internal static AnyDecimal Create(RandomSource source) {
@@ -136,7 +139,7 @@ public sealed class AnyDecimal : IAny<decimal>, IHasRandomSource, ICardinalityHi
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="scale" /> is outside the range [0, 28].</exception>
     /// <exception cref="ConflictingAnyConstraintException">Thrown when the constraint contradicts a constraint already declared.</exception>
     public AnyDecimal WithScale(int scale) {
-        if (scale < 0 || scale > 28) { throw new ArgumentOutOfRangeException(nameof(scale), scale, "The scale must be in the inclusive range [0, 28]."); }
+        if (scale < MinScale || scale > DecimalIntervalSpec.MaxScale) { throw new ArgumentOutOfRangeException(nameof(scale), scale, $"The scale must be in the inclusive range [{MinScale}, {DecimalIntervalSpec.MaxScale}]."); }
 
         return new AnyDecimal(_source, _spec.WithScale(scale, ConstraintCall.Of(nameof(WithScale), scale.ToString(CultureInfo.InvariantCulture))));
     }

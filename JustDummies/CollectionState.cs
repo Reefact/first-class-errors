@@ -26,6 +26,18 @@ namespace JustDummies;
 /// <typeparam name="T">The element type.</typeparam>
 internal sealed class CollectionState<T> {
 
+    // The three numbers the exhaustion budget is built from. They bound how long a dedup-draw may keep colliding
+    // before it reports a shortfall, and nothing outside ExhaustionBudget reads them.
+
+    /// <summary>How many consecutive collisions each value of a known finite domain is allowed to cost.</summary>
+    private const long CollisionsPerValue = 64L;
+
+    /// <summary>The cardinality up to which the budget scales with the domain rather than with the requested count.</summary>
+    private const long ScalableCardinality = 1_000_000L;
+
+    /// <summary>The floor the budget never drops below, whatever the domain and the count work out to.</summary>
+    private const long MinimumBudget = 10_000L;
+
     #region Statics members declarations
 
     internal static CollectionState<T> Create(IAny<T> item, bool distinct, IEqualityComparer<T>? comparer) {
@@ -268,9 +280,9 @@ internal sealed class CollectionState<T> {
         // floor that collisions only reach if the domain is unexpectedly small (for example a comparer that
         // merges most values). Either way the fill is bounded — never an unbounded retry loop.
         long cardinality = _itemCardinality ?? long.MaxValue;
-        long bounded     = cardinality <= 1_000_000L ? 64L * cardinality : 64L * target;
+        long bounded     = cardinality <= ScalableCardinality ? CollisionsPerValue * cardinality : CollisionsPerValue * target;
 
-        return (int)Math.Min(Math.Max(bounded, 10_000L), int.MaxValue);
+        return (int)Math.Min(Math.Max(bounded, MinimumBudget), int.MaxValue);
     }
 
     private static AnyGenerationException Exhausted(RandomSource source, int reached, int target, string what, IAny<T> culprit) {

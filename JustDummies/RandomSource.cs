@@ -352,7 +352,7 @@ internal static class RandomSampling {
     internal static ulong NextUInt64(this SeededRandom random) {
         if (random is null) { throw new ArgumentNullException(nameof(random)); }
 
-        byte[] bytes = new byte[8];
+        byte[] bytes = new byte[sizeof(ulong)];
         random.NextBytes(bytes);
 
         return BitConverter.ToUInt64(bytes, 0);
