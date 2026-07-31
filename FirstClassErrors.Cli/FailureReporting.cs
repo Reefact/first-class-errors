@@ -19,12 +19,12 @@ internal static class FailureReporting {
     ///     and can be looked up in the generated catalog of the tool's own errors. The full exception goes to the
     ///     debug channel, which surfaces only under <c>--verbose</c>.
     /// </summary>
-    /// <returns>The command exit code for a failure (1).</returns>
+    /// <returns><see cref="ExitCodes.Failure" />, so every caller reports a coded failure with the same code.</returns>
     internal static int ReportCodedFailure(IGenerationLogger logger, DiagnosableException exception) {
         logger.Error($"{exception.Error.Code}: {exception.Message}");
         logger.Debug(exception.ToString());
 
-        return 1;
+        return ExitCodes.Failure;
     }
 
     #endregion

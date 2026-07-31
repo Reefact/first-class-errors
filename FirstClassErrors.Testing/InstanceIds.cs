@@ -23,6 +23,12 @@ namespace FirstClassErrors.Testing;
 public static class InstanceIds {
 
     /// <summary>
+    ///     How many bytes the trailing segment of a <see cref="Guid" /> holds — the <c>d</c> argument of the
+    ///     <c>Guid(int, short, short, byte[])</c> constructor, which rejects an array of any other length.
+    /// </summary>
+    private const int GuidTrailingByteCount = 8;
+
+    /// <summary>
     ///     Pins every error created within the scope to the same fixed identifier.
     /// </summary>
     /// <param name="id">The identifier to assign.</param>
@@ -56,7 +62,7 @@ public static class InstanceIds {
     public static IDisposable UseSequential() {
         int counter = 0;
 
-        return Use(() => new Guid(++counter, 0, 0, new byte[8]));
+        return Use(() => new Guid(++counter, 0, 0, new byte[GuidTrailingByteCount]));
     }
 
     /// <summary>

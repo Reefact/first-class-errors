@@ -91,21 +91,21 @@ internal sealed class CatalogDiffCommand : Command<CatalogDiffSettings> {
             if (failOn is not (FailOnBreaking or "any" or "none")) {
                 logger.Error($"Unknown --fail-on value '{settings.FailOn}'. Use breaking, any or none.");
 
-                return 1;
+                return ExitCodes.Failure;
             }
 
             string report = NormalizeReport(settings.Report ?? "text");
             if (report is not ("text" or "markdown" or "json")) {
                 logger.Error($"Unknown --report value '{settings.Report}'. Use text, markdown (alias: md) or json.");
 
-                return 1;
+                return ExitCodes.Failure;
             }
 
             string baselinePath = BaselineStore.Resolve(settings.BaselinePath, configuration.Baseline, configDir);
             if (!BaselineStore.Exists(baselinePath)) {
                 logger.Error($"No baseline at '{baselinePath}'. Run 'fce catalog update' to create it.");
 
-                return 1;
+                return ExitCodes.Failure;
             }
 
             CatalogSnapshot baseline = BaselineStore.Load(baselinePath);
@@ -132,15 +132,15 @@ internal sealed class CatalogDiffCommand : Command<CatalogDiffSettings> {
                                  ? $"The catalog has {diff.BreakingChanges.Count} breaking change(s) against the baseline. Fix them, or accept them deliberately with 'fce catalog update'."
                                  : $"The catalog has {diff.Changes.Count} change(s) against the baseline. Accept them with 'fce catalog update'.");
 
-                return 2;
+                return ExitCodes.ChangesDetected;
             }
 
-            return 0;
+            return ExitCodes.Success;
         } catch (OperationCanceledException) {
             // Cancellation (Ctrl+C) is an abort, not a failure: report it with the conventional SIGINT exit code.
             logger.Error("Catalog diff canceled.");
 
-            return 130;
+            return ExitCodes.Canceled;
         } catch (DiagnosableException exception) {
             return FailureReporting.ReportCodedFailure(logger, exception);
         } catch (Exception exception) {
@@ -148,7 +148,7 @@ internal sealed class CatalogDiffCommand : Command<CatalogDiffSettings> {
             logger.Error(exception.Message);
             logger.Debug(exception.ToString());
 
-            return 1;
+            return ExitCodes.Failure;
         }
     }
 

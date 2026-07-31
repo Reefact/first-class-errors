@@ -39,7 +39,7 @@ internal sealed class RendererAddCommand : Command<RendererReferenceSettings> {
         if (!File.Exists(library)) {
             Console.Error.WriteLine($"error: renderer library not found: '{library}'.");
 
-            return 1;
+            return ExitCodes.Failure;
         }
 
         IReadOnlyList<IErrorDocumentationRenderer> renderers;
@@ -48,13 +48,13 @@ internal sealed class RendererAddCommand : Command<RendererReferenceSettings> {
         } catch (Exception exception) {
             Console.Error.WriteLine($"error: could not load '{library}': {exception.Message}");
 
-            return 1;
+            return ExitCodes.Failure;
         }
 
         if (renderers.Count == 0) {
             Console.Error.WriteLine($"error: no IErrorDocumentationRenderer found in '{library}'.");
 
-            return 1;
+            return ExitCodes.Failure;
         }
 
         CliConfiguration configuration = ConfigurationStore.Load(path);
@@ -64,7 +64,7 @@ internal sealed class RendererAddCommand : Command<RendererReferenceSettings> {
         if (alreadyReferenced) {
             Console.Out.WriteLine($"'{settings.LibraryPath}' is already referenced.");
 
-            return 0;
+            return ExitCodes.Success;
         }
 
         configuration.Renderers.Add(settings.LibraryPath);
@@ -73,7 +73,7 @@ internal sealed class RendererAddCommand : Command<RendererReferenceSettings> {
         string formats = string.Join(", ", renderers.Select(renderer => renderer.Format));
         Console.Out.WriteLine($"Added '{settings.LibraryPath}' (formats: {formats}).");
 
-        return 0;
+        return ExitCodes.Success;
     }
 
 }

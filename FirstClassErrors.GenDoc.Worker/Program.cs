@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using FirstClassErrors.GenDoc;
+using FirstClassErrors.GenDoc.Worker;
 
 #endregion
 
@@ -33,13 +34,13 @@ using FirstClassErrors.GenDoc;
 if (parseError is not null) {
     await Console.Error.WriteLineAsync(parseError);
 
-    return 2;
+    return ExitCodes.BadUsage;
 }
 
 if (string.IsNullOrWhiteSpace(assemblyPath)) {
     await Console.Error.WriteLineAsync("Usage: FirstClassErrors.GenDoc.Worker <assembly-path> [output-json-path] [--culture <name>]");
 
-    return 2;
+    return ExitCodes.BadUsage;
 }
 
 if (cultureName is not null) {
@@ -52,7 +53,7 @@ if (cultureName is not null) {
     } catch (CultureNotFoundException) {
         await Console.Error.WriteLineAsync($"Unknown culture '{cultureName}'.");
 
-        return 2;
+        return ExitCodes.BadUsage;
     }
 }
 
@@ -84,11 +85,11 @@ try {
         await File.WriteAllTextAsync(outputPath, json);
     }
 
-    return 0;
+    return ExitCodes.Success;
 } catch (Exception ex) {
     await Console.Error.WriteLineAsync($"Fatal error while extracting documentation from '{assemblyPath}': {ex}");
 
-    return 1;
+    return ExitCodes.ExtractionError;
 }
 
 // Parses the positional <assembly-path> [output-json-path] and the optional --culture <name>. Returns the parsed
