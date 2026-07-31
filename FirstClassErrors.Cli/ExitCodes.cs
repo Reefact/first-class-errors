@@ -25,6 +25,15 @@ internal static class ExitCodes {
     internal const int ChangesDetected = 2;
 
     /// <summary>
+    ///     The command line could not be parsed: an unknown command, a malformed option, an argument the settings
+    ///     reject. Distinct from <see cref="Failure" /> so a pipeline can tell "this invocation is wrong" — which a
+    ///     retry will never fix — from "the tool ran and could not finish". <c>64</c> is <c>EX_USAGE</c>, the
+    ///     conventional value for a command-line usage error; <see cref="ChangesDetected" /> already owns <c>2</c>,
+    ///     the other convention for it.
+    /// </summary>
+    internal const int UsageError = 64;
+
+    /// <summary>
     ///     The run was cancelled (Ctrl+C). The conventional value for a process killed by a signal is
     ///     <c>128 + signal</c>, and SIGINT is signal 2 — an abort, not a failure.
     /// </summary>

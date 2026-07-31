@@ -2,38 +2,9 @@
 
 using FirstClassErrors.Cli;
 
-using Spectre.Console.Cli;
-
 #endregion
 
-CommandApp app = new();
-
-app.Configure(config => {
-    config.SetApplicationName("fce");
-
-    config.AddCommand<GenerateCommand>("generate")
-          .WithDescription("Generate error documentation from a solution or from assemblies.");
-
-    config.AddBranch<CommandSettings>("catalog", catalog => {
-        catalog.SetDescription("Track the error catalog as a versioned contract (baseline + diff).");
-        catalog.AddCommand<CatalogUpdateCommand>("update").WithDescription("Create or refresh the catalog baseline (deliberately accept the current contract).");
-        catalog.AddCommand<CatalogDiffCommand>("diff").WithDescription("Compare the current catalog against the baseline and report the changes.");
-    });
-
-    config.AddBranch<CommandSettings>("config", configuration => {
-        configuration.SetDescription("Manage the configuration file (fce.json).");
-        configuration.AddCommand<InitCommand>("init").WithDescription("Create the configuration file.");
-        configuration.AddCommand<ConfigShowCommand>("show").WithDescription("Print the current configuration.");
-
-        configuration.AddBranch<CommandSettings>("renderer", renderer => {
-            renderer.SetDescription("Manage the custom renderer libraries referenced by the configuration.");
-            renderer.AddCommand<RendererAddCommand>("add").WithDescription("Register a renderer library.");
-            renderer.AddCommand<RendererRemoveCommand>("remove").WithDescription("Unregister a renderer library.");
-            renderer.AddCommand<RendererListCommand>("list").WithDescription("List available renderers (built-in and configured).");
-        });
-    });
-});
-
-// Spectre handles argument parsing, validation errors and --help. Runtime failures are handled inside each command
-// so the tool reports them as a terse "error: …" line rather than a stack trace.
-return await app.RunAsync(args);
+// The command tree, its exception handling and its exit codes live in CliApplication, so a test can reach them
+// without launching a process. Spectre handles argument parsing and --help; runtime failures are handled inside
+// each command so the tool reports them as a terse "error: …" line rather than a stack trace.
+return await CliApplication.RunAsync(args);
