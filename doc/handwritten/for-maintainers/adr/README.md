@@ -269,3 +269,5 @@ Optional supporting material:
 | [ADR-0065](0065-carry-a-declared-constraint-as-a-value-object.md) | Carry a declared constraint as a value object, not as its rendered text | Accepted |
 | [ADR-0066](0066-declare-a-value-object-and-enforce-its-identity.md) | Declare a value object with an attribute, and enforce its identity by convention | Accepted |
 | [ADR-0067](0067-treat-the-cli-s-exit-codes-as-a-closed-published-contract.md) | Treat the CLI's exit codes as a closed, published contract | Accepted |
+| [ADR-0068](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0068-extract-justdummies-into-its-own-repository.md) | Extract JustDummies into its own repository *(recorded in `Reefact/just-dummies`)* | Proposed |
+| [ADR-0069](0069-consume-justdummies-from-its-own-repository.md) | Consume JustDummies from its own repository | Proposed |
