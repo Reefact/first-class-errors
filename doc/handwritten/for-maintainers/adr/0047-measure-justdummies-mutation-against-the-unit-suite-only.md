@@ -2,8 +2,9 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0047-measure-justdummies-mutation-against-the-unit-suite-only.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Proposed:** 2026-07-27
+**Accepted:** 2026-07-31
 **Decision Makers:** Reefact
 
 ## Context

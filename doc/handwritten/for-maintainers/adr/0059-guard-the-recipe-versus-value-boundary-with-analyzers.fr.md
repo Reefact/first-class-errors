@@ -2,8 +2,9 @@
 
 🌍 🇫🇷 Français (ce fichier) · 🇬🇧 [English](0059-guard-the-recipe-versus-value-boundary-with-analyzers.md)
 
-**Statut :** Proposé
+**Statut :** Accepté
 **Proposé :** 2026-07-29
+**Accepté :** 2026-07-31
 **Décideurs :** Reefact
 
 ## Contexte
