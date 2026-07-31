@@ -2,8 +2,9 @@
 
 🌍 🇫🇷 Français (ce fichier) · 🇬🇧 [English](0066-declare-a-value-object-and-enforce-its-identity.md)
 
-**Statut :** Proposé
+**Statut :** Accepté
 **Proposé :** 2026-07-30
+**Accepté :** 2026-07-31
 **Décideurs :** Reefact
 
 ## Contexte
