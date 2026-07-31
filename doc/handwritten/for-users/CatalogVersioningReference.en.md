@@ -43,6 +43,7 @@ Exit codes:
 | --- | --- |
 | `0` | Baseline created, already current, or replaced successfully. |
 | `1` | Execution error or baseline schema newer than the tool. |
+| `64` | The command line was refused: unknown command, or an option given without its value. |
 | `130` | Execution interrupted. |
 
 ## `fce catalog diff`
@@ -60,6 +61,7 @@ Exit codes:
 | `0` | No change reaches the threshold selected by `--fail-on`. |
 | `2` | At least one change reaches that threshold. |
 | `1` | Execution error: missing baseline, failed extraction, invalid file, and so on. |
+| `64` | The command line was refused: unknown command, or an option given without its value. |
 | `130` | Execution interrupted. |
 
 ### Failure policy: `--fail-on`

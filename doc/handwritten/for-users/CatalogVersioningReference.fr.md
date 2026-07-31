@@ -43,6 +43,7 @@ Codes de sortie :
 | --- | --- |
 | `0` | Baseline créée, déjà à jour ou remplacée avec succès. |
 | `1` | Erreur d'exécution ou schéma de baseline plus récent que l'outil. |
+| `64` | Ligne de commande refusée : commande inconnue, ou option fournie sans sa valeur. |
 | `130` | Exécution interrompue. |
 
 ## `fce catalog diff`
@@ -60,6 +61,7 @@ Codes de sortie :
 | `0` | Aucun changement n'atteint le seuil défini par `--fail-on`. |
 | `2` | Au moins un changement atteint ce seuil. |
 | `1` | Erreur d'exécution : baseline manquante, extraction impossible, fichier invalide, etc. |
+| `64` | Ligne de commande refusée : commande inconnue, ou option fournie sans sa valeur. |
 | `130` | Exécution interrompue. |
 
 ### Politique d'échec : `--fail-on`
