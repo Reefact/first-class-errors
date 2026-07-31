@@ -2,8 +2,9 @@
 
 🌍 🇫🇷 Français (ce fichier) · 🇬🇧 [English](0060-let-stated-intent-outrank-generic-analyzer-advice.md)
 
-**Statut :** Proposé
+**Statut :** Accepté
 **Proposé :** 2026-07-29
+**Accepté :** 2026-07-31
 **Décideurs :** Reefact
 
 ## Contexte

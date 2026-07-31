@@ -247,9 +247,9 @@ Optional supporting material:
 | [ADR-0043](0043-gate-pull-requests-on-the-mutation-score-of-the-diff.md) | Gate pull requests on the mutation score of what they changed | Accepted |
 | [ADR-0044](0044-ship-justdummies-analyzers.md) | Ship first-party JustDummies analyzers, and guard the reproducible async surface with them | Accepted |
 | [ADR-0045](0045-guard-public-and-internal-arguments-against-null.md) | Guard public and internal arguments against null, enforced by a reflection convention | Superseded |
-| [ADR-0046](0046-make-the-per-pull-request-mutation-gate-advisory.md) | Make the per-pull-request mutation gate advisory; the weekly full sweep is the enforced bar | Proposed |
-| [ADR-0047](0047-measure-justdummies-mutation-against-the-unit-suite-only.md) | Measure JustDummies mutation against the deterministic unit suite only; drop the FsCheck property suite from the oracle | Proposed |
-| [ADR-0048](0048-guarantee-a-generated-regex-value-matches-by-bounded-redraw.md) | Guarantee a generated regex value matches its pattern, by bounded redraw | Proposed |
+| [ADR-0046](0046-make-the-per-pull-request-mutation-gate-advisory.md) | Make the per-pull-request mutation gate advisory; the weekly full sweep is the enforced bar | Accepted |
+| [ADR-0047](0047-measure-justdummies-mutation-against-the-unit-suite-only.md) | Measure JustDummies mutation against the deterministic unit suite only; drop the FsCheck property suite from the oracle | Accepted |
+| [ADR-0048](0048-guarantee-a-generated-regex-value-matches-by-bounded-redraw.md) | Guarantee a generated regex value matches its pattern, by bounded redraw | Accepted |
 | [ADR-0049](0049-drop-the-justdummies-generator-from-the-per-pull-request-mutation-matrix.md) | Drop the JustDummies generator from the per-pull-request mutation matrix; its adapter and analyzers keep theirs, the weekly sweep keeps measuring it | Accepted |
 | [ADR-0050](0050-let-a-size-maximum-cap-without-steering-the-draw.md) | Let a size maximum cap without steering the draw, and ceiling an explicitly demanded size | Accepted |
 | [ADR-0051](0051-filter-the-datetimeoffset-pool-by-the-declared-offset.md) | Filter the DateTimeOffset pool by the declared offset; supersedes ADR-0037 | Accepted |
@@ -260,8 +260,8 @@ Optional supporting material:
 | [ADR-0056](0056-state-the-coding-rules-where-an-agent-can-act-on-them.md) | State the coding rules where an agent can act on them, and check them at the edit | Accepted |
 | [ADR-0057](0057-keep-one-dated-line-per-state-an-adr-reached.md) | Keep one dated line per state an ADR reached, and never overwrite one | Accepted |
 | [ADR-0058](0058-suppress-ca1510-while-the-netstandard-floor-stands.md) | Suppress CA1510 while the pre-.NET-6 floor stands | Accepted |
-| [ADR-0059](0059-guard-the-recipe-versus-value-boundary-with-analyzers.md) | Guard the recipe-versus-value boundary with analyzers where the type system cannot reach it | Proposed |
-| [ADR-0060](0060-let-stated-intent-outrank-generic-analyzer-advice.md) | Let stated intent outrank generic analyzer advice, and record the refusal beside the rule | Proposed |
+| [ADR-0059](0059-guard-the-recipe-versus-value-boundary-with-analyzers.md) | Guard the recipe-versus-value boundary with analyzers where the type system cannot reach it | Accepted |
+| [ADR-0060](0060-let-stated-intent-outrank-generic-analyzer-advice.md) | Let stated intent outrank generic analyzer advice, and record the refusal beside the rule | Accepted |
 | [ADR-0061](0061-run-the-justdummies-analyzers-on-the-repository-s-own-code.md) | Run the JustDummies analyzers on the repository's own code, so the rules are verified against code not written to please them | Accepted |
 | [ADR-0062](0062-derive-the-build-rule-set-from-the-quality-profile.md) | Derive the build's Sonar rule set from the quality profile: generated membership, hand-written exceptions, weekly drift check | Accepted |
 | [ADR-0063](0063-throw-the-library-s-own-exceptions-through-named-factories.md) | Throw the library's own exceptions through named factories, and only those — the `System` types keep their guard clauses | Accepted |
