@@ -1,3 +1,9 @@
+#region Usings declarations
+
+using System.Diagnostics;
+
+#endregion
+
 namespace FirstClassErrors;
 
 /// <summary>
@@ -14,6 +20,7 @@ namespace FirstClassErrors;
 ///         success or failure matters, not a produced value.
 ///     </para>
 /// </remarks>
+[DebuggerDisplay("{ToString()}")]
 public sealed class Outcome {
 
     #region Statics members declarations
@@ -627,6 +634,16 @@ public sealed class Outcome {
         return IsSuccess ? AsyncCallbackGuard.EnsureTask(onSuccess(cancellationToken)) : AsyncCallbackGuard.EnsureTask(onFailure(Error!, cancellationToken));
     }
 
+    /// <summary>
+    ///     Returns which of the two states this outcome is in, naming the error when it failed — the form
+    ///     <see cref="DebuggerDisplayAttribute" /> shows, so an outcome under inspection reads as its state rather
+    ///     than as its type name.
+    /// </summary>
+    /// <returns><c>Success</c>, or <c>Failure: </c> followed by the error.</returns>
+    public override string ToString() {
+        return IsSuccess ? "Success" : $"Failure: {Error}";
+    }
+
 }
 
 /// <summary>
@@ -654,6 +671,7 @@ public sealed class Outcome {
 ///         conditions as data, while still leveraging the richness of the error model for diagnostic purposes.
 ///     </para>
 /// </remarks>
+[DebuggerDisplay("{ToString()}")]
 public sealed class Outcome<T>
     where T : notnull {
 
@@ -1146,6 +1164,32 @@ public sealed class Outcome<T>
         if (onFailure is null) { throw new ArgumentNullException(nameof(onFailure)); }
 
         return IsSuccess ? AsyncCallbackGuard.EnsureTask(onSuccess(_result!, cancellationToken)) : AsyncCallbackGuard.EnsureTask(onFailure(Error!, cancellationToken));
+    }
+
+    /// <summary>
+    ///     Returns which of the two states this outcome is in — the carried result when it succeeded, the error when
+    ///     it failed. The form <see cref="DebuggerDisplayAttribute" /> shows, so an outcome under inspection reads as
+    ///     its state rather than as its type name.
+    /// </summary>
+    /// <remarks>
+    ///     A result is the caller's own type, so rendering it runs the caller's <c>ToString</c>. Under the doctrine
+    ///     that reporting a failure never throws, one that raises degrades to the type name rather than replacing the
+    ///     outcome being inspected with an unrelated exception — an outcome is read on failure paths, where a
+    ///     secondary throw masks the problem that was being diagnosed.
+    /// </remarks>
+    /// <returns><c>Success: </c> followed by the result, or <c>Failure: </c> followed by the error.</returns>
+    public override string ToString() {
+        return IsSuccess ? $"Success: {Rendered(_result)}" : $"Failure: {Error}";
+    }
+
+    private static string Rendered(T? result) {
+        if (result is null) { return "null"; }
+
+        try {
+            return result.ToString() ?? result.GetType().Name;
+        } catch (Exception) {
+            return result.GetType().Name;
+        }
     }
 
 }

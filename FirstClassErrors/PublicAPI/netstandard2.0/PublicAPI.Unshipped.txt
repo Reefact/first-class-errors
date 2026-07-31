@@ -225,6 +225,8 @@ override FirstClassErrors.ErrorContextKey.ToString() -> string!
 override FirstClassErrors.ErrorDocumentation.ToString() -> string!
 override FirstClassErrors.GenDoc.ErrorDocumentationExtractionFailure.ToString() -> string!
 override FirstClassErrors.InfrastructureError.ToException() -> FirstClassErrors.DiagnosableException!
+override FirstClassErrors.Outcome.ToString() -> string!
+override FirstClassErrors.Outcome<T>.ToString() -> string!
 override FirstClassErrors.PrimaryPortError.ToException() -> FirstClassErrors.DiagnosableException!
 override FirstClassErrors.PrimaryPortInnerErrors.ToString() -> string!
 override FirstClassErrors.SecondaryPortError.ToException() -> FirstClassErrors.DiagnosableException!
