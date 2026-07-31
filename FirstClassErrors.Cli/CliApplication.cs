@@ -1,5 +1,7 @@
 #region Usings declarations
 
+using System.Diagnostics.CodeAnalysis;
+
 using Spectre.Console.Cli;
 
 #endregion
@@ -39,6 +41,17 @@ internal static class CliApplication {
         config.SetApplicationName("fce");
         config.SetExceptionHandler(HandleUncaught);
 
+        // An argument the command tree does not declare is refused rather than collected. The parser gathers such a
+        // token into the remaining arguments, which this tool never reads: a mistyped flag was accepted, ignored, and
+        // reported as a success, so a pipeline asking for something the tool does not do was told it had it.
+        //
+        // The parser's own strict mode (UseStrictParsing) would say the same thing, and cannot be used: in
+        // Spectre.Console.Cli 0.55 it makes an option declared without a value swallow the internal
+        // "__default_command" token as that value, so `fce generate --solution` looks for a file by that name instead
+        // of reporting a usage error. Refusing the leftovers ourselves keeps the diagnosis and leaves the parser's
+        // handling of a missing value intact.
+        config.SetInterceptor(new RefuseUndeclaredArguments());
+
         config.AddCommand<GenerateCommand>("generate")
               .WithDescription("Generate error documentation from a solution or from assemblies.");
 
@@ -73,7 +86,8 @@ internal static class CliApplication {
     /// </remarks>
     private static int HandleUncaught(Exception exception, ITypeResolver? resolver) {
         _ = resolver;
-        bool usage = exception is CommandParseException or CommandTemplateException or CommandConfigurationException;
+        bool usage = exception is CommandParseException or CommandTemplateException or CommandConfigurationException
+                                  or UndeclaredArgumentException;
 
         Console.Error.WriteLine($"error: {exception.Message}");
         if (usage) { Console.Error.WriteLine("Run 'fce --help' to see the available commands."); }
@@ -82,5 +96,37 @@ internal static class CliApplication {
     }
 
     #endregion
+
+    /// <summary>
+    ///     Refuses a command line carrying an argument no command declares, before the command runs.
+    /// </summary>
+    private sealed class RefuseUndeclaredArguments : ICommandInterceptor {
+
+        /// <inheritdoc />
+        public void Intercept(CommandContext context, CommandSettings settings) {
+            if (context is null) { throw new ArgumentNullException(nameof(context)); }
+
+            IReadOnlyList<string> undeclared = [.. context.Remaining.Raw, .. context.Remaining.Parsed.Select(pair => pair.Key)];
+            if (undeclared.Count == 0) { return; }
+
+            throw new UndeclaredArgumentException(undeclared[0]);
+        }
+
+    }
+
+}
+
+/// <summary>
+///     Raised when the command line carries an argument the command tree does not declare. It is the tool's own
+///     usage refusal rather than the parser's, so it names the offending argument and nothing else.
+/// </summary>
+[SuppressMessage("Minor Code Smell", "S3871:Exception types should be \"public\"",
+                 Justification =
+                     "The rule exists so a caller outside the assembly can catch the exception. This assembly is an " +
+                     "executable: nothing references it, and the only code that catches this is the exit-code handler " +
+                     "a few lines above. Making it public would advertise a type to callers that cannot exist.")]
+internal sealed class UndeclaredArgumentException : Exception {
+
+    internal UndeclaredArgumentException(string argument) : base($"Unknown argument '{argument}'.") { }
 
 }
