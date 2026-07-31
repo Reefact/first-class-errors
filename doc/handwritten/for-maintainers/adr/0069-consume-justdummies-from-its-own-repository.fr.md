@@ -2,8 +2,9 @@
 
 🌍 🇫🇷 Français (ce fichier) · 🇬🇧 [English](0069-consume-justdummies-from-its-own-repository.md)
 
-**Statut :** Proposé
+**Statut :** Accepté
 **Proposé :** 2026-07-31
+**Accepté :** 2026-07-31
 **Décideurs :** Reefact
 **Supersède :** [ADR-0011](0011-host-dummies-as-a-standalone-package.fr.md) (son volet colocation), ainsi que
 le contournement d'embarquement accepté par [ADR-0026](0026-rebase-testing-arbitrary-values-on-dummies.fr.md)
@@ -87,7 +88,10 @@ bord.
 
 Les ADR-0011, ADR-0026 et ADR-0061 ne sont **pas** supprimés, ni l'ADR-0006. Ils actent des décisions que ce
 dépôt a réellement prises, et la forme actuelle de `FirstClassErrors.Testing` est illisible sans eux. Les
-ADR-0011 et ADR-0022 existent aussi dans `Reefact/just-dummies`, car ils lient les deux produits.
+ADR-0011 et ADR-0022 existent aussi dans `Reefact/just-dummies`, car ils lient les deux produits — ils y
+portent les numéros [ADR-0003](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0003-host-dummies-as-a-standalone-package.fr.md) et
+[ADR-0007](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0007-floor-the-library-on-net-framework-4-7-2.fr.md), ce dépôt-là ayant renuméroté sa base en
+séquence contiguë après l'extraction.
 
 `doc/handwritten/for-users/ArbitraryTestValues.{en,fr}.md` documente le package de test de ce dépôt et
 mentionne JustDummies comme son moteur ; il reste, et gagne un lien vers le nouveau dépôt.
