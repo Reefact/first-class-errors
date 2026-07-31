@@ -53,7 +53,34 @@ public sealed class CliApplicationExitCodeTests {
         Check.That(error).Contains("frobnicate");
     }
 
-    [Fact(DisplayName = "An option given without its value is a usage error (64).")]
+    [Fact(DisplayName = "An option no command declares is a usage error (64), naming the argument.")]
+    public void AnUndeclaredOptionIsAUsageError() {
+        // Exercise: config show succeeds on its own, so only the unknown option can be what fails this.
+        (int exitCode, string error) = Run("config", "show", "--nope");
+
+        // Verify
+        Check.That(exitCode).IsEqualTo(64);
+        Check.That(error).Contains("--nope");
+    }
+
+    // The regression this pins: a mistyped flag used to be collected into the parser's remaining arguments — which
+    // this tool never reads — so the command ran without it and reported success. A pipeline asking for something the
+    // tool did not do was told it had it.
+    [Fact(DisplayName = "A mistyped option is refused rather than ignored, and never reports success.")]
+    public void AMistypedOptionIsRefusedRatherThanIgnored() {
+        // Exercise
+        (int exitCode, string error) = Run("config", "show", "--verbosee");
+
+        // Verify
+        Check.That(exitCode).IsNotEqualTo(0);
+        Check.That(exitCode).IsEqualTo(64);
+        Check.That(error).Contains("--verbosee");
+    }
+
+    // Refusing undeclared arguments must not be bought by breaking the parser's own diagnosis. Spectre's strict
+    // parsing mode would have said the same thing about an unknown option, at the cost of this case: in 0.55 it makes
+    // a valueless option swallow the internal "__default_command" token, so the tool looks for a file by that name.
+    [Fact(DisplayName = "An option given without its value is still the parser's usage error (64).")]
     public void AnOptionWithoutItsValueIsAUsageError() {
         // Exercise
         (int exitCode, string error) = Run("generate", "--solution");
