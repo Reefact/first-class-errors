@@ -15,13 +15,13 @@ internal sealed class ConfigShowCommand : Command<ConfigScopedSettings> {
         if (!ConfigurationStore.Exists(path)) {
             Console.Out.WriteLine($"No configuration at '{path}'. Run 'fce config init' to create one.");
 
-            return 0;
+            return ExitCodes.Success;
         }
 
         Console.Out.WriteLine($"# {path}");
         Console.Out.WriteLine(File.ReadAllText(path));
 
-        return 0;
+        return ExitCodes.Success;
     }
 
 }

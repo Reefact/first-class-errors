@@ -18,7 +18,7 @@ internal sealed class RendererRemoveCommand : Command<RendererReferenceSettings>
         if (!ConfigurationStore.Exists(path)) {
             Console.Error.WriteLine($"error: no configuration at '{path}'. Run 'fce config init' first.");
 
-            return 1;
+            return ExitCodes.Failure;
         }
 
         string                configDir     = Path.GetDirectoryName(path) ?? Directory.GetCurrentDirectory();
@@ -31,13 +31,13 @@ internal sealed class RendererRemoveCommand : Command<RendererReferenceSettings>
         if (removed == 0) {
             Console.Error.WriteLine($"error: '{settings.LibraryPath}' is not referenced.");
 
-            return 1;
+            return ExitCodes.Failure;
         }
 
         ConfigurationStore.Save(path, configuration);
         Console.Out.WriteLine($"Removed '{settings.LibraryPath}'.");
 
-        return 0;
+        return ExitCodes.Success;
     }
 
 }

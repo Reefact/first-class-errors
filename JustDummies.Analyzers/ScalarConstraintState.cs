@@ -18,6 +18,13 @@ namespace JustDummies.Analyzers;
 /// </remarks>
 internal sealed class ScalarConstraintState {
 
+    /// <summary>
+    ///     How many values the emptiness checks will walk before giving up and answering "not empty". It bounds both
+    ///     walks below — the range and the lattice — so the rule stays cheap on a chain over a huge domain, at the
+    ///     price of a deliberate false negative on one no realistic exclusion set could empty anyway.
+    /// </summary>
+    private const long MaxWalkLength = 64;
+
     private ScalarConstraintState(long minimum, long maximum, long? multipleOf, HashSet<long>? allowed, HashSet<long> excluded, bool saturated = false) {
         Minimum    = minimum;
         Maximum    = maximum;
@@ -66,7 +73,7 @@ internal sealed class ScalarConstraintState {
     // Only walk a range small enough to enumerate, and far enough from the extremes that the arithmetic cannot
     // overflow. A wider range is never declared empty by exclusions: no realistic exclusion set could empty it.
     private bool FitsInAWalk() {
-        return Minimum > long.MinValue / 2 && Maximum < long.MaxValue / 2 && Maximum - Minimum < 64;
+        return Minimum > long.MinValue / 2 && Maximum < long.MaxValue / 2 && Maximum - Minimum < MaxWalkLength;
     }
 
     /// <summary>Whether <paramref name="value" /> survives every constraint declared so far.</summary>
@@ -167,13 +174,14 @@ internal sealed class ScalarConstraintState {
             ? (Minimum + step - 1) / step * step
             : -((-Minimum) / step) * step;
 
-        for (long candidate = first, seen = 0; candidate <= Maximum && seen < 64; candidate += step, seen++) {
+        for (long candidate = first, seen = 0; candidate <= Maximum && seen < MaxWalkLength; candidate += step, seen++) {
             if (!Excluded.Contains(candidate) && (Allowed is null || Allowed.Contains(candidate))) { return true; }
         }
 
         // The walk gave up before finding one; only a range genuinely wider than the walk can still hold a multiple.
-        // Compare by division so the subtraction cannot overflow at the representable extremes.
-        return Maximum / 2 - Minimum / 2 >= step * 32;
+        // Compare by division so the subtraction cannot overflow at the representable extremes — which is why both
+        // sides are halved, the right one carrying half the walk length rather than the whole of it.
+        return Maximum / 2 - Minimum / 2 >= step * (MaxWalkLength / 2);
     }
 
 }

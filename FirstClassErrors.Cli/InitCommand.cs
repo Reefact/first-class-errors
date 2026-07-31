@@ -28,13 +28,13 @@ internal sealed class InitCommand : Command<InitSettings> {
         if (ConfigurationStore.Exists(path) && !settings.Force) {
             Console.Error.WriteLine($"error: a configuration already exists at '{path}'. Use --force to overwrite.");
 
-            return 1;
+            return ExitCodes.Failure;
         }
 
         ConfigurationStore.Save(path, new CliConfiguration());
         Console.Out.WriteLine($"Created configuration at '{path}'.");
 
-        return 0;
+        return ExitCodes.Success;
     }
 
 }
