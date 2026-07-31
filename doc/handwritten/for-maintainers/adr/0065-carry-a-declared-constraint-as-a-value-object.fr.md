@@ -2,8 +2,9 @@
 
 🌍 🇫🇷 Français (ce fichier) · 🇬🇧 [English](0065-carry-a-declared-constraint-as-a-value-object.md)
 
-**Statut :** Proposé
+**Statut :** Accepté
 **Proposé :** 2026-07-30
+**Accepté :** 2026-07-31
 **Décideurs :** Reefact
 
 ## Contexte
