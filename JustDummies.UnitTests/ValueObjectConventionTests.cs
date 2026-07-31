@@ -1,5 +1,6 @@
 #region Usings declarations
 
+using System.Diagnostics;
 using System.Reflection;
 
 using NFluent;
@@ -10,8 +11,9 @@ namespace JustDummies.UnitTests;
 
 /// <summary>
 ///     The value-object convention, enforced by reflection over the whole library: a type marked
-///     <c>[ValueObject]</c> is sealed, immutable, and carries the full identity set — <see cref="IEquatable{T}" />,
-///     both <c>Equals</c> overloads, <c>GetHashCode</c>, and <c>==</c>/<c>!=</c>.
+///     <c>[ValueObject]</c> is sealed, immutable, renders itself, and carries the full identity set —
+///     <see cref="IEquatable{T}" />, both <c>Equals</c> overloads, <c>GetHashCode</c>, <c>ToString</c> behind a
+///     <see cref="DebuggerDisplayAttribute" />, and <c>==</c>/<c>!=</c>.
 /// </summary>
 /// <remarks>
 ///     <para>
@@ -77,6 +79,17 @@ public sealed class ValueObjectConventionTests {
 
         if (!DeclaresMethod(value, nameof(Equals), typeof(object))) { yield return "does not override Equals(object)"; }
         if (!DeclaresMethod(value, nameof(GetHashCode))) { yield return "does not override GetHashCode()"; }
+
+        // A value that does not render itself shows a debugger its type name, which is the one thing the reader
+        // already knows. The attribute is what puts that rendering in front of them without expanding the instance.
+        if (!DeclaresMethod(value, nameof(ToString))) { yield return "does not override ToString()"; }
+
+        DebuggerDisplayAttribute? display = value.GetCustomAttribute<DebuggerDisplayAttribute>();
+        if (display is null) {
+            yield return "does not carry [DebuggerDisplay]";
+        } else if (display.Value?.Contains(nameof(ToString)) != true) {
+            yield return $"carries [DebuggerDisplay(\"{display.Value}\")] rather than forwarding to ToString()";
+        }
 
         // The operator pair is the silent half of the contract: without it `a == b` compiles and compares references,
         // where a missing Equals would at least be visible to anyone reading the type.

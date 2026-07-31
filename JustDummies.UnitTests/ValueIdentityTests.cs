@@ -66,6 +66,19 @@ public sealed class ValueIdentityTests {
         Check.That(partial.Guidance).Contains("not reproducible from this seed alone");
     }
 
+    // Rendered for a reader rather than for a message: nothing appends a replay whole — AnyGenerationException takes
+    // its guidance and its seed separately — so this exists for the debugger, which the type points at it.
+    [Fact(DisplayName = "A replay renders its seed and guidance rather than its type name.")]
+    public void ReplayRendersItself() {
+        FixedRandomSource source = new(7);
+
+        string rendered = Replay.Of(source, 42).ToString();
+
+        Check.That(rendered).StartsWith("seed 42:");
+        Check.That(rendered).Contains("Any.WithSeed(42)");
+        Check.That(rendered).Not.Contains(nameof(Replay));
+    }
+
     [Fact(DisplayName = "Two claims blaming the same constraint for the same thing are equal.")]
     public void ClaimsWithTheSameConstraintAndClaimAreEqual() {
         ConstraintClaim first  = ConstraintClaim.Of(Length("3"), "already fixes the length at 3");

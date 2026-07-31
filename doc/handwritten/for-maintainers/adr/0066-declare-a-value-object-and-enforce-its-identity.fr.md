@@ -36,7 +36,7 @@ lecteur pouvait l'appliquer.
 ## Décision
 
 Un type dont les instances sont des valeurs se déclare par `[ValueObject]`, et une convention par réflexion tient
-chaque type marqué à une identité de valeur complète.
+chaque type marqué à une identité de valeur complète et à se rendre lui-même pour un lecteur.
 
 ## Justification
 

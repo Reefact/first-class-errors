@@ -1,3 +1,9 @@
+#region Usings declarations
+
+using System.Diagnostics;
+
+#endregion
+
 namespace JustDummies;
 
 /// <summary>
@@ -28,6 +34,7 @@ namespace JustDummies;
 ///     </para>
 /// </remarks>
 [BuiltOnTheFailurePath]
+[DebuggerDisplay("{ToString()}")]
 [ValueObject]
 internal sealed class Replay : IEquatable<Replay> {
 
@@ -86,6 +93,14 @@ internal sealed class Replay : IEquatable<Replay> {
 
     /// <summary>The sentence naming the seed and scoping what it replays, appended to the failure message.</summary>
     internal string Guidance { get; }
+
+    /// <summary>
+    ///     The seed and what it replays, as a reader needs them — the form <see cref="DebuggerDisplayAttribute" />
+    ///     shows, since a value that renders as its own type name tells a debugger nothing.
+    /// </summary>
+    public override string ToString() {
+        return $"seed {Seed}: {Guidance}";
+    }
 
     /// <inheritdoc />
     public bool Equals(Replay? other) {

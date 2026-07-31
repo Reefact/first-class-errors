@@ -1,3 +1,9 @@
+#region Usings declarations
+
+using System.Diagnostics;
+
+#endregion
+
 namespace JustDummies;
 
 /// <summary>
@@ -40,6 +46,7 @@ namespace JustDummies;
 ///         restate it, and could not be reached from C# without defeating the annotation it duplicates.
 ///     </para>
 /// </remarks>
+[DebuggerDisplay("{ToString()}")]
 [ValueObject]
 internal sealed class ConstraintCall : IEquatable<ConstraintCall> {
 
