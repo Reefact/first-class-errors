@@ -10,6 +10,12 @@ namespace JustDummies;
 /// </summary>
 public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Guid> {
 
+    /// <summary>How many bytes a <see cref="Guid" /> is made of — its 128 bits, which a draw fills whole.</summary>
+    private const int GuidByteCount = 16;
+
+    /// <summary>How many values a pin leaves producible — the one it fixed.</summary>
+    private const int PinnedCardinality = 1;
+
     #region Statics members declarations
 
     internal static AnyGuid Create(RandomSource source) {
@@ -68,7 +74,7 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Gui
     RandomSource? IHasRandomSource.Source => _source;
 
     // Pinned to a single value, or bounded by an allow-list; otherwise the domain is effectively unbounded.
-    long? ICardinalityHint<Guid>.DistinctCardinality => _pinned is not null ? 1 : _effectiveAllowed?.Count;
+    long? ICardinalityHint<Guid>.DistinctCardinality => _pinned is not null ? PinnedCardinality : _effectiveAllowed?.Count;
 
     // Mirrors Generate: the pin, then the allow-list, then the full space minus the exclusions.
     bool ICardinalityHint<Guid>.Contains(Guid value) {
@@ -144,7 +150,7 @@ public sealed class AnyGuid : IAny<Guid>, IHasRandomSource, ICardinalityHint<Gui
             return _effectiveAllowed[random.Next(_effectiveAllowed.Count)];
         }
 
-        byte[] bytes = new byte[16];
+        byte[] bytes = new byte[GuidByteCount];
         random.NextBytes(bytes);
         Guid candidate = new(bytes);
         // Colliding with an excluded identifier has probability |excluded| / 2^128 per draw. On a collision,

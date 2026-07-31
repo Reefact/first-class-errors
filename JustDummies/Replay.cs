@@ -38,6 +38,12 @@ namespace JustDummies;
 [ValueObject]
 internal sealed class Replay : IEquatable<Replay> {
 
+    /// <summary>
+    ///     The odd prime the seed's hash is multiplied by before the guidance is folded in, so that the two fields
+    ///     swapping values do not collide. Its exact value carries no meaning beyond being odd and prime.
+    /// </summary>
+    private const int HashMultiplier = 397;
+
     #region Statics members declarations
 
     /// <summary>
@@ -115,7 +121,7 @@ internal sealed class Replay : IEquatable<Replay> {
     /// <inheritdoc />
     public override int GetHashCode() {
         unchecked {
-            return (Seed * 397) ^ StringComparer.Ordinal.GetHashCode(Guidance);
+            return (Seed * HashMultiplier) ^ StringComparer.Ordinal.GetHashCode(Guidance);
         }
     }
 

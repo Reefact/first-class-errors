@@ -42,6 +42,12 @@ namespace JustDummies;
 [ValueObject]
 internal sealed class ConstraintClaim : IEquatable<ConstraintClaim> {
 
+    /// <summary>
+    ///     The odd prime each field's hash is multiplied by before the next is folded in, so that two fields swapping
+    ///     values do not collide. Its exact value carries no meaning beyond being odd and prime.
+    /// </summary>
+    private const int HashMultiplier = 397;
+
     #region Statics members declarations
 
     /// <summary>
@@ -120,9 +126,9 @@ internal sealed class ConstraintClaim : IEquatable<ConstraintClaim> {
     public override int GetHashCode() {
         unchecked {
             int hash = StringComparer.Ordinal.GetHashCode(Subject);
-            hash = (hash * 397) ^ StringComparer.Ordinal.GetHashCode(Claims);
+            hash = (hash * HashMultiplier) ^ StringComparer.Ordinal.GetHashCode(Claims);
 
-            return (hash * 397) ^ (Constraint?.GetHashCode() ?? 0);
+            return (hash * HashMultiplier) ^ (Constraint?.GetHashCode() ?? 0);
         }
     }
 

@@ -16,6 +16,14 @@ namespace JustDummies;
 /// </summary>
 public sealed class AnyInt128 : IAny<Int128>, IHasRandomSource, ICardinalityHint<Int128> {
 
+    /// <summary>
+    ///     The bit that tells a negative <see cref="Int128" /> from a non-negative one. Flipping it maps a signed
+    ///     value onto its order-preserving ordinal and back — the 128-bit twin of <see cref="OrdinalMapping" />'s
+    ///     64-bit mapping. It is <c>static readonly</c> rather than <c>const</c> because C# has no constant of a
+    ///     user-defined type such as <see cref="UInt128" />.
+    /// </summary>
+    private static readonly UInt128 SignBit = UInt128.One << 127;
+
     #region Statics members declarations
 
     internal static AnyInt128 Create(RandomSource source) {
@@ -25,11 +33,11 @@ public sealed class AnyInt128 : IAny<Int128>, IHasRandomSource, ICardinalityHint
     }
 
     private static UInt128 Ord(Int128 value) {
-        return unchecked((UInt128)value) ^ (UInt128.One << 127);
+        return unchecked((UInt128)value) ^ SignBit;
     }
 
     private static Int128 Val(UInt128 ordinal) {
-        return unchecked((Int128)(ordinal ^ (UInt128.One << 127)));
+        return unchecked((Int128)(ordinal ^ SignBit));
     }
 
     private static string V(Int128 value) {

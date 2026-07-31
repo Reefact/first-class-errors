@@ -14,6 +14,12 @@ internal sealed class DecimalIntervalSpec {
     private const int NoScale     = -1;
     private const int NudgeBudget = 128;
 
+    /// <summary>The most decimal places a <see cref="decimal" /> carries — the widest scale its 96-bit mantissa allows.</summary>
+    internal const int MaxScale = 28;
+
+    /// <summary>How many bytes that mantissa spans: 96 bits, which <see cref="BitConverter" /> reads back as three limbs.</summary>
+    private const int MantissaByteCount = 3 * sizeof(int);
+
     private static readonly decimal SmallestStep = 0.0000000000000000000000000001m;
     private static readonly decimal MaxFraction  = 7.9228162514264337593543950335m;
 
@@ -236,13 +242,13 @@ internal sealed class DecimalIntervalSpec {
         // A uniform fraction in [0, 1] over the full 96-bit mantissa scale. NextBytes fills all three
         // limbs — including each limb's top bit, which three non-negative Random.Next() draws would pin
         // to zero, capping the fraction near 0.5 and leaving the upper half of every range unreachable.
-        byte[] mantissa = new byte[12];
+        byte[] mantissa = new byte[MantissaByteCount];
         random.NextBytes(mantissa);
         decimal fraction = new decimal(
             BitConverter.ToInt32(mantissa, 0),
-            BitConverter.ToInt32(mantissa, 4),
-            BitConverter.ToInt32(mantissa, 8),
-            false, 28) / MaxFraction;
+            BitConverter.ToInt32(mantissa, sizeof(int)),
+            BitConverter.ToInt32(mantissa, 2 * sizeof(int)),
+            false, MaxScale) / MaxFraction;
         // Interpolate as a convex combination: min*(1 - fraction) + max*fraction stays within [min, max] for
         // fraction in [0, 1], and no intermediate ever leaves the decimal range. The earlier midpoint form
         // (mid ± half) overflowed on the full domain — it is symmetric, so max/2 rounds up and half = max/2 - min/2
