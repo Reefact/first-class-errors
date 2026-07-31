@@ -70,7 +70,7 @@ internal sealed class CatalogUpdateCommand : Command<CatalogUpdateSettings> {
                 BaselineStore.Save(baselinePath, current);
                 _output.WriteLine($"Baseline created at '{baselinePath}', tracking {current.Errors.Count} error(s).");
 
-                return 0;
+                return ExitCodes.Success;
             }
 
             string existingText = File.ReadAllText(baselinePath);
@@ -78,7 +78,7 @@ internal sealed class CatalogUpdateCommand : Command<CatalogUpdateSettings> {
             if (string.Equals(existingText, canonical, StringComparison.Ordinal)) {
                 _output.WriteLine($"Baseline at '{baselinePath}' is already up to date ({current.Errors.Count} error(s)).");
 
-                return 0;
+                return ExitCodes.Success;
             }
 
             // Summarize what the refresh absorbs, so accepting a breaking change is a visible, reviewable act. A
@@ -103,13 +103,13 @@ internal sealed class CatalogUpdateCommand : Command<CatalogUpdateSettings> {
                 _output.WriteLine($"Baseline updated at '{baselinePath}': {diff.BreakingChanges.Count} breaking, {diff.CompatibleChanges.Count} compatible and {diff.InformationalChanges.Count} documentation change(s) accepted.");
             }
 
-            return 0;
+            return ExitCodes.Success;
         } catch (OperationCanceledException) {
             // Cancellation (Ctrl+C) is an abort, not a failure: the child processes are already killed through the
             // token, so report it with the conventional SIGINT exit code (128 + 2) rather than a generic error.
             logger.Error("Catalog update canceled.");
 
-            return 130;
+            return ExitCodes.Canceled;
         } catch (DiagnosableException exception) {
             return FailureReporting.ReportCodedFailure(logger, exception);
         } catch (Exception exception) {
@@ -117,7 +117,7 @@ internal sealed class CatalogUpdateCommand : Command<CatalogUpdateSettings> {
             logger.Error(exception.Message);
             logger.Debug(exception.ToString());
 
-            return 1;
+            return ExitCodes.Failure;
         }
     }
 

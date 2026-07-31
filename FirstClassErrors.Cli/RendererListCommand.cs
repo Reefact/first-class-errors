@@ -34,7 +34,7 @@ internal sealed class RendererListCommand : Command<ConfigScopedSettings> {
         if (configuration.Renderers.Count == 0) {
             Console.Out.WriteLine($"No custom renderers configured ({path}).");
 
-            return 0;
+            return ExitCodes.Success;
         }
 
         string configDir = Path.GetDirectoryName(path) ?? Directory.GetCurrentDirectory();
@@ -56,7 +56,7 @@ internal sealed class RendererListCommand : Command<ConfigScopedSettings> {
             }
         }
 
-        return 0;
+        return ExitCodes.Success;
     }
 
 }

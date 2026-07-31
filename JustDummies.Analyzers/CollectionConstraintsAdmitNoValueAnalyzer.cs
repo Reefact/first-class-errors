@@ -17,6 +17,13 @@ namespace JustDummies.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class CollectionConstraintsAdmitNoValueAnalyzer : DiagnosticAnalyzer {
 
+    /// <summary>
+    ///     How many values <c>Any.Boolean()</c> can produce. Restated here rather than read from the library: an
+    ///     analyzer ships without it and reasons over symbols, so a fact about a generator's domain has to be
+    ///     written down on this side too.
+    /// </summary>
+    private const int BooleanValueCount = 2;
+
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
         ImmutableArray.Create(Descriptors.CollectionConstraintsAdmitNoValue);
@@ -149,7 +156,7 @@ public sealed class CollectionConstraintsAdmitNoValueAnalyzer : DiagnosticAnalyz
 
         switch (root.TargetMethod.Name) {
             case "Boolean":
-                cardinality = 2;
+                cardinality = BooleanValueCount;
 
                 return true;
 

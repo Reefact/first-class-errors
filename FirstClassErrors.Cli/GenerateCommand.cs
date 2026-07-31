@@ -63,7 +63,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
             // Effective options: command line first, then configuration, then the built-in default.
             ResolvedGenerateOptions resolved = GenerateOptionsResolver.Resolve(settings, configuration);
 
-            if (ReportUnusableSource(resolved, logger)) { return 1; }
+            if (ReportUnusableSource(resolved, logger)) { return ExitCodes.Failure; }
 
             // The language drives both the extraction (localized error descriptions) and the rendering (localized
             // template boilerplate). It defaults to English.
@@ -75,7 +75,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
             IReadOnlyList<IErrorDocumentationRenderer> customRenderers = RendererLoader.Load(configuration.Renderers, configDir, logger);
             IErrorDocumentationRenderer                renderer        = RendererCatalog.Create(resolved.Format, customRenderers);
 
-            if (ReportUnusableOutput(resolved, renderer, logger)) { return 1; }
+            if (ReportUnusableOutput(resolved, renderer, logger)) { return ExitCodes.Failure; }
 
             SolutionGenerationOptions options = new() {
                 BuildSolution      = !resolved.NoBuild,
@@ -117,14 +117,14 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
                 logger.Info($"Catalog snapshot written to '{snapshotPath}'.");
             }
 
-            return 0;
+            return ExitCodes.Success;
         } catch (OperationCanceledException) {
             // Cancellation (Ctrl+C) is an abort, not a failure: the child processes are already killed through the
             // token, so report it as its own concise line and the conventional SIGINT exit code (128 + 2) rather than a
             // generic error.
             logger.Error("Generation canceled.");
 
-            return 130;
+            return ExitCodes.Canceled;
         } catch (DiagnosableException exception) {
             return FailureReporting.ReportCodedFailure(logger, exception);
         } catch (Exception exception) {
@@ -134,7 +134,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
             logger.Error(exception.Message);
             logger.Debug(exception.ToString());
 
-            return 1;
+            return ExitCodes.Failure;
         }
     }
 
