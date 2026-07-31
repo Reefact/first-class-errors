@@ -56,6 +56,27 @@ internal sealed class ConstraintCall : IEquatable<ConstraintCall> {
     ///     A constraint whose arguments are rendered, including the common case of a constraint that takes none —
     ///     which is this factory called with no <paramref name="arguments" /> (<c>Zero()</c>, <c>Distinct()</c>).
     /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         <paramref name="arguments" /> takes rendered <b>text</b> — what the reader of a conflict message sees
+    ///         between the parentheses — never a parameter name. Two shapes reach it. The ordinary one is a value the
+    ///         declaring generator rendered itself (<c>V(minimum)</c>, <c>Join(values)</c>), giving
+    ///         <c>Between(0, 100)</c>. The other is a word standing in for an argument that has no useful rendering,
+    ///         written where it reads better than the ellipsis <see cref="OfElided" /> would give:
+    ///         <c>Distinct(comparer)</c> for an equality, <c>ContainingAny(&lt;generator&gt;)</c> for a recipe.
+    ///     </para>
+    ///     <para>
+    ///         Such a stand-in is passed as the literal it is, and <c>nameof(...)</c> does not belong here even when
+    ///         the parameter it would name happens to spell it — <c>Distinct(IEqualityComparer&lt;T&gt;)</c> passes
+    ///         <c>"comparer"</c>, not <c>nameof(comparer)</c>. The rule differs from <paramref name="name" />'s on
+    ///         purpose: a method name is a public symbol the message must follow through a rename, whereas a stand-in
+    ///         is prose whose resemblance to a parameter is a coincidence of good naming. Tying it to the symbol would
+    ///         let a rename local to one overload silently reword a user-facing message, and would leave the same
+    ///         constraint reading differently across the generators declaring it as soon as two of them named their
+    ///         parameter differently. <c>&lt;generator&gt;</c> is that same convention where no identifier could have
+    ///         been mistaken for it.
+    ///     </para>
+    /// </remarks>
     /// <param name="name">The declaring method's name, passed as <c>nameof(...)</c>.</param>
     /// <param name="arguments">The arguments, each already rendered by the declaring generator.</param>
     /// <returns>The constraint, rendered as <c>name(argument, argument)</c>.</returns>
