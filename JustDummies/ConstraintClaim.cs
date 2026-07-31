@@ -1,3 +1,9 @@
+#region Usings declarations
+
+using System.Diagnostics;
+
+#endregion
+
 namespace JustDummies;
 
 /// <summary>
@@ -32,6 +38,7 @@ namespace JustDummies;
 ///     </para>
 /// </remarks>
 [BuiltOnTheFailurePath]
+[DebuggerDisplay("{ToString()}")]
 [ValueObject]
 internal sealed class ConstraintClaim : IEquatable<ConstraintClaim> {
 

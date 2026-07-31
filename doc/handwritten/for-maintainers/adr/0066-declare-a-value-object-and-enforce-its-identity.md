@@ -36,7 +36,7 @@ enforce it.
 ## Decision
 
 A type whose instances are values declares itself with `[ValueObject]`, and a reflection convention holds every
-marked type to a full value identity.
+marked type to a full value identity and to rendering itself for a reader.
 
 ## Rationale
 
@@ -60,6 +60,12 @@ the fields chosen for equality are the right ones, are questions about a specifi
 over its shape can answer; they belong to that type's own tests. What reflection can settle — sealed, immutable, and
 the full member set present — is precisely the half that goes missing when nobody is looking, and it cannot be
 satisfied by accident.
+
+Rendering is part of the contract for the same reason the rest is: a value that does not override `ToString` shows a
+debugger the one thing its reader already knows — its type name — and nothing about that looks wrong either. The
+repository had already settled the form, `[DebuggerDisplay]` forwarding to `ToString`, on the values in
+`FirstClassErrors`; it was followed there by attention alone, and the values added since did not follow it. That is
+the same drift this decision exists to stop, so the convention carries it rather than a reader.
 
 Sealedness is required rather than encouraged because an unsealed value cannot keep its equality symmetric: a
 subclass carrying an extra field compares equal to its base in one direction and unequal in the other, which breaks
