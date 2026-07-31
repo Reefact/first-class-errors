@@ -7,6 +7,12 @@ namespace JustDummies;
 /// </summary>
 public sealed class AnyBoolean : IAny<bool>, IHasRandomSource, ICardinalityHint<bool> {
 
+    /// <summary>How many values <see cref="bool" /> has: <c>false</c> and <c>true</c>, and nothing else.</summary>
+    private const int BooleanValueCount = 2;
+
+    /// <summary>How many values a pin leaves producible — the one it fixed.</summary>
+    private const int PinnedCardinality = 1;
+
     #region Statics members declarations
 
     internal static AnyBoolean Create(RandomSource source) {
@@ -38,7 +44,7 @@ public sealed class AnyBoolean : IAny<bool>, IHasRandomSource, ICardinalityHint<
     RandomSource? IHasRandomSource.Source => _source;
 
     // Two distinct values unless a pin has already fixed one of them.
-    long? ICardinalityHint<bool>.DistinctCardinality => _pinned is null ? 2 : 1;
+    long? ICardinalityHint<bool>.DistinctCardinality => _pinned is null ? BooleanValueCount : PinnedCardinality;
 
     // A pin narrows the domain to that single value; unpinned, both booleans are producible.
     bool ICardinalityHint<bool>.Contains(bool value) => _pinned is not bool pinned || pinned == value;
@@ -70,7 +76,7 @@ public sealed class AnyBoolean : IAny<bool>, IHasRandomSource, ICardinalityHint<
 
     /// <inheritdoc />
     public bool Generate() {
-        return _pinned ?? _source.Current.Next(2) == 0;
+        return _pinned ?? _source.Current.Next(BooleanValueCount) == 0;
     }
 
     private AnyBoolean Pin(bool value, ConstraintCall applying) {

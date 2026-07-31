@@ -47,6 +47,68 @@ internal sealed class UriSpec {
     private const string Unreserved     = "abcdefghijklmnopqrstuvwxyz0123456789-._~";
     private const int    MinDynamicPort = 1025; // above every default we emit (http 80, https 443, ftp 21, ws 80, wss 443)
 
+    /// <summary>The lowest port an authority may carry; zero is reserved and never appears in a URI.</summary>
+    private const int MinPort = 1;
+
+    /// <summary>The highest port an authority may carry — a port number is sixteen bits wide.</summary>
+    private const int MaxPort = 65535;
+
+    /// <summary>The highest code point that is still ASCII; above it a host is internationalized (IDN).</summary>
+    private const int MaxAsciiCodePoint = 127;
+
+    /// <summary>How many dot-separated octets a dotted-quad IPv4 literal is written with.</summary>
+    private const int Ipv4OctetCount = 4;
+
+    /// <summary>The most digits a canonical IPv4 octet spells — the width of <c>"255"</c>.</summary>
+    private const int MaxOctetDigits = 3;
+
+    /// <summary>The highest value an IPv4 octet holds — an octet is one byte.</summary>
+    private const int MaxOctetValue = 255;
+
+    /// <summary>How many schemes the Web and WebSocket families draw between: http/https, and ws/wss.</summary>
+    private const int SchemesPerFamily = 2;
+
+    // The lengths and counts below decide how a generated URI LOOKS. Nothing in the grammar requires these particular
+    // numbers — they are chosen to read as a plausible URI in a failing test's output without burying it, and they are
+    // gathered here because each one is otherwise invisible at its call site, spelled as a bare pair of bounds passed
+    // to Draw. Changing one changes the look of every URI the library generates.
+
+    /// <summary>The shortest user, password or mailto subject drawn.</summary>
+    private const int MinUserInfoLength = 3;
+
+    /// <summary>The longest user, password or mailto subject drawn.</summary>
+    private const int MaxUserInfoLength = 8;
+
+    /// <summary>The shortest path segment, fragment, or standalone relative reference drawn.</summary>
+    private const int MinTokenLength = 1;
+
+    /// <summary>The longest path segment, fragment, or standalone relative reference drawn.</summary>
+    private const int MaxTokenLength = 8;
+
+    /// <summary>The shortest key or value inside a generated query pair.</summary>
+    private const int MinQueryTokenLength = 1;
+
+    /// <summary>The longest key or value inside a generated query pair.</summary>
+    private const int MaxQueryTokenLength = 6;
+
+    /// <summary>The shortest top-level domain drawn.</summary>
+    private const int MinTldLength = 2;
+
+    /// <summary>The longest top-level domain drawn.</summary>
+    private const int MaxTldLength = 4;
+
+    /// <summary>The longest tail drawn after a DNS label's mandatory leading letter, so a label spans one to eight characters.</summary>
+    private const int MaxLabelTailLength = 7;
+
+    /// <summary>The most segments an unconstrained (<see cref="UriPathMode.Auto" />) path draws; it may also draw none.</summary>
+    private const int MaxAutoPathSegments = 2;
+
+    /// <summary>The fewest key/value pairs a generated query string carries.</summary>
+    private const int MinQueryPairs = 1;
+
+    /// <summary>The most key/value pairs a generated query string carries.</summary>
+    private const int MaxQueryPairs = 2;
+
     #endregion
 
     #region Statics members declarations
@@ -257,27 +319,27 @@ internal sealed class UriSpec {
         builder.Append(scheme).Append(':');
 
         if (family == UriFamily.Mailto) {
-            builder.Append(_user ?? Draw(random, LowerAlphaNum, 3, 8));
+            builder.Append(_user ?? Draw(random, LowerAlphaNum, MinUserInfoLength, MaxUserInfoLength));
             builder.Append('@');
             builder.Append(_host ?? Host(random));
-            if (_hasQuery) { builder.Append("?subject=").Append(Draw(random, LowerAlphaNum, 3, 8)); }
+            if (_hasQuery) { builder.Append("?subject=").Append(Draw(random, LowerAlphaNum, MinUserInfoLength, MaxUserInfoLength)); }
 
             return builder.ToString();
         }
 
         builder.Append("//");
         if (AllowsUserInfo(family) && _hasUserInfo) {
-            builder.Append(_user ?? Draw(random, LowerAlphaNum, 3, 8));
-            builder.Append(':').Append(_password ?? Draw(random, LowerAlphaNum, 3, 8));
+            builder.Append(_user ?? Draw(random, LowerAlphaNum, MinUserInfoLength, MaxUserInfoLength));
+            builder.Append(':').Append(_password ?? Draw(random, LowerAlphaNum, MinUserInfoLength, MaxUserInfoLength));
             builder.Append('@');
         }
 
         builder.Append(_host ?? Host(random));
-        if (_hasPort) { builder.Append(':').Append(V(_port ?? random.Next(MinDynamicPort, 65536))); }
+        if (_hasPort) { builder.Append(':').Append(V(_port ?? random.Next(MinDynamicPort, MaxPort + 1))); }
 
         builder.Append(Path(random, leadingSlash: true));
         if (AllowsQuery(family) && _hasQuery) { builder.Append(Query(random)); }
-        if (AllowsFragment(family) && _hasFragment) { builder.Append('#').Append(Draw(random, LowerAlphaNum, 1, 8)); }
+        if (AllowsFragment(family) && _hasFragment) { builder.Append('#').Append(Draw(random, LowerAlphaNum, MinTokenLength, MaxTokenLength)); }
 
         return builder.ToString();
     }
@@ -287,7 +349,7 @@ internal sealed class UriSpec {
         StringBuilder builder = new();
         builder.Append(Path(random, leadingSlash: _rooted));
         if (_hasQuery) { builder.Append(Query(random)); }
-        if (_hasFragment) { builder.Append('#').Append(Draw(random, LowerAlphaNum, 1, 8)); }
+        if (_hasFragment) { builder.Append('#').Append(Draw(random, LowerAlphaNum, MinTokenLength, MaxTokenLength)); }
 
         string result = builder.ToString();
         if (result.Length > 0) { return result; }
@@ -300,15 +362,15 @@ internal sealed class UriSpec {
             throw AnyGenerationException.EmptyRelativeReference(Replay.Of(source));
         }
 
-        return Draw(random, LowerAlphaNum, 1, 8);
+        return Draw(random, LowerAlphaNum, MinTokenLength, MaxTokenLength);
     }
 
     private string ResolveScheme(UriFamily family, SeededRandom random) {
         if (_scheme is not null) { return _scheme; }
 
         return family switch {
-            UriFamily.Web       => random.Next(2) == 0 ? "http" : "https",
-            UriFamily.WebSocket => random.Next(2) == 0 ? "ws" : "wss",
+            UriFamily.Web       => random.Next(SchemesPerFamily) == 0 ? "http" : "https",
+            UriFamily.WebSocket => random.Next(SchemesPerFamily) == 0 ? "ws" : "wss",
             UriFamily.Ftp       => "ftp",
             UriFamily.Mailto    => "mailto",
             _                   => throw new InvalidOperationException("Relative URIs have no scheme.")
@@ -319,7 +381,7 @@ internal sealed class UriSpec {
         int count = _pathMode switch {
             UriPathMode.Root  => 0,
             UriPathMode.Exact => _pathSegments,
-            _                 => random.Next(3) // 0..2
+            _                 => random.Next(MaxAutoPathSegments + 1)
         };
 
         if (count == 0) { return leadingSlash ? "/" : string.Empty; }
@@ -327,30 +389,30 @@ internal sealed class UriSpec {
         StringBuilder builder = new();
         for (int i = 0; i < count; i++) {
             if (leadingSlash || i > 0) { builder.Append('/'); }
-            builder.Append(Draw(random, LowerAlphaNum, 1, 8));
+            builder.Append(Draw(random, LowerAlphaNum, MinTokenLength, MaxTokenLength));
         }
 
         return builder.ToString();
     }
 
     private static string Query(SeededRandom random) {
-        int           pairs   = random.Next(1, 3); // 1..2
+        int           pairs   = random.Next(MinQueryPairs, MaxQueryPairs + 1);
         StringBuilder builder = new("?");
         for (int i = 0; i < pairs; i++) {
             if (i > 0) { builder.Append('&'); }
-            builder.Append(Draw(random, LowerAlphaNum, 1, 6)).Append('=').Append(Draw(random, LowerAlphaNum, 1, 6));
+            builder.Append(Draw(random, LowerAlphaNum, MinQueryTokenLength, MaxQueryTokenLength)).Append('=').Append(Draw(random, LowerAlphaNum, MinQueryTokenLength, MaxQueryTokenLength));
         }
 
         return builder.ToString();
     }
 
     private static string Host(SeededRandom random) {
-        return Label(random) + "." + Draw(random, LowerLetters, 2, 4);
+        return Label(random) + "." + Draw(random, LowerLetters, MinTldLength, MaxTldLength);
     }
 
     private static string Label(SeededRandom random) {
         // A DNS-safe label: starts with a letter, then letters/digits — no leading digit, no hyphen edges.
-        return LowerLetters[random.Next(LowerLetters.Length)].ToString() + Draw(random, LowerAlphaNum, 0, 7);
+        return LowerLetters[random.Next(LowerLetters.Length)].ToString() + Draw(random, LowerAlphaNum, 0, MaxLabelTailLength);
     }
 
     private static string Draw(SeededRandom random, string pool, int min, int max) {
@@ -381,7 +443,7 @@ internal sealed class UriSpec {
         if (host is null) { throw new ArgumentNullException(parameterName); }
         if (parameterName is null) { throw new ArgumentNullException(nameof(parameterName)); }
         if (host.Length == 0) { throw new ArgumentException("The host must not be empty.", parameterName); }
-        if (host.Any(character => character > 127)) {
+        if (host.Any(character => character > MaxAsciiCodePoint)) {
             throw new ArgumentException("The host must be ASCII: an internationalized (IDN) host would not round-trip identically across target frameworks. Pass the punycode form instead (e.g. \"xn--mnchen-3ya.de\").", parameterName);
         }
         if (Uri.CheckHostName(host) == UriHostNameType.Unknown) {
@@ -401,11 +463,11 @@ internal sealed class UriSpec {
 
     private static bool IsCanonicalIpv4(string host) {
         string[] parts = host.Split('.');
-        if (parts.Length != 4) { return false; }
+        if (parts.Length != Ipv4OctetCount) { return false; }
         foreach (string part in parts) {
-            if (part.Length is 0 or > 3) { return false; }
+            if (part.Length is 0 or > MaxOctetDigits) { return false; }
             if (part.Length > 1 && part[0] == '0') { return false; } // a leading zero is a non-canonical (octal-ish) octet
-            if (!int.TryParse(part, NumberStyles.None, CultureInfo.InvariantCulture, out int octet) || octet > 255) { return false; }
+            if (!int.TryParse(part, NumberStyles.None, CultureInfo.InvariantCulture, out int octet) || octet > MaxOctetValue) { return false; }
         }
 
         return true;
@@ -429,7 +491,7 @@ internal sealed class UriSpec {
 
     internal static int RequirePort(int port, string parameterName) {
         if (parameterName is null) { throw new ArgumentNullException(nameof(parameterName)); }
-        if (port is < 1 or > 65535) { throw new ArgumentOutOfRangeException(parameterName, port, "The port must be between 1 and 65535."); }
+        if (port is < MinPort or > MaxPort) { throw new ArgumentOutOfRangeException(parameterName, port, $"The port must be between {V(MinPort)} and {V(MaxPort)}."); }
 
         return port;
     }

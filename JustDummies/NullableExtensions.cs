@@ -9,6 +9,13 @@ namespace JustDummies;
 public static class NullableExtensions {
 
     /// <summary>
+    ///     How many equiprobable outcomes the null-versus-value draw picks between — two, which is what makes
+    ///     <c>null</c> come up about half the time. Shared with
+    ///     <see cref="NullableReferenceExtensions.OrNull{T}" /> so the two siblings cannot drift to different rates.
+    /// </summary>
+    internal const int NullDrawOutcomes = 2;
+
+    /// <summary>
     ///     Derives a generator that yields <c>null</c> about half the time and, otherwise, a value drawn from
     ///     <paramref name="generator" /> — so a test exercises both the present and the absent case without pinning
     ///     either. Reproducible under a seed, like every other draw.
@@ -39,7 +46,7 @@ public static class NullableExtensions {
         return new DerivedAny<T?>(source, reproducible, () => {
             RandomSource working = source ?? AmbientRandomSource.Instance;
 
-            return working.Current.Next(2) == 0 ? (T?)null : generator.Generate();
+            return working.Current.Next(NullDrawOutcomes) == 0 ? (T?)null : generator.Generate();
         });
     }
 
@@ -75,7 +82,7 @@ public static class NullableReferenceExtensions {
         return new DerivedAny<T?>(source, reproducible, () => {
             RandomSource working = source ?? AmbientRandomSource.Instance;
 
-            return working.Current.Next(2) == 0 ? (T?)null : generator.Generate();
+            return working.Current.Next(NullableExtensions.NullDrawOutcomes) == 0 ? (T?)null : generator.Generate();
         });
     }
 

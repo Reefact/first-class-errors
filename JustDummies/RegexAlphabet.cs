@@ -17,6 +17,9 @@ internal static class RegexAlphabet {
     internal const char MinPrintable = ' ';  // 0x20
     internal const char MaxPrintable = '~';  // 0x7E
 
+    /// <summary>How far an ASCII letter's two cases sit apart: <c>'a' - 'A'</c>, the single bit that tells them apart.</summary>
+    private const int AsciiCaseDistance = 'a' - 'A';
+
     /// <summary>Every printable ASCII character — the universe negated classes and the dot draw from.</summary>
     internal static readonly char[] Printable = Range(MinPrintable, MaxPrintable);
 
@@ -61,8 +64,8 @@ internal static class RegexAlphabet {
     ///     or class member matches either case.
     /// </summary>
     internal static IEnumerable<char> WithBothCases(char character) {
-        if (character is >= 'A' and <= 'Z') { return new[] { character, (char)(character + 32) }; }
-        if (character is >= 'a' and <= 'z') { return new[] { character, (char)(character - 32) }; }
+        if (character is >= 'A' and <= 'Z') { return new[] { character, (char)(character + AsciiCaseDistance) }; }
+        if (character is >= 'a' and <= 'z') { return new[] { character, (char)(character - AsciiCaseDistance) }; }
 
         return new[] { character };
     }
