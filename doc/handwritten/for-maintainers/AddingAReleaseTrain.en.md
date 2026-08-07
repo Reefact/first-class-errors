@@ -84,6 +84,22 @@ everything else about the train from `trains.sh`.)
   missing). You may pre-create it by hand for a tidier first pull request, but you
   do not have to.
 
+## Removing a train
+
+The reverse of this runbook, with one step it does not have a mirror for: **a train
+whose workflow publishes a REQUIRED status check leaves that requirement behind.**
+Deleting the workflow does not delete the rule that waits for it, so every later pull
+request sits at `mergeable_state: blocked` with every check green — a state that reads
+as a content problem and is not one. Remove the check names from the branch ruleset
+(*Settings → Rules*) in the same breath as the workflow.
+
+This is not hypothetical: removing the `dum` train left `JustDummies mutation gate` and
+`JustDummies packaged-asset compatibility` required, and the pull request that removed
+it could not merge until they were dropped from the ruleset.
+
+Dropping a requirement for code the repository no longer contains is not a weakened
+protection. Keeping it protects nothing and blocks everything.
+
 ## Verify
 
 - **Commit convention:** make a commit under a new scope and confirm

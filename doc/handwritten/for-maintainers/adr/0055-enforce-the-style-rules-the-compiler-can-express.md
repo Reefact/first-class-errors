@@ -156,9 +156,9 @@ one configuration and a silent loss of rules.
 
 ## References
 
-* [ADR-0031](0031-name-any-factories-after-their-clr-type.md) — the same move in a
+* [just-dummies ADR-0010](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0010-name-any-factories-after-their-clr-type.md) — the same move in a
   different register: a convention made machine-checkable rather than left to attention.
-* [ADR-0045](0045-guard-public-and-internal-arguments-against-null.md) — a rule enforced by a
+* [just-dummies ADR-0024](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0024-guard-public-and-internal-arguments-against-null.md) — a rule enforced by a
   reflection convention, for the same reason.
 * Pull request [#360](https://github.com/Reefact/first-class-errors/pull/360) — the implementation, and
   the measurements the rejected alternatives rest on.

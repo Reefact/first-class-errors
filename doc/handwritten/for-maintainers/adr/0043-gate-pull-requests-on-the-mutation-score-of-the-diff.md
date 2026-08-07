@@ -289,7 +289,7 @@ of them — snapshot suites and process-spawning tests included.
   is implemented, and the knobs it exposes.
 * [ADR-0001](0001-lock-the-analyzer-roslyn-floor.md) — the precedent for pinning
   a tool version that would otherwise move a measured result on its own.
-* [ADR-0040](0040-split-the-justdummies-test-bed-between-example-and-property-suites.md)
+* [just-dummies ADR-0019](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0019-split-the-justdummies-test-bed-between-example-and-property-suites.md)
   — the test-bed split whose two suites both feed this gate.
 * [stryker-net#3117](https://github.com/stryker-mutator/stryker-net/issues/3117)
   — the upstream report of Stryker's VSTest runner mishandling xUnit v3.

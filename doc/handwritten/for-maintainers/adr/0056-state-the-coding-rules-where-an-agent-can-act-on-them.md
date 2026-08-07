@@ -151,5 +151,5 @@ indirection that failed here.
 
 * [ADR-0055](0055-enforce-the-style-rules-the-compiler-can-express.md) — the build-time
   half of the same problem, and the measurements behind it.
-* [ADR-0045](0045-guard-public-and-internal-arguments-against-null.md) — a convention made
+* [just-dummies ADR-0024](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0024-guard-public-and-internal-arguments-against-null.md) — a convention made
   observable rather than left to attention.

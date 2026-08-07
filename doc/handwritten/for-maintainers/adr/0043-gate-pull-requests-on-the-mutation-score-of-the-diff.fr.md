@@ -315,7 +315,7 @@ snapshots et tests lanceurs de processus compris.
 * [ADR-0001](0001-lock-the-analyzer-roslyn-floor.fr.md) — le précédent en matière
   d'épinglage d'une version d'outil qui, sinon, déplacerait seule un résultat
   mesuré.
-* [ADR-0040](0040-split-the-justdummies-test-bed-between-example-and-property-suites.fr.md)
+* [just-dummies ADR-0019](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0019-split-the-justdummies-test-bed-between-example-and-property-suites.md)
   — le découpage du banc de tests dont les deux suites alimentent ce barrage.
 * [stryker-net#3117](https://github.com/stryker-mutator/stryker-net/issues/3117)
   — le signalement amont du runner VSTest de Stryker face à xUnit v3.

@@ -11,7 +11,7 @@
 
 This repository ships two analyzer packages. `FirstClassErrors.Analyzers` carries
 `FCE001`–`FCE022`; `JustDummies.Analyzers`, created under
-[ADR-0044](0044-ship-justdummies-analyzers.md), carries `JD001`–`JD028`.
+[just-dummies ADR-0023](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0023-ship-justdummies-analyzers.md), carries `JD001`–`JD028`.
 
 The two are verified very differently.
 
@@ -189,10 +189,10 @@ binary claim that something specific is wrong.
 
 ## References
 
-* [ADR-0044](0044-ship-justdummies-analyzers.md) — the decision to ship
+* [just-dummies ADR-0023](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0023-ship-justdummies-analyzers.md) — the decision to ship
   first-party JustDummies analyzers.
 * [ADR-0046](0046-make-the-per-pull-request-mutation-gate-advisory.md) — the advisory
   per-pull-request check this record declines to imitate.
-* [ADR-0059](0059-guard-the-recipe-versus-value-boundary-with-analyzers.md) — the
+* [just-dummies ADR-0038](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0038-guard-the-recipe-versus-value-boundary-with-analyzers.md) — the
   recipe-versus-value rules, whose dogfooding produced part of the evidence above.
 * [The JustDummies analyzer rules](../../for-users/analyzers/README.md).

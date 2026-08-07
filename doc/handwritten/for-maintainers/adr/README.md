@@ -214,60 +214,26 @@ Optional supporting material:
 | [ADR-0010](0010-treat-gendocs-error-catalog-as-a-versioned-contract.md) | Treat GenDoc's error catalog as a versioned contract | Accepted |
 | [ADR-0011](0011-host-dummies-as-a-standalone-package.md) | Host JustDummies as a standalone package in this repository | Accepted |
 | [ADR-0012](0012-fix-the-binder-options-before-binding-begins.md) | Fix the binder options before binding begins | Accepted |
-| [ADR-0013](0013-gate-distinct-collections-by-cardinality-else-bounded-draw.md) | Gate distinct collections by cardinality, otherwise by a bounded draw | Accepted |
 | [ADR-0014](0014-bind-a-required-list-by-presence-not-cardinality.md) | Bind a required list by presence, not cardinality | Accepted |
-| [ADR-0015](0015-cap-any-combine-at-arity-eight.md) | Cap Any.Combine at arity eight | Accepted |
 | [ADR-0016](0016-make-the-binders-structural-error-codes-configurable.md) | Make the binder's structural error codes configurable | Superseded |
 | [ADR-0017](0017-provide-a-configurable-application-wide-default-for-the-binder-options.md) | Provide a configurable application-wide default for the binder options | Accepted |
 | [ADR-0018](0018-bundle-the-binders-structural-error-code-and-messages.md) | Bundle the binder's structural error code and messages in one definition | Accepted |
 | [ADR-0019](0019-document-overridden-binder-errors-in-the-consumers-catalog.md) | Document overridden binder errors in the consumer's own catalog | Accepted |
-| [ADR-0020](0020-materialize-dummies-only-through-generate.md) | Materialize dummies only through Generate() | Accepted |
 | [ADR-0021](0021-bind-out-of-dto-arguments-as-peers-through-a-source-agnostic-entry.md) | Bind out-of-DTO arguments as peers through a source-agnostic untyped entry | Accepted |
-| [ADR-0022](0022-floor-the-library-on-net-framework-4-7-2.md) | Floor the library's .NET Framework support at 4.7.2 | Accepted |
 | [ADR-0023](0023-keep-expression-tree-selectors-for-the-v1-binder-api.md) | Keep expression-tree selectors for the v1 binder API | Accepted |
 | [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) | Allow a one-time editorial refactoring of accepted ADRs | Accepted |
-| [ADR-0025](0025-generate-strings-from-a-home-grown-regular-subset.md) | Generate matching strings from a home-grown regular subset | Accepted |
 | [ADR-0026](0026-rebase-testing-arbitrary-values-on-dummies.md) | Rebase the testing package's arbitrary values on JustDummies | Accepted |
 | [ADR-0027](0027-repair-dependabot-pull-requests-within-a-risk-boundary.md) | Repair Dependabot pull requests within a risk boundary | Accepted |
 | [ADR-0028](0028-bridge-throwing-code-into-outcomes-through-a-guarded-try.md) | Bridge throwing code into outcomes through a guarded Try | Accepted |
 | [ADR-0029](0029-complete-the-outcome-try-async-surface-with-token-less-overloads.md) | Complete the Outcome.Try async surface with token-less overloads | Accepted |
-| [ADR-0030](0030-draw-arbitrary-strings-from-an-explicit-terminal-set.md) | Draw arbitrary strings from an explicit, terminal value set | Superseded |
-| [ADR-0031](0031-name-any-factories-after-their-clr-type.md) | Name Any's scalar factories after their CLR type | Accepted |
-| [ADR-0032](0032-draw-arbitrary-values-from-an-explicit-top-level-pool.md) | Draw arbitrary values from an explicit, top-level choice pool | Accepted |
-| [ADR-0033](0033-meet-string-exclusions-with-a-bounded-redraw.md) | Meet string exclusions with a bounded redraw | Accepted |
 | [ADR-0034](0034-require-a-scope-on-the-version-driving-commit-types.md) | Require a scope on the version-driving commit types | Accepted |
-| [ADR-0035](0035-enforce-structural-any-conflicts-at-compile-time.md) | Enforce structural Any conflicts at compile time, value-dependent ones at run time | Accepted |
-| [ADR-0036](0036-draw-lattice-constrained-scalars-on-the-grid.md) | Draw lattice-constrained scalars on the grid | Accepted |
-| [ADR-0037](0037-vary-the-datetimeoffset-offset-dimension.md) | Vary the DateTimeOffset offset dimension | Superseded |
-| [ADR-0038](0038-open-the-ambient-seed-scope-to-adapters.md) | Open the ambient seed scope to test-framework adapters | Accepted |
-| [ADR-0039](0039-adapt-dummies-to-xunit-v3-through-a-companion-package.md) | Adapt JustDummies to xUnit v3 through a companion package | Accepted |
-| [ADR-0040](0040-split-the-justdummies-test-bed-between-example-and-property-suites.md) | Split the JustDummies test bed between an example suite and a property suite | Accepted |
-| [ADR-0041](0041-draw-flag-enum-combinations-behind-an-opt-in.md) | Draw flag-enum combinations behind an opt-in | Accepted |
-| [ADR-0042](0042-serialize-draws-on-a-random-source.md) | Serialize draws on a random source, and scope reproducibility to the draw sequence | Accepted |
 | [ADR-0043](0043-gate-pull-requests-on-the-mutation-score-of-the-diff.md) | Gate pull requests on the mutation score of what they changed | Accepted |
-| [ADR-0044](0044-ship-justdummies-analyzers.md) | Ship first-party JustDummies analyzers, and guard the reproducible async surface with them | Accepted |
-| [ADR-0045](0045-guard-public-and-internal-arguments-against-null.md) | Guard public and internal arguments against null, enforced by a reflection convention | Superseded |
 | [ADR-0046](0046-make-the-per-pull-request-mutation-gate-advisory.md) | Make the per-pull-request mutation gate advisory; the weekly full sweep is the enforced bar | Accepted |
-| [ADR-0047](0047-measure-justdummies-mutation-against-the-unit-suite-only.md) | Measure JustDummies mutation against the deterministic unit suite only; drop the FsCheck property suite from the oracle | Accepted |
-| [ADR-0048](0048-guarantee-a-generated-regex-value-matches-by-bounded-redraw.md) | Guarantee a generated regex value matches its pattern, by bounded redraw | Accepted |
-| [ADR-0049](0049-drop-the-justdummies-generator-from-the-per-pull-request-mutation-matrix.md) | Drop the JustDummies generator from the per-pull-request mutation matrix; its adapter and analyzers keep theirs, the weekly sweep keeps measuring it | Accepted |
-| [ADR-0050](0050-let-a-size-maximum-cap-without-steering-the-draw.md) | Let a size maximum cap without steering the draw, and ceiling an explicitly demanded size | Accepted |
-| [ADR-0051](0051-filter-the-datetimeoffset-pool-by-the-declared-offset.md) | Filter the DateTimeOffset pool by the declared offset; supersedes ADR-0037 | Accepted |
-| [ADR-0052](0052-draw-arbitrary-numbers-within-an-ordinary-magnitude.md) | Draw arbitrary numbers within an ordinary magnitude; the integer generators keep their full range | Accepted |
-| [ADR-0053](0053-unify-discrete-generation-in-one-ordinal-space.md) | Unify discrete generation in one ordinal space, with a dedicated engine only where the arithmetic substrate forces one | Accepted |
-| [ADR-0054](0054-decide-a-constraint-surface-by-constructive-versus-rejective.md) | Decide a generator's constraint surface by constructive versus rejective, not by terminality; supersedes ADR-0030 | Accepted |
 | [ADR-0055](0055-enforce-the-style-rules-the-compiler-can-express.md) | Enforce the style rules the compiler can express, and keep the DotSettings authoritative for the rest | Accepted |
 | [ADR-0056](0056-state-the-coding-rules-where-an-agent-can-act-on-them.md) | State the coding rules where an agent can act on them, and check them at the edit | Accepted |
 | [ADR-0057](0057-keep-one-dated-line-per-state-an-adr-reached.md) | Keep one dated line per state an ADR reached, and never overwrite one | Accepted |
-| [ADR-0058](0058-suppress-ca1510-while-the-netstandard-floor-stands.md) | Suppress CA1510 while the pre-.NET-6 floor stands | Accepted |
-| [ADR-0059](0059-guard-the-recipe-versus-value-boundary-with-analyzers.md) | Guard the recipe-versus-value boundary with analyzers where the type system cannot reach it | Accepted |
 | [ADR-0060](0060-let-stated-intent-outrank-generic-analyzer-advice.md) | Let stated intent outrank generic analyzer advice, and record the refusal beside the rule | Accepted |
 | [ADR-0061](0061-run-the-justdummies-analyzers-on-the-repository-s-own-code.md) | Run the JustDummies analyzers on the repository's own code, so the rules are verified against code not written to please them | Accepted |
 | [ADR-0062](0062-derive-the-build-rule-set-from-the-quality-profile.md) | Derive the build's Sonar rule set from the quality profile: generated membership, hand-written exceptions, weekly drift check | Accepted |
-| [ADR-0063](0063-throw-the-library-s-own-exceptions-through-named-factories.md) | Throw the library's own exceptions through named factories, and only those — the `System` types keep their guard clauses | Accepted |
-| [ADR-0064](0064-exempt-the-whole-failure-reporting-path-from-the-null-guard-convention.md) | Exempt the whole failure-reporting path from the null-guard convention, declared with `[BuiltOnTheFailurePath]`; supersedes ADR-0045 | Accepted |
-| [ADR-0065](0065-carry-a-declared-constraint-as-a-value-object.md) | Carry a declared constraint as a value object, not as its rendered text | Accepted |
-| [ADR-0066](0066-declare-a-value-object-and-enforce-its-identity.md) | Declare a value object with an attribute, and enforce its identity by convention | Accepted |
 | [ADR-0067](0067-treat-the-cli-s-exit-codes-as-a-closed-published-contract.md) | Treat the CLI's exit codes as a closed, published contract | Accepted |
-| [ADR-0044](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0044-extract-justdummies-into-its-own-repository.md) | Extract JustDummies into its own repository *(recorded in `Reefact/just-dummies`; it was ADR-0068 when this row was written, before that repository renumbered)* | Accepted |
 | [ADR-0069](0069-consume-justdummies-from-its-own-repository.md) | Consume JustDummies from its own repository | Accepted |

@@ -33,12 +33,12 @@ the three libraries (`FirstClassErrors`, `FirstClassErrors.Testing`,
 documentation generator, the Roslyn analyzers. What stays out, and why, is under
 *Handle with care* below.
 
-**JustDummies is not measured here.** It has its own workflow with its own gate,
-[`justdummies-mutation`](justdummies-mutation.en.md), because it is headed for a
-repository of its own ([ADR-0011](../adr/0011-host-dummies-as-a-standalone-package.md)).
-The two are the same machine with different matrices; everything in this page
-except the scope applies to both, and the JustDummies page links back here rather
-than repeating it.
+**JustDummies is not measured here.** It left for a repository of its own
+([ADR-0011](../adr/0011-host-dummies-as-a-standalone-package.md), executed by
+[ADR-0069](../adr/0069-consume-justdummies-from-its-own-repository.md)), taking its
+workflow with it — which is what that workflow was written to make possible: a file
+move, not an edit. It is measured in
+[`Reefact/just-dummies`](https://github.com/Reefact/just-dummies).
 
 ## When it runs
 
@@ -168,7 +168,7 @@ for the odd equivalent mutant.
 
 **Five projects have no bar yet** — the analyzers, the documentation generator,
 the command line, `JustDummies`, and the JustDummies analyzers that shipped with
-[ADR-0044](../adr/0044-ship-justdummies-analyzers.md). No full-sweep score was
+[just-dummies ADR-0023](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0023-ship-justdummies-analyzers.md). No full-sweep score was
 ever measured for any of them — for most, because the sweep is too long to have
 been run interactively — and a bar was **not** guessed: their `break` is `0`.
 Their legs still run, still fail on a broken build or a failing suite, and still
@@ -186,9 +186,9 @@ today, and a pull request touching one of its weaker files can still fall under
 it. That is the gate working, not misfiring — the report says which assertion is
 missing.
 
-One library escapes this rule for now: `JustDummies`, whose sweep is too long to
-have been calibrated against, ships with its score gate off. See
-[`justdummies-mutation`](justdummies-mutation.en.md#justdummies-has-no-score-threshold-yet).
+`JustDummies` used to escape this rule — its sweep was too long to have been
+calibrated against, so it shipped with its score gate off. That exception left with
+it; the repository that now owns it owns the calibration too.
 
 ## When the survivor is an equivalent mutant
 

@@ -5,7 +5,7 @@
 
 **Date:** 2026-07-20
 **Audited revision:** `3bf89e3fb568beb69329b12b2ec2be14553bb8d4` (`main` at audit time)
-**Scope:** the whole FirstClassErrors ecosystem — core library, Analyzers, GenDoc (+ Worker), CLI, RequestBinder, Testing, JustDummies (as an ecosystem member; its dedicated audit is the [JustDummies architecture & design audit](./2026-07-20-dummies-architecture-and-design-audit.md)), samples, tests, documentation (EN + FR), ADR base, CI/CD and release engineering.
+**Scope:** the whole FirstClassErrors ecosystem — core library, Analyzers, GenDoc (+ Worker), CLI, RequestBinder, Testing, JustDummies (as an ecosystem member; its dedicated audit is the [JustDummies architecture & design audit](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/audit/2026-07-20-dummies-architecture-and-design-audit.md)), samples, tests, documentation (EN + FR), ADR base, CI/CD and release engineering.
 **Status:** advisory. Per the repository's own convention (ADR-0004), this audit produces recommendations, never blockers; every proposed ADR change is a draft for `@reefact` to accept or reject.
 **Commissioned question:** *“Is this a coherent, professional, maintainable open-source project that could reasonably become a reference in its domain?”*
 

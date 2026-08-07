@@ -15,7 +15,7 @@ The tooling previously targeted the latest .NET runtime. That prevented consumer
 
 The worker also loads consumer assemblies. Its process must therefore be able to run on a runtime compatible with the target assembly it inspects. This is a runtime-selection concern rather than a reason to publish one binary per .NET release.
 
-At the time of the decision, .NET 8 was the oldest supported LTS and matched the product's analyzer-host floor. The library's separate .NET Framework support floor is defined by [ADR-0022](0022-floor-the-library-on-net-framework-4-7-2.md), which refines the incidental statement previously carried here.
+At the time of the decision, .NET 8 was the oldest supported LTS and matched the product's analyzer-host floor. The library's separate .NET Framework support floor is defined by [just-dummies ADR-0007](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0007-floor-the-library-on-net-framework-4-7-2.md), which refines the incidental statement previously carried here.
 
 ## Decision
 
@@ -69,5 +69,5 @@ Considered as the conventional compatibility strategy. Rejected because one floo
 * [ADR implementation reference — Tooling runtime floor](../specifications/adr-implementation-reference.md#tooling-runtime-floor)
 * [`ci` workflow reference](../workflows/ci.en.md)
 * [ADR-0001](0001-lock-the-analyzer-roslyn-floor.md) — the analyzer-host counterpart.
-* [ADR-0022](0022-floor-the-library-on-net-framework-4-7-2.md) — refines the library's .NET Framework floor; it replaces the incidental 4.6.1 statement formerly present in this ADR.
+* [just-dummies ADR-0007](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0007-floor-the-library-on-net-framework-4-7-2.md) — refines the library's .NET Framework floor; it replaces the incidental 4.6.1 statement formerly present in this ADR.
 * [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.md) — authorizes this editorial extraction.

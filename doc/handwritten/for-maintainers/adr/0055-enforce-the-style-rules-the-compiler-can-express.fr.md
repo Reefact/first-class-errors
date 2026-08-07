@@ -161,9 +161,9 @@ configuration unique, mais une configuration unique doublée d'une perte silenci
 
 ## Références
 
-* [ADR-0031](0031-name-any-factories-after-their-clr-type.fr.md) — le même geste dans un
+* [just-dummies ADR-0010](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0010-name-any-factories-after-their-clr-type.md) — le même geste dans un
   autre registre : une convention rendue vérifiable par la machine plutôt que laissée à l'attention.
-* [ADR-0045](0045-guard-public-and-internal-arguments-against-null.fr.md) — une règle appliquée par une
+* [just-dummies ADR-0024](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0024-guard-public-and-internal-arguments-against-null.md) — une règle appliquée par une
   convention de réflexion, pour la même raison.
 * Pull request [#360](https://github.com/Reefact/first-class-errors/pull/360) — la mise en œuvre, et les
   mesures sur lesquelles reposent les alternatives écartées.
