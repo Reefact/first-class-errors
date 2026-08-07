@@ -7,7 +7,6 @@ name: Draft changelog
 # before merging. The trains version independently and keep separate changelogs:
 #   lib -> CHANGELOG.md                     (FirstClassErrors + FirstClassErrors.Testing + FirstClassErrors.RequestBinder)
 #   cli -> FirstClassErrors.Cli/CHANGELOG.md (the fce .NET tool)
-#   dum -> JustDummies/CHANGELOG.md             (the standalone JustDummies library)
 on:
   workflow_dispatch:
     inputs:
@@ -17,7 +16,6 @@ on:
         options:
           - lib
           - cli
-          - dum
         required: true
       from_ref:
         description: "Previous tag to diff from. Leave blank to auto-detect the train's latest tag; if the train has no tag yet, the whole history is used."
@@ -92,7 +90,7 @@ jobs:
           tools/changelog/collect-prs.sh "$COMPONENT" > prs.json
           echo "count=$(jq 'length' prs.json)" >> "$GITHUB_OUTPUT"
           echo "Collected $(jq 'length' prs.json) ${COMPONENT}-facing pull request(s) for this changelog."
-        # COMPONENT is a choice input (lib|cli|dum only), safe to pass straight through.
+        # COMPONENT is a choice input (lib|cli only), safe to pass straight through.
         # from_ref is free text, so it travels via the environment (never inlined
         # into the script) and is only ever passed to git (rev-parse, then log) as a ref argument.
 

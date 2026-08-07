@@ -22,16 +22,8 @@ errors should stay structured, documented, and close to the code.
 * Test: `dotnet test FirstClassErrors.sln`
 * Run the analyzer tests when touching analyzers:
   `dotnet test FirstClassErrors.Analyzers.UnitTests`
-* `JustDummies` has two test suites, and a new test belongs to exactly one of them:
-  `JustDummies.PropertyTests` owns invariants that hold for every legal constraint
-  argument, `JustDummies.UnitTests` owns specific named cases (message content,
-  argument validation, structural conventions, dated regressions). The rule and how
-  to apply it are in
-  [`doc/handwritten/for-maintainers/WritingJustDummiesTests.en.md`](doc/handwritten/for-maintainers/WritingJustDummiesTests.en.md)
-  (decision: ADR-0040). Read it before adding a JustDummies test.
 * Mutation testing measures every pull request on the files it changed, for every
-  project whose code ships or runs, through two independent checks — one for the
-  FirstClassErrors libraries and tooling, one for the JustDummies packages
+  project whose code ships or runs
   (decisions: ADR-0043, and ADR-0046 which made the per-PR check **advisory** — it
   reports the diff's score but does not block the merge; the enforced bar is the
   weekly full sweep). A test that *executes* new code without *asserting* it will
@@ -39,8 +31,7 @@ errors should stay structured, documented, and close to the code.
   with
   `dotnet tool restore && dotnet stryker --config-file build/stryker/<project>.json --since:$(git merge-base origin/main HEAD)`;
   the configurations and the reasons behind them are in
-  [`mutation.en.md`](doc/handwritten/for-maintainers/workflows/mutation.en.md) and
-  [`justdummies-mutation.en.md`](doc/handwritten/for-maintainers/workflows/justdummies-mutation.en.md).
+  [`mutation.en.md`](doc/handwritten/for-maintainers/workflows/mutation.en.md).
 * Only report tests as passing if you actually ran the corresponding command.
 * If you did not run a relevant command, say so explicitly.
 
@@ -142,7 +133,7 @@ The essentials, inlined so they hold even if `AGENTS.md` is not read:
 * Follow `.github/pull_request_template.md` for every pull request.
 * Do not open a pull request unless I explicitly ask for one.
 * PR titles, descriptions, commits, and branch names must be written in English.
-* Write every commit message per [`CONTRIBUTING.md`](CONTRIBUTING.md): Conventional Commits, a closed type list, the scopes `core, analyzers, binder, cli, justdummies, gendoc, testing`, an imperative header within 72 characters, and `Refs: #NN` in a footer when a GitHub issue exists (issue-closing keywords belong in the PR description, not the commit).
+* Write every commit message per [`CONTRIBUTING.md`](CONTRIBUTING.md): Conventional Commits, a closed type list, the scopes `core, analyzers, binder, cli, gendoc, testing`, an imperative header within 72 characters, and `Refs: #NN` in a footer when a GitHub issue exists (issue-closing keywords belong in the PR description, not the commit).
 * Write every pull request title per [`CONTRIBUTING.md`](CONTRIBUTING.md): name the whole change in English; a single-intention PR mirrors its commit header (`type(scope): description`), a multi-intention PR uses a short descriptive title, and issue references stay in the description, not the title.
 * Enable the local commit-message hook once per clone with `git config core.hooksPath .githooks`; the same check runs in CI on every pull request.
 * Before opening a pull request — and after pushing more commits to an open one — read the branch against a fresh `origin/main` and, if the history is messy (pending `fixup!`/`squash!`, wip/typo/"address review" commits, headers the lint rejects, one change split across non-standalone commits or two folded into one), **propose** a cleanup and rewrite only after I approve — while the branch is yours alone, with `git push --force-with-lease`, leaving the diff against `origin/main` unchanged. This repository merges with a merge commit, so a messy branch reaches `main`. Full rule in [`AGENTS.md`](AGENTS.md) ("Tidying history before a pull request"); the `/tidy-history` command runs it.

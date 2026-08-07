@@ -70,7 +70,6 @@ jobs:
         run: |
           tools/packaging/pack.sh "$DRYRUN_VERSION" lib
           tools/packaging/pack.sh "$DRYRUN_VERSION" cli
-          tools/packaging/pack.sh "$DRYRUN_VERSION" dum
 
       # Rehearse the train-scoped release-notes generation too (release.yml's other production-only path),
       # so a bug in it surfaces here instead of during a real release. Prints to the log; publishes nothing.
@@ -78,4 +77,3 @@ jobs:
         run: |
           echo "----- lib notes -----"; tools/packaging/release-notes.sh lib HEAD
           echo "----- cli notes -----"; tools/packaging/release-notes.sh cli HEAD
-          echo "----- dum notes -----"; tools/packaging/release-notes.sh dum HEAD
