@@ -5,11 +5,9 @@ on:
     # Publish on a train-prefixed semantic-version tag. The trains version independently:
     #   lib-v1.2.3  -> FirstClassErrors + FirstClassErrors.Testing + FirstClassErrors.RequestBinder
     #   cli-v1.2.3  -> FirstClassErrors.Cli (the fce .NET tool)
-    #   dum-v1.2.3  -> JustDummies (the standalone arbitrary-test-value library)
     tags:
       - 'lib-v*.*.*'
       - 'cli-v*.*.*'
-      - 'dum-v*.*.*'
   workflow_dispatch:
     inputs:
       component:
@@ -18,7 +16,6 @@ on:
         options:
           - lib
           - cli
-          - dum
         required: true
       version:
         description: 'Package version, without any prefix (e.g. 1.2.3; a dry run can use any SemVer, e.g. 0.0.0-dry.1)'
@@ -105,13 +102,12 @@ jobs:
             case "$REF_NAME" in
               lib-v*) COMPONENT="lib"; VERSION="${REF_NAME#lib-v}" ;;
               cli-v*) COMPONENT="cli"; VERSION="${REF_NAME#cli-v}" ;;
-              dum-v*) COMPONENT="dum"; VERSION="${REF_NAME#dum-v}" ;;
-              *) echo "::error::Tag '$REF_NAME' is not a release tag; expected lib-v*.*.*, cli-v*.*.* or dum-v*.*.*."; exit 1 ;;
+              *) echo "::error::Tag '$REF_NAME' is not a release tag; expected lib-v*.*.* or cli-v*.*.*."; exit 1 ;;
             esac
           fi
           case "$COMPONENT" in
-            lib|cli|dum) ;;
-            *) echo "::error::Invalid component '$COMPONENT'; expected 'lib', 'cli' or 'dum'."; exit 1 ;;
+            lib|cli) ;;
+            *) echo "::error::Invalid component '$COMPONENT'; expected 'lib' or 'cli'."; exit 1 ;;
           esac
           # Build metadata (+...) is deliberately REJECTED even though SemVer allows it: NuGet strips it
           # from the package identity, so a tag like lib-v1.2.3+build5 packs as FirstClassErrors.1.2.3.nupkg.
@@ -190,7 +186,7 @@ jobs:
           echo "ok: GenDoc's error catalog has a breaking change since $PREVIOUS_TAG, matched by the major version bump ($PREVIOUS_MAJOR -> $NEW_MAJOR)."
 
       # Pack only the train this release targets (lib -> FirstClassErrors + .Testing + .RequestBinder;
-      # cli -> the fce tool; dum -> JustDummies), so a lib release never republishes the CLI and vice versa.
+      # cli -> the fce tool), so a lib release never republishes the CLI and vice versa.
       # The analyzer is bundled inside the main package and the GenDoc worker inside the CLI tool; the
       # samples are not published.
       # GenerateSBOM activates Microsoft.Sbom.Targets in each packable project: each package embeds its SPDX

@@ -65,7 +65,7 @@ The header must match `<type>[(<scope>[,<scope>...])][!]: <lowercase description
 
 - **type**: one of `feat, fix, build, chore, ci, docs, perf, refactor, revert,
   style, test`. Dependabot uses `build` (NuGet) or `ci` (GitHub Actions).
-- **scope** (optional): one of `core, analyzers, binder, cli, justdummies, gendoc,
+- **scope** (optional): one of `core, analyzers, binder, cli, gendoc,
   testing`. A dependency bump has no natural scope — **omit it**. `deps` is **not**
   a valid scope here.
 - **description**: imperative, lowercase first letter, no trailing period; whole

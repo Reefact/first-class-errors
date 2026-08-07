@@ -293,12 +293,6 @@ __pycache__/
 tools/floor-check/local-feed/
 tools/floor-check/packages/
 tools/floor-check/build.log
-# JustDummies packaged-asset compatibility check (tools/justdummies-check): CI-generated artifacts, never committed.
-# local-feed holds the packed .nupkg the justdummies job produces; packages/ is the project-local NuGet
-# extraction folder (RestorePackagesPath); *.log are the job's per-asset run outputs.
-tools/justdummies-check/local-feed/
-tools/justdummies-check/packages/
-tools/justdummies-check/*.log
 # Stryker mutation runs (the `mutation` workflow, or `dotnet stryker` locally): reports and the temporary
 # copies of the solution Stryker compiles the mutants in. The workflow writes under artifacts/ (already
 # ignored above); a local run defaults to StrykerOutput/ next to the config file.

@@ -13,10 +13,6 @@ library produces. This guide defines how commits are written here.
 * Build: `dotnet build FirstClassErrors.sln`
 * Test: `dotnet test FirstClassErrors.sln`
 * Analyzer tests, when touching analyzers: `dotnet test FirstClassErrors.Analyzers.UnitTests`
-* `JustDummies` tests are split across two suites — properties for invariants that
-  hold for every constraint argument, examples for specific named cases. See
-  [Writing JustDummies tests](doc/handwritten/for-maintainers/WritingJustDummiesTests.en.md)
-  before adding one.
 
 See [`CLAUDE.md`](CLAUDE.md) for the project layout and the broader change
 guidelines.
@@ -24,8 +20,8 @@ guidelines.
 ## Public API baseline
 
 The shipping libraries — `FirstClassErrors`, `FirstClassErrors.Testing`,
-`FirstClassErrors.RequestBinder` (the `lib` train) and `JustDummies` (the `dum`
-train) — carry a committed public-API baseline, so every change to their public
+`FirstClassErrors.RequestBinder` (the `lib` train) — carry a committed
+public-API baseline, so every change to their public
 surface is a reviewed diff and an accidental breaking change (a removed overload,
 a narrowed return type, a renamed member) cannot ship silently under a version
 number that promises compatibility. Two guards, wired once in
@@ -39,8 +35,9 @@ number that promises compatibility. Two guards, wired once in
   surface change fails the build until the same change updates the baseline.
 * **Package validation** (`EnablePackageValidation`) runs ApiCompat during
   `dotnet pack`. With no baseline version set it performs the same-package
-  cross-target-framework check (it proves `JustDummies`' net8.0 surface never drops
-  API a netstandard2.0 consumer sees). To additionally gate against a published
+  cross-target-framework check, which matters for any multi-targeting package: it
+  proves the modern leg never drops API a netstandard2.0 consumer sees. To
+  additionally gate against a published
   version, set `PackageValidationBaselineVersion`; `0.1.0-preview.1` is the first
   such baseline available for the `lib` train.
 
@@ -303,7 +300,6 @@ When present it MUST be lowercase and MUST be one of:
 | `analyzers` | `FirstClassErrors.Analyzers` — the Roslyn analyzers and their `FCExxx` diagnostics |
 | `binder` | `FirstClassErrors.RequestBinder` — the request binder for the primary-adapter boundary |
 | `cli` | `FirstClassErrors.Cli` — the command-line tool |
-| `justdummies` | `JustDummies` — the standalone arbitrary-test-value generator |
 | `gendoc` | `FirstClassErrors.GenDoc` and its worker — the documentation generator |
 | `testing` | `FirstClassErrors.Testing` — the test-support package |
 
@@ -315,8 +311,8 @@ The scope is load-bearing for the release record. The tooling partitions commits
 into **release trains** by scope — `tools/trains.sh` is the single source of
 truth — and each train publishes independently: `lib` (scopes `core`, `analyzers`,
 `testing`, `binder` → `FirstClassErrors`, `FirstClassErrors.Testing` and
-`FirstClassErrors.RequestBinder`), `cli` (scopes `cli`, `gendoc` → the `fce` tool)
-and `dum` (scope `justdummies` → `JustDummies`). A commit's scope decides which train's
+`FirstClassErrors.RequestBinder`) and `cli` (scopes `cli`, `gendoc` → the `fce`
+tool). A commit's scope decides which train's
 release notes and changelog it lands in; see
 [Adding a release train](doc/handwritten/for-maintainers/AddingAReleaseTrain.en.md).
 

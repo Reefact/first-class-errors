@@ -10,19 +10,18 @@
 # It assumes the solution has already been built in Release (it packs with
 # --no-build). It writes the .nupkg / .snupkg into ./artifacts.
 #
-# Usage: tools/packaging/pack.sh <version> <scope:lib|cli|dum>
+# Usage: tools/packaging/pack.sh <version> <scope:lib|cli>
 #   <version> is any valid SemVer (a real release passes the tag version; the
 #             dry run passes a throwaway like 0.0.0-dryrun).
 #   <scope>   selects which release train to pack, since the trains are versioned
 #             and released independently:
 #               lib  -> FirstClassErrors + FirstClassErrors.Testing + FirstClassErrors.RequestBinder (lockstep)
 #               cli  -> FirstClassErrors.Cli (the `fce` .NET tool)
-#               dum  -> JustDummies (the standalone arbitrary-test-value library)
 
 set -eu
 
 if [ "$#" -ne 2 ] || [ -z "$1" ] || [ -z "$2" ]; then
-  echo "usage: tools/packaging/pack.sh <version> <scope:lib|cli|dum>" >&2
+  echo "usage: tools/packaging/pack.sh <version> <scope:lib|cli>" >&2
   exit 2
 fi
 version="$1"
@@ -46,16 +45,8 @@ case "$scope" in
     # package -- asserted after the pack, below). Released on its own cadence and version.
     projects='FirstClassErrors.Cli/FirstClassErrors.Cli.csproj'
     ;;
-  dum)
-    # JustDummies, the standalone arbitrary-test-value library, and its xUnit v3 companion. Deliberately
-    # independent of everything else in this repository (ADR-0011): neither references a FirstClassErrors
-    # project, so they release on their own train and their packages must declare no FirstClassErrors
-    # dependency -- asserted below. JustDummies.Xunit rides this train because it versions with the library it
-    # adapts (ADR-0036); if JustDummies ever moves to its own repository, that pairing is worth revisiting.
-    projects='JustDummies/JustDummies.csproj JustDummies.Xunit/JustDummies.Xunit.csproj'
-    ;;
   *)
-    echo "error: unknown scope '$scope' (expected 'lib', 'cli' or 'dum')" >&2
+    echo "error: unknown scope '$scope' (expected 'lib' or 'cli')" >&2
     exit 2
     ;;
 esac
@@ -96,23 +87,6 @@ $(unzip -p "$package" '*.nuspec' | grep -o '<dependency [^>]*id="FirstClassError
 EOF
   done
   echo "ok: every lib-train package pins its FirstClassErrors dependency to the co-published $version"
-fi
-
-# Standalone guard for the dum train. JustDummies' whole identity is that it depends on nothing (ADR-0011):
-# an architecture test asserts it at build time, and this asserts it on the shipped artifact itself -- a
-# FirstClassErrors dependency sneaking into the nuspec must fail the pack, not surface on nuget.org.
-if [ "$scope" = "dum" ]; then
-  for package in artifacts/JustDummies.*.nupkg; do
-    # Fail CLOSED, like the cli guard: an unmatched glob or an unreadable nuspec must not pass as
-    # "standalone" -- read the nuspec first (unzip fails loudly on both), then reject any
-    # FirstClassErrors dependency found in it.
-    nuspec="$(unzip -p "$package" '*.nuspec')" || { echo "error: cannot read the nuspec from $package" >&2; exit 1; }
-    if printf '%s\n' "$nuspec" | grep -q '<dependency [^>]*id="FirstClassErrors'; then
-      echo "error: $package declares a FirstClassErrors dependency; JustDummies is standalone (ADR-0011)" >&2
-      exit 1
-    fi
-    echo "ok: $package is standalone (no FirstClassErrors dependency)"
-  done
 fi
 
 # Positive proof that the fce tool ships its GenDoc worker. `fce generate` does not do the whole job

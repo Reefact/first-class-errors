@@ -1,8 +1,8 @@
 name: mutation
 
-# Mutation testing for the FirstClassErrors libraries. JustDummies has its own, identical workflow
-# — `justdummies-mutation.yml` — because it is destined for a repository of its own: the split has to
-# be a file move, not an edit of a shared matrix. Keep the two in step when you change one.
+# Mutation testing for the FirstClassErrors libraries. JustDummies used to ride an identical workflow
+# of its own, written so that the repository split would be a file move rather than an edit of a shared
+# matrix. The split happened (ADR-0069) and the file moved; nothing here needs a twin any more.
 
 on:
   pull_request:
@@ -57,7 +57,6 @@ jobs:
         # shipped behaviour), and so does `GenDoc.Worker`: nothing unit-tests it in process — it is a
         # process entry point, exercised end to end by the `floor` job of `ci` — so mutating it would
         # report survivors that no test could ever kill.
-        # JustDummies and JustDummies.Xunit live in `justdummies-mutation.yml`. See ADR-0043.
         include:
           - name: core
             config: build/stryker/core.json

@@ -39,8 +39,8 @@ here instead of being repeated on every page.
   top-level block to satisfy one job. A job that needs *nothing* does the reverse:
   it declares `permissions: {}` — the explicit empty mapping, since a bare
   `permissions:` is a null and not an empty map — so the inherited floor does not
-  reach it. The advisory `gate` jobs of `mutation` and `justdummies-mutation` are
-  that case: they check nothing out and call no API.
+  reach it. The advisory `gate` job of `mutation` is that case: it checks nothing
+  out and calls no API.
 - **Every job sets `timeout-minutes`.** The GitHub default is six hours; a hung
   step would otherwise hold a runner for that long. Each cap is set a few times
   the observed run time, noted in a comment next to it.
@@ -69,7 +69,6 @@ here instead of being repeated on every page.
 | [`ci`](ci.en.md) | Build and test the whole solution on Linux and Windows, with coverage. The primary gate. |
 | [`sonar`](sonar.en.md) | SonarQube Cloud analysis — quality gate and coverage reporting. |
 | [`mutation`](mutation.en.md) | Mutation testing of the FirstClassErrors libraries and tooling with Stryker.NET — a required check on what a PR changed, plus a weekly full sweep. |
-| [`justdummies-mutation`](justdummies-mutation.en.md) | The same, for the JustDummies packages, with its own required check — kept separate so the future repository split is a file move. |
 | [`analyzers`](analyzers.en.md) | Dogfood the bundled Roslyn analyzers, including on the oldest supported compiler (the Roslyn floor). |
 | [`commit-lint`](commit-lint.en.md) | Enforce the Conventional Commits convention on every PR commit, using the same script as the local hook. |
 | [`lint`](lint.en.md) | shellcheck and actionlint over the files the C# compiler never sees — the POSIX scripts and the workflow definitions. Zero findings, `info` included. |

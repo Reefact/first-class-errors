@@ -41,8 +41,8 @@ documentées une seule fois ici plutôt que répétées sur chaque page.
   pour satisfaire un seul job. À l'inverse, un job qui n'a besoin de *rien* fait le
   contraire : il déclare `permissions: {}` — le mapping vide explicite, car un
   `permissions:` nu est un null et non un mapping vide — pour que le plancher hérité
-  ne l'atteigne pas. Les jobs `gate` consultatifs de `mutation` et
-  `justdummies-mutation` sont ce cas : ils ne récupèrent rien et n'appellent aucune API.
+  ne l'atteigne pas. Le job `gate` consultatif de `mutation` est ce cas : il ne
+  récupère rien et n'appelle aucune API.
 - **Chaque job fixe `timeout-minutes`.** Le défaut GitHub est de six heures ; une
   étape bloquée retiendrait sinon un runner tout ce temps. Chaque plafond est
   fixé à quelques fois le temps observé, noté en commentaire à côté.
@@ -73,7 +73,6 @@ documentées une seule fois ici plutôt que répétées sur chaque page.
 | [`ci`](ci.fr.md) | Construit et teste toute la solution sous Linux et Windows, avec couverture. Le barrage principal. |
 | [`sonar`](sonar.fr.md) | Analyse SonarQube Cloud — quality gate et remontée de couverture. |
 | [`mutation`](mutation.fr.md) | Tests de mutation des bibliothèques et de l'outillage FirstClassErrors avec Stryker.NET — check obligatoire sur ce qu'une PR modifie, plus un balayage complet hebdomadaire. |
-| [`justdummies-mutation`](justdummies-mutation.fr.md) | Idem pour les packages JustDummies, avec son propre check obligatoire — séparé pour que la future séparation de dépôt soit un déplacement de fichier. |
 | [`analyzers`](analyzers.fr.md) | Dogfood des analyzers Roslyn embarqués, y compris sur le plus vieux compilateur supporté (le floor Roslyn). |
 | [`commit-lint`](commit-lint.fr.md) | Impose la convention Conventional Commits sur chaque commit de PR, via le même script que le hook local. |
 | [`lint`](lint.fr.md) | shellcheck et actionlint sur les fichiers que le compilateur C# ne voit jamais — les scripts POSIX et les définitions de workflow. Zéro constat, `info` compris. |
