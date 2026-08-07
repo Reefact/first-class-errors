@@ -56,31 +56,17 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
-    <!-- JustDummies backs the arbitrary-value factories (ADR-0026). It is not yet on NuGet (ADR-0011), so
-         reference it privately and embed its assembly in this package (see the pack target below);
-         switch to a NuGet PackageReference once JustDummies is published. -->
-    <ProjectReference Include="..\JustDummies\JustDummies.csproj" PrivateAssets="all" />
+    <!-- JustDummies backs the arbitrary-value factories (ADR-0026), and is now a published package.
+         Declared WITHOUT PrivateAssets, unlike every other reference here: a consumer restoring this
+         package must get JustDummies too, since the factories call into it at runtime. That makes it a
+         real, visible dependency where it used to be an assembly smuggled into lib/ — and it is a
+         PRERELEASE dependency, deliberately and temporarily, so the split can happen before JustDummies
+         reaches 1.0 stable. This package cannot ship a stable version until that one does. -->
+    <PackageReference Include="JustDummies" />
 
-    <!-- Run the JustDummies analyzers on this project (ADR-0061): OutputItemType=Analyzer loads them at
-         build and in the IDE, ReferenceOutputAssembly=false keeps them off the runtime graph, and
-         PrivateAssets=all stops the reference from reaching a consumer of this project. -->
-    <ProjectReference Include="..\JustDummies.Analyzers\JustDummies.Analyzers.csproj"
-                      OutputItemType="Analyzer"
-                      ReferenceOutputAssembly="false"
-                      PrivateAssets="all" />
+    <!-- The JustDummies analyzers (ADR-0061) need no reference of their own: the package carries them
+         under analyzers/dotnet/cs, so the PackageReference above loads them at build and in the IDE. -->
   </ItemGroup>
-
-  <!-- While JustDummies is unpublished, carry JustDummies.dll inside this package's lib/ so a consumer restores it
-       transparently. PrivateAssets=all above emits no JustDummies <dependency>, so the embedded copy is the
-       only one. Remove this whole block when JustDummies moves to a NuGet PackageReference (ADR-0026 follow-up). -->
-  <PropertyGroup>
-    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeJustDummiesInPackage</TargetsForTfmSpecificBuildOutput>
-  </PropertyGroup>
-  <Target Name="IncludeJustDummiesInPackage">
-    <ItemGroup>
-      <BuildOutputInPackage Include="$(OutputPath)JustDummies.dll" />
-    </ItemGroup>
-  </Target>
 
   <ItemGroup>
     <!-- Embed an SPDX SBOM (software bill of materials) inside the package at pack time

@@ -25,15 +25,10 @@
   <ItemGroup>
     <ProjectReference Include="..\FirstClassErrors\FirstClassErrors.csproj" />
     <ProjectReference Include="..\FirstClassErrors.Testing\FirstClassErrors.Testing.csproj" />
-    <ProjectReference Include="..\JustDummies\JustDummies.csproj" />
+    <PackageReference Include="JustDummies" />
 
-    <!-- Run the JustDummies analyzers on this project (ADR-0061): OutputItemType=Analyzer loads them at
-         build and in the IDE, ReferenceOutputAssembly=false keeps them off the runtime graph, and
-         PrivateAssets=all stops the reference from reaching a consumer of this project. -->
-    <ProjectReference Include="..\JustDummies.Analyzers\JustDummies.Analyzers.csproj"
-                      OutputItemType="Analyzer"
-                      ReferenceOutputAssembly="false"
-                      PrivateAssets="all" />
+    <!-- The JustDummies analyzers (ADR-0061) need no reference of their own: the package carries them
+         under analyzers/dotnet/cs, so a PackageReference loads them at build and in the IDE. -->
   </ItemGroup>
 
   <ItemGroup>
