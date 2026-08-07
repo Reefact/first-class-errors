@@ -21,7 +21,7 @@ Lors d'un changement de plancher, il faut mettre à jour la propriété centrale
 
 ## Plancher d'exécution des outils
 
-Décisions liées : [ADR-0002](../adr/0002-floor-the-tooling-runtime.fr.md), [ADR-0022](../adr/0022-floor-the-library-on-net-framework-4-7-2.fr.md).
+Décisions liées : [ADR-0002](../adr/0002-floor-the-tooling-runtime.fr.md), [just-dummies ADR-0007](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0007-floor-the-library-on-net-framework-4-7-2.md).
 
 Les outils en ligne de commande et le worker hors processus ciblent le plus ancien runtime .NET LTS pris en charge. La CI ordinaire s'exécute avec le SDK de développement courant, tandis que des jobs dédiés exécutent les outils livrés sur le plus ancien runtime pris en charge.
 
@@ -57,7 +57,7 @@ La baseline n'est mise à jour par le processus de release qu'après une publica
 
 ## Contrats de génération de JustDummies
 
-Décisions liées : [ADR-0006](../adr/0006-supply-arbitrary-test-values-from-a-seedable-source.fr.md), [ADR-0011](../adr/0011-host-dummies-as-a-standalone-package.fr.md), [ADR-0013](../adr/0013-gate-distinct-collections-by-cardinality-else-bounded-draw.fr.md), [ADR-0015](../adr/0015-cap-any-combine-at-arity-eight.fr.md), [ADR-0020](../adr/0020-materialize-dummies-only-through-generate.fr.md).
+Décisions liées : [ADR-0006](../adr/0006-supply-arbitrary-test-values-from-a-seedable-source.fr.md), [ADR-0011](../adr/0011-host-dummies-as-a-standalone-package.fr.md), [just-dummies ADR-0004](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0004-gate-distinct-collections-by-cardinality-else-bounded-draw.md), [just-dummies ADR-0005](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0005-cap-any-combine-at-arity-eight.md), [just-dummies ADR-0006](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0006-materialize-dummies-only-through-generate.md).
 
 JustDummies est livré comme package autonome sans dépendance sur le package d'exécution FirstClassErrors. La génération n'est pas seedée par défaut ; la génération reproductible est choisie explicitement et expose la seed nécessaire pour rejouer les échecs.
 

@@ -151,6 +151,6 @@ venait à compter.
 * [ADR-0021](0021-bind-out-of-dto-arguments-as-peers-through-a-source-agnostic-entry.fr.md) —
   l'entrée hors-DTO, dont le chemin par nom est la forme non-expression
   existante du binder.
-* [ADR-0022](0022-floor-the-library-on-net-framework-4-7-2.fr.md) — le
+* [just-dummies ADR-0007](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0007-floor-the-library-on-net-framework-4-7-2.md) — le
   floor .NET Framework 4.7.2 contre lequel le cache de getters compilés a
   été vérifié.

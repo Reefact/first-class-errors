@@ -21,7 +21,7 @@ When the floor changes, update the central property, the floor SDK used by the w
 
 ## Tooling runtime floor
 
-Related decisions: [ADR-0002](../adr/0002-floor-the-tooling-runtime.md), [ADR-0022](../adr/0022-floor-the-library-on-net-framework-4-7-2.md).
+Related decisions: [ADR-0002](../adr/0002-floor-the-tooling-runtime.md), [just-dummies ADR-0007](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0007-floor-the-library-on-net-framework-4-7-2.md).
 
 The command-line tooling and out-of-process worker target the oldest supported .NET LTS runtime. The ordinary CI suite runs on the current development SDK, while dedicated floor jobs execute the shipped tooling on the oldest supported runtime.
 
@@ -57,7 +57,7 @@ The baseline is updated only by the release process after a successful compatibl
 
 ## JustDummies generation contracts
 
-Related decisions: [ADR-0006](../adr/0006-supply-arbitrary-test-values-from-a-seedable-source.md), [ADR-0011](../adr/0011-host-dummies-as-a-standalone-package.md), [ADR-0013](../adr/0013-gate-distinct-collections-by-cardinality-else-bounded-draw.md), [ADR-0015](../adr/0015-cap-any-combine-at-arity-eight.md), [ADR-0020](../adr/0020-materialize-dummies-only-through-generate.md).
+Related decisions: [ADR-0006](../adr/0006-supply-arbitrary-test-values-from-a-seedable-source.md), [ADR-0011](../adr/0011-host-dummies-as-a-standalone-package.md), [just-dummies ADR-0004](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0004-gate-distinct-collections-by-cardinality-else-bounded-draw.md), [just-dummies ADR-0005](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0005-cap-any-combine-at-arity-eight.md), [just-dummies ADR-0006](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0006-materialize-dummies-only-through-generate.md).
 
 JustDummies is shipped as a standalone package with no dependency on the FirstClassErrors runtime package. Generation is unseeded by default; reproducible generation is selected explicitly and exposes the seed needed to replay failures.
 

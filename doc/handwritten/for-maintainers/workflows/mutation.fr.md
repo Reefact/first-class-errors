@@ -34,13 +34,12 @@ la ligne de commande `fce`, le générateur de documentation, les analyseurs
 Roslyn. Ce qui en reste dehors, et pourquoi, est sous *À manipuler avec
 précaution* plus bas.
 
-**JustDummies n'est pas mesuré ici.** Il a son propre workflow et son propre
-barrage, [`justdummies-mutation`](justdummies-mutation.fr.md), parce qu'il est
-destiné à un dépôt à lui
-([ADR-0011](../adr/0011-host-dummies-as-a-standalone-package.fr.md)). Les deux
-sont la même machine avec une matrice différente ; tout ce qui suit, hormis le
-périmètre, vaut pour les deux, et la page JustDummies renvoie ici plutôt que de
-le répéter.
+**JustDummies n'est pas mesuré ici.** Il est parti dans un dépôt à lui
+([ADR-0011](../adr/0011-host-dummies-as-a-standalone-package.fr.md), exécuté par
+[ADR-0069](../adr/0069-consume-justdummies-from-its-own-repository.fr.md)), en
+emportant son workflow — ce que ce workflow était précisément écrit pour rendre
+possible : un déplacement de fichier, pas une édition. Il est mesuré dans
+[`Reefact/just-dummies`](https://github.com/Reefact/just-dummies).
 
 ## Quand il s'exécute
 
@@ -185,7 +184,7 @@ arrondi vers le bas, avec un peu de marge pour l'éventuel mutant équivalent.
 
 **Cinq projets n'ont pas encore de barre** : les analyseurs, le générateur de
 documentation, la ligne de commande, `JustDummies`, et les analyseurs JustDummies
-arrivés avec l'[ADR-0044](../adr/0044-ship-justdummies-analyzers.fr.md). Aucun
+arrivés avec l'[just-dummies ADR-0023](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0023-ship-justdummies-analyzers.md). Aucun
 score de balayage complet n'a été mesuré pour eux — pour la plupart, parce que le
 balayage est trop long pour avoir été exécuté interactivement — et une barre n'a
 **pas** été devinée : leur `break` vaut `0`. Leurs branches tournent quand même,
@@ -204,10 +203,10 @@ barre basse aujourd'hui, et une pull request qui touche l'un de ses fichiers les
 plus faibles peut quand même passer dessous. C'est le barrage qui fonctionne, pas
 qui se trompe — le rapport dit quelle assertion manque.
 
-Une bibliothèque échappe pour l'instant à cette règle : `JustDummies`, dont le
-balayage est trop long pour avoir servi de calibration, part avec son barrage sur
-le score coupé. Voir
-[`justdummies-mutation`](justdummies-mutation.fr.md#justdummies-na-pas-encore-de-seuil-de-score).
+`JustDummies` échappait à cette règle — son balayage était trop long pour avoir
+servi de calibration, il partait donc avec son barrage sur le score coupé. Cette
+exception est partie avec lui ; le dépôt qui le porte désormais porte aussi sa
+calibration.
 
 ## Quand le survivant est un mutant équivalent
 

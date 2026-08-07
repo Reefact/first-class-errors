@@ -91,6 +91,23 @@ workflow lit tout le reste du train depuis `trains.sh`.)
   Vous pouvez le pré-créer à la main pour une première pull request plus propre, mais
   ce n'est pas obligatoire.
 
+## Retirer un train
+
+L'inverse de ce runbook, avec une étape dont il n'a pas le miroir : **un train dont le
+workflow publie un check de statut REQUIS laisse cette exigence derrière lui.**
+Supprimer le workflow ne supprime pas la règle qui l'attend, et toute pull request
+ultérieure reste en `mergeable_state: blocked` avec tous ses checks au vert — un état
+qui se lit comme un problème de contenu alors qu'il n'en est pas un. Retirez les noms
+de ces checks du ruleset de la branche (*Settings → Rules*) dans le même mouvement que
+le workflow.
+
+Ce n'est pas hypothétique : retirer le train `dum` a laissé `JustDummies mutation gate`
+et `JustDummies packaged-asset compatibility` requis, et la pull request qui le
+retirait n'a pas pu être mergée avant qu'ils ne soient sortis du ruleset.
+
+Retirer une exigence portant sur du code que le dépôt ne contient plus n'est pas un
+affaiblissement de la protection. La garder ne protège rien et bloque tout.
+
 ## Vérifier
 
 - **Convention de commit :** faites un commit sous un nouveau scope et confirmez que

@@ -154,5 +154,5 @@ l'indirection qui a échoué ici.
 
 * [ADR-0055](0055-enforce-the-style-rules-the-compiler-can-express.fr.md) — la moitié « compilation »
   du même problème, et les mesures qui la fondent.
-* [ADR-0045](0045-guard-public-and-internal-arguments-against-null.fr.md) — une convention rendue
+* [just-dummies ADR-0024](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0024-guard-public-and-internal-arguments-against-null.md) — une convention rendue
   observable plutôt que laissée à l'attention.
