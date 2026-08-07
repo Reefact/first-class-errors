@@ -15,7 +15,7 @@ L'outillage ciblait auparavant la dernière version de .NET. Cela empêchait les
 
 Le worker charge également les assemblies des consommateurs. Son processus doit donc pouvoir s'exécuter sur un runtime compatible avec l'assembly cible qu'il inspecte. Il s'agit d'une question de sélection du runtime, pas d'une raison de publier un binaire par version de .NET.
 
-Au moment de la décision, .NET 8 était la plus ancienne LTS prise en charge et correspondait au plancher de l'hôte de l'analyseur. Le plancher distinct de prise en charge de .NET Framework par la bibliothèque est défini par l'[ADR-0022](0022-floor-the-library-on-net-framework-4-7-2.fr.md), qui raffine la mention incidente auparavant présente ici.
+Au moment de la décision, .NET 8 était la plus ancienne LTS prise en charge et correspondait au plancher de l'hôte de l'analyseur. Le plancher distinct de prise en charge de .NET Framework par la bibliothèque est défini par l'[just-dummies ADR-0007](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0007-floor-the-library-on-net-framework-4-7-2.md), qui raffine la mention incidente auparavant présente ici.
 
 ## Décision
 
@@ -69,5 +69,5 @@ Envisagé comme stratégie classique de compatibilité. Rejeté parce qu'un buil
 * [Référence d'implémentation des ADR — Plancher d'exécution des outils](../specifications/adr-implementation-reference.fr.md#plancher-dexécution-des-outils)
 * [Référence du workflow `ci`](../workflows/ci.fr.md)
 * [ADR-0001](0001-lock-the-analyzer-roslyn-floor.fr.md) — la décision correspondante pour l'hôte de l'analyseur.
-* [ADR-0022](0022-floor-the-library-on-net-framework-4-7-2.fr.md) — raffine le plancher .NET Framework de la bibliothèque et remplace la mention incidente de 4.6.1 auparavant présente dans cet ADR.
+* [just-dummies ADR-0007](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0007-floor-the-library-on-net-framework-4-7-2.md) — raffine le plancher .NET Framework de la bibliothèque et remplace la mention incidente de 4.6.1 auparavant présente dans cet ADR.
 * [ADR-0024](0024-allow-a-one-time-editorial-refactoring-of-accepted-adrs.fr.md) — autorise cette extraction éditoriale.

@@ -135,5 +135,5 @@ the natural successor if the residual cost ever matters.
 * [ADR-0021](0021-bind-out-of-dto-arguments-as-peers-through-a-source-agnostic-entry.md) —
   the out-of-DTO entry, whose name-based path is the binder's existing
   non-expression shape.
-* [ADR-0022](0022-floor-the-library-on-net-framework-4-7-2.md) — the .NET
+* [just-dummies ADR-0007](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0007-floor-the-library-on-net-framework-4-7-2.md) — the .NET
   Framework 4.7.2 floor the compiled-getter cache was verified against.

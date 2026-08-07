@@ -11,7 +11,7 @@
 
 Ce dépôt livre deux paquets d'analyseurs. `FirstClassErrors.Analyzers` porte
 `FCE001`–`FCE022` ; `JustDummies.Analyzers`, créé sous
-[ADR-0044](0044-ship-justdummies-analyzers.md), porte `JD001`–`JD028`.
+[just-dummies ADR-0023](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0023-ship-justdummies-analyzers.md), porte `JD001`–`JD028`.
 
 Les deux sont vérifiés de façon très différente.
 
@@ -204,10 +204,10 @@ précis ne va pas.
 
 ## Références
 
-* [ADR-0044](0044-ship-justdummies-analyzers.md) — la décision de livrer des analyseurs
+* [just-dummies ADR-0023](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0023-ship-justdummies-analyzers.md) — la décision de livrer des analyseurs
   JustDummies de première partie.
 * [ADR-0046](0046-make-the-per-pull-request-mutation-gate-advisory.md) — le contrôle
   consultatif par pull request que ce document refuse d'imiter.
-* [ADR-0059](0059-guard-the-recipe-versus-value-boundary-with-analyzers.md) — les règles
+* [just-dummies ADR-0038](https://github.com/Reefact/just-dummies/blob/main/doc/handwritten/for-maintainers/adr/0038-guard-the-recipe-versus-value-boundary-with-analyzers.md) — les règles
   recette-contre-valeur, dont le dogfooding a produit une partie des preuves ci-dessus.
 * [Les règles d'analyse JustDummies](../../for-users/analyzers/README.md).
