@@ -123,8 +123,11 @@ suivants est délibéré :
   cli) sont conditionnées.** L'échange de token est ce qui valide la
   policy trusted-publishing, donc un dry run échoue (rouge) quand la policy ou
   `NUGET_USER` est absent. Il génère une clé à usage unique que le dry run ne
-  dépense jamais. Nécessite une policy trusted-publishing sur nuget.org et le
-  secret `NUGET_USER` (le **nom d'utilisateur** du profil, pas l'e-mail).
+  dépense jamais. Nécessite une policy trusted-publishing sur nuget.org et la
+  **variable** de dépôt `NUGET_USER` (le **nom d'utilisateur** du profil, pas
+  l'e-mail). C'est une variable, pas un secret : un nom de profil nuget.org est
+  public, et le masquer ne faisait que le cacher des logs qui vous diraient
+  qu'il est faux.
 - **L'étape Release épingle `--target "$GITHUB_SHA"`.** Sur `workflow_dispatch` le
   tag n'existe pas encore et `gh` le créerait sinon depuis le dernier état de la
   branche par défaut ; épingler le SHA lie le tag, l'archive source et les
