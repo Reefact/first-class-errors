@@ -77,9 +77,9 @@ Un dry run est *presque* sans effet de bord, avec deux points à connaître :
 - **Il effectue le vrai login OIDC NuGet.** L'échange de jeton du trusted
   publishing s'exécute pendant un dry run — c'est le but : il valide la policy
   nuget.org, donc un dry run **échoue (rouge)** si la policy trusted-publishing
-  ou le secret `NUGET_USER` est absent ou mal configuré. Il génère une clé API
-  éphémère à usage unique que le dry run ne dépense jamais (le push est sauté),
-  donc rien n'est publié.
+  ou la variable de dépôt `NUGET_USER` est absente ou mal configurée. Il génère
+  une clé API éphémère à usage unique que le dry run ne dépense jamais (le push
+  est sauté), donc rien n'est publié.
 - **Rien n'est publié.** Aucun package n'atteint nuget.org, et aucune GitHub
   Release ni aucun tag Git n'est créé.
 - **Les `.nupkg` / `.snupkg` produits sont uploadés en artefacts de run**, que

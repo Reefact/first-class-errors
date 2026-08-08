@@ -115,8 +115,10 @@ deliberate:
   gated.** The token exchange is what validates the
   trusted-publishing policy, so a dry run fails red when the policy or
   `NUGET_USER` is missing. It mints a single-use key the dry run never spends.
-  Requires a trusted-publishing policy on nuget.org and the `NUGET_USER` secret
-  (the profile **username**, not the email).
+  Requires a trusted-publishing policy on nuget.org and the `NUGET_USER`
+  repository **variable** (the profile **username**, not the email). It is a
+  variable, not a secret: a nuget.org profile name is public, and masking it
+  only hid it from the logs that would tell you when it is wrong.
 - **The Release step pins `--target "$GITHUB_SHA"`.** On `workflow_dispatch` the
   tag does not exist yet and `gh` would otherwise create it from the default
   branch's latest state; pinning the SHA ties the tag, source archive and

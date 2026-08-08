@@ -73,9 +73,9 @@ A dry run is *almost* free of side effects, with two things to be aware of:
 - **It performs the real NuGet OIDC login.** The trusted-publishing token
   exchange runs in a dry run — that is the point: it validates the nuget.org
   policy, so a dry run **fails red** if the trusted-publishing policy or the
-  `NUGET_USER` secret is missing or misconfigured. It mints a short-lived,
-  single-use API key that the dry run never spends (the push is skipped), so
-  nothing is published.
+  `NUGET_USER` repository variable is missing or misconfigured. It mints a
+  short-lived, single-use API key that the dry run never spends (the push is
+  skipped), so nothing is published.
 - **Nothing is published.** No package reaches nuget.org, and no GitHub Release
   or git tag is created.
 - **The packed `.nupkg` / `.snupkg` are uploaded as workflow-run artifacts**,
