@@ -27,6 +27,14 @@ Les outils en ligne de commande et le worker hors processus ciblent le plus anci
 
 Les bibliothèques netstandard2.0 ont un plancher distinct : .NET Framework 4.7.2. Des tests Windows dédiés exercent les bibliothèques concernées sur le véritable runtime .NET Framework. Les projets d'outillage restent réservés au .NET moderne.
 
+Les frontières qui en résultent, par artefact livré :
+
+| Artefact | Cible de build | Frontière d'hôte prise en charge |
+|---|---|---|
+| `FirstClassErrors`, `FirstClassErrors.Testing`, `FirstClassErrors.RequestBinder` | `netstandard2.0` | .NET Framework 4.7.2 ou ultérieur, et tout .NET moderne implémentant .NET Standard 2.0 |
+| `FirstClassErrors.Analyzers` | `netstandard2.0`, compilé contre `RoslynFloorVersion` | les versions de SDK et de Visual Studio portant ce Roslyn, ou ultérieures |
+| `FirstClassErrors.Cli`, `FirstClassErrors.GenDoc`, `FirstClassErrors.GenDoc.Worker` | `net8.0` | .NET 8 ou ultérieur, par roll-forward |
+
 ## Vérification ADR des pull requests
 
 Décision liée : [ADR-0004](../adr/0004-check-every-pull-request-against-the-adr-base.fr.md).
@@ -34,6 +42,17 @@ Décision liée : [ADR-0004](../adr/0004-check-every-pull-request-against-the-ad
 La vérification ADR est une procédure destinée au mainteneur et aux agents, documentée dans `AGENTS.md`, qui compare une modification aux décisions acceptées et détermine si elle enregistre, remplace ou contredit un ADR.
 
 Le workflow GitHub actuel est déclenché manuellement. Il soutient donc la procédure, mais ne garantit pas à lui seul que chaque pull request a été vérifiée. Toute automatisation future de cette obligation relève de la documentation et de la configuration des workflows, pas de l'ADR-0004.
+
+La vérification a quatre issues possibles, chacune assortie d'une action requise :
+
+| Issue | Action requise |
+|---|---|
+| Aucune décision | Indiquer que la modification n'introduit aucune décision d'architecture. |
+| Créer | Rédiger un ADR par décision nouvelle, au statut `Proposed`, l'indexer et le lier depuis la pull request. |
+| Superséder | Rédiger un successeur au statut `Proposed` et nommer l'ADR accepté qu'il remplacerait ; ne jamais réécrire l'ADR accepté. |
+| Alerter | Signaler le conflit exact avec un ADR accepté et laisser la résolution au mainteneur. |
+
+Un agent rédige et recommande ; seul le mainteneur accepte, supersède, déprécie ou lève un conflit.
 
 ## Contrats d'implémentation du Request Binder
 
@@ -54,6 +73,15 @@ Décision liée : [ADR-0010](../adr/0010-treat-gendocs-error-catalog-as-a-versio
 Le catalogue d'erreurs généré est traité comme un artefact de compatibilité versionné. L'automatisation de release compare le catalogue généré à la baseline associée à la dernière version compatible et signale les incompatibilités avant publication.
 
 La baseline n'est mise à jour par le processus de release qu'après une publication compatible réussie. Les étapes de workflow, commandes, chemins d'artefacts et procédures de reprise sont maintenus dans la référence des workflows. Les mainteneurs doivent notamment prendre en compte le cas où la publication réussit mais où la mise à jour suivante de la baseline échoue.
+
+Cycle de vie de la baseline :
+
+1. la baseline versionnée représente le catalogue de la dernière release `cli` publiée avec succès ;
+2. la génération de documentation en pull request compare le catalogue courant à cette baseline et expose l'impact en attente pour la revue ;
+3. la baseline n'avance pas au cours du développement ordinaire ;
+4. après une publication `cli` réussie, l'automatisation de release la régénère depuis l'état livré et commite le résultat sur `main`.
+
+La baseline n'est générée que par `fce catalog update` ; l'éditer à la main invalide le contrat mesuré.
 
 ## Contrats de génération de JustDummies
 
