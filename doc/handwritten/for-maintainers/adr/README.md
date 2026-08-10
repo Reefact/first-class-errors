@@ -237,4 +237,4 @@ Optional supporting material:
 | [ADR-0062](0062-derive-the-build-rule-set-from-the-quality-profile.md) | Derive the build's Sonar rule set from the quality profile: generated membership, hand-written exceptions, weekly drift check | Accepted |
 | [ADR-0067](0067-treat-the-cli-s-exit-codes-as-a-closed-published-contract.md) | Treat the CLI's exit codes as a closed, published contract | Accepted |
 | [ADR-0069](0069-consume-justdummies-from-its-own-repository.md) | Consume JustDummies from its own repository | Accepted |
-| [ADR-0070](0070-land-pull-requests-by-rebasing-and-keep-main-linear.md) | Land pull requests by rebasing, and keep `main`'s history linear | Proposed |
+| [ADR-0070](0070-land-pull-requests-by-rebasing-and-keep-main-linear.md) | Land pull requests by rebasing, and keep `main`'s history linear | Accepted |
