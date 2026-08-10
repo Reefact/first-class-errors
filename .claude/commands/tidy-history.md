@@ -7,9 +7,9 @@ Tidy the commit history of the current branch **before it reaches `main`**, per
 `CONTRIBUTING.md` ("Branches", "Commit messages") and `AGENTS.md` ("Tidying
 history before a pull request").
 
-This repository merges pull requests with a **merge commit**: every commit on
-the branch lands in `main`'s history, so cleaning it up before merge is not
-cosmetic.
+This repository merges pull requests by **rebasing** them onto `main`: every
+commit on the branch is replayed into `main`'s history, so cleaning it up before
+merge is not cosmetic.
 
 Base to compare against: `origin/main`. If a base ref was passed (`$ARGUMENTS`),
 use it in place of `origin/main` everywhere below.
