@@ -27,6 +27,14 @@ The command-line tooling and out-of-process worker target the oldest supported .
 
 The netstandard2.0 libraries have a separate support floor: .NET Framework 4.7.2. Dedicated Windows tests exercise the relevant libraries on the real .NET Framework runtime. Tooling projects remain modern-.NET-only.
 
+The resulting boundaries, per shipped artifact:
+
+| Artifact | Build target | Supported host boundary |
+|---|---|---|
+| `FirstClassErrors`, `FirstClassErrors.Testing`, `FirstClassErrors.RequestBinder` | `netstandard2.0` | .NET Framework 4.7.2 or later, and any modern .NET implementing .NET Standard 2.0 |
+| `FirstClassErrors.Analyzers` | `netstandard2.0`, compiled against `RoslynFloorVersion` | the SDK and Visual Studio releases carrying that Roslyn, or later |
+| `FirstClassErrors.Cli`, `FirstClassErrors.GenDoc`, `FirstClassErrors.GenDoc.Worker` | `net8.0` | .NET 8 or later, through roll-forward |
+
 ## ADR pull-request check
 
 Related decision: [ADR-0004](../adr/0004-check-every-pull-request-against-the-adr-base.md).
@@ -34,6 +42,17 @@ Related decision: [ADR-0004](../adr/0004-check-every-pull-request-against-the-ad
 The ADR check is a maintainer and agent procedure, documented in `AGENTS.md`, that compares a change against accepted decisions and identifies whether it records, supersedes, or conflicts with an ADR.
 
 The current GitHub workflow is manually dispatchable and therefore supports the procedure but does not, by itself, guarantee that every pull request was checked. Any future automated enforcement belongs in the workflow documentation and configuration rather than ADR-0004.
+
+The check has four possible outcomes, and each carries a required action:
+
+| Outcome | Required action |
+|---|---|
+| No decision | State that the change introduces no architectural decision. |
+| Create | Draft one ADR per new decision as `Proposed`, index it, and link it from the pull request. |
+| Supersede | Draft a successor as `Proposed` and name the accepted ADR it would replace; never rewrite the accepted one. |
+| Alert | Flag the exact conflict with an accepted ADR and leave the resolution to the maintainer. |
+
+An agent drafts and recommends; only the maintainer accepts, supersedes, deprecates, or waives a conflict.
 
 ## Request Binder implementation contracts
 
@@ -54,6 +73,15 @@ Related decision: [ADR-0010](../adr/0010-treat-gendocs-error-catalog-as-a-versio
 The generated error catalog is treated as a versioned compatibility artifact. Release automation compares the generated catalog against the baseline associated with the last compatible release and reports incompatible changes before publication.
 
 The baseline is updated only by the release process after a successful compatible release. Workflow steps, commands, artifact paths, and recovery procedures are maintained in the workflow reference. In particular, maintainers must account for the failure mode where publication succeeds but the subsequent baseline update does not.
+
+The baseline's lifecycle:
+
+1. the committed baseline represents the catalog of the last successfully published `cli` release;
+2. pull-request documentation generation compares the current catalog against it and exposes the pending impact for review;
+3. the baseline does not advance during ordinary development;
+4. after a successful `cli` publication, release automation regenerates it from the shipped state and commits the result to `main`.
+
+The baseline is generated only through `fce catalog update`; hand-editing it invalidates the measured contract.
 
 ## JustDummies generation contracts
 
