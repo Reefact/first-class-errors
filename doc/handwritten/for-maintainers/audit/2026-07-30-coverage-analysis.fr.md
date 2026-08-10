@@ -12,6 +12,12 @@
 recommandations, jamais des blocages ; les deux ADR candidates qu'elle nomme sont des propositions que
 `@reefact` accepte ou rejette.
 
+**Depuis cette analyse :** JustDummies a été extrait dans
+[`Reefact/just-dummies`](https://github.com/Reefact/just-dummies) le 2026-08-07 (ADR-0069), emportant
+ses sources, ses records de décision et sa documentation de workflow hors de ce dépôt. Les chiffres
+JustDummies ci-dessous sont conservés comme trace de ce qui a été mesuré le 2026-07-30 ; les
+références au matériel déplacé sont nommées mais ne sont plus des liens.
+
 **Méthode.** Les mesures par fichier ont été tirées de `api/measures/component_tree` de SonarCloud (les
 deux pages, 614 composants), et les compteurs de passages et de branchements par ligne de
 `api/sources/lines` pour les 182 fichiers portant un trou. Les totaux reconstruits correspondent
@@ -335,10 +341,10 @@ compte le plus.
 5. **Ensuite, les deux matrices réflexives de JustDummies.** Les interfaces d'introspection `Any<T>`
    (64) et les positions d'opérande d'`Any.Combine` (52). Ce sont deux théories uniques sur une liste de
    types existante. D'après
-   [l'ADR-0040](../adr/0040-split-the-justdummies-test-bed-between-example-and-property-suites.fr.md),
+   l'ADR-0040 (détenue ici à l'époque, partie avec l'extraction),
    ce sont des invariants qui tiennent pour tout argument légal : ils relèvent donc de
    `JustDummies.PropertyTests`, pas de la suite unitaire — voir
-   [Écrire des tests JustDummies](../WritingJustDummiesTests.fr.md).
+   *Écrire des tests JustDummies*, également déplacé.
 
 6. **Seulement après, les analyzers — et les piloter par la mutation, pas par la couverture.** 487
    unités, majoritairement des branchements déjà *exécutés* mais non *vérifiés*. La couverture les
@@ -407,8 +413,7 @@ classification exhaustive plutôt qu'indicative.
   produits.
 - [Workflow `sonar-gate`](../workflows/sonar-gate.fr.md) — comment le quality gate est relu.
 - [Workflow `ci`](../workflows/ci.fr.md) — produit le même format OpenCover via `coverage.runsettings`.
-- [`mutation`](../workflows/mutation.fr.md) et
-  [`justdummies-mutation`](../workflows/justdummies-mutation.fr.md) — les contrôles qui mesurent si une
-  ligne couverte est réellement vérifiée.
-- [Écrire des tests JustDummies](../WritingJustDummiesTests.fr.md) — à quelle suite appartient un
-  nouveau test JustDummies.
+- [`mutation`](../workflows/mutation.fr.md) — le contrôle qui mesure si une ligne couverte est
+  réellement vérifiée. Son pendant JustDummies, `justdummies-mutation`, est parti avec l'extraction.
+- *Écrire des tests JustDummies* — à quelle suite appartient un nouveau test JustDummies ; il vit
+  désormais dans [`Reefact/just-dummies`](https://github.com/Reefact/just-dummies).
