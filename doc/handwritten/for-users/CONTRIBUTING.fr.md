@@ -148,10 +148,12 @@ Tout ce qui suit en découle.
   PAS être ravivée, pas même pour un suivi sur le même sujet : une pull request mergée ne
   peut pas décrire un nouveau travail, et une pull request fermée a été mise de côté. Le
   suivi passe par une nouvelle branche, coupée fraîchement depuis `origin/main`.
-* Pour reporter la progression de `main` dans une branche ouverte : tant que la branche
-  n’est qu’à vous, **rebasez-la** sur `origin/main` ; dès que d’autres ont pu baser du
-  travail dessus, **mergez** plutôt `origin/main` dedans. L’un comme l’autre garde la
-  branche à jour sans réécrire ce qu’un collaborateur a déjà récupéré (pull).
+* Pour reporter la progression de `main` dans une branche ouverte, **rebasez-la** sur
+  `origin/main`. Ne mergez jamais `origin/main` dans une branche (décision : ADR-0071) :
+  le rebase qui intègre la branche rejoue ses propres commits sur `main`, ce merge y
+  remettrait donc la forme même que l’historique linéaire a supprimée. Si quelqu’un
+  d’autre a déjà basé du travail sur la branche, coordonnez le force-push ou scindez le
+  travail en deux — ne recourez pas à un merge.
 * Réécrire l’historique d’une branche — un force-push, un `git rebase -i` — est
   acceptable tant que la branche n’est **qu’à vous**, et c’est ainsi qu’un message de
   commit rejeté par le lint ou par un relecteur se corrige, même en cours de relecture :

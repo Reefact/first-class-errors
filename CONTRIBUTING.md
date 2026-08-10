@@ -136,10 +136,12 @@ below follows from that.
   NOT be revived, not even for follow-up on the same topic: a merged pull
   request cannot describe new work, and a closed one was set aside. Follow-up is
   a new branch, cut fresh from `origin/main`.
-* To carry `main`'s progress into an open branch: while the branch is yours
-  alone, **rebase** it onto `origin/main`; once others may have based work on
-  it, **merge** `origin/main` in instead. Either keeps the branch current
-  without rewriting what a collaborator has already pulled.
+* To carry `main`'s progress into an open branch, **rebase** it onto
+  `origin/main`. Never merge `origin/main` into a branch (decision: ADR-0071):
+  the rebase that lands the branch replays its own commits onto `main`, so that
+  merge would put back the very shape the linear history removed. If someone
+  else has already based work on the branch, coordinate the force-push or split
+  the work in two — do not reach for a merge.
 * Rewriting a branch's history — a force-push, a `git rebase -i` — is fine
   while the branch is **yours alone**, and is how a commit message the lint or
   a reviewer rejected gets fixed, even mid-review: a rejected message cannot be
