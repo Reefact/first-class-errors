@@ -238,3 +238,4 @@ Optional supporting material:
 | [ADR-0067](0067-treat-the-cli-s-exit-codes-as-a-closed-published-contract.md) | Treat the CLI's exit codes as a closed, published contract | Accepted |
 | [ADR-0069](0069-consume-justdummies-from-its-own-repository.md) | Consume JustDummies from its own repository | Accepted |
 | [ADR-0070](0070-land-pull-requests-by-rebasing-and-keep-main-linear.md) | Land pull requests by rebasing, and keep `main`'s history linear | Accepted |
+| [ADR-0071](0071-refresh-an-open-branch-only-by-rebasing-it.md) | Refresh an open branch only by rebasing it onto `main` | Accepted |
