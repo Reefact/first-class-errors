@@ -27,7 +27,7 @@
     <PackageVersion Include="AngleSharp" Version="1.7.2" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="coverlet.collector" Version="10.0.1" />
-    <PackageVersion Include="FsCheck" Version="3.3.4" />
+    <PackageVersion Include="FsCheck" Version="3.4.0" />
     <PackageVersion Include="JetBrains.Annotations" Version="2026.2.0" />
     <PackageVersion Include="JustDummies" Version="1.0.0-preview.1" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.9.0" />
