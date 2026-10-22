@@ -156,6 +156,31 @@ Ask these questions in order:
 
 Do not choose a type from the current class or folder. Choose it from the meaning of the failure.
 
+## Specializing a built-in type
+
+`DomainError`, `PrimaryPortError`, `SecondaryPortError` and `InfrastructureError` can be derived from, so a shared platform library can define a reusable category (a persistence failure, for example) without a class per error code. A specialized error keeps its direction, its transience and its place in the hierarchy.
+
+```csharp
+public sealed class PersistenceError : SecondaryPortError {
+
+    private PersistenceError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, Transience transience)
+        : base(code, diagnosticMessage, shortMessage, detailedMessage, transience) { }
+
+    public static PublicMessageStage<PersistenceError> Create(ErrorCode code, string diagnosticMessage, Transience transience) {
+        return new PublicMessageStage<PersistenceError>((shortMessage, detailedMessage) =>
+                                                            new PersistenceError(code, diagnosticMessage, shortMessage, detailedMessage, transience));
+    }
+
+}
+```
+
+The type exposes its own `Create` factory built on `PublicMessageStage<TError>`, which keeps the two-stage contract of the built-in types: the public message is always supplied before the error exists. Documented factories that return a specialized type are extracted by GenDoc like any other.
+
+Two things to keep in mind:
+
+* `ToException()` still returns the exception of the built-in parent (`SecondaryPortException` here), never an exception specific to your type.
+* A specialized type is a classification, not an identity: the error code still identifies the failure.
+
 ---
 
 <div align="center">
