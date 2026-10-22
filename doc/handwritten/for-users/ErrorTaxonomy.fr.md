@@ -158,7 +158,7 @@ Ne choisissez pas un type selon la classe ou le dossier actuel. Choisissez-le se
 
 ## Spécialiser un type intégré
 
-`DomainError`, `PrimaryPortError`, `SecondaryPortError` et `InfrastructureError` peuvent être dérivés, afin qu’une bibliothèque de socle partagée définisse une catégorie réutilisable (une défaillance de persistance, par exemple) sans créer une classe par code d’erreur. Une erreur spécialisée conserve sa direction, sa transience et sa place dans la hiérarchie.
+Les classes `DomainError`, `PrimaryPortError`, `SecondaryPortError` et `InfrastructureError` peuvent servir de classes de base, afin qu’une bibliothèque de socle partagée définisse une catégorie réutilisable (une défaillance de persistance, par exemple) sans créer une classe par code d’erreur. Chaque classe dérivée conserve les propriétés de sa classe de base et sa place dans la hiérarchie ; la direction de l’interaction et le caractère transitoire ou non de l’erreur sont propres à la famille infrastructure (`InfrastructureError` et ses descendants), pas à `DomainError`.
 
 ```csharp
 public sealed class PersistenceError : SecondaryPortError {
@@ -178,7 +178,7 @@ Le type expose sa propre fabrique `Create`, construite sur `PublicMessageStage<T
 
 Deux points à garder en tête :
 
-* `ToException()` renvoie toujours l’exception du parent intégré (`SecondaryPortException` ici), jamais une exception propre à votre type.
+* Par défaut, `ToException()` renvoie l’exception du parent intégré (`SecondaryPortException` ici). Un type dérivé peut la redéfinir pour renvoyer une exception spécialisée, elle-même dérivée de cette exception.
 * Un type spécialisé est une classification, pas une identité : c’est toujours le code d’erreur qui identifie l’échec.
 
 ---
