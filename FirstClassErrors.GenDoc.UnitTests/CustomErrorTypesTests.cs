@@ -25,7 +25,7 @@ public sealed class CustomErrorTypesTests {
 
     #endregion
 
-    [Fact(DisplayName = "A consumer assembly can derive a typed error from a built-in error and build it through its own staged factory.")]
+    [Fact(DisplayName = "A consumer assembly can derive a typed error and its exception from the built-in ones, and build it through its own staged factory.")]
     public void AConsumerAssemblyCanDeriveATypedError() {
         // Exercise
         CustomPersistenceError error = CustomRepositoryErrors.Unavailable();
@@ -35,7 +35,7 @@ public sealed class CustomErrorTypesTests {
         Check.That(error.ShortMessage).IsEqualTo("Service temporarily unavailable.");
         Check.That(error.Direction).IsEqualTo(InteractionDirection.Outgoing);
         Check.That(error.Transience).IsEqualTo(Transience.Transient);
-        Check.That(error.ToException()).IsInstanceOf<SecondaryPortException>();
+        Check.That(error.ToException()).IsInstanceOf<CustomPersistenceException>();
     }
 
     [Fact(DisplayName = "GenDoc extracts a documented factory that returns a custom error type, running its examples.")]
@@ -70,6 +70,16 @@ public sealed class CustomErrorTypesTests {
             return new PublicMessageStage<CustomPersistenceError>((shortMessage, detailedMessage) =>
                                                                       new CustomPersistenceError(code, diagnosticMessage, shortMessage, detailedMessage, transience));
         }
+
+        public override DiagnosableException ToException() {
+            return new CustomPersistenceException(this);
+        }
+
+    }
+
+    private sealed class CustomPersistenceException : SecondaryPortException {
+
+        public CustomPersistenceException(CustomPersistenceError error) : base(error) { }
 
     }
 
