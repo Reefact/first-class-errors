@@ -2,9 +2,10 @@
 
 🌍 🇫🇷 Français (ce fichier) · 🇬🇧 [English](0072-allow-custom-error-subtypes.md)
 
-**Status:** Proposed
-**Proposed:** 2026-10-22
-**Decision Makers:** Reefact
+**Statut :** Accepté
+**Proposé :** 2026-10-22
+**Accepté :** 2026-10-22
+**Décideurs :** Reefact
 
 ## Contexte
 
@@ -55,7 +56,7 @@ Les codes identifient bien les situations particulières, mais ne permettent pas
 
 ## Actions de suivi
 
-* Documenter le modèle d'extension et exécuter les tests d'héritage côté consommateur sur les frameworks pris en charge.
+* Aucune en attente. Le modèle d'extension est documenté dans le [guide de la taxonomie des erreurs](../../for-users/ErrorTaxonomy.fr.md), et l'héritage côté consommateur ainsi que l'extraction GenDoc sont couverts par `CustomErrorTypesTests` dans `FirstClassErrors.GenDoc.UnitTests`, un assembly sans accès aux membres internes de la bibliothèque.
 
 ## Références
 
