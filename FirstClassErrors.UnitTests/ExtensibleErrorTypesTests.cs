@@ -92,7 +92,7 @@ public sealed class ExtensibleErrorTypesTests {
         private CustomDomainError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage)
             : base(code, diagnosticMessage, shortMessage, detailedMessage) { }
 
-        public new static PublicMessageStage<CustomDomainError> Create(ErrorCode code, string diagnosticMessage) {
+        public static PublicMessageStage<CustomDomainError> Create(ErrorCode code, string diagnosticMessage) {
             return new PublicMessageStage<CustomDomainError>((shortMessage, detailedMessage) =>
                                                                 new CustomDomainError(code, diagnosticMessage, shortMessage, detailedMessage));
         }
@@ -104,7 +104,7 @@ public sealed class ExtensibleErrorTypesTests {
         private CustomInfrastructureError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage)
             : base(code, diagnosticMessage, shortMessage, detailedMessage, InteractionDirection.Outgoing, Transience.Transient) { }
 
-        public new static PublicMessageStage<CustomInfrastructureError> Create(ErrorCode code, string diagnosticMessage) {
+        public static PublicMessageStage<CustomInfrastructureError> Create(ErrorCode code, string diagnosticMessage) {
             return new PublicMessageStage<CustomInfrastructureError>((shortMessage, detailedMessage) =>
                                                                         new CustomInfrastructureError(code, diagnosticMessage, shortMessage, detailedMessage));
         }
@@ -116,7 +116,7 @@ public sealed class ExtensibleErrorTypesTests {
         private CustomPrimaryPortError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, PrimaryPortInnerErrors innerErrors)
             : base(code, diagnosticMessage, shortMessage, detailedMessage, innerErrors) { }
 
-        public new static PublicMessageStage<CustomPrimaryPortError> Create(ErrorCode code, string diagnosticMessage, PrimaryPortInnerErrors innerErrors) {
+        public static PublicMessageStage<CustomPrimaryPortError> Create(ErrorCode code, string diagnosticMessage, PrimaryPortInnerErrors innerErrors) {
             return new PublicMessageStage<CustomPrimaryPortError>((shortMessage, detailedMessage) =>
                                                                      new CustomPrimaryPortError(code, diagnosticMessage, shortMessage, detailedMessage, innerErrors));
         }
@@ -131,12 +131,12 @@ public sealed class ExtensibleErrorTypesTests {
         private PersistenceError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, SecondaryPortInnerErrors innerErrors)
             : base(code, diagnosticMessage, shortMessage, detailedMessage, innerErrors) { }
 
-        public new static PublicMessageStage<PersistenceError> Create(ErrorCode code, string diagnosticMessage, Transience transience) {
+        public static PublicMessageStage<PersistenceError> Create(ErrorCode code, string diagnosticMessage, Transience transience) {
             return new PublicMessageStage<PersistenceError>((shortMessage, detailedMessage) =>
                                                                new PersistenceError(code, diagnosticMessage, shortMessage, detailedMessage, transience));
         }
 
-        public new static PublicMessageStage<PersistenceError> Create(ErrorCode code, string diagnosticMessage, SecondaryPortInnerErrors innerErrors) {
+        public static PublicMessageStage<PersistenceError> Create(ErrorCode code, string diagnosticMessage, SecondaryPortInnerErrors innerErrors) {
             return new PublicMessageStage<PersistenceError>((shortMessage, detailedMessage) =>
                                                                new PersistenceError(code, diagnosticMessage, shortMessage, detailedMessage, innerErrors));
         }
