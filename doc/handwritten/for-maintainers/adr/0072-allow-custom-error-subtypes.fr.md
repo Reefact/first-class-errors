@@ -12,9 +12,9 @@
 FirstClassErrors fournit une hiérarchie typée d'erreurs de domaine et d'infrastructure, avec les ports primaires et secondaires.
 Les équipes de socle peuvent définir des catégories d'erreurs réutilisables, par exemple les erreurs de persistance, pour harmoniser le support et le diagnostic.
 
-Les classes existantes disposent de factories à étapes, mais leurs constructeurs ne sont pas accessibles aux sous-classes d'autres assemblies.
+Les classes existantes disposent de méthodes de fabrique en deux étapes, mais leurs constructeurs ne sont pas accessibles aux classes dérivées définies dans d’autres projets .NET.
 Une catégorie personnalisée ne peut donc pas étendre cette taxonomie sans remplacer ou dupliquer son fonctionnement.
-Les consommateurs ne peuvent pas non plus créer une factory à étapes renvoyant un type spécialisé.
+Les consommateurs ne peuvent pas non plus créer une méthode de fabrique en deux étapes renvoyant un type spécialisé.
 
 ## Décision
 
@@ -23,8 +23,8 @@ FirstClassErrors permettra aux applications de dériver des catégories d'erreur
 ## Justification
 
 Une hiérarchie extensible permet aux bibliothèques de socle de proposer des catégories utiles au support sans créer un type par code d'erreur.
-Le maintien dans la hiérarchie existante préserve la direction architecturale, la classification de transience et les diagnostics.
-Les factories à étapes conservent une façon uniforme de fournir les messages publics.
+Le maintien dans la hiérarchie existante préserve la direction architecturale, le caractère transitoire ou non de l’erreur et les diagnostics.
+Les méthodes de fabrique en deux étapes conservent une façon uniforme de fournir les messages publics.
 
 ## Alternatives étudiées
 
@@ -41,17 +41,17 @@ Les codes identifient bien les situations particulières, mais ne permettent pas
 ### Positives
 
 * Les consommateurs peuvent ajouter des catégories sémantiques sans modifier FirstClassErrors.
-* Les factories et codes existants restent utilisables.
+* Les méthodes de fabrique et les codes d’erreur existants restent utilisables.
 * Les types personnalisés bénéficient du même modèle de messages publics à deux étapes.
 
 ### Négatives
 
 * L'API publique expose de nouveaux points d'extension et de nouvelles obligations de compatibilité.
-* Les types dérivés doivent fournir leurs propres factories.
+* Les types dérivés doivent fournir leurs propres méthodes de fabrique.
 
 ### Risques
 
-* Les sous-classes peuvent s'écarter des conventions de construction ; les exemples et les tests doivent promouvoir les factories à étapes.
+* Les classes dérivées peuvent s'écarter des conventions de construction ; les exemples et les tests doivent promouvoir les méthodes de fabrique en deux étapes.
 * Une conversion en exception plus spécialisée nécessite une adaptation explicite.
 
 ## Actions de suivi
