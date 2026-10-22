@@ -23,7 +23,7 @@ FirstClassErrors permettra aux applications de dériver des catégories d'erreur
 ## Justification
 
 Une hiérarchie extensible permet aux bibliothèques de socle de proposer des catégories utiles au support sans créer un type par code d'erreur.
-Le maintien dans la hiérarchie existante préserve la direction architecturale, le caractère transitoire ou non de l’erreur et les diagnostics.
+Le maintien dans la hiérarchie existante préserve les métadonnées héritées et la place des erreurs dans la taxonomie. Les types dérivés de la famille infrastructure conservent aussi leur direction d’interaction et leur caractère transitoire ou non.
 Les méthodes de fabrique en deux étapes conservent une façon uniforme de fournir les messages publics.
 
 ## Alternatives étudiées
