@@ -158,7 +158,7 @@ Do not choose a type from the current class or folder. Choose it from the meanin
 
 ## Specializing a built-in type
 
-`DomainError`, `PrimaryPortError`, `SecondaryPortError` and `InfrastructureError` can be derived from, so a shared platform library can define a reusable category (a persistence failure, for example) without a class per error code. A specialized error keeps its direction, its transience and its place in the hierarchy.
+`DomainError`, `PrimaryPortError`, `SecondaryPortError` and `InfrastructureError` can be used as base classes, so a shared platform library can define a reusable category (a persistence failure, for example) without a class per error code. A derived class keeps the properties of its base class and its place in the hierarchy; the interaction direction and the transience belong to the infrastructure family (`InfrastructureError` and its descendants), not to `DomainError`.
 
 ```csharp
 public sealed class PersistenceError : SecondaryPortError {
@@ -178,7 +178,7 @@ The type exposes its own `Create` factory built on `PublicMessageStage<TError>`,
 
 Two things to keep in mind:
 
-* `ToException()` still returns the exception of the built-in parent (`SecondaryPortException` here), never an exception specific to your type.
+* By default, `ToException()` returns the exception of the built-in parent (`SecondaryPortException` here). A derived type can override it to return a specialized exception, itself derived from that exception.
 * A specialized type is a classification, not an identity: the error code still identifies the failure.
 
 ---
