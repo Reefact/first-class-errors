@@ -2,8 +2,9 @@
 
 🌍 🇬🇧 English (this file) · 🇫🇷 [Français](0072-allow-custom-error-subtypes.fr.md)
 
-**Status:** Proposed
+**Status:** Accepted
 **Proposed:** 2026-10-22
+**Accepted:** 2026-10-22
 **Decision Makers:** Reefact
 
 ## Context
@@ -55,7 +56,7 @@ Codes identify individual failure cases well, but they do not provide reusable t
 
 ## Follow-up Actions
 
-* Document the extension pattern and run the consumer-style inheritance tests across supported target frameworks.
+* None outstanding. The extension pattern is documented in the [Error Taxonomy guide](../../for-users/ErrorTaxonomy.en.md), and consumer-style inheritance and GenDoc extraction are covered by `CustomErrorTypesTests` in `FirstClassErrors.GenDoc.UnitTests`, an assembly without access to the library's internals.
 
 ## References
 
