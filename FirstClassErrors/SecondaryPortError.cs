@@ -15,10 +15,16 @@ public class SecondaryPortError : InfrastructureError {
 
     #region Constructors declarations
 
-    internal SecondaryPortError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, Transience transience, Action<ErrorContextBuilder>? configureContext = null)
+    /// <summary>
+    ///     Initializes a <see cref="SecondaryPortError" /> or a derived error type.
+    /// </summary>
+    protected internal SecondaryPortError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, Transience transience, Action<ErrorContextBuilder>? configureContext = null)
         : base(code, diagnosticMessage, shortMessage, detailedMessage, InteractionDirection.Outgoing, transience, configureContext) { }
 
-    internal SecondaryPortError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, SecondaryPortInnerErrors innerErrors, Action<ErrorContextBuilder>? configureContext = null)
+    /// <summary>
+    ///     Initializes a <see cref="SecondaryPortError" /> or a derived error type.
+    /// </summary>
+    protected internal SecondaryPortError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, SecondaryPortInnerErrors innerErrors, Action<ErrorContextBuilder>? configureContext = null)
         : base(code, diagnosticMessage, shortMessage, detailedMessage, InteractionDirection.Outgoing, innerErrors.ComputeTransience(), innerErrors.ToList(), configureContext) { }
 
     #endregion

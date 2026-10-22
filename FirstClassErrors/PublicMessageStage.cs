@@ -28,7 +28,15 @@ public sealed class PublicMessageStage<TError>
 
     #region Constructors declarations
 
-    internal PublicMessageStage(Func<string, string?, TError> finalize) {
+    /// <summary>
+    ///     Initializes a staged builder for a custom error type.
+    /// </summary>
+    /// <param name="finalize">Creates the specialized error once the public messages are supplied.</param>
+    /// <remarks>
+    ///     Derived error types can expose their own Create factory using this constructor, keeping the
+    ///     two-stage public-message contract of the built-in error types.
+    /// </remarks>
+    public PublicMessageStage(Func<string, string?, TError> finalize) {
         _finalize = finalize;
     }
 

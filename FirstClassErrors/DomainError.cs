@@ -14,13 +14,22 @@ public class DomainError : Error {
 
     #region Constructors declarations
 
-    internal DomainError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, Action<ErrorContextBuilder>? configureContext = null)
+    /// <summary>
+    ///     Initializes a <see cref="DomainError" /> or a derived error type.
+    /// </summary>
+    protected internal DomainError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, Action<ErrorContextBuilder>? configureContext = null)
         : base(code, diagnosticMessage, shortMessage, detailedMessage, configureContext) { }
 
-    internal DomainError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, DomainError innerError, Action<ErrorContextBuilder>? configureContext = null)
+    /// <summary>
+    ///     Initializes a <see cref="DomainError" /> or a derived error type.
+    /// </summary>
+    protected internal DomainError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, DomainError innerError, Action<ErrorContextBuilder>? configureContext = null)
         : base(code, diagnosticMessage, shortMessage, detailedMessage, innerError, configureContext) { }
 
-    internal DomainError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, IEnumerable<DomainError> innerErrors, Action<ErrorContextBuilder>? configureContext = null)
+    /// <summary>
+    ///     Initializes a <see cref="DomainError" /> or a derived error type.
+    /// </summary>
+    protected internal DomainError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, IEnumerable<DomainError> innerErrors, Action<ErrorContextBuilder>? configureContext = null)
         : base(code, diagnosticMessage, shortMessage, detailedMessage, innerErrors, configureContext) { }
 
     #endregion

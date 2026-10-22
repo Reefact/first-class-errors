@@ -15,10 +15,16 @@ public class PrimaryPortError : InfrastructureError {
 
     #region Constructors declarations
 
-    internal PrimaryPortError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, Transience transience, Action<ErrorContextBuilder>? configureContext = null)
+    /// <summary>
+    ///     Initializes a <see cref="PrimaryPortError" /> or a derived error type.
+    /// </summary>
+    protected internal PrimaryPortError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, Transience transience, Action<ErrorContextBuilder>? configureContext = null)
         : base(code, diagnosticMessage, shortMessage, detailedMessage, InteractionDirection.Incoming, transience, configureContext) { }
 
-    internal PrimaryPortError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, PrimaryPortInnerErrors innerErrors, Action<ErrorContextBuilder>? configureContext = null)
+    /// <summary>
+    ///     Initializes a <see cref="PrimaryPortError" /> or a derived error type.
+    /// </summary>
+    protected internal PrimaryPortError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, PrimaryPortInnerErrors innerErrors, Action<ErrorContextBuilder>? configureContext = null)
         : base(code, diagnosticMessage, shortMessage, detailedMessage, InteractionDirection.Incoming, innerErrors.ComputeTransience(), innerErrors.ToList(), configureContext) { }
 
     #endregion

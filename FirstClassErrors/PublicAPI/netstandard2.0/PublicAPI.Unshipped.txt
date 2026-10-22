@@ -13,6 +13,9 @@ FirstClassErrors.DocumentedByAttribute
 FirstClassErrors.DocumentedByAttribute.DocumentedByAttribute(string! documentationMethodName) -> void
 FirstClassErrors.DocumentedByAttribute.MethodName.get -> string!
 FirstClassErrors.DomainError
+FirstClassErrors.DomainError.DomainError(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, string! shortMessage, string? detailedMessage, FirstClassErrors.DomainError! innerError, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> void
+FirstClassErrors.DomainError.DomainError(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, string! shortMessage, string? detailedMessage, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> void
+FirstClassErrors.DomainError.DomainError(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, string! shortMessage, string? detailedMessage, System.Collections.Generic.IEnumerable<FirstClassErrors.DomainError!>! innerErrors, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> void
 FirstClassErrors.DomainException
 FirstClassErrors.DomainException.DomainException(FirstClassErrors.DomainError! error) -> void
 FirstClassErrors.Error
@@ -141,6 +144,9 @@ FirstClassErrors.IErrorRuleStage.WithRule(string! rule) -> FirstClassErrors.IErr
 FirstClassErrors.IErrorTitleStage
 FirstClassErrors.IErrorTitleStage.WithTitle(string! title) -> FirstClassErrors.IErrorDescriptionStage!
 FirstClassErrors.InfrastructureError
+FirstClassErrors.InfrastructureError.InfrastructureError(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, string! shortMessage, string? detailedMessage, FirstClassErrors.InteractionDirection direction, FirstClassErrors.Transience transience, FirstClassErrors.Error! innerError, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> void
+FirstClassErrors.InfrastructureError.InfrastructureError(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, string! shortMessage, string? detailedMessage, FirstClassErrors.InteractionDirection direction, FirstClassErrors.Transience transience, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> void
+FirstClassErrors.InfrastructureError.InfrastructureError(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, string! shortMessage, string? detailedMessage, FirstClassErrors.InteractionDirection direction, FirstClassErrors.Transience transience, System.Collections.Generic.IEnumerable<FirstClassErrors.Error!>! innerErrors, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> void
 FirstClassErrors.InfrastructureError.Direction.get -> FirstClassErrors.InteractionDirection
 FirstClassErrors.InfrastructureError.Transience.get -> FirstClassErrors.Transience
 FirstClassErrors.InfrastructureException
@@ -186,6 +192,8 @@ FirstClassErrors.Outcome<T>.Then<TResult>(System.Func<T, TResult>! convert) -> F
 FirstClassErrors.Outcome<T>.ThrowIfFailure() -> void
 FirstClassErrors.OutcomeTaskExtensions
 FirstClassErrors.PrimaryPortError
+FirstClassErrors.PrimaryPortError.PrimaryPortError(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, string! shortMessage, string? detailedMessage, FirstClassErrors.PrimaryPortInnerErrors! innerErrors, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> void
+FirstClassErrors.PrimaryPortError.PrimaryPortError(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, string! shortMessage, string? detailedMessage, FirstClassErrors.Transience transience, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> void
 FirstClassErrors.PrimaryPortException
 FirstClassErrors.PrimaryPortException.PrimaryPortException(FirstClassErrors.PrimaryPortError! error) -> void
 FirstClassErrors.PrimaryPortInnerErrors
@@ -201,8 +209,11 @@ FirstClassErrors.ProvidesErrorsForAttribute.DescriptionResourceType.set -> void
 FirstClassErrors.ProvidesErrorsForAttribute.ProvidesErrorsForAttribute(string! source) -> void
 FirstClassErrors.ProvidesErrorsForAttribute.Source.get -> string!
 FirstClassErrors.PublicMessageStage<TError>
+FirstClassErrors.PublicMessageStage<TError>.PublicMessageStage(System.Func<string!, string?, TError!>! finalize) -> void
 FirstClassErrors.PublicMessageStage<TError>.WithPublicMessage(string! shortMessage, string? detailedMessage = null) -> TError!
 FirstClassErrors.SecondaryPortError
+FirstClassErrors.SecondaryPortError.SecondaryPortError(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, string! shortMessage, string? detailedMessage, FirstClassErrors.SecondaryPortInnerErrors! innerErrors, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> void
+FirstClassErrors.SecondaryPortError.SecondaryPortError(FirstClassErrors.ErrorCode! code, string! diagnosticMessage, string! shortMessage, string? detailedMessage, FirstClassErrors.Transience transience, System.Action<FirstClassErrors.ErrorContextBuilder!>? configureContext = null) -> void
 FirstClassErrors.SecondaryPortException
 FirstClassErrors.SecondaryPortException.SecondaryPortException(FirstClassErrors.SecondaryPortError! error) -> void
 FirstClassErrors.SecondaryPortInnerErrors

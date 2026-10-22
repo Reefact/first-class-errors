@@ -20,19 +20,28 @@ public class InfrastructureError : Error {
 
     #region Constructors declarations
 
-    internal InfrastructureError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, InteractionDirection direction, Transience transience, Action<ErrorContextBuilder>? configureContext = null)
+    /// <summary>
+    ///     Initializes a <see cref="InfrastructureError" /> or a derived error type.
+    /// </summary>
+    protected internal InfrastructureError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, InteractionDirection direction, Transience transience, Action<ErrorContextBuilder>? configureContext = null)
         : base(code, diagnosticMessage, shortMessage, detailedMessage, configureContext) {
         Direction  = direction;
         Transience = transience;
     }
 
-    internal InfrastructureError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, InteractionDirection direction, Transience transience, Error innerError, Action<ErrorContextBuilder>? configureContext = null)
+    /// <summary>
+    ///     Initializes a <see cref="InfrastructureError" /> or a derived error type.
+    /// </summary>
+    protected internal InfrastructureError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, InteractionDirection direction, Transience transience, Error innerError, Action<ErrorContextBuilder>? configureContext = null)
         : base(code, diagnosticMessage, shortMessage, detailedMessage, innerError, configureContext) {
         Direction  = direction;
         Transience = transience;
     }
 
-    internal InfrastructureError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, InteractionDirection direction, Transience transience, IEnumerable<Error> innerErrors, Action<ErrorContextBuilder>? configureContext = null)
+    /// <summary>
+    ///     Initializes a <see cref="InfrastructureError" /> or a derived error type.
+    /// </summary>
+    protected internal InfrastructureError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, InteractionDirection direction, Transience transience, IEnumerable<Error> innerErrors, Action<ErrorContextBuilder>? configureContext = null)
         : base(code, diagnosticMessage, shortMessage, detailedMessage, innerErrors, configureContext) {
         Direction  = direction;
         Transience = transience;
