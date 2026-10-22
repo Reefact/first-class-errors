@@ -156,6 +156,31 @@ Posez ces questions dans l’ordre :
 
 Ne choisissez pas un type selon la classe ou le dossier actuel. Choisissez-le selon le sens de l’échec.
 
+## Spécialiser un type intégré
+
+`DomainError`, `PrimaryPortError`, `SecondaryPortError` et `InfrastructureError` peuvent être dérivés, afin qu’une bibliothèque de socle partagée définisse une catégorie réutilisable (une défaillance de persistance, par exemple) sans créer une classe par code d’erreur. Une erreur spécialisée conserve sa direction, sa transience et sa place dans la hiérarchie.
+
+```csharp
+public sealed class PersistenceError : SecondaryPortError {
+
+    private PersistenceError(ErrorCode code, string diagnosticMessage, string shortMessage, string? detailedMessage, Transience transience)
+        : base(code, diagnosticMessage, shortMessage, detailedMessage, transience) { }
+
+    public static PublicMessageStage<PersistenceError> Create(ErrorCode code, string diagnosticMessage, Transience transience) {
+        return new PublicMessageStage<PersistenceError>((shortMessage, detailedMessage) =>
+                                                            new PersistenceError(code, diagnosticMessage, shortMessage, detailedMessage, transience));
+    }
+
+}
+```
+
+Le type expose sa propre fabrique `Create`, construite sur `PublicMessageStage<TError>`, ce qui conserve le contrat en deux étapes des types intégrés : le message public est toujours fourni avant que l’erreur n’existe. Les fabriques documentées qui renvoient un type spécialisé sont extraites par GenDoc comme les autres.
+
+Deux points à garder en tête :
+
+* `ToException()` renvoie toujours l’exception du parent intégré (`SecondaryPortException` ici), jamais une exception propre à votre type.
+* Un type spécialisé est une classification, pas une identité : c’est toujours le code d’erreur qui identifie l’échec.
+
 ---
 
 <div align="center">
