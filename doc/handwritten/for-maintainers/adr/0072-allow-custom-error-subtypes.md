@@ -23,7 +23,7 @@ FirstClassErrors will allow applications to derive specialized error categories 
 ## Rationale
 
 An extensible type hierarchy allows shared platform libraries to introduce meaningful operational categories without requiring a concrete class for every individual error code.
-Keeping specialized errors within the existing hierarchy preserves their architectural direction, transience classification, and diagnosable metadata.
+Keeping specialized errors within the existing hierarchy preserves their inherited metadata and their place in the taxonomy. Infrastructure-derived types also retain their interaction direction and transience classification.
 Preserving staged construction provides a consistent way to supply public messages and minimizes divergence between built-in and user-defined error factories.
 
 ## Alternatives Considered
