@@ -39,9 +39,9 @@ On a `[ubuntu-latest, windows-latest]` matrix:
 
 1. Checkout, then set up the .NET SDK.
 2. `dotnet restore` → `dotnet build -c Release` → `dotnet test -c Release`.
-3. Tests collect OpenCover coverage via `coverlet.collector`, configured by
-   [`coverage.runsettings`](../../../../coverage.runsettings), into
-   `artifacts/coverage/<guid>/coverage.opencover.xml`.
+3. Tests collect OpenCover coverage via `coverlet.MTP`, configured by
+   [`coverage.rsp`](../../../../coverage.rsp), into
+   `artifacts/coverage/coverage.opencover.<timestamp>.xml` (one per test project).
 4. The coverage report is uploaded as a per-OS artifact.
 
 ### `floor` — the tooling on its minimum runtime
@@ -96,7 +96,7 @@ secrets and needs no write scope.
 
 ## Related
 
-- [`sonar`](sonar.en.md) reuses the same `coverage.runsettings` so its coverage
+- [`sonar`](sonar.en.md) reuses the same `coverage.rsp` so its coverage
   report matches this one.
 - [`analyzers`](analyzers.en.md) covers the analyzer dogfood that `ci` does not.
 - [`canary.yml`](../../../../.github/workflows/canary.yml) *(no reference page yet)*

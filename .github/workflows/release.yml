@@ -130,7 +130,7 @@ jobs:
         run: dotnet build FirstClassErrors.sln -c Release --no-restore -p:Version="$VERSION"
 
       - name: Test
-        run: dotnet test FirstClassErrors.sln -c Release --no-build --logger "console;verbosity=normal"
+        run: dotnet test --solution FirstClassErrors.sln -c Release --no-build --output Detailed
 
       # GenDoc ships bundled inside the fce tool (no package of its own -- see pack.sh), so a breaking
       # change to its own error catalog is a breaking change of the cli train. doc/generated/gendoc/

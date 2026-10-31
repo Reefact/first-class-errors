@@ -53,21 +53,22 @@ jobs:
         run: dotnet build FirstClassErrors.sln -c Release --no-restore
 
       - name: Test
-        # Collect OpenCover coverage via coverlet.collector (configured in coverage.runsettings).
-        # Reports land under artifacts/coverage/<guid>/coverage.opencover.xml, ready for a Sonar scan.
+        # Collect OpenCover coverage via coverlet.MTP (options in coverage.rsp). Reports land under
+        # artifacts/coverage/coverage.opencover.<timestamp>.xml, one per test project, ready for a Sonar scan.
+        # '@coverage.rsp' is quoted: unquoted, PowerShell (the windows-latest default shell) parses it as its
+        # splatting operator and fails before dotnet runs.
         run: >-
-          dotnet test FirstClassErrors.sln -c Release --no-build
-          --collect:"XPlat Code Coverage"
-          --settings coverage.runsettings
+          dotnet test --solution FirstClassErrors.sln -c Release --no-build
+          '@coverage.rsp'
           --results-directory artifacts/coverage
-          --logger "console;verbosity=normal"
+          --output Detailed
 
       - name: Upload coverage report
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           # Per-OS name so the two matrix legs do not clash when uploading.
           name: coverage-${{ matrix.os }}
-          path: artifacts/coverage/**/coverage.opencover.xml
+          path: artifacts/coverage/**/coverage.opencover.*.xml
           if-no-files-found: error
 
   # build-test above runs the suite on the LATEST .NET (10). This job proves the LIBRARY's OTHER supported
@@ -110,8 +111,8 @@ jobs:
             FirstClassErrors.PropertyTests \
             FirstClassErrors.RequestBinder.PropertyTests ; do
             echo "::group::$proj (net472)"
-            dotnet test "$proj/$proj.csproj" -c Release -f net472 -p:EnableNet472Floor=true \
-              --logger "console;verbosity=normal"
+            dotnet test --project "$proj/$proj.csproj" -c Release -f net472 -p:EnableNet472Floor=true \
+              --output Detailed
             echo "::endgroup::"
           done
 
