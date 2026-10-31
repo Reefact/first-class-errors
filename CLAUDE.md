@@ -145,10 +145,15 @@ When you act on review feedback on a pull request (for example a Codex review),
 follow the escalation rules in [`AGENTS.md`](AGENTS.md) ("Responding to review
 feedback"). The essentials, inlined so they hold even if `AGENTS.md` is not read:
 
+* Reply with Conventional Comments reply labels, per the
+  [`respond-to-review`](.claude/skills/respond-to-review/SKILL.md) skill: `done:`
+  only once the fix is pushed, `ack:`, `disagree:`, `thanks:`, `note:`, `question:`;
+  never `decision:` or `reviewed:`, and leave a blocking thread for its reviewer
+  to resolve.
 * If you agree and the fix is clear and local, implement it, push, and reply
-  `Resolved in <sha>`.
-* If you believe a finding is wrong, reply with the concrete technical reason and
-  mention `@reefact` to arbitrate — do not argue with the reviewer bot.
+  `done: fixed in <sha>, <what changed>`.
+* If you believe a finding is wrong, reply `disagree:` with the concrete technical
+  reason and mention `@reefact` to arbitrate — do not argue with the reviewer bot.
 * If a finding needs a human judgement (architecture, a trade-off, an ambiguous
   requirement, a security or compatibility policy), mention `@reefact` and wait.
 * Never mention both the reviewer bot and `@reefact` on the same thread; cap at

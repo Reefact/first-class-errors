@@ -202,13 +202,24 @@ review (for example `@claude`), not the reviewer. The human maintainer `@reefact
 is the only authority that merges a pull request; no agent merges, and no agent
 enables auto-merge on its own pull request.
 
+Write every reply with the Conventional Comments reply labels (`done`, `ack`,
+`disagree`, `thanks`, `note`, `question`), as the
+[`respond-to-review`](.claude/skills/respond-to-review/SKILL.md) skill describes:
+it says which label fits which answer, which labels an agent never posts
+(`decision`, `reviewed`), and who resolves a blocking thread (its reviewer). The
+skill is vendored verbatim from
+[`Reefact/conventional-comments-toolkit`](https://github.com/Reefact/conventional-comments-toolkit/tree/main/skills/respond-to-review)
+(commit `996a6fd`); update it by copying a newer version over it, never by editing
+it here. Where it and this section overlap, this section decides who is mentioned
+and when to stop.
+
 For each review finding, take exactly one route:
 
 - **You agree and the fix is clear and local** — implement it, push, and reply on
-  the thread with `Resolved in <sha>`. You MAY ask the reviewer (`@codex`) for a
-  single confirming re-review; never open a back-and-forth.
-- **You believe the finding is wrong** — reply on the thread with the concrete
-  technical reason and mention `@reefact` to arbitrate. Do not ping `@codex` to
+  the thread with `done: fixed in <sha>, <what changed>`. You MAY ask the reviewer
+  (`@codex`) for a single confirming re-review; never open a back-and-forth.
+- **You believe the finding is wrong** — reply on the thread with `disagree:` and
+  the concrete technical reason, and mention `@reefact` to arbitrate. Do not ping `@codex` to
   argue: a peer reviewer has no authority to settle the disagreement.
 - **The finding needs a human judgement** — architecture, a product trade-off, an
   ambiguous requirement, a security or compatibility policy — mention `@reefact`
