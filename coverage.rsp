@@ -1,0 +1,16 @@
+# Coverage options for `dotnet test`, shared by the ci and sonar workflows: `dotnet test ... '@coverage.rsp'`.
+# Keep the quotes: unquoted, PowerShell parses @coverage as its splatting operator.
+#
+# Drives the coverlet.MTP extension (referenced by every test project) to emit OpenCover XML. SonarQube /
+# SonarCloud reads C# coverage from OpenCover via sonar.cs.opencover.reportsPaths; it does not consume
+# coverlet's default Cobertura output. Keeping the options here rather than in each workflow means local runs
+# and CI produce identical reports.
+#
+# Command-line options, not a testconfig.json: a coverlet configuration file is authoritative and switches
+# off coverlet's default exclusions (generated and compiler-generated code, ExcludeFromCodeCoverage, the test
+# assemblies themselves), which these options keep and only extend with Obsolete.
+--coverlet
+--coverlet-output-format
+opencover
+--coverlet-exclude-by-attribute
+Obsolete

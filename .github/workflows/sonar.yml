@@ -93,7 +93,7 @@ jobs:
           /o:"reefact"
           /d:sonar.token="$SONAR_TOKEN"
           /d:sonar.host.url="https://sonarcloud.io"
-          /d:sonar.cs.opencover.reportsPaths="artifacts/coverage/**/coverage.opencover.xml"
+          /d:sonar.cs.opencover.reportsPaths="artifacts/coverage/**/coverage.opencover.*.xml"
           /d:sonar.exclusions="**/*.verified.*"
           /d:sonar.coverage.exclusions="FirstClassErrors.RequestBinder.Benchmarks/**"
           /d:sonar.issue.ignore.multicriteria="s7682,s7679"
@@ -112,13 +112,12 @@ jobs:
         run: dotnet build FirstClassErrors.sln -c Release -p:TreatWarningsAsErrors=false -p:MSBuildTreatWarningsAsErrors=false
 
       - name: Test with coverage
-        # Reuse coverage.runsettings so the OpenCover report matches the one the ci workflow produces.
+        # Reuse coverage.rsp so the OpenCover report matches the one the ci workflow produces.
         run: >-
-          dotnet test FirstClassErrors.sln -c Release --no-build
-          --collect:"XPlat Code Coverage"
-          --settings coverage.runsettings
+          dotnet test --solution FirstClassErrors.sln -c Release --no-build
+          '@coverage.rsp'
           --results-directory artifacts/coverage
-          --logger "console;verbosity=normal"
+          --output Detailed
 
       - name: End analysis
         env:

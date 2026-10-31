@@ -63,5 +63,5 @@ s'authentifie avec le secret `SONAR_TOKEN`.
 ## En rapport
 
 - [`ci`](ci.fr.md) — produit la même forme de couverture OpenCover via le
-  `coverage.runsettings` partagé, et c'est là que le cliquet de warnings est
+  `coverage.rsp` partagé, et c'est là que le cliquet de warnings est
   réellement imposé.

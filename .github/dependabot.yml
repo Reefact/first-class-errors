@@ -17,6 +17,12 @@ updates:
       # nuget config cannot scope the rule to one project, so these also freeze in the analyzer test project.
       - dependency-name: "Microsoft.CodeAnalysis.CSharp"
       - dependency-name: "Microsoft.CodeAnalysis.Common"
+      # Verify 33 added a build-time SponsorCheck (error SC021) that fails GenDoc.UnitTests unless the build
+      # declares a sponsorship, a licence or a time-bounded exemption — a licensing decision, not routine
+      # maintenance. Verify.XunitV3 32.x runs on xunit.v3 4 (its dependency is a 3.2.2 minimum), so it stays
+      # there until the maintainer settles that question.
+      - dependency-name: "Verify.XunitV3"
+        versions: [">= 33.0.0"]
 
   - package-ecosystem: "github-actions"
     directory: "/"

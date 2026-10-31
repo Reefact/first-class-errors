@@ -38,7 +38,7 @@
 <!-- Check only the commands/tests that were actually run. Add details if something was not run. -->
 
 * [ ] `dotnet build FirstClassErrors.sln`
-* [ ] `dotnet test FirstClassErrors.sln`
+* [ ] `dotnet test --solution FirstClassErrors.sln`
 * [ ] Analyzer tests pass (`FirstClassErrors.Analyzers.UnitTests`)
 
 ## Documentation

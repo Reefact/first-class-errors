@@ -11,8 +11,8 @@ library produces. This guide defines how commits are written here.
 
 * Target framework: **.NET Standard 2.0**.
 * Build: `dotnet build FirstClassErrors.sln`
-* Test: `dotnet test FirstClassErrors.sln`
-* Analyzer tests, when touching analyzers: `dotnet test FirstClassErrors.Analyzers.UnitTests`
+* Test: `dotnet test --solution FirstClassErrors.sln`
+* Analyzer tests, when touching analyzers: `dotnet test --project FirstClassErrors.Analyzers.UnitTests`
 
 See [`CLAUDE.md`](CLAUDE.md) for the project layout and the broader change
 guidelines.

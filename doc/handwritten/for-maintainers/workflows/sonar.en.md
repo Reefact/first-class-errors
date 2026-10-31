@@ -60,4 +60,4 @@ the **SonarQube Cloud GitHub App**, not by this workflow's token, so no
 ## Related
 
 - [`ci`](ci.en.md) — produces the same OpenCover coverage shape via the shared
-  `coverage.runsettings`, and is where the warning ratchet is actually enforced.
+  `coverage.rsp`, and is where the warning ratchet is actually enforced.

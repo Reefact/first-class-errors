@@ -41,9 +41,9 @@ Sur une matrice `[ubuntu-latest, windows-latest]` :
 
 1. Checkout, puis installation du SDK .NET.
 2. `dotnet restore` → `dotnet build -c Release` → `dotnet test -c Release`.
-3. Les tests collectent la couverture OpenCover via `coverlet.collector`,
-   configuré par [`coverage.runsettings`](../../../../coverage.runsettings), dans
-   `artifacts/coverage/<guid>/coverage.opencover.xml`.
+3. Les tests collectent la couverture OpenCover via `coverlet.MTP`,
+   configuré par [`coverage.rsp`](../../../../coverage.rsp), dans
+   `artifacts/coverage/coverage.opencover.<horodatage>.xml` (un par projet de test).
 4. Le rapport de couverture est uploadé en artefact, un par OS.
 
 ### `floor` — l'outillage sur son runtime minimum
@@ -100,7 +100,7 @@ stocke aucun secret et n'a besoin d'aucun périmètre en écriture.
 
 ## En rapport
 
-- [`sonar`](sonar.fr.md) réutilise le même `coverage.runsettings` pour que son
+- [`sonar`](sonar.fr.md) réutilise le même `coverage.rsp` pour que son
   rapport de couverture corresponde à celui-ci.
 - [`analyzers`](analyzers.fr.md) couvre le dogfood des analyzers que `ci` ne fait
   pas.

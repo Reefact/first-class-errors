@@ -61,6 +61,8 @@ artifacts/
 *.pgc
 *.pgd
 *.rsp
+# ...except the shared coverage options of `dotnet test` (ci and sonar workflows).
+!/coverage.rsp
 *.sbr
 *.tlb
 *.tli

@@ -156,6 +156,6 @@ jobs:
             # the preview major. The env is scoped inline to the test call so it never touches build/evaluation.
             dotnet build "$proj/$proj.csproj" -c Release
             DOTNET_ROLL_FORWARD=LatestMajor DOTNET_ROLL_FORWARD_TO_PRERELEASE=1 \
-              dotnet test "$proj/$proj.csproj" -c Release --no-build --logger "console;verbosity=normal"
+              dotnet test --project "$proj/$proj.csproj" -c Release --no-build --output Detailed
             echo "::endgroup::"
           done

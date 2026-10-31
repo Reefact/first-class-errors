@@ -12,8 +12,8 @@ commits sont écrits ici.
 
 * Framework cible : **.NET Standard 2.0**.
 * Compiler : `dotnet build FirstClassErrors.sln`
-* Tester : `dotnet test FirstClassErrors.sln`
-* Tests des analyzers, lorsque vous touchez aux analyzers : `dotnet test FirstClassErrors.Analyzers.UnitTests`
+* Tester : `dotnet test --solution FirstClassErrors.sln`
+* Tests des analyzers, lorsque vous touchez aux analyzers : `dotnet test --project FirstClassErrors.Analyzers.UnitTests`
 
 Voir [`CLAUDE.md`](../../../CLAUDE.md) pour l’organisation du projet et les lignes
 directrices plus larges concernant les changements.

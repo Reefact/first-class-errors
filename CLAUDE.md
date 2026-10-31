@@ -19,9 +19,9 @@ errors should stay structured, documented, and close to the code.
 
 * Target framework: **.NET Standard 2.0**.
 * Build: `dotnet build FirstClassErrors.sln`
-* Test: `dotnet test FirstClassErrors.sln`
+* Test: `dotnet test --solution FirstClassErrors.sln`
 * Run the analyzer tests when touching analyzers:
-  `dotnet test FirstClassErrors.Analyzers.UnitTests`
+  `dotnet test --project FirstClassErrors.Analyzers.UnitTests`
 * Mutation testing measures every pull request on the files it changed, for every
   project whose code ships or runs
   (decisions: ADR-0043, and ADR-0046 which made the per-PR check **advisory** — it
